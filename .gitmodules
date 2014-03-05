@@ -2,3 +2,7 @@
 	path = CNNcortex
 	url = git@github.com:mhlabCodingTeam/CNN.git
 	branch = cortex
+[submodule "auxiliaryMethods"]
+	path = auxiliaryMethods
+	url = git@github.com:mhlabCodingTeam/auxiliaryMethods.git
+	branch = master
