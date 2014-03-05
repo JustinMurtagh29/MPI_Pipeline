@@ -6,3 +6,7 @@
 	path = auxiliaryMethods
 	url = git@github.com:mhlabCodingTeam/auxiliaryMethods.git
 	branch = master
+[submodule "segmentation"]
+	path = segmentation
+	url = git@github.com:mhlabCodingTeam/segmentation.git
+	branch = master
