@@ -1,9 +1,12 @@
 # Matlab Autosaves
 *.asv
-*.m~
 
-# Vim swap files
+# Vim swap and undo files
 *.swp
+*.un
+
+# Autosaves
+*~
 
 # Anything else?
 
