@@ -1,7 +1,7 @@
-[submodule "CNNcortex"]
-	path = CNNcortex
+[submodule "CNN"]
+	path = CNN
 	url = git@github.com:mhlabCodingTeam/CNN.git
-	branch = cortex
+	branch = master
 [submodule "auxiliaryMethods"]
 	path = auxiliaryMethods
 	url = git@github.com:mhlabCodingTeam/auxiliaryMethods.git
@@ -13,4 +13,4 @@
 [submodule "active"]
 	path = active
 	url = git@github.com:mhlabCodingTeam/active.git
-	branch = dev
+	branch = master
