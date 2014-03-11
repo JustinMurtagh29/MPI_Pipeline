@@ -11,6 +11,8 @@ switch hostnameShort
 		GLOBAL_DATA_DIR = [base 'data' filesep];
 	        GLOBAL_RESULT_DIR = [base 'results' filesep];
 	        GLOBAL_OUTPUT_DIR = [base 'sync' filesep];
+		addpath('/usr/local/jacket/');
+		addpath('/usr/local/jacket/engine');
 	case 'P1-380'
 	        base = 'I:\CortexConnectomics\Manuel\';
 		GLOBAL_CPU_JM = 'p1-380-cpu';
@@ -23,4 +25,7 @@ switch hostnameShort
 		warning(manuelCode:unknownHost,['Warning: Computer ' hostname ' unknown. Please add to startup.m']);
 end
 clear hostname* base;
+
+% Set path
+addpath(genpathGit(GLOBAL_CODE_DIR));
 
