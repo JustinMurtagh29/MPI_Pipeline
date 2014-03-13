@@ -1,6 +1,7 @@
 function jm = findJm()
 
-jm = findResource('scheduler', 'type', 'jobmanager', 'LookupURL', 'fermat01');
+jm(1) = findResource('scheduler', 'type', 'jobmanager', 'LookupURL', 'fermat01', 'name', 'fermat-job-manager');
+jm(2) = findResource('scheduler', 'type', 'jobmanager', 'LookupURL', 'fermat01', 'name', 'fermat-gpu-manager');
 
 end
 

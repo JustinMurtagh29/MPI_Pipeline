@@ -1,13 +1,13 @@
-function job = startCPU( functionHandle, inputCell, jobName )
+function job = startGPU( functionHandle, inputCell, jobName )
 
-pathDependencies = {'/zdata/manuel/code/CNN/' '/zdata/manuel/code/auxiliaryMethods/' '/zdata/manuel/code/auxiliaryMethods/cubes/'};
+pathDependencies = {'/usr/local/jacket/' '/usr/local/jacket/engine/' '/zdata/manuel/code/CNN/' '/zdata/manuel/code/auxiliaryMethods/' '/zdata/manuel/code/auxiliaryMethods/cubes/'};
 
 % Load cluster configuration
 jm = findJm();
-jm = jm(1);
+jm = jm(2);
 % Create job on cluster
 job = createJob(jm, 'RestartWorker', 1, 'PathDependencies', pathDependencies, 'Name', jobName);
-for i=1:length(functionHandle)
+for i=1:length(functionHandle);
 	createTask(job, functionHandle{i}, 0, inputCell{i}, 'MaximumNumberOfRetries', 5, 'Timeout', 90000, 'CaptureCommandWindowOutput', 0);
 end
 % Start job

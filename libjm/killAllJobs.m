@@ -2,7 +2,7 @@ function killAllJobs(which, finished)
 %killJob( jobIDsToKill )
 %   Kills jobs on "which" jobmanager (if finsished = 1, only finshed jobs)
 
-jm = findResource('scheduler', 'type', 'jobmanager', 'LookupURL', 'fermat01');
+jm = findJm;
 if any(which == 1)
     if finished
         jobs = findJob(jm(1), 'Username', 'mberning', 'state', 'finished');
