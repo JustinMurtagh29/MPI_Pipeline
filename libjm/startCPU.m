@@ -1,4 +1,4 @@
-function job = startCPU( functionHandle, inputCell, jobName )
+function startCPU( functionHandle, inputCell, jobName )
 
 pathDependencies = {'/zdata/manuel/code/CNN/' '/zdata/manuel/code/auxiliaryMethods/' '/zdata/manuel/code/auxiliaryMethods/cubes/'};
 
