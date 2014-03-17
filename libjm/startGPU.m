@@ -1,6 +1,6 @@
 function startGPU( functionHandle, inputCell, jobName )
 
-pathDependencies = {'/usr/local/jacket/' '/usr/local/jacket/engine/' '/zdata/manuel/code/CNN/' '/zdata/manuel/code/auxiliaryMethods/' '/zdata/manuel/code/auxiliaryMethods/cubes/'};
+pathDependencies = {'/usr/local/jacket/' '/usr/local/jacket/engine/' '/zdata/manuel/code/CNN/' '/zdata/manuel/code/auxiliaryMethods/' '/zdata/manuel/code/auxiliaryMethods/cubes/' '/zdata/manuel/code/active/'};
 
 % Load cluster configuration
 jm = findJm();
