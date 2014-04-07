@@ -68,7 +68,7 @@ for id=1:length(files)
 			    cube = smooth3(cube, 'gaussian', 5, 2);
 			    issfs{i} = isosurface(cube, .5);
 			    if ~isempty(issfs{i}.vertices)
-				    reducepatch(issfs{i}, .2);
+				    reducepatch(issfs{i}, .01);
 				    issfs{i}.vertices(:,[1 2]) = issfs{i}.vertices(:,[2 1]); 			    
 				    issfs{i}.vertices = issfs{i}.vertices + repmat(zeroOfCube - [1 1 1],size(issfs{i}.vertices,1),1);
 				    issfs{i}.vertices = issfs{i}.vertices .* repmat([12 12 25],size(issfs{i}.vertices,1),1);
@@ -86,8 +86,8 @@ for id=1:length(files)
 			issfs(find(idx)) = [];		
 			% Save
 			skel_data{1}.nodes(:,1:3) = skel_data{1}.nodes(:,1:3) .* repmat([12 12 25], size(skel_data{1}.nodes,1), 1);
-			exportSurfaceToAmira(issfs, [outputPath files(id).name(end-4:end) '.issf']);
-			convertKnossosNmlToHoc2(skel_data, [outputPath files(id).name(end-4:end)], 0, 1, 0, 0, [1 1 1]);
+			exportSurfaceToAmira(issfs, [outputPath files(id).name(1:end-4) '.issf']);
+			convertKnossosNmlToHoc2(skel_data, [outputPath files(id).name(1:end-4)], 0, 1, 0, 0, [1 1 1]);
 			clear groupedNodes issfs;
 		end
 	end

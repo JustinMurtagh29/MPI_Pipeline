@@ -1,7 +1,7 @@
-function result = globalize(cubeCoords1, cubeCoords2, cubeSize, overlap, seg_path )
-%GLOBALIZE 
-% Create index array of overlapping segments
+function result = calculateLocalCorrespondences(cubeCoords1, cubeCoords2, cubeSize, overlap, seg_path )
+% calculateLocalCorrespondences -> Find correspondence between local segmentations by comparing overlap around face between cubes
 
+% Create index array of overlapping segments
 cube1 = load([seg_path,'x000',num2str(cubeCoords1(1)),'y000',num2str(cubeCoords1(2)),'z000',num2str(cubeCoords1(3)),'\seg.mat']);
 cube1 = cube1.seg;
 cube2 = load([seg_path,'x000',num2str(cubeCoords2(1)),'y000',num2str(cubeCoords2(2)),'z000',num2str(cubeCoords2(3)),'\seg.mat']);
