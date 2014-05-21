@@ -68,7 +68,7 @@ for id=1:length(files)
 			    cube = smooth3(cube, 'gaussian', 5, 2);
 			    issfs{i} = isosurface(cube, .5);
 			    if ~isempty(issfs{i}.vertices)
-				    reducepatch(issfs{i}, .01);
+				    issfs{i} = reducepatch(issfs{i}, .01);
 				    issfs{i}.vertices(:,[1 2]) = issfs{i}.vertices(:,[2 1]); 			    
 				    issfs{i}.vertices = issfs{i}.vertices + repmat(zeroOfCube - [1 1 1],size(issfs{i}.vertices,1),1);
 				    issfs{i}.vertices = issfs{i}.vertices .* repmat([12 12 25],size(issfs{i}.vertices,1),1);

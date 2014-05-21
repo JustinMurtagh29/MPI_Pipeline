@@ -3,6 +3,14 @@ global GLOBAL_CODE_DIR GLOBAL_DATA_DIR GLOBAL_RESULT_DIR GLOBAL_OUTPUT_DIR GLOBA
 [~,hostname]= system('hostname');
 hostnameShort = hostname(1:6);
 switch hostnameShort
+	case 'turing'
+		base = '/zdata/manuel/';
+		GLOBAL_CPU_JM = 'fermat-cpu';
+		GLOBAL_GPU_JM = 'fermat-cnn';
+		GLOBAL_CODE_DIR = [base 'code' filesep];
+		GLOBAL_DATA_DIR = [base 'data' filesep];
+	        GLOBAL_RESULT_DIR = [base 'results' filesep];
+	        GLOBAL_OUTPUT_DIR = [base 'sync' filesep];
 	case 'fermat'
 		base = '/zdata/manuel/';
 		GLOBAL_CPU_JM = 'fermat-cpu';

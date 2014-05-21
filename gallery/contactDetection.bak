@@ -38,7 +38,7 @@ for i = 1:size(uniqueCubeCoords,1)
 	% Detect merger: winner takes all according to number of nodes in segment/supervoxel
 	mergeSegId = intersect(uniqueSegIds1, uniqueSegIds2); 
 	if ~isempty(mergeSegId);
-	    display([num2str(uniqueCubeCoords(i,:), '%.2i,%.2i,%.2i') ' - Merger detected, ID(s): ' num2str(mergeSegId')]);
+	    display([num2str(uniqueCubeCoords(i,:), '%.2i,%.2i,%.2i') ' - Merger detected, ID(s): ' num2str(mergeSegId)]);
 	    for j=1:length(mergeSegId)
 		% Save some info about each merger
 		mergerNumber = mergerNumber + 1;
@@ -65,11 +65,10 @@ for i = 1:size(uniqueCubeCoords,1)
 	% Find contact area in segmentation
 	cube1 = ismember(cube,uniqueSegIds1);
 	cube2 = ismember(cube,uniqueSegIds2);
-	contactCube = imdilate(cube1, ones(3,3,3)) & imdilate(cube2, ones(3,3,3));
-	contactCube = imclose(contactCube, ones(10,10,10));
+	contactCube = imdilate(cube1, ones(5,5,5)) & imdilate(cube2, ones(5,5,5));
+	contactCube = imclose(contactCube, ones(7,7,7));
 	props = regionprops(contactCube, {'PixelList'});
 	for j=1:length(props)
-		display([num2str(uniqueCubeCoords(i,:), '%.2i,%.2i,%.2i') ' - Contact detected']);
 		% Save some info about each contact
 		contactNumber = contactNumber + 1;
 		contact(contactNumber).cubeId = uniqueCubeCoords(i,:);
