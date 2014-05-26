@@ -9,6 +9,8 @@ skel = mergeTrees(skel1, skel2, skeletons{1}, skeletons{2});
 cubeCoords =  [floor((skel{1}.nodes(:,1:3)-1)./128); floor((skel{2}.nodes(:,1:3)-1)./128)];
 % all unique cubes traversed by this skeleton 
 uniqueCubeCoords = unique(cubeCoords, 'rows');
+% restrict to the IPL as segmentation gets very problematic near somata (layers)
+uniqueCubeCoords = uniqueCubeCoords(all(bsxfun(@gt, uniqueCubeCoords, [7 3 1]),2) & all(bsxfun(@lt, uniqueCubeCoords, [30 39 42]),2),:);
 % counter
 contactNumber = 0;
 mergerNumber = 0;
@@ -66,7 +68,7 @@ for i = 1:size(uniqueCubeCoords,1)
 	cube1 = ismember(cube,uniqueSegIds1);
 	cube2 = ismember(cube,uniqueSegIds2);
 	contactCube = imdilate(cube1, ones(3,3,3)) & imdilate(cube2, ones(3,3,3));
-	contactCube = imclose(contactCube, ones(10,10,10));
+	contactCube = imclose(contactCube, ones(5,5,5));
 	props = regionprops(contactCube, {'PixelList'});
 	for j=1:length(props)
 		display([num2str(uniqueCubeCoords(i,:), '%.2i,%.2i,%.2i') ' - Contact detected']);

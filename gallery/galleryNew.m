@@ -4,11 +4,13 @@ addpath('/nfs/bmo/mberning/20140310backup/zdataNew/NOBACKUP/code/auxiliary/');
 addpath('/nfs/bmo/mberning/20140310backup/zdataNew/NOBACKUP/code/auxiliary/hocMaker/');
 addpath('/nfs/bmo/mberning/20140310backup/zdataNew/NOBACKUP/code/auxiliary/cubes/');
 
+% Needed for large skeletons and convertNmlToHocFunction subfunction, maybe fix at some point
+set(0,'RecursionLimit',10000);
 % Look up files
 files = dir([skelPath '*.nml']);
 
 for id=1:length(files)
-	skel_data = readNml([skelPath files(id).name]);
+	skel_data = parseNml([skelPath files(id).name]);
 	nodes = skel_data{1,1}.nodes(:,1:3);
 	if size(nodes,1) > 100 % ignore small skeletons
 		% for each node, find cube in which it lays so the cubes data can be used for
@@ -43,7 +45,7 @@ for id=1:length(files)
 		for i = 1 : size(groupedNodes,2)
     			%read cube
 			disp(['Skeleton ' num2str(id,'%.2i') ': processing cube ' num2str(i,'%.4i') ' of ' num2str(size(groupedNodes,2),'%.4i')]);
-			if all(groupedNodes{i}.cubeCoords > [3 2 0]) & all(groupedNodes{i}.cubeCoords < [31 40 43])
+			if all(groupedNodes{i}.cubeCoords > [7 3 1]) & all(groupedNodes{i}.cubeCoords < [30 39 42])
     			    cube = readKnossosCube('/nfs/bmo/mberning/20140310backup/mag1/', '100527_k0563_seg', groupedNodes{i}.cubeCoords, 'uint16', '', 'raw', 256);
 			    %get the color values of the nodes in the cube
 			    segIds = zeros(1,size(groupedNodes{i}.nodes,1));
