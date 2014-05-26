@@ -1,6 +1,7 @@
 function startCPU( functionHandle, inputCell, jobName )
 
-pathDependencies = {'/zdata/manuel/code/CNN/' '/zdata/manuel/code/auxiliaryMethods/' '/zdata/manuel/code/auxiliaryMethods/cubes/' '/zdata/manuel/code/active/' '/zdata/manuel/code/correspondence/'};
+pathDependencies = {'/zdata/manuel/code/CNN/' '/zdata/manuel/code/auxiliaryMethods/' '/zdata/manuel/code/auxiliaryMethods/cubes/', ...
+       '/zdata/manuel/code/active/' '/zdata/manuel/code/correspondence/' '/zdata/manuel/code/graphConstruction/'};
 
 % Load cluster configuration
 jm = findJm();

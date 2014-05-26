@@ -1,5 +1,11 @@
-function [seg, edges, borders, edgesToBorder] = findEdgesandBorders(seg)
+function findEdgesandBorders(segFile, edgeFile, borderFile, tileBorder)
 % Computation of edges and borders optimized for 512x512x256
+
+% Load segmentation from file
+load(segFile);
+seg = seg(1-tileBorder(1,1):end-tileBorder(1,2),...
+	1-tileBorder(2,1):end-tileBorder(2,2),...
+	1-tileBorder(3,1):end-tileBorder(3,2));
 
 % Pad array with a 1 voxel surround with a new unique value
 globalBorderId = max(seg(:))+1;
@@ -38,5 +44,9 @@ seg = seg(2:end-1,2:end-1,2:end-1);
 
 %Delete leaves from seg, edges and borders
 [seg,edges,borders] = correctLeaves(seg,leaves,edges,borders);
+save(segFile, 'seg');
+save(edgeFile, 'edges', 'edgesToBorder');
+save(borderFile, 'borders');
+
 
 end
