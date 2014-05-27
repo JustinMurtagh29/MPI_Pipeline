@@ -44,9 +44,11 @@ seg = seg(2:end-1,2:end-1,2:end-1);
 
 %Delete leaves from seg, edges and borders
 [seg,edges,borders] = correctLeaves(seg,leaves,edges,borders);
+
+% Save to files: currently segmentation overwrites old one (now leaves are merged)
 save(segFile, 'seg');
 save(edgeFile, 'edges', 'edgesToBorder');
 save(borderFile, 'borders');
 
-
 end
+

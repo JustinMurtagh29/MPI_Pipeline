@@ -1,11 +1,11 @@
-outputDir = '/zdata/manuel/sync/wholeCell/contactDetectionA2';
+outputDir = '/zdata/manuel/sync/wholeCell/contactDetectionA2/';
 pathBP = '/zdata/manuel/sync/fromLap/ekSkel/a2skel/a2only/';
 pathGC = '/zdata/manuel/sync/fromLap/ekSkel/a2skel/bpOnly/';
 filesBP = dir([pathBP '*.nml']);
 filesGC = dir([pathGC '*.nml']);
 
 tic;
-for i=1:length(filesBP)
+for i=50:length(filesBP)
     for j=1:length(filesGC)
 	display(['Evaluating contacts from ' filesBP(i).name  ' to ' filesGC(j).name]);
 	[skel{i,j} data{i,j}] = contactDetection({[pathBP filesBP(i).name] [pathGC filesGC(j).name]});

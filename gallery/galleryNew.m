@@ -9,7 +9,7 @@ set(0,'RecursionLimit',10000);
 % Look up files
 files = dir([skelPath '*.nml']);
 
-for id=1:length(files)
+for id=50:length(files)
 	skel_data = parseNml([skelPath files(id).name]);
 	nodes = skel_data{1,1}.nodes(:,1:3);
 	if size(nodes,1) > 100 % ignore small skeletons
