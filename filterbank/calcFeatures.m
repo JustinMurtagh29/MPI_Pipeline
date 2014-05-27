@@ -14,9 +14,7 @@ if strcmp(parameter.feature.input, 'aff')
 	imfeat = loadClassData(parameter.class.root, parameter.class.prefix, parameter.local(sub(1),sub(2),sub(3)).bboxBig);
 end
 
-border = load('~/GIT/manuelCode/border.mat');
-border = border.border;
-disp('border loaded');
+border = load(parameter.local(sub(1),sub(2),sub(3)).borderFile);
 
 for m=1:1%size(parameter.filter,2)
 	imfeats = filter3d(parameter, imfeat, m);
