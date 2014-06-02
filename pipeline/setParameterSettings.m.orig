@@ -39,17 +39,22 @@ parameter.filter = {{'sortedeigenvalueshessian' [3 5] []}...
 	{'sortedeigenvaluesstructure' [3 5] [5 7]}...
 	{'laplaceofgaussian' [3 5] []}...
 	{'differenceofgaussians' [3 5] []}};
+<<<<<<< HEAD
+parameter.feature.root = [parameter.saveFolder 'features/'];
 
 % Correspondence parameter
 parameter.correspondence.overlap = 1; % overlap of local segmentation to compare on each side around a face
 parameter.correspondence.saveFolder = [parameter.saveFolder 'correspondences/'];
-
-% Feature parameter
+=======
 parameter.feature.root = [parameter.saveFolder 'features\'];
 % Function to use for FeatureCalculation
 parameter.feature.func = @calcFeaturesnew;
 % Choice of filters for 'raw' or 'class'
 parameter.feature.input = 'raw';
+
+% Correspondence parameter
+parameter.correspondence.planeOverlap = 1;
+>>>>>>> Alex
 
 % GLOBAL SETTINGS FOR fromGraphToDB.m
 % State variables from the GP
@@ -94,7 +99,10 @@ for i=1:parameter.tiles(1)
 			parameter.local(i,j,k).bboxSmall = [parameter.bbox(:,1) + [i-1; j-1; k-1] .* parameter.tileSize parameter.bbox(:,1) + [i; j; k] .* parameter.tileSize - [1; 1; 1]];
 			parameter.local(i,j,k).bboxBig = parameter.local(i,j,k).bboxSmall + parameter.tileBorder;
 			% Where to save
+<<<<<<< HEAD
 			parameter.local(i,j,k).segFile = [parameter.local(i,j,k).saveFolder 'seg.mat'];
+=======
+>>>>>>> Alex
 			parameter.local(i,j,k).edgeFile = [parameter.local(i,j,k).saveFolder 'edges.mat'];
 			parameter.local(i,j,k).borderFile =  [parameter.local(i,j,k).saveFolder 'borders.mat'];
 			parameter.local(i,j,k).weightFile = [parameter.local(i,j,k).saveFolder 'weights.mat'];
@@ -125,10 +133,16 @@ for i=1:3
         % Bounding box without and with border for this tile
         parameterTrain.local(i).bboxBig = parameterTrain.local(i).bboxSmall + parameterTrain.tileBorder;
         % Where to save
+<<<<<<< HEAD
 	parameterTrain.local(i).class.root = [parameterTrain.local(i).saveFolder 'class/'];
 	parameterTrain.local(i).class.prefix = parameterTrain.class.prefix;
 	parameterTrain.local(i).segFile = [parameterTrain.local(i).saveFolder 'seg.mat'];
 	parameterTrain.local(i).edgeFile = [parameterTrain.local(i).saveFolder 'edges.mat'];
+=======
+        parameterTrain.local(i).class.root = [parameterTrain.local(i).saveFolder 'class/'];
+        parameterTrain.local(i).class.prefix = parameterTrain.class.prefix;
+        parameterTrain.local(i).edgeFile = [parameterTrain.local(i).saveFolder 'edges.mat'];
+>>>>>>> Alex
         parameterTrain.local(i).borderFile =  [parameterTrain.local(i).saveFolder 'borders.mat'];
         parameterTrain.local(i).weightFile = [parameterTrain.local(i).saveFolder 'weights.mat'];
 end
