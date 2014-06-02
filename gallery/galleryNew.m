@@ -5,11 +5,11 @@ addpath('/nfs/bmo/mberning/20140310backup/zdataNew/NOBACKUP/code/auxiliary/hocMa
 addpath('/nfs/bmo/mberning/20140310backup/zdataNew/NOBACKUP/code/auxiliary/cubes/');
 
 % Needed for large skeletons and convertNmlToHocFunction subfunction, maybe fix at some point
-set(0,'RecursionLimit',10000);
+%set(0,'RecursionLimit',10000);
 % Look up files
 files = dir([skelPath '*.nml']);
 
-for id=50:length(files)
+for id=1:length(files)
 	skel_data = parseNml([skelPath files(id).name]);
 	nodes = skel_data{1,1}.nodes(:,1:3);
 	if size(nodes,1) > 100 % ignore small skeletons
@@ -89,7 +89,7 @@ for id=50:length(files)
 			% Save
 			skel_data{1}.nodes(:,1:3) = skel_data{1}.nodes(:,1:3) .* repmat([12 12 25], size(skel_data{1}.nodes,1), 1);
 			exportSurfaceToAmira(issfs, [outputPath files(id).name(1:end-4) '.issf']);
-			convertKnossosNmlToHoc2(skel_data, [outputPath files(id).name(1:end-4)], 0, 1, 0, 0, [1 1 1]);
+			%convertKnossosNmlToHoc2(skel_data, [outputPath files(id).name(1:end-4)], 0, 1, 0, 0, [1 1 1]);
 			clear groupedNodes issfs;
 		end
 	end
