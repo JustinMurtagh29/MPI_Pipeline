@@ -26,7 +26,9 @@ switch todo
 		correspondenceFinder(p);
 	% Should be placed in a single subdirectory as well (as it is not really part of the active classifier)
 	case 'graphFeatures'
-		% Alex please enter here
+		miniFeature(p);
+	case 'graphFeaturesLR'
+		miniFeature(pT);
 	% These last ones reside in the active repo and implement the GP classifier in an active fashion 
 	case 'prepareSupervoxelGP'
 		prepareTrainingData(pT);
