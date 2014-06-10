@@ -9,7 +9,6 @@ elseif nargin == 1
 	parameter.start = old_datestr;
 end
 parameter.saveFolder = ['/zdata/manuel/results/pipeline/' parameter.start '/'];
-parameter.stateFolder = [parameter.saveFolder 'activeState/'];
 % Define region to put through pipeline
 %parameter.bbox = [641 8320; 769 5888; 1 3328]; % this should be aligned with KNOSSOS cubes and be divisble by tileSize 
 parameter.bbox = [3073 5120; 3073 5120; 2049 3072];
@@ -53,9 +52,10 @@ parameter.feature.input = {'raw', 'aff'};
 
 % GLOBAL SETTINGS FOR fromGraphToDB.m
 % State variables from the GP
-parameter.gp.normValues = [parameter.stateFolder 'normValues.mat'];
-parameter.gp.hyperParameter = [parameter.stateFolder 'hyperParameter.mat'];
-parameter.gp.groundTruth = [parameter.stateFolder 'groundTruth/'];
+parameter.gp.stateFolder = [parameter.saveFolder 'state/'];
+parameter.gp.normValues = [parameter.gp.stateFolder 'normValues.mat'];
+parameter.gp.hyperParameter = [parameter.gp.stateFolder 'hyperParameter.mat'];
+parameter.gp.initalGroundTruth = [parameter.gp.stateFolder 'initalGroundTruth.mat'];
 % Define cutoff(s) for writing to knowledge DB 
 parameter.gp.upperCut = .95;
 parameter.gp.lowerCut = .15;

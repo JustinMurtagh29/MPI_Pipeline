@@ -28,7 +28,7 @@ end
 minValues = min(allWeights,[],1);
 maxValues = max(allWeights,[],1);
 compFactor = 1./(maxValues-minValues);
-save(pT.normValues, 'minValues', 'maxValues', 'compFactor');
+save(pT.gp.normValues, 'minValues', 'maxValues', 'compFactor');
 
 % Normalize allWeights 
 allWeights = bsxfun(@minus,allWeights,minValues);
@@ -37,7 +37,7 @@ allWeights = bsxfun(@times,allWeights,compFactor);
 % skeleton annotation (assumes dense label in bboxSmall)
 trainingData = allWeights(labelIdx,:);
 trainingLabels = allLabels;
-save(pT.initalGroundTruth, 'trainingData', 'trainingLabels');
+save(pT.gp.initalGroundTruth, 'trainingData', 'trainingLabels');
 
 end
 
