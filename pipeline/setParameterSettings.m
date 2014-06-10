@@ -49,7 +49,7 @@ parameter.feature.root = [parameter.saveFolder 'features\'];
 % Function to use for FeatureCalculation
 parameter.feature.func = @calcFeatures;
 % Choice of filters for 'raw' or 'class'
-parameter.feature.input = 'raw';
+parameter.feature.input = {'raw', 'aff'};
 
 % GLOBAL SETTINGS FOR fromGraphToDB.m
 % State variables from the GP

@@ -1,4 +1,4 @@
-function [imfeat] = filter3d(parameter,I, idx)
+function imfeat = filter3d(parameter,I, idx, idxSiz)
 
 %filter3d: gives back the filtered image(s) imfeats of the input image I
 %the applied filter is specified by type and the siz parameter (two in the
@@ -10,7 +10,7 @@ function [imfeat] = filter3d(parameter,I, idx)
 % profile on;
 % 
 type = parameter.filter{idx}{1};
-sizs = parameter.filter{idx}{2};
+sizs = parameter.filter{idx}{2}(idxSiz);
 siz2s = parameter.filter{idx}{3};
 if ~isa(I, 'single')  %uniform data type
     I=single(I);
@@ -141,8 +141,7 @@ for u=1:length(sizs)
                 Ix=convn(Ix_y,hx{3},'same');
 		clear Ix_y
                 Iy_x=convn(I,hy{1},'same');
-		clear Iy_x
-                Iy_y=convn(Iy_x,hy{2},'same');
+		Iy_y=convn(Iy_x,hy{2},'same');
 		clear Iy_x
                 Iy=convn(Iy_y,hy{3},'same');
 		clear Iy_y
@@ -193,7 +192,7 @@ for u=1:length(sizs)
             	Ieigen = eig3([reshape(Ixx, newSize) reshape(Ixy, newSize) reshape(Ixz, newSize); ...
             	    reshape(Ixy, newSize) reshape(Iyy, newSize) reshape(Iyz, newSize); ...
             	    reshape(Ixz, newSize) reshape(Iyz, newSize) reshape(Izz, newSize)]);
-            	Ieigen = sort(Ieigen,1);
+            	Ieigen = sort(Ieigen,2);
             	imfeat{1}=reshape(Ieigen(:,1), [a b c]);
             	imfeat{2}=reshape(Ieigen(:,2), [a b c]);
             	imfeat{3}=reshape(Ieigen(:,3), [a b c]);            
@@ -215,13 +214,6 @@ end
 if strcmp(type,'sortedeigenvaluesstructure') || strcmp(type, 'sortedeigenvalueshessian')
 	imfeats = cat(1,imfeats{:});
 end
-
-%save([parameter.feature.root type '.mat'], 'imfeats', '-v7.3');
-%save([parameter.feature.root input type '.mat'], 'imfeats', '-v7.3');
-
-%profile viewer;
-%profile off;
-%profsave(profile('info'), ['P:\Filter' input type  '/']);
 
 end
 
