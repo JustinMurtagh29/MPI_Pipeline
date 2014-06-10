@@ -24,14 +24,15 @@ switch todo
 	% See correspondence subdirectory
 	case 'correspondence'
 		correspondenceFinder(p);
-	% Should be placed in a single subdirectory as well (as it is not really part of the active classifier)
-	case 'graphFeatures'
+	% See filterbank subdirectory
+	case 'filterbank'
 		miniFeature(p);
-	case 'graphFeaturesLR'
+	case 'filterbankLR'
 		miniFeature(pT);
-	% These last ones reside in the active repo and implement the GP classifier in an active fashion 
-	case 'prepareSupervoxelGP'
+	case 'prepareTrainingData'
 		prepareTrainingData(pT);
+	% These last ones reside in the active repo and implement the GP classifier in an active fashion
+	case 'prepareSupervoxelGP'
 		prepareHyperparameter(pT);
 	case 'applySupervoxelGP'
 		fromGraphToDB(p);

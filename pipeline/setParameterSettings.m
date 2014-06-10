@@ -109,14 +109,22 @@ parameterTrain = rmfield(parameterTrain, 'local');
 parameterTrain.cnn.GPU = false; % minicubeFwdPass on CPU to allow arbitrary region size
 
 % Regions needed for training data
-parameterTrain.local(1).bboxSmall = [4097 4736; 4481 5248; 2250 2450]; % Heiko
-parameterTrain.local(2).bboxSmall = [1417 1717; 4739 5039; 890 1190]; % Alex
-parameterTrain.local(3).bboxSmall = [6800 7100; 2140 2440; 1236 1536]; % Max/Anna
 
-% Add resepective skeletons
+% Region from Heiko, training region
+parameterTrain.local(1).bboxSmall = [4097 4736; 4481 5248; 2250 2450]; % Heiko
 parameterTrain.local(1).trainFile = '/zdata/manuel/data/cortex/denseSkel/region1.nml';
+parameterTrain.local(1).useSegTraining = true;
+parameterTrain.local(1).useGpTraining = true;
+% Region from Alex, training region
+parameterTrain.local(2).bboxSmall = [1417 1717; 4739 5039; 890 1190]; % Alex
 parameterTrain.local(2).trainFile = '/zdata/manuel/data/cortex/denseSkel/region2.nml';
+parameterTrain.local(2).useSegTraining = true;
+parameterTrain.local(2).useGpTraining = true;
+% Region from Max & Anna, test region
+parameterTrain.local(3).bboxSmall = [6800 7100; 2140 2440; 1236 1536]; % Max/Anna
 parameterTrain.local(3).trainFile = '/zdata/manuel/data/cortex/denseSkel/region3.nml';
+parameterTrain.local(3).useSegTraining = false;
+parameterTrain.local(3).useGpTraining = false;
 
 % LOCAL SETTINGS FOR training tiles
 for i=1:3
@@ -130,7 +138,8 @@ for i=1:3
 	parameterTrain.local(i).segFile = [parameterTrain.local(i).saveFolder 'seg.mat'];
 	parameterTrain.local(i).edgeFile = [parameterTrain.local(i).saveFolder 'edges.mat'];
         parameterTrain.local(i).borderFile =  [parameterTrain.local(i).saveFolder 'borders.mat'];
-        parameterTrain.local(i).weightFile = [parameterTrain.local(i).saveFolder 'weights.mat'];
+        parameterTrain.local(i).weightFile = parameterTrain.local(i).saveFolder 'weights.mat'];
+	parameterTrain.local(i).gtFile = [parameterTrain.local(i).saveFolder 'region' num2str(i) '.mat')];
 end
 
 % Create state folder for this parameter setting
