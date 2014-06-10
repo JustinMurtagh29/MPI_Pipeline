@@ -4,7 +4,6 @@ function pipeline(p,pT,todo);
 % todo can be any of strings parsed here
 % All functions called can be found in pipeline subdirectory of manuelCode repositorium as well
 
-% Classification of dense or training regions
 switch todo
 	% Classification (calls fwdPass3DonKnossosFolder from CNN subrepo)
 	case 'classification'

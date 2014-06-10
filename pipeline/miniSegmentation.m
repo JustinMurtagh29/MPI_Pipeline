@@ -1,4 +1,4 @@
-function miniSegmentation(parameter)
+function jobs = miniSegmentation(parameter)
 
 for i=1:size(parameter.local,1)
 	for j=1:size(parameter.local,2)
@@ -17,7 +17,7 @@ for i=1:size(parameter.local,1)
 	end
 end
 
-startCPU(functionH, inputCell, 'segmentation');
+jobs = startCPU(functionH, inputCell, 'segmentation');
 
 end
 

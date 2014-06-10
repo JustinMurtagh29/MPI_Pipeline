@@ -1,4 +1,4 @@
-function miniFeature(parameter)
+function job = miniFeature(parameter)
 % calculates the feature weights and takes 'raw' or 'aff' as input
 
 for i=1:size(parameter.local,1)
@@ -15,7 +15,7 @@ for i=1:size(parameter.local,1)
 	end
 end
 
-startCPU(functionH, inputCell, 'featureCalculation');
+job = startCPU(functionH, inputCell, 'featureCalculation');
 
 end
 

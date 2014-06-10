@@ -62,8 +62,8 @@ parameter.gp.lowerCut = .15;
 
 % GLOBAL SETTINGS FOR writeKnowledgeDB.m
 % Where to put knowledge DB data
-parameter.kdb.writeLocation = '/nfs/bmo/mberning/knowledgeDB/';
-parameter.kdb.counter = [parameter.stateFolder 'kdbCounter.mat'];
+parameter.kdb.writeLocation = [parameter.saveFolder 'kdb/'];
+parameter.kdb.counter = [parameter.saveFolder 'kdb/counter.mat'];
 % Settings for dataset (written to knowledge DB)
 parameter.kdb.settings.name = '2012-09-28_ex145_07x2_corrected';
 parameter.kdb.settings.scale = [11.24 11.24 28];
@@ -138,19 +138,23 @@ for i=1:3
 	parameterTrain.local(i).segFile = [parameterTrain.local(i).saveFolder 'seg.mat'];
 	parameterTrain.local(i).edgeFile = [parameterTrain.local(i).saveFolder 'edges.mat'];
         parameterTrain.local(i).borderFile =  [parameterTrain.local(i).saveFolder 'borders.mat'];
-        parameterTrain.local(i).weightFile = parameterTrain.local(i).saveFolder 'weights.mat'];
-	parameterTrain.local(i).gtFile = [parameterTrain.local(i).saveFolder 'region' num2str(i) '.mat')];
+        parameterTrain.local(i).weightFile = [parameterTrain.local(i).saveFolder 'weights.mat'];
+	parameterTrain.local(i).gtFile = [parameterTrain.local(i).saveFolder 'region' num2str(i) '.mat'];
 end
 
-% Create state folder for this parameter setting
-if ~exist(parameter.stateFolder, 'dir')
-	mkdir(parameter.stateFolder);
+% Create state folder for this parameter settings GP
+if ~exist(parameter.gp.stateFolder, 'dir')
+	mkdir(parameter.gp.stateFolder);
+end
+% Create folder for writing Knowledge DB for games
+if ~exist(parameter.gp.stateFolder, 'dir')
+	mkdir(parameter.gp.stateFolder);
 end
 
 % Save everything
 pT = parameterTrain;
 p = parameter;
-save([parameter.stateFolder 'allParameter.mat'], 'p', 'pT');
+save([parameter.saveFolder 'allParameter.mat'], 'p', 'pT');
 
 end
 

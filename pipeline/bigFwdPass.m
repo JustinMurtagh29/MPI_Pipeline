@@ -1,4 +1,4 @@
-function bigFwdPass( parameter, bboxOutput )
+function job = bigFwdPass( parameter, bboxOutput )
 % do the whole classifcation for structure 
 
 % If only one argument is supplied use bbox from parameter file and add tile border to be able to do segmentation with big field of view for games
@@ -32,9 +32,9 @@ for i=1:length(X)-1
 end
 
 if parameter.cnn.GPU
-	startGPU(functionH, inputCell, 'classification');
+	job = startGPU(functionH, inputCell, 'classification');
 else
-	startCPU(functionH, inputCell, 'classification');
+	job = startCPU(functionH, inputCell, 'classification');
 end
 
 end

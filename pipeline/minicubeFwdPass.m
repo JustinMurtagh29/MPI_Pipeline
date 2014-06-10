@@ -1,4 +1,4 @@
-function minicubeFwdPass( parameter )
+function job = minicubeFwdPass( parameter )
 % classification of subergions within the data set (for segmentation optimization and GP training) 
 
 load(parameter.cnn.first, 'cnet');
@@ -30,9 +30,9 @@ for tr=1:length(parameter.local)
 end
 
 if parameter.cnn.GPU
-	startGPU(functionH, inputCell, 'classification');
+	job = startGPU(functionH, inputCell, 'classification');
 else
-	startCPU(functionH, inputCell, 'classification');
+	job = startCPU(functionH, inputCell, 'classification');
 end
 
 end

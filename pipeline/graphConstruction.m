@@ -1,4 +1,4 @@
-function graphConstruction(parameter)
+function job = graphConstruction(parameter)
 
 for i=1:size(parameter.local,1)
 	for j=1:size(parameter.local,2)
@@ -13,7 +13,7 @@ for i=1:size(parameter.local,1)
 	end
 end
 
-startCPU(functionH, inputCell, 'graphConstruction');
+job = startCPU(functionH, inputCell, 'graphConstruction');
 
 end
 
