@@ -24,7 +24,7 @@ for l = 1: length(parameter.feature.input)
 	 imfeats = filter3d(parameter, imfeat, m, n);
  	 if isa(imfeats, 'cell')
 		for p=1:length(imfeats)
-		weights_new = featureDesign(imfeats{p}, border);
+		weights_new = featureDesign(real(imfeats{p}), border);
 		weights = [weights weights_new];
 		disp('m:');
 		disp(m);
