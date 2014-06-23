@@ -28,15 +28,16 @@ switch todo
 		miniFeature(p);
 	case 'filterbankLR'
 		miniFeature(pT);
+	% FROM HERE: GP/Supervoel graph related
 	case 'prepareTrainingData'
 		prepareTrainingData(pT);
 	% These last ones reside in the active repo and implement the GP classifier in an active fashion
-	case 'prepareSupervoxelGP'
-		prepareHyperparameter(pT);
-	case 'applySupervoxelGP'
-		fromGraphToDB(p);
-	case 'updateSupervoxelGP'
-
+	case 'prepareGP'
+		optimizeHyperparameterGP(pT);
+	case 'applyGP'
+		makePredictions(p);
+	case 'constructSupervoxelGraph'
+		constructSupervoxelGraph(p);
 	otherwise 
 		display('Unknown instructions! No actions performed ...');
 end

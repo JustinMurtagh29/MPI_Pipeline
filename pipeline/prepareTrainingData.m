@@ -1,18 +1,12 @@
 function prepareTrainingData(pT)
 % Collects normalized training data to pT.initalGroundTruth and values needed for normalization of test data to pT.normValues
 
-display('Normalizing training data & generating labels for edges in training region (if segment is labelled)');
-tic;
-
 allIdx = [];
 allLabels = [];
 allWeights = [];
 for i=1:length(pT.local)
 	% Load data of current densly skeletonized training region
-	load(pT.local(i).segFile);
-	seg = seg(1-pT.tileBorder(1,1):end-pT.tileBorder(1,2),...
-		1-pT.tileBorder(2,1):end-pT.tileBorder(2,2),...
-		1-pT.tileBorder(3,1):end-pT.tileBorder(3,2));
+	[~, seg] = loadSegData(pT.local(i).segFile, pT.tileBorder);
 	load(pT.local(i).edgeFile);
 	load(pT.local(i).weightFile);
 	skel.file = pT.local(i).trainFile;
@@ -20,9 +14,9 @@ for i=1:length(pT.local)
 	% Extract labels for all segments that intersect with any of the dense skeletons
 	[labelIdx, labels] = extractGroundTruthFromNml(seg, edges, skel);
 	% Keep allWeights and just the labelled ones for normalization of test data & GP training respectively
-	allWeights = [allWeights weights];
-	allIdx = [allIdx labelIdx];
-	allLabels = [allLabels labels];
+	allWeights = [allWeights; weights];
+	allIdx = [allIdx; labelIdx];
+	allLabels = [allLabels; labels];
 	clear seg edges weights skel labelIdx labels;
 end
 
@@ -38,11 +32,9 @@ allWeights = bsxfun(@minus,allWeights,minValues);
 allWeights = bsxfun(@times,allWeights,compFactor);
 
 % skeleton annotation (assumes dense label in bboxSmall)
-trainingData = allWeights(labelIdx,:);
+trainingData = allWeights(allIdx,:);
 trainingLabels = allLabels;
 save(pT.gp.initalGroundTruth, 'trainingData', 'trainingLabels');
-
-toc;
 
 end
 

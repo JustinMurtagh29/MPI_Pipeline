@@ -98,6 +98,7 @@ for i=1:parameter.tiles(1)
 			parameter.local(i,j,k).edgeFile = [parameter.local(i,j,k).saveFolder 'edges.mat'];
 			parameter.local(i,j,k).borderFile =  [parameter.local(i,j,k).saveFolder 'borders.mat'];
 			parameter.local(i,j,k).weightFile = [parameter.local(i,j,k).saveFolder 'weights.mat'];
+			parameter.local(i,j,k).probFile = [parameter.local(i,j,k).saveFolder 'prob.mat'];
 		end
 	end
 end
