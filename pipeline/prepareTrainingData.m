@@ -20,7 +20,7 @@ for i=1:length(pT.local)
 	clear seg edges weights skel labelIdx labels;
 end
 
-%% Determine global 'whitening' values (0 and 1 of each feature correspond to min/max value in training set)
+% Determine global 'whitening' values (0 and 1 of each feature correspond to min/max value in training set)
 % Get min/max values (and precomputed value 'compFactor' for faster scaling to 0-1 on test data) of original data
 minValues = min(allWeights,[],1);
 maxValues = max(allWeights,[],1);
