@@ -1,20 +1,23 @@
 % Startup File manuelCode repo
-global GLOBAL_CODE_DIR GLOBAL_DATA_DIR GLOBAL_RESULT_DIR GLOBAL_OUTPUT_DIR GLOBAL_CPU_JM GLOBAL_GPU_JM;
+global GLOBAL_HOST GLOBAL_CODE_DIR GLOBAL_DATA_DIR GLOBAL_RESULT_DIR GLOBAL_OUTPUT_DIR GLOBAL_CPU_JM GLOBAL_GPU_JM;
 [~,hostname]= system('hostname');
+GLOBAL_HOST = hostname(1:end-1);
 hostnameShort = hostname(1:4);
 switch hostnameShort
 	case 'turi'
 		base = '/zdata/manuel/';
-		GLOBAL_CPU_JM = 'fermat-cpu';
-		GLOBAL_GPU_JM = 'fermat-cnn';
+        GLOBAL_HOST = hostname;
+		GLOBAL_CPU_JM = 'fermat-job-manager';
+		GLOBAL_GPU_JM = 'fermat-gpu-manager';
 		GLOBAL_CODE_DIR = [base 'code' filesep];
 		GLOBAL_DATA_DIR = [base 'data' filesep];
 	    GLOBAL_RESULT_DIR = [base 'results' filesep];
 	    GLOBAL_OUTPUT_DIR = [base 'sync' filesep];
 	case 'ferm'
 		base = '/zdata/manuel/';
-		GLOBAL_CPU_JM = 'fermat-cpu';
-		GLOBAL_GPU_JM = 'fermat-cnn';
+        GLOBAL_HOST = hostname;
+        GLOBAL_CPU_JM = 'fermat-job-manager';
+		GLOBAL_GPU_JM = 'fermat-gpu-manager';
 		GLOBAL_CODE_DIR = [base 'code' filesep];
 		GLOBAL_DATA_DIR = [base 'data' filesep];
 	    GLOBAL_RESULT_DIR = [base 'results' filesep];
@@ -31,8 +34,8 @@ switch hostnameShort
 	    GLOBAL_OUTPUT_DIR = [base 'sync' filesep];
     case 'gaba'
         base = '/gaba/u/mberning/';
-		GLOBAL_CPU_JM = 'mjs';
-		GLOBAL_GPU_JM = 'mjs';
+		GLOBAL_CPU_JM = 'gabaCPU';
+		GLOBAL_GPU_JM = 'gabaGPU';
 		GLOBAL_CODE_DIR = [base 'code' filesep];
 		GLOBAL_DATA_DIR = [base 'data' filesep];
 	    GLOBAL_RESULT_DIR = [base 'results' filesep];
