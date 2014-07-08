@@ -1,5 +1,10 @@
 function onlyFwdPass3DonKnossosFolder(cnetLocation, gpuSwitch, input, result, bbox)
 
+% Choose the right GPU if on actvtClass indicated GPU usage
+w = getCurrentWorker();
+w = w.Name;
+gpuDevice(str2double(w(14:15)));
+
 % Load the CNN used for classification
 load(cnetLocation, 'cnet');
 cnet = cnet.loadLastCNN;

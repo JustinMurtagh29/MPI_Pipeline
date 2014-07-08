@@ -14,7 +14,8 @@ if strcmp(GLOBAL_HOST,'fermat01')
     end
 elseif strcmp(GLOBAL_HOST, 'gaba')
     job = createJob(jm(2), 'RestartWorker', true, 'Name', jobName);
-    job.AdditionalPaths = {'/gaba/u/mberning/code/CNN/'};
+    job.AdditionalPaths = {'/gaba/u/mberning/code/CNN/' '/gaba/u/mberning/code/pipeline/' '/gaba/u/mberning/code/auxiliaryMethods/' '/gaba/u/mberning/code/auxiliaryMethods/cubes/'};
+    job.AutoAttachFiles = false;
     for i=1:length(functionHandle);
     	createTask(job, functionHandle{i}, 0, inputCell{i});
     end
