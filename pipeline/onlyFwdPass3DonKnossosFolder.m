@@ -17,7 +17,6 @@ end
 % Load data with right border for cnet
 bboxWithBorder(:,1) = bbox(:,1) - ceil(cnet.randOfConvn'/2);
 bboxWithBorder(:,2) = bbox(:,2) + ceil(cnet.randOfConvn'/2);
-activity = cell(cnet.numLayer, max(cnet.numFeature));
 raw = readKnossosRoi(input.root, input.prefix, bboxWithBorder);
 
 % Normalize data
