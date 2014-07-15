@@ -31,10 +31,17 @@ save(pT.gp.normValues, 'minValues', 'maxValues', 'compFactor');
 allWeights = bsxfun(@minus,allWeights,minValues);
 allWeights = bsxfun(@times,allWeights,compFactor);
 
-% skeleton annotation (assumes dense label in bboxSmall)
-trainingData = allWeights(allIdx,:);
-trainingLabels = allLabels;
-save(pT.gp.initalGroundTruth, 'trainingData', 'trainingLabels');
+% Split into training and test data (keep ~80% as training label)
+nrTrainingSamples = round(length(allLabels)*.8);
+nrTestSamples = length(allLabels) - nrTrainingSamples;
+randIdx = [true(1,nrTrainingSamples) false(1,nrTestSamples)];
+randIdx = randIdx(randperm(length(randIdx)));
+allIdx = find(allIdx);
+trainingData = allWeights(allIdx(randIdx),:);
+trainingLabels = allLabels(randIdx);
+testData = allWeights(allIdx(~randIdx),:);
+testLabels = allLabels(~randIdx);
+save(pT.gp.initalGroundTruth, 'trainingData', 'trainingLabels', 'testData', 'testLabels');
 
 end
 

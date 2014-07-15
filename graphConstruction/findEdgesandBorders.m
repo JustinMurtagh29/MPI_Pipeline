@@ -30,7 +30,7 @@ edges = findEdges(nSegId);
 edgesToBorder = edges(edges(:,2) == globalBorderId,:);
 edges(edges(:,2) == globalBorderId,:) = [];
 
-%Find leaves
+% Find leaves
 leaves = findLeaves(edges,edgesToBorder(:,1));
 
 % Find borders

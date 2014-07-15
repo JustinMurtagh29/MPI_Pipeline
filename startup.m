@@ -6,7 +6,6 @@ hostnameShort = hostname(1:4);
 switch hostnameShort
 	case 'turi'
 		base = '/zdata/manuel/';
-        GLOBAL_HOST = hostname;
 		GLOBAL_CPU_JM = 'fermat-job-manager';
 		GLOBAL_GPU_JM = 'fermat-gpu-manager';
 		GLOBAL_CODE_DIR = [base 'code' filesep];
@@ -15,7 +14,6 @@ switch hostnameShort
 	    GLOBAL_OUTPUT_DIR = [base 'sync' filesep];
 	case 'ferm'
 		base = '/zdata/manuel/';
-        GLOBAL_HOST = hostname;
         GLOBAL_CPU_JM = 'fermat-job-manager';
 		GLOBAL_GPU_JM = 'fermat-gpu-manager';
 		GLOBAL_CODE_DIR = [base 'code' filesep];

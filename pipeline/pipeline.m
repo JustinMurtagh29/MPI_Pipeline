@@ -30,7 +30,7 @@ switch todo
 		miniFeature(pT);
 	% FROM HERE: GP/Supervoel graph related
 	case 'prepareTrainingData'
-		prepareTrainingData(pT);
+        prepareTrainingData(pT);
 	% These last ones reside in the active repo and implement the GP classifier in an active fashion
 	case 'prepareGP'
 		optimizeHyperparameterGP(pT);

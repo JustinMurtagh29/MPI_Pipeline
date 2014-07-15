@@ -1,5 +1,5 @@
 function jm = findJm()
-global GLOBAL_HOST GLOBAL_GPU_JM;
+global GLOBAL_HOST GLOBAL_CPU_JM GLOBAL_GPU_JM;
 
 switch GLOBAL_HOST
     case 'fermat01'

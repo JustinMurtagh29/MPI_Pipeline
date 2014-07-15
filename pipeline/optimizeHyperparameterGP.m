@@ -18,7 +18,7 @@ likfunc = @likErf;
 inffunc = @infFITC_EP;
 
 hyp = minimize(hyp, @gp, -100, inffunc, meanfunc, covfunc, likfunc, trainingData, trainingLabels);
-save(p.hyper, 'hyp', 'inffunc', 'meanfunc', 'covfunc', 'likfunc');
+save(pT.gp.hyperParameter, 'hyp', 'inffunc', 'meanfunc', 'covfunc', 'likfunc');
 
 end
 
