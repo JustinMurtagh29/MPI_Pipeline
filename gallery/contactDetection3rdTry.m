@@ -6,7 +6,7 @@ filesGC = dir([pathGC '*.nml']);
 
 display('----------------------------------------------------------------------------------------');
 tall = tic;
-for i=1:length(filesBP)
+for i=117:length(filesBP)
     for j=1:length(filesGC)
 	tSingle = tic;
 	display(['Evaluating contacts from ' filesBP(i).name  ' to ' filesGC(j).name]);

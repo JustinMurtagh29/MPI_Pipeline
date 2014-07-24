@@ -12,8 +12,10 @@ indPoints = trainingData(rndIdx(1:nrIndPoints),:);
 % Define all parameters of GP: mean, covariance, likelihood and inference functions
 meanfunc = @meanConst;
 hyp.mean = 0;
-covfunc = {@covFITC, {@covLINard}, indPoints};
-hyp.cov = zeros(size(trainingData,2),1);
+covfunc = {@covFITC, {@covSum, {@covLINard, @covNoise}}, indPoints};  % Try some 
+hyp.cov = [zeros(size(trainingData,2),1); log(0.1)];
+%covfunc = {@covFITC, {@covSEard}, indPoints};
+%hyp.cov = log([ones(size(trainingData,2),1); 1]);
 likfunc = @likErf;
 inffunc = @infFITC_EP;
 

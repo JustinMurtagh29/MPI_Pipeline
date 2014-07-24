@@ -20,16 +20,7 @@ for i=1:length(pT.local)
 	clear seg edges weights skel labelIdx labels;
 end
 
-% Determine global 'whitening' values (0 and 1 of each feature correspond to min/max value in training set)
-% Get min/max values (and precomputed value 'compFactor' for faster scaling to 0-1 on test data) of original data
-minValues = min(allWeights,[],1);
-maxValues = max(allWeights,[],1);
-compFactor = 1./(maxValues-minValues);
-save(pT.gp.normValues, 'minValues', 'maxValues', 'compFactor');
-
-% Normalize allWeights 
-allWeights = bsxfun(@minus,allWeights,minValues);
-allWeights = bsxfun(@times,allWeights,compFactor);
+allWeights = normalizeTrainingDataForGP(allWeights, true, pT.gp.normValues);
 
 % Split into training and test data (keep ~80% as training label)
 nrTrainingSamples = round(length(allLabels)*.8);
@@ -42,6 +33,7 @@ trainingLabels = allLabels(randIdx);
 testData = allWeights(allIdx(~randIdx),:);
 testLabels = allLabels(~randIdx);
 save(pT.gp.initalGroundTruth, 'trainingData', 'trainingLabels', 'testData', 'testLabels');
+visualizeEdgeFeaturesNewest(pT);
 
 end
 
