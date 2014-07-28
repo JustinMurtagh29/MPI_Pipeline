@@ -6,7 +6,7 @@ filesGC = dir([pathGC '*.nml']);
 
 display('----------------------------------------------------------------------------------------');
 tall = tic;
-for i=117:length(filesBP)
+for i=151:length(filesBP)
     for j=1:length(filesGC)
 	tSingle = tic;
 	display(['Evaluating contacts from ' filesBP(i).name  ' to ' filesGC(j).name]);
@@ -19,6 +19,6 @@ for i=117:length(filesBP)
 	end
 end
 toc(tall);
-save([outputDir 'data.mat'], 'data', 'skel', '-v7.3');
+%save([outputDir 'data.mat'], 'data', 'skel', '-v7.3');
 
 

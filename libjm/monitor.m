@@ -11,7 +11,7 @@ while true
 	display(['Idle Workers:' 9 9 num2str(jmCPU.NumberOfIdleWorker, '%.3i')]);
     display(['-----------------------------------------------------------']);
     
-    cpuJobs = findJob(jmCPU);    
+    cpuJobs = findJob(jmCPU, 'Username', username);    
     for i=1:length(cpuJobs)
         display(cpuJobs(i).Name);
         cpuTasks = findTask(cpuJobs(i), 'state', 'running');
@@ -33,7 +33,7 @@ while true
 	display(['Idle Workers:' 9 9 num2str(jmGPU.NumberOfIdleWorker, '%.3i')]);
 	display(['-----------------------------------------------------------']);   
 
-    gpuJobs = findJob(jmGPU);
+    gpuJobs = findJob(jmGPU, 'Username', username);
     for i=1:length(gpuJobs)
 	    display(gpuJobs(i).Name);
         gpuTasks = findTask(gpuJobs(i), 'state', 'running');
