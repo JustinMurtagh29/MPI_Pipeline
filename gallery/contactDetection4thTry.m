@@ -1,6 +1,6 @@
-outputDir = '/zdata/manuel/sync/wholeCell/contactDetection/3rd/';
-pathBP = '/zdata/manuel/sync/fromLap/ekSkel/3rdTry/bp/';
-pathGC = '/zdata/manuel/sync/fromLap/ekSkel/3rdTry/gcl/';
+outputDir = '/zdata/manuel/sync/wholeCell/contactDetection/4th/';
+pathBP = '/zdata/manuel/sync/fromLap/ekSkel/4thTry/bp/';
+pathGC = '/zdata/manuel/sync/fromLap/ekSkel/4thTry/gcl/';
 filesBP = dir([pathBP '*.nml']);
 filesGC = dir([pathGC '*.nml']);
 

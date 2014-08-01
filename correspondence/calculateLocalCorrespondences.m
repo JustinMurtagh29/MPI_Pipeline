@@ -30,18 +30,37 @@ bbox2 = bbox2 + repmat((coordShift < 0) .* innerCubeSize, [1 2]); % shift to 'up
 % Get segmentations to compare for correspondence finding
 overlap1 = cube1.seg(bbox1(1,1):bbox1(1,2), bbox1(2,1):bbox1(2,2), bbox1(3,1):bbox1(3,2));
 overlap2 = cube2.seg(bbox2(1,1):bbox2(1,2), bbox2(2,1):bbox2(2,2), bbox2(3,1):bbox2(3,2));
-
 clear cube1 cube2;
 
 % create one dimensional array to compare both overlaps
 correspondences = [reshape(overlap1, [numel(overlap1) 1 1]) reshape(overlap2, [numel(overlap2) 1 1])];
 % remove correspondences to 0 (background)
 correspondences(any(correspondences == 0,2),:) = [];
+
+% Make dimension orthogonal to plane last dimension in array
+permuteVector = [1 2 3];
+permuteVector(permuteVector == find(coordShift)) = 3;
+permuteVector(3) = find(coordShift);
+overlap1 = permute(overlap1, permuteVector);
+overlap2 = permute(overlap2, permuteVector);
+
+% Find all segments that appear in z=2 of overlap1 but not z=1 and all segments that appear z=1 in overlap2 but not z=2
+o1z1 = unique(reshape(overlap1(:,:,1), [numel(overlap1)/2 1 1]));
+o1z2 = unique(reshape(overlap1(:,:,2), [numel(overlap1)/2 1 1]));
+o1ToRemove = setdiff(o1z2,o1z1);
+o2z1 = unique(reshape(overlap2(:,:,1), [numel(overlap2)/2 1 1]));
+o2z2 = unique(reshape(overlap2(:,:,2), [numel(overlap2)/2 1 1]));
+o2ToRemove = setdiff(o2z1,o2z2);
+% Remove those
+for i=1:length(o1ToRemove)
+    correspondences(correspondences(:,1) == o1ToRemove(i),:) = [];
+end
+for i=1:length(o2ToRemove)
+    correspondences(correspondences(:,2) == o2ToRemove(i),:) = [];
+end
+
 % find unique correspondences
 uniqueCorrespondences = unique(correspondences, 'rows');
-% create global IDs, this limits us to 999^2 of the 512x512x256 cubes = 510k^3 voxel, easily changed/raised, not sure about absorption
-uniqueCorrespondencesGlobal(:,1) = sum(uint64(cubeCoords1) .* uint64([1e12 1e9 1e6])) + uint64(uniqueCorrespondences(:,1));
-uniqueCorrespondencesGlobal(:,2) = sum(uint64(cubeCoords2) .* uint64([1e12 1e9 1e6])) + uint64(uniqueCorrespondences(:,2));
 
 % create output struct
 result.cubeCoords1 = cubeCoords1;
@@ -49,7 +68,6 @@ result.cubeCoords2 = cubeCoords2;
 result.overlap1 = overlap1;
 result.overlap2 = overlap2;
 result.correspondences = uniqueCorrespondences;
-result.correspondencesGlobal = uniqueCorrespondencesGlobal;
 
 % Create main correspondence folder if necessary
 if ~exist(saveFolder, 'dir')
