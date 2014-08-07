@@ -1,4 +1,4 @@
-function findEdgesandBorders(segFile, edgeFile, borderFile, tileBorder)
+function findEdgesandBorders(segFile, edgeFile, borderFile, segmentFile, tileBorder)
 % Computation of edges and borders optimized for 512x512x256
 
 % Load segmentation from file
@@ -49,6 +49,15 @@ seg(1-tileBorder(1,1):end-tileBorder(1,2),...
 save(segFile, 'seg');
 save(edgeFile, 'edges', 'edgesToBorder');
 save(borderFile, 'borders');
+
+% get segment PixelIdxLists for glia predition
+props = regionprops(seg,'PixelIdxList');
+ids = unique(seg);
+for i = 1:length(ids)
+    segments(i).PixelIdxList = props(ids(i)).PixelIdxList;
+    segments(i).id = ids(i);
+end
+save(segmentFile,'segments');
 
 end
 

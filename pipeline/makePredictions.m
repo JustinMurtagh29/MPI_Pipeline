@@ -1,4 +1,5 @@
-function job = makePredictions(parameter)
+function job = makePredictions(parameter,mode)
+
 
 for i=1:size(parameter.local,1)
 	for j=1:size(parameter.local,2)
@@ -7,8 +8,13 @@ for i=1:size(parameter.local,1)
 				mkdir(parameter.local(i,j,k).saveFolder);
 			end
 			idx = sub2ind(size(parameter.local), i, j, k);
-			functionH{idx} = @edgeProbabilityPrediction;
-			inputCell{idx} = {parameter.local(i,j,k).weightFile, parameter.gp.normValues, parameter.gp.initalGroundTruth, parameter.hyperParameter, parameter.local(i,j,k).probFile};
+            if strcmp(mode,'edges')
+                functionH{idx} = @edgeProbabilityPrediction;
+                inputCell{idx} = {parameter.local(i,j,k).weightFile, parameter.gp.normValues, parameter.gp.initalGroundTruth, parameter.gp.hyperParameter, parameter.local(i,j,k).probFile};
+            elseif strcmp(mode,'glia')  
+                functionH{idx} = @gliaPrediction;
+                inputCell{idx} = {parameter.local(i,j,k).segmentWeightFile, parameter.glia.normValues, parameter.glia.initalGroundTruth, parameter.glia.hyperParameter, parameter.local(i,j,k).gliaProbFile};
+            end			
 		end
 	end
 end

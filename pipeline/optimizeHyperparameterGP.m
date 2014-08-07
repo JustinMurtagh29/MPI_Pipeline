@@ -1,12 +1,22 @@
-function optimizeHyperparameterGP(pT)
+function optimizeHyperparameterGP(pT,mode)
+
+if strcmp(mode,'edges')
+    nrIndPoints = 1000;
+    groundTrouthFile = pT.gp.initalGroundTruth;
+    hypFile = pT.gp.hyperParameter;
+elseif strcmp(mode,'glia')  
+    nrIndPoints = 200;
+    groundTrouthFile = pT.glia.initalGroundTruth;
+    hypFile = pT.glia.hyperParameter;
+end
+
 
 % gpml toolbox (Rasmussen) startup script
 run('/zdata/manuel/code/active/gpml/startup.m');
 % Load normalized training data
-load(pT.gp.initalGroundTruth);
+load(groundTrouthFile);
 % Define inducing points for FITC approximation
 nrTrainingCases = size(trainingLabels,1);
-nrIndPoints = 1000;
 rndIdx = randperm(nrTrainingCases);
 indPoints = trainingData(rndIdx(1:nrIndPoints),:);
 % Define all parameters of GP: mean, covariance, likelihood and inference functions
@@ -20,7 +30,7 @@ likfunc = @likErf;
 inffunc = @infFITC_EP;
 
 hyp = minimize(hyp, @gp, -100, inffunc, meanfunc, covfunc, likfunc, trainingData, trainingLabels);
-save(pT.gp.hyperParameter, 'hyp', 'inffunc', 'meanfunc', 'covfunc', 'likfunc');
+save(hypFile, 'hyp', 'inffunc', 'meanfunc', 'covfunc', 'likfunc');
 
 end
 
