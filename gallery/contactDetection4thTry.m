@@ -11,7 +11,7 @@ for i=1:length(filesBP)
 	tSingle = tic;
 	display(['Evaluating contacts from ' filesBP(i).name  ' to ' filesGC(j).name]);
 	[skel{i,j} data{i,j}] = contactDetection({[pathBP filesBP(i).name] [pathGC filesGC(j).name]});
-	if length(skel{i,j}) > 2
+	if length(skel{i,j}) < 3
 		writeNmlOld([outputDir filesBP(i).name(1:end-4) 'TO' filesGC(j).name(1:end-4) '.nml'], skel{i,j});
 	end
 	toc(tSingle);

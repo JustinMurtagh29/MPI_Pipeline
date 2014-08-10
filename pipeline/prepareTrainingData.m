@@ -20,7 +20,7 @@ for i=1:length(pT.local)
 	clear seg edges weights skel labelIdx labels;
 end
 
-allWeights = normalizeTrainingDataForGP(allWeights, true, pT.gp.normValues);
+allWeights = normalizeDataForGP(allWeights, true, pT.gp.normValues);
 
 % Split into training and test data (keep ~80% as training label)
 nrTrainingSamples = round(length(allLabels)*.8);
