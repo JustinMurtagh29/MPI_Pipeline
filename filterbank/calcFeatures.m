@@ -2,6 +2,7 @@ function calcFeatures(parameter, sub)
 
 idx = sub2ind(sub,1);
 weights = [];
+segmentWeights = [];
 
 if ~exist(parameter.local(sub(1),sub(2),sub(3)).saveFolder, 'dir') 
 	mkdir(parameter.local(sub(1),sub(2),sub(3)).saveFolder);
@@ -19,6 +20,7 @@ for l=1:length(parameter.feature.input)
         end
     end
 	load(parameter.local(sub(1),sub(2),sub(3)).borderFile);
+    load(parameter.local(sub(1),sub(2),sub(3)).segmentFile);
 	for m=1:size(parameter.filter,2)
 		for n=1:length(parameter.filter{m}{2})
 	 		imfeats = filter3d(parameter, imfeat, m, n);
@@ -26,16 +28,28 @@ for l=1:length(parameter.feature.input)
 				for p=1:length(imfeats)
 					weights_new = featureDesign(real(imfeats{p}), borders);
 					weights = [weights weights_new];
+                    segmentWeights_new = featureDesign(real(imfeats{p}), segments);
+					segmentWeights = [segmentWeights segmentWeights_new];
 				end
-	       		else
+	       	else
 				weights_new = featureDesign(imfeats, borders);
-				weights = [weights weights_new];	
+				weights = [weights weights_new];
+                segmentWeights_new = featureDesign(imfeats, segments);
+                segmentWeights = [segmentWeights segmentWeights_new];
 			end
 		end
 	end
 end
 
+% calculate shape features and add to weights
+weightsShape_borders = shapeFeatures(borders);
+weightsShape_segments = shapeFeatures(segments);
+
+weights = [weights weightsShape_borders];
+segmentWeights = [segmentsWeights weightsShape_segments];
+
 save(parameter.local(sub(1),sub(2),sub(3)).weightFile, 'weights');
+save(parameter.local(sub(1),sub(2),sub(3)).segmentWeightFile, 'segmentWeights');
 
 end
 
