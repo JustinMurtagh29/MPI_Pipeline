@@ -12,7 +12,7 @@ for i=1:size(parameter.local,1)
                 functionH{idx} = @edgeProbabilityPrediction;
                 inputCell{idx} = {parameter.local(i,j,k).weightFile, parameter.gp.normValues, parameter.gp.initalGroundTruth, parameter.gp.hyperParameter, parameter.local(i,j,k).probFile};
             elseif strcmp(mode,'glia')  
-                functionH{idx} = @gliaPrediction;
+                functionH{idx} = @edgeProbabilityPrediction;
                 inputCell{idx} = {parameter.local(i,j,k).segmentWeightFile, parameter.glia.normValues, parameter.glia.initalGroundTruth, parameter.glia.hyperParameter, parameter.local(i,j,k).gliaProbFile};
             end			
 		end
