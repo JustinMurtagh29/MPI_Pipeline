@@ -1,7 +1,9 @@
-function weights = shapeFeatures(segments)
-     
+function weights = shapeFeatures(segments,siz)
+
     for i=1:length(segments)
-        PixelList = segments(i).PixelList;             
+        % switch from ind to sub
+        [x,y,z] = ind2sub(siz,segments(i).PixelIdxList);
+        PixelList = [x y z];             
         objSize = length(PixelList);
         
         [COEFF,SCORE,latent] = princomp(PixelList);

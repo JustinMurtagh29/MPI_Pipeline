@@ -42,8 +42,13 @@ for l=1:length(parameter.feature.input)
 end
 
 % calculate shape features and add to weights
-weightsShape_borders = shapeFeatures(borders);
-weightsShape_segments = shapeFeatures(segments);
+if isfield(parameter.local(sub(1),sub(2),sub(3)), 'class')
+    siz = parameter.local(sub(1),sub(2),sub(3)).bboxSmall(:,2) - parameter.local(sub(1),sub(2),sub(3)).bboxSmall(:,1) + 1;
+else
+    siz = parameter.tileSize;
+end
+weightsShape_borders = shapeFeatures(borders,siz);
+weightsShape_segments = shapeFeatures(segments,siz);
 
 weights = [weights weightsShape_borders];
 segmentWeights = [segmentsWeights weightsShape_segments];
