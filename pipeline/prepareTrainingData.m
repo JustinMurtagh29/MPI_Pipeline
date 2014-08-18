@@ -29,7 +29,7 @@ elseif strcmp(mode,'glia')
         [~, seg] = loadSegData(pT.local(i).segFile, pT.tileBorder);
         load(pT.local(i).segmentFile);
         load(pT.local(i).segmentWeightFile);
-        skel.file = pT.local(i).trainFile;
+        skel.file = pT.local(i).trainFileGlia;
         skel.bbox = pT.local(i).bboxSmall;
         % Extract labels for all segments that intersect with any of the dense skeletons
         [labelIdx, labels] = extractGroundTruthFromNml_glia(seg, segments, skel);

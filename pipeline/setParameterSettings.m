@@ -123,16 +123,19 @@ parameterTrain.cnn.GPU = false; % minicubeFwdPass on CPU to allow arbitrary regi
 % Region from Heiko, training region
 parameterTrain.local(1).bboxSmall = [4097 4736; 4481 5248; 2250 2450]; % Heiko
 parameterTrain.local(1).trainFile = '/zdata/manuel/data/cortex/denseSkel/region1.nml';
+parameterTrain.local(1).trainFileGlia = '/zdata/manuel/data/cortex/denseSkel/region1glia.nml';
 parameterTrain.local(1).useSegTraining = true;
 parameterTrain.local(1).useGpTraining = true;
 % Region from Alex, training region
 parameterTrain.local(2).bboxSmall = [1417 1717; 4739 5039; 890 1190]; % Alex
 parameterTrain.local(2).trainFile = '/zdata/manuel/data/cortex/denseSkel/region2.nml';
+parameterTrain.local(2).trainFileGlia = '/zdata/manuel/data/cortex/denseSkel/region2glia.nml';
 parameterTrain.local(2).useSegTraining = true;
 parameterTrain.local(2).useGpTraining = true;
 % Region from Max & Anna, test region
 parameterTrain.local(3).bboxSmall = [6800 7100; 2140 2440; 1236 1536]; % Max/Anna
 parameterTrain.local(3).trainFile = '/zdata/manuel/data/cortex/denseSkel/region3.nml';
+parameterTrain.local(3).trainFileGlia = '/zdata/manuel/data/cortex/denseSkel/region3glia.nml';
 parameterTrain.local(3).useSegTraining = false;
 parameterTrain.local(3).useGpTraining = false;
 

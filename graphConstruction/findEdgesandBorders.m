@@ -51,8 +51,8 @@ function findEdgesandBorders(segFile, edgeFile, borderFile, segmentFile, tileBor
 % save(borderFile, 'borders');
 
 % get segment PixelIdxLists for glia predition
-ids = unique(seg);
-props = regionprops(seg,'PixelIdxList');
+ids = unique(segSmall);
+props = regionprops(segSmall,'PixelIdxList');
 ids(ids == 0) = [];
 for i = 1:length(ids)
     segments(i).PixelIdxList = props(ids(i)).PixelIdxList;
