@@ -2,7 +2,7 @@ function weights = shapeFeatures(segments,siz)
 
     for i=1:length(segments)
         % switch from ind to sub
-        [x,y,z] = ind2sub(siz,segments(i).PixelIdxList);
+        [x,y,z] = ind2sub(siz,double(segments(i).PixelIdxList'));
         PixelList = [x y z];             
         objSize = length(PixelList);
         
@@ -20,6 +20,13 @@ function weights = shapeFeatures(segments,siz)
         %work on that.. cant handle small segments, bad calculations...
         %weights(i,9) = calcConcavity(PixelList,10);
     end
-        
+       
+    %for small segments nan values might appear. set the value of nan entries to the mean of all non nan entries.
+
+    nanInd = find(isnan(weights));
+    [x,y] = ind2sub(size(weights),nanInd);
+    for i = 1:length(x)
+	weights(x(i),y(i)) = mean(weights(~isnan(weights(:,y(i))),y(i)));
+    end
 end
 
