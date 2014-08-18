@@ -20,7 +20,11 @@ for l=1:length(parameter.feature.input)
         end
     end
 	load(parameter.local(sub(1),sub(2),sub(3)).borderFile);
-    load(parameter.local(sub(1),sub(2),sub(3)).segmentFile);
+        load(parameter.local(sub(1),sub(2),sub(3)).segmentFile);
+	% change data typ of PixelIdxLists to be consistent with borders. Adapt PixelIdxList computation for segmetns (memory/faster than regionprops?)
+	for s = 1:length(segments)
+		segments(s).PixelIdxList = int32(segments(s).PixelIdxList');
+	end
 	for m=1:size(parameter.filter,2)
 		for n=1:length(parameter.filter{m}{2})
 	 		imfeats = filter3d(parameter, imfeat, m, n);
@@ -43,15 +47,15 @@ end
 
 % calculate shape features and add to weights
 if isfield(parameter.local(sub(1),sub(2),sub(3)), 'class')
-    siz = parameter.local(sub(1),sub(2),sub(3)).bboxSmall(:,2) - parameter.local(sub(1),sub(2),sub(3)).bboxSmall(:,1) + 1;
+    siz = (parameter.local(sub(1),sub(2),sub(3)).bboxSmall(:,2) - parameter.local(sub(1),sub(2),sub(3)).bboxSmall(:,1) + 1)';
 else
-    siz = parameter.tileSize;
+    siz = parameter.tileSize';
 end
 weightsShape_borders = shapeFeatures(borders,siz);
 weightsShape_segments = shapeFeatures(segments,siz);
 
 weights = [weights weightsShape_borders];
-segmentWeights = [segmentsWeights weightsShape_segments];
+segmentWeights = [segmentWeights weightsShape_segments];
 
 save(parameter.local(sub(1),sub(2),sub(3)).weightFile, 'weights');
 save(parameter.local(sub(1),sub(2),sub(3)).segmentWeightFile, 'segmentWeights');
