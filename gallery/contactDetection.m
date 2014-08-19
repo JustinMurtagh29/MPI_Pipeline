@@ -1,9 +1,14 @@
-function [skel, data] = contactDetection(skeletons, outputDir)
+function skel = contactDetection(skeletons, outputDir)
+%[skel, data] =
 % Pass exactly two file names in a cell array
 % Modified Benjamins gallery code (quite a bit)
 
-skel1 = parseNml(skeletons{1});
-skel2 = parseNml(skeletons{2});
+% For some reason parseNml not working on turing, fix?, fixed with using R2011b
+%skel1 = parseNml(skeletons{1});
+%skel2 = parseNml(skeletons{2});
+% Weird format to supress output, gets annoying after a while
+[~,skel1] = evalc('parseNml(skeletons{1})');
+[~,skel2] = evalc('parseNml(skeletons{2})');
 skel = mergeTrees(skel1, skel2, skeletons{1}, skeletons{2});
 % for each node from both skeletons, find cube in which it resides
 cubeCoords =  [floor((skel{1}.nodes(:,1:3)-1)./128); floor((skel{2}.nodes(:,1:3)-1)./128)];
@@ -110,8 +115,8 @@ end
 
 display([num2str(length(contact)) ' contacts and ' num2str(length(merger)) ' merger detected!']);
 
-data.contact = contact;
-data.merger = merger;
+%data.contact = contact;
+%data.merger = merger;
 
 end
 
