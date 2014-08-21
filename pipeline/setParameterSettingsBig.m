@@ -31,6 +31,8 @@ parameter.class.root = [parameter.saveFolder 'class/'];
 parameter.class.prefix = parameter.raw.prefix;
 % Function to use for segmentation
 parameter.seg.func = @seg20130604;
+parameter.seg.root = [parameter.saveFolder 'seg/'];
+parameter.seg.prefix = parameter.raw.prefix;
 % Specify arguments for filterbank applied to raw and aff data each
 parameter.filter = {{'sortedeigenvalueshessian' [3 5] []}...
 	{'gaussiansmoothedgradmagnitude' [3 5] []}...

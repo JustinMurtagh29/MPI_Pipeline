@@ -16,7 +16,7 @@ numEl = uint32(0);
 numElTotal = zeros(size(p.local), 'uint32');
 for i=1:size(p.local,1)
     for j=1:size(p.local,2)
-        for k=4% 1:size(p.local,3)
+        for k=1:size(p.local,3)
             % Load segmentation and extract relevant section
             load(p.local(i,j,k).segFile)
             seg = seg(coords{i,j,k}(1,1):coords{i,j,k}(1,2), coords{i,j,k}(2,1):coords{i,j,k}(2,2), coords{i,j,k}(3,1):coords{i,j,k}(3,2));
@@ -31,12 +31,12 @@ for i=1:size(p.local,1)
             numElTotal(i,j,k) = numEl;
             numEl = numEl + uint32(nrGlobalIDs);
             % Write modified seg with globalIDs (not complete wrt IDs, e.g. localIDs in outer bounidng box of inner cube will not be present, any better idea?)
-            writeKnossosRoi(p.seg.segFolder, p.seg.prefix , [p.local(i,j,k).bboxBig(:,1) + coords{i,j,k}(:,1) - [1; 1; 1]]', seg, 'uint32');
+            writeKnossosRoi(p.seg.root, p.seg.prefix , [p.local(i,j,k).bboxBig(:,1) + coords{i,j,k}(:,1) - [1; 1; 1]]', seg, 'uint32');
         end
     end
 end
 % Save numElTotal so that it only has to be added to localID of repective cube to get global one
-save([p.seg.segFolder 'numEl.mat'], 'numElTotal') 
+save([p.seg.root 'numEl.mat'], 'numElTotal') 
 
 end
 
