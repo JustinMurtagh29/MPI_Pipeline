@@ -9,7 +9,7 @@ end
 
 % Preallocation
 borders = struct('PixelIdxList', {}, 'Area', {}, 'Centroid', {});
-newedges = zeros(size(edges,1)*2, 2, 'uint16');
+newedges = zeros(size(edges,1), 2, 'uint16'); % Preallocate biggest chunk, will grow due to multiple borders between objects, better approach?
 g = 1;
 
 for i=1:size(edges,1)
@@ -34,8 +34,8 @@ for i=1:size(edges,1)
         z = int32(z)-1;
         % Collect output(s)
         borders(g).PixelIdxList = sub2ind([M-2,N-2,P-2],x,y,z);
-        borders(g).Area = size(borders(g).PixelIdxList,1);
-        borders(g).Centroid = mean(borders(g).PixelIdxList,1);
+        borders(g).Area = size(borders(g).PixelIdxList,2);
+        borders(g).Centroid = mean(vertcat(x,y,z),2)';
         newedges(g,:) = edges(i,:);
         g=g+1;
     end

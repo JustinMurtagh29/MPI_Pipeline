@@ -1,4 +1,4 @@
-function miniSegmentation(parameter)
+function jobs = miniSegmentation(parameter)
 
 for i=1:size(parameter.local,1)
 	for j=1:size(parameter.local,2)
@@ -7,13 +7,17 @@ for i=1:size(parameter.local,1)
 				mkdir(parameter.local(i,j,k).saveFolder);
 			end
 			idx = sub2ind(size(parameter.local), i, j, k);
-			functionH{idx} = parameter.seg.func; 
-			inputCell{idx} = {parameter.class.root parameter.class.prefix, parameter.local(i,j,k).bboxBig, parameter.local(i,j,k).segFile};
+			functionH{idx} = parameter.seg.func;
+			if isfield(parameter.local(i,j,k), 'class')
+				inputCell{idx} = {parameter.local(i,j,k).class.root parameter.local(i,j,k).class.prefix, parameter.local(i,j,k).bboxBig, parameter.local(i,j,k).segFile};
+			else
+				inputCell{idx} = {parameter.class.root parameter.class.prefix, parameter.local(i,j,k).bboxBig, parameter.local(i,j,k).segFile};
+			end
 		end
 	end
 end
 
-startCPU(functionH, inputCell, 'segmentation');
+jobs = startCPU(functionH, inputCell, 'segmentation');
 
 end
 

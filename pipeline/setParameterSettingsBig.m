@@ -10,8 +10,8 @@ elseif nargin == 1
 end
 parameter.saveFolder = ['/zdata/manuel/results/pipeline/' parameter.start '/'];
 % Define region to put through pipeline
-%parameter.bbox = [641 8320; 769 5888; 1 3328]; % this should be aligned with KNOSSOS cubes and be divisble by tileSize 
-parameter.bbox = [3073 5120; 3073 5120; 2049 3072];
+parameter.bbox = [641 8320; 769 5888; 129 3200]; % this should be aligned with KNOSSOS cubes and be divisble by tileSize 
+%parameter.bbox = [3073 5120; 3073 5120; 2049 3072];
 parameter.tileSize =  [512; 512; 256]; % Size of local segmentation and local graph construction
 parameter.tileBorder = [-256 256; -256 256; -128 128]; % border of local segmentation included for gloablization and large size due to games
 parameter.tiles = (parameter.bbox(:,2) - parameter.bbox(:,1) + 1) ./ parameter.tileSize;
@@ -31,6 +31,8 @@ parameter.class.root = [parameter.saveFolder 'class/'];
 parameter.class.prefix = parameter.raw.prefix;
 % Function to use for segmentation
 parameter.seg.func = @seg20130604;
+parameter.seg.root = [parameter.saveFolder 'seg/'];
+parameter.seg.prefix = parameter.raw.prefix;
 % Specify arguments for filterbank applied to raw and aff data each
 parameter.filter = {{'sortedeigenvalueshessian' [3 5] []}...
 	{'gaussiansmoothedgradmagnitude' [3 5] []}...

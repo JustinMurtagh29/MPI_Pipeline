@@ -4,7 +4,6 @@ function pipeline(p,pT,todo);
 % todo can be any of strings parsed here
 % All functions called can be found in pipeline subdirectory of manuelCode repositorium as well
 
-% Classification of dense or training regions
 switch todo
 	% Classification (calls fwdPass3DonKnossosFolder from CNN subrepo)
 	case 'classification'
@@ -24,19 +23,21 @@ switch todo
 	% See correspondence subdirectory
 	case 'correspondence'
 		correspondenceFinder(p);
-	% Should be placed in a single subdirectory as well (as it is not really part of the active classifier)
-	case 'graphFeatures'
+	% See filterbank subdirectory
+	case 'filterbank'
 		miniFeature(p);
-	case 'graphFeaturesLR'
+	case 'filterbankLR'
 		miniFeature(pT);
-	% These last ones reside in the active repo and implement the GP classifier in an active fashion 
-	case 'prepareSupervoxelGP'
-		prepareTrainingData(pT);
-		prepareHyperparameter(pT);
-	case 'applySupervoxelGP'
-		fromGraphToDB(p);
-	case 'updateSupervoxelGP'
-
+	% FROM HERE: GP/Supervoel graph related
+	case 'prepareTrainingData'
+        prepareTrainingData(pT);
+	% These last ones reside in the active repo and implement the GP classifier in an active fashion
+	case 'prepareGP'
+		optimizeHyperparameterGP(pT);
+	case 'applyGP'
+		makePredictions(p);
+	case 'constructSupervoxelGraph'
+		constructSupervoxelGraph(p);
 	otherwise 
 		display('Unknown instructions! No actions performed ...');
 end

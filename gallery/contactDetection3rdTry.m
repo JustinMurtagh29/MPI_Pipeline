@@ -1,6 +1,6 @@
-outputDir = '/zdata/manuel/sync/wholeCell/contactDetection/2nd/';
-pathBP = '/zdata/manuel/sync/fromLap/ekSkel/2ndStorySkel/bp/';
-pathGC = '/zdata/manuel/sync/fromLap/ekSkel/2ndStorySkel/gcl/';
+outputDir = '/zdata/manuel/sync/wholeCell/contactDetection/3rd/';
+pathBP = '/zdata/manuel/sync/fromLap/ekSkel/3rdTry/bp/';
+pathGC = '/zdata/manuel/sync/fromLap/ekSkel/3rdTry/gcl/';
 filesBP = dir([pathBP '*.nml']);
 filesGC = dir([pathGC '*.nml']);
 
@@ -19,6 +19,6 @@ for i=1:length(filesBP)
 	end
 end
 toc(tall);
-save([outputDir 'data.mat'], 'data', 'skel', '-v7.3');
+%save([outputDir 'data.mat'], 'data', 'skel', '-v7.3');
 
 

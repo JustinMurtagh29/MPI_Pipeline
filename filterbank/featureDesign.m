@@ -1,4 +1,4 @@
-function [weights] = featureDesign(input, border)
+function weights = featureDesign(input, border)
 %Comment
 
 weights = [];

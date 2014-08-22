@@ -8,21 +8,21 @@ if nargin == 0
 elseif nargin == 1
 	parameter.start = old_datestr;
 end
-parameter.saveFolder = ['/zdata/manuel/results/pipeline/' parameter.start '/'];
+parameter.saveFolder = ['/gaba/u/mberning/results/pipeline/' parameter.start '/'];
 % Define region to put through pipeline
-%parameter.bbox = [641 8320; 769 5888; 1 3328]; % this should be aligned with KNOSSOS cubes and be divisble by tileSize 
-parameter.bbox = [3073 5120; 3073 5120; 2049 3072];
+parameter.bbox = [641 8320; 769 5888; 129 3200]; % this should be aligned with KNOSSOS cubes and be divisble by tileSize 
+%parameter.bbox = [3073 5120; 3073 5120; 2049 3072]; % test region from fermat
 parameter.tileSize =  [512; 512; 256]; % Size of local segmentation and local graph construction
 parameter.tileBorder = [-256 256; -256 256; -128 128]; % border of local segmentation included for gloablization and large size due to games
 parameter.tiles = (parameter.bbox(:,2) - parameter.bbox(:,1) + 1) ./ parameter.tileSize;
 % Which raw dataset
-parameter.raw.root = '/zdata/manuel/data/cortex/2012-09-28_ex145_07x2_corrected/color/1/';
+parameter.raw.root = '/gaba/u/mberning/data/cortex/2012-09-28_ex145_07x2_corrected/color/1/';
 parameter.raw.prefix = '2012-09-28_ex145_07x2_corrected_mag1';
 % Which classifier to use
 parameter.cnn.dateStrings = '20130516T204040';
 parameter.cnn.iter = 8; 
 parameter.cnn.gpu = 3;
-parameter.cnn.first = ['/zdata/manuel/results/parameterSearch/' parameter.cnn.dateStrings '/iter' num2str(parameter.cnn.iter, '%.2i') '/gpu' num2str(parameter.cnn.gpu, '%.2i') '/saveNet0000000001.mat'];
+parameter.cnn.first = ['/gaba/u/mberning/results/parameterSearch/' parameter.cnn.dateStrings '/iter' num2str(parameter.cnn.iter, '%.2i') '/gpu' num2str(parameter.cnn.gpu, '%.2i') '/saveNet0000000001.mat'];
 parameter.cnn.GPU = true;
 % Function to use for classification
 parameter.class.func = @bigFwdPass;
@@ -113,17 +113,17 @@ parameterTrain.cnn.GPU = false; % minicubeFwdPass on CPU to allow arbitrary regi
 
 % Region from Heiko, training region
 parameterTrain.local(1).bboxSmall = [4097 4736; 4481 5248; 2250 2450]; % Heiko
-parameterTrain.local(1).trainFile = '/zdata/manuel/data/cortex/denseSkel/region1.nml';
+parameterTrain.local(1).trainFile = '/gaba/u/mberning/data/cortex/denseSkel/region1.nml';
 parameterTrain.local(1).useSegTraining = true;
 parameterTrain.local(1).useGpTraining = true;
 % Region from Alex, training region
 parameterTrain.local(2).bboxSmall = [1417 1717; 4739 5039; 890 1190]; % Alex
-parameterTrain.local(2).trainFile = '/zdata/manuel/data/cortex/denseSkel/region2.nml';
+parameterTrain.local(2).trainFile = '/gaba/u/mberning/data/cortex/denseSkel/region2.nml';
 parameterTrain.local(2).useSegTraining = true;
 parameterTrain.local(2).useGpTraining = true;
 % Region from Max & Anna, test region
 parameterTrain.local(3).bboxSmall = [6800 7100; 2140 2440; 1236 1536]; % Max/Anna
-parameterTrain.local(3).trainFile = '/zdata/manuel/data/cortex/denseSkel/region3.nml';
+parameterTrain.local(3).trainFile = '/gaba/u/mberning/data/cortex/denseSkel/region3.nml';
 parameterTrain.local(3).useSegTraining = false;
 parameterTrain.local(3).useGpTraining = false;
 
