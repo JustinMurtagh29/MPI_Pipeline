@@ -8,11 +8,11 @@ classdef supervoxelGraph
 		function sg = supervoxelGraph(p)
 			sg.supervoxel = struct('cubeCoords', {}, 'segmentID', {}, 'CoM', {});
 			sg.supervoxelContacts = struct('propability', {}, 'supervoxel1', {}, 'supervoxel2', {}, 'borderCoM', {});
-            for i=1:size(p.local,1)
-				for j=1:size(p.local,2)
-					for k=1:size(p.local,3)
+            for i=1:1%size(p.local,1)
+				for j=1:1%size(p.local,2)
+					for k=1:1%size(p.local,3)
 						load(p.local(i,j,k).edgeFile)
-						load(p.local(i,j,k).ComFile)
+						load([p.local(i,j,k).saveFolder, 'CoM.mat'])
 						load(p.local(i,j,k).borderFile)
                         load(p.local(i,j,k).probFile)
 
@@ -54,7 +54,7 @@ classdef supervoxelGraph
             sg.adjMatrix(idx) = 1;
             sg.adjMatrix(idx2) = 1;
 
-            save([p.sv.saveFolder, 'supervoxel.mat'], 'sg')
+            save([p.saveFolder, '/supervoxelGraph/supervoxel.mat'], 'sg')
         end    
 	end
 
