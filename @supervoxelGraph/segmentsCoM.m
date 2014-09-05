@@ -2,11 +2,8 @@ function segCoM(p,i,j,k)
 % calculates Center of Mass for unique segments connected by edges
 % the output has numel(unique(edges(:))) which gives list with numRow = GlobalId of segment
 
-        load(p.local(i,j,k).edgeFile)
-	load(p.local(i,j,k).segFile)
-
-	[uni, ia, ic] = unique([edges(:,1); edges(:,2)]);
-
+    load(p.local(i,j,k).segFile)
+    uni = unique(seg);
 %Calculate CoM of both supervoxels connected by edges
 for m = 1:size(uni,1)
 
