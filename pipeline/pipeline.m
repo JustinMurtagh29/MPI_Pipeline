@@ -39,6 +39,10 @@ switch todo
 	case 'constructSupervoxelGraph'
 		constructSupervoxelGraph(p);
     % Glia prediction using GP functions    
+    case 'addNeighborFeatures'
+        addNeighborFeatures(p)
+    case 'addNeighborFeaturesLR'
+        addNeighborFeatures(pT)
     case 'prepareTrainingData Glia'
         prepareTrainingData(pT,'glia');
 	case 'prepareGP Glia'
