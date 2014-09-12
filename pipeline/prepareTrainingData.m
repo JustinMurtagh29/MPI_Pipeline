@@ -39,7 +39,10 @@ elseif strcmp(mode,'glia')
         allLabels = [allLabels; labels];
         clear seg segments segmentWeights skel labelIdx labels;
     end
-    allWeights = normalizeDataForGP(allWeights, true, pT.glia.normValues);    
+    if ~exist(pT.glia.stateFolder, 'dir')
+	mkdir(pT.glia.stateFolder);
+    end
+    allWeights = normalizeDataForGPold(allWeights, true, pT.glia.normValues);    
 end
 
 

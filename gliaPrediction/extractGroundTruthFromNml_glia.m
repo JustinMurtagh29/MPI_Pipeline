@@ -1,6 +1,6 @@
 function [labeledIdx, labels] = extractGroundTruthFromNml(seg, segments, skelParam)
 
-skel = parseNml(skelParam.file);
+skel = skeleton(skelParam.file,0);
 bbox = skelParam.bbox;
 
 %% get tree ids
@@ -8,7 +8,7 @@ bbox = skelParam.bbox;
 gliaTrees = [];
 for i=1:length(skel.nodesAsStruct)
     for j=1:length(skel.nodesAsStruct{i})
-        if strcmp(skel.nodesAsStruct{i}{j}.comment,'glia') || strcmp(skel.nodesAsStruct{i}{j}.comment,'Glia') 
+        if strcmp(skel.nodesAsStruct{i}(j).comment,'glia') || strcmp(skel.nodesAsStruct{i}(j).comment,'Glia') 
             gliaTrees(end+1) = skel.thingIDs(i);
             continue;
         end
