@@ -1,6 +1,5 @@
 function globalCorrSeg(p)
 
-% Fix k=4
 files = dir([p.correspondence.saveFolder, '*.mat']);
 corrGlobal1 = [];
 corrGlobal2 = [];

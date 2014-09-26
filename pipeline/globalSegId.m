@@ -36,7 +36,7 @@ for i=1:size(p.local,1)
     end
 end
 % Save numElTotal so that it only has to be added to localID of repective cube to get global one
-save([p.seg.root 'numEl.mat'], 'numElTotal') 
+save([p.seg.root 'numEl.mat'], 'numElTotal'); 
 
 end
 
