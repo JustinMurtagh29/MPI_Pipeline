@@ -1,9 +1,7 @@
 function job = startCPU( functionHandle, inputCell, jobName )
 global GLOBAL_HOST;
 
-pathDependencies = {'/zdata/manuel/code/CNN/' '/zdata/manuel/code/auxiliaryMethods/' '/zdata/manuel/code/auxiliaryMethods/cubes/', ...
-	'/zdata/manuel/code/active/' '/zdata/manuel/code/correspondence/' '/zdata/manuel/code/graphConstruction/', ...
-	'/zdata/manuel/code/filterbank/' '/zdata/manuel/code/pipeline/'};
+pathDependencies = {'/home/trende/august/' '/home/trende/august/libjm'};
 
 % Load cluster configuration
 jm = findJm();

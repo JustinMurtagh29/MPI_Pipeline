@@ -15,6 +15,8 @@ switch todo
 		miniSegmentation(p);
 	case 'segmentationLR'
 		miniSegmentation(pT);
+    case 'globalID'
+        calculateGlobalID(p);
 	% See graphConstruction subdirectory
 	case 'graphConstruction'
 		graphConstruction(p);
