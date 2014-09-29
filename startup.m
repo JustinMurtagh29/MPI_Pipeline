@@ -45,6 +45,6 @@ clear hostname* base;
 
 % Set path
 addpath(genpathGit(GLOBAL_CODE_DIR));
-[p,pT] = setParameterSettings('20140312T141921');
+[p,pT] = setParameterSettingsBig('20140817T211953');
 
 
