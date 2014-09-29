@@ -1,5 +1,4 @@
-function job = miniFeature(parameter)
-% calculates the feature weights and takes 'raw' or 'aff' as input
+function addNeighborFeatures(parameter)
 
 for i=1:size(parameter.local,1)
 	for j=1:size(parameter.local,2)
@@ -9,7 +8,7 @@ for i=1:size(parameter.local,1)
             end
             sub = [i,j,k];
 			idx = sub2ind(size(parameter.local), i, j, k);
-			functionH{idx} = parameter.feature.func; 
+			functionH{idx} = @addFeatures; 
             inputCell{idx} = {parameter, sub};
 		end
 	end
@@ -18,4 +17,3 @@ end
 job = startCPU(functionH, inputCell, 'featureCalculation');
 
 end
-

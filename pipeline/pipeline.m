@@ -32,14 +32,25 @@ switch todo
 		miniFeature(pT);
 	% FROM HERE: GP/Supervoel graph related
 	case 'prepareTrainingData'
-        prepareTrainingData(pT);
+        prepareTrainingData(pT,'edges');
 	% These last ones reside in the active repo and implement the GP classifier in an active fashion
 	case 'prepareGP'
-		optimizeHyperparameterGP(pT);
+		optimizeHyperparameterGP(pT,'edges');
 	case 'applyGP'
-		makePredictions(p);
+		makePredictions(p,'edges');
 	case 'constructSupervoxelGraph'
 		constructSupervoxelGraph(p);
+    % Glia prediction using GP functions    
+    case 'addNeighborFeatures'
+        addNeighborFeatures(p)
+    case 'addNeighborFeaturesLR'
+        addNeighborFeatures(pT)
+    case 'prepareTrainingData Glia'
+        prepareTrainingData(pT,'glia');
+	case 'prepareGP Glia'
+		optimizeHyperparameterGP(pT,'glia');
+	case 'applyGP Glia'
+		makePredictions(p,'glia');
 	otherwise 
 		display('Unknown instructions! No actions performed ...');
 end
