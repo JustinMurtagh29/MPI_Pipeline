@@ -1,0 +1,67 @@
+pipeline(p,pT,todo)
+-------------------
+
+'classification' - bigFwdPass(p)
+---------------------------------
+	onlyFwdPass3DonKnossosFolder 
+		readKnossosRoi 				     (/auxilaryMethods)
+			readKnossosCube
+		onlyFwdPass3D 			       (/CNN)
+			fwdPass3D
+		writeKnossosRoi 			     (/auxilaryMethods)
+			writeKnossosCube
+
+'segmentation' - miniSegmentation(p)
+------------------------------------
+	miniSegmentation
+		seg20130604 			          (/active)
+
+'graphConstruction' - graphConstruction(p)
+------------------------------------------
+	findEdgesandBorders 			  	(/graphConstruction)
+		loadSegData 				        (/auxilaryMethods)
+		findEdges 			        	  (/graphConstruction)
+		findLeaves 			          	(/graphConstruction)
+			findConnectedComponents		(/graphConstruction)
+		findBorders				          (/graphConstruction)
+		correctLeaves 			      	(/graphConstruction)
+
+'correspondence' - correspondenceFinder(p)
+------------------------------------------
+	getOverlaps 					              (/correspondences)
+	calculateLocalCorrespondences 			(/correspondences)
+
+'filterbank' - miniFeature(p)
+-----------------------------
+	calcFeatures 					(/filterbank)
+		filter3d 			    	(/filterbank)
+			fspecial3 			  (/filterbank)
+			CardanRoots			  (/filterbank)
+			eig3 			      	(/filterbank)
+		featureDesign 			(/filterbank)
+		
+'prepareTrainingData' - prepareTrainingData(pT)
+-----------------------------------------------
+	loadSegData 					          (/auxilaryMethods)
+	extractGroundTruthFromNml 			(/active)
+		parseNml 			              	(/auxilaryMethods)
+		removeEmptySkeletons			    (/auxilaryMethods)
+		switchToLocalCoords_v2			  (/visualization)
+		correctSkeletonsToBBox_v2		  (/visualization)
+		evalSegError 				          (/active)
+	normalizeDataForGP 				      (/pipeline)
+	visualizeEdgeFeaturesNewest 	  (/visualization)
+
+'prepareGP' - optimizeHyperparameterGP(pT)
+------------------------------------------
+	gpml 					                 	(/active)
+	
+'applyGP' - makePredictions(p)
+------------------------------
+	edgeProbabilityPrediction 			(/active)
+	normalizeDataForGP 				      (/pipeline)
+	gpml 						                (/active)
+
+'constructSupervoxelGraph' - constructSupervoxelGraph(p)
+--------------------------------------------------------
+	underConstruction
