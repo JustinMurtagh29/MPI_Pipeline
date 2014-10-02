@@ -10,7 +10,7 @@ elseif nargin == 1
 end
 parameter.saveFolder = ['/zdata/manuel/results/pipeline/' parameter.start '/'];
 % Define region to put through pipeline
-parameter.bbox = [641 8320; 769 5888; 129 3200]; % this should be aligned with KNOSSOS cubes and be divisble by tileSize 
+parameter.bbox = [641 8320; 769 5376; 129 3200]; % this should be aligned with KNOSSOS cubes and be divisble by tileSize 
 %parameter.bbox = [641 8320; 769 5888; 1 3328]; % this should be aligned with KNOSSOS cubes and be divisble by tileSize 
 %parameter.bbox = [3073 5120; 3073 5120; 2049 3072];
 parameter.tileSize =  [512; 512; 256]; % Size of local segmentation and local graph construction
@@ -47,7 +47,7 @@ parameter.correspondence.overlap = 1; % overlap of local segmentation to compare
 parameter.correspondence.saveFolder = [parameter.saveFolder 'correspondences/'];
 
 % Feature parameter
-parameter.feature.root = [parameter.saveFolder 'features\'];
+parameter.feature.root = [parameter.saveFolder 'features/'];
 % Function to use for FeatureCalculation
 parameter.feature.func = @calcFeatures;
 % Choice of filters for 'raw' or 'class'
@@ -109,7 +109,8 @@ end
 
 % GLOBAL SETTINGS FOR training data generation
 parameterTrain = parameter;
-parameterTrain = rmfield(parameterTrain, 'local');
+% Remove all fields that do not make sense in training data setting
+parameterTrain = rmfield(parameterTrain, {'local' 'bbox' 'tileSize' 'tiles' 'correspondence'});
 parameterTrain.cnn.GPU = false; % minicubeFwdPass on CPU to allow arbitrary region size
 
 % Regions needed for training data
