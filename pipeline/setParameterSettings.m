@@ -31,6 +31,8 @@ parameter.class.root = [parameter.saveFolder 'class/'];
 parameter.class.prefix = parameter.raw.prefix;
 % Function to use for segmentation
 parameter.seg.func = @seg20130604;
+parameter.seg.root = [parameter.saveFolder 'segmentation/'];
+parameter.seg.prefix = parameter.raw.prefix;
 % Specify arguments for filterbank applied to raw and aff data each
 parameter.filter = {{'sortedeigenvalueshessian' [3 5] []}...
 	{'gaussiansmoothedgradmagnitude' [3 5] []}...
@@ -97,11 +99,20 @@ for i=1:parameter.tiles(1)
 			parameter.local(i,j,k).segFile = [parameter.local(i,j,k).saveFolder 'seg.mat'];
 			parameter.local(i,j,k).edgeFile = [parameter.local(i,j,k).saveFolder 'edges.mat'];
 			parameter.local(i,j,k).borderFile =  [parameter.local(i,j,k).saveFolder 'borders.mat'];
+            parameter.local(i,j,k).segmentFile = [parameter.local(i,j,k).saveFolder 'segments.mat'];
 			parameter.local(i,j,k).weightFile = [parameter.local(i,j,k).saveFolder 'weights.mat'];
+            parameter.local(i,j,k).segmentWeightFile = [parameter.local(i,j,k).saveFolder 'segmentWeights.mat'];
 			parameter.local(i,j,k).probFile = [parameter.local(i,j,k).saveFolder 'prob.mat'];
+            parameter.local(i,j,k).gliaProbFile = [parameter.local(i,j,k).saveFolder 'gliaProb.mat'];
 		end
 	end
 end
+
+% SETTINGS for glia prediction
+parameter.glia.stateFolder = [parameter.saveFolder 'gliaState/'];
+parameter.glia.initalGroundTruth = [parameter.glia.stateFolder 'initalGroundTruth.mat'];
+parameter.glia.normValues = [parameter.glia.stateFolder 'normValues.mat'];
+parameter.glia.hyperParameter = [parameter.glia.stateFolder 'hyperParameter.mat'];
 
 
 % GLOBAL SETTINGS FOR training data generation
@@ -114,34 +125,40 @@ parameterTrain.cnn.GPU = false; % minicubeFwdPass on CPU to allow arbitrary regi
 % Region from Heiko, training region
 parameterTrain.local(1).bboxSmall = [4097 4736; 4481 5248; 2250 2450]; % Heiko
 parameterTrain.local(1).trainFile = '/zdata/manuel/data/cortex/denseSkel/region1.nml';
+parameterTrain.local(1).trainFileGlia = '/zdata/manuel/data/cortex/denseSkel/region1glia.nml';
 parameterTrain.local(1).useSegTraining = true;
 parameterTrain.local(1).useGpTraining = true;
 % Region from Alex, training region
 parameterTrain.local(2).bboxSmall = [1417 1717; 4739 5039; 890 1190]; % Alex
 parameterTrain.local(2).trainFile = '/zdata/manuel/data/cortex/denseSkel/region2.nml';
+parameterTrain.local(2).trainFileGlia = '/zdata/manuel/data/cortex/denseSkel/region2glia.nml';
 parameterTrain.local(2).useSegTraining = true;
 parameterTrain.local(2).useGpTraining = true;
 % Region from Max & Anna, test region
 parameterTrain.local(3).bboxSmall = [6800 7100; 2140 2440; 1236 1536]; % Max/Anna
 parameterTrain.local(3).trainFile = '/zdata/manuel/data/cortex/denseSkel/region3.nml';
+parameterTrain.local(3).trainFileGlia = '/zdata/manuel/data/cortex/denseSkel/region3glia.nml';
 parameterTrain.local(3).useSegTraining = false;
 parameterTrain.local(3).useGpTraining = false;
 
 % LOCAL SETTINGS FOR training tiles
 for i=1:3
 	% Save path for data relating to this tile
-	parameterTrain.local(i).saveFolder = [parameterTrain.saveFolder 'train' num2str(i, '%.4i') '/'];
-        % Bounding box without and with border for this tile
-        parameterTrain.local(i).bboxBig = parameterTrain.local(i).bboxSmall + parameterTrain.tileBorder;
-        % Where to save
+    parameterTrain.local(i).saveFolder = [parameterTrain.saveFolder 'train' num2str(i, '%.4i') '/'];
+    % Bounding box without and with border for this tile
+    parameterTrain.local(i).bboxBig = parameterTrain.local(i).bboxSmall + parameterTrain.tileBorder;
+    % Where to save
 	parameterTrain.local(i).class.root = [parameterTrain.local(i).saveFolder 'class/'];
 	parameterTrain.local(i).class.prefix = parameterTrain.class.prefix;
 	parameterTrain.local(i).segFile = [parameterTrain.local(i).saveFolder 'seg.mat'];
 	parameterTrain.local(i).edgeFile = [parameterTrain.local(i).saveFolder 'edges.mat'];
-        parameterTrain.local(i).borderFile =  [parameterTrain.local(i).saveFolder 'borders.mat'];
-        parameterTrain.local(i).weightFile = [parameterTrain.local(i).saveFolder 'weights.mat'];
+    parameterTrain.local(i).borderFile =  [parameterTrain.local(i).saveFolder 'borders.mat'];
+    parameterTrain.local(i).segmentFile =  [parameterTrain.local(i).saveFolder 'segments.mat'];
+    parameterTrain.local(i).weightFile = [parameterTrain.local(i).saveFolder 'weights.mat'];
+    parameterTrain.local(i).segmentWeightFile = [parameterTrain.local(i).saveFolder 'segmentWeights.mat'];
 	parameterTrain.local(i).gtFile = [parameterTrain.local(i).saveFolder 'region' num2str(i) '.mat'];
 end
+
 
 % Create state folder for this parameter settings GP
 if ~exist(parameter.gp.stateFolder, 'dir')

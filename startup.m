@@ -16,7 +16,7 @@ switch hostnameShort
 		base = '/zdata/manuel/';
         GLOBAL_CPU_JM = 'fermat-job-manager';
 		GLOBAL_GPU_JM = 'fermat-gpu-manager';
-		GLOBAL_CODE_DIR = [base 'code' filesep];
+		GLOBAL_CODE_DIR = [base 'code' filesep;
 		GLOBAL_DATA_DIR = [base 'data' filesep];
 	    GLOBAL_RESULT_DIR = [base 'results' filesep];
 	    GLOBAL_OUTPUT_DIR = [base 'sync' filesep];
@@ -26,7 +26,7 @@ switch hostnameShort
 	    base = 'I:\CortexConnectomics\Manuel\';
 		GLOBAL_CPU_JM = 'p1-380-cpu';
 		GLOBAL_GPU_JM = 'p1-380-gpu';
-		GLOBAL_CODE_DIR = 'C:\manuelCode\';
+		GLOBAL_CODE_DIR = 'P:\manuelCode\';
 		GLOBAL_DATA_DIR = [base 'data' filesep];
 	    GLOBAL_RESULT_DIR = [base 'results' filesep];
 	    GLOBAL_OUTPUT_DIR = [base 'sync' filesep];

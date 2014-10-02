@@ -1,11 +1,13 @@
 classdef supervoxelGraph
 	properties
+		supervoxel
 		supervoxelContacts
         adjMatrix
     end
     methods
 		function sg = supervoxelGraph(p)
-			sg.supervoxelContacts = struct('propability', {}, 'supervoxel1', {}, 'supervoxel2', {}, 'CoM1', {}, 'CoM2', {}, 'borderCoM', {});
+			sg.supervoxel = struct('cubeCoords', {}, 'segmentID', {}, 'CoM', {});
+			sg.supervoxelContacts = struct('propability', {}, 'supervoxel1', {}, 'supervoxel2', {}, 'borderCoM', {});
             for i=1:size(p.local,1)
 				for j=1:size(p.local,2)
 					for k=1:size(p.local,3)
@@ -14,23 +16,25 @@ classdef supervoxelGraph
 						load(p.local(i,j,k).borderFile)
                         load(p.local(i,j,k).probFile)
 
-						%idx = size(sg.supervoxel,2);
-						%[uni, ia, ic] = unique([edges(:,1); edges(:,2)]);						
+						idx = size(sg.supervoxel,2);
+						[uni, ia, ic] = unique([edges(:,1); edges(:,2)]);						
 
-						%coords = cell(1,size(uni,1));
-                        %coords(1:end) = {[i,j,k]};
-                        %[sg.supervoxel(end+1:(end+size(coords,2))).cubeCoords] = coords{:};
+						coords = cell(1,size(uni,1));
+                        coords(1:end) = {[i,j,k]};
+                        [sg.supervoxel(end+1:(end+size(coords,2))).cubeCoords] = coords{:};
+                                                
+                        segmentID = num2cell(uni(:,1))';
+                        [sg.supervoxel((end-size(coords,2)+1) : end).segmentID] = segmentID{:};
+
+						CoMcell = mat2cell(CoM, ones(size(CoM,1),1));   
+						[sg.supervoxel((end-size(coords,2)+1) : end).CoM] = CoMcell{:};
 
 						%create supervoxelContacts struct
-						sv1 = num2cell(edges(:,1));
-						sv2 = num2cell(edges(:,2));
+						edgesGlobal = [ic(1:size(ic,1)/2), ic(size(ic,1)/2+1:end)] + idx;
+						sv1 = num2cell(edgesGlobal(:,1));
+						sv2 = num2cell(edgesGlobal(:,2));
 						[sg.supervoxelContacts(end+1 : (end+size(sv1,1))).supervoxel1] = sv1{:};
 						[sg.supervoxelContacts((end-size(sv1,1)+1) : end).supervoxel2] = sv2{:};
-
-                        %CoM1 = mat2cell(CoM);
-                        %CoM2 = mat2cell(CoM);
-                        %[sg.supervoxelContacts((end-size(sv1,1)+1) : end).CoM1] = CoM1{:};
-                        %[sg.supervoxelContacts((end-size(sv1,1)+1) : end).CoM2] = CoM2{:};
 
 						bCoM = {borders(:).Centroid}';
                         [sg.supervoxelContacts((end-size(sv1,1)+1) : end).borderCoM] = bCoM{:};
