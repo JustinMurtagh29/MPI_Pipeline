@@ -16,7 +16,7 @@ switch hostnameShort
 		base = '/zdata/manuel/';
         GLOBAL_CPU_JM = 'fermat-job-manager';
 		GLOBAL_GPU_JM = 'fermat-gpu-manager';
-		GLOBAL_CODE_DIR = [base 'code' filesep;
+		GLOBAL_CODE_DIR = [base 'code' filesep];
 		GLOBAL_DATA_DIR = [base 'data' filesep];
 	    GLOBAL_RESULT_DIR = [base 'results' filesep];
 	    GLOBAL_OUTPUT_DIR = [base 'sync' filesep];
@@ -45,6 +45,10 @@ clear hostname* base;
 
 % Set path
 addpath(genpathGit(GLOBAL_CODE_DIR));
-[p,pT] = setParameterSettingsBig('20140817T211953');
-
+% Load parameters for big pipeline test
+[p,pT] = setParameterSettingsBig('20141007T094904');
+% Log commands
+diaryStart = datestr(clock, 30);
+diaryName = input('Please enter name for the diary: ', 's');
+diary(['/zdata/manuel/log/' diaryStart diaryName '.log']);
 

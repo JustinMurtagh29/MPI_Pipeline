@@ -15,6 +15,15 @@ switch todo
 		miniSegmentation(p);
 	case 'segmentationLR'
 		miniSegmentation(pT);
+    % Segmentation parameter search related
+    case 'prepareSkeletons'
+        prepareSkeletons(pT);
+        skeletonStatistics('/zdata/manuel/data/cortex/denseSkel/');
+    case 'segmentationPS'
+        parameterSearchSeg(pT);
+    % Globalization of segmentation related    
+	case 'correspondence'
+		correspondenceFinder(p);
     case 'globalID'
         calculateGlobalID(p);
 	% See graphConstruction subdirectory
@@ -22,9 +31,6 @@ switch todo
 		graphConstruction(p);
 	case 'graphConstructionLR'
 		graphConstruction(pT);
-	% See correspondence subdirectory
-	case 'correspondence'
-		correspondenceFinder(p);
 	% See filterbank subdirectory
 	case 'filterbank'
 		miniFeature(p);
