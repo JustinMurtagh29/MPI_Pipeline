@@ -32,7 +32,7 @@ function [parameter, parameterTrain] = setParameterSettings(old_datestr)
     parameter.class.root = [parameter.saveFolder 'class/'];
     parameter.class.prefix = parameter.raw.prefix;
     % Function to use for segmentation
-    parameter.seg.func = @seg20130604;
+    parameter.seg.func = @seg20141017;
     parameter.seg.root = [parameter.saveFolder 'globalSeg/'];
     parameter.seg.prefix = parameter.raw.prefix;
 
