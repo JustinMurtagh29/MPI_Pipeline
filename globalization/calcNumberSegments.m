@@ -1,7 +1,5 @@
-function calcNumberSegments(p)
+function calcNumberSegments(p, coords)
     % Calculate offset local to global segmentation for each cube
-
-    coords = localToGlobalBboxModification(p);
 
     numEl = uint32(0);
     numElTotal = zeros(size(p.local), 'uint32');
@@ -25,7 +23,7 @@ function calcNumberSegments(p)
         end
     end
     % Save numElTotal so that it only has to be added to localID of respective cube to get global one
-    save([p.seg.root 'numEl.mat'], 'numElTotal'); 
+    save([p.saveFolder 'numEl.mat'], 'numElTotal'); 
 
 end
 

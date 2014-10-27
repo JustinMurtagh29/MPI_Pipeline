@@ -65,6 +65,12 @@ function [parameter, parameterTrain] = setParameterSettings(old_datestr)
     parameter.gp.upperCut = .95;
     parameter.gp.lowerCut = .15;
 
+    % State variables for glia prediction
+    parameter.glia.stateFolder = [parameter.saveFolder 'gliaState/'];
+    parameter.glia.initalGroundTruth = [parameter.glia.stateFolder 'initalGroundTruth.mat'];
+    parameter.glia.normValues = [parameter.glia.stateFolder 'normValues.mat'];
+    parameter.glia.hyperParameter = [parameter.glia.stateFolder 'hyperParameter.mat'];
+
     % GLOBAL SETTINGS FOR writeKnowledgeDB.m
     % Where to put knowledge DB data
     parameter.kdb.folder = [parameter.saveFolder 'kdb/'];
@@ -104,6 +110,10 @@ function [parameter, parameterTrain] = setParameterSettings(old_datestr)
                 parameter.local(i,j,k).borderFile =  [parameter.local(i,j,k).saveFolder 'borders.mat'];
                 parameter.local(i,j,k).weightFile = [parameter.local(i,j,k).saveFolder 'weights.mat'];
                 parameter.local(i,j,k).probFile = [parameter.local(i,j,k).saveFolder 'prob.mat'];
+                % Same files for glia prediction
+                parameter.local(i,j,k).segmentFile = [parameter.local(i,j,k).saveFolder 'segments.mat'];    
+                parameter.local(i,j,k).segmentWeightFile = [parameter.local(i,j,k).saveFolder 'segmentWeights.mat'];
+                parameter.local(i,j,k).gliaProbFile = [parameter.local(i,j,k).saveFolder 'gliaProb.mat'];
             end
         end
     end
@@ -150,6 +160,10 @@ function [parameter, parameterTrain] = setParameterSettings(old_datestr)
         parameterTrain.local(i).borderFile =  [parameterTrain.local(i).saveFolder 'borders.mat'];
         parameterTrain.local(i).weightFile = [parameterTrain.local(i).saveFolder 'weights.mat'];
         parameterTrain.local(i).gtFile = [parameterTrain.local(i).saveFolder 'region' num2str(i) '.mat'];
+        % Benjamin's glia prediction
+        parameterTrain.local(i).segmentFile = [parameterTrain.local(i).saveFolder 'segments.mat'];    
+        parameterTrain.local(i).segmentWeightFile = [parameterTrain.local(i).saveFolder 'segmentWeights.mat'];
+        parameterTrain.local(i).gliaProbFile = [parameterTrain.local(i).saveFolder 'gliaProb.mat'];
     end
 
     % Create state folder for this parameter settings GP

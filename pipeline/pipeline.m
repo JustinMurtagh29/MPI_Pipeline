@@ -21,12 +21,7 @@ switch todo
         skeletonStatistics('/zdata/manuel/data/cortex/denseSkel/');
     case 'segmentationPS'
         parameterSearchSeg(pT);
-    % Globalization of segmentation related    
-	case 'correspondence'
-		correspondenceFinder(p);
-    case 'globalID'
-        calculateGlobalID(p);
-	% See graphConstruction subdirectory
+ 	% See graphConstruction subdirectory
 	case 'graphConstruction'
 		graphConstruction(p);
 	case 'graphConstructionLR'
@@ -36,7 +31,12 @@ switch todo
 		miniFeature(p);
 	case 'filterbankLR'
 		miniFeature(pT);
-	% FROM HERE: GP/Supervoel graph related
+    % Globalization of segmentation related    
+	case 'correspondence'
+		correspondenceFinder(p);
+    case 'globalID'
+        calculateGlobalID(p);
+	% FROM HERE: GP/Supervoxel graph related
 	case 'prepareTrainingData'
         prepareTrainingData(pT,'edges');
 	% These last ones reside in the active repo and implement the GP classifier in an active fashion

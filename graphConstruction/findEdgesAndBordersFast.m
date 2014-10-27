@@ -1,4 +1,4 @@
-function findEdgesandBorders(segFile, edgeFile, borderFile, segmentFile, tileBorder)
+function findEdgesAndBordersFast(segFile, edgeFile, borderFile, segmentFile, tileBorder)
     % Computation of edges and borders optimized for 512x512x256
 
     % Load segmentation from file
@@ -30,22 +30,13 @@ function findEdgesandBorders(segFile, edgeFile, borderFile, segmentFile, tileBor
     edgesToBorder = edges(edges(:,2) == globalBorderId,:);
     edges(edges(:,2) == globalBorderId,:) = [];
 
-    % Find leaves
-    leaves = findLeaves(edges,edgesToBorder(:,1));
-
     % Find borders
     [edges,borders] = findBorders(ind, nInd, nSegId, edges, M, N, P);
 
     % Undo padding of seg
     segSmall = segSmall(2:end-1,2:end-1,2:end-1);
 
-    % Delete leaves from seg, edges and borders
-    [segSmall,edges,borders] = correctLeaves(segSmall,leaves,edges,borders);
-
     % Save to files: currently segmentation overwrites old one (now leaves are merged)
-    seg(1-tileBorder(1,1):end-tileBorder(1,2),...
-        1-tileBorder(2,1):end-tileBorder(2,2),...
-        1-tileBorder(3,1):end-tileBorder(3,2)) = segSmall;
     save(segFile, 'seg');
     save(edgeFile, 'edges', 'edgesToBorder');
     save(borderFile, 'borders');
