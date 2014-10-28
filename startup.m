@@ -42,7 +42,6 @@ switch hostnameShort
 	  base = '/zdata/manuel/';
     GLOBAL_CPU_JM = 'fermat-job-manager';
 		GLOBAL_GPU_JM = 'fermat-gpu-manager';
-		GLOBAL_CODE_DIR = ['/zdata/rzepka' filesep 'code' filesep];
 		GLOBAL_DATA_DIR = [base 'data' filesep];
 	  GLOBAL_RESULT_DIR = [base 'results' filesep];
 	  GLOBAL_OUTPUT_DIR = [base 'sync' filesep];
@@ -50,6 +49,7 @@ switch hostnameShort
 		warning(manuelCode:unknownHost,['Warning: Computer ' hostname ' unknown. Please add to startup.m']);
 end
 clear hostname* base;
+GLOBAL_CODE_DIR = ['/zdata/rzepka' filesep 'code' filesep];
 
 % Set path
 addpath(genpathGit(GLOBAL_CODE_DIR));
