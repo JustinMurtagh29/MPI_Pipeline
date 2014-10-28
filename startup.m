@@ -42,7 +42,7 @@ switch hostnameShort
 	  base = '/zdata/manuel/';
     GLOBAL_CPU_JM = 'fermat-job-manager';
 		GLOBAL_GPU_JM = 'fermat-gpu-manager';
-		GLOBAL_CODE_DIR = [base 'code' filesep];
+		GLOBAL_CODE_DIR = ['/zdata/rzepka' filesep 'code' filesep];
 		GLOBAL_DATA_DIR = [base 'data' filesep];
 	  GLOBAL_RESULT_DIR = [base 'results' filesep];
 	  GLOBAL_OUTPUT_DIR = [base 'sync' filesep];
