@@ -40,8 +40,10 @@ switch todo
 	case 'prepareTrainingData'
         prepareTrainingData(pT,'edges');
 	% These last ones reside in the active repo and implement the GP classifier in an active fashion
-	case 'prepareGP'
-		optimizeHyperparameterGP(pT,'edges');
+  case 'prepareGP'
+    optimizeHyperparameterGP(pT,'edges');
+  case 'retrainGP'
+		retrainHyperparameterGP(pT,'edges');
 	case 'applyGP'
 		makePredictions(p,'edges');
 	case 'constructSupervoxelGraph'
