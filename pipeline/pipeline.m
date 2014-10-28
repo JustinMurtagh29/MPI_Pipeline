@@ -36,6 +36,7 @@ switch todo
 		correspondenceFinder(p);
     case 'globalID'
         calculateGlobalID(p);
+        % Once finished use globalCorrSeg(p), mappingForOxalis(p)
 	% FROM HERE: GP/Supervoxel graph related
 	case 'prepareTrainingData'
         prepareTrainingData(pT,'edges');

@@ -8,7 +8,7 @@ for i=1:size(parameter.local,1)
 			end
 			idx = sub2ind(size(parameter.local), i, j, k);
 			functionH{idx} = @findEdgesAndBordersFast; 
-			inputCell{idx} = {parameter.local(i,j,k).segFile, parameter.local(i,j,k).edgeFile, parameter.local(i,j,k).borderFile, parameter.local(i,j,k).segmentFile, parameter.tileBorder};
+			inputCell{idx} = {parameter.local(i,j,k).segFile, parameter.local(i,j,k).edgeFile, parameter.local(i,j,k).borderFile, parameter.tileBorder};
 		end
 	end
 end

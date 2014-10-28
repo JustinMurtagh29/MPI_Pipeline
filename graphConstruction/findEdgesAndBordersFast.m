@@ -1,4 +1,4 @@
-function findEdgesAndBordersFast(segFile, edgeFile, borderFile, segmentFile, tileBorder)
+function findEdgesAndBordersFast(segFile, edgeFile, borderFile, tileBorder)
     % Computation of edges and borders optimized for 512x512x256
 
     % Load segmentation from file
@@ -33,24 +33,9 @@ function findEdgesAndBordersFast(segFile, edgeFile, borderFile, segmentFile, til
     % Find borders
     [edges,borders] = findBorders(ind, nInd, nSegId, edges, M, N, P);
 
-    % Undo padding of seg
-    segSmall = segSmall(2:end-1,2:end-1,2:end-1);
-
     % Save to files: currently segmentation overwrites old one (now leaves are merged)
-    save(segFile, 'seg');
     save(edgeFile, 'edges', 'edgesToBorder');
     save(borderFile, 'borders');
-
-    % @Benjamin: Commented out, much too slow, fix for glia prediction
-    % get segment PixelIdxLists for glia predition
-    % ids = unique(segSmall);
-    % props = regionprops(segSmall,'PixelIdxList');
-    % ids(ids == 0) = [];
-    % for i = 1:length(ids)
-    %    segments(i).PixelIdxList = props(ids(i)).PixelIdxList;
-    %    segments(i).id = ids(i);
-    % end
-    % save(segmentFile,'segments','-v7.3');
 
 end
 

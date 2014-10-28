@@ -2,9 +2,9 @@ function mappingForOxalis(p)
 
 % Implement better at some point
 load([p.seg.root 'numEl.mat']);
-load([p.seg.root 'globalMapping.mat']);
+load([p.seg.root 'globalCorrespondences.mat']);
 
-% Find maximum id
+% Find maximum ID
 load(p.local(end,end,end).segFile);
 nrGlobalIDs = max(seg(:));
 numEl = numElTotal(end,end,end) + uint32(nrGlobalIDs);
