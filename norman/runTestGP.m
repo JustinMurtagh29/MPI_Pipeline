@@ -7,7 +7,9 @@ function runTestGP(parameter)
   disp(['Output to: ' outputFile]);
 
   [labelMean labelCov latentMean latentCov predictedLabelProb post] = ...
-    predictGP(groundTruth.testData, parameter.gp.normValues, groundTruth.trainingData(1:1000,:), groundTruth.trainingLabels(1:1000,:), gpOptions);
+    predictGP(groundTruth.testData, parameter.gp.normValues, groundTruth.trainingData, groundTruth.trainingLabels, gpOptions);
+  % Small version
+  % predictGP(groundTruth.testData, parameter.gp.normValues, groundTruth.trainingData(1:1000,:), groundTruth.trainingLabels(1:1000,:), gpOptions);
   
   save(outputFile, 'labelMean', 'labelCov', 'latentMean', 'latentCov', 'predictedLabelProb', 'post');
 
