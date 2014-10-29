@@ -1,18 +1,16 @@
-function [components] = bfs(idx,adjacency_list)
+function components = bfs(idx,adjacency_list)
 
 components ={};
 k = 1;
-nonvisited = 1:size(idx,1);
+nonvisited = 1:length(idx);
 
 while ~isempty(nonvisited)
-    %[~, b] = max(cellfun(@length, adjacency_list(nonvisited)));
-    %components{k,1} = borderIdx(nonvisited(b));
     components{k,1} = idx(nonvisited(1));
     l1 = size(components{k,1},2);
     components{k,1}=horzcat(components{k,1},adjacency_list{nonvisited(1)});
     l2 = size(components{k,1},2);
     nonvisited(1)=[];
-    while ~(l1==l2)
+    while l1~=l2
         v=[];
         for j=l1+1:l2
             index = find(idx==(components{k,1}(j)));
