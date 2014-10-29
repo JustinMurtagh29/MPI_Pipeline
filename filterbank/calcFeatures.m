@@ -1,48 +1,42 @@
 function calcFeatures(parameter, sub)
+% We need to make sure that this function works correctly near borders of cube, right now due to no padding and 'same' convolution in filter3d
+% we should have massive border effects?
 
-idx = sub2ind(sub,1);
 weights = [];
-segmentWeights = [];
 
 if ~exist(parameter.local(sub(1),sub(2),sub(3)).saveFolder, 'dir') 
 	mkdir(parameter.local(sub(1),sub(2),sub(3)).saveFolder);
 end
 
-for l=1:length(parameter.feature.input) 
+bbox = parameter.local(sub(1),sub(2),sub(3)).bboxSmall + [-10 10; -10 10; -10 10];
+for l=1:length(parameter.feature.input)
 	if strcmp(parameter.feature.input{l}, 'raw')
-		imfeat = loadRawData(parameter.raw.root, parameter.raw.prefix, parameter.local(sub(1),sub(2),sub(3)).bboxSmall, 1);           
+		imfeat = loadRawData(parameter.raw.root, parameter.raw.prefix, bbox, 1);           
 	elseif strcmp(parameter.feature.input{l}, 'aff')
 		% Add Manuel: Here we need to differentiate between densly labeled regions and normal regions at least if we want to process LR beforehand (for training GP)
 		if isfield(parameter.local(sub(1),sub(2),sub(3)), 'class')
 			local = parameter.local(sub(1),sub(2),sub(3));
-			imfeat = loadClassData(local.class.root, local.class.prefix, local.bboxSmall);
+			imfeat = loadClassData(local.class.root, local.class.prefix, bbox);
 		else
-			imfeat = loadClassData(parameter.class.root, parameter.class.prefix, parameter.local(sub(1),sub(2),sub(3)).bboxSmall);
+			imfeat = loadClassData(parameter.class.root, parameter.class.prefix, bbox);
 		end
 	end
 end
 
 load(parameter.local(sub(1),sub(2),sub(3)).borderFile);
-load(parameter.local(sub(1),sub(2),sub(3)).segmentFile);
-% change data typ of PixelIdxLists to be consistent with borders. Adapt PixelIdxList computation for segmetns (memory/faster than regionprops?)
-for s = 1:length(segments)
-	segments(s).PixelIdxList = int32(segments(s).PixelIdxList');
-end
 for m=1:size(parameter.filter,2)
 	for n=1:length(parameter.filter{m}{2})
 		imfeats = filter3d(parameter, imfeat, m, n);
 		if isa(imfeats, 'cell')
 			for p=1:length(imfeats)
+                imfeats{p} = imfeats{p}(11:end-10,11:end-10,11:end-10);
 				weights_new = featureDesign(real(imfeats{p}), borders);
 				weights = [weights weights_new];
-				segmentWeights_new = featureDesign(real(imfeats{p}), segments);
-				segmentWeights = [segmentWeights segmentWeights_new];
 			end
 		else
+            imfeats = imfeats(11:end-10,11:end-10,11:end-10);
 			weights_new = featureDesign(imfeats, borders);
 			weights = [weights weights_new];
-			segmentWeights_new = featureDesign(imfeats, segments);
-			segmentWeights = [segmentWeights segmentWeights_new];
 		end
 	end
 end
@@ -55,13 +49,10 @@ else
 end
 
 weightsShape_borders = shapeFeatures(borders,siz);
-weightsShape_segments = shapeFeatures(segments,siz);
 
 weights = [weights weightsShape_borders];
-segmentWeights = [segmentWeights weightsShape_segments];
 
 save(parameter.local(sub(1),sub(2),sub(3)).weightFile, 'weights');
-save(parameter.local(sub(1),sub(2),sub(3)).segmentWeightFile, 'segmentWeights');
 
 end
 
