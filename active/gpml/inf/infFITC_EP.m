@@ -78,6 +78,7 @@ end
 
 nlZ_old = Inf; sweep = 0;               % converged, max. sweeps or min. sweeps?
 while (abs(nlZ-nlZ_old) > tol && sweep < max_sweep) || sweep<min_sweep
+  tic
   nlZ_old = nlZ; sweep = sweep+1;
   for i = randperm(n)       % iterate EP updates (in random order) over examples
     pi = P(:,i); t = R*(R0*pi);                            % temporary variables
@@ -97,6 +98,8 @@ while (abs(nlZ-nlZ_old) > tol && sweep < max_sweep) || sweep<min_sweep
   % recompute since repeated rank-one updates can destroy numerical precision
   [d,P,R,nn,gg] = epfitcRefresh(d0,Ku,R0,V, ttau,tnu);
   [nlZ,nu_n,tau_n] = epfitcZ(d,P,R,nn,gg,ttau,tnu,d0,R0,Ku,y,lik,hyp,m,inf);
+  disp(sprintf('%d infFITC_EP sweeps', sweep));
+  toc
 end
 
 if sweep == max_sweep

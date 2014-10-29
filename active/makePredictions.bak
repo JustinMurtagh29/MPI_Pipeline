@@ -1,0 +1,10 @@
+function f_star = makePredictions(w, dim, x_star)
+
+x = zeros(size(w,1),size(x_star,2));
+x(dim,:) = x_star;
+
+f_star.Mu = x'*w.Mu;
+f_star.Sigma = x'*w.Sigma*x;
+
+end
+

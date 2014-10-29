@@ -1,0 +1,118 @@
+function [out1, out2, out3, out4] = binaryGPclassifier( prior, X, y, x )
+
+K_XX = X'*prior.Sigma*X;
+[alpha, sW, L, nlZ] = feval('laplaceApprox', K_XX, 'logistic', X, y);
+
+if nargin==3
+    % Mode-finding
+    out1 = nlZ;
+else
+    % Prediction
+    out1=[]; out2=[]; out3=[]; out4=nlZ;                   % init output arguments
+    nstar   = size(x,2);                               % number of data points
+    nperchk = 10000;                              % number of data points per chunk
+    nact = 0;                                 % number of processed data points
+    while nact < nstar            % process minibatches of test cases to save memory
+        id = (nact+1):min(nact+nperchk,nstar);              % data points to process
+        K_xx = 1 + sum(x.*x)';
+        K_xX = x'*prior.Sigma*X;
+        mu = K_xX*alpha;                              % predictive means
+        v  = L'\(repmat(sW,1,length(id)).*K_xX');
+        s2 = K_xx - sum(v.*v,1)';                      % predictive variances
+        p  = feval('erfint', ones(size(mu)), mu, s2);                      % predictive probabilities
+        out1=[out1;p];
+        out2=[out2;mu];
+        out3=[out3;s2];     % assign output arguments
+        nact = id(end);          % set counter to index of last processed data point
+    end
+end
+
+end
+
+function [a, sW, L, nlZ] = laplaceApprox(K, lik, X, y)
+
+tol = 1e-9;
+n = size(X,2);
+
+f = zeros(n,1); % Start at 0
+[lp,dlp,d2lp] = feval(lik,y,f);
+W=-d2lp;
+Psi_new = lp;
+Psi_old = -Inf;
+while Psi_new - Psi_old > tol
+    Psi_old = Psi_new;
+    sW = sqrt(W);
+    L = chol(eye(n)+sW*sW'.*K);                            % L'*L=B=eye(n)+sW*K*sW
+    b = W.*f+dlp;
+    a = b - sW.*(L\(L'\(sW.*(K*b))));
+    f = K*a;
+    [lp,dlp,d2lp] = feval(lik,y,f);
+    W=-d2lp;
+    Psi_new = -a'*f/2 + lp;
+    i = 0;
+    while i < 10 && Psi_new < Psi_old
+        a = (alpha_old+a)/2;                      % reduce step size by half
+        f = K*a;
+        [lp,dlp,d2lp] = feval(lik,y,f);
+        W=-d2lp;
+        Psi_new = -a'*f/2 + lp;
+        i = i+1;
+    end
+    if Psi_new < Psi_old
+        error('Problem in newton iteration!');
+    end
+end
+% Recalculate L and nlZ
+sW = sqrt(W);
+L  = chol(eye(n)+sW*sW'.*K);
+nlZ = a'*f/2 - lp + sum(log(diag(L)));
+
+end
+
+function [out1, out2, out3] = logistic(y, f)
+% Function to calculate likelihood, log likelihood and derivatives for
+% logistic (3 output arguments calculates derivates, otherwise
+% likelihood & log likelihood)
+	yf = y.*f;
+	lik = 1./(1+exp(-yf));
+    logLik = log(lik);
+    if nargout == 2
+        out1 = lik;
+        out2 = logLik;
+    else
+        s    = -yf;
+        ps   = max(0,s);
+        out1 = -sum(ps+log(exp(-ps)+exp(s-ps)));
+        s    = min(0,f); 
+        p    = exp(s)./(exp(s)+exp(s-f));
+        out2 = (y+1)/2-p;
+        out3 = -exp(2*s-f)./(exp(s)+exp(s-f)).^2;
+    end
+end
+
+function [m0,m1,m2] = erfint(y, mu, s2)
+
+l = [0.44 0.41 0.40 0.39 0.36]; % approximation coefficients lambda_i
+
+c = [1.146480988574439e+02; -1.508871030070582e+03; 2.676085036831241e+03;  
+    -1.356294962039222e+03;  7.543285642111850e+01                        ];
+    
+S2 = 2*s2.*(y.^2)*(l.^2) + 1;                                    % zeroth moment
+S  = sqrt( S2 );
+Z  = mu.*y*l./S;
+M0 = erf(Z);
+m0 = ( 1 + M0*c )/2;
+    
+if nargout>1                                                      % first moment
+  NormZ = exp(-Z.^2)/sqrt(2*pi);
+  M0mu = M0.*repmat(mu,[1,5]);
+  M1 = (2*sqrt(2)*y.*s2)*l.*NormZ./S + M0mu;
+  m1 = ( mu + M1*c )/2;
+        
+  if nargout>2                                                   % second moment
+    M2 =   repmat(2*mu,[1,5]).*(1+s2.*y.^2*(l.^2)).*(M1-M0mu)./S2 ...
+         + repmat(s2+mu.^2,[1,5]).*M0;
+    m2 = ( mu.^2 + s2 + M2*c )/2;
+  end
+end
+end
