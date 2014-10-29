@@ -1,10 +1,10 @@
-[precision, recall, F1] = function errorAnalysis(testLabels, predictedLabels)
+function [precision, recall, F1] = errorAnalysis(testLabels, predictedLabels)
 
   positives = predictedLabels == 1;
   negatives = predictedLabels == 0;
 
   trues = positives == predictedLabels;
-  falses = positives != predictedLabels;
+  falses = positives ~= predictedLabels;
 
   truePositives = sum(trues & positives);
   trueNegatives = sum(trues & negatives);
