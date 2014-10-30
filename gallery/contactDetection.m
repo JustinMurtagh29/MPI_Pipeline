@@ -109,7 +109,12 @@ if ~isempty(merger)
     [skel, merger] = accumulateOverCubeBorders(skel, merger, 'Merger ID : ');
 end
 
-writeNmlOld([outputDir skeleton1.name(1:end-4) 'TO' skeleton2.name(1:end-4) '.nml'], skel);
+skel1FileNameOnly = regexp(skeleton1, '/', 'split');
+skel1FileNameOnly = skel1FileNameOnly{end}(1:end-4);
+skel2FileNameOnly = regexp(skeleton2, '/', 'split');
+skel2FileNameOnly = skel2FileNameOnly{end}(1:end-4);
+
+writeNmlOld([outputDir skel1FileNameOnly 'TO' skel2FileNameOnly '.nml'], skel);
 
 end
 
