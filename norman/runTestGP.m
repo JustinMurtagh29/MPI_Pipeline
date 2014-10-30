@@ -13,8 +13,8 @@ function runTestGP(parameter)
   
   save(outputFile, 'labelMean', 'labelCov', 'latentMean', 'latentCov', 'predictedLabelProb', 'post');
 
-  [precision, recall, F1] = errorAnalysis(groundTruth.testLabels, predictedLabelProb > 0.5);
-
-  disp(sprintf('Precision: %f   Recall: %f   F1: %f', precision, recall, F1));
-
+  for i=[0:.02:1]
+    [precision, recall, F1] = errorAnalysis(groundTruth.testLabels, predictedLabelProb >= i);
+    disp(sprintf('Threshold: %f   Precision: %f   Recall: %f   F1: %f', i, precision, recall, F1));
+  end
 end
