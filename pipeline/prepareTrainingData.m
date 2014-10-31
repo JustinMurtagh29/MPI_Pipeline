@@ -11,7 +11,7 @@ function prepareTrainingData(pT,mode)
             [~, seg] = loadSegData(pT.local(i).segFile, pT.tileBorder);
             load(pT.local(i).edgeFile);
             load(pT.local(i).weightFile);
-            skel.file = pT.local(i).trainFile;
+            skel.file = pT.local(i).trainFileRaw;
             skel.bbox = pT.local(i).bboxSmall;
             % Extract labels for all segments that intersect with any of the dense skeletons
             [labelIdx, labels] = extractGroundTruthFromNml(seg, edges, skel);

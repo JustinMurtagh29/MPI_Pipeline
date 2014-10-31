@@ -1,4 +1,4 @@
-function [precision, recall, F1] = errorAnalysis(testLabels, predictedLabels)
+function [precision, recall, F1, truePositives, trueNegatives, falsePositives, falseNegatives] = errorAnalysis(testLabels, predictedLabels)
 
   if size(testLabels) ~= size(predictedLabels)
     error('testLabels and predictedLabels don''t line up.');
