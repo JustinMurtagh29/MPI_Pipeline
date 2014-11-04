@@ -20,7 +20,7 @@ function prepareTrainingData(pT,mode)
             allIdx = [allIdx; labelIdx];
             allLabels = [allLabels; labels];
             disp(size(labels));
-            regionData(i).X = weights(labelIdx);
+            regionData(i).X = weights(labelIdx, :);
             regionData(i).Y = labels;
             clear seg edges weights skel labelIdx labels;
         end
