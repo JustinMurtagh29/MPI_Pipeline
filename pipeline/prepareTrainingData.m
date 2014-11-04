@@ -19,6 +19,9 @@ function prepareTrainingData(pT,mode)
             allWeights = [allWeights; weights];
             allIdx = [allIdx; labelIdx];
             allLabels = [allLabels; labels];
+            disp(size(labels));
+            regionData(i).X = weights(labelIdx);
+            regionData(i).Y = labels;
             clear seg edges weights skel labelIdx labels;
         end
         allWeights = normalizeDataForGP(allWeights, true, pT.gp.normValues);
@@ -58,7 +61,7 @@ function prepareTrainingData(pT,mode)
     testLabels = allLabels(~randIdx);
 
     if strcmp(mode,'edges')
-        save(pT.gp.initalGroundTruth, 'trainingData', 'trainingLabels', 'testData', 'testLabels');
+        save(pT.gp.initalGroundTruth, 'trainingData', 'trainingLabels', 'testData', 'testLabels', 'regionData');
         visualizeEdgeFeaturesNewest(pT);
     elseif strcmp(mode,'glia')  
         save(pT.glia.initalGroundTruth, 'trainingData', 'trainingLabels', 'testData', 'testLabels');
