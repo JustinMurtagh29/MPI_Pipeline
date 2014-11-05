@@ -3,10 +3,13 @@ function calcFeatures(parameter, sub)
 % we should have massive border effects?
 
 weights = [];
+weightNames = {};
 
 if ~exist(parameter.local(sub(1),sub(2),sub(3)).saveFolder, 'dir')
     mkdir(parameter.local(sub(1),sub(2),sub(3)).saveFolder);
 end
+
+load(parameter.local(sub(1),sub(2),sub(3)).borderFile);
 
 bbox = parameter.local(sub(1),sub(2),sub(3)).bboxSmall + [-10 10; -10 10; -10 10];
 for l=1:length(parameter.feature.input)
@@ -21,28 +24,33 @@ for l=1:length(parameter.feature.input)
             imfeat = loadClassData(parameter.class.root, parameter.class.prefix, bbox);
         end
     end
-end
+    
+    for m=1:size(parameter.filter,2)
+        currentFilter = parameter.filter{m};
+        for n=1:length(currentFilter{2})
+            filteredImFeats = filter3d(currentFilter{1}, imfeat, currentFilter{2}(n), currentFilter{3});
+            if isa(filteredImFeats, 'cell')
+                for p=1:length(filteredImFeats)
+                    filteredImFeats{p} = filteredImFeats{p}(11:end-10,11:end-10,11:end-10);
+                    [weights_new, weightNames_new] = featureDesign(real(filteredImFeats{p}), borders);
+                    weights = [weights weights_new];
 
-load(parameter.local(sub(1),sub(2),sub(3)).borderFile);
-for m=1:size(parameter.filter,2)
-    currentFilter = parameter.filter{m};
-    for n=1:length(currentFilter{2})
-        filteredImFeats = filter3d(currentFilter{1}, imfeat, currentFilter{2}(n), currentFilter{3});
-        if isa(filteredImFeats, 'cell')
-            for p=1:length(filteredImFeats)
-                filteredImFeats{p} = filteredImFeats{p}(11:end-10,11:end-10,11:end-10);
-                weights_new = featureDesign(real(filteredImFeats{p}), borders);
+                    weightNames_new = strcat({sprintf('%s filtersize=%d feature=%d ', currentFilter{1}, currentFilter{2}(n), p)}, weightNames_new);
+                    weightNames = { weightNames{:}, weightNames_new{:} };
+                end
+            else
+                filteredImFeats = filteredImFeats(11:end-10,11:end-10,11:end-10);
+                [weights_new, weightNames_new] = featureDesign(filteredImFeats, borders);
                 weights = [weights weights_new];
-                disp(sprintf('%s size %d feature %d x%d', currentFilter{1}, currentFilter{2}(n), p, size(weights_new, 2)));
+
+                weightNames_new = strcat({sprintf('%s filtersize=%d feature=%d ', currentFilter{1}, currentFilter{2}(n), 0)}, weightNames_new);
+                weightNames = {weightNames{:}, weightNames_new{:}};
+                    
             end
-        else
-            filteredImFeats = filteredImFeats(11:end-10,11:end-10,11:end-10);
-            weights_new = featureDesign(filteredImFeats, borders);
-            weights = [weights weights_new];
-            disp(sprintf('%s size %d feature %d x%d', currentFilter{1}, currentFilter{2}(n), 0, size(weights_new, 2)));
         end
     end
 end
+
 
 % calculate shape features and add to weights
 if isfield(parameter.local(sub(1),sub(2),sub(3)), 'class')
@@ -51,11 +59,12 @@ else
     siz = parameter.tileSize';
 end
 
-weightsShape_borders = shapeFeatures(borders,siz);
+[weightsShape_borders, weightNames_new] = shapeFeatures(borders,siz);
 
 weights = [weights weightsShape_borders];
+weightNames = {weightNames{:}, weightNames_new{:}};
 
-save(parameter.local(sub(1),sub(2),sub(3)).weightFile, 'weights');
+save(parameter.local(sub(1),sub(2),sub(3)).weightFile, 'weights', 'weightNames');
 
 end
 
