@@ -1,4 +1,4 @@
-function weights = shapeFeatures(segments,siz)
+function [weights, weightNames] = shapeFeatures(segments,siz)
 
     for i=1:length(segments)
         % switch from ind to sub
@@ -28,5 +28,9 @@ function weights = shapeFeatures(segments,siz)
     for i = 1:length(x)
 	weights(x(i),y(i)) = mean(weights(~isnan(weights(:,y(i))),y(i)));
     end
+
+    weightNames = { 'shape: logObjSize', 'shape: pcFracs(1)', 'shape: pcFracs(2)', ...
+        'shape: pcFracs(3)', 'shape: pcFracs(3)/pcFracs(2)', 'shape: pcFracs(3)/pcFracs(1)', ...
+        'shape: pcFracs(2)/pcFracs(1)', 'shape: entropy' };
 end
 
