@@ -78,7 +78,7 @@ end
 
 nlZ_old = Inf; sweep = 0;               % converged, max. sweeps or min. sweeps?
 while (abs(nlZ-nlZ_old) > tol && sweep < max_sweep) || sweep<min_sweep
-  timerVal = tic
+  timerVal = tic;
   nlZ_old = nlZ; sweep = sweep+1;
   for i = randperm(n)       % iterate EP updates (in random order) over examples
     pi = P(:,i); t = R*(R0*pi);                            % temporary variables

@@ -1,6 +1,6 @@
 function optimizeHyperparameterGP(pT,mode)
 
-timerVal = tic
+timerVal = tic;
 
 if strcmp(mode,'edges')
     nrIndPoints = 100;
@@ -27,7 +27,7 @@ hyp.mean = 0;
 % covfunc = {@covFITC, {@covSum, {@covLINard, @covNoise}}, indPoints};  % Try some 
 % hyp.cov = [zeros(size(trainingData,2),1); log(0.1)];
 covfunc = {@covFITC, {@covSum, {@covSEard, @covNoise}}, indPoints};
-hyp.cov = 1.0e-5 * ([ones(size(trainingData,2),1); 10]);
+hyp.cov = 1.0e-5 * [ones(size(trainingData,2),1); 10; 1];
 likfunc = @likErf;
 inffunc = @infFITC_EP;
 
