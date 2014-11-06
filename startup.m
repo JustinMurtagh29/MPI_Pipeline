@@ -54,7 +54,7 @@ GLOBAL_CODE_DIR = ['/zdata/rzepka' filesep 'code' filesep];
 % Set path
 addpath(genpathGit(GLOBAL_CODE_DIR));
 % Load parameters for big pipeline test
-[p,pT] = setParameterSettingsBig('20140312T141921');
+[p,pT] = setParameterSettingsBig('20141007T094904');
 % Log commands
 diaryStart = datestr(clock, 30);
 diaryName = input('Please enter name for the diary: ', 's');

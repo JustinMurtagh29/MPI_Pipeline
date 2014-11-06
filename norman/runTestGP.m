@@ -13,13 +13,18 @@ function runTestGP(parameter)
   
   save(outputFile, 'labelMean', 'labelCov', 'latentMean', 'latentCov', 'predictedLabelProb', 'post');
 
+  data = [];
   lower=[];
   for i=linspace(0,1,100)
     [precision, recall, F1, truePositives, trueNegatives, falsePositives, falseNegatives] = ...
-      errorAnalysis(~(groundTruth.testLabels > 0), ~(predictedLabelProb >= i));
+      errorAnalysis((groundTruth.testLabels > 0), (predictedLabelProb >= i));
     lower = [lower; precision, recall];
+    data = [data; [truePositives, trueNegatives, falsePositives, falseNegatives]];
     disp(sprintf('Threshold: %.2f   Precision: %f   Recall: %f   F1: %f', i, precision, recall, F1));
   end
+  plot(data);
+  legend('truePositives', 'trueNegatives', 'falsePositives', 'falseNegatives');
+
 
   upper=[];
   for i=linspace(0,1,100)
@@ -29,10 +34,10 @@ function runTestGP(parameter)
     disp(sprintf('Threshold: %.2f   Precision: %f   Recall: %f   F1: %f', i, precision, recall, F1));
   end
 
-  % hold on
-  % scatter(lower(:,2), lower(:,1), [],linspace(0,1,size(lower, 1)));
-  % scatter(upper(:,2), upper(:,1), [],linspace(1,0,size(upper, 1)));
-  % hold off
+  hold on
+  scatter(lower(:,2), lower(:,1), [],linspace(0,1,size(lower, 1)));
+  scatter(upper(:,2), upper(:,1), [],linspace(1,0,size(upper, 1)));
+  hold off
 
   plot(linspace(0,1,100), [lower upper]);
 

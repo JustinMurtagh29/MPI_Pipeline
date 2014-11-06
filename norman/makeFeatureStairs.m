@@ -1,18 +1,53 @@
-load trainsamples.mat
+function makeFeatureStairs(regionData, weightNames)
 
-BIN_COUNT = 40;
+  BIN_COUNT = 40;
 
-for i=[1:size(Sample1.X,2)]
-  bins1 = hist(Sample1.X(:,i), BIN_COUNT);
-  bins2 = hist(Sample2.X(:,i), BIN_COUNT);
-  bins3 = hist(Sample3.X(:,i), BIN_COUNT);
+  parfor i=[1:size(regionData(1).X, 2)]
 
-  figure();
-  set(gcf,'Visible', 'off');
+    figure();
+    set(gcf,'Visible', 'off');
 
-  stairs([1:BIN_COUNT], [(bins1/norm(bins1))', (bins2/norm(bins2))', (bins3/norm(bins3))'])
-  legend('Sample1', 'Sample2', 'Sample3');
-  title(sprintf('Feature %03d', i));
+    subplot(2,1,1);
 
-  saveas(gcf, sprintf('feature%03d.pdf', i));
+    bins = {};
+    for j=1:length(regionData)
+      positiveIndices = find(regionData(j).Y > 0);
+      bins{j} = hist(regionData(j).X(positiveIndices,i), BIN_COUNT);
+    end
+
+    stairData = [];
+    stairLabels = {};
+    for j=1:length(bins)
+      stairData = [stairData, (bins{j}/norm(bins{j}))'];
+      stairLabels{j} = sprintf('Region %d', j);
+    end
+
+    stairs([1:BIN_COUNT], stairData);
+    legend(stairLabels);
+    title(sprintf('Connected Feature %03d: %s', i, weightNames{i}));
+
+    subplot(2,1,2);
+
+    bins = {};
+    for j=1:length(regionData)
+      negativeIndices = find(regionData(j).Y < 0);
+      bins{j} = hist(regionData(j).X(negativeIndices,i), BIN_COUNT);
+    end
+
+    stairData = [];
+    stairLabels = {};
+    for j=1:length(bins)
+      stairData = [stairData, (bins{j}/norm(bins{j}))'];
+      stairLabels{j} = sprintf('Region %d', j);
+    end
+
+    stairs([1:BIN_COUNT], stairData);
+    legend(stairLabels);
+    title(sprintf('Unconnected Feature %03d: %s', i, weightNames{i}));
+
+
+    saveas(gcf, sprintf('feature%03d.pdf', i));
+    disp(sprintf('feature%03d.pdf', i));
+  end
+
 end

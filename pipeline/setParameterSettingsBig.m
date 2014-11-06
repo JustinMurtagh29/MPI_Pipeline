@@ -59,8 +59,8 @@ function [parameter, parameterTrain] = setParameterSettings(old_datestr)
     % State variables from the GP
     parameter.gp.stateFolder = [parameter.saveFolder 'state/'];
     parameter.gp.normValues = [parameter.gp.stateFolder 'normValues.mat'];
-    parameter.gp.hyperParameter = [parameter.gp.stateFolder 'hyperParameter.Sample1.mat'];
-    parameter.gp.initalGroundTruth = [parameter.gp.stateFolder 'initalGroundTruth.Sample1.mat'];
+    parameter.gp.hyperParameter = [parameter.gp.stateFolder 'hyperParameter.mat'];
+    parameter.gp.initalGroundTruth = [parameter.gp.stateFolder 'initalGroundTruth.mat'];
     % Define cutoff(s) for writing to knowledge DB 
     parameter.gp.upperCut = .95;
     parameter.gp.lowerCut = .15;
