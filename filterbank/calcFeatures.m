@@ -35,7 +35,7 @@ for l=1:length(parameter.feature.input)
                     [weights_new, weightNames_new] = featureDesign(real(filteredImFeats{p}), borders);
                     weights = [weights weights_new];
 
-                    weightNames_new = strcat({sprintf('%s filtersize=%d feature=%d ', currentFilter{1}, currentFilter{2}(n), p)}, weightNames_new);
+                    weightNames_new = strcat({sprintf('%s %s filtersize=%d feature=%d ', currentFilter{1}, parameter.feature.input{l}, currentFilter{2}(n), p)}, weightNames_new);
                     weightNames = { weightNames{:}, weightNames_new{:} };
                 end
             else
@@ -43,7 +43,7 @@ for l=1:length(parameter.feature.input)
                 [weights_new, weightNames_new] = featureDesign(filteredImFeats, borders);
                 weights = [weights weights_new];
 
-                weightNames_new = strcat({sprintf('%s filtersize=%d feature=%d ', currentFilter{1}, currentFilter{2}(n), 0)}, weightNames_new);
+                weightNames_new = strcat({sprintf('%s %s filtersize=%d feature=%d ', currentFilter{1}, parameter.feature.input{l}, currentFilter{2}(n), 0)}, weightNames_new);
                 weightNames = {weightNames{:}, weightNames_new{:}};
                     
             end
