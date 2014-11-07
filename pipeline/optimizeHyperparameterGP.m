@@ -1,5 +1,7 @@
 function optimizeHyperparameterGP(pT,mode)
 
+global GLOBAL_CODE_DIR;
+
 timerVal = tic;
 
 if strcmp(mode,'edges')
