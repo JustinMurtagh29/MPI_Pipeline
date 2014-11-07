@@ -11,7 +11,7 @@ function prepareTrainingData(pT,mode)
             [~, seg] = loadSegData(pT.local(i).segFile, pT.tileBorder);
             load(pT.local(i).edgeFile);
             load(pT.local(i).weightFile);
-            skel.file = pT.local(i).trainFile;
+            skel.file = pT.local(i).trainFileRaw;
             skel.bbox = pT.local(i).bboxSmall;
             % Extract labels for all segments that intersect with any of the dense skeletons
             [labelIdx, labels] = extractGroundTruthFromNml(seg, edges, skel);
@@ -19,9 +19,19 @@ function prepareTrainingData(pT,mode)
             allWeights = [allWeights; weights];
             allIdx = [allIdx; labelIdx];
             allLabels = [allLabels; labels];
+            disp(size(labels));
+            regionData(i).X = weights(labelIdx, :);
+            regionData(i).Y = labels;
             clear seg edges weights skel labelIdx labels;
         end
+        % Normalization
         allWeights = normalizeDataForGP(allWeights, true, pT.gp.normValues);
+
+        % Applying normalization on regionData
+        for i=1:length(pT.local)
+            regionData(i).X = normalizeDataForGP(region(i).X, false, pT.gp.normValues);
+        end
+
 
     elseif strcmp(mode,'glia')  
         for i=1:length(pT.local)
@@ -58,7 +68,7 @@ function prepareTrainingData(pT,mode)
     testLabels = allLabels(~randIdx);
 
     if strcmp(mode,'edges')
-        save(pT.gp.initalGroundTruth, 'trainingData', 'trainingLabels', 'testData', 'testLabels');
+        save(pT.gp.initalGroundTruth, 'trainingData', 'trainingLabels', 'testData', 'testLabels', 'regionData');
         visualizeEdgeFeaturesNewest(pT);
     elseif strcmp(mode,'glia')  
         save(pT.glia.initalGroundTruth, 'trainingData', 'trainingLabels', 'testData', 'testLabels');

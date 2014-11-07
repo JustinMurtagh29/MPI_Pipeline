@@ -11,11 +11,11 @@ weights = normalizeDataForGP(weights, false, normFile);
 % gpml toolbox usage
 run('/zdata/manuel/code/active/gpml/startup.m');
 % Make predictions
-[labelMean labelCov latentMean latentCov lp] = gp(hyp, inffunc, meanfunc, covfunc, likfunc, trainingData, trainingLabels, weights, ones(size(weights,1), 1));
+[labelMean labelCov latentMean latentCov lp post] = gp(hyp, inffunc, meanfunc, covfunc, likfunc, trainingData, trainingLabels, weights, ones(size(weights,1), 1));
 
 % save preditions to designated file
 prob = exp(lp);
-save(probFile, 'labelMean', 'labelCov', 'latentMean', 'latentCov', 'prob');
+save(probFile, 'labelMean', 'labelCov', 'latentMean', 'latentCov', 'prob', 'post');
 
 end
 

@@ -1,18 +1,17 @@
-function weights = featureDesign(input, border)
-%Comment
+function [weights weightNames] = featureDesign(input, border)
 
-weights = [];
-for j = 1:size(border,2)
-	b = border(j).PixelIdxList;
-	temp = real(input(b));
-  	weights1(1) = quantile(temp,0);
-	weights1(2) = quantile(temp,0.25);
-	weights1(3) = quantile(temp,0.5);
-   	weights1(4) = quantile(temp,0.75);
-   	weights1(5) = quantile(temp,1);
-	weights1(6) = mean(temp);
-	weights1(7) = std(temp);
-	weights = [weights; weights1];
-end
+% Finding the pixeldata for each voxel of the borders
+temp = arrayfun(@(b) real(input(b.PixelIdxList)), border, 'UniformOutput', false);
+
+% Computing 7 features
+% - 5 Quantiles: 0, 0.25, 0.5, 0.75, 1
+weights = cell2mat(arrayfun(@(t) quantile(t{:}, [0, 0.25, 0.5, 0.75, 1])', temp, 'UniformOutput', false))';
+% - Mean
+weights = [weights arrayfun(@(t) mean(t{:}), temp)'];
+% - Standard deviation
+weights = [weights arrayfun(@(t) std(t{:}), temp)'];
+
+weightNames = { 'quantile0', 'quantile0.25', 'quantile0.5', 'quantile0.75', 'quantile1', 'mean', 'std' };
+
 end
 

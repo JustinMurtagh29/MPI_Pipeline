@@ -81,6 +81,7 @@ if eval(feval(mean{:})) ~= numel(hyp.mean)
 end
 if ~isfield(hyp,'cov'), hyp.cov = []; end
 if eval(feval(cov{:})) ~= numel(hyp.cov)
+  eval(feval(cov{:}))
   error('Number of cov function hyperparameters disagree with cov function')
 end
 if ~isfield(hyp,'lik'), hyp.lik = []; end
