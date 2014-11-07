@@ -1,11 +1,13 @@
-function findEdgesAndBordersFast(segFile, edgeFile, borderFile, tileBorder)
+function findEdgesAndBordersFast(seg, edgeFile, borderFile, bbox)
     % Computation of edges and borders optimized for 512x512x256
 
     % Load segmentation from file
-    [seg, segSmall] = loadSegData(segFile, tileBorder);
+    %[seg, segSmall] = loadSegData(segFile, tileBorder);
+    % Load global segmentation instead of local
+    segSmall = loadSegDataGlobal(seg.root, seg.prefix, bbox);
 
     % Pad array with a 1 voxel surround with a new unique value
-    globalBorderId = max(seg(:))+1;
+    globalBorderId = max(segSmall(:))+1;
     segSmall = padarray(segSmall,[1 1 1],globalBorderId);
 
     % Size of padded segmentation
