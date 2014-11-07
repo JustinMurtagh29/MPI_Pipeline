@@ -24,7 +24,14 @@ function prepareTrainingData(pT,mode)
             regionData(i).Y = labels;
             clear seg edges weights skel labelIdx labels;
         end
+        % Normalization
         allWeights = normalizeDataForGP(allWeights, true, pT.gp.normValues);
+
+        % Applying normalization on regionData
+        for i=1:length(pT.local)
+            regionData(i).X = normalizeDataForGP(region(i).X, false, pT.gp.normValues);
+        end
+
 
     elseif strcmp(mode,'glia')  
         for i=1:length(pT.local)

@@ -10,38 +10,44 @@ function makeFeatureStairs(regionData, weightNames)
     subplot(2,1,1);
 
     bins = {};
+    centers = {};
     for j=1:length(regionData)
       positiveIndices = find(regionData(j).Y > 0);
-      bins{j} = hist(regionData(j).X(positiveIndices,i), BIN_COUNT);
+      [bins{j}, centers{j}] = hist(regionData(j).X(positiveIndices,i), linspace(-1.5, 1.5, BIN_COUNT));
     end
 
     stairData = [];
+    stairCenters = [];
     stairLabels = {};
     for j=1:length(bins)
       stairData = [stairData, (bins{j}/norm(bins{j}))'];
+      stairCenters = [stairCenters, centers{j}'];
       stairLabels{j} = sprintf('Region %d', j);
     end
 
-    stairs([1:BIN_COUNT], stairData);
+    stairs(stairCenters, stairData);
     legend(stairLabels);
     title(sprintf('Connected Feature %03d: %s', i, weightNames{i}));
 
     subplot(2,1,2);
 
     bins = {};
+    centers = {};
     for j=1:length(regionData)
       negativeIndices = find(regionData(j).Y < 0);
-      bins{j} = hist(regionData(j).X(negativeIndices,i), BIN_COUNT);
+      [bins{j}, centers{j}] = hist(regionData(j).X(negativeIndices,i), linspace(-1.5, 1.5, BIN_COUNT));
     end
 
     stairData = [];
+    stairCenters = [];
     stairLabels = {};
     for j=1:length(bins)
       stairData = [stairData, (bins{j}/norm(bins{j}))'];
+      stairCenters = [stairCenters, centers{j}'];
       stairLabels{j} = sprintf('Region %d', j);
     end
 
-    stairs([1:BIN_COUNT], stairData);
+    stairs(stairCenters, stairData);
     legend(stairLabels);
     title(sprintf('Unconnected Feature %03d: %s', i, weightNames{i}));
 
