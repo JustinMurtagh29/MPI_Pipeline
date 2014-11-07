@@ -49,7 +49,7 @@ switch hostnameShort
 		warning(manuelCode:unknownHost,['Warning: Computer ' hostname ' unknown. Please add to startup.m']);
 end
 clear hostname* base;
-GLOBAL_CODE_DIR = ['/zdata/rzepka' filesep 'code' filesep];
+GLOBAL_CODE_DIR = ['/zdata/manuel' filesep 'code' filesep];
 
 % Set path
 addpath(genpathGit(GLOBAL_CODE_DIR));

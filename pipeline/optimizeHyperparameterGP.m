@@ -14,7 +14,7 @@ end
 
 
 % gpml toolbox (Rasmussen) startup script
-run('/zdata/rzepka/code/active/gpml/startup.m');
+run([GLOBAL_CODE_DIR '/active/gpml/startup.m']);
 % Load normalized training data
 load(groundTrouthFile);
 % Define inducing points for FITC approximation
