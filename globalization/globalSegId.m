@@ -25,9 +25,6 @@ function globalSegId(p, coords, i, j, k)
         end 
     end
 
-    % This is the array which saves the mapping from local to global IDs
-    localToGlobalMapping = [localIds globalIds'];
-
     % Add sum of all former 
     seg = globalIds(n);
     seg = reshape(seg, sizeCube);
@@ -35,7 +32,7 @@ function globalSegId(p, coords, i, j, k)
     % Write modified seg with globalIDs (not complete wrt IDs, e.g. localIDs in outer bounidng box of inner cube will not be present, any better idea?)
     writeKnossosRoi(p.seg.root, p.seg.prefix , [p.local(i,j,k).bboxBig(:,1) + coords{i,j,k}(:,1) - [1; 1; 1]]', seg, 'uint32'); 
     % Save mapping from local to global IDs
-    save([p.local(i,j,k).saveFolder 'localToGlobalSegId.mat'], 'localToGlobalMapping');
+    save([p.local(i,j,k).saveFolder 'localToGlobalSegId.mat'], 'localIds', 'globalIds');
 
 end
 

@@ -1,7 +1,7 @@
 function bloodVesselVisualization(bloodVessels, bbox)
     % Visualize blood vessels for 07x2 from dataset preprocessing
 
-    z = bbox(3,1):100:bbox(3,2);
+    z = bbox(3,1):50:bbox(3,2);
     for i=1:length(z)-1
         display(['-----' num2str(i) '/' num2str(length(z)-1) '-----']);
         display('Smoothing blood vessels');
