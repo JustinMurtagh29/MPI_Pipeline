@@ -10,7 +10,7 @@ function job = startCPU( functionHandle, inputCell, jobName )
     jm = findJm();
     % Create job on cluster
     if strcmp(GLOBAL_HOST,'fermat01')
-        job = createJob(jm(1), 'RestartWorker', true, 'PathDependencies', pathDependencies, 'Name', jobName);
+        job = createJob(jm(2), 'RestartWorker', true, 'PathDependencies', pathDependencies, 'Name', jobName);
         for i=1:length(functionHandle)
             createTask(job, functionHandle{i}, 0, inputCell{i}, 'MaximumNumberOfRetries', 5, 'Timeout', 90000, 'CaptureCommandWindowOutput', 0);
         end
