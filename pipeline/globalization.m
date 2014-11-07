@@ -1,4 +1,4 @@
-function job = globalization(parameter)
+function globalization(parameter)
     % calculates number of segments per cube
 
     coords = localToGlobalBboxModification(parameter);
@@ -9,6 +9,7 @@ function job = globalization(parameter)
     calcNumberSegments(parameter, coords);
     toc;
 
+    % Globalize segmentation and save as KNOSSOS hierachy for Oxalis
     for i=1:size(parameter.local,1)
         for j=1:size(parameter.local,2)
             for k=1:size(parameter.local,3)
@@ -18,6 +19,15 @@ function job = globalization(parameter)
             end
         end
     end
-    job = startCPU(functionH, inputCell, 'globalize segmentation IDs')
+    startCPU(functionH, inputCell, 'globalize segmentation IDs');
+
+    % Globalize correspondences
+    clear functionH inputCell;
+    files = dir([parameter.correspondence.saveFolder, '*.mat']);
+    for i=1:length(files)
+        functionH{i} = @globalCorrSeg;
+        inputCell{i} = {parameter, files(i).name};
+    end
+    startCPU(functionH, inputCell, 'globalize correspondences');
 
 end
