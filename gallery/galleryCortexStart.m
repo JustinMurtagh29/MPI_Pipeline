@@ -1,12 +1,12 @@
 function galleryCortexStart(p)
 
-skelPath = '/zdata/manuel/sync/fromLap/07x2skeletons/wholeCell/';
+skelPath = '/zdata/manuel/sync/fromLap/07x2skeletons/somaForSfn/';
 
 files = dir([skelPath '*.nml']);
 
 for i=1:length(files)
     functionH{i} = @galleryCortex;
-    inputCell{i} = {p, skelPath, files(i).name, '/zdata/manuel/sync/wholeCell/cortex/20141019/'};
+    inputCell{i} = {p, skelPath, files(i).name, '/zdata/manuel/sync/wholeCell/cortex/20141110/'};
 end
 
 startCPU(functionH, inputCell, 'whole cell cortex new');

@@ -1,11 +1,11 @@
-function contactDetection(skeleton1, skeleton2, outputDir)
+function contactDetection(skel1, skel2, outputFile)
 % Pass two nml filenames which are to be contact detected and one output folder
 % Modified Benjamins gallery code (quite a bit)
 
 % Weird format to supress output, gets annoying after a while
-[~,skel1] = evalc('parseNml(skeleton1)');
-[~,skel2] = evalc('parseNml(skeleton2)');
-skel = mergeTrees(skel1, skel2, skeleton1, skeleton2);
+%[~,skel1] = evalc('parseNml(skeleton1)');
+%[~,skel2] = evalc('parseNml(skeleton2)');
+skel = mergeTrees(skel1, skel2, 'pre', 'post');
 % for each node from both skeletons, find cube in which it resides
 cubeCoords =  [floor((skel{1}.nodes(:,1:3)-1)./128); floor((skel{2}.nodes(:,1:3)-1)./128)];
 % all unique cubes traversed by this skeleton 
@@ -17,7 +17,7 @@ rT = 1;
 [x,y,z] = meshgrid(-rT:rT,-rT:rT,-rT:rT);
 se = (x/rT).^2 + (y/rT).^2 + (z/rT).^2 <= 1;
 % Set voxel dimension in nm for calculation of distances
-voxSize = [11.24 11.24 28];
+voxSize = [12 12 25];
 % counter
 contactNumber = 0;
 mergerNumber = 0;
@@ -109,12 +109,12 @@ if ~isempty(merger)
     [skel, merger] = accumulateOverCubeBorders(skel, merger, 'Merger ID : ');
 end
 
-skel1FileNameOnly = regexp(skeleton1, '/', 'split');
-skel1FileNameOnly = skel1FileNameOnly{end}(1:end-4);
-skel2FileNameOnly = regexp(skeleton2, '/', 'split');
-skel2FileNameOnly = skel2FileNameOnly{end}(1:end-4);
+%skel1FileNameOnly = regexp(skeleton1, '/', 'split');
+%skel1FileNameOnly = skel1FileNameOnly{end}(1:end-4);
+%skel2FileNameOnly = regexp(skeleton2, '/', 'split');
+%skel2FileNameOnly = skel2FileNameOnly{end}(1:end-4);
 
-writeNmlOld([outputDir skel1FileNameOnly 'TO' skel2FileNameOnly '.nml'], skel);
+writeNmlOld(outputFile, skel);
 
 end
 
