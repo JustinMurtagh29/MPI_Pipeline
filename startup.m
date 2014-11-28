@@ -51,6 +51,9 @@ end
 clear hostname* base;
 GLOBAL_CODE_DIR = ['/zdata/rzepka' filesep 'code' filesep];
 
+dbstop if error
+dbstop if caught error
+
 % Set path
 addpath(genpathGit(GLOBAL_CODE_DIR));
 % Load parameters for big pipeline test
