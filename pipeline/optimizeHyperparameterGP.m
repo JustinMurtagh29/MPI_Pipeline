@@ -28,11 +28,11 @@ meanfunc = @meanZero;
 % covfunc = {@covFITC, {@covSum, {@covLINard, @covNoise}}, indPoints};  % Try some 
 % hyp.cov = [zeros(size(trainingData,2),1); log(0.1)];
 covfunc = {@covFITC, {@covSEard}, indPoints};
-hyp.cov = log([5 .* ones(size(trainingData,2),1); 1]);
+hyp.cov = log([10 .* ones(size(trainingData,2),1); 1]);
 likfunc = @likErf;
 inffunc = @infFITC_EP;
 
-hyp = minimize(hyp, @gp, -100, inffunc, meanfunc, covfunc, likfunc, trainingData, trainingLabels);
+hyp = minimize(hyp, @gp, -20, inffunc, meanfunc, covfunc, likfunc, trainingData, trainingLabels);
 save(hypFile, 'hyp', 'inffunc', 'meanfunc', 'covfunc', 'likfunc');
 
 toc(timerVal)
