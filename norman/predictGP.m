@@ -4,7 +4,7 @@ function [labelMean, labelCov, latentMean, latentCov, testLabelProb, post] = ...
   global GLOBAL_CODE_DIR;
 
   % normalize test data (variable weights)
-  testData = normalizeDataForGP(testData, false, normFile);
+  % testData = normalizeDataForGP(testData, false, normFile);
   initialTestLabels = ones(size(testData, 1), 1);
 
   if isreal(testData) == 0
@@ -14,6 +14,7 @@ function [labelMean, labelCov, latentMean, latentCov, testLabelProb, post] = ...
   % gpml toolbox usage
   run([GLOBAL_CODE_DIR 'active/gpml/startup.m']);
 
+  % gpOptions.hyp.cov(1:end-1) = gpOptions.hyp.cov(1:end-1) * 10;
   % Make predictions
   [labelMean, labelCov, latentMean, latentCov, lp, post] = ...
     gp(gpOptions.hyp, gpOptions.inffunc, gpOptions.meanfunc, gpOptions.covfunc, ...
