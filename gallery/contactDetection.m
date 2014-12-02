@@ -1,10 +1,10 @@
-function contactDetection(skel1, skel2, outputFile)
+function contactDetection(skeleton1, skeleton2, outputFile)
 % Pass two nml filenames which are to be contact detected and one output folder
 % Modified Benjamins gallery code (quite a bit)
 
 % Weird format to supress output, gets annoying after a while
-%[~,skel1] = evalc('parseNml(skeleton1)');
-%[~,skel2] = evalc('parseNml(skeleton2)');
+[~,skel1] = evalc('parseNml(skeleton1)');
+[~,skel2] = evalc('parseNml(skeleton2)');
 skel = mergeTrees(skel1, skel2, 'pre', 'post');
 % for each node from both skeletons, find cube in which it resides
 cubeCoords =  [floor((skel{1}.nodes(:,1:3)-1)./128); floor((skel{2}.nodes(:,1:3)-1)./128)];
@@ -108,11 +108,6 @@ end
 if ~isempty(merger)
     [skel, merger] = accumulateOverCubeBorders(skel, merger, 'Merger ID : ');
 end
-
-%skel1FileNameOnly = regexp(skeleton1, '/', 'split');
-%skel1FileNameOnly = skel1FileNameOnly{end}(1:end-4);
-%skel2FileNameOnly = regexp(skeleton2, '/', 'split');
-%skel2FileNameOnly = skel2FileNameOnly{end}(1:end-4);
 
 writeNmlOld(outputFile, skel);
 

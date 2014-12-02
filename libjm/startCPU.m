@@ -8,6 +8,8 @@ function job = startCPU( functionHandle, inputCell, jobName )
 
     % Load cluster configuration
     jm = findJm();
+    % If gpu job-manger is down uncomment this line, will help to avoid index assignment error
+    %jm = findResource('scheduler', 'type', 'jobmanager');
     % Create job on cluster
     if strcmp(GLOBAL_HOST,'fermat01')
         job = createJob(jm(1), 'RestartWorker', true, 'PathDependencies', pathDependencies, 'Name', jobName);

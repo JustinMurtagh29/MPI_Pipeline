@@ -51,7 +51,6 @@ for l=1:length(parameter.feature.input)
     end
 end
 
-
 % calculate shape features and add to weights
 if isfield(parameter.local(sub(1),sub(2),sub(3)), 'class')
     siz = (parameter.local(sub(1),sub(2),sub(3)).bboxSmall(:,2) - parameter.local(sub(1),sub(2),sub(3)).bboxSmall(:,1) + 1)';
