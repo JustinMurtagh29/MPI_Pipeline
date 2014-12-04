@@ -2,9 +2,14 @@ function [labelMean, labelCov, latentMean, latentCov, testLabelProb, post] = ...
   predictGP(testData, normFile, trainingData, trainingLabels, gpOptions)
 
   global GLOBAL_CODE_DIR;
+  % Removing persistent values in @infFITC_EP
+  clear infFITC_EP;
 
-  % normalize test data (variable weights)
-  % testData = normalizeDataForGP(testData, false, normFile);
+  if ~isempty(normFile)
+    % normalize test data (variable weights)
+    testData = normalizeDataForGP(testData, false, normFile);
+  end
+
   initialTestLabels = ones(size(testData, 1), 1);
 
   if isreal(testData) == 0

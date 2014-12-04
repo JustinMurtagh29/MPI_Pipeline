@@ -1,4 +1,5 @@
 function contOptimizeHyperparameterGP(pT,mode)
+% Continue a hyperparameter optimization
 
 global GLOBAL_CODE_DIR;
 

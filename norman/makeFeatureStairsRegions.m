@@ -1,3 +1,5 @@
+function makeFeatureStairsRegions(regionData, weightNames)
+
 % Plots for comparing the histograms of each feature in the 
 % different training regions. One plot each for both labels.
 %
@@ -5,7 +7,6 @@
 % load(pT.local(1,1,1).weightFile);
 % load(pT.gp.initalGroundTruth);
 % makeFeatureStairsRegions(regionData, weightNames)
-function makeFeatureStairsRegions(regionData, weightNames)
 
   BIN_COUNT = 40;
 

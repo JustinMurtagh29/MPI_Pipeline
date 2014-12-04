@@ -1,3 +1,5 @@
+function makeFeatureStairsTrainTest(trainingData, trainingLabels, testData, testLabels, weightNames, hyp)
+
 % Plots for comparing the histograms of each feature in training and test set.
 %
 % Use:
@@ -5,7 +7,6 @@
 % load(pT.gp.initalGroundTruth);
 % load(pT.gp.hyperParameter);
 % makeFeatureStairsTrainTest(trainingData, trainingLabels, testData, testLabels, weightNames, hyp)
-function makeFeatureStairsTrainTest(trainingData, trainingLabels, testData, testLabels, weightNames, hyp)
 
   BIN_COUNT = 40;
 
