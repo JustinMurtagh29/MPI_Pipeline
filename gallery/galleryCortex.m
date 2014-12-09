@@ -1,4 +1,4 @@
-function galleryNew(p, skelPath, skelFile, outputPath)
+function galleryCortex(p, skelPath, skelFile, outputPath)
 
     % Display status
     display(['Processing skeleton: ' skelFile]);

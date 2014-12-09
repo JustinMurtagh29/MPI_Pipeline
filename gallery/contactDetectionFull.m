@@ -12,5 +12,5 @@ for i=1:length(filesBP)
     end
 end
 
-startCPU(functionH, inputCell, 'cortex galley full');
+startCPU(functionH, inputCell, 'retina contact detection full');
 

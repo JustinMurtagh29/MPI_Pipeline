@@ -9,6 +9,9 @@ for i=1:size(parameter.local,1)
 			idx = sub2ind(size(parameter.local), i, j, k);
 			functionH{idx} = @findEdgesAndBordersFast; 
 			inputCell{idx} = {parameter.seg, parameter.local(i,j,k).edgeFile, parameter.local(i,j,k).borderFile, parameter.local(i,j,k).bboxSmall};
+            % Old version on local IDs, still not sure what is better
+            %functionH{idx} = @findEdgesandBorders;
+            %inputCell{idx} = {parameter.local(i,j,k).segFile, parameter.local(i,j,k).edgeFile, parameter.local(i,j,k).borderFile, 'neededForGlia', parameter.tileBorder};
 		end
 	end
 end

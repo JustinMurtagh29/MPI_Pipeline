@@ -1,6 +1,6 @@
 function plotRawCube(root, prefix, bbox, outputFile)
-    figure('Units', 'centimeters', 'Position', [0 0 29.7 21], 'Visible', 'off', ...
-        'PaperType', 'A4', 'PaperUnits', 'centimeters', 'PaperPosition', [0 0 29.7 21], 'PaperOrientation', 'portrait');
+    % Do not show figure (because no GUI output on cluster)
+    figure('Visible', 'off');
     hold on;    
     bbox = repmat({bbox'},[6 1]);
     for i=1:6
@@ -24,7 +24,7 @@ function plotRawCube(root, prefix, bbox, outputFile)
     camlight('headlight');
     lighting phong;
     axis off; axis tight;
-    set(gcf,'PaperSize',fliplr(get(gcf,'PaperSize')));
-    print(outputFile, '-dpng', '-r600');
+    % One can control much more, e.g. Light color, strength, angle etc. -> google: Matlab Lightning Overview
+    hgsave(gcf, outputFile, '-v7.3');
 end
 

@@ -18,7 +18,7 @@ function findEdgesAndBordersFast(seg, edgeFile, borderFile, bbox)
     vec = int32([(-M*N+[-M-1 -M -M+1 -1 0 1 M-1 M M+1]) [-M-1 -M -M+1 -1 1 M-1 M M+1] (M*N+[-M-1 -M -M+1 -1 0 1 M-1 M M+1])]);
 
     % Find linear inidices of all wall voxel
-    ind = find(segSmall==0);
+    ind = int32(find(segSmall==0));
 
     % Find segmentation ID of all neighbours of all wall voxel (according to 26
     % connectivity)
