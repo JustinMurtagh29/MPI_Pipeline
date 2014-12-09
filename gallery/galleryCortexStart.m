@@ -1,6 +1,7 @@
 function galleryCortexStart(p)
 
-skelPath = '/zdata/manuel/sync/fromLap/07x2skeletons/axonsMHforPaper/';
+%skelPath = '/zdata/manuel/sync/fromLap/07x2skeletons/axonsMHforPaper/';
+skelPath = '/zdata/manuel/sync/fromLap/07x2skeletons/spinyStellateForPaper/';
 
 files = dir([skelPath '*.nml']);
 
