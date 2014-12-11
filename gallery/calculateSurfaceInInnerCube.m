@@ -64,7 +64,8 @@ function calculateSurfaceInInnerCube( skelPath, skelFile, outputFile )
                     a = vertices(faces(:, 2), :) - vertices(faces(:, 1), :);
                     b = vertices(faces(:, 3), :) - vertices(faces(:, 1), :);
                     c = cross(a, b, 2);
-                    area(groupedNodes{i}.cubeCoords) = 1/2 * sum(sqrt(sum(c.^2, 2)));               
+                    cubeCoord = groupedNodes{i}.cubeCoords;
+                    area(cubeCoord(1),cubeCoord(2),cubeCoord(3))= 1/2 * sum(sqrt(sum(c.^2, 2)));               
                 end
             end
         end
