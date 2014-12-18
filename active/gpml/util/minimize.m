@@ -69,13 +69,19 @@ SIG = 0.1; RHO = SIG/2; % SIG and RHO are the constants controlling the Wolfe-
 
 if max(size(length)) == 2, red=length(2); length=length(1); else red=1; end
 if length>0, S='Linesearch'; else S='Function evaluation'; end 
+disp('Here we go!')
+timerVal = tic;
 
 i = 0;                                            % zero the run length counter
 ls_failed = 0;                             % no previous line search has failed
 [f0 df0] = feval(f, X, varargin{:});          % get function value and gradient
 Z = X; X = unwrap(X); df0 = unwrap(df0);
-disp(sprintf('%s %6i;  Value %4.6e', S, i, f0));
-if exist('fflush','builtin') fflush(stdout); end
+fprintf('%s %6i;  Value %4.6e\n', S, i, f0);
+saveValues(i, X, df0);
+% if exist('fflush','builtin') fflush(stdout); end
+toc(timerVal)
+timerVal = tic;
+
 fX = f0;
 i = i + (length<0);                                            % count epochs?!
 s = -df0; d0 = -s'*s;           % initial search direction (steepest) and slope
@@ -96,6 +102,7 @@ while i < abs(length)                                      % while not finished
         
         [f3 df3] = feval(f, rewrap(Z,X+x3*s), varargin{:});
         df3 = unwrap(df3);
+        saveValues(i, X+x3*s, df3);
         if isnan(f3) || isinf(f3) || any(isnan(df3)+isinf(df3)), error(''), end
         success = 1;
       catch                                % catch any error which occured in f
@@ -140,6 +147,7 @@ while i < abs(length)                                      % while not finished
     x3 = max(min(x3, x4-INT*(x4-x2)),x2+INT*(x4-x2));  % don't accept too close
     [f3 df3] = feval(f, rewrap(Z,X+x3*s), varargin{:});
     df3 = unwrap(df3);
+    saveValues(i, X+x3*s, df3);
     if f3 < F0, X0 = X+x3*s; F0 = f3; dF0 = df3; end         % keep best values
     M = M - 1; i = i + (length<0);                             % count epochs?!
     d3 = df3'*s;                                                    % new slope
@@ -147,8 +155,8 @@ while i < abs(length)                                      % while not finished
 
   if abs(d3) < -SIG*d0 && f3 < f0+x3*RHO*d0          % if line search succeeded
     X = X+x3*s; f0 = f3; fX = [fX' f0]';                     % update variables
-    disp(sprintf('%s %6i;  Value %4.6e', S, i, f0));
-    if exist('fflush','builtin') fflush(stdout); end
+    fprintf('%s %6i;  Value %4.6e\n', S, i, f0);
+    % if exist('fflush','builtin') fflush(stdout); end
     s = (df3'*df3-df0'*df3)/(df0'*df0)*s - df3;   % Polack-Ribiere CG direction
     df0 = df3;                                               % swap derivatives
     d3 = d0; d0 = df0'*s;
@@ -158,6 +166,7 @@ while i < abs(length)                                      % while not finished
     x3 = x3 * min(RATIO, d3/(d0-realmin));          % slope ratio but max RATIO
     ls_failed = 0;                              % this line search did not fail
   else
+    disp('line search failed');
     X = X0; f0 = F0; df0 = dF0;                     % restore best point so far
     if ls_failed || i > abs(length)         % line search failed twice in a row
       break;                             % or we ran out of time, so we give up
@@ -166,9 +175,17 @@ while i < abs(length)                                      % while not finished
     x3 = 1/(1-d0);                     
     ls_failed = 1;                                    % this line search failed
   end
+  fprintf('%d / %d\n', i, abs(length));
+  toc(timerVal)
+  timerVal = tic;
 end
 X = rewrap(Z,X); 
-fprintf('\n'); if exist('fflush','builtin') fflush(stdout); end
+% fprintf('\n'); if exist('fflush','builtin') fflush(stdout); end
+
+function saveValues(i, x, dx)
+  % save(sprintf('minimize_hyp_%i_%s.mat', i, datestr(clock, 30)), 'x', 'dx');
+  fprintf('Evaluation %i\n', i);
+
 
 function v = unwrap(s)
 % Extract the numerical values from "s" into the column vector "v". The
