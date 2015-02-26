@@ -40,6 +40,7 @@ switch hostnameShort
         GLOBAL_OUTPUT_DIR = [base 'sync' filesep];
     case 'quak'
         base = '/zdata/manuel/';
+        GLOBAL_CODE_DIR = ['/zdata/rzepka/code' filesep];
         GLOBAL_CPU_JM = 'fermat-job-manager';
         GLOBAL_GPU_JM = 'fermat-gpu-manager';
         GLOBAL_DATA_DIR = [base 'data' filesep];
