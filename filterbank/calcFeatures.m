@@ -2,16 +2,23 @@ function calcFeatures(parameter, sub)
 % We need to make sure that this function works correctly near borders of cube, right now due to no padding and 'same' convolution in filter3d
 % we should have massive border effects?
 
+% Why do this, empty initaliztion seems bad
 weights = [];
+segmentWeights = [];
 weightNames = {};
 
+% Create output directory if it does not exist
 if ~exist(parameter.local(sub(1),sub(2),sub(3)).saveFolder, 'dir')
     mkdir(parameter.local(sub(1),sub(2),sub(3)).saveFolder);
 end
 
+% Load pixel list for borders and segments
 load(parameter.local(sub(1),sub(2),sub(3)).borderFile);
+load(parameter.local(sub(1),sub(2),sub(3)).segmentFile);
 
+% Define bounding box, add border so that 3D filter do not 
 bbox = parameter.local(sub(1),sub(2),sub(3)).bboxSmall + [-10 10; -10 10; -10 10];
+
 for l=1:length(parameter.feature.input)
     if strcmp(parameter.feature.input{l}, 'raw')
         imfeat = loadRawData(parameter.raw.root, parameter.raw.prefix, bbox, 1);
@@ -34,7 +41,6 @@ for l=1:length(parameter.feature.input)
                     filteredImFeats{p} = filteredImFeats{p}(11:end-10,11:end-10,11:end-10);
                     [weights_new, weightNames_new] = featureDesign(real(filteredImFeats{p}), borders);
                     weights = [weights weights_new];
-
                     weightNames_new = strcat({sprintf('%s %s filtersize=%d feature=%d ', currentFilter{1}, parameter.feature.input{l}, currentFilter{2}(n), p)}, weightNames_new);
                     weightNames = { weightNames{:}, weightNames_new{:} };
                 end
@@ -42,7 +48,6 @@ for l=1:length(parameter.feature.input)
                 filteredImFeats = filteredImFeats(11:end-10,11:end-10,11:end-10);
                 [weights_new, weightNames_new] = featureDesign(filteredImFeats, borders);
                 weights = [weights weights_new];
-
                 weightNames_new = strcat({sprintf('%s %s filtersize=%d feature=%d ', currentFilter{1}, parameter.feature.input{l}, currentFilter{2}(n), 0)}, weightNames_new);
                 weightNames = {weightNames{:}, weightNames_new{:}};
                     

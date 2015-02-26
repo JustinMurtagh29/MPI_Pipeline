@@ -59,7 +59,7 @@ function calculateSurfaceInInnerCube( skelPath, skelFile, outputFile )
                 cube = cube(65:end-64,65:end-64,65:end-64);
                 issfs{i} = isosurface(cube, .5);
                 if ~isempty(issfs{i}.vertices)
-                    vertices = bsxfun(@plus, issfs{i}.vertices, [12 12 25]);
+                    vertices = bsxfun(@times, issfs{i}.vertices, [12 12 25]);
                     faces = issfs{i}.faces;
                     a = vertices(faces(:, 2), :) - vertices(faces(:, 1), :);
                     b = vertices(faces(:, 3), :) - vertices(faces(:, 1), :);
