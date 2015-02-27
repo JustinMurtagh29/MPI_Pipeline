@@ -39,18 +39,27 @@ for l=1:length(parameter.feature.input)
             if isa(filteredImFeats, 'cell')
                 for p=1:length(filteredImFeats)
                     filteredImFeats{p} = filteredImFeats{p}(11:end-10,11:end-10,11:end-10);
-                    [weights_new, weightNames_new] = featureDesign(real(filteredImFeats{p}), borders);
-                    weights = [weights weights_new];
+                    % Feature for edges
+                    %[weights_new, weightNames_new] = featureDesign(real(filteredImFeats{p}), borders);
+                    %weights = [weights weights_new];
+                    % Feature for nodes
+                    [segmentWeights_new, weightNames_new] = featureDesign(real(imfeats{p}), segments);
+                    segmentWeights = [segmentWeights segmentWeights_new]; 
+                    % Names for features
                     weightNames_new = strcat({sprintf('%s %s filtersize=%d feature=%d ', currentFilter{1}, parameter.feature.input{l}, currentFilter{2}(n), p)}, weightNames_new);
                     weightNames = { weightNames{:}, weightNames_new{:} };
                 end
             else
                 filteredImFeats = filteredImFeats(11:end-10,11:end-10,11:end-10);
-                [weights_new, weightNames_new] = featureDesign(filteredImFeats, borders);
-                weights = [weights weights_new];
+                % Feature for edges
+                %[weights_new, weightNames_new] = featureDesign(filteredImFeats, borders);
+                %weights = [weights weights_new];
+                % Feature for nodes
+                [segmentWeights_new,weightNames_new] = featureDesign(imfeats, segments);
+                segmentWeights = [segmentWeights segmentWeights_new];
+                % Names for features
                 weightNames_new = strcat({sprintf('%s %s filtersize=%d feature=%d ', currentFilter{1}, parameter.feature.input{l}, currentFilter{2}(n), 0)}, weightNames_new);
-                weightNames = {weightNames{:}, weightNames_new{:}};
-                    
+                weightNames = {weightNames{:}, weightNames_new{:}};                   
             end
         end
     end
@@ -63,12 +72,15 @@ else
     siz = parameter.tileSize';
 end
 
-[weightsShape_borders, weightNames_new] = shapeFeatures(borders,siz);
+%[weightsShape_borders, weightNames_new] = shapeFeatures(borders,siz);
+[weightsShape_segments, weightNames_new] = shapeFeatures(segments,siz);
 
-weights = [weights weightsShape_borders];
+%weights = [weights weightsShape_borders];
+segmentWeights = [segmentWeights weightsShape_segments];
 weightNames = {weightNames{:}, weightNames_new{:}};
 
-save(parameter.local(sub(1),sub(2),sub(3)).weightFile, 'weights', 'weightNames');
+%save(parameter.local(sub(1),sub(2),sub(3)).weightFile, 'weights', 'weightNames');
+save(parameter.local(sub(1),sub(2),sub(3)).segmentWeightFile, 'segmentWeights', 'weightNames');
 
 end
 
