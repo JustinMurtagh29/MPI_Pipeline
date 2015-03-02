@@ -43,7 +43,7 @@ for l=1:length(parameter.feature.input)
                     %[weights_new, weightNames_new] = featureDesign(real(filteredImFeats{p}), borders);
                     %weights = [weights weights_new];
                     % Feature for nodes
-                    [segmentWeights_new, weightNames_new] = featureDesign(real(imfeats{p}), segments);
+                    [segmentWeights_new, weightNames_new] = featureDesign(real(filteredImFeats{p}), segments);
                     segmentWeights = [segmentWeights segmentWeights_new]; 
                     % Names for features
                     weightNames_new = strcat({sprintf('%s %s filtersize=%d feature=%d ', currentFilter{1}, parameter.feature.input{l}, currentFilter{2}(n), p)}, weightNames_new);
@@ -55,7 +55,7 @@ for l=1:length(parameter.feature.input)
                 %[weights_new, weightNames_new] = featureDesign(filteredImFeats, borders);
                 %weights = [weights weights_new];
                 % Feature for nodes
-                [segmentWeights_new,weightNames_new] = featureDesign(imfeats, segments);
+                [segmentWeights_new,weightNames_new] = featureDesign(filteredImFeats, segments);
                 segmentWeights = [segmentWeights segmentWeights_new];
                 % Names for features
                 weightNames_new = strcat({sprintf('%s %s filtersize=%d feature=%d ', currentFilter{1}, parameter.feature.input{l}, currentFilter{2}(n), 0)}, weightNames_new);
