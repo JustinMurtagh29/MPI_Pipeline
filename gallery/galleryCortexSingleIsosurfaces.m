@@ -3,7 +3,7 @@ function galleryCortexSingleIsosurfaces(p, skelPath, skelFile, outputPath)
     % Display status
     display(['Processing skeleton: ' skelFile]);
     % evalc to supress output of parseNml
-    [~,skel_data] = evalc('parseNml([skelPath skelFile])'); 
+    [~,skel_data] = evalc('parseNml_noInVP([skelPath skelFile])'); 
 
     % Find X,Y,Z for each node if it is within parameter.local(X,Y,Z).bboxSmall
     for sk = 1:length(skel_data)
@@ -74,6 +74,7 @@ function galleryCortexSingleIsosurfaces(p, skelPath, skelFile, outputPath)
                             issfs{idxIso}.vertices = issfs{idxIso}.vertices + repmat(zeroOfCube(1,:) - [2 2 2],size(issfs{idxIso}.vertices,1),1);
                             issfs{idxIso}.vertices = issfs{idxIso}.vertices .* repmat([11.24 11.24 28],size(issfs{idxIso}.vertices,1),1);
                         end
+                        idxIso = idxIso + 1;
                     end
                 end
             end
