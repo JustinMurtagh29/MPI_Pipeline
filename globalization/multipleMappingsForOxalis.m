@@ -12,7 +12,7 @@ display(['Maximum ID in (globalized) segmentation: ' num2str(numEl)]);
 % Create structure & write JSON for correspondence mapping
 coMapping.name = 'correspondences';
 coMapping.classes = components; % from globalCorrespondences.mat, see findGlobalCC.m for calculation
-writeJson([p.saveFolder 'correspondences.json'], coMapping); 
+writeJson([p.saveFolder 'correspondences.json'],coMapping); 
 
 % Load all edges and probabilities
 allComponents = {};
@@ -28,7 +28,7 @@ for i=1:size(p.local,1)
             uniqueEdgesToJoin = unique(edgesToJoin);
             componentsNew = findConnectedComponents(edgesToJoin, uniqueEdgesToJoin);
             save([p.local(i,j,k).saveFolder 'joinedComponents.mat'], 'componentsNew');
-            allComponents = [allComponents newComponents];
+            allComponents = [allComponents; componentsNew];
         end
     end
 end

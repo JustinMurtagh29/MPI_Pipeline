@@ -53,6 +53,7 @@ switch hostnameShort
 
     % Set path
     addpath(genpathGit(GLOBAL_CODE_DIR));
+    addpath('/zdata/manuel/matlab-json/'); % for reading and writing JSON
     % Load parameters for big pipeline test
     [p,pT] = setParameterSettingsBig('20141007T094904');
     % Log commands
