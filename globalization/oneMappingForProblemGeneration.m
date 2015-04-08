@@ -31,7 +31,7 @@ if ~exist([p.saveFolder 'graph.mat'], 'dir')
     % Drop part of arrays preallocated but not assigned
     graph.edges(idx:end,:) = [];
     graph.prob(idx:end) = [];
-    save([p.saveFolder 'graph.mat'], graph);
+    save([p.saveFolder 'graph.mat'], 'graph');
 else
     display('NOTE: Graph loaded from HD. Rename for recalculation');
     load([p.saveFolder 'graph.mat']);
