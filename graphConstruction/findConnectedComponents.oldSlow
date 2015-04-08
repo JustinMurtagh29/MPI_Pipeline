@@ -1,4 +1,4 @@
-function components = findConnectedComponents2(newedgelist,newobjectIds)
+function components = findConnectedComponents(newedgelist,newobjectIds)
 
 components ={};
 k = 1;

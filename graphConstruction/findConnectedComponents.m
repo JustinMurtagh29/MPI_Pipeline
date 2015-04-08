@@ -1,36 +1,34 @@
-function components = findConnectedComponents(newedgelist,newobjectIds)
+function [equivalenceClasses, objectClassLabels] = findConnectedComponents(sparseAdjMatrixOrEdgeList)
+% Finds connected components in undirected graph (graph is made symetric)
+%INPUT: either sparse adjanceny matrix (assumed symetric) or one direction edge list
+% (which will be made into symetric adjanceny list here, inconsistent?)
+%OUTPUT: first result = cell array with all equivalence classes with more
+% than 1 object, second result equivalence class label for each object
 
-components ={};
-k = 1;
-%Liste der noch nicht besuchten Knoten
-nonvisited = 1:size(newobjectIds,1);
-
-while ~isempty(nonvisited)
-    components{k,1} = newobjectIds(nonvisited(1));
-    l1 = size(components{k,1},1);
-    %Hinzufuegen aller Nachbarn von nonvisited(1)
-    index = any(newedgelist == newobjectIds(nonvisited(1)), 2);
-    v = newedgelist(index,:);
-    %Loeschen des besuchten Wertes
-    nonvisited(1)=[];
-    v = intersect(v(:),newobjectIds(nonvisited));
-    components{k,1}=vertcat(components{k,1},v);
-    l2 = size(components{k,1},1);
-    %Hinzufuegen aller Nachbarn der Nachbarn etc
-    while ~(l1==l2)
-        v=[];
-        for j=l1+1:l2
-            index = find(newobjectIds==(components{k,1}(j)));
-            index1 = any(newedgelist == newobjectIds(index), 2);
-            v=[v; newedgelist(index1,:)];
-            nonvisited(nonvisited==index)=[];
-        end
-        l1 = l2;
-        v = intersect(v(:),newobjectIds(nonvisited));
-        components{k,1}=vertcat(components{k,1},v);
-        l2 = size(components{k,1},1);
-    end
-    k = k+1;
+% Create sparse undirected adjaceny matrix if not supplied
+if ~issparse(sparseAdjMatrixOrEdgeList)
+    maxValue = max(sparseAdjMatrixOrEdgeList(:));
+    sparseAdjMatrixOrEdgeList = sparse(sparseAdjMatrixOrEdgeList(:,1),sparseAdjMatrixOrEdgeList(:,2),1,maxValue,maxValue);
 end
+
+% Make sure adjMatric is symetric
+sparseAdjMatrixOrEdgeList = sparseAdjMatrixOrEdgeList + sparseAdjMatrixOrEdgeList';
+
+% Find block diagonal matrix permutation
+[rowPermutation,~,rowBlockBoundaries] = dmperm(sparseAdjMatrixOrEdgeList + speye(maxValue));
+
+% Create vector with one at each row boundary start
+newLabelStart = zeros(1,maxValue);
+newLabelStart(rowBlockBoundaries(1:end-1)) = 1;
+
+% Calculate object class labels (equivalence class of each object)
+objectClassLabels = cumsum(newLabelStart);
+objectClassLabels(rowPermutation) = objectClassLabels;
+
+% Equivalence classes (sort out 1-element ones first)
+sizeBlocks = diff(rowBlockBoundaries);
+sizeBlocks(sizeBlocks == 1) = [];
+rowPermutation(~(newLabelStart == 0 | [diff(newLabelStart) 0] == -1)) = [];
+equivalenceClasses = mat2cell(rowPermutation', sizeBlocks);
 
 end
