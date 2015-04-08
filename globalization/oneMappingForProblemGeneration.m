@@ -1,6 +1,6 @@
 function oneMappingForProblemGeneration(p)
 
-if ~exist([p.saveFolder 'graph.mat'], 'dir')
+if ~exist([p.saveFolder 'graph.mat'], 'file')
     % Collect all edges of local supervoxel graph
     graph.edges = NaN(1e8,2); % 1e8 heuristic for 07x2, turns out actually ~7.5e7
     graph.prob = NaN(1e8,1);
@@ -37,9 +37,7 @@ else
     load([p.saveFolder 'graph.mat']);
 end
 
-
-
-if ~exist([p.saveFolder 'bothMappings.mat'], 'dir');
+if ~exist([p.saveFolder 'graphNew.mat'], 'file');
     % Load cube border correspondences and all local cube components based on GP
     load([p.saveFolder 'globalCorrespondences.mat']);
     load([p.saveFolder 'joinedComponents.mat']);
