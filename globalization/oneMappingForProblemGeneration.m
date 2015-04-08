@@ -1,4 +1,5 @@
-function oneMappingForProblemGeneration(p)
+function oneMappingForProblemGeneration(p, upperT)
+% Mainly for testing GP based joining of supervoxel graph, maybe should become class later
 
 if ~exist([p.saveFolder 'graph.mat'], 'file')
     % Collect all edges of local supervoxel graph
@@ -38,53 +39,31 @@ else
 end
 
 if ~exist([p.saveFolder 'graphNew.mat'], 'file');
-    % Load cube border correspondences and all local cube components based on GP
-    load([p.saveFolder 'globalCorrespondences.mat']);
-    load([p.saveFolder 'joinedComponents.mat']);
-    % Join those two mappings into one 
-    bothMappings = [components; allComponents];
-    clear components allComponents;
-    % Initalize empty adjaceny list of equivalence classes
-    adjList = [];
-    lengthBothMappings = length(bothMappings);
-    for i=1:lengthBothMappings
-        temp = find(cellfun(@(x,y)any(ismember(x,y)), repmat(bothMappings(i),lengthBothMappings-i,1), bothMappings(i+1:end)))+i;
-        adjList = [adjList; i.*ones(length(temp),1) temp];
+    % Upper threshold
+    idxJoined = graph.prob > upperT;
+    graph.edgesJoined = graph.edges(idxJoined,:);
+    graph.probJoined = graph.prob(idxJoined);
+    % Find connected components in joined edges 
+    [graph.ccEdgesJoined.equivalenceClasses, graph.ccEdgesJoined.objectClassLabels] = findConnectedComponents(graph.edgesJoined);
+    % Recalculate edge and probability list for joined edges
+    % Initalize with edges not joined
+    graph.edgesRemaining = graph.edges(~idxJoined,:);
+    graph.probRemaining = graph.prob(~idxJoined);
+    tempEdges = permute(graph.edgesRemaining, [3 1 2 ]);
+    % Loop for relabeling edges and calculating probabilities accordinglyy
+    for i=1:length(graph.ccEdgesJoined.equivalenceClasses)
+        % Find all edges pointing into current (i-th) connected component
+        tempFindEdges = bsxfun(@eq, tempEdges, graph.ccEdgesJoined.equivalenceClasses{i});
+        edges = graph.edgesRemaining(squeeze(sum(sum(tempFindEdges,1),3)),:); 
+        graph.edgesRemaining = a;
+        graph.probRemaining = b;
     end
-    bothMappingsIdx = findConnectedComponents(adjList, unique(adjList));
-    oneMapping = cell(length(bothMappingsIdx),1);
-    for i=1:length(bothMappingsIdx)
-        oneMapping{i} = bothMappings{bothMappingsIdx{i}};
-    end
-    save([p.saveFolder 'oneMapping.mat']);
+    % Save for future use 
+    save([p.saveFolder 'graphNew.mat'], 'graph');
 else
-    warning('Joining quotient sets of both mappings loaded from disk, NOT recalculated')
-    load([p.saveFolder 'bothMappings.mat']);
-end
-% Iterate over cubes and apply thresholds to GP prediction
-for i=1:size(p.local,1)
-    for j=1:size(p.local,2)
-        for k=1:size(p.local,3)
-            load(p.local(i,j,k).edgeFile);
-            load(p.local(i,j,k).probFile);
-            % Drop edges over upper threshold (already CC's detected in joinedComponents.mat, variable componentsNew)
-            edges = edges(prob < upperT);
-            prob = prob(prob < upperT);
-            % Drop edges below lower threshold
-            edges = edges(prob > lowerT);
-            prob = prob(prob > lowerT);j
-            % Renumber edges according joinedComponents.mat, 
-            for i=1:length(componentsNew)
-                edges == componentsNew{i}(j);
-            end
-            % Put everything in one structure
-            graph(i,j,k) = [edges prob];
-        end
-    end
+    display('Graph after GP and correspodence based joining of supervoxel loaded from disk, NOT recalculated')
+    load([p.saveFolder 'graphNew.mat']);
 end
 
-
-% Save global correspodences
-
-
 end
+
