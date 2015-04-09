@@ -24,9 +24,8 @@ for i=1:size(p.local,1)
             joinEdges = prob > upperT;
             % Calculate, save and collect all GP based components for each cube
             edgesToJoin = edges(joinEdges,:);
-            uniqueNodesToJoin = unique(edgesToJoin);
-            componentsNew = findConnectedComponents(edgesToJoin, uniqueNodesToJoin);
-            allComponents = [allComponents; componentsNew];
+            componentsNew = findConnectedComponents(edgesToJoin);
+            allComponents = [allComponents; componentsNew]; % this line is probably slowing this down substaintially, optimize if problem 
             save([p.local(i,j,k).saveFolder 'joinedComponents.mat'], 'componentsNew');
         end
     end
@@ -40,3 +39,4 @@ gpMapping.classes = allComponents;
 writeJson([p.saveFolder 'gaussianProcess.json'], gpMapping); 
 
 end
+

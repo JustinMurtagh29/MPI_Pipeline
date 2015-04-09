@@ -2,6 +2,7 @@ function oneMappingForProblemGeneration(p, upperT)
 % Mainly for testing GP based joining of supervoxel graph, maybe should become class later
 
 if ~exist([p.saveFolder 'graph.mat'], 'file')
+    tic;
     % Collect all edges of local supervoxel graph
     graph.edges = NaN(1e8,2); % 1e8 heuristic for 07x2, turns out actually ~7.5e7
     graph.prob = NaN(1e8,1);
@@ -33,33 +34,54 @@ if ~exist([p.saveFolder 'graph.mat'], 'file')
     graph.edges(idx:end,:) = [];
     graph.prob(idx:end) = [];
     save([p.saveFolder 'graph.mat'], 'graph');
+    toc;
 else
     display('NOTE: Graph loaded from HD. Rename for recalculation');
     load([p.saveFolder 'graph.mat']);
 end
 
 if ~exist([p.saveFolder 'graphNew.mat'], 'file');
+    tic;
+    % Find maximum ID before joining to determine new (joined) supervoxel IDs
+    load([p.local(end,end,end).saveFolder 'localToGlobalSegId.mat']);
+    maxGlobalId = max(globalIds);
     % Upper threshold
     idxJoined = graph.prob > upperT;
     graph.edgesJoined = graph.edges(idxJoined,:);
     graph.probJoined = graph.prob(idxJoined);
-    % Find connected components in joined edges 
-    [graph.ccEdgesJoined.equivalenceClasses, graph.ccEdgesJoined.objectClassLabels] = findConnectedComponents(graph.edgesJoined);
-    % Recalculate edge and probability list for joined edges
-    % Initalize with edges not joined
     graph.edgesRemaining = graph.edges(~idxJoined,:);
     graph.probRemaining = graph.prob(~idxJoined);
-    tempEdges = permute(graph.edgesRemaining, [3 1 2 ]);
-    % Loop for relabeling edges and calculating probabilities accordinglyy
+    % Find connected components in joined edges 
+    [graph.ccEdgesJoined.equivalenceClasses, graph.ccEdgesJoined.objectClassLabels] = findConnectedComponents(graph.edgesJoined);
+    % Loop for relabeling edges and calculating probabilities accordingly
     for i=1:length(graph.ccEdgesJoined.equivalenceClasses)
-        % Find all edges pointing into current (i-th) connected component
-        tempFindEdges = bsxfun(@eq, tempEdges, graph.ccEdgesJoined.equivalenceClasses{i});
-        edges = graph.edgesRemaining(squeeze(sum(sum(tempFindEdges,1),3)),:); 
-        graph.edgesRemaining = a;
-        graph.probRemaining = b;
+        % Find all edges pointing into current (i-th) connected component (not within, see all 2nd line)
+        logicalFindEdges = bsxfun(@eq, graph.edgesRemaining, permute(graph.ccEdgesJoined.equivalenceClasses{i}, [2 3 1]));
+        idxToRemove = any(any(logicalFindEdges,3),2) & ~all(any(logicalFindEdges,3),2);
+        % Store edges and probabilities before removing to calculate what to (re)insert
+        edgesToRemove = graph.edgesRemaining(idxToRemove,:);
+        probToRemove = graph.probRemaining(idxToRemove);
+        logicalToRemove = logicalFindEdges(idxToRemove,:,:);
+        % Remove all of those from remaining edges and probabilities
+        graph.edgesRemaining(idxToRemove,:) = [];
+        graph.probRemaining(idxToRemove) = [];
+        % Renumber all edges to new supervoxel ID 
+        edgesToRemove(any(logicalToRemove,3)) = maxGlobalId + i;
+        % Make sure first edge column is always smaller
+        edgesToRemove = sort(edgesToRemove,2);
+        % Remove double entries    
+        [edgesToRemove, idxNew, idxOld] = unique(edgesToRemove, 'rows');
+        % Calculate new probabilities
+        for j=1:size(edgesToRemove,1)
+            prob(j) = 1 - prod(1 - probToRemove(idxOld == j));
+        end 
+        % Reinsert into graph
+        graph.edgesRemaining = [graph.edgesRemaining; edgesToRemove];
+        graph.probRemaining = [graph.probRemaining; probToRemove];
     end
     % Save for future use 
     save([p.saveFolder 'graphNew.mat'], 'graph');
+    toc;
 else
     display('Graph after GP and correspodence based joining of supervoxel loaded from disk, NOT recalculated')
     load([p.saveFolder 'graphNew.mat']);

@@ -7,6 +7,7 @@ function [equivalenceClasses, objectClassLabels] = findConnectedComponents(spars
 
 % Create sparse undirected adjaceny matrix if not supplied
 if ~issparse(sparseAdjMatrixOrEdgeList)
+    sparseAdjMatrixOrEdgeList = double(sparseAdjMatrixOrEdgeList); % integer sparse matrices apparently not possible in matlab (tested R2011b)
     maxValue = max(sparseAdjMatrixOrEdgeList(:));
     sparseAdjMatrixOrEdgeList = sparse(sparseAdjMatrixOrEdgeList(:,1),sparseAdjMatrixOrEdgeList(:,2),1,maxValue,maxValue);
 end
