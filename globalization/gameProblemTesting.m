@@ -5,8 +5,8 @@ function gameProblemTesting(p, coord, lowerT, upperT)
 % Look up segment ID at inital location
 segId = readKnossosRoi(p.seg.root, p.seg.prefix, [coord; coord])
 
-% Load correspondences in global IDs, e.g. how to continue over cube borders (variable components)
-
+% Load supervoxel in global IDs (edges & prob before joining, (edge/prob)Remaining after GP and correspondence application)
+load([p.saveFolder 'graphNew.mat']);
 
 % Write skeletons (later here, game problems) according to pruned graph
 

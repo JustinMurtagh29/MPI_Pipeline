@@ -55,25 +55,27 @@ if ~exist([p.saveFolder 'graphNew.mat'], 'file');
     [graph.ccEdgesJoined.equivalenceClasses, graph.ccEdgesJoined.objectClassLabels] = findConnectedComponents(graph.edgesJoined);
     % Loop for relabeling edges and calculating probabilities accordingly
     for i=1:length(graph.ccEdgesJoined.equivalenceClasses)
-        % Find all edges pointing into current (i-th) connected component (not within, see all 2nd line)
-        logicalFindEdges = bsxfun(@eq, graph.edgesRemaining, permute(graph.ccEdgesJoined.equivalenceClasses{i}, [2 3 1]));
-        idxToRemove = any(any(logicalFindEdges,3),2) & ~all(any(logicalFindEdges,3),2);
+        % Find all edges pointing into current (i-th) connected component (not within, see all in last line)
+        logicalFindEdges = false(size(graph.edgesRemaining));
+        for j=1:length(graph.ccEdgesJoined.equivalenceClasses)
+            logicalFindEdges = logicalFindEdges | (graph.edgesRemaining == graph.ccEdgesJoined.equivalenceClasses{i}(j));
+        end
+        idxToRemove = any(logicalFindEdges,2) & ~all(logicalFindEdges,2);
         % Store edges and probabilities before removing to calculate what to (re)insert
         edgesToRemove = graph.edgesRemaining(idxToRemove,:);
         probToRemove = graph.probRemaining(idxToRemove);
-        logicalToRemove = logicalFindEdges(idxToRemove,:,:);
         % Remove all of those from remaining edges and probabilities
         graph.edgesRemaining(idxToRemove,:) = [];
         graph.probRemaining(idxToRemove) = [];
         % Renumber all edges to new supervoxel ID 
-        edgesToRemove(any(logicalToRemove,3)) = maxGlobalId + i;
+        edgesToRemove(logicalFindEdges(idxToRemove,:)) = maxGlobalId + i;
         % Make sure first edge column is always smaller
         edgesToRemove = sort(edgesToRemove,2);
-        % Remove double entries    
-        [edgesToRemove, idxNew, idxOld] = unique(edgesToRemove, 'rows');
+        % Remove double entries / redundancies (thereby generating new edges after thresholod)   
+        [edgesNew, ~, idxOld] = unique(edgesToRemove, 'rows');
         % Calculate new probabilities
         for j=1:size(edgesToRemove,1)
-            prob(j) = 1 - prod(1 - probToRemove(idxOld == j));
+            probNew(j) = 1 - prod(1 - probToRemove(idxOld == j));
         end 
         % Reinsert into graph
         graph.edgesRemaining = [graph.edgesRemaining; edgesToRemove];
