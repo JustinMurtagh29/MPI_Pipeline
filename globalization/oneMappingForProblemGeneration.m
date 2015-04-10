@@ -69,12 +69,11 @@ if ~exist([p.saveFolder 'graphNew.mat'], 'file');
         % Make sure first edge column is always smaller
         edgesToRemove = sort(edgesToRemove,2);
         % Remove double entries / redundancies (thereby generating new edges after thresholod)   
-        [edgesNew, ~, idxOld] = unique(edgesToRemove, 'rows');
+        [edgesNew, idxNew, idxOld] = unique(edgesToRemove, 'rows');
         % Calculate new probabilities
-        probNew = zeros(size(edgesToRemove,1),1);
-        for j=1:size(edgesToRemove,1)
-            probNew(j) = 1 - prod(1 - probToRemove(idxOld == j));
-        end 
+        probMatrix = sparse(1:length(idxOld), idxOld, 1);
+        probMatrix = bsxfun(@times, probMatrix, probToRemove);
+        probNew = 1-prod(1-probMatrix)';
         % Reinsert into graph
         graph.edgesRemaining = [graph.edgesRemaining; edgesNew];
         graph.probRemaining = [graph.probRemaining; probNew];
