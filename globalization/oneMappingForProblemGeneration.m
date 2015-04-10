@@ -57,7 +57,7 @@ if ~exist([p.saveFolder 'graphNew.mat'], 'file');
     for i=1:length(graph.ccEdgesJoined.equivalenceClasses)
         % Find all edges pointing into current (i-th) connected component (not within, see all in last line)
         logicalFindEdges = false(size(graph.edgesRemaining));
-        for j=1:length(graph.ccEdgesJoined.equivalenceClasses)
+        for j=1:length(graph.ccEdgesJoined.equivalenceClasses{i})
             logicalFindEdges = logicalFindEdges | (graph.edgesRemaining == graph.ccEdgesJoined.equivalenceClasses{i}(j));
         end
         idxToRemove = any(logicalFindEdges,2) & ~all(logicalFindEdges,2);
