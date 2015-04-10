@@ -56,10 +56,7 @@ if ~exist([p.saveFolder 'graphNew.mat'], 'file');
     % Loop for relabeling edges and calculating probabilities accordingly
     for i=1:length(graph.ccEdgesJoined.equivalenceClasses)
         % Find all edges pointing into current (i-th) connected component (not within, see all in last line)
-        logicalFindEdges = false(size(graph.edgesRemaining));
-        for j=1:length(graph.ccEdgesJoined.equivalenceClasses{i})
-            logicalFindEdges = logicalFindEdges | (graph.edgesRemaining == graph.ccEdgesJoined.equivalenceClasses{i}(j));
-        end
+        logicalFindEdges = ismember(graph.edgesRemaining, graph.ccEdgesJoined.equivalenceClasses{i});
         idxToRemove = any(logicalFindEdges,2) & ~all(logicalFindEdges,2);
         % Store edges and probabilities before removing to calculate what to (re)insert
         edgesToRemove = graph.edgesRemaining(idxToRemove,:);
@@ -74,12 +71,13 @@ if ~exist([p.saveFolder 'graphNew.mat'], 'file');
         % Remove double entries / redundancies (thereby generating new edges after thresholod)   
         [edgesNew, ~, idxOld] = unique(edgesToRemove, 'rows');
         % Calculate new probabilities
+        probNew = zeros(size(edgesToRemove,1),1);
         for j=1:size(edgesToRemove,1)
             probNew(j) = 1 - prod(1 - probToRemove(idxOld == j));
         end 
         % Reinsert into graph
-        graph.edgesRemaining = [graph.edgesRemaining; edgesToRemove];
-        graph.probRemaining = [graph.probRemaining; probToRemove];
+        graph.edgesRemaining = [graph.edgesRemaining; edgesNew];
+        graph.probRemaining = [graph.probRemaining; probNew];
     end
     % Save for future use 
     save([p.saveFolder 'graphNew.mat'], 'graph');
