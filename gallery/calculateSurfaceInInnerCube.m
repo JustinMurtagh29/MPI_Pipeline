@@ -36,6 +36,7 @@ function calculateSurfaceInInnerCube( skelPath, skelFile, outputFile )
         %read cube
         if all(groupedNodes{i}.cubeCoords > [7 3 1]) & all(groupedNodes{i}.cubeCoords < [30 39 42])
             cube = readKnossosCube('/nfs/bmo/mberning/20140310backup/mag1/', '100527_k0563_seg', groupedNodes{i}.cubeCoords, 'uint16=>uint16', '', 'raw', 256);
+            cube = single(cube);
             %get the color values of the nodes in the cube
             segIds = zeros(1,size(groupedNodes{i}.nodes,1));
             zeroOfCube = groupedNodes{i}.cubeCoords * 128 + 1;
@@ -54,9 +55,9 @@ function calculateSurfaceInInnerCube( skelPath, skelFile, outputFile )
                 end
                 cube(~isnan(cube)) = 0;
                 cube(isnan(cube)) = 1;
-                cube = imclose(cube, ones([3,3,3]));
-                cube = padarray(cube, [1 1 1]);
-                cube = smooth3(cube, 'gaussian', 5, 2);
+                %cube = imclose(cube, ones([3,3,3]));
+                %cube = padarray(cube, [1 1 1]);
+                %cube = smooth3(cube, 'gaussian', 5, 2);
                 cube = cube(65:end-64,65:end-64,65:end-64);
                 issfs{i} = isosurface(cube, .5);
                 if ~isempty(issfs{i}.vertices)
