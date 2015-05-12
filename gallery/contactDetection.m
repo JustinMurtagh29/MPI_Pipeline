@@ -3,8 +3,10 @@ function contactDetection(skeleton1, skeleton2, outputFile)
 % Modified Benjamins gallery code (quite a bit)
 
 % Weird format to supress output, gets annoying after a while
-[~,skel1] = evalc('parseNml(skeleton1)');
-[~,skel2] = evalc('parseNml(skeleton2)');
+%[~,skel1] = evalc('parseNml(skeleton1)');
+%[~,skel2] = evalc('parseNml(skeleton2)');
+skel1 = parseNml(skeleton1);
+skel2 = parseNml(skeleton2);
 skel = mergeTrees(skel1, skel2, 'pre', 'post');
 % for each node from both skeletons, find cube in which it resides
 cubeCoords =  [floor((skel{1}.nodes(:,1:3)-1)./128); floor((skel{2}.nodes(:,1:3)-1)./128)];

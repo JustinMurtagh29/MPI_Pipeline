@@ -1,6 +1,7 @@
 function calculateSurfaceInInnerCube( skelPath, skelFile, outputFile )
     display(['Processing skeleton: ' skelFile]);
-    [~,skel_data] = evalc('parseNml([skelPath skelFile])');
+    %[~,skel_data] = evalc('parseNml([skelPath skelFile])');
+    skel_data = parseNml([skelPath skelFile]);
     nodes = skel_data{1,1}.nodes(:,1:3);
     % for each node, find cube in which it lays so the cubes data can be used for
     % several nodes
@@ -34,7 +35,7 @@ function calculateSurfaceInInnerCube( skelPath, skelFile, outputFile )
     for i = 1 : size(groupedNodes,2)
         %read cube
         if all(groupedNodes{i}.cubeCoords > [7 3 1]) & all(groupedNodes{i}.cubeCoords < [30 39 42])
-            cube = readKnossosCube('/nfs/bmo/mberning/20140310backup/mag1/', '100527_k0563_seg', groupedNodes{i}.cubeCoords, 'uint16', '', 'raw', 256);
+            cube = readKnossosCube('/nfs/bmo/mberning/20140310backup/mag1/', '100527_k0563_seg', groupedNodes{i}.cubeCoords, 'uint16=>uint16', '', 'raw', 256);
             %get the color values of the nodes in the cube
             segIds = zeros(1,size(groupedNodes{i}.nodes,1));
             zeroOfCube = groupedNodes{i}.cubeCoords * 128 + 1;
