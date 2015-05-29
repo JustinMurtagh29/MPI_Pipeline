@@ -77,7 +77,7 @@ function [parameter, parameterTrain] = setParameterSettings(old_datestr)
     parameter.kdb.folder = [parameter.saveFolder 'kdb/'];
     parameter.kdb.counter = [parameter.kdb.folder 'counter.mat'];
     % Settings for dataset (written to knowledge DB)
-    parameter.kdb.settings.name = '2012-09-28_ex145_07x2_corrected';
+    parameter.kdb.settings.name = '2012-09-28_ex145_07x2_segNew';
     parameter.kdb.settings.scale = [11.24 11.24 28];
     parameter.kdb.settings.priority = 0;
     % Viewports
