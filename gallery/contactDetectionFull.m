@@ -1,6 +1,8 @@
-outputDir = '/zdata/manuel/sync/wholeCell/contactDetection/full/';
-pathBP = '/zdata/manuel/sync/fromLap/ekSkel/full/bpc/';
-pathGC = '/zdata/manuel/sync/fromLap/ekSkel/full/gcl/';
+function contactDetectionFull()
+
+outputDir = '/zdata/manuel/sync/wholeCell/20150505/contactDetection/';
+pathBP = '/zdata/manuel/sync/wholeCell/20150505skeletonUpdate/bpc/';
+pathGC = '/zdata/manuel/sync/wholeCell/20150505skeletonUpdate/gcl/';
 filesBP = dir([pathBP '*.nml']);
 filesGC = dir([pathGC '*.nml']);
 
@@ -13,4 +15,6 @@ for i=1:length(filesBP)
 end
 
 startCPU(functionH, inputCell, 'retina contact detection full');
+
+end
 

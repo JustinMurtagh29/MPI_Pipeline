@@ -11,6 +11,7 @@ function [parameter, parameterTrain] = setParameterSettings(old_datestr)
     parameter.saveFolder = ['/zdata/manuel/results/pipeline/' parameter.start '/'];
     parameter.syncFolder = strrep(parameter.saveFolder, 'results', 'sync');
     % Define region to put through pipeline
+    % Reduce by 512 in x for next run on 07x2, still running out of dataset @8575,652,468
     parameter.bbox = [641 8320; 769 5376; 129 3200]; % this should be aligned with KNOSSOS cubes and be divisble by tileSize 
     %parameter.bbox = [641 8320; 769 5888; 1 3328]; % this should be aligned with KNOSSOS cubes and be divisble by tileSize 
     %parameter.bbox = [3073 5120; 3073 5120; 2049 3072];
@@ -76,7 +77,7 @@ function [parameter, parameterTrain] = setParameterSettings(old_datestr)
     parameter.kdb.folder = [parameter.saveFolder 'kdb/'];
     parameter.kdb.counter = [parameter.kdb.folder 'counter.mat'];
     % Settings for dataset (written to knowledge DB)
-    parameter.kdb.settings.name = '2012-09-28_ex145_07x2_corrected';
+    parameter.kdb.settings.name = '2012-09-28_ex145_07x2_segNew';
     parameter.kdb.settings.scale = [11.24 11.24 28];
     parameter.kdb.settings.priority = 0;
     % Viewports

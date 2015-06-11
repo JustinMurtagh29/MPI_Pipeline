@@ -14,7 +14,7 @@ function job = startCPU( functionHandle, inputCell, jobName )
     if strcmp(GLOBAL_HOST,'fermat01')
         job = createJob(jm(1), 'RestartWorker', true, 'PathDependencies', pathDependencies, 'Name', jobName);
         for i=1:length(functionHandle)
-            createTask(job, functionHandle{i}, 0, inputCell{i}, 'MaximumNumberOfRetries', 5, 'Timeout', 90000, 'CaptureCommandWindowOutput', 0);
+            createTask(job, functionHandle{i}, 0, inputCell{i}, 'MaximumNumberOfRetries', 5, 'Timeout', 90000, 'CaptureCommandWindowOutput', 1);
         end
     elseif strcmp(GLOBAL_HOST, 'gaba')
         job = createJob(jm(1), 'RestartWorker', true, 'Name', jobName);

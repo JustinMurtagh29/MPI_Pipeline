@@ -19,11 +19,12 @@ function calcNumberSegments(p, coords)
                 % Update sum of all former nrGlobalIDs & collect for all cubes for use with correspondences
                 numElTotal(i,j,k) = numEl;
                 numEl = numEl + uint32(nrGlobalIdsNeededForThisCube);
+                numElTotalUpper(i,j,k) = numEl+1;
             end
         end
     end
     % Save numElTotal so that it only has to be added to localID of respective cube to get global one
-    save([p.saveFolder 'numEl.mat'], 'numElTotal'); 
+    save([p.saveFolder 'numEl.mat'], 'numElTotal', 'numElTotalUpper'); 
 
 end
 
