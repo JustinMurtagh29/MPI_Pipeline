@@ -7,7 +7,7 @@ function galleryCortex(p, skelPath, skelFile, outputPath)
 
     % Find X,Y,Z for each node if it is within parameter.local(X,Y,Z).bboxSmall
     for sk = 1:length(skel_data)
-        if size(skel_data{sk}.nodes,1) > 10
+        if size(skel_data{sk}.nodes,1) > 8
             nodeData.nodes = skel_data{sk}.nodes(:,1:3);
             nodeData.cubeCoords = zeros(size(nodeData.nodes,1),1);
             pCube = p.local(:);
@@ -67,9 +67,9 @@ function galleryCortex(p, skelPath, skelFile, outputPath)
                     cube = imclose(cube, ones([3,3,3]));
                     cube = padarray(cube, [2 2 2]);
                     cube = smooth3(cube, 'gaussian', 5, 2);
-                    issfs{i} = isosurface(cube, .1);
+                    issfs{i} = isosurface(cube, .05);
                     if ~isempty(issfs{i}.vertices)
-                        issfs{i} = reducepatch(issfs{i}, .01);
+                        issfs{i} = reducepatch(issfs{i}, .1);
                         issfs{i}.vertices(:,[1 2]) = issfs{i}.vertices(:,[2 1]); 			    
                         issfs{i}.vertices = issfs{i}.vertices + repmat(zeroOfCube(1,:) - [2 2 2],size(issfs{i}.vertices,1),1);
                         issfs{i}.vertices = issfs{i}.vertices .* repmat([11.24 11.24 28],size(issfs{i}.vertices,1),1);
@@ -87,6 +87,8 @@ function galleryCortex(p, skelPath, skelFile, outputPath)
                 issfs(find(idx)) = [];	
                 % Save
                 exportSurfaceToAmira(issfs, [outputPath strrep(skelFile, '.nml', ['_' num2str(sk) '.issf'])]);
+                skel_data{1}.nodes(:,1:3) = skel_data{1}.nodes(:,1:3) .* repmat([11.24 11.24 28], size(skel_data{1}.nodes,1), 1);
+                convertKnossosNmlToHoc2(skel_data, [outputPath skelFile(1:end-4)], 0, 1, 0, 0, [1 1 1]);
             end
             clear groupedNodes nodeData issfs;
         end

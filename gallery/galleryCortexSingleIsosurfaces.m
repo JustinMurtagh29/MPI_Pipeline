@@ -67,7 +67,7 @@ function galleryCortexSingleIsosurfaces(p, skelPath, skelFile, outputPath)
                         cube = imclose(cube, ones([3,3,3]));
                         cube = padarray(cube, [2 2 2]);
                         cube = smooth3(cube, 'gaussian', 5, 2);
-                        issfs{idxIso} = isosurface(cube, .1);
+                        issfs{idxIso} = isosurface(cube, .05);
                         if ~isempty(issfs{idxIso}.vertices)
                             issfs{idxIso} = reducepatch(issfs{idxIso}, .01);
                             issfs{idxIso}.vertices(:,[1 2]) = issfs{idxIso}.vertices(:,[2 1]); 			    
@@ -89,6 +89,8 @@ function galleryCortexSingleIsosurfaces(p, skelPath, skelFile, outputPath)
                 issfs(find(idx)) = [];	
                 % Save
                 exportSurfaceToAmira(issfs, [outputPath strrep(skelFile, '.nml', ['_' num2str(sk) '.issf'])]);
+                skel_data{1}.nodes(:,1:3) = skel_data{1}.nodes(:,1:3) .* repmat([11.24 11.24 28], size(skel_data{1}.nodes,1), 1);
+                convertKnossosNmlToHoc2(skel_data, [outputPath skelFile(1:end-4)], 0, 1, 0, 0, [1 1 1]);
             end
             clear groupedNodes nodeData issfs;
         end

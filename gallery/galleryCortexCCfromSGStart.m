@@ -6,7 +6,7 @@ if ~exist(outputPath)
     mkdir(outputPath);
 end
 
-load([p.saveFolder 'graph.mat']);
+load([p.saveFolder 'graphNew.mat']);
 
 for i=1:length(graph.ccEdgesJoined.equivalenceClasses)
     functionH{i} = @galleryCortexCCfromSG;;
