@@ -8,7 +8,7 @@ function [parameter, parameterTrain] = setParameterSettings(old_datestr)
     elseif nargin == 1
         parameter.start = old_datestr;
     end
-    parameter.saveFolder = ['/zdata/manuel/results/pipeline/' parameter.start '/'];
+    parameter.saveFolder = ['/gaba/u/mberning/results/pipeline/' parameter.start '/'];
     parameter.syncFolder = strrep(parameter.saveFolder, 'results', 'sync');
     % Define region to put through pipeline
     % Reduce by 512 in x for next run on 07x2, still running out of dataset @8575,652,468
