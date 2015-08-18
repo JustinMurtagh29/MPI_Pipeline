@@ -1,7 +1,8 @@
-function startGPU(fH, iC, jN);
+function job = startGPU(fH, iC, jN);
     % Wrapper function for startJob.m used for backward compability
 
-    global clusterGPU;
-    startJob(clusterGPU, fH, iC, jN);
+    global CLUSTER_GPU;
+    job = startJob(CLUSTER_GPU, fH, iC, jN);
+
 end
 

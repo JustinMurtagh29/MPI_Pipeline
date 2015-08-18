@@ -1,7 +1,8 @@
-function startCPU(fH, iC, jN);
+function job = startCPU(fH, iC, jN);
     % Wrapper function for startJob.m used for backward compability
 
-    global clusterCPU;
-    startJob(clusterCPU, fH, iC, jN);
+    global CLUSTER_CPU;
+    job = startJob(CLUSTER_CPU, fH, iC, jN);
+
 end
 
