@@ -13,26 +13,29 @@ function p = recursiveReplaceInParameter(p, oSL, nSL)
     % Only kind of recursive, lots of iteration below xD
     % Get fieldnames of struct
     % Iterate over struct in case it is non scalar
-    for i=1:size(p,1)
-        for j=1:size(p,2)
-            for k=1:size(p,3)
-                if ~strcmp(class(p), 'function_handle')
-                    switch class(p(i,j,k))
-                        case 'struct'
+    if isa(p, 'char')
+        p = strrep(p, oSL, nSL);
+    else
+
+        for i=1:size(p,1)
+            for j=1:size(p,2)
+                for k=1:size(p,3)
+                    if ~strcmp(class(p), 'function_handle')
+                        if isa(p, 'struct')
                             fP = fieldnames(p);
                             for f=1:length(fP)
                                 p(i,j,k).(fP{f}) = recursiveReplaceInParameter(p(i,j,k).(fP{f}), oSL, nSL);
                             end
-                        case 'char'
-                            p(i,j,k) = strrep(p(i,j,k), oSL, nSL);
-                        case 'cell'
+                        end
+                        if isa(p, 'cell')
                             for c=1:length(p{i,j,k})
                                 p{i,j,k}(c) = recursiveReplaceInParameter(p{i,j,k}(c), oSL, nSL);
                             end
+                        end
                     end
                 end
             end
         end
     end
-end
 
+end

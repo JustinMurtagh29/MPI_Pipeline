@@ -2,12 +2,17 @@ function galleryCortex(p, skelPath, skelFile, outputPath)
 
     % Display status
     display(['Processing skeleton: ' skelFile]);
-    % evalc to supress output of parseNml
-    [~,skel_data] = evalc('parseNml([skelPath skelFile])'); 
+    % If 2nd argument is string use normal mode of getting passed nml, otherwise expect skeleton struct as 2nd input
+    if isa(skelPath, 'char')
+        % evalc to supress output of parseNml
+        [~,skel_data] = evalc('parseNml([skelPath skelFile])');
+    else
+        skel_data = skelPath;
+    end
 
     % Find X,Y,Z for each node if it is within parameter.local(X,Y,Z).bboxSmall
     for sk = 1:length(skel_data)
-        if size(skel_data{sk}.nodes,1) > 8
+        if size(skel_data{sk}.nodes,1) > 10 
             nodeData.nodes = skel_data{sk}.nodes(:,1:3);
             nodeData.cubeCoords = zeros(size(nodeData.nodes,1),1);
             pCube = p.local(:);
@@ -88,7 +93,7 @@ function galleryCortex(p, skelPath, skelFile, outputPath)
                 % Save
                 exportSurfaceToAmira(issfs, [outputPath strrep(skelFile, '.nml', ['_' num2str(sk) '.issf'])]);
                 skel_data{1}.nodes(:,1:3) = skel_data{1}.nodes(:,1:3) .* repmat([11.24 11.24 28], size(skel_data{1}.nodes,1), 1);
-                convertKnossosNmlToHoc2(skel_data, [outputPath skelFile(1:end-4)], 0, 1, 0, 0, [1 1 1]);
+                %convertKnossosNmlToHoc2(skel_data, [outputPath skelFile(1:end-4)], 0, 1, 0, 0, [1 1 1]);
             end
             clear groupedNodes nodeData issfs;
         end
