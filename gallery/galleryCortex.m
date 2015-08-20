@@ -45,55 +45,57 @@ function galleryCortex(p, skelPath, skelFile, outputPath)
                 end
             end
 
-            % calculate local isosurfaces in global coordinates 
-            for i=1:size(groupedNodes,2)
-                display(['Processing cube: ' num2str(i) '/' num2str(size(groupedNodes,2))]);
-                load(pCube(groupedNodes{i}.cubeCoords).segFile);
-                % Initalize variables 
-                segIds = zeros(1,size(groupedNodes{i}.nodes,1));
-                zeroOfCube = pCube(groupedNodes{i}.cubeCoords).bboxBig';
-                % Find ids of nodes
-                for j=1:size(groupedNodes{i}.nodes,1) 
-                    rel_coords = groupedNodes{i}.nodes(j,:) - zeroOfCube(1,:);
-                    segIds(j) = seg(rel_coords(1),rel_coords(2),rel_coords(3)); 
-                end
-                %delete the zeros no neuron has color black
-                segIds(segIds == 0) = [];
-                % node threshold: change threshold in last line here to apply different node threshold        
-                counts = histc(segIds,unique(segIds));
-                segIds = unique(segIds);
-                segIds(counts < 1) = [];
-                % collect supervoxel and calculate isosurfaces
-                if ~isempty(segIds)
-                    cube = false(size(seg));
-                    for k = 1 : size(segIds,2)
-                        cube(seg == segIds(k)) = 1;
+            if exist(groupedNodes, 'var')
+                % calculate local isosurfaces in global coordinates 
+                for i=1:size(groupedNodes,2)
+                    display(['Processing cube: ' num2str(i) '/' num2str(size(groupedNodes,2))]);
+                    load(pCube(groupedNodes{i}.cubeCoords).segFile);
+                    % Initalize variables 
+                    segIds = zeros(1,size(groupedNodes{i}.nodes,1));
+                    zeroOfCube = pCube(groupedNodes{i}.cubeCoords).bboxBig';
+                    % Find ids of nodes
+                    for j=1:size(groupedNodes{i}.nodes,1) 
+                        rel_coords = groupedNodes{i}.nodes(j,:) - zeroOfCube(1,:);
+                        segIds(j) = seg(rel_coords(1),rel_coords(2),rel_coords(3)); 
                     end
-                    cube = imclose(cube, ones([3,3,3]));
-                    cube = padarray(cube, [2 2 2]);
-                    cube = smooth3(cube, 'gaussian', 5, 2);
-                    issfs{i} = isosurface(cube, .05);
-                    if ~isempty(issfs{i}.vertices)
-                        issfs{i} = reducepatch(issfs{i}, .1);
-                        issfs{i}.vertices(:,[1 2]) = issfs{i}.vertices(:,[2 1]); 			    
-                        issfs{i}.vertices = issfs{i}.vertices + repmat(zeroOfCube(1,:) - [2 2 2],size(issfs{i}.vertices,1),1);
-                        issfs{i}.vertices = issfs{i}.vertices .* repmat([11.24 11.24 28],size(issfs{i}.vertices,1),1);
-                    end
-                end
-            end
-            if exist('issfs', 'var')
-                % Remove empty isosurfaces
-                idx = zeros(length(issfs),1);
-                for i=1:length(issfs)
-                    if isempty(issfs{i}) | isempty(issfs{i}.vertices)
-                        idx(i) = 1;
+                    %delete the zeros no neuron has color black
+                    segIds(segIds == 0) = [];
+                    % node threshold: change threshold in last line here to apply different node threshold        
+                    counts = histc(segIds,unique(segIds));
+                    segIds = unique(segIds);
+                    segIds(counts < 1) = [];
+                    % collect supervoxel and calculate isosurfaces
+                    if ~isempty(segIds)
+                        cube = false(size(seg));
+                        for k = 1 : size(segIds,2)
+                            cube(seg == segIds(k)) = 1;
+                        end
+                        cube = imclose(cube, ones([3,3,3]));
+                        cube = padarray(cube, [2 2 2]);
+                        cube = smooth3(cube, 'gaussian', 5, 2);
+                        issfs{i} = isosurface(cube, .05);
+                        if ~isempty(issfs{i}.vertices)
+                            issfs{i} = reducepatch(issfs{i}, .1);
+                            issfs{i}.vertices(:,[1 2]) = issfs{i}.vertices(:,[2 1]); 			    
+                            issfs{i}.vertices = issfs{i}.vertices + repmat(zeroOfCube(1,:) - [2 2 2],size(issfs{i}.vertices,1),1);
+                            issfs{i}.vertices = issfs{i}.vertices .* repmat([11.24 11.24 28],size(issfs{i}.vertices,1),1);
+                        end
                     end
                 end
-                issfs(find(idx)) = [];	
-                % Save
-                exportSurfaceToAmira(issfs, [outputPath strrep(skelFile, '.nml', ['_' num2str(sk) '.issf'])]);
-                skel_data{1}.nodes(:,1:3) = skel_data{1}.nodes(:,1:3) .* repmat([11.24 11.24 28], size(skel_data{1}.nodes,1), 1);
-                %convertKnossosNmlToHoc2(skel_data, [outputPath skelFile(1:end-4)], 0, 1, 0, 0, [1 1 1]);
+                if exist('issfs', 'var')
+                    % Remove empty isosurfaces
+                    idx = zeros(length(issfs),1);
+                    for i=1:length(issfs)
+                        if isempty(issfs{i}) | isempty(issfs{i}.vertices)
+                            idx(i) = 1;
+                        end
+                    end
+                    issfs(find(idx)) = [];	
+                    % Save
+                    exportSurfaceToAmira(issfs, [outputPath strrep(skelFile, '.nml', ['_' num2str(sk) '.issf'])]);
+                    skel_data{1}.nodes(:,1:3) = skel_data{1}.nodes(:,1:3) .* repmat([11.24 11.24 28], size(skel_data{1}.nodes,1), 1);
+                    %convertKnossosNmlToHoc2(skel_data, [outputPath skelFile(1:end-4)], 0, 1, 0, 0, [1 1 1]);
+                end
             end
             clear groupedNodes nodeData issfs;
         end
