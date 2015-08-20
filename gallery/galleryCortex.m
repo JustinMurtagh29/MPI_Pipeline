@@ -45,7 +45,7 @@ function galleryCortex(p, skelPath, skelFile, outputPath)
                 end
             end
 
-            if exist(groupedNodes, 'var')
+            if exist('groupedNodes', 'var')
                 % calculate local isosurfaces in global coordinates 
                 for i=1:size(groupedNodes,2)
                     display(['Processing cube: ' num2str(i) '/' num2str(size(groupedNodes,2))]);
