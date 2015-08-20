@@ -22,8 +22,8 @@ function [parameter, parameterTrain] = setParameterSettings(old_datestr)
     parameter.raw.root = '/gaba/u/mberning/data/cortex/2012-09-28_ex145_07x2_corrected/color/1/';
     parameter.raw.prefix = '2012-09-28_ex145_07x2_corrected_mag1';
     % Which classifier to use
-    %parameter.cnn.benedikt = true; 
-    %parameter.cnn.saveFile = '/gaba/u/mberning/data/cortex/07x2CNNfromBenedikt/CNN1mplarge20140705T1940.mat';
+    parameter.cnn.benedikt = true; 
+    parameter.cnn.saveFile = '/gaba/u/mberning/data/cortex/07x2CNNfromBenedikt/CNN1mplarge20140705T1940.mat';
     %parameter.cnn.saveFile = '/gaba/u/mberning/data/cortex/07x2CNNfromBenedikt/ChallengerDeep3.mat';
     parameter.cnn.dateStrings = '20130516T204040';
     parameter.cnn.iter = 8; 
@@ -31,7 +31,7 @@ function [parameter, parameterTrain] = setParameterSettings(old_datestr)
     parameter.cnn.first = ['/gaba/u/mberning/results/parameterSearch/' parameter.cnn.dateStrings '/iter' num2str(parameter.cnn.iter, '%.2i') '/gpu' num2str(parameter.cnn.gpu, '%.2i') '/saveNet0000000001.mat'];
     parameter.cnn.GPU = true;
     % Function to use for classification
-    parameter.class.func = @bigFwdPass;
+    parameter.class.func = @bigFwdPass; % need to clean up here soon again, does not seem to be used
     % Location to store CNN classification
     parameter.class.root = [parameter.saveFolder 'class/'];
     parameter.class.prefix = parameter.raw.prefix;

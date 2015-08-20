@@ -7,3 +7,6 @@
 	url = git@github.com:mhlabCodingTeam/auxiliaryMethods.git
 	branch = master
 
+[submodule "+benedikt"]
+	path = benedikt
+	url = git@github.com:mhlabCodingTeam/benedikt.git
