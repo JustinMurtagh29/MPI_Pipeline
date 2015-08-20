@@ -2,7 +2,8 @@ folder = '/home/mberning/Desktop/mergerNml/';
 
 files = dir([folder '*.mat']);
 
-close all;
+close all; clc;
+
 figure('Position', [1921 1 1920 999]);
 for i=1:length(files)
     subplot(5,2,2*i-1);
@@ -18,6 +19,7 @@ for i=1:length(files)
     temp = cell2mat(temp(~cellfun(@isempty, temp)));
     hist(temp);
     xlabel('probability of normal edge');
+    display(sum(temp < 0.8) ./ length(temp));
 end
 
-export_fig(gcf, [folder 'visualization.svg']);
+export_fig(gcf, [folder 'visualization.png']);
