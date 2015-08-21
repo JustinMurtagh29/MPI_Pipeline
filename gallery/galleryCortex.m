@@ -55,7 +55,7 @@ function galleryCortex(p, skelPath, skelFile, outputPath)
                     zeroOfCube = pCube(groupedNodes{i}.cubeCoords).bboxBig';
                     % Find ids of nodes
                     for j=1:size(groupedNodes{i}.nodes,1) 
-                        rel_coords = groupedNodes{i}.nodes(j,:) - zeroOfCube(1,:);
+                        rel_coords = groupedNodes{i}.nodes(j,:) - zeroOfCube(1,:) + 2;
                         segIds(j) = seg(rel_coords(1),rel_coords(2),rel_coords(3)); 
                     end
                     %delete the zeros no neuron has color black

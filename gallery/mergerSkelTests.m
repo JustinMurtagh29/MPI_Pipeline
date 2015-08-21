@@ -18,7 +18,7 @@ function mergerSkelTests(p, skelPath, skelFile, outputPath)
             % calculate local isosurfaces in global coordinates 
             for i=1:size(nodeData.nodes,1) 
                 % Find ids of nodes
-                segIds(i) = readKnossosRoi(p.seg.root, p.seg.prefix, [nodeData.nodes(i,:)' nodeData.nodes(i,:)'], 'uint32', '', 'raw'); 
+                segIds(i) = readKnossosRoi(p.seg.root, p.seg.prefix, [nodeData.nodes(i,:)+1' nodeData.nodes(i,:)'+1], 'uint32', '', 'raw'); 
             end
             for i=1:size(nodeData.edges,1)
                 % segId1,2 for each node of current edge
