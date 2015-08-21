@@ -10,3 +10,6 @@
 [submodule "+benedikt"]
 	path = benedikt
 	url = git@github.com:mhlabCodingTeam/benedikt.git
+[submodule "visualization/export_fig"]
+	path = visualization/export_fig
+	url = git@github.com:altmany/export_fig.git
