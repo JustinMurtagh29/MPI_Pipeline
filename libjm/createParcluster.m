@@ -1,12 +1,23 @@
-function cluster = getCluster( clusterConfiguration, jobStorageLocation)
+function cluster = getCluster( clusterConfiguration, priority, memoryPerTask, jobStorageLocation)
 
     % Default values for all input arguments
     if nargin < 1
         clusterConfiguration = 'cpu';
     end
     if nargin < 2
+        priority = -500;
+    end
+    if nargin < 3
+        if strcmp(clusterConfiguration, 'cpu')
+            memoryPerTask = 16;
+        else
+            memoryPerTask = 32;
+        end
+    end
+    if nargin < 4
         jobStorageLocation = '/u/mberning/temp/';
     end
+
     % Generate generic cluster profile
     cluster = parallel.cluster.Generic();
     cluster.JobStorageLocation = jobStorageLocation;
@@ -19,13 +30,13 @@ function cluster = getCluster( clusterConfiguration, jobStorageLocation)
     % Set independent submit function parameter dependent on cluster configuration
     switch clusterConfiguration
         case 'm2090'
-            cluster.IndependentSubmitFcn = {@independentSubmitFcn, '-p -400 -pe openmp 1 -l h_vmem=12G,h_rt=10:00:00,num_m2090=1'};
+            cluster.IndependentSubmitFcn = {@independentSubmitFcn, ['-p ' num2str(priority) ' -pe openmp 1 -l h_vmem=' num2str(memoryPerTask) 'G,h_rt=10:00:00,num_m2090=1']};
         case 'k40'
-            cluster.IndependentSubmitFcn = {@independentSubmitFcn, '-p -400 -pe openmp 1 -l h_vmem=36G,h_rt=100:00:00,num_k40=1'};
+            cluster.IndependentSubmitFcn = {@independentSubmitFcn, ['-p ' num2str(priority) ' -pe openmp 1 -l h_vmem=' num2str(memoryPerTask) 'G,h_rt=100:00:00,num_k40=1']};
         case 'gpu'
-            cluster.IndependentSubmitFcn = {@independentSubmitFcn, '-p -400 -pe openmp 1 -l h_vmem=36G,h_rt=100:00:00,num_k40=1'};
+            cluster.IndependentSubmitFcn = {@independentSubmitFcn, ['-p ' num2str(priority) ' -pe openmp 1 -l h_vmem=' num2str(memoryPerTask) 'G,h_rt=100:00:00,num_k40=1']};
         case 'cpu'
-            cluster.IndependentSubmitFcn = {@independentSubmitFcn, '-p -400 -pe openmp 1 -l h_vmem=16G,h_rt=100:00:00'};
+            cluster.IndependentSubmitFcn = {@independentSubmitFcn, ['-p ' num2str(priority) ' -pe openmp 1 -l h_vmem=' num2str(memoryPerTask) 'G,h_rt=100:00:00']};
         otherwise
             error('getCluster:unknownClusterConfiguration', 'Unkown cluster configuration string passed');
     end

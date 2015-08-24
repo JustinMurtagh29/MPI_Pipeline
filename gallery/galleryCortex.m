@@ -71,13 +71,13 @@ function galleryCortex(p, skelPath, skelFile, outputPath)
                             cube(seg == segIds(k)) = 1;
                         end
                         cube = imclose(cube, ones([3,3,3]));
-                        cube = padarray(cube, [2 2 2]);
+                        cube = padarray(cube, [5 5 5]);
                         cube = smooth3(cube, 'gaussian', 5, 2);
                         issfs{i} = isosurface(cube, .05);
                         if ~isempty(issfs{i}.vertices)
                             issfs{i} = reducepatch(issfs{i}, .1);
                             issfs{i}.vertices(:,[1 2]) = issfs{i}.vertices(:,[2 1]); 			    
-                            issfs{i}.vertices = issfs{i}.vertices + repmat(zeroOfCube(1,:) - [2 2 2],size(issfs{i}.vertices,1),1);
+                            issfs{i}.vertices = issfs{i}.vertices + repmat(zeroOfCube(1,:) - [5 5 5],size(issfs{i}.vertices,1),1);
                             issfs{i}.vertices = issfs{i}.vertices .* repmat([11.24 11.24 28],size(issfs{i}.vertices,1),1);
                         end
                     end
