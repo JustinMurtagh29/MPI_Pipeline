@@ -1,8 +1,8 @@
 function job = minicubeFwdPass( parameter )
     % classification of subergions within the data set (for segmentation optimization and GP training) 
 
-    if isfield(cnn, 'benedikt') && cnn.benedikt;
-        load parameter.cnn.saveFile;
+    if isfield(parameter.cnn, 'benedikt') && parameter.cnn.benedikt;
+        load(parameter.cnn.saveFile);
         for tr=1:length(parameter.local)
             bbox = parameter.local(tr).bboxBig;
             % Cant remember why this should be needed. Drop?
