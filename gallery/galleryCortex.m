@@ -75,7 +75,7 @@ function galleryCortex(p, skelPath, skelFile, outputPath)
                         cube = smooth3(cube, 'gaussian', 5, 2);
                         issfs{i} = isosurface(cube, .05);
                         if ~isempty(issfs{i}.vertices)
-                            issfs{i} = reducepatch(issfs{i}, .1);
+                            issfs{i} = reducepatch(issfs{i}, .01);
                             issfs{i}.vertices(:,[1 2]) = issfs{i}.vertices(:,[2 1]); 			    
                             issfs{i}.vertices = issfs{i}.vertices + repmat(zeroOfCube(1,:) - [5 5 5],size(issfs{i}.vertices,1),1);
                             issfs{i}.vertices = issfs{i}.vertices .* repmat([11.24 11.24 28],size(issfs{i}.vertices,1),1);
@@ -93,7 +93,13 @@ function galleryCortex(p, skelPath, skelFile, outputPath)
                     issfs(find(idx)) = [];	
                     % Save
                     exportSurfaceToAmira(issfs, [outputPath strrep(skelFile, '.nml', ['_' num2str(sk) '.issf'])]);
-                    skel_data{1}.nodes(:,1:3) = skel_data{1}.nodes(:,1:3) .* repmat([11.24 11.24 28], size(skel_data{1}.nodes,1), 1);
+                    issfs = [issfs{:}];
+                    nrVertices = cellfun(@(x)size(x,1), {issfs(:).vertices});
+                    for i=1:length(issfs)
+                        issfs(i).faces = issfs(i).faces + sum(nrVertices(1:(i-1)));
+                    end
+                    vertface2obj(cat(1,issfs(:).vertices), cat(1,issfs(i).faces), [outputPath strrep(skelFile, '.nml', ['_' num2str(sk) '.obj'])]);
+                    %skel_data{1}.nodes(:,1:3) = skel_data{1}.nodes(:,1:3) .* repmat([11.24 11.24 28], size(skel_data{1}.nodes,1), 1);
                     %convertKnossosNmlToHoc2(skel_data, [outputPath skelFile(1:end-4)], 0, 1, 0, 0, [1 1 1]);
                 end
             end
