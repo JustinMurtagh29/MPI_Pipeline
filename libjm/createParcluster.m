@@ -1,4 +1,4 @@
-function cluster = getCluster( clusterConfiguration, priority, memoryPerTask, jobStorageLocation)
+function cluster = createParcluster( clusterConfiguration, priority, memoryPerTask, jobStorageLocation)
 
     % Default values for all input arguments
     if nargin < 1
@@ -11,7 +11,7 @@ function cluster = getCluster( clusterConfiguration, priority, memoryPerTask, jo
         if strcmp(clusterConfiguration, 'cpu')
             memoryPerTask = 16;
         else
-            memoryPerTask = 32;
+            memoryPerTask = 36;
         end
     end
     if nargin < 4

@@ -9,7 +9,8 @@ function job = minicubeFwdPass( parameter )
             bbox(:,1) - mod(bbox(:,1)-1,128);
             bbox(:,2) = bbox(:,2) + (128 - mod(bbox(:,2),128));
             options.gpuDev = parameter.cnn.GPU;
-            options.target_size = [64 64 64];
+            options.val_fwd_alg = 'memory1';
+            options.target_size = [100 100 100];
             inputCell{tr} = {cnet, bbox, options, parameter.raw, parameter.local(tr).class};
         end
         functionH = @Codat.CNN.Misc.predictROI_forCluster; 
