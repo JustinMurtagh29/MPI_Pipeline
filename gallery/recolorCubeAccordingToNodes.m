@@ -1,4 +1,7 @@
-function recolorCubeAccordingToNodes(segParam, segOutParam, nodes, cubeCoord)
+function recolorCubeAccordingToNodes(segParam, segOutParam, skeletonFile, cubeCoord)
+    % Recolor a single KNOSSOS cube with overlap and cut out right size
+
+    load(skeletonFile);
     % Read oversegmented KNOSSOS cube
     cube = readKnossosCube(segParam.root, segParam.prefix, cubeCoord, 'uint16=>uint16', '', 'raw', 256);
     % Determine one coordinate of KNOSSOS cube (with overlap for reading and without for writing) 

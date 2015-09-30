@@ -15,19 +15,22 @@ function recolorSegmentationAccordingToSkeletons()
         nodes{i} = skel_data{i}.nodes(:,1:3);
     end
 
+    % Save skeletons to file for loading by workers
+    fileName = [segOutParam.root 'skeletonToColor.mat'];
+    save(fileName, 'nodes', 'files', 'skelPath');
+
     % Start one process for each cube (on cluster)
     cubesProcessed = 0;
     for x=cubes(1,1):cubes(2,1)
         for y=cubes(1,2):cubes(2,2)
             for z=cubes(1,3):cubes(2,3)
                 cubesProcessed = cubesProcessed + 1;
-                inputCell{cubesProcessed} = {segParam, segOutParam, nodes, [x y z]};
+                inputCell{cubesProcessed} = {segParam, segOutParam, fileName, [x y z]};
             end
         end
     end
     functionH = @recolorCubeAccordingToNodes;
     startCPU(functionH, inputCell, 'retina recoloring');
-    save([segOutParam.root 'skeletonToColor.mat'], 'files', 'skel_data');
 
 end
 
