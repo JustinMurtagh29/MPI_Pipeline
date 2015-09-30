@@ -35,7 +35,8 @@ function galleryNew( skelPath, skelFile, outputPath )
     for i = 1 : size(groupedNodes,2)
         %read cube
         if all(groupedNodes{i}.cubeCoords > [7 3 1]) & all(groupedNodes{i}.cubeCoords < [30 39 42])
-            cube = readKnossosCube('/nfs/bmo/mberning/20140310backup/mag1/', '100527_k0563_seg', groupedNodes{i}.cubeCoords, 'uint16=>uint16', '', 'raw', 256);
+            cube = readKnossosCube('/gaba/u/mberning/backup/nfs_mberning/20140310backup/mag1/', '100527_k0563_seg', ...
+                groupedNodes{i}.cubeCoords, 'uint16=>uint16', '', 'raw', 256);
             cube = single(cube);
             %get the color values of the nodes in the cube
             segIds = zeros(1,size(groupedNodes{i}.nodes,1));

@@ -7,10 +7,10 @@ function parameterSearchSeg(pT)
     psValues.r = [0];
     % Parameter for H-minima based segmentation
     psValues.algo(1).fun = @(seg,pars) watershedSeg_v1_cortex(seg, pars(:));
-    psValues.algo(1).par = {0.2:0.01:0.4 0:10:20};
+    psValues.algo(1).par = {0.1:0.1:0.5 0:10:50};
     % Parameter for threshold based segmentation
     psValues.algo(2).fun = @(seg,pars) watershedSeg_v2_cortex(seg, pars(:));
-    psValues.algo(2).par = {};
+    psValues.algo(2).par = {-0.5:0.1:1 0:10:50};
     % from Alex, not sure, check again sometime?
     psValues.algo(3).fun = @(seg,pars) watershedSeg_v3_cortex(seg, pars(:));
     psValues.algo(3).par = {};
@@ -43,7 +43,7 @@ function parameterSearchSeg(pT)
 
     functionH = @morphologicalReconstruction;
     job = startCPU(functionH, inputCell, 'morphological reconstruction');
-    waitForState(job);
+    wait(job, 'finished');
     toc;
 
     clear job functionH inputCell;
@@ -63,7 +63,7 @@ function parameterSearchSeg(pT)
 
     functionH = @performSegmentation;
     job = startCPU(functionH, inputCell, 'segmentation parameter search');
-    waitForState(job);
+    wait(job, 'finished');
     toc;
     
     display('Parameter search finished. Continuing with visualization of results!');

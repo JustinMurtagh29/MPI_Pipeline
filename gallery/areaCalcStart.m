@@ -1,7 +1,7 @@
 function areaCalcStart()
 
-skelPath = '/zdata/manuel/sync/fromLap/ekSkel/20150804/gclNice/';
-outputDir = '/zdata/manuel/sync/wholeCell/cortex/20150804/surfaceCalculation/'; 
+skelPath = '/gaba/u/mberning/data/retina/retinaN2skeletons/gclNice/';
+outputDir = '/gaba/u/mberning/data/retina/retinaN2skeletons/results/surfaceAreaCalculation/'; 
 
 files = dir([skelPath '*.nml']);
 for i=1:length(files)

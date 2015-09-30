@@ -40,7 +40,7 @@ for i = 1:size(uniqueCubeCoords,1)
     	skel1nodesLocal = bsxfun(@minus, skel1nodes, lowerLimit-1);
     	skel2nodesLocal = bsxfun(@minus, skel2nodes, lowerLimit-1);
     	% read local segmentation from disk
-    	cube = readKnossosCube('/nfs/bmo/mberning/20140310backup/mag1/', '100527_k0563_seg', uniqueCubeCoords(i,:), 'uint16=>uint16', '', 'raw', 256);
+    	cube = readKnossosCube('/gaba/u/mberning/backup/nfs_mberning/20140310backup/mag1/', '100527_k0563_seg', uniqueCubeCoords(i,:), 'uint16=>uint16', '', 'raw', 256);
         cube = single(cube);
         % get all local segmentation IDs of the nodes in the cube & vector of unique values
     	segIds1 = cube(sub2ind(size(cube),skel1nodesLocal(:,1),skel1nodesLocal(:,2),skel1nodesLocal(:,3)));
