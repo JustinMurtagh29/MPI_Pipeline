@@ -12,7 +12,7 @@ function morphologicalReconstruction(classParam, bbox, r, outputFile)
         affReconDilated = imdilate(affRecon, se);
         affReconRecon = imreconstruct(imcomplement(affReconDilated), imcomplement(affRecon));
     else
-        affReconRecon = imcomplement(classification);
+        affReconRecon = -classification;
     end
    save(outputFile, 'affReconRecon');
 

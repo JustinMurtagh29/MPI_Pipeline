@@ -4,13 +4,13 @@ function parameterSearchSeg(pT)
     % Output folder for figures and tables
     psValues.outputFolder = [pT.saveFolder 'segmentationPS/'];
     % Radii for Morphological Reconstruction
-    psValues.r = [0];
+    psValues.r = [0 1];
     % Parameter for H-minima based segmentation
     psValues.algo(1).fun = @(seg,pars) watershedSeg_v1_cortex(seg, pars(:));
-    psValues.algo(1).par = {0.1:0.1:0.5 0:10:50};
+    psValues.algo(1).par = {0:0.05:1 0:50:200};
     % Parameter for threshold based segmentation
     psValues.algo(2).fun = @(seg,pars) watershedSeg_v2_cortex(seg, pars(:));
-    psValues.algo(2).par = {-0.5:0.1:1 0:10:50};
+    psValues.algo(2).par = {-1:0.1:1 0:50:200};
     % from Alex, not sure, check again sometime?
     psValues.algo(3).fun = @(seg,pars) watershedSeg_v3_cortex(seg, pars(:));
     psValues.algo(3).par = {};
