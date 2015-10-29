@@ -9,12 +9,13 @@ for i=1:size(parameter.local,1)
             end
             sub = [i,j,k];
 			idx = sub2ind(size(parameter.local), i, j, k);
-			functionH{idx} = parameter.feature.func; 
             inputCell{idx} = {parameter, sub};
 		end
 	end
 end
 
+
+functionH = parameter.feature.func; 
 job = startCPU(functionH, inputCell, 'featureCalculation');
 
 end

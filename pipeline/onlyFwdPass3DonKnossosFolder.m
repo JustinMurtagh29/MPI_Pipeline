@@ -1,17 +1,10 @@
 function onlyFwdPass3DonKnossosFolder(cnetLocation, gpuSwitch, input, result, bbox)
 
-% Choose the right GPU if switch is set
-if gpuSwitch
-    w = getCurrentWorker();
-    w = w.Name;
-    gselect(str2double(w(end-1:end)));
-end
-
 % Load the CNN used for classification
 load(cnetLocation, 'cnet');
 cnet = cnet.loadLastCNN;
 if gpuSwitch
-    cnet.run.actvtClass = @gsingle;
+    cnet.run.actvtClass = @gpuArray;
 else
     cnet.run.actvtClass = @single;
 end

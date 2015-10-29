@@ -5,8 +5,7 @@ function galleryCortexCCfromSG(p, component, outputFile)
     % Find X,Y,Z for each node if it is within parameter.local(X,Y,Z).bboxSmall
     for c = 1:length(component)
         nodeData.supervoxelID = component(c);
-
-        nodeData.cubeCoords
+        nodeData.cube
     end
     for i=1:length(nodeData)
         nodeData.nodes = skel_data{sk}.nodes(:,1:3);

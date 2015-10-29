@@ -1,28 +1,15 @@
 function galleryFinal()
 
-skelPath = '/zdata/manuel/sync/wholeCell/20150505skeletonUpdate/bpc/';
+skelPath = '/gaba/u/mberning/data/retina/retinaN2skeletons/allNice/';
+outputDir = '/gaba/u/mberning/data/retina/retinaN2skeletons/results/gallery/';
 
 files = dir([skelPath '*.nml']);
-
 for i=1:length(files)
-    functionH{i} = @galleryNew;
-	inputCell{i} = {skelPath, files(i).name, '/zdata/manuel/sync/wholeCell/20150505/gallery/'};
+	inputCell{i} = {skelPath, files(i).name, outputDir};
 end
 
-startCPU(functionH, inputCell, 'gallery retina BPC');
-
-clear functionH inputCell;
-
-skelPath = '/zdata/manuel/sync/wholeCell/20150505skeletonUpdate/gcl/';
-
-files = dir([skelPath '*.nml']);
-
-for i=1:length(files)
-    functionH{i} = @galleryNew;
-	inputCell{i} = {skelPath, files(i).name, '/zdata/manuel/sync/wholeCell/20150505/gallery/'};
-end
-
-startCPU(functionH, inputCell, 'gallery retina GCL');
+functionH = @galleryNew;
+startCPU(functionH, inputCell, 'gallery retina');
 
 end
 

@@ -7,7 +7,6 @@ for i=1:size(parameter.local,1)
 				mkdir(parameter.local(i,j,k).saveFolder);
 			end
 			idx = sub2ind(size(parameter.local), i, j, k);
-			functionH{idx} = parameter.seg.func;
 			if isfield(parameter.local(i,j,k), 'class')
 				inputCell{idx} = {parameter.local(i,j,k).class.root parameter.local(i,j,k).class.prefix, parameter.local(i,j,k).bboxBig, parameter.local(i,j,k).segFile};
 			else
@@ -17,6 +16,7 @@ for i=1:size(parameter.local,1)
 	end
 end
 
+functionH = parameter.seg.func;
 jobs = startCPU(functionH, inputCell, 'segmentation');
 
 end

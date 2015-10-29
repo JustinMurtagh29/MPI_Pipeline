@@ -124,6 +124,7 @@ function contactDetectionCortex(p, skeleton1, skeleton2, outputFile)
         [skel, merger] = accumulateOverCubeBorders(skel, merger, 'Merger ID : ');
     end
 
+    % why do we need old version here, can't remember
     writeNmlOld(outputFile, skel);
 
 end
