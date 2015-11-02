@@ -7,7 +7,7 @@ function restartTasksWithErrors(job, gpuFlag)
     errorCell = {job.Tasks(:).Error};
     idxError = cellfun(@isempty, errorCell);
     inputCell = {job.Tasks(~idxError).InputArguments};
-    functionH = @galleryCortex;
+    functionH = job.Tasks(find(~idxError,1)).Function;
     if gpuFlag
         job = startGPU(functionH, inputCell, 'restarted tasks');
     else
