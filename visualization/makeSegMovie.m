@@ -1,10 +1,13 @@
-function makeSegMovie( segmentation, raw, outputFileAdress)
+function makeSegMovie( segmentation, raw, outputFileAdress, nrElementsInSegmentation)
 %UNTITLED2 Summary of this function goes here
 %   Detailed explanation goes here
 
-load('C:\code\autoKLEE_colormap.mat');
-autoKLEE_colormap = repmat(autoKLEE_colormap, 100, 1);
-colormap = [1 0 0; 0 1 0];
+if nargin < 4
+    % -1 to not count zero as an element
+    nrElementsInSegmentation = length(unique(segmentation(:))) - 1;
+end
+
+colors = distinguishable_colors(nrElementsInSegmentation, [0 0 0]);
 
 figure;
 set(gcf,'NextPlot','replacechildren');
@@ -14,12 +17,11 @@ writerObj.FrameRate = 16;
 open(writerObj);
 for f=1:size(raw,3)
     hold off;
-    imshow(raw(:,:,f))
-    %imshow(raw(:,:,f), [60 180], 'InitialMagnification', 50);
+    imshow(raw(:,:,f), [60 180], 'InitialMagnification', 50)
     hold on;
-    temp = label2rgb(segmentation(:,:,f), autoKLEE_colormap);
-    himage = imshow(temp, [60 180]);
-    set(himage, 'AlphaData', 0.15 );
+    temp = label2rgb(segmentation(:,:,f), colors, [1 1 1]);
+    himage = imshow(temp);
+    set(himage, 'AlphaData', 0.2);
     drawnow;
     frame = getframe;
     writeVideo(writerObj,frame);

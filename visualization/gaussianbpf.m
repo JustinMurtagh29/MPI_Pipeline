@@ -1,7 +1,7 @@
 function filtered = gaussianbpf(I,d0,d1)
 
 % Fast n-dimensional fourier transform
-[nx ny nz] = size(I);
+[nx, ny, nz] = size(I);
 fftI = fftn(I,[2*nx-1 2*ny-1 2*nz-1]);
 fftI = fftshift(fftI);
 
