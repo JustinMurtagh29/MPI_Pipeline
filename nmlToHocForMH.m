@@ -6,5 +6,6 @@ folder = '/home/mberning/Desktop/forMH/';
 files = dir([folder '*.nml']);
 for i=1:length(files)
     skel = parseNml([folder files(i).name]);
-    convertKnossosNmlToHoc2(skel, [folder files(i).name(1:end-4)], 0, 1, 0, 0, [12 12 25]);
+    %skel{1}.nodes(:,1:3) = bsxfun(@times, skel{1}.nodes(:,1:3), [12 12 25]);
+    convertKnossosNmlToHoc2(skel, [folder files(i).name(1:end-4)], 0, 1, 0, 0, [11.24 11.24 28]);
 end
