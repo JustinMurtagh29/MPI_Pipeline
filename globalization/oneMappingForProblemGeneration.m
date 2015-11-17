@@ -11,8 +11,7 @@ function oneMappingForProblemGeneration(p, upperT)
         graph.prob = NaN(1e8,1);
         graph.cubeLI = NaN(1e8,1); % store linear indices as well (second column for correspondences)
         idx = 1;
-        % IMPORTANT TO DO: Remove index shifts here in next run, just quick fix for now
-        for i=2:size(p.local,1)-1
+        for i=1:size(p.local,1)
             for j=1:size(p.local,2)
                 for k=1:size(p.local,3)
                     load(p.local(i,j,k).edgeFile);
@@ -30,15 +29,11 @@ function oneMappingForProblemGeneration(p, upperT)
         % Collect all correspondences between local supervoxel graph
         files = dir([p.correspondence.saveFolder, '*global.mat']);
         for i=1:length(files)
-            % IMPORTANT TO DO: same here, change to using back all indices!
-            if ~(strcmp(files(i).name(1:2),'01') || strcmp(files(i).name(1:2), '15') || ...
-                    strcmp(files(i).name(7:8),'01') || strcmp(files(i).name(7:8), '15'))
-                load([p.correspondence.saveFolder files(i).name]);
-                nrElements = length(corrGlobal1);
-                graph.edges(idx:idx+nrElements-1,:) = [corrGlobal1 corrGlobal2];
-                graph.prob(idx:idx+nrElements-1) = ones(length(corrGlobal1),1);
-                idx = idx+nrElements;
-            end
+            load([p.correspondence.saveFolder files(i).name]);
+            nrElements = length(corrGlobal1);
+            graph.edges(idx:idx+nrElements-1,:) = [corrGlobal1 corrGlobal2];
+            graph.prob(idx:idx+nrElements-1) = ones(length(corrGlobal1),1);
+            idx = idx+nrElements;
         end
         % Drop part of arrays preallocated but not assigned
         graph.edges(idx:end,:) = [];
