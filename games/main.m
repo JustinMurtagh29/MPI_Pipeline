@@ -26,6 +26,6 @@ checkAggloConsitency(agglo);
 
 % Lets agglomerate some nuclei (to somata) and seg. border IDs (to bigger neurites)
 agglo.borderGrown = agglomerateSG(graph, agglo.borderMerged, .95, 10, false);
-agglo.nucleiGrown = agglomerateSG(graph, agglo.nuclei, .95, 10, false)
+agglo.nucleiGrown = agglomerateSG(graph, agglo.nuclei, .95, 10, false);
 
 

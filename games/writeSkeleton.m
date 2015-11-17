@@ -6,29 +6,45 @@ function skel = writeSkeleton(graph, seeds, com);
     idx = ismember(graph.edges,cat(1,seeds{:}));
     idx = idx(:,1) & idx(:,2);
     graph.edges = graph.edges(idx,:);
+    graph.prob = graph.prob(idx);
     % Write skeleton for check
     skel = initializeSkeleton();
     tic;
     for tr=1:length(seeds)
-        skel{c}.thingID = c;
-        skel{c}.name = ['Component ' num2str(tr, '%.2i')];
-        skel{c}.color = [rand(1,3) 1];
-        theseCoM = com(seeds{tr},:);
-        idx = ismember(graph.edges,seeds{tr});
-        idx = idx(:,1) & idx(:,2);
-        theseEdges = graph.edges(idx,:);
-        for no=1:size(theseCoM,1)
-            nodeId = nodeId + 1;
-            skel{c}.nodesAsStruct(nodeId-nodeOffsetThisSkel) = generateNodeAsStruct(nodeId, theseCoM(no,:), 10);
-            skel{c}.nodes(nodeId-nodeOffsetThisSkel,:) = [theseCoM(no,:) 10];
-            theseEdges(theseEdges == seeds{tr}(no)) = no;
+        if ~isempty(seeds{tr})
+            skel{c}.thingID = c;
+            skel{c}.name = ['Component ' num2str(tr, '%.2i')];
+            skel{c}.color = [rand(1,3) 1];
+            theseCoM = com(seeds{tr},:);
+            idx = ismember(graph.edges,seeds{tr});
+            idx = idx(:,1) & idx(:,2);
+            theseEdges = graph.edges(idx,:);
+            theseProb = graph.prob(idx);
+            for no=1:size(theseCoM,1)
+                skel{c}.nodesAsStruct(nodeId-nodeOffsetThisSkel) = generateNodeAsStruct(nodeId, theseCoM(no,:), 10);
+                skel{c}.nodes(nodeId-nodeOffsetThisSkel,:) = [theseCoM(no,:) 10];
+                nodeId = nodeId + 1;
+                theseEdges(theseEdges == seeds{tr}(no)) = no;
+            end
+            if size(theseEdges,1) < 3
+                skel{c}.edges = theseEdges;
+            else
+                theseEdges = minimalSpanningTree(theseEdges, 2-theseProb); % to keep correspondence cost positive
+                skel{c}.edges = theseEdges;
+            end
+            c = c + 1;
+            nodeOffsetThisSkel = nodeId - 1;
+            Util.progressBar(tr, length(seeds));
         end
-        skel{c}.edges = theseEdges;
-        Util.progressBar(tr, length(seeds));
     end
-    % Increase skeleton counter, save NodeID offset for next skeleton
-    c = c + 1;
-    nodeOffsetThisSkel = nodeId - 1;
+end
+
+function edgesNew = minimalSpanningTree(edges, prob)
+    maxID = max(edges(:));
+    adj = sparse(edges(:,1), edges(:,2), prob, maxID, maxID);
+    adj = adj + adj';
+    tree = graphminspantree(adj);
+    [edgesNew(:,1), edgesNew(:,2)] = find(tree);
 end
 
 function skel = initializeSkeleton()
