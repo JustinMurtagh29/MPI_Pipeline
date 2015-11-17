@@ -14,19 +14,15 @@ function skel = writeSkeleton(graph, seeds, com);
         skel{c}.name = ['Component ' num2str(tr, '%.2i')];
         skel{c}.color = [rand(1,3) 1];
         theseCoM = com(seeds{tr},:);
-        tic;
         idx = ismember(graph.edges,seeds{tr});
         idx = idx(:,1) & idx(:,2);
         theseEdges = graph.edges(idx,:);
-        toc;
-        tic;
         for no=1:size(theseCoM,1)
             nodeId = nodeId + 1;
             skel{c}.nodesAsStruct(nodeId-nodeOffsetThisSkel) = generateNodeAsStruct(nodeId, theseCoM(no,:), 10);
             skel{c}.nodes(nodeId-nodeOffsetThisSkel,:) = [theseCoM(no,:) 10];
             theseEdges(theseEdges == seeds{tr}(no)) = no;
         end
-        toc;
         skel{c}.edges = theseEdges;
         Util.progressBar(tr, length(seeds));
     end
