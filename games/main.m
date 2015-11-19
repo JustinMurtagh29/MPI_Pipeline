@@ -19,13 +19,26 @@ load([p.saveFolder 'CoM.mat']);
 % agglo.vessel = determineSegIdsFromMag4(p, p.vessel);
 % excludedID = cat(1,agglo.nuclei{:}, agglo.vessel{:});
 % agglo.border = determineSegIdsAtSGborders(p, excludedID);
-agglo.borderMerged = agglomerateSG(graph, agglo.border, .95, 1, true);
-load([p.saveFolder 'agglomeration' filesep 'nucleiVesselBorder.mat']);
-agglo = rmfield(agglo, 'border');
-checkAggloConsitency(agglo);
-
+% agglo.borderMerged = agglomerateSG(graph, agglo.border, .95, 1, true);
+% checkAggloConsitency(agglo);
 % Lets agglomerate some nuclei (to somata) and seg. border IDs (to bigger neurites)
-agglo.borderGrown = agglomerateSG(graph, agglo.borderMerged, .95, 10, false);
-agglo.nucleiGrown = agglomerateSG(graph, agglo.nuclei, .95, 10, false);
+% agglo.borderGrown = agglomerateSG(graph, agglo.borderMerged, .95, 10, false);
+% agglo.nucleiGrown = agglomerateSG(graph, agglo.nuclei, .95, 10, false);
+load([p.saveFolder 'agglomeration' filesep 'nucleiVesselBorder.mat']);
 
+% Seed 10 by 10 micron plane, see MH comment lablog
+seedPlaneCenter = [4166 5376 2387];
+expandVector = [floor(10000/11.24) 0 floor(10000/28)];
+seedPlane(:,1) = seedPlaneCenter - expandVector;
+seedPlane(:,2) = seedPlaneCenter + expandVector;
+segIds = unique(readKnossosRoi(p.seg.root, p.seg.prefix, seedPlane, 'uint32', '', 'raw'));
+segIds = segIds(segIds ~= 0);
+segIds(ismember(segIds, cat(1,agglo.nuclei{:}, agglo.vessel{:}))) = [];
+segIds = mat2cell(segIds, ones(length(segIds),1), 1);
+aggloPlane = agglomerateSG(graph, segIds, .95, 10);
+uniqueAggloPlane = mergeSeeds(graph, aggloPlane);
+skel = writeSkeleton(graph, aggloPlane, com);
+writeNml('/gaba/u/mberning/testPlane.nml', skel);
+skel = writeSkeleton(graph, uniqueAggloPlane, com);
+writeNml('/gaba/u/mberning/testPlaneMerged.nml', skel);
 
