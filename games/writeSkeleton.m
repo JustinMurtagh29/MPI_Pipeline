@@ -1,12 +1,17 @@
-function skel = writeSkeleton(graph, seeds, com);
+function skel = writeSkeleton(graph, seeds, com, writeMaxProbableContFlag, startSeeds);
+    
+    if nargin < 4
+        writeMaxProbableContFlag = false;
+    end    
+    
     c = 1; % counter for trees in skeleton
     nodeId = 1; % counter for nodes in current skeleton
     nodeOffsetThisSkel = 0;
     % Reduce graph only to edges needed here for efficeny
     idx = ismember(graph.edges,cat(1,seeds{:}));
     idx = idx(:,1) & idx(:,2);
-    graph.edges = graph.edges(idx,:);
-    graph.prob = graph.prob(idx);
+    edges = graph.edges(idx,:);
+    prob = graph.prob(idx);
     % Write skeleton for check
     skel = initializeSkeleton();
     tic;
@@ -16,16 +21,77 @@ function skel = writeSkeleton(graph, seeds, com);
             skel{c}.name = ['Component ' num2str(tr, '%.2i')];
             skel{c}.color = [rand(1,3) 1];
             theseCoM = com(seeds{tr},:);
-            idx = ismember(graph.edges,seeds{tr});
+            idx = ismember(edges,seeds{tr});
             idx = idx(:,1) & idx(:,2);
-            theseEdges = graph.edges(idx,:);
-            theseProb = graph.prob(idx);
+            theseEdges = edges(idx,:);
+            theseProb = prob(idx);
             for no=1:size(theseCoM,1)
                 skel{c}.nodesAsStruct(nodeId-nodeOffsetThisSkel) = generateNodeAsStruct(nodeId, theseCoM(no,:), 10);
                 skel{c}.nodes(nodeId-nodeOffsetThisSkel,:) = [theseCoM(no,:) 10];
                 nodeId = nodeId + 1;
                 theseEdges(theseEdges == seeds{tr}(no)) = no;
             end
+            if writeMaxProbableContFlag
+                % Find endSegment (if more than 1 segment use PC)
+                if length(seeds{tr}) > 1
+                    % If onlt two segments PCA will not work
+                    if length(seeds{tr}) == 2
+                        maxIdx = 1;
+                        minIdx = 2;
+                    else
+                        [~,score] = princomp(theseCoM);
+                        [~, maxIdx] = max(score(:,1));
+                        [~, minIdx] = min(score(:,1));
+                    end
+                    if ismember(seeds{tr}(maxIdx), [startSeeds{:}]);
+                        endSegment = seeds{tr}(minIdx);
+                        edgeIdxInNml = minIdx;
+                    elseif ismember(seeds{tr}(minIdx), [startSeeds{:}])
+                        endSegment = seeds{tr}(maxIdx);
+                        edgeIdxInNml = maxIdx;
+                    % These two next elseif only work for current plane
+                    elseif com(seeds{tr}(maxIdx),2) > com(seeds{tr}(minIdx),2)
+                        endSegment = seeds{tr}(minIdx);
+                        edgeIdxInNml = minIdx;
+                    elseif com(seeds{tr}(minIdx),2) > com(seeds{tr}(maxIdx),2)
+                        endSegment = seeds{tr}(maxIdx);
+                        edgeIdxInNml = maxIdx;
+                    % Else choose random for now
+                    else
+                        rN = randi(2, 1);
+                        if rN == 1
+                            endSegment = seeds{tr}(minIdx);
+                            edgeIdxInNml = minIdx;                           
+                        else
+                            endSegment = seeds{tr}(minIdx);
+                            edgeIdxInNml = minIdx;
+                        end
+                    end
+                else
+                    endSegment = seeds{tr};
+                    edgeIdxInNml = 1;
+                end
+                % Find maximal probability connection to end segment
+                idxToEnd = any(ismember(graph.edges, endSegment),2);
+                idxInAgglo = all(ismember(graph.edges, cat(1, seeds{:})),2);
+                idx = find(idxToEnd & ~idxInAgglo);
+                if isempty(idx)
+                    skel{c}.nodesAsStruct{nodeId-1-nodeOffsetThisSkel}.comment = 'no (not already collected) neighbours found';
+                else
+                    [maxProb,maxProbIdx] = max(graph.prob(idx));
+                    querrySegment = graph.edges(idx(maxProbIdx),:);
+                    querrySegment = querrySegment(querrySegment ~= endSegment);
+                    % Update edge and probability lists (with additional edge to annotate)
+                    theseEdges(end+1,:) = [edgeIdxInNml; max(theseEdges(:))+1];
+                    theseProb(end+1) = maxProb;
+                    % Write node to skeleton
+                    comment = ['Destination of querry: edge p=' num2str(maxProb, '%3.2f')];
+                    skel{c}.nodesAsStruct(nodeId-nodeOffsetThisSkel) = generateNodeAsStruct(nodeId, com(querrySegment,:), 10, comment);
+                    skel{c}.nodes(nodeId-nodeOffsetThisSkel,:) = [com(querrySegment,:) 10];
+                    nodeId = nodeId + 1;
+                end
+            end
+            % Generate minimal spanning tree if necessary
             if size(theseEdges,1) < 3
                 skel{c}.edges = theseEdges;
             else
