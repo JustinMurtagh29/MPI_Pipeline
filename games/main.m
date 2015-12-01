@@ -24,17 +24,20 @@ load([p.saveFolder 'CoM.mat']);
 % Lets agglomerate some nuclei (to somata) and seg. border IDs (to bigger neurites)
 % agglo.borderGrown = agglomerateSG(graph, agglo.borderMerged, .95, 10, false);
 % agglo.nucleiGrown = agglomerateSG(graph, agglo.nuclei, .95, 10, false);
-load([p.saveFolder 'agglomeration' filesep 'nucleiVesselBorder.mat']);
+% load([p.saveFolder 'agglomeration' filesep 'nucleiVesselBorder.mat']);
 
-% Seed 5 by 5 micron plane, see MH comment lablog
+% Seed 5 by 5 micron plane & cube, see MH comment lablog
 seedPlaneCenter = [4166 5376 2387];
 expandVector = [floor(5000/11.24) 0 floor(5000/28)];
 seedPlane(:,1) = seedPlaneCenter - expandVector;
 seedPlane(:,2) = seedPlaneCenter + expandVector;
-segIds = unique(readKnossosRoi(p.seg.root, p.seg.prefix, seedPlane, 'uint32', '', 'raw'));
-segIds = segIds(segIds ~= 0);
-segIds(ismember(segIds, cat(1,agglo.nuclei{:}, agglo.vessel{:}))) = [];
-segIds = mat2cell(segIds, ones(length(segIds),1), 1);
+seedCube(:,1) = seedPlaneCenter - expandVector - [0 floor(10000/11.24) 0];
+seedCube(:,2) = seedPlaneCenter + expandVector;
+
+%segIds = unique(readKnossosRoi(p.seg.root, p.seg.prefix, seedPlane, 'uint32', '', 'raw'));
+%segIds = segIds(segIds ~= 0);
+%segIds(ismember(segIds, cat(1,agglo.nuclei{:}, agglo.vessel{:}))) = [];
+%segIds = mat2cell(segIds, ones(length(segIds),1), 1);
 % Agglomerate for 10 steps:
 %aggloPlane = agglomerateSG(graph, segIds, .95, 10);
 % Merge seeds which overlap in 1 segment
@@ -46,9 +49,9 @@ segIds = mat2cell(segIds, ones(length(segIds),1), 1);
 %writeNml('/gaba/u/mberning/testPlaneMerged.nml', skel);
 
 % Choose 100 random seeds from plane
-idx = randi(length(segIds),100,1);
-segIdsRand = segIds(idx);
-p = [.9 .95 .98];
+%idx = randi(length(segIds),100,1);
+%segIdsRand = segIds(idx);
+%p = [.9 .95 .98];
 for p_i=1:length(p);
     aggloRand = agglomerateSG(graph, segIdsRand, p(p_i), 10);
     aggloRand = mergeSeeds(aggloRand);
@@ -56,12 +59,15 @@ for p_i=1:length(p);
     writeNml(['/gaba/u/mberning/testPlane' num2str(p(p_i), '%3.2f') '.nml'], skel);
 end
 
-aggloRand = agglomerateSG(graph, segIdsRand, .95, 100);
-aggloRand = mergeSeeds(aggloRand);
-skel = writeSkeleton(graph, aggloRand, com);
-writeNml(['/gaba/u/mberning/testPlaneLong.nml'], skel);
+%aggloRand = agglomerateSG(graph, segIdsRand, .95, 100);
+%aggloRand = mergeSeeds(aggloRand);
+%skel = writeSkeleton(graph, aggloRand, com);
+%writeNml(['/gaba/u/mberning/testPlaneLong.nml'], skel);
 
-aggloRand = agglomerateSG(graph, segIdsRand, .95, 10);
-aggloRand = mergeSeeds(aggloRand);
-skel = writeSkeleton(graph, aggloRand, com, true, segIds);
-writeNml(['/gaba/u/mberning/testPlane' num2str(.95, '%3.2f') 'wQuerries.nml'], skel);
+%aggloRand = agglomerateSG(graph, segIdsRand, .95, 10);
+%aggloRand = mergeSeeds(aggloRand);
+%skel = writeSkeleton(graph, aggloRand, com, true, segIds);
+%writeNml(['/gaba/u/mberning/testPlane' num2str(.95, '%3.2f') 'wQuerries.nml'], skel);
+
+[graphR, comR, segIdsR, segIdsB] = restrictSGtoRegion(p, graph, com, seedCube);
+

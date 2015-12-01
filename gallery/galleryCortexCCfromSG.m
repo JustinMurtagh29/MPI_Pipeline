@@ -5,7 +5,7 @@ function galleryCortexCCfromSG(p, component, outputFile)
     % Find X,Y,Z for each node if it is within parameter.local(X,Y,Z).bboxSmall
     for c = 1:length(component)
         nodeData.supervoxelID = component(c);
-        nodeData.cube
+        nodeData.cube = 
     end
     for i=1:length(nodeData)
         nodeData.nodes = skel_data{sk}.nodes(:,1:3);
@@ -80,11 +80,11 @@ function galleryCortexCCfromSG(p, component, outputFile)
         % Remove empty isosurfaces
         idx = zeros(length(issfs),1);
         for i=1:length(issfs)
-            if isempty(issfs{i}) | isempty(issfs{i}.vertices)
+            if isempty(issfs{i}) || isempty(issfs{i}.vertices)
                 idx(i) = 1;
             end
         end
-        issfs(find(idx)) = [];	
+        issfs(idx) = [];	
         % Save
         exportSurfaceToAmira(issfs, [outputPath strrep(skelFile, '.nml', ['_' num2str(sk) '.issf'])]);
     end

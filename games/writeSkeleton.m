@@ -82,7 +82,11 @@ function skel = writeSkeleton(graph, seeds, com, writeMaxProbableContFlag, start
                     querrySegment = graph.edges(idx(maxProbIdx),:);
                     querrySegment = querrySegment(querrySegment ~= endSegment);
                     % Update edge and probability lists (with additional edge to annotate)
-                    theseEdges(end+1,:) = [edgeIdxInNml; max(theseEdges(:))+1];
+                    if isempty(theseEdges)
+                        theseEdges = [1 2];
+                    else
+                        theseEdges(end+1,:) = [edgeIdxInNml; max(theseEdges(:))+1];
+                    end
                     theseProb(end+1) = maxProb;
                     % Write node to skeleton
                     comment = ['Destination of querry: edge p=' num2str(maxProb, '%3.2f')];
@@ -109,7 +113,7 @@ function edgesNew = minimalSpanningTree(edges, prob)
     maxID = max(edges(:));
     adj = sparse(edges(:,1), edges(:,2), prob, maxID, maxID);
     adj = adj + adj';
-    tree = graphminspantree(adj);
+    tree = graphminspantree(adj, 'Method', 'Kruskal');
     [edgesNew(:,1), edgesNew(:,2)] = find(tree);
 end
 

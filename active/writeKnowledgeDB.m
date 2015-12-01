@@ -1,41 +1,45 @@
-function v = writeKnowledgeDB(par, seg, mito, edges, p, border, edgesOld, pOld, borderOld)
+function v = writeKnowledgeDB(p, graph, edgesToAnnotate)
 
 % Viewport settings used as top level for writing missions to knowledge DB
-v = par.v;
+v = p.kdb.v;
+
 % Load global counter variables
-if exist(par.kdbCounter, 'file')
-	load(par.kdbCounter);
+if exist(p.kdb.counter, 'file')
+	load(p.kdb.counter);
 else
 	counter.layerId = 1;
 	counter.taskId = 0;
-	save(par.kdbCounter, 'counter');
 end
-% Increase counter variables
-if par.restartCounter
+
+% Reset counter variables if restartCounter
+if restartCounter
 	counter.layerId = 1;
 	taskId = 0;
-	counter.taskId = size(edges,1); 
 else
 	counter.layerId = counter.layerId + 1;
 	taskId = counter.taskId;
-	counter.taskId = counter.taskId + size(edges,1);
+	counter.taskId = counter.taskId + size(edgesToAnnotate,1);
 end
+
 % Save global counter variables
-save(par.kdbCounter, 'counter');
+save(par.kdb.counter, 'counter');
 
 % Metadata fuer Tasks generieren
-for i=1:1000%size(edges,1)
+for i=1:size(edgesToAnnotate,1)
 	tic;
+    % Find index in graph of current edge
+    idx = bsxfun(@isequal, graph.edges, edgesToAnnotate(i,:));
 	% cut out local stack for speed purposes (and for having local CoM/direction)
-	errorCenter = round(border(i).Centroid([2 1 3]));
-	segLocal = seg(errorCenter(1)-par.kdbBorder(1):errorCenter(1)+par.kdbBorder(1),...
-				errorCenter(2)-par.kdbBorder(2):errorCenter(2)+par.kdbBorder(2),...
-				errorCenter(3)-par.kdbBorder(3):errorCenter(3)+par.kdbBorder(3));
+	errorCenter = round(graph.borderCentroid(i,:));
+	thisBBox = [errorCenter(1)-par.kdb.border(1) errorCenter(1)+par.kdb.border(1);...
+				errorCenter(2)-par.kdb.border(2) errorCenter(2)+par.kdb.border(2);...
+				errorCenter(3)-par.kdb.border(3) errorCenter(3)+par.kdb.border(3)];
+    seg = readKnossosRoi(p.seg.root, p.seg.prefix, thisBBox, 'uint32', '', 'raw');
 	% Logical array of objects in small bounding box
-	obj1 = segLocal == edges(i,1);
-	obj2 = segLocal == edges(i,2);
+	obj1 = segLocal == edgesToAnnotate(i,1);
+	obj2 = segLocal == edgesToAnnotate(i,2);
 	% Determine CoM of segments
-       	obj1Prop = regionprops(obj1, 'Centroid', 'Area', 'PixelList');
+   	obj1Prop = regionprops(obj1, 'Centroid', 'Area', 'PixelList');
 	% This is necessary if object is split by by cutting out local bbox
 	if length(obj1Prop) > 1
 		comWrtEc = sum(bsxfun(@times, bsxfun(@minus, cat(1,obj1Prop(:).Centroid), par.kdbBorder), par.settings.scale) .^ 2,2);
@@ -57,9 +61,9 @@ for i=1:1000%size(edges,1)
 	% Calculate extend of start object wrt to error center in nm 
 	pixelPosWrtErrorCenter = bsxfun(@times, bsxfun(@minus, obj1Prop.PixelList(:,[2 1 3]), par.kdbBorder), par.settings.scale);
 	% Determine pixel list all objects
-       	objAllProps = regionprops(segLocal, 'PixelList');
+    objAllProps = regionprops(segLocal, 'PixelList');
 	% Find objects ID of objects neighbouring object 1
-        [row, col] = find(edgesOld == edges(i,1));
+    [row, col] = find(edgesOld == edges(i,1));
 	col(col == 1) = 3;
 	col = col - 1;
 	for j=1:length(v)
@@ -69,13 +73,13 @@ for i=1:1000%size(edges,1)
 		v(j).missions(i).isControl = logical(par.controlFlag);
 		v(j).missions(i).isTutorial = logical(par.tutorialFlag);
 		% Start and end segment used for rendering (section-local)
-		v(j).missions(i).start.id = edges(i,1);
-		v(j).missions(i).end.id = edges(i,2);
+		v(j).missions(i).start.id = edgesToAnnotate(i,1);
+		v(j).missions(i).end.id = edgesToAnnotate(i,2);
 		% error center in voxel (global)
-		v(j).missions(i).errorCenter = errorCenter + par.bboxBig(:,1)';
+		v(j).missions(i).errorCenter = errorCenter;
 		% Calculate CoM of objects in voxel
-		v(j).missions(i).start.CoM = obj1Prop.Centroid([2 1 3]) + v(j).missions(i).errorCenter - par.kdbBorder;
-		v(j).missions(i).end.CoM = obj2Prop.Centroid([2 1 3]) + v(j).missions(i).errorCenter - par.kdbBorder;
+		v(j).missions(i).start.CoM = obj1Prop.Centroid([2 1 3]) + errorCenter - par.kdbBorder;
+		v(j).missions(i).end.CoM = obj2Prop.Centroid([2 1 3]) + errorCenter - par.kdbBorder;
 		% Rotated or original direction
 		if v(j).isRotated
 			v(j).missions(i).start.direction = rotate(direction, randomOrthVec, rand(1)*v(j).openingAngle);
