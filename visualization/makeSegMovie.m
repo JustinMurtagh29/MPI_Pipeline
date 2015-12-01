@@ -21,7 +21,7 @@ for f=1:size(raw,3)
     hold on;
     temp = label2rgb(segmentation(:,:,f), colors, [1 1 1]);
     himage = imshow(temp);
-    set(himage, 'AlphaData', 0.2);
+    set(himage, 'AlphaData', 0.5);
     drawnow;
     frame = getframe;
     writeVideo(writerObj,frame);
