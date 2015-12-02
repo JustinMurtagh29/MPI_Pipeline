@@ -18,7 +18,7 @@ function skel = writeSkeleton(graph, seeds, com, writeMaxProbableContFlag, start
     for tr=1:length(seeds)
         if ~isempty(seeds{tr})
             skel{c}.thingID = c;
-            skel{c}.name = ['Component ' num2str(tr, '%.2i')];
+            skel{c}.name = ['Component ' num2str(tr, '%.4i')];
             skel{c}.color = [rand(1,3) 1];
             theseCoM = com(seeds{tr},:);
             idx = ismember(edges,seeds{tr});

@@ -41,7 +41,7 @@ function collectGlobalGraph(p)
         graph.prob(idx:end) = [];
         graph.cubeLI(idx:end) = [];
         graph.borderCentroid(idx:end,:) = [];
-        save([p.saveFolder 'graph.mat'], 'graph');
+        save([p.saveFolder 'graph.mat'], 'graph', '-v7.3');
         toc;
 
 end

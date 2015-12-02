@@ -126,10 +126,7 @@ fprintf('\n');
 
 % SEGMENTATION LAYER
 % Define folder in which mission & section json is placed (as well as segmentation in subfolder corresponding to resolution)
-rootFolder = [par.writeLocation par.settings.name '/segmentation/section' num2str(counter.layerId) '/'];
-
-% Cubes & JSON schreiben 
-writeKnossosRoi([rootFolder '1/'], [par.settings.name '_mag1'], par.bboxBig(:,1)', seg, class(seg));
+rootFolder = [par.folder '/section' num2str(counter.layerId, '%.4i') '/'];
 
 % missions.json & section.json schreiben
 segSection.resolutions = 1;
@@ -141,38 +138,9 @@ missionStruct.sectionId = ['section' num2str(counter.layerId)];
 missionStruct.viewports = v;
 savejson('', missionStruct, 'FileName', [rootFolder 'missions.json'], 'ParseLogical', 1);
 
-% layer.json 
-segLayer.typ = 'segmentation';
-segLayer.class = class(seg);
-savejson('', segLayer, [par.writeLocation par.settings.name '/segmentation/layer.json']);
-
-% FEATURES LAYER
-% Define folder in which mission & section json is placed (as well as segmentation in subfolder corresponding to resolution)
-rootFolder = [par.writeLocation par.settings.name '/features/section' num2str(counter.layerId) '/'];
-
-% Cubes & JSON schreiben
-writeKnossosRoi([rootFolder '1/'], [par.settings.name '_mag1'], par.bboxBig(:,1)', mito, class(mito));
-
-% section.json schreiben
-featSection.resolutions = 1;
-featSection.sectionId = counter.layerId;
-featSection.bboxSmall = par.bboxSmall;
-featSection.bboxBig = par.bboxBig;
-savejson('', featSection, [rootFolder 'section.json']);
-
-% layer.json
-featLayer.typ = 'features';
-featLayer.class = class(mito);
-savejson('', featLayer, [par.writeLocation par.settings.name '/features/layer.json']);
-
-% FOR BOTH
-% Write settings.json
-savejson('', par.settings, [par.writeLocation par.settings.name '/settings.json']);
-
 % save everything to synced folder for problem inspection if flag is set
-if par.saveForProblemInspector
-	raw = loadRawData(par.raw.root, par.raw.prefix, par.bboxBig, 0); 
-	save(['/zdata/manuel/sync/problemInspector/' 'kDbResults' strrep(par.start, '/', '-') '.mat'], 'par', 'raw', 'seg', 'mito', 'v', '-v7.3');
+if par.kdb.saveForProblemInspector
+	save([rootFolder 'section' num2str(counter.layerId, '%.4i')  '.mat'], 'par', 'v', '-v7.3');
 end
 
 end
