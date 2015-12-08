@@ -18,7 +18,7 @@ function skel = writeSkeletonEdges(graph, com, cc, probabilities);
             theseProb = graph.prob(idx);
             for no=1:size(theseCoM,1)
                 if no > 1
-                    cS = ['Accumulated evidence: ' num2str(probabilities{tr}(no), '%.2f')];
+                    cS = ['Step: ' num2str(no-1, '%.3i') ' Probability: ' num2str(probabilities{tr}(no), '%.2f')];
                     skel{c}.nodesAsStruct(nodeId-nodeOffsetThisSkel) = generateNodeAsStruct(nodeId, theseCoM(no,:), 10, cS);
                 else
                     skel{c}.nodesAsStruct(nodeId-nodeOffsetThisSkel) = generateNodeAsStruct(nodeId, theseCoM(no,:), 10);
