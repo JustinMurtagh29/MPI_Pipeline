@@ -24,6 +24,7 @@ function [graphR, comR, segIdsR, segIdsB] = restrictSGtoRegion(p, graph, com, bb
     graphR.edges = graph.edges(edgeIdx,:);
     graphR.prob = graph.prob(edgeIdx);
     graphR.cubeLI = graph.cubeLI(edgeIdx);
+    graphR.borderCentroid = graph.borderCentroid(edgeIdx,:);
 
 end
 
