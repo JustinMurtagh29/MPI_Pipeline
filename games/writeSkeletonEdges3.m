@@ -1,28 +1,35 @@
-function skel = writeSkeletonEdges(graph, com, cc, probabilities, skel);
-      
-    c = 2; % counter for trees in skeleton
-    nodeOffsetThisSkel = max(skel{1}.nodesNumDataAll(:,1));  
-    nodeId = nodeOffsetThisSkel + 1; % counter for nodes in current skeleton
-    % Fromat skeleton, Change to the segNew
-    skel{1}.parameters.experiment.name='2012-09-28_ex145_07x2_segNew';
+function skel = writeSkeletonEdges3(graph, com, cc, probabilities, stats, querriedEdges);
+
+    c = 1; % counter for trees in skeleton
+    nodeId = 1; % counter for nodes in current skeleton
+    nodeOffsetThisSkel = 0;
+    % Write skeleton for check
+    skel = initializeSkeleton();
+    tic;
     for tr=1:length(cc)
         if ~isempty(cc{tr})
             skel{c}.thingID = c;
-            skel{c}.name = ['Seed ' num2str(tr, '%.4i')];
+            skel{c}.name = ['Component ' num2str(tr, '%.4i')];
             skel{c}.color = [rand(1,3) 1];
             theseCoM = com(cc{tr},:);
             idx = ismember(graph.edges,cc{tr});
             idx = idx(:,1) & idx(:,2);
             theseEdges = graph.edges(idx,:);
-            theseProb = graph.prob(idx);
+            theseEdges = cat(1, theseEdges, querriedEdges{tr});
             for no=1:size(theseCoM,1)
+                % Generate comment for skeleton based on agglomeration
                 if no > 1
-                    cS = ['Step: ' num2str(no-1, '%.3i') ' Probability: ' num2str(probabilities{tr}(no-1), '%.2f')];
-                    skel{c}.nodesAsStruct(nodeId-nodeOffsetThisSkel) = generateNodeAsStruct(nodeId, theseCoM(no,:), 10, cS);
+                    cS = ['Step: ' num2str(no-1, '%.3i') ', Probability: ' num2str(probabilities{tr}(no-1), '%.2f')];
+                    if stats(tr).querried(no-1)
+                        cS = [cS ', querried'];
+                    end
+                    if stats(tr).merger(no-1)
+                        cS = [cS ', merger']; 
+                    end
                 else
                     cS = 'Start segment';
-                    skel{c}.nodesAsStruct(nodeId-nodeOffsetThisSkel) = generateNodeAsStruct(nodeId, theseCoM(no,:), 10, cS);
                 end
+                skel{c}.nodesAsStruct(nodeId-nodeOffsetThisSkel) = generateNodeAsStruct(nodeId, theseCoM(no,:), 10, cS);
                 skel{c}.nodes(nodeId-nodeOffsetThisSkel,:) = [theseCoM(no,:) 10];
                 nodeId = nodeId + 1;
                 theseEdges(theseEdges == cc{tr}(no)) = no;
@@ -30,6 +37,7 @@ function skel = writeSkeletonEdges(graph, com, cc, probabilities, skel);
             skel{c}.edges = theseEdges;
             c = c + 1;
             nodeOffsetThisSkel = nodeId - 1;
+            Util.progressBar(tr, length(cc));
         end
     end
 end

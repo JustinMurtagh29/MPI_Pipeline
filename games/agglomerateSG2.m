@@ -1,33 +1,24 @@
-function [newSeeds, probabilities, stats] = agglomerateSG2(graph, seeds, nrSteps)
+function [agglo, probabilities] = agglomerateSG2(graph, seeds, nrSteps)
     % Agglomerates supervoxel given the graph, always highest probability for nrSteps
 
     % Initalization
-    newSeeds = seeds;
+    agglo = mat2cell(seeds, ones(length(seeds),1));
     probabilities = cell(size(seeds));
-    stats = struct();
 
-    display('Agglomerating supervoxel');
-    tic;
     for s=1:length(seeds)
         for n=1:nrSteps
-            % Multiply with GP-based adjaceny matrix
-            theseProbabilities = max(graph.adj(newSeeds{s},:),[],1);
+            theseNeighbours = [graph.neighbours{agglo{s}}];
+            % Determine probability of all neighbours
+            theseProbabilities = cat(1,graph.neighProb{agglo{s}});
             % Remove self edges (within component)
-            theseProbabilities(newSeeds{s}) = 0;
-            % Add maxium probability ID to agglomerated seed
+            selfEdgeIdx = ismember(theseNeighbours, agglo{s});
+            theseNeighbours(selfEdgeIdx) = [];
+            theseProbabilities(selfEdgeIdx) = [];
+            % Determine maxium probability and ID to agglomerated segments
             [maxProb, maxId] = max(theseProbabilities);
-            newSeeds{s}(n+1) = maxId;
-            probabilities{s}(n+1) = full(maxProb);
-            % Temporary section to evaluate stop conditions
-            stats(s,n).segId = maxId;
-            stats(s,n).neighbours = find(graph.adj(maxId,:));
-            stats(s,n).prob = graph.adj(maxId, stats(s,n).neighbours);
-            if maxId == 6033884 || maxId ==  6035398 || maxId == 5934237
-                break;
-            end
+            agglo{s}(n+1) = theseNeighbours(maxId);
+            probabilities{s}(n) = full(maxProb);
         end
-        % Display progress
-        Util.progressBar(s, length(seeds));
     end
 
 end

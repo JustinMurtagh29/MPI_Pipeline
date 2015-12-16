@@ -6,6 +6,7 @@ function collectGlobalGraph(p)
         graph.prob = NaN(1e8,1);
         graph.cubeLI = NaN(1e8,1); % store linear indices as well (second column for correspondences)
         graph.borderCentroid = NaN(1e8,3);
+        graph.borderArea = NaN(1e8,3);
         idx = 1;
         for i=1:size(p.local,1)
             for j=1:size(p.local,2)
@@ -19,6 +20,7 @@ function collectGlobalGraph(p)
                     graph.edges(idx:idx+nrElements-1,:) = edges;
                     theseBorderCentroids = cat(1, borders(:).Centroid);
                     graph.borderCentroid(idx:idx+nrElements-1,:) = bsxfun(@plus, theseBorderCentroids(:,[2 1 3]), offsetThisCube);
+                    graph.borderArea(idx:idx+nrElements-1) = cat(1, borders(:).Area); 
                     graph.prob(idx:idx+nrElements-1) = prob;
                     graph.cubeLI(idx:idx+nrElements-1) = repmat(sub2ind(size(p.local),i,j,k), [nrElements 1]);
                     idx = idx+nrElements;
@@ -41,6 +43,7 @@ function collectGlobalGraph(p)
         graph.prob(idx:end) = [];
         graph.cubeLI(idx:end) = [];
         graph.borderCentroid(idx:end,:) = [];
+        graph.borderArea(idx:end) = [];
         save([p.saveFolder 'graph.mat'], 'graph', '-v7.3');
         toc;
 
