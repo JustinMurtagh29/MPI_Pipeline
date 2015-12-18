@@ -1,16 +1,33 @@
-function skel = writeSkeletonEdges3(graph, com, cc, probabilities, stats, querriedEdges);
+function skel = writeSkeletonEdges3(graph, com, cc, probabilities, querried, merged, querriedEdges, gtSkel);
 
     c = 1; % counter for trees in skeleton
     nodeId = 1; % counter for nodes in current skeleton
     nodeOffsetThisSkel = 0;
+    % Set colors to be used
+    colors = [0 0 1 1; 0 1 0 1; 1 0 0 1];
     % Write skeleton for check
     skel = initializeSkeleton();
-    tic;
+    % Write ground truth skeleton first
+    skel{c}.thingID = c;
+    skel{c}.name = 'ground truth';
+    skel{c}.color = [0 0 0 1];
+    %theseEdges = gtSkel.edges;
+    for i=1:size(gtSkel.nodes,1)
+        thisNodeId = gtSkel.nodesNumDataAll(i,1);
+        skel{c}.nodesAsStruct(nodeId-nodeOffsetThisSkel) = generateNodeAsStruct(nodeId, gtSkel.nodes(i,:), 10);
+        skel{c}.nodes(nodeId-nodeOffsetThisSkel,:) = gtSkel.nodes(i,:);
+        %theseEdges(theseEdges == thisNodeId) = i;
+        nodeId = nodeId + 1;
+    end
+    skel{c}.edges = gtSkel.edges;;
+    c = c + 1;
+    nodeOffsetThisSkel = nodeId -1; 
+    % Write seeded skeletons next
     for tr=1:length(cc)
         if ~isempty(cc{tr})
             skel{c}.thingID = c;
             skel{c}.name = ['Component ' num2str(tr, '%.4i')];
-            skel{c}.color = [rand(1,3) 1];
+            skel{c}.color = colors(c-1,:);
             theseCoM = com(cc{tr},:);
             idx = ismember(graph.edges,cc{tr});
             idx = idx(:,1) & idx(:,2);
@@ -20,10 +37,10 @@ function skel = writeSkeletonEdges3(graph, com, cc, probabilities, stats, querri
                 % Generate comment for skeleton based on agglomeration
                 if no > 1
                     cS = ['Step: ' num2str(no-1, '%.3i') ', Probability: ' num2str(probabilities{tr}(no-1), '%.2f')];
-                    if stats(tr).querried(no-1)
+                    if querried{tr}(no-1)
                         cS = [cS ', querried'];
                     end
-                    if stats(tr).merger(no-1)
+                    if merged{tr}(no-1)
                         cS = [cS ', merger']; 
                     end
                 else
@@ -37,7 +54,6 @@ function skel = writeSkeletonEdges3(graph, com, cc, probabilities, stats, querri
             skel{c}.edges = theseEdges;
             c = c + 1;
             nodeOffsetThisSkel = nodeId - 1;
-            Util.progressBar(tr, length(cc));
         end
     end
 end

@@ -1,65 +1,75 @@
-function [agglo, probabilities, stats, querriedEdges, mergerList] = agglomerateSG3(graph, com, seeds, termNodes, segIds)
+function [agglo, probabilities, querried, merger, querriedEdges, mergerList] = agglomerateSG3(graph, com, seeds, segIds)
     % Agglomerates supervoxel given the graph, always highest probability for nrSteps
 
     % Initalization
-    display('Initalization');
-    tic;
-    agglo = seeds;
-    probabilities = cell(size(seeds));
-    querriedEdges = cell(size(seeds));
-    mergerList = cell(size(seeds));
-    stats = struct('querried', {}, 'merger', {});
-    stats(4).querried = []; 
-    toc;
+    agglo = mat2cell(seeds, ones(length(seeds),1));
+    probabilities = cell(size(agglo));
+    querried = cell(size(agglo));
+    merger = cell(size(agglo));
+    querriedEdges = cell(size(agglo));
+    mergerList = [];
+    aggloFlag = true(size(agglo));
 
-    display('Agglomerating supervoxel');
-    tic;
-    for s=1:length(seeds)
-        while isempty(intersect(agglo{s}, termNodes{s})) & length(agglo{s}) < 400
-            % Remove merger from agglomerated segments
-            thisAggloWithoutMerger = setdiff(agglo{s}, mergerList{s});
-            % Determine neighbours of all agglomerated objects
-            theseNeighbours = [graph.neighbours{thisAggloWithoutMerger}];
-            % Determine probability of all neighbours
-            theseProbabilities = cat(1,graph.neighProb{thisAggloWithoutMerger});
-            % Remove self edges (within component)
-            selfEdgeIdx = ismember(theseNeighbours, agglo{s});                      
-            theseNeighbours(selfEdgeIdx) = [];
-            theseProbabilities(selfEdgeIdx) = [];
-            % Determine maxium probability and ID to agglomerated segments
-            [maxProb, maxProbIdx] = max(theseProbabilities);
-            % ID about to be agglomerated
-            maxProbId = theseNeighbours(maxProbIdx);
-            % Heuristics: Querry skeleton if sth sth sth dark side
-            if maxProb < .85
-                % Querry skeleton for continuation at point farest way from start com
-                startCoord = com(seeds{s}(1),:);
-                aggloCoord = com(agglo{s},:);
-                distances = sqrt(sum(bsxfun(@times, bsxfun(@minus, aggloCoord, startCoord), [11.24 11.24 28]).^2,2));
-                [~,maxDistIdx] = max(distances);
-                addedId = querrySkeleton(graph, agglo{s}, segIds{s}, agglo{s}(maxDistIdx));
-                querriedEdges{s}(end+1,1:2) = [agglo{s}(maxDistIdx) addedId];
-                stats(s).querried(end+1) = true;
-            else
-                addedId = maxProbId;
-                stats(s).querried(end+1) = false;
-            end
-            % Add id to agglomeration
-            agglo{s}(end+1) = addedId;
-            probabilities{s}(end+1) = maxProb;
-            % Next Heuristics: Exclude if 40 neighbours or more
-            if length(graph.neighbours{addedId}) >= 30 
-                stats(s).merger(end+1) = true;
-                % Add last seed ID to ignore list (SegEM merger)
-                mergerList{s}(end+1) = addedId;
-            else
-                stats(s).merger(end+1) = false;
+    while true 
+        for s=1:length(seeds)
+            if aggloFlag(s)
+                % Remove merger from agglomerated segments
+                thisAggloWithoutMerger = setdiff(agglo{s}, mergerList);
+                % Determine neighbours of all agglomerated objects
+                theseNeighbours = [graph.neighbours{thisAggloWithoutMerger}];
+                % Determine probability of all neighbours
+                theseProbabilities = cat(1,graph.neighProb{thisAggloWithoutMerger});
+                % Remove self edges (within component)
+                selfEdgeIdx = ismember(theseNeighbours, agglo{s});                      
+                theseNeighbours(selfEdgeIdx) = [];
+                theseProbabilities(selfEdgeIdx) = [];
+                % Determine maxium probability and ID to agglomerated segments
+                [maxProb, maxProbIdx] = max(theseProbabilities);
+                % ID about to be agglomerated
+                maxProbId = theseNeighbours(maxProbIdx);
+                % Heuristics: Querry skeleton if sth sth sth dark side
+                if maxProb < .825
+                    % Determine segment farest way from start com
+                    startCoord = com(seeds(s),:);
+                    aggloCoord = com(thisAggloWithoutMerger,:);
+                    distances = sqrt(sum(bsxfun(@times, bsxfun(@minus, aggloCoord, startCoord), [11.24 11.24 28]).^2,2));
+                    [~,maxDistIdx] = max(distances);
+                    % Querry skeleton
+                    addedId = querrySkeleton(graph, agglo{s}, segIds, thisAggloWithoutMerger(maxDistIdx));
+                    querriedEdges{s}(end+1,1:2) = [thisAggloWithoutMerger(maxDistIdx) addedId];
+                    querried{s}(end+1) = true;
+                else
+                    addedId = maxProbId;
+                    querried{s}(end+1) = false;
+                end
+                % Add id to agglomeration
+                agglo{s}(end+1) = addedId;
+                probabilities{s}(end+1) = maxProb;
+                % Next Heuristics: Exclude if 40 neighbours or more
+                if length(graph.neighbours{addedId}) >= 40 
+                    merger{s}(end+1) = true;
+                    % Add last seed ID to ignore list (SegEM merger)
+                    mergerList(end+1) = addedId;
+                else
+                    merger{s}(end+1) = false;
+                end
             end
         end
-        % Display progress
-        Util.progressBar(s, length(seeds));
+        % New stop condition(s), stop growing of seeds as soon as two seeds meet
+        for i=1:length(agglo)
+            for j=i+1:length(agglo)
+                overlap(i,j) = ~isempty(intersect(agglo{i},agglo{j}));
+                if overlap(i,j)
+                    aggloFlag(i) = false;
+                    aggloFlag(j) = false;
+                end
+            end
+        end
+        % Stop agglomeration if all seeds have met
+        if all(~aggloFlag)
+            break;
+        end       
     end
-
 end
 
 function newId = querrySkeleton(graph, agglo, segIds, querryId)

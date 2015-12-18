@@ -22,7 +22,7 @@ load([p.saveFolder 'agglomeration/nucleiVesselBorder.mat']);
 % save([p.saveFolder 'graph.mat'], 'graph', '-v7.3');
 
 % Get seeds & GT from MH skeletons for now
-folder = '/gaba/u/mberning/axonsTest/';
+folder = '/gaba/u/mberning/skeletons/source/';
 files = dir([folder '*.nml']);
 tr = 1;
 % Read skeletons
@@ -46,17 +46,27 @@ segIds = cellfun(@(x)x(x~=0), segIds, 'UniformOutput', false);
 borderId = cat(1,agglo.borderMerged{:});
 seeds = cellfun(@(x)intersect(x, borderId), segIds, 'UniformOutput', false);
 % Fix seeds manually for now
-seeds{1}(2) = 8787098;
-seeds{2}(2) = 1456992;
-for i=1:length(seeds)
-    termNodes{i} = seeds{i}(2);
-    seeds{i}(2) = [];
-end
-% Alternate ending (branch structure we do not care about)
-termNodes{4}(2) = 7320841;
+seeds{1}(2,1) = 8787098;
+seeds{2}(2,1) = 1456992;
+seeds{4}(3,1) = 7320841;
 
 % Agglomerate segments and save result to skeleton
-[collectedIds, probabilities, stats, querriedEdges, mergerList] = agglomerateSG3(graph, com, seeds, termNodes, segIds);
-skelToWrite = writeSkeletonEdges3(graph, com, collectedIds, probabilities, stats, querriedEdges);
-writeNml('/gaba/u/mberning/axonsMHgrown.nml', skelToWrite);
+for i=1:length(seeds)
+    [collectedIds{i}, probabilities{i}, querried{i}, merger{i}, querriedEdges{i}, mergerList{i}] = agglomerateSG3(graph, com, seeds{i}, segIds{i});
+    skelToWrite = writeSkeletonEdges3(graph, com, collectedIds{i}, probabilities{i}, querried{i}, merger{i}, querriedEdges{i}, skel{1}{i});
+    writeNml(['/gaba/u/mberning/skeletons/axonsTest' num2str(i, '%.3i') '.nml'], skelToWrite);
+end
+
+% Visualize querried edges (analog to B4B game 1)
+for i=1:length(seeds)
+    for j=1:length(seeds{i})
+        queryIds = collectedIds{i}{j}(find(querried{i}{j})+1);
+        for k=1:length(queryIds)
+            mergerIds = collectedIds{i}{j}(find(merger{i}{j}(1:k))+1);
+            outputFile = ['/gaba/u/mberning/skeletons/movies/queries' num2str(i, '%.2i') '_' num2str(j, '%.2i') '_' num2str(k, '%.2i')];
+            arbitraryResliceAgglo(p, graph, com, collectedIds{i}{j}(1:k+1), queryIds(k), mergerIds, outputFile);
+        end
+    end
+end
+
 
