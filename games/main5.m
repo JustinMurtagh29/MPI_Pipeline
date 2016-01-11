@@ -63,22 +63,36 @@ for i=1:length(seeds)
 end
 
 % Agglomerate segments and save result to skeleton
-matlabpool 8;
 t_prob = .75:0.01:0.99;
 t_neigh = 20:5:40;
-tic;
 for t1=1:length(t_prob)
     for t2=1:length(t_neigh)
-        parfor i=1:length(seed)
+        for i=1:length(seed)
             [collectedIds{t1,t2}{i}, probabilities{t1,t2}{i}, mergerList{t1,t2}{i}, queryId{t1,t2}{i}] = agglomerateSG5(graph, com, seed{i}, t_prob(t1), t_neigh(t2));
             comIds{t1,t2}{i} = com(collectedIds{t1,t2}{i}{1},:);
-            skelToWrite = writeSkeletonEdges5(graph, com, collectedIds{t1,t2}{i}, probabilities{t1,t2}{i}, skel{i}{1}, mergerList{t1,t2}{i}, queryId{t1,t2}{i});
+            skelToWrite = writeSkeletonEdges5(graph, com, collectedIds{t1,t2}{i}, probabilities{t1,t2}{i}, mergerList{t1,t2}{i}, queryId{t1,t2}{i}, skel{i}{1});
             writeNml(['/gaba/u/mberning/skeletons/' num2str(t_prob(t1), '%3.2f') '_' num2str(t_neigh(t2), '%.2i') '_' files(i).name], skelToWrite);
         end
-        Util.progressBar((t1-1)*length(t_neigh)+t2, length(t_prob)*length(t_neigh));
     end
 end
-save('/gaba/u/mberning/skeletons/temp.mat', 'collectedIds', 'probabilities', 'mergerList', 'queryId', 'seed', 'comIds', 'files', 't_prob', 't_neigh', 'nodes', 'skel', 'skelToWrite');
+save('/gaba/u/mberning/skeletons/temp.mat', 'collectedIds', 'probabilities', 'mergerList', 'queryId', 'seed', 'comIds', 'files', 't_prob', 't_neigh', 'nodes', 'skel');
+clear i j t1 t2 randIdx pos;
+
+% Take some random set of bouton seeds
+idx = all(bsxfun(@gt, boutons.boutonCoMs, [1250 1250 1700]),2) & all(bsxfun(@lt, boutons.boutonCoMs, [2000 2000 2000]),2);
+bSeeds = boutons.boutonIDs(idx);
+
+% Agglomerate boutons @90% and 40 neighbours
+tic;
+for i=1:length(bSeeds)
+    [collectedIds{i}, probabilities{i}, mergerList{i}, queryId{i}] = agglomerateSG5(graph, com, bSeeds(i), .9, 40);
+    comIds{i} = com(collectedIds{i}{1},:);
+    skelToWrite = writeSkeletonEdges5(graph, com, collectedIds{i}, probabilities{i}, mergerList{i}, queryId{i}, reachedIdx{i});
+    skelName = ['/gaba/u/mberning/skeletons/boutons/bouton' num2str(i, '%.3i') '.nml'];
+    evalc('writeNml(skelName, skelToWrite)');
+    Util.progressBar(i,length(bSeeds));
+end
+save('/gaba/u/mberning/skeletons/temp2.mat', 'collectedIds', 'probabilities', 'mergerList', 'queryId', 'seed', 'comIds', 'files', 't_prob', 't_neigh', 'nodes', 'skel');
 
 % Visualize querried edges (analog to B4B game 1)
 for i=1:length(seeds)
