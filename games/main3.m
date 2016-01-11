@@ -60,11 +60,14 @@ end
 % Visualize querried edges (analog to B4B game 1)
 for i=1:length(seeds)
     for j=1:length(seeds{i})
-        queryIds = collectedIds{i}{j}(find(querried{i}{j})+1);
+        queryIds = querriedEdges{i}{j}(:,1);
         for k=1:length(queryIds)
-            mergerIds = collectedIds{i}{j}(find(merger{i}{j}(1:k))+1);
+            queryIdx = find(collectedIds{i}{j} == queryIds(k));
+            aggloIds = collectedIds{i}{j}(1:queryIdx);
+            % TO DO: Add handling of merger here & in function
+            mergerIds = [];
             outputFile = ['/gaba/u/mberning/skeletons/movies/queries' num2str(i, '%.2i') '_' num2str(j, '%.2i') '_' num2str(k, '%.2i')];
-            arbitraryResliceAgglo(p, graph, com, collectedIds{i}{j}(1:k+1), queryIds(k), mergerIds, outputFile);
+            arbitraryResliceAgglo(p, graph, com, aggloIds, queryIds(k), mergerIds, outputFile);
         end
     end
 end

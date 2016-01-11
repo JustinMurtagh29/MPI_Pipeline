@@ -1,35 +1,45 @@
 function arbitraryResliceAgglo(p, graph, com, idsAgglo, idQuerried, idsMerger, outputFile)
 
     comStartSegment = com(idQuerried,:);
-    % Take 5 segments before for direction (less if start of agglo)
-    nrPreviousSegments = min(length(idsAgglo)-1, 6);
-    comOf5SegmentsBefore = com(idsAgglo(end-nrPreviousSegments:end-1),:);
-    direction = comStartSegment - comOf5SegmentsBefore;
+    % Take 5 segments nearest for direction
+    idsBefore = idsAgglo(1:end-1);
+    comSegmentsBefore = com(idsBefore,:);
+    distances = sqrt(sum(bsxfun(@times, bsxfun(@minus, comSegmentsBefore, comStartSegment), [11.24 11.24 28]).^2,2));
+    [sD, perm] = sort(distances, 'ascend');
+    nrSeg = min(5, length(perm));
+    display(num2str(sD(1:nrSeg)));
+    % Direction and ONB for video
+    direction = comStartSegment - mean(comSegmentsBefore(perm(1:nrSeg),:),1);
+    direction = direction .* [11.24 11.24 28];
     direction = direction ./ norm(direction);
     [orth1, orth2] = findOrthogonals(direction);
+    % Define bounding box
     sizeBBox = [500 500 200];
     bboxToLoad(:,1) = comStartSegment - sizeBBox;
     bboxToLoad(:,2) = comStartSegment + sizeBBox;
 
     % Load raw data and segmentation around comStartSegment
-    rawLocal = readKnossosRoi(p.raw.root, p.raw.prefix, bboxToLoad);
+    rawLocal = single(readKnossosRoi(p.raw.root, p.raw.prefix, bboxToLoad));
     segLocal = readKnossosRoi(p.seg.root, p.seg.prefix, bboxToLoad, 'uint32', '', 'raw');
+    rawLocal = permute(rawLocal, [2 1 3]);
+    segLocal = permute(segLocal, [2 1 3]);
 
     % Color in only agglomerated segments for now
-    segLocalAgglo = zeros(size(seg));
+    segLocalAgglo = zeros(size(segLocal));
     for i=1:length(idsAgglo)
         segLocalAgglo(segLocal == idsAgglo(i)) = 1;
     end
+    clear segLocal;
 
     % set/extract some needed parameters, use B4B settings for now
-    frameSize = [p.kdb.v(2).width p.kdb.v(2).height]; % same as in mission.json
-    renderedFrames = [0 200]; % setting from levelcreator (how many frames before and after problem location)
-    voxelSize = parameter.settings.scale; % from settings.json (anisotropy)
+    frameSize = [640 480];
+    renderedFrames = [20 200];
+    voxelSize = [11.24 11.24 28];
     voxelSizeAfter = [11.24 11.24 11.24]; % size of voxel after interpolation (in video)
 
     % Define grid for original values (rawLocal & segLocal),
     % which has size 2* border+1 and is centered on the error center
-    [X,Y,Z] = meshgrid(-border(1):border(1),-border(2):border(2),-border(3):border(3)); % grid in dataset coordinates [voxel]
+    [X,Y,Z] = meshgrid(-sizeBBox(1):sizeBBox(1),-sizeBBox(2):sizeBBox(2),-sizeBBox(3):sizeBBox(3)); % grid in dataset coordinates [voxel]
     X = X .* voxelSize(1); % grid in dataset coordinates [nm]
     Y = Y .* voxelSize(2);
     Z = Z .* voxelSize(3);
@@ -43,10 +53,11 @@ function arbitraryResliceAgglo(p, graph, com, idsAgglo, idQuerried, idsMerger, o
     XI = reshape(coords(:,1),size(XI)); % Undo linearization
     YI = reshape(coords(:,2),size(YI));
     ZI = reshape(coords(:,3),size(ZI));
+    clear coords;
     % Do the interpolation from original grid (X,Y,Z) indicating location of (raw/seg/mito)Local values onto rotated grid with different
     % anisotropy (all grids are in nm)
-    rawLocalNewDirection = interp3(X, Y, Z, rawLocal, XI, YI, ZI, 'cubic');
-    segLocalNewDirection = interp3(X, Y, Z, single(segLocal), XI, YI, ZI, 'nearest');
+    rawLocalNewDirection = interp3(X, Y, Z, single(rawLocal), XI, YI, ZI, 'cubic');
+    segLocalNewDirection = interp3(X, Y, Z, single(segLocalAgglo), XI, YI, ZI, 'nearest') > 0;
     % Make movies of stacks (no more processing done in there, just displaying frame by frame and capturing)
     makeTaskMovieSet(rawLocalNewDirection, segLocalNewDirection, outputFile);
 

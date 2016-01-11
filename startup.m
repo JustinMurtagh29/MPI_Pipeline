@@ -10,6 +10,12 @@ switch GLOBAL_HOST
         GLOBAL_DATA_DIR = [base 'data' filesep];
         GLOBAL_RESULT_DIR = [base 'results' filesep];
         GLOBAL_OUTPUT_DIR = [base 'sync' filesep];
+    case 'gaba02'
+        base = '/gaba/u/mberning/';
+        GLOBAL_CODE_DIR = [base 'code' filesep];
+        GLOBAL_DATA_DIR = [base 'data' filesep];
+        GLOBAL_RESULT_DIR = [base 'results' filesep];
+        GLOBAL_OUTPUT_DIR = [base 'sync' filesep];
     case 'M-01273'
         base = '/home/mberning/localStorage/';
         GLOBAL_CODE_DIR = [base 'code' filesep];
