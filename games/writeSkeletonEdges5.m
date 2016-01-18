@@ -1,4 +1,4 @@
-function skel = writeSkeletonEdges5(graph, com, cc, probabilities, gtSkel, mergerList, queryId);
+function skel = writeSkeletonEdges5(graph, com, cc, probabilities, mergerList, queryId, gtSkel);
 
     c = 1; % counter for trees in skeleton
     nodeId = 1; % counter for nodes in current skeleton
@@ -7,25 +7,27 @@ function skel = writeSkeletonEdges5(graph, com, cc, probabilities, gtSkel, merge
     colors = [0 0 1 1; 0 1 0 1; 1 0 0 1];
     % Write skeleton for check
     skel = initializeSkeleton();
-    % Write ground truth skeleton first
-    skel{c}.thingID = c;
-    skel{c}.name = 'ground truth';
-    skel{c}.color = [0 0 0 1];
-    for i=1:size(gtSkel.nodes,1)
-        thisNodeId = gtSkel.nodesNumDataAll(i,1);
-        skel{c}.nodesAsStruct(nodeId-nodeOffsetThisSkel) = generateNodeAsStruct(nodeId, gtSkel.nodes(i,:), 10);
-        skel{c}.nodes(nodeId-nodeOffsetThisSkel,:) = gtSkel.nodes(i,:);
-        nodeId = nodeId + 1;
+    if nargin > 6
+        % Write ground truth skeleton first
+        skel{c}.thingID = c;
+        skel{c}.name = 'ground truth';
+        skel{c}.color = [0 0 0 1];
+        for i=1:size(gtSkel.nodes,1)
+            thisNodeId = gtSkel.nodesNumDataAll(i,1);
+            skel{c}.nodesAsStruct(nodeId-nodeOffsetThisSkel) = generateNodeAsStruct(nodeId, gtSkel.nodes(i,:), 10);
+            skel{c}.nodes(nodeId-nodeOffsetThisSkel,:) = gtSkel.nodes(i,:);
+            nodeId = nodeId + 1;
+        end
+        skel{c}.edges = gtSkel.edges;
+        c = c + 1;
+        nodeOffsetThisSkel = nodeId -1; 
     end
-    skel{c}.edges = gtSkel.edges;
-    c = c + 1;
-    nodeOffsetThisSkel = nodeId -1; 
     % Write seeded skeletons next
     for tr=1:length(cc)
         if ~isempty(cc{tr})
             skel{c}.thingID = c;
             skel{c}.name = ['Component ' num2str(tr, '%.4i')];
-            skel{c}.color = colors(c-1,:);
+            skel{c}.color = colors(c,:);
             theseCoM = com(cc{tr},:);
             idx = ismember(graph.edges,cc{tr});
             idx = idx(:,1) & idx(:,2);
