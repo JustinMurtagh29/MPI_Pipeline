@@ -79,20 +79,54 @@ save('/gaba/u/mberning/skeletons/temp.mat', 'collectedIds', 'probabilities', 'me
 clear i j t1 t2 randIdx pos;
 
 % Take some random set of bouton seeds
-idx = all(bsxfun(@gt, boutons.boutonCoMs, [1250 1250 1700]),2) & all(bsxfun(@lt, boutons.boutonCoMs, [2000 2000 2000]),2);
-bSeeds = boutons.boutonIDs(idx);
-
+%idx = all(bsxfun(@gt, boutons.boutonCoMs, [1250 1250 1700]),2) & all(bsxfun(@lt, boutons.boutonCoMs, [2000 2000 2000]),2);
+%bSeeds = boutons.boutonIDs(idx);
+bSeeds = intersect(boutons.boutonIDs,unique(graph.edges(:)));
 % Agglomerate boutons @90% and 40 neighbours
 tic;
 for i=1:length(bSeeds)
     [collectedIds{i}, probabilities{i}, mergerList{i}, queryId{i}] = agglomerateSG5(graph, com, bSeeds(i), .9, 40);
     comIds{i} = com(collectedIds{i}{1},:);
-    skelToWrite = writeSkeletonEdges5(graph, com, collectedIds{i}, probabilities{i}, mergerList{i}, queryId{i}, reachedIdx{i});
+    skelToWrite = writeSkeletonEdges5(graph, com, collectedIds{i}, probabilities{i}, mergerList{i}, queryId{i});
     skelName = ['/gaba/u/mberning/skeletons/boutons/bouton' num2str(i, '%.3i') '.nml'];
     evalc('writeNml(skelName, skelToWrite)');
     Util.progressBar(i,length(bSeeds));
 end
-save('/gaba/u/mberning/skeletons/temp2.mat', 'collectedIds', 'probabilities', 'mergerList', 'queryId', 'seed', 'comIds', 'files', 't_prob', 't_neigh', 'nodes', 'skel');
+save('/gaba/u/mberning/skeletons/temp3.mat', 'collectedIds', 'probabilities', 'mergerList', 'queryId', 'bSeeds', 'comIds');
+
+
+% Added 19.01.: Exclude all already agglomerated IDs 
+load([p.saveFolder 'skelGT_20160119.mat']);
+load([p.saveFolder 'agglomeration/nucleiVesselBorder.mat']);
+excludeIds = cat(1,agglo.nucleiGrown{:},agglo.vessel{:},skelGTflat.segIdsClean{:});
+excludeIds(excludeIds == 0) = [];
+
+% Find connected components (as seeds sometimes agglomerate to same or overlapping skeletons)
+cIds = cellfun(@(x)x{1}, collectedIds, 'UniformOutput', false);
+cIds = cellfun(@(x)setdiff(x,excludeIds), cIds, 'UniformOutput', false);
+excludeIdx = cellfun(@length, cIds) < 2;
+cIds(excludeIdx) = [];
+
+edges = cellfun(@(x)combnk(x,2), cIds, 'UniformOutput', false);
+edges = double(sort(cat(1,edges{:}),2));
+edges = unique(edges, 'rows');
+edgesN = intersect(edges, graph.edges, 'rows');
+
+cc = Graph.findConnectedComponents(edgesN,false, true);
+sizeCC = cellfun(@length, cc);
+
+[sizeCC, idxResort] = sort(sizeCC, 'descend');
+cc = cc(idxResort);
+
+group = 0:100:50000;
+tic;
+for i=1:length(group)-1
+    skelToWrite = writeSkeletonFromAgglo(graph, com, cc(group(i)+1:group(i+1)));
+    skelName = ['/gaba/u/mberning/skeletons/boutonsExcludedCC/skel' num2str(i, '%.3i') '.nml'];
+    evalc('writeNml(skelName, skelToWrite)');
+    Util.progressBar(i,length(group)-1);
+end
+
 
 % Visualize querried edges (analog to B4B game 1)
 for i=1:length(seeds)
