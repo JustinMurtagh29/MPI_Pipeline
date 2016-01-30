@@ -30,7 +30,7 @@ function galleryCortexCCfromSG(p, component, outputFile)
             cube = smooth3(cube, 'gaussian', 5, 2);
             issfs{i} = isosurface(cube, .2);
             if ~isempty(issfs{i}.vertices)
-                issfs{i} = reducepatch(issfs{i}, .1);
+                issfs{i} = reducepatch(issfs{i}, .01);
                 issfs{i}.vertices(:,[1 2]) = issfs{i}.vertices(:,[2 1]); 			    
                 issfs{i}.vertices = bsxfun(@plus, issfs{i}.vertices, zeroOfCube(1,:) - [2 2 2]);
                 issfs{i}.vertices = bsxfun(@times, issfs{i}.vertices, [11.24 11.24 28]);
@@ -45,10 +45,28 @@ function galleryCortexCCfromSG(p, component, outputFile)
                 idx(i) = true;
             end
         end
-        issfs(idx) = [];	
+        issfs(idx) = [];
+        % Make directory if it does not exist
+        direc = fileparts(outputFile); 
+        if ~exist(direc, 'dir')
+            mkdir(direc);
+        end
         % Save
         exportSurfaceToAmira(issfs, outputFile);
+        save(strrep(outputFile, '.issf', '.mat'), 'issfs');
+        % Reduce patches again
+        for i=1:length(issfs)
+            issfs{i} = reducepatch(issfs{i}, .01);
+        end
+        % Remove empty isosurfaces
+        idx = false(length(issfs),1);
+        for i=1:length(issfs)
+            if isempty(issfs{i}) || isempty(issfs{i}.vertices)
+                idx(i) = true;
+            end
+        end
+        issfs(idx) = [];
+        exportSurfaceToAmira(issfs, strrep(outputFile, 'larger', 'smaller'));
     end
-
 end
 

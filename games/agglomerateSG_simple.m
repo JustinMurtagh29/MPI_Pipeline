@@ -1,4 +1,4 @@
-function [agglo, agglomerated] = agglomerateSG_simple(graph, agglo, t_prob)
+function [agglo, agglomerated] = agglomerateSG_simple(graph, agglo, t_prob, excludeIds)
     % Agglomerates supervoxel given the graph, always highest probability until under t_prob 
 
     agglomerated = 0;
@@ -8,15 +8,19 @@ function [agglo, agglomerated] = agglomerateSG_simple(graph, agglo, t_prob)
         % Determine probability of all neighbours
         theseProbabilities = cat(1,graph.neighProb{agglo});
         % Remove self edges (within component)
-        selfEdgeIdx = ismember(theseNeighbours, agglo);                      
+        selfEdgeIdx = ismember(theseNeighbours, agglo);                 
         theseNeighbours(selfEdgeIdx) = [];
         theseProbabilities(selfEdgeIdx) = [];
+        % Remove excluded ids
+        excEdgeIdx = ismember(theseNeighbours, excludeIds);                      
+        theseNeighbours(excEdgeIdx) = [];
+        theseProbabilities(excEdgeIdx) = [];
         % Determine maxium probability and ID to agglomerated segments
         [maxProb, maxProbIdx] = max(theseProbabilities);
         % ID about to be agglomerated
         maxProbId = theseNeighbours(maxProbIdx);
-        % Stop if below probability threshold or over 1000 segments agglomerated
-        if maxProb < t_prob || agglomerated >= 5000
+        % Stop if below probability threshold or over 10000 segments agglomerated
+        if maxProb < t_prob || agglomerated >= 10000
             break;
         else
             agglomerated = agglomerated + 1;
