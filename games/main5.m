@@ -127,6 +127,26 @@ for i=1:length(group)-1
     Util.progressBar(i,length(group)-1);
 end
 
+group = 0:100:50000;
+tic;
+for i=5
+    % Write skeletons first
+    skelToWrite = writeSkeletonFromAgglo(graph, com, cc(group(i)+1:group(i+1)));
+    skelName = ['/gaba/u/mberning/axonAgglo/skel' num2str(i, '%.3i') '.nml'];
+    evalc('writeNml(skelName, skelToWrite)');
+    % Now calculate isosurfaces for seeds and agglomerated boutons
+    for j=1:100
+        connComp = cc{group(i)+j};
+        seeds = intersect(connComp, bSeeds);
+        agglomerated = setdiff(connComp, seeds);
+        inputCell{j} = {p, seeds, ['/gaba/u/mberning/axonAgglo/seeds_' num2str(j, '%.5i')  '.issf'], 'isoSurf'};
+        functionH(inputCell{j}{:});
+        inputCell{j} = {p, agglomerated, ['/gaba/u/mberning/axonAgglo/agglo_' num2str(j, '%.5i')  '.issf'], 'isoSurf'};
+        functionH(inputCell{j}{:});
+    end
+    Util.progressBar(i,length(group)-1);
+end
+
 
 % Visualize querried edges (analog to B4B game 1)
 for i=1:length(seeds)
