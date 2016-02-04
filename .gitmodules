@@ -1,15 +1,6 @@
-[submodule "CNN"]
-	path = CNN
-	url = git@github.com:mhlabCodingTeam/CNN.git
-	branch = master
 [submodule "auxiliaryMethods"]
 	path = auxiliaryMethods
-	url = git@github.com:mhlabCodingTeam/auxiliaryMethods.git
-	branch = master
-
-[submodule "+benedikt"]
-	path = benedikt
-	url = git@github.com:mhlabCodingTeam/benedikt.git
-[submodule "visualization/export_fig"]
-	path = visualization/export_fig
-	url = git@github.com:altmany/export_fig.git
+	url = https://github.com/mhlabCodingTeam/auxiliaryMethods.git
+[submodule "CNN"]
+	path = CNN
+	url = https://github.com/mhlabCodingTeam/CNN.git

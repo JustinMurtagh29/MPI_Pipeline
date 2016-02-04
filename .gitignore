@@ -1,11 +1,11 @@
-# Matlab Autosaves
+# Matlab Autosaves Windows
 *.asv
 
 # Vim swap and undo files
 *.swp
 *.un
 
-# Autosaves
+# Matlab Autosaves Linux
 *~
 
 # Original files when merging
@@ -13,4 +13,3 @@
 
 # Anything else?
 
-/tmp
