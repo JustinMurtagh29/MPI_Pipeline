@@ -8,7 +8,8 @@ else
 	bbox = bboxOutput;
 end
 
-cubeSize = [512 512 256]; % This is not of any importance due to CNN translation invariance, can be choosen for computational efficency, currenlty optimized for running on GPU with 12GB, should be multiples of 128
+% This is not of any importance due to CNN translation invariance, can be choosen for computational efficency, currenlty optimized for running on GPU with 12GB, should be multiples of 128
+cubeSize = [512 512 256]; 
 X = bbox(1,1):cubeSize(1):bbox(1,2)+1;
 Y = bbox(2,1):cubeSize(2):bbox(2,2)+1;
 Z = bbox(3,1):cubeSize(3):bbox(3,2)+1;

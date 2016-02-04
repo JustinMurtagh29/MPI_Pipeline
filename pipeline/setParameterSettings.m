@@ -1,18 +1,16 @@
 function [parameter, parameterTrain] = setParameterSettings(parameter)
     % Pass structure with basic settings to add all dependent and constant parameter for pipeline
 
-    % Check whether bounding box user provided fullfills prerequisites
-    if ~(all(mod(parameter.bbox(:,1)-1,128) == 0) & all(mod(parameter.bbox(:,2),128) == 0))
-        error('Please provide bounding box that is aligned to KNOSSOS cubes');
-    end
-    if ~all(mod(parameter.bbox(:,2) - parameter.bbox(:,1) + 1, parameter.tileSize) == 0)
-        error('Please provide bounding box size that is divisible by 512 by 512 by 256');
-    end
     % Size of local segmentation and local graph construction
     parameter.tileSize =  [512; 512; 256];
+    % Check whether bounding box meets requirements and fix if not
+    parameter.bbox = fixBoundingBox(parameter);
     % Overlap between tiles in segmentation for gloablization
     parameter.tileBorder = [-256 256; -256 256; -128 128];
     parameter.tiles = (parameter.bbox(:,2) - parameter.bbox(:,1) + 1) ./ parameter.tileSize;
+    % Which function to use to normalize data to zero mean and one std
+    [meanVal, stdVal] = determineMeanAndStdOfData(parameter);
+    parameter.norm.func = @(x)normalizeStack(x,meanVal,stdVal);
     % Which classifier to use
     parameter.cnn.dateStrings = '20130516T204040';
     parameter.cnn.iter = 8; 
@@ -26,7 +24,7 @@ function [parameter, parameterTrain] = setParameterSettings(parameter)
     parameter.class.root = [parameter.saveFolder 'class/'];
     parameter.class.prefix = parameter.raw.prefix;
     % Function to use for segmentation
-    parameter.seg.func = @seg20141017;
+    parameter.seg.func = @(x)watershedSeg_v1_cortex(x,{parameter.seg.threshold 10});
     parameter.seg.root = [parameter.saveFolder 'globalSeg/'];
     parameter.seg.prefix = parameter.raw.prefix;
     % Specify arguments for filterbank applied to raw and aff data each
@@ -133,10 +131,6 @@ function [parameter, parameterTrain] = setParameterSettings(parameter)
     if ~exist(parameter.gp.stateFolder, 'dir')
         mkdir(parameter.gp.stateFolder);
     end
-    % Create folder for writing Knowledge DB for games
-    if ~exist(parameter.kdb.folder, 'dir')
-        mkdir(parameter.kdb.folder);
-    end
 
     % Save everything
     pT = parameterTrain;
@@ -145,3 +139,66 @@ function [parameter, parameterTrain] = setParameterSettings(parameter)
 
 end
 
+function bbox = fixBoundingBox(parameter)
+    % Make bounding box meet requirements
+    
+    % Transform from webKNOSSOS style bounding box to bounding box format
+    % used in pipeline
+    bbox = reshape(parameter.bbox_wK,3,2);
+    
+    % First check whether bounding box is aligned with KNOSSOS cubes
+    lowerLimitMod = mod(bbox(:,1)-1,128);
+    upperLimitMod = mod(bbox(:,2),128);
+    if any(lowerLimitMod)
+        warning('Lower edge of bounding box not aligned to KNOSSOS cubes, fixing.');
+        bbox(:,1) = bbox(:,1) + mod(128 - lowerLimitMod, 128);
+    end
+    if any(upperLimitMod)
+        warning('Upper edge of bounding box not aligned to KNOSSOS cubes, fixing.');
+        bbox(:,2) = bbox(:,2) - upperLimitMod;
+    end
+    
+    % Second check whether it is 'tileable' using tileSize
+    sizeOfRoi = bbox(:,2) - bbox(:,1) + 1;
+    tileSize = parameter.tileSize;
+    sizeToRemove = mod(sizeOfRoi, tileSize);
+    if any(sizeToRemove)
+        warning(['Bounding box not divisable by tileSize (' num2str(tileSize') '), fixing']);
+        for i=1:3
+            if sizeToRemove(i)
+                if ~mod(sizeToRemove(i),2*128)
+                    % If sizeToRemove is divisiable by 2 * knossos cube size, remove at both ends
+                    bbox(i,1) = bbox(i,1) + sizeToRemove(i)/2;
+                    bbox(i,2) = bbox(i,2) - sizeToRemove(i)/2;
+                else
+                    % Otherwise arbitrarily drop more at upper edge
+                    bbox(i,1) = bbox(i,1) + (sizeToRemove(i)-128)/2;
+                    bbox(i,2) = bbox(i,2) - ((sizeToRemove(i)-128)/2+128);
+                end
+            end
+        end
+    end
+    
+end
+
+function [meanVal, stdVal] = determineMeanAndStdOfData(parameter)
+
+display('Sampling mean and standard deviation values for CNN normalization');
+% How many 100^3 samples to use for determination of normalization
+% constants, 100 seems rather too much but ok as only takes 5 min
+nrCubesToSample = 100;
+sizeOfRoi = parameter.bbox(:,2) - parameter.bbox(:,1) + 1;
+meanVal = zeros(nrCubesToSample,1);
+stdVal = zeros(nrCubesToSample,1);
+for i=1:nrCubesToSample
+    lowerLeft = [randi(sizeOfRoi(1)-99); randi(sizeOfRoi(2)-99); randi(sizeOfRoi(3)-99)];
+    bbox = cat(2,lowerLeft, lowerLeft + 99);
+    raw = loadRawData(parameter.raw.root, parameter.raw.prefix, bbox, false);
+    meanVal(i) = mean(raw(:));
+    stdVal(i) = std(raw(:));
+end
+
+meanVal = median(meanVal);
+stdVal = median(stdVal);
+
+end
