@@ -33,7 +33,9 @@ p.seg.threshold.hmin = .25;
 p.bbox = [1001 1600; 1001 1800; 129 256]; 
 p.seg.threshold.hmin = .25;
 % Just make a short movie for judgement of segmentation quality
-makeSegmentationPreviewMovie(p);
+outputFile = makeSegmentationPreviewMovie(p);
+% Display name of movie just generated
+display(outputFile);
 
 %% 2nd example: Example parameters pipeline isosurface visualization
 

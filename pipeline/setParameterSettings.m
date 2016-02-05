@@ -5,6 +5,8 @@ function [parameter, parameterTrain] = setParameterSettings(parameter)
     parameter.tileSize =  [512; 512; 256];
     % Check whether bounding box meets requirements and fix if not
     parameter.bbox = fixBoundingBox(parameter);
+    % Add a temp folder for storing intermediate results
+    parameter.tempFolder = [parameter.saveFolder 'temp/'];
     % Overlap between tiles in segmentation for gloablization
     parameter.tileBorder = [-256 256; -256 256; -128 128];
     parameter.tiles = (parameter.bbox(:,2) - parameter.bbox(:,1) + 1) ./ parameter.tileSize;
