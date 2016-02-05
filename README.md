@@ -12,8 +12,13 @@ Preparation:
 Usage:
 ========================
 
-Replace YOUR_DIRECTORY with a directory that you can write to
-You will be prompted for a username & password here, use the RZG one
+Connect to GABA over the intranet with
+```
+ssh gaba.opt.rzg.mpg.de
+```
+
+Replace YOUR_DIRECTORY with a directory that you can write to.
+You will be prompted for a username & password here, use the RZG one.
 ```
 module load git/2.1.1
 module load matlab/R2014b
@@ -21,11 +26,14 @@ git clone https://gitlab.mpcdf.mpg.de/mberning/pipeline.git YOUR_DIRECTORY
 cd YOUR_DIRECTORY
 ```
 
-You will be prompted for a username & password here, use github account
+You will be prompted for a username & password here. Use your GitHub account.
 ```
 git submodule init
 git submodule update
-matlab -nosplash -nodesktop
 ```
 
-Now open/run exampleUsage.m once you have edited to to your needs.
+Now edit exampleUsage.m to your needs with `nano exampleUsage.m`. Save the file
+by pressing Control+X and then 'Y' for "yes".
+
+Finally, start matlab with `matlab -nosplash -nodesktop` and launch the
+pipeline with `exampleUsage();`.
