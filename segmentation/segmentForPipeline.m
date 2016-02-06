@@ -6,7 +6,7 @@ aff = imcomplement(aff);
 
 % Perform segmentation
 seg = segFunction(aff);
-seg = seg{1,1};
+seg = uint16(seg{1,1});
 
 % Save segmentation to MATLAB file in 'saveFolder'
 save(saveFile, 'seg');
