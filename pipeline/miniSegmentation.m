@@ -18,7 +18,8 @@ for i=1:size(p.local,1)
 end
 
 functionH = @segmentForPipeline;
-job = startCPU(functionH, inputCell, 'segmentation');
+% Needs 18 GB of memory
+job = startCPU(functionH, inputCell, 'segmentation', 18);
 
 end
 

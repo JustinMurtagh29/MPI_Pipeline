@@ -8,6 +8,12 @@ aff = imcomplement(aff);
 seg = segFunction(aff);
 seg = uint16(seg{1,1});
 
+% If folder does not exist, create it
+saveFolder = fileparts(saveFile);
+if ~exist(saveFolder, 'dir')
+    mkdir(saveFolder);
+end
+
 % Save segmentation to MATLAB file in 'saveFolder'
 save(saveFile, 'seg');
 
