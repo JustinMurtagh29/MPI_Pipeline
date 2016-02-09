@@ -1,29 +1,27 @@
-function findEdgesAndBordersFast(seg, edgeFile, borderFile, bbox)
+function findEdgesAndBordersFast(segFile, edgeFile, borderFile)
     % Computation of edges and borders optimized for 512x512x256
 
-    % Load segmentation from file
-    %[seg, segSmall] = loadSegData(segFile, tileBorder);
     % Load global segmentation instead of local
-    segSmall = loadSegDataGlobal(seg.root, seg.prefix, bbox);
-    segSmall = int32(segSmall);
+    load(segFile);
+    seg = int32(seg);
 
     % Pad array with a 1 voxel surround with a new unique value
-    globalBorderId = max(segSmall(:))+1;
-    segSmall = padarray(segSmall,[1 1 1],globalBorderId);
+    globalBorderId = max(seg(:))+1;
+    seg = padarray(seg,[1 1 1],globalBorderId);
 
     % Size of padded segmentation
-    [M,N,P] = size(segSmall);
+    [M,N,P] = size(seg);
 
     % Construct 26-connectivity linear indices shift for padded segmentation
     vec = int32([(-M*N+[-M-1 -M -M+1 -1 0 1 M-1 M M+1]) [-M-1 -M -M+1 -1 1 M-1 M M+1] (M*N+[-M-1 -M -M+1 -1 0 1 M-1 M M+1])]);
 
     % Find linear inidices of all wall voxel
-    ind = int32(find(segSmall==0));
+    ind = int32(find(seg==0));
 
     % Find segmentation ID of all neighbours of all wall voxel (according to 26
     % connectivity)
     nInd = bsxfun(@plus, ind, vec);
-    nSegId = segSmall(nInd);
+    nSegId = seg(nInd);
 
     % Find edges
     edges = findEdges(nSegId);

@@ -1,9 +1,8 @@
-function globalSegId(p, coords, i, j, k)
+function globalSegId(p, i, j, k)
 
     % Load offset and segmentation and extract relevant section
     load(p.local(i,j,k).segFile);
     load([p.saveFolder 'numEl.mat']);
-    seg = seg(coords{i,j,k}(1,1):coords{i,j,k}(1,2), coords{i,j,k}(2,1):coords{i,j,k}(2,2), coords{i,j,k}(3,1):coords{i,j,k}(3,2));
     
     % Linearize segmentation for relabeling
     sizeCube = size(seg);
@@ -29,8 +28,10 @@ function globalSegId(p, coords, i, j, k)
     seg = globalIds(n);
     seg = reshape(seg, sizeCube);
 
+    % Save to segGlobal.mat for Alessandro
+    save([p.local(i,j,k).saveFolder 'segGlobal.mat'], 'seg');
     % Write modified seg with globalIDs (not complete wrt IDs, e.g. localIDs in outer bounidng box of inner cube will not be present, any better idea?)
-    writeKnossosRoi(p.seg.root, p.seg.prefix , [p.local(i,j,k).bboxBig(:,1) + coords{i,j,k}(:,1) - [1; 1; 1]]', seg, 'uint32'); 
+    writeKnossosRoi(p.seg.root, p.seg.prefix , p.local(i,j,k).bboxSmall(:,1)', seg, 'uint32'); 
     % Save mapping from local to global IDs
     save([p.local(i,j,k).saveFolder 'localToGlobalSegId.mat'], 'localIds', 'globalIds');
 

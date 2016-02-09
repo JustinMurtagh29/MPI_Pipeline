@@ -7,13 +7,13 @@ function globalCorrSeg(p, fname)
     load([p.correspondence.saveFolder fname]);
     % Globalize
     load([p.local(cubeCoords1(1),cubeCoords1(2),cubeCoords1(3)).saveFolder 'localToGlobalSegId.mat']);
-    corrLocal1 = uint32(result.correspondences(:,1));
+    corrLocal1 = uint32(uniqueCorrespondences(:,1));
     corrGlobal1 = zeros(size(corrLocal1),'uint32');
     for i=1:length(corrLocal1)
         corrGlobal1(i) = globalIds(localIds == corrLocal1(i));
     end 
     load([p.local(cubeCoords2(1),cubeCoords2(2),cubeCoords2(3)).saveFolder 'localToGlobalSegId.mat']);
-    corrLocal2 = uint32(result.correspondences(:,2));
+    corrLocal2 = uint32(uniqueCorrespondences(:,2));
     corrGlobal2 = zeros(size(corrLocal2),'uint32');
     for i=1:length(corrLocal2)
         corrGlobal2(i) = globalIds(localIds == corrLocal2(i));

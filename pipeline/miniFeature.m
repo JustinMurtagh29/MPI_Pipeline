@@ -14,7 +14,6 @@ for i=1:size(parameter.local,1)
 	end
 end
 
-
 functionH = parameter.feature.func; 
 job = startCPU(functionH, inputCell, 'featureCalculation');
 
