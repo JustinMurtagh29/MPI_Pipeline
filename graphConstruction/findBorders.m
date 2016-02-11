@@ -28,14 +28,14 @@ for i=1:size(edges,1)
 
     for j=1:length(bordersForThisEdge)
         % Reshaping the indices of regionmatrix to indices of seg
-        [x y z] = ind2sub([M N P],bordersForThisEdge{j});
+        [x, y, z] = ind2sub([M N P],bordersForThisEdge{j});
         x = int32(x)-1; % -1 due to padding in parent function (bad practice?)
         y = int32(y)-1;
         z = int32(z)-1;
         % Collect output(s)
         borders(g).PixelIdxList = sub2ind([M-2,N-2,P-2],x,y,z);
-        borders(g).Area = size(borders(g).PixelIdxList,2);
-        borders(g).Centroid = mean(vertcat(x,y,z),2)';
+        borders(g).Area = size(borders(g).PixelIdxList,1);
+        borders(g).Centroid = mean(horzcat(x,y,z),1)';
         newedges(g,:) = edges(i,:);
         g=g+1;
     end
