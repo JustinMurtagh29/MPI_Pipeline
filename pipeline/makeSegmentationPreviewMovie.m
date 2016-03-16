@@ -5,7 +5,7 @@ function outputFile = makeSegmentationPreviewMovie(p, bbox)
     functionH = @onlyFwdPass3DonKnossosFolder;
     tempClass.root = [p.tempFolder 'classForMovie/'];
     tempClass.prefix = 'classForMovie';
-    inputCell{1} = {p.cnn.first, p.cnn.GPU, p.raw, tempClass, bbox};
+    inputCell{1} = {p.cnn.first, p.cnn.GPU, p.raw, tempClass, bbox,p.norm.func};
     if p.cnn.GPU
         job = startGPU(functionH, inputCell, 'classForMovie');
     else
