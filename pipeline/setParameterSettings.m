@@ -191,16 +191,21 @@ function [meanVal, stdVal] = determineMeanAndStdOfData(p)
     display('Sampling mean and standard deviation values for CNN normalization');
     % How many 100^3 samples to use for determination of normalization
     % constants, 100 seems rather too much but ok as only takes 5 min
-    nrCubesToSample = 100;
+    nrCubesToSample = 50;
     sizeOfRoi = p.bbox(:,2) - p.bbox(:,1) + 1;
     meanVal = zeros(nrCubesToSample,1);
     stdVal = zeros(nrCubesToSample,1);
     for i=1:nrCubesToSample
         lowerLeft = [randi(sizeOfRoi(1)-99); randi(sizeOfRoi(2)-99); randi(sizeOfRoi(3)-99)];
+	lowerLeft = lowerLeft + p.bbox(:,1) - 1;
         bbox = cat(2,lowerLeft, lowerLeft + 99);
         raw = loadRawData(p.raw.root, p.raw.prefix, bbox, false);
         meanVal(i) = mean(raw(:));
         stdVal(i) = std(raw(:));
+    end
+
+    if any(meanVal == 0) | any(stdVal == 0)
+	error('Found cube with 0 mean or standard deviation in bounding box');
     end
 
     meanVal = median(meanVal);
