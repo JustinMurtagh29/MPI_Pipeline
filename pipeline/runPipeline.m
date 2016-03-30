@@ -1,8 +1,5 @@
 function runPipeline(p)
 
-    % To be REMOVED!! For 07x2 consistency checks use right normalization values
-    p.norm.func = @(x)normalizeStack(x,122,22);
-    % Runs CNN based forward pass for region defined in p.bbox,p.raw and saves as p.class
     % Because CNN is translation invariant, saved as KNOSSOS hierachy again
     % Pass bounding box as well as tileSize will be added in bigFwdPass otherwise (legacy stuff)
     % This uses CNN subfolder in code repository
