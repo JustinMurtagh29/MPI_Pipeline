@@ -1,6 +1,6 @@
 function runPipeline(p)
 
-    % Because CNN is translation invariant, saved as KNOSSOS hierachy again
+    % Runs CNN based forward pass for region defined in p.bbox,p.raw and saves as p.class	
     % Pass bounding box as well as tileSize will be added in bigFwdPass otherwise (legacy stuff)
     % This uses CNN subfolder in code repository
     job = bigFwdPass(p, p.bbox);
