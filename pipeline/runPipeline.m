@@ -1,9 +1,7 @@
 function runPipeline(p)
 
-    % To be REMOVED!! For 07x2 consistency checks use right normalization values
-    p.norm.func = @(x)normalizeStack(x,122,22);
-    % Runs CNN based forward pass for region defined in p.bbox,p.raw and saves as p.class
-    % Because CNN is translation invariant, saved as KNOSSOS hierachy again
+    % Runs CNN based forward pass for region defined in p.bbox,p.raw and saves as p.class	
+    % Because CNN is translation invariant, saved as KNOSSOS hierachy again 
     % Pass bounding box as well as tileSize will be added in bigFwdPass otherwise (legacy stuff)
     % This uses CNN subfolder in code repository
     job = bigFwdPass(p, p.bbox);
@@ -26,8 +24,12 @@ function runPipeline(p)
     % tile before), this will be called global IDs from time to time
     % will work on correspondences and segmentation
     % see globalization subfolder 
-    jobs = globalization(p);
-    Cluster.waitForJob(jobs);
+    % globalization is run in two parts: globalizeSegmentation and globalizeCorrespondences
+    job = globalizeSegmentation(p);
+    Cluster.waitForJob(job);
+    
+    job = globalizeCorrespondences(p);
+    Cluster.waitForJob(job);
     % Construct graph on globalized version of segmentation
     % This will create p.local(:).edgeFile & borderFile
     % See graphConstruction subfolder
