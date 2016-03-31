@@ -1,13 +1,13 @@
-function findEdgesAndBordersFast(segFile, edgeFile, borderFile)
+function findEdgesAndBordersFast(segFile, edgeFile, borderFile, segmentFile)
     % Computation of edges and borders optimized for 512x512x256
 
     % Load global segmentation instead of local
     load(segFile);
-    seg = int32(seg);
+    segSmall = int32(seg);
 
     % Pad array with a 1 voxel surround with a new unique value
-    globalBorderId = max(seg(:))+1;
-    seg = padarray(seg,[1 1 1],globalBorderId);
+    globalBorderId = max(segSmall(:))+1;
+    seg = padarray(segSmall,[1 1 1],globalBorderId);
 
     % Size of padded segmentation
     [M,N,P] = size(seg);
@@ -37,6 +37,12 @@ function findEdgesAndBordersFast(segFile, edgeFile, borderFile)
     % Save to files: currently segmentation overwrites old one (now leaves are merged)
     save(edgeFile, 'edges', 'edgesToBorder');
     save(borderFile, 'borders');
+
+    % Get segment pixelIdxLists
+    segments = regionprops(segSmall, 'PixelIdxList', 'MeanIntensity');
+    [segments.ids] = segments.MeanIntensity;
+    segments = rmfield(segments, 'MeanIntensity');
+    save(segmentFile, 'segments', '-v7.3');
 
 end
 
