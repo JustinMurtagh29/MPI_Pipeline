@@ -4,15 +4,18 @@
 % Please set all parameters needed for your dataset
 
 % Choose were to store result of the calculations, make sure you have WRITE access;
-p.saveFolder = '/gaba/u/kostalr/data/documents/segTry/';
+p.saveFolder = '/gaba/u/mberning/results/pipeline/test/';
+
 % Define ROI, make sure no black (surround) pixel are within this bbox
 % This can be copied directly from webKNOSSOS bounding box field
-p.bbox_wK = [1810, 2058, 398, 2916, 3399, 1150]; 
+p.bbox_wK = [1153, 769, 129, 7808, 5376, 3200]; 
+  
 % Define directory and file prefix and voxel size for KNOSSOS hierachy with raw data
 % READABLE to you on gaba
-p.raw.root = '/gaba/u/kostalr/data/documents/ratL4stackKnoss/1/';
-p.raw.prefix = '2016-03-12_ex4_RN_CC_S1BF_L4_mag1';
-p.raw.voxelSize = [12 12 30];
+p.raw.root = '/gaba/u/mberning/data/cortex/2012-09-28_ex145_07x2_corrected/color/1/';
+p.raw.prefix = '2012-09-28_ex145_07x2_corrected_mag1';
+
+p.raw.voxelSize = [11.24 11.24 28];
 % This segmentation parameter controls over- vs. undersegmentation,
 % decrease for more smaller segments and vice versa
 p.seg.threshold = .25;
