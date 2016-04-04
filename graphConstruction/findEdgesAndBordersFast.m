@@ -39,7 +39,8 @@ function findEdgesAndBordersFast(segFile, edgeFile, borderFile, segmentFile)
     save(borderFile, 'borders');
 
     % Get segment pixelIdxLists
-    segments = regionprops(segSmall, 'PixelIdxList', 'MeanIntensity');
+    segSmallbwLabel = bwlabeln(segSmall);
+    segments = regionprops(segSmallbwLabel,segSmall, 'PixelIdxList', 'MeanIntensity');
     [segments.ids] = segments.MeanIntensity;
     segments = rmfield(segments, 'MeanIntensity');
     save(segmentFile, 'segments', '-v7.3');
