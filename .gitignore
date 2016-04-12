@@ -12,6 +12,7 @@
 *.orig
 
 # Do not over-write sample config
+configuration.m
 configuration-sample.m
 
 # Anything else?
