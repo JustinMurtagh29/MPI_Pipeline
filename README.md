@@ -32,8 +32,13 @@ git submodule init
 git submodule update
 ```
 
-Now edit configuration.m to your needs with e.g.:`nano configuration.m`. Save the file
-by pressing Control+X and then 'Y' for "yes".
+Next, you need to create the configuration.m file:
+```
+cp configuration-sample.m configuration.m
+```
+
+Now edit configuration.m to your needs with `nano configuration.m`. Save the file
+by pressing Control+X and then 'Y' for "yes". Finally, press enter.
 
 Finally, start matlab with `matlab -nosplash -nodesktop` and:
 1. Set configuration for pipeline you just edited by running:

@@ -11,5 +11,8 @@
 # Original files when merging
 *.orig
 
+# Do not over-write sample config
+configuration-sample.m
+
 # Anything else?
 
