@@ -47,7 +47,7 @@ run configuration.m;
 ```
 2. Look at a preview of the segmentation using (second argument is region to be put into movie in voxel coordiantes): 
 ```
-makeSegmentationPreviewMovie(p, [1001 1720; 1001 2280; 1001 1100])
+makeSegmentationPreviewMovie(p, [1001, 1001, 1001, 1720, 2280, 1100])
 ```
 This will print a file name of a segmentation movie you can use to judge quality (e.g. over vs. undersegmentation).
 3. If you are not satisfied with the results, edit configuration.m again and repeat steps 1 & 2
