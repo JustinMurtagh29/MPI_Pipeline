@@ -9,43 +9,42 @@ function imfeat = sortedeigenvalueshessian(I, siz)
 
     %apply the filter to the image, ignoring boundaries, i.e. intensity outside
     %the image is set to zero
-    Ixx_x=convn(I,hxx{1},'same');
-    Ixx_y=convn(Ixx_x,hxx{2},'same');
-    Ixx=convn(Ixx_y,hxx{3},'same');
+    Ixx = convn(I,   hxx{1}, 'same');
+    Ixx = convn(Ixx, hxx{2}, 'same');
+    Ixx = convn(Ixx, hxx{3}, 'same');
 
-    Iyy_x=convn(I,hyy{1},'same');
-    Iyy_y=convn(Iyy_x,hyy{2},'same');
-    Iyy=convn(Iyy_y,hyy{3},'same');
-    clear Iyy_x Iyy_y Ixx_x Ixx_y
+    Iyy = convn(I,   hyy{1}, 'same');
+    Iyy = convn(Iyy, hyy{2}, 'same');
+    Iyy = convn(Iyy, hyy{3}, 'same');
 
-    Izz_x=convn(I,hzz{1},'same');
-    Izz_y=convn(Izz_x,hzz{2},'same');
-    Izz=convn(Izz_y,hzz{3},'same');
+    Izz = convn(I,   hzz{1}, 'same');
+    Izz = convn(Izz, hzz{2}, 'same');
+    Izz = convn(Izz, hzz{3}, 'same');
 
-    Ixy_x=convn(I,hxy{1},'same');
-    Ixy_y=convn(Ixy_x,hxy{2},'same');
-    Ixy=convn(Ixy_y,hxy{3},'same');
-    clear Izz_x Izz_y Ixy_x Ixy_y
+    Ixy = convn(I,   hxy{1}, 'same');
+    Ixy = convn(Ixy, hxy{2}, 'same');
+    Ixy = convn(Ixy, hxy{3}, 'same');
 
-    Ixz_x=convn(I,hxz{1},'same');
-    Ixz_y=convn(Ixz_x,hxz{2},'same');
-    Ixz=convn(Ixz_y,hxz{3},'same');
+    Ixz = convn(I,   hxz{1}, 'same');
+    Ixz = convn(Ixz, hxz{2}, 'same');
+    Ixz = convn(Ixz, hxz{3}, 'same');
 
-    Iyz_x=convn(I,hyz{1},'same');
-    Iyz_y=convn(Iyz_x,hyz{2},'same');
-    Iyz=convn(Iyz_y,hyz{3},'same');
-    clear Ixz_x Ixz_y Iyz_x Iyz_y
+    Iyz = convn(I,   hyz{1}, 'same');
+    Iyz = convn(Iyz, hyz{2}, 'same');
+    Iyz = convn(Iyz, hyz{3}, 'same');
 
     %Calculate eigenvectors and eigenvalues of the Hessian for each point
-    [a,b,c]=size(I);
-    imfeat=cell(3,1);
-    newSize = [1 1 a*b*c];
-    Ieigen= eig3([reshape(Ixx, newSize) reshape(Ixy, newSize) reshape(Ixz, newSize); ...
-        reshape(Ixy, newSize) reshape(Iyy, newSize) reshape(Iyz, newSize); ...
-        reshape(Ixz, newSize) reshape(Iyz, newSize) reshape(Izz, newSize)]);
-    Ieigen = sort(Ieigen,2);
-    imfeat{1}=reshape(Ieigen(:,1), [a b c]);
-    imfeat{2}=reshape(Ieigen(:,2), [a b c]);
-    imfeat{3}=reshape(Ieigen(:,3), [a b c]); 
-
+    Isize = size(I);
+    imfeat = cell(3, 1);
+    inputA = [Ixx(:)';Ixy(:)';Ixz(:)';
+              Iyy(:)';Iyz(:)';Izz(:)';];
+    roots = eig3S(inputA);
+    Ieigen = roots';
+    [~,sortIdx]=sort(abs(Ieigen),2);
+    sortIdx = repmat((1:size(sortIdx,1))',1,3) + (sortIdx - 1)*size(sortIdx,1);
+    Ieigen = Ieigen(sortIdx);
+   
+    imfeat{1} = reshape(Ieigen(:, 1), Isize);
+    imfeat{2} = reshape(Ieigen(:, 2), Isize);
+    imfeat{3} = reshape(Ieigen(:, 3), Isize);
 end
