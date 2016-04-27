@@ -40,6 +40,10 @@ function runPipeline(p)
     % see filterbank 
     job = miniFeature(p);
     Cluster.waitForJob(job);
+    %Make predictions on edge based features using previously trained GP
+    job = makePredictions(p,'edges');
+    Cluster.waitForJob(job);
+
     
 end
 
