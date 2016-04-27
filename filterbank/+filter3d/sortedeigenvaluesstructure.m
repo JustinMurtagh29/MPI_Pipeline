@@ -49,8 +49,7 @@ function imfeat = sortedeigenvaluesstructure(I, siz, siz2)
     % calculate the eigenvalues of the structure tensor
     Isize = size(I);
     imfeat = cell(3, 1);
-    Ieigen = eig3S([Ixx(:)';Ixy(:)';Ixz(:)';
-              Iyy(:)';Iyz(:)';Izz(:)'])';
+    Ieigen = eig3S([Ixx(:)'; Ixy(:)'; Ixz(:)'; Iyy(:)'; Iyz(:)'; Izz(:)'])';
     clear Ixx Ixy Ixz Iyy Iyz Izz
     % Eigen values are sorted based on their absolute values to be in consistency with classifiers trained on previously used 'eig' function
     [~,sortIds]=sort(abs(Ieigen),2);
@@ -59,7 +58,7 @@ function imfeat = sortedeigenvaluesstructure(I, siz, siz2)
     linearIds = bsxfun(@plus, (sortIds -1)*sortRows,(1:sortRows)');
     Ieigen = Ieigen(linearIds);
 
-    imfeat{1} = reshape(Ieigen(:, 3), Isize);
+    imfeat{1} = reshape(Ieigen(:, 1), Isize);
     imfeat{2} = reshape(Ieigen(:, 2), Isize);
-    imfeat{3} = reshape(Ieigen(:, 1), Isize);
+    imfeat{3} = reshape(Ieigen(:, 3), Isize);
 end

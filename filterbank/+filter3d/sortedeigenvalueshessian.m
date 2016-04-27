@@ -36,8 +36,7 @@ function imfeat = sortedeigenvalueshessian(I, siz)
     %Calculate eigenvectors and eigenvalues of the Hessian for each point
     Isize = size(I);
     imfeat = cell(3, 1);
-    Ieigen = eig3S([Ixx(:)';Ixy(:)';Ixz(:)';
-              Iyy(:)';Iyz(:)';Izz(:)'])';
+    Ieigen = eig3S([Ixx(:)'; Ixy(:)'; Ixz(:)'; Iyy(:)'; Iyz(:)'; Izz(:)'])';
     clear Ixx Ixy Ixz Iyy Iyz Izz     
 % Eigen values are sorted based on their absolute values to be in consistency with classifiers trained on previously used 'eig' function
     [~,sortIds]=sort(abs(Ieigen),2);
