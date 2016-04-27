@@ -1,69 +1,65 @@
 function imfeat = sortedeigenvaluesstructure(I, siz, siz2)
-    %calculate gradients with fspecial3 using size siz2
-    hx=fspecial3.gradient(siz2,1);
-    hy=fspecial3.gradient(siz2,2);
-    hz=fspecial3.gradient(siz2,3);
+    % calculate gradients with fspecial3 using size siz2
+    hx =fspecial3.gradient(siz2, 1);
+    hy =fspecial3.gradient(siz2, 2);
+    hz =fspecial3.gradient(siz2, 3);
 
-    Ix_x=convn(I,hx{1},'same');
-    Ix_y=convn(Ix_x,hx{2},'same');
-    clear Ix_x
-    Ix=convn(Ix_y,hx{3},'same');
-    clear Ix_y
-    Iy_x=convn(I,hy{1},'same');
-    Iy_y=convn(Iy_x,hy{2},'same');
-    clear Iy_x
-    Iy=convn(Iy_y,hy{3},'same');
-    clear Iy_y
-    Iz_x=convn(I,hz{1},'same');
-    Iz_y=convn(Iz_x,hz{2},'same');
-    clear Iz_x
-    Iz=convn(Iz_y,hz{3},'same');
+    Ix = convn(I,  hx{1}, 'same');
+    Ix = convn(Ix, hx{2}, 'same');
+    Ix = convn(Ix, hx{3}, 'same');
+    
+    Iy = convn(I,  hy{1}, 'same');
+    Iy = convn(Iy, hy{2}, 'same');
+    Iy = convn(Iy, hy{3}, 'same');
+    
+    Iz = convn(I,  hz{1}, 'same');
+    Iz = convn(Iz, hz{2}, 'same');
+    Iz = convn(Iz, hz{3}, 'same');
 
     clear Iz_y hx hy hz
 
-    %calculate elements of the structure tensor
-    h=fspecial3.gaussianFWHMhalfSize(siz2); %window function
+    % calculate elements of the structure tensor
+    % window function
+    h = fspecial3.gaussianFWHMhalfSize(siz2);
 
-    Ixx1=convn(Ix.^2,h{1},'same');
-    Ixx2=convn(Ixx1,h{2},'same');
-    Ixx=convn(Ixx2,h{3},'same');
-    clear Ixx1 Ixx2
+    Ixx = convn(Ix .^ 2,  h{1}, 'same');
+    Ixx = convn(Ixx,      h{2}, 'same');
+    Ixx = convn(Ixx,      h{3}, 'same');
 
-    Ixy1=convn(Ix.*Iy,h{1},'same');
-    Ixy2=convn(Ixy1,h{2},'same');
-    Ixy=convn(Ixy2,h{3},'same');
-    clear Ixy1 Ixy2
+    Ixy = convn(Ix .* Iy, h{1}, 'same');
+    Ixy = convn(Ixy,      h{2}, 'same');
+    Ixy = convn(Ixy,      h{3}, 'same');
 
-    Ixz1=convn(Ix.*Iz,h{1},'same');
-    Ixz2=convn(Ixz1,h{2},'same');
-    Ixz=convn(Ixz2,h{3},'same');
-    clear Ixz1 Ixz2
+    Ixz = convn(Ix .* Iz, h{1}, 'same');
+    Ixz = convn(Ixz,      h{2}, 'same');
+    Ixz = convn(Ixz,      h{3}, 'same');
 
-    Iyy1=convn(Iy.^2,h{1},'same');
-    Iyy2=convn(Iyy1,h{2},'same');
-    Iyy=convn(Iyy2,h{3},'same');
-    clear Iyy1 Iyy2
+    Iyy = convn(Iy .^ 2,  h{1}, 'same');
+    Iyy = convn(Iyy,      h{2}, 'same');
+    Iyy = convn(Iyy,      h{3}, 'same');
 
-    Iyz1=convn(Iy.*Iz,h{1},'same');
-    Iyz2=convn(Iyz1,h{2},'same');
-    Iyz=convn(Iyz2,h{3},'same');
-    clear Iyz1 Iyz2
+    Iyz = convn(Iy .* Iz, h{1}, 'same');
+    Iyz = convn(Iyz,      h{2}, 'same');
+    Iyz = convn(Iyz,      h{3}, 'same');
 
-    Izz1=convn(Iz.^2,h{1},'same');
-    Izz2=convn(Izz1,h{2},'same');
-    Izz=convn(Izz2,h{3},'same');               
-    clear Izz1 Izz2 Iz Ix Iy
+    Izz = convn(Iz .^ 2,  h{1}, 'same');
+    Izz = convn(Izz,      h{2}, 'same');
+    Izz = convn(Izz,      h{3}, 'same');
 
-    %calculate the eigenvalues of the structure tensor
-    [a,b,c]=size(I);
-    imfeat=cell(3,1);
-    newSize = [1 1 a*b*c];
-    Ieigen = eig3([reshape(Ixx, newSize) reshape(Ixy, newSize) reshape(Ixz, newSize); ...
-        reshape(Ixy, newSize) reshape(Iyy, newSize) reshape(Iyz, newSize); ...
-        reshape(Ixz, newSize) reshape(Iyz, newSize) reshape(Izz, newSize)]);
-    Ieigen = sort(Ieigen,2);
-    imfeat{1}=reshape(Ieigen(:,1), [a b c]);
-    imfeat{2}=reshape(Ieigen(:,2), [a b c]);
-    imfeat{3}=reshape(Ieigen(:,3), [a b c]);  
+    % calculate the eigenvalues of the structure tensor
+    Isize = size(I);
+    imfeat = cell(3, 1);
+    Ieigen = eig3S([Ixx(:)';Ixy(:)';Ixz(:)';
+              Iyy(:)';Iyz(:)';Izz(:)'])';
+    clear Ixx Ixy Ixz Iyy Iyz Izz
+    % Eigen values are sorted based on their absolute values to be in consistency with classifiers trained on previously used 'eig' function
+    [~,sortIds]=sort(abs(Ieigen),2);
+    % Each row of sortIdx matrix points to sorting order for each row of Ieigen. These indices are converted to linear indices to implement this on Ieigen
+    sortRows = size(sortIds,1);
+    linearIds = bsxfun(@plus, (sortIds -1)*sortRows,(1:sortRows)');
+    Ieigen = Ieigen(linearIds);
 
+    imfeat{1} = reshape(Ieigen(:, 3), Isize);
+    imfeat{2} = reshape(Ieigen(:, 2), Isize);
+    imfeat{3} = reshape(Ieigen(:, 1), Isize);
 end
