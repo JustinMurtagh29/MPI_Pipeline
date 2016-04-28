@@ -9,7 +9,7 @@ load(hyperFile); % all parameter for GP (e.g. hyp, meanfunc)
 weights = normalizeDataForGP(weights, false, normFile);
 
 % gpml toolbox usage
-%run('/zdata/manuel/code/active/gpml/startup.m');
+run('./active/gpml/startup.m');
 % Make predictions
 [labelMean labelCov latentMean latentCov lp post] = gp(hyp, inffunc, meanfunc, covfunc, likfunc, trainingData, trainingLabels, weights, ones(size(weights,1), 1));
 
