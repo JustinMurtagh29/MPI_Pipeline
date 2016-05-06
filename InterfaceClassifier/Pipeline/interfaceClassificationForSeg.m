@@ -37,8 +37,9 @@ end
 pCube = p.local(cubeNo);
 
 %load segmentation
-seg = Seg.Local.getSegSmall(pCube, true);
-
+%seg = Seg.Local.getSegSmall(pCube, true);
+m = load(pCube.segFile);
+seg = m.seg;
 %load edges and borders
 m = load(pCube.edgeFile);
 edges = m.edges;
