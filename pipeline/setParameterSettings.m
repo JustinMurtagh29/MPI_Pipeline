@@ -78,6 +78,8 @@ function [p, pT] = setParameterSettings(p)
                 p.local(i,j,k).borderFile =  [p.local(i,j,k).saveFolder 'borders.mat'];
                 p.local(i,j,k).weightFile = [p.local(i,j,k).saveFolder 'weights.mat'];
                 p.local(i,j,k).probFile = [p.local(i,j,k).saveFolder 'prob.mat'];
+                p.local(i,j,k).synapseFile = [p.local(i,j,k).saveFolder 'synapses.mat'];
+
                 % Same files for glia prediction
                 p.local(i,j,k).segmentFile = [p.local(i,j,k).saveFolder 'segments.mat'];    
                 p.local(i,j,k).segmentWeightFile = [p.local(i,j,k).saveFolder 'segmentWeights.mat'];
@@ -127,6 +129,7 @@ function [p, pT] = setParameterSettings(p)
         pT.local(i).edgeFile = [pT.local(i).saveFolder 'edges.mat'];
         pT.local(i).borderFile =  [pT.local(i).saveFolder 'borders.mat'];
         pT.local(i).weightFile = [pT.local(i).saveFolder 'weights.mat'];
+
         pT.local(i).gtFile = [pT.local(i).saveFolder 'region' num2str(i) '.mat'];
         % Benjamin's glia prediction
         pT.local(i).segmentFile = [pT.local(i).saveFolder 'segments.mat'];    

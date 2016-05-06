@@ -43,7 +43,9 @@ function runPipeline(p)
     %Make predictions on edge based features using previously trained GP
     job = makePredictions(p,'edges');
     Cluster.waitForJob(job);
+    %Run interface classifier using Benedikt's trained classifier
+    job = interfaceClassificationOnCluster(p);
+    Cluster.waitForJob(job);
 
-    
 end
 

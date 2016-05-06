@@ -1,0 +1,17 @@
+options.display = 10;
+options.tr_size = [20, 20, 20];
+options.val_size = [100, 100, 100];
+options.val_iter = 0;
+options.val_fwd_alg = 'fft2';
+options.gpuDev = 0;
+options.max_iter = 10000;
+options.augment = true;
+options.snapshot = 1000;
+options.save_imp = false;
+options.snapshot_name = 'MyCnet';
+options.data_pre = func2str(@Codat.CNN.Synapses.loadData);
+options.class_ratio = 3;
+options.skip_single_class_cubes = false;
+options.lr_policy = 'step';
+options.step_size = 10000;
+options.gamma = 0.5;
