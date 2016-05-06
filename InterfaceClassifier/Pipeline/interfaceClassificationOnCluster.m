@@ -37,13 +37,13 @@ elseif ~isrow(options.cubeIndices)
     options.cubeIndices = options.cubeIndices';
 end
 
-cluster = getCluster('cpu');
+
 inputCell = cell(length(options.cubeIndices),1);
 for i = 1:length(options.cubeIndices)
     cubeNo = options.cubeIndices(i);
     inputCell{i} = {p, i, options.aggloT, options.saveFeatures, ...
                     options.saveInterfaces};
 end
-job = startJob(cluster,@interfaceClassificationForSeg, inputCell, 0);
+job = startCPU(@interfaceClassificationForSeg, inputCell, 'interfaceClassification');
 
 end
