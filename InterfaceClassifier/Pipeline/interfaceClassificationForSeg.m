@@ -78,13 +78,13 @@ end
 %calculate prediction and save result
 [scores, X, interfaces] = interfaceClassification( raw, seg, edges, borders, featureMap, classifier );
 
-scoresReshaped = NaN(size(edges));
-tmp = [borders(:).Area]> 150;
-scoresReshaped(tmp,:)=reshape(scores,[],2);
+%scoresReshaped = NaN(size(edges));
+%tmp = [borders(:).Area]> 150;
+%scoresReshaped(tmp,:)=reshape(scores,[],2);
 
 m = matfile([p.local(cubeNo).saveFolder 'synapses.mat'], 'Writable', true);
 %m = matfile(pCube.synapseFile,'Writable',true);
-m.scores = scoresReshaped;
+m.scores = scores;
 if saveFeatures
     m = matfile([p.local(cubeNo).saveFolder 'interfaceWeights.mat'], 'Writable', true);
     m.X = X;
