@@ -39,7 +39,10 @@ pCube = p.local(cubeNo);
 %load segmentation
 %seg = Seg.Local.getSegSmall(pCube, true);
 m = load(pCube.segFile);
-seg = m.seg;
+seg = uint32(m.seg);
+% IDs should be converted to global indices.
+seg = Seg.Local.localGlobalIDConversion('LocalToGlobal',pCube,seg); 
+
 %load edges and borders
 m = load(pCube.edgeFile);
 edges = m.edges;
