@@ -1,7 +1,7 @@
 function findEdgesAndBordersFast(segFile, edgeFile, borderFile, segmentFile)
     % Computation of edges and borders optimized for 512x512x256
 
-    % Load global segmentation instead of local
+    % Load *SMALL* cube of global segmentation IDs
     load(segFile);
     segSmall = int32(seg);
 
@@ -39,12 +39,22 @@ function findEdgesAndBordersFast(segFile, edgeFile, borderFile, segmentFile)
     save(borderFile, 'borders');
 
     % Get segment pixelIdxLists
+    segments = regionprops( ...
+        segSmall, segSmall, 'PixelIdxList', 'MinIntensity');
     
-    segmentsTemp = regionprops(segSmall,segSmall, 'PixelIdxList', 'MeanIntensity');
-    segments = segmentsTemp(~isnan([segmentsTemp.MeanIntensity]));
-    [segments.ids] = segments.MeanIntensity;
-    segments = rmfield(segments, 'MeanIntensity');
+    % NOTE
+    %   Previously, regionprops was run on the local segmentation volume
+    %   where the segment IDs started with one. Now, we have to skip
+    %   all IDs below the smallest occuring global segment ID.
+    segments = segments(arrayfun( ...
+        @(curSeg) ~isempty(curSeg.MinIntensity), segments));
+    
+    % NOTE
+    %   We use the mean intensity to find the global segment ID.
+    [segments.Id] = segments.MinIntensity;
+    
+    % remove MinIntensity field
+    segments = rmfield(segments, 'MinIntensity');
     save(segmentFile, 'segments', '-v7.3');
-
 end
 
