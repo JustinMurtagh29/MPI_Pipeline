@@ -41,6 +41,12 @@ function runPipeline(p)
     job = graphConstruction(p);
     Cluster.waitForJob(job);
     
+    % Build segment-to-cube mapping
+    job = startCPU( ...
+        @Seg.Global.buildSegToCubeMap, ...
+        {{p}}, 'segToCubeMap');
+    Cluster.waitForJob(job);
+    
     % Build segment masks and bounding boxes
     % This produces the 'segMasks.mat' files and is required
     % to produce iso-surfaces for visualizations, etc.
