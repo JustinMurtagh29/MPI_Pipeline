@@ -10,9 +10,9 @@ for i =1:length(cubeIndices)
 
 	m=load(p.local(i).synapseFile);
 	scores = single(m.scores);
-	m=load(p.local(i).edgeFile)
+	m=load(p.local(i).edgeFile);
 	edges = m.edges;
-	boutonIDs = vertcat(boutonIDs,edges(scores>0,:));
+	boutonIDs = vertcat(boutonIDs,edges(scores>0));
 end
 
 %load com.mat to get CoMs of boutonIDs
