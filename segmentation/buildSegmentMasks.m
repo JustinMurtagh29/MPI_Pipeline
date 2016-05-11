@@ -1,48 +1,18 @@
-function jobSegMasks(cubeParam)
-    function segIds = getSegIds(cubeFolder)
-        globalSegFile = [cubeFolder, 'segGlobal.mat'];
-        
-        % load global seg matrix
-        fileStruct = load(globalSegFile, 'seg');
-        segMat = fileStruct.seg;
-        
-        % find unique ids
-        uniqueIds = unique(segMat(:));
-        segIds = sort(uniqueIds);
-    end
+function buildSegmentMasks(cubeParams)
+    cubeFolder = cubeParams.saveFolder;
     
-    function saveSegmentIds(segsDir, segList)
-        segsFileStruct = struct;
-        segsFileStruct.segments = segList;
-        
-        segsFile = [segsDir, 'segments.mat'];
-        save(segsFile, '-struct', 'segsFileStruct');
-    end
-        
-    cubeFolder = cubeParam.saveFolder;
-    cubeBoxBig = cubeParam.bboxBig;
-    cubeBoxBigMin = cubeBoxBig(:, 1);
-    
-    % build path to segments folder
-    cubeSegsFolder = [cubeFolder, 'segments', filesep];
-    
-    % create folder if it does not exist
-    if ~exist(cubeSegsFolder, 'dir')
-        % create segments folder
-        mkdir(cubeSegsFolder);
-    end
-    
-    % load global seg matrix
-    disp('Loading global segment matrix');
-    sortedIds = getSegIds(cubeFolder);
-    
-    % save list of segments
-    saveSegmentIds(cubeSegsFolder, sortedIds);
+    disp('Loading global segment ids');
+    segIds = getSegIds(cubeParams);
+    sortedIds = sort(segIds);
     
     % find extremal segment ids
     minId = sortedIds(1);
     maxId = sortedIds(end);
     numSegs = maxId - minId + 1;
+    
+    disp('Loading global segment matrix');
+    segGlobalFile = [cubeFolder, 'segGlobal.mat'];
+    load(segGlobalFile, 'seg');
     
     % ATTENTION!
     % seg = seg - minId + 1
@@ -63,6 +33,13 @@ function jobSegMasks(cubeParam)
         error('Sanity check failed!');
     end
     
+    % prepare output
+    out = struct;
+    out.segIds = uint32(sortedIds(:));
+    out.boxLocal = uint32(numSegs, 3, 2);
+    out.boxGlobal = uint32(numSegs, 3, 2);
+    out.masks = cell(numSegs, 1);
+    
     % extract segments
     disp('Extracting segments');
     for segIdx = 1:numSegs
@@ -82,8 +59,9 @@ function jobSegMasks(cubeParam)
         boxMax = boxMin + boxWidth - 1;
         
         % build bounding boxes
-        boxLocal = [boxMin', boxMax'];
-        boxGlobal = boxLocal + repmat(cubeBoxBigMin, [1, 2]) - 1;
+        boxLocal = [boxMin(:), boxMax(:)];
+        boxGlobal = bsxfun( ...
+            @plus, boxLocal, cubeBoxBigMin - 1);
         
         % extracting mask
         mask = seg( ...
@@ -92,23 +70,27 @@ function jobSegMasks(cubeParam)
             boxMin(3):boxMax(3));
         mask = (mask == segIdx);
         
-        % prepare results
-        maskStruct = Util.buildMaskStruct( ...
-            boxLocal, boxGlobal, mask);
-        
-        % build path to results
-        segDir = [cubeSegsFolder, num2str(segId), filesep];
-        
-        % create folder if needed
-        if ~exist(segDir, 'dir')
-            mkdir(segDir);
-        end
-        
-        maskFile = [segDir, 'mask.mat'];
-        save(maskFile, '-struct', 'maskStruct');
+        % store result
+        out.segIds(segIdx) = segId;
+        out.boxLocal(segIdx, :, :) = boxLocal;
+        out.boxGlobal(segIdx, :, :) = boxGlobal;
+        out.masks{segIdx} = mask;
     end
+    
+    % save result
+    disp('Storing results...');
+    segMaskFile = [cubeFolder, 'segMasks.mat'];
+    save(segMaskFile, '-v7.3', '-struct', 'out');
 
     % show when done
     Util.showProgress( ...
         numSegs, numSegs, 'Done!');
+end
+
+function segIds = getSegIds(cubeParams)
+    load(cubeParams.segmentFile, 'segments');
+    [segIds] = segments.Id;
+    
+    % make sure segIds are uint32
+    segIds = uint32(segIds);
 end
