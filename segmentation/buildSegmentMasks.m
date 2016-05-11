@@ -1,5 +1,6 @@
 function buildSegmentMasks(cubeParams)
     cubeFolder = cubeParams.saveFolder;
+    cubeBoxSmallMin = cubeParams.bboxSmall(:, 1);
     
     disp('Loading global segment ids');
     segIds = getSegIds(cubeParams);
@@ -36,8 +37,8 @@ function buildSegmentMasks(cubeParams)
     % prepare output
     out = struct;
     out.segIds = uint32(sortedIds(:));
-    out.boxLocal = uint32(numSegs, 3, 2);
-    out.boxGlobal = uint32(numSegs, 3, 2);
+    out.boxLocal = uint32(zeros(numSegs, 3, 2));
+    out.boxGlobal = uint32(zeros(numSegs, 3, 2));
     out.masks = cell(numSegs, 1);
     
     % extract segments
@@ -45,10 +46,8 @@ function buildSegmentMasks(cubeParams)
     for segIdx = 1:numSegs
         segId = sortedIds(segIdx);
         segBox = segProps(segIdx).BoundingBox;
-        
-        % show progress
-        Util.showProgress( ...
-            segIdx, numSegs, ['Segment ', num2str(segId)]);
+
+        disp(['Processing segment ', num2str(segId)]);
         
         % ATTENTION!
         % just as isosurface, also regionprops expects the
@@ -61,7 +60,7 @@ function buildSegmentMasks(cubeParams)
         % build bounding boxes
         boxLocal = [boxMin(:), boxMax(:)];
         boxGlobal = bsxfun( ...
-            @plus, boxLocal, cubeBoxBigMin - 1);
+            @plus, boxLocal, cubeBoxSmallMin - 1);
         
         % extracting mask
         mask = seg( ...
@@ -81,15 +80,11 @@ function buildSegmentMasks(cubeParams)
     disp('Storing results...');
     segMaskFile = [cubeFolder, 'segMasks.mat'];
     save(segMaskFile, '-v7.3', '-struct', 'out');
-
-    % show when done
-    Util.showProgress( ...
-        numSegs, numSegs, 'Done!');
 end
 
 function segIds = getSegIds(cubeParams)
     load(cubeParams.segmentFile, 'segments');
-    [segIds] = segments.Id;
+    segIds = [segments.Id];
     
     % make sure segIds are uint32
     segIds = uint32(segIds);
