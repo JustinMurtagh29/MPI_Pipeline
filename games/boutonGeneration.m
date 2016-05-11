@@ -18,7 +18,7 @@ end
 %load com.mat to get CoMs of boutonIDs
 load([p.saveFolder 'globalCoMList.mat']);
 
-boutonCoMs = comList(boutonIDs,:);
+boutonCoMs = globalCoMList(boutonIDs,:);
 
 boutons.boutonIDs = boutonIDs;
 boutons.boutonCoMs = boutonCoMs;
