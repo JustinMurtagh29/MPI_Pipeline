@@ -8,7 +8,7 @@ boutonIDs = [];
 boutonsCoMs = [];
 for i =1:length(cubeIndices)
 
-	m=load(p.local(i).synapseFile);
+	m=load([p.local(i).saveFolder 'synapses.mat');
 	scores = single(m.scores);
 	m=load(p.local(i).edgeFile);
 	edges = m.edges;
