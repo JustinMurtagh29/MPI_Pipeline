@@ -206,9 +206,12 @@ function [meanVal, stdVal] = determineMeanAndStdOfData(p)
         meanVal(i) = mean(raw(:));
         stdVal(i) = std(raw(:));
     end
-
+    
     if any(meanVal == 0) | any(stdVal == 0)
-	error('Found cube with 0 mean or standard deviation in bounding box');
+        error('Found cube with 0 mean or standard deviation in bounding box');
+    elseif any(meanVal == 0) | any(stdVal == 0)
+        nZero = max(length(find(meanVal == 0)),length(find(stdVal == 0)))
+        warning('Found %d of %d randomly chosen cubes with 0 mean or standard deviation in bounding box',nZero,nrCubesToSample);
     end
 
     meanVal = median(meanVal);
