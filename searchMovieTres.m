@@ -1,4 +1,4 @@
-function searchMovieTres()
+function searchMovieTres(Trange)
 % function that allows you to create multiple movies of different
 % segmentations. Set the appropriate Threshold in the Threshold loop. To
 % prevent the multiple calculation of the classification a flag was
@@ -10,7 +10,7 @@ startup % starts everything and initiated Cluster Object
 run configuration.m
 
 flag = 0; % usually start with 1 whenever FOV was changed;
-for threshold = 0.1:0.05:0.3
+for threshold = Trange
     
     % change threshold and threshold function
     p.seg.threshold = threshold;
