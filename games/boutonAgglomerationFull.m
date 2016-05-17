@@ -1,15 +1,17 @@
+function boutonAgglomerationFull(p)
+
 % Set rng to state of starting matlab
 rng default;
 
 %% Load some stuff
 % Load parameter from newest pipeline run
-load('/gaba/u/mberning/results/pipeline/20151111T183414/allParameter.mat');
+load([p.saveFolder 'allParameter.mat']);
 % Load global graph representation
 graph = load([p.saveFolder 'graph.mat']);
 % Load bouton seeds (presynaptic segments as detected by Benedikt)
 boutons = load([p.saveFolder 'Boutons.mat']);
 % Load center of mass of all segments
-load([p.saveFolder 'CoM.mat']);
+load([p.saveFolder 'globalCoMList.mat']);
 % Load ground truth already agglomerated segments 
 groundTruth = load([p.saveFolder 'agglomeration/20160202T222401.mat']);
 % Fix excludeIds to represent @94% 
@@ -69,6 +71,7 @@ for i=1:length(cc)
     end
     Util.progressBar(i, length(cc));
 end
+
 % Add agglomerations were PC1 explains less than 70%
 excludedCC = excludedCC | (cellfun(@(x)x(1), q.varianceExplained)' < 0.7 & cellfun(@length, cc) > 40);
 for i=1:length(cc)
@@ -76,16 +79,16 @@ for i=1:length(cc)
     seedIds = intersect(seeds.notTraced, cc{i});
     skelToWrite = writeSkeletonFromAggloWBP(graph, com, cc(i), excluded(theseSeedIdx), seedIds, q.edges{i}(:,1), ['CC' num2str(i, '%.3i')]);
     if excludedCC(i)
-        skelName = [outputFolder 'axonsSorted/bad' num2str(i, '%.3i') '.nml'];
+        skelName = [p.saveFolder 'axonsSorted/bad' num2str(i, '%.3i') '.nml'];
     else 
-        skelName = [outputFolder 'axonsSorted/good' num2str(i, '%.3i') '.nml'];
+        skelName = [p.saveFolder 'axonsSorted/good' num2str(i, '%.3i') '.nml'];
     end
     evalc('writeNml(skelName, skelToWrite)');
 end
 
 % 'Write' problems to flight mode webKNOSSOS
 extend = round(1000 ./ [11.24 11.24 28]);
-fid = fopen(['/gaba/u/mberning/webKnossos.txt'], 'w');
+fid = fopen([p.saveFolder 'webKnossos.txt'], 'w');
 for i=1:length(q.pos)
     if ~excludedCC(i)
         for j=1:size(q.pos{i},1)
@@ -110,6 +113,6 @@ variables = who;
 variables(strcmp(variables, 'graph')) = [];
 variables(strcmp(variables, 'com')) = [];
 variables(strcmp(variables, 'groundTruth')) = [];
-save(['/gaba/u/mberning/' datestr(clock, 30) '_boutonAggloFull.mat'], variables{:});
+save([p.saveFolder ' datestr(clock, 30) '_boutonAggloFull.mat'], variables{:});
 
-
+end
