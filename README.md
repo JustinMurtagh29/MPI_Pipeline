@@ -4,10 +4,9 @@ Short introduction on how to use this repositorium on gaba cluster
 Preparation:
 ============
 
-1. Get a github account by signing up on the website github.com
-2. Get a account at the RZG and make sure you can connect to the gaba cluster at the Rechenzentrum Garching (see [here](https://wiki.hest.brain.mpg.de/doku.php?id=knowledge:organization:it:connecting_to_garching) for a guide)
-3. Send an email to heiko.wissler@brain.mpg.de with your github and RZG username to be added to the respective teams/repos
-4. Wait for a positive reply from Heiko
+1. Get a account at the Max Planck Computing and Data Facility (MPCDF). Make sure you can connect to the GABA cluster at the Rechenzentrum Garching (see [here](https://wiki.hest.brain.mpg.de/doku.php?id=knowledge:organization:it:connecting_to_garching) for a guide)
+2. Send an email to heiko.wissler@brain.mpg.de with your GitLab username to be added to the respective teams/repos
+3. Wait for a positive reply from Heiko
 
 Usage:
 ========================
@@ -26,10 +25,9 @@ git clone https://gitlab.mpcdf.mpg.de/mberning/pipeline.git YOUR_DIRECTORY
 cd YOUR_DIRECTORY
 ```
 
-You will be prompted for a username & password here. Use your GitHub account.
+Download all the dependencies with the following command. You will be prompted for a username & password here. Use your GitLab account.
 ```
-git submodule init
-git submodule update
+git submodule update --init --recursive
 ```
 
 Next, you need to create the configuration.m file:
