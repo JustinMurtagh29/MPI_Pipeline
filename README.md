@@ -1,15 +1,14 @@
-Short introduction on how to use this repositorium on gaba cluster
-==================================================================
+Introduction to the Pipline Repository
+======================================
 
-Preparation:
-============
-
+Preparation
+-----------
 1. Get a account at the Max Planck Computing and Data Facility (MPCDF). Make sure you can connect to the GABA cluster at the Rechenzentrum Garching (see [here](https://wiki.hest.brain.mpg.de/doku.php?id=knowledge:organization:it:connecting_to_garching) for a guide)
 2. Send an email to heiko.wissler@brain.mpg.de with your GitLab username to be added to the respective teams/repos
 3. Wait for a positive reply from Heiko
 
-Usage:
-========================
+Usage
+-----
 
 Connect to GABA over the intranet with
 ```
@@ -55,3 +54,11 @@ This will print a file name of a segmentation movie you can use to judge quality
 runPipeline(p)
 ```
 
+Updating
+--------
+
+To update your pipeline repository to the latest version, just switch into the pipline directory and run these two lines of code:
+```
+git pull origin master
+git submodule update --recursive
+```
