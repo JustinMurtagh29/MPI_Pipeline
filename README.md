@@ -38,7 +38,8 @@ cp configuration-sample.m configuration.m
 Now edit configuration.m to your needs with `nano configuration.m`. Save the file
 by pressing Control+X and then 'Y' for "yes". Finally, press enter.
 
-Finally, start matlab with `matlab -nosplash -nodesktop` and:
+Finally, start MATLAB with `matlab -nosplash -nodesktop`. Please make sure you are in the pipline directory when starting MATLAB. Then it's time for the kick-off:
+
 1. Set configuration for pipeline you just edited by running:
 ```
 run configuration.m;
