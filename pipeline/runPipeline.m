@@ -67,5 +67,15 @@ function runPipeline(p)
     job = interfaceClassificationOnCluster(p);
     Cluster.waitForJob(job);
 
+    %Save the global SVG data
+    job = collectSvgDataOnCluster(p);
+    Cluster.waitForJob(job);
+    
+    %Create graph struct 
+    job = collectGraphStructOnCluster(p);
+    Cluster.waitForJob(job);
+    
+    
+
 end
 
