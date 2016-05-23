@@ -5,6 +5,9 @@ if ~exist('PIPELINE_READY', 'var') || ~PIPELINE_READY
     error('Please start MATLAB inside the pipeline directory');
 end
 
+if ~exist('p.retina','var')
+    error('Please set the flag p.retina in startup to True or False'); % Defult flag is False
+end
 %%%%%%%%%%%%%%%%%%%%%%%%%% EDIT BELOW THIS LINE %%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Choose were to store result of the calculations
