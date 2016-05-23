@@ -16,7 +16,7 @@ function runPipeline(p)
     % overlap and later joined together (see correspondences)
     % Uses segmentation subfolder in code repository
     if p.retina
-    job = miniSegmentation(p);
+    job = miniSegmentationRetina(p);
     else   
     job = miniSegmentation(p);
     end
