@@ -24,17 +24,3 @@ CLUSTER_GPU = Cluster.getCluster( ...
 % Mark as ready
 global PIPELINE_READY;
 PIPELINE_READY = true;
-
-
-% By default dataset is not a retina so p.retina = false. REmoce retina directories from the matlab path
-global p_retina;
-p_retina = false;
-
-if p.retina
-rmpath([pwd '/CNN']);
-rmpath([pwd '/segmentation']);
-else
-rmpath([pwd '/retinaCNN']);
-rmpath([pwd '/retinaSegmentation']);
-end
-
