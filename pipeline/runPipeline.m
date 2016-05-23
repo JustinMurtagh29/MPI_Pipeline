@@ -4,7 +4,7 @@ function runPipeline(p)
     % Because CNN is translation invariant, saved as KNOSSOS hierachy again 
     % Pass bounding box as well as tileSize will be added in bigFwdPass otherwise (legacy stuff)
     % This uses CNN subfolder in code repository
-    if p.retina
+    if p_retina
     job= bigFwdPassRetina(p,p.bbox);
     else
     job = bigFwdPass(p, p.bbox);
@@ -15,7 +15,7 @@ function runPipeline(p)
     % Because watershed segmentation has FOV effects (no translation invariance), processed with large
     % overlap and later joined together (see correspondences)
     % Uses segmentation subfolder in code repository
-    if p.retina
+    if p_retina
     job = miniSegmentationRetina(p);
     else   
     job = miniSegmentation(p);

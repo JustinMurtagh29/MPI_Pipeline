@@ -17,7 +17,7 @@ function [p, pT] = setParameterSettings(p)
     p.cnn.dateStrings = '20130516T204040';
     p.cnn.iter = 8; 
     p.cnn.gpu = 3;
-    if p.retina
+    if p_retina
     p.cnn.first = '/gaba/u/sahilloo/gitlab/data/retinaCNN/retina_cnn_32.mat';
     else
     p.cnn.first = ['/gaba/u/mberning/results/parameterSearch/' p.cnn.dateStrings ...
@@ -29,11 +29,11 @@ function [p, pT] = setParameterSettings(p)
     % Location to store CNN classification
     p.class.root = [p.saveFolder 'class/'];
     p.class.prefix = p.raw.prefix;
-    if p.retina 
+    if p_retina 
     p.class.folders = {'x','y','z'}; % First 3 folders store affinity results. Last folder stores the average of the three
     end
     % Function to use for segmentation
-    if p.retina
+    if p_retina
     p.seg.func = @(x)watershedSeg_v2_retina(x,{p.seg.threshold 10});
     else
     p.seg.func = @(x)watershedSeg_v1_cortex(x,{p.seg.threshold 10});
