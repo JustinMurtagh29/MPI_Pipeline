@@ -4,14 +4,22 @@ function runPipeline(p)
     % Because CNN is translation invariant, saved as KNOSSOS hierachy again 
     % Pass bounding box as well as tileSize will be added in bigFwdPass otherwise (legacy stuff)
     % This uses CNN subfolder in code repository
+    if p.retina
+    job= bigFwdPassRetina(p,p.bbox);
+    else
     job = bigFwdPass(p, p.bbox);
+    end
     Cluster.waitForJob(job);
     
     % Runs watershed based segmentation for region defined in p.bbox on p.raw and saves as p.local.segFile
     % Because watershed segmentation has FOV effects (no translation invariance), processed with large
     % overlap and later joined together (see correspondences)
     % Uses segmentation subfolder in code repository
+    if p.retina
     job = miniSegmentation(p);
+    else   
+    job = miniSegmentation(p);
+    end
     Cluster.waitForJob(job);
     
     % Find correspondences between tiles processed (segmented) in paralell
