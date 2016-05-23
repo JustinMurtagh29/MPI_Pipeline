@@ -20,7 +20,7 @@ You will be prompted for a username & password here, use the RZG one.
 ```
 module load git
 module load matlab/R2014b
-git clone https://gitlab.mpcdf.mpg.de/connectomics/pipeline YOUR_DIRECTORY
+git clone git@gitlab.mpcdf.mpg.de:connectomics/pipeline.git YOUR_DIRECTORY
 cd YOUR_DIRECTORY
 ```
 
