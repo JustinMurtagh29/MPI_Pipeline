@@ -1,4 +1,4 @@
-function job = saveGlobalSvgDataOnCluster(p)
+function job = collectSvgDataOnCluster(p)
 
 functionH = @Seg.Global.saveGlobalSvgData;
 inputCell = [p];

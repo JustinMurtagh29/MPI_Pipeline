@@ -1,4 +1,4 @@
-function job = collectGlobalGraphStructOnCluster(p)
+function job = collectGraphStructOnCluster(p)
 
 functionH = @collectGlobalGraphStruct;
 inputCell = {p};
