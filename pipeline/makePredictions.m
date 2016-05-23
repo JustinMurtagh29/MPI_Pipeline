@@ -1,5 +1,7 @@
 function job = makePredictions(parameter,mode)
 
+%copy GP state variables to results/state
+copyfile([pwd '/state/'],parameter.gp.stateFolder);
 
 % Add visualization of some statistics
 
