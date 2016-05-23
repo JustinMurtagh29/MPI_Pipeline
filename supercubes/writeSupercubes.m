@@ -9,7 +9,7 @@ raw = readKnossosRoi(root, prefix, bbox);
 for i=1:length(magToWrite)
     raw = imresize(raw, 0.5);
     newPrefix = [prefix(1:endIdx-1) '_mag' num2str(i)];
-    writeKnossosRoi(fullfile(outputDirectory, num2str(magToWrite)), newPrefix, bbox(:,1)', raw);
+    writeKnossosRoi(fullfile(outputDirectory, num2str(magToWrite)), newPrefix, double(bbox(:,1)'), raw);
 end
 
 end
