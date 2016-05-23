@@ -44,6 +44,6 @@ for i = 1:length(options.cubeIndices)
     inputCell{i} = {p, i, options.aggloT, options.saveFeatures, ...
                     options.saveInterfaces};
 end
-job = startCPU(@interfaceClassificationForSeg, inputCell, 'interfaceClassification');
+job = startCPU(@interfaceClassificationForSeg, inputCell, 'interfaceClassification',24);
 
 end
