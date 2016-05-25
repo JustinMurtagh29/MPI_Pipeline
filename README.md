@@ -29,10 +29,12 @@ Download all the dependencies with the following command. You will be prompted f
 git submodule update --init --recursive
 ```
 
-Next, you need to create the configuration.m file:
+Next, you need to create the `configuration.m` file:
 ```
 cp configuration-sample.m configuration.m
 ```
+
+The `configuration.m` file is special in that it is ignored by git and excluded from versioning. This way you can be sure that your `configuration.m` will never be overwritten by a `git pull`.
 
 Now edit configuration.m to your needs with `nano configuration.m`. Save the file
 by pressing Control+X and then 'Y' for "yes". Finally, press enter.
