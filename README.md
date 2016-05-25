@@ -60,5 +60,5 @@ Updating
 To update your pipeline repository to the latest version, just switch into the pipline directory and run these two lines of code:
 ```
 git pull origin master
-git submodule update --recursive
+git submodule update --init --recursive
 ```
