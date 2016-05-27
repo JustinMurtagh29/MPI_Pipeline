@@ -9,22 +9,26 @@ function createResolutionPyramid( root, prefix, bbox, outputDirectory )
 
 if nargin < 4
     % If no output folder is provided, assume one level up from root
-    outputDirectory = strrep(root, '/1/', '/');
+    fsep = filesep;
+    outputDirectory = strrep(root, [fsep '1' fsep], fsep);
+    clear fsep;
 end
 
 if nargin < 3
     % Get bounding box from section.json
     temp = readJson([outputDirectory 'section.json']);
-    bbox = cell2mat(cat(2, temp.bbox{:}))';
+    bbox = double(cell2mat(cat(2, temp.bbox{:}))');
     % Make sure it does not start at [0 0 0]
-    bbox(:,1) = max(int64([1; 1; 1]), bbox(:,1));
+    bbox = bsxfun(@plus, [1; 1; 1], bbox);
+    clear temp;
 end
 
 if nargin < 2
     % Get prefix from filename in root Knossos Hierachy
     temp = dir([root 'x0000/y0000/z0000/*.raw']);
     [startIdx, endIdx] = regexp(temp(1).name, '_mag.{1,3}_');
-    prefix = temp(endIdx:end);
+    prefix = temp(1).name(1:endIdx-1);
+    clear temp startIdx endIdx;
 end
 
 
@@ -35,7 +39,7 @@ end
 
 % Set according to memory limits, currently optimized for 12 GB RAM
 % Will be paralellized on cubes of this size
-cubeSize = [2056 2056 2056];
+cubeSize = [2048 2048 2048];
 % Write these magnifications, mags grouped in inside Brackets will be calculated by only reading once
 magsToWrite = {[2 4 8 16] [32 64 128 256]};
 
@@ -48,7 +52,7 @@ for i=1:length(magsToWrite)
     for x=1:length(X)-1
         for y=1:length(Y)-1
             for z=1:length(Z)-1
-                thisBBox = [X(x) X(x+1); Y(y) Y(y+1); Z(z) Z(z+1)];
+                thisBBox = [X(x) X(x+1)-1; Y(y) Y(y+1)-1; Z(z) Z(z+1)-1];
                 inputCell{idx} = {root, prefix, thisBBox, magsToWrite{i}, outputDirectory};
                 idx = idx + 1;
             end
@@ -58,7 +62,9 @@ for i=1:length(magsToWrite)
     wait(job, 'finished');
     % Update parameter, read last resoultion written with right bbox
     bbox = ceil(bbox ./ magsToWrite{i}(end));
-    root = fullfile(outputDirectory, num2str(magsToWrite{i}(end))); 
+    root = fullfile(outputDirectory, num2str(magsToWrite{i}(end)));
+    [startIdx, endIdx] = regexp(prefix, '_mag.{1,3}');
+    prefix = [prefix(1:startIdx-1) '_mag' num2str(magsToWrite{i}(end))];
     clear inputCell; 
 end
 

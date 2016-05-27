@@ -7,9 +7,13 @@ raw = readKnossosRoi(root, prefix, bbox);
 
 % Write multiple resoultions
 for i=1:length(magToWrite)
-    raw = imresize(raw, 0.5);
-    newPrefix = [prefix(1:endIdx-1) '_mag' num2str(i)];
-    writeKnossosRoi(fullfile(outputDirectory, num2str(magToWrite)), newPrefix, double(bbox(:,1)'), raw);
+    if size(raw,3) > 1
+        raw = nlfilter3(raw, @median, [2 2 2]);
+        [startIdx, endIdx] = regexp(prefix, '_mag.{1,3}');
+        newPrefix = [prefix(1:startIdx-1) '_mag' num2str(magToWrite(i))];
+        startPos = (bbox(:,1)' - [1 1 1]) ./ magToWrite(i) + [1 1 1];
+        writeKnossosRoi(fullfile(outputDirectory, num2str(magToWrite(i))), newPrefix, startPos, raw, 'uint8', '', 'noRead');
+    end
 end
 
 end
