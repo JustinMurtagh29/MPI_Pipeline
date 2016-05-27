@@ -1,6 +1,17 @@
 function [p, pT] = setParameterSettings(p)
     % Pass structure with basic settings to add all dependent and constant p for pipeline
 
+    % Sanitize paths by adding trailing slashes
+    if p.saveFolder(end) ~= filesep
+        p.saveFolder = [p.saveFolder, filesep];
+        warning('Added trailing slash to p.saveFolder');
+    end
+
+    if p.raw.root(end) ~= filesep
+        p.raw.root = [p.raw.root, filesep];
+        warning('Added trailing slash to p.raw.root');
+    end
+
     % Size of local segmentation and local graph construction
     p.tileSize =  [512; 512; 256];
     % Check whether bounding box meets requirements and fix if not
