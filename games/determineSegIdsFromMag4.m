@@ -16,6 +16,7 @@ function segIds = determineSegIdsFromMag4(p, mag4)
             for k=1:size(p.local,3)
                 % Extrat label in local bounding box
                 thisBBox = p.local(i,j,k).bboxSmall;
+                thisBBox = thisBBox - repmat(p.bbox(:,1), 1,2) + ones(3,2);
                 thisBBoxMag4 = ceil(thisBBox ./ 4);
                 theseLabels = labels(thisBBoxMag4(1,1):thisBBoxMag4(1,2), ...
                     thisBBoxMag4(2,1):thisBBoxMag4(2,2), ...
@@ -25,9 +26,7 @@ function segIds = determineSegIdsFromMag4(p, mag4)
                     theseLabels = theseLabels(x,y,z);
                     % Load bboxSmall part of segmentation
                     load([p.local(i,j,k).saveFolder 'segGlobal.mat']);
-                    thisSeg = seg(1-p.tileBorder(1,1):end-p.tileBorder(1,2), ...
-                        1-p.tileBorder(2,1):end-p.tileBorder(2,2), ...
-                        1-p.tileBorder(3,1):end-p.tileBorder(3,2));
+                    thisSeg = seg;
                     % Get linear indices of all labels
                     rp = regionprops(theseLabels(:), 'PixelIdxList');
                     % Find all segments for each label
