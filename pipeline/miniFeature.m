@@ -9,7 +9,7 @@ for i=1:size(parameter.local,1)
             end
             sub = [i,j,k];
 			idx = sub2ind(size(parameter.local), i, j, k);
-            inputCell{idx} = {parameter, sub};
+            inputCell{idx} = {parameter, sub, p.norm.func};
 		end
 	end
 end
