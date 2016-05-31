@@ -1,4 +1,4 @@
-function calcFeatures(parameter, sub, normFunc)
+function calcFeatures(parameter, sub)
 % We need to make sure that this function works correctly near borders of cube, right now due to no padding and 'same' convolution in filter3d
 % we should have massive border effects?
 
@@ -34,7 +34,7 @@ for l=1:length(parameter.feature.input)
     end
 
     % Normalize data same way as before the classification
-    imfeat = normFunc(single(imfeat));
+    imfeat = parameter.norm.func(single(imfeat));
     
     for m=1:size(parameter.filter,2)
         currentFilter = parameter.filter{m};
