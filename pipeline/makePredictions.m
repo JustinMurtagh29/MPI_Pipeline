@@ -1,7 +1,7 @@
 function job = makePredictions(parameter,mode)
 
 %copy GP state variables to results/state
-if ~exist(parameter.gp.normValues,'file') || ~exist(parameter.gp.hyperParameter,'file') || ~exist(parameter.gp.initialGroundTruth,'file')
+if ~exist(parameter.gp.normValues,'file') || ~exist(parameter.gp.hyperParameter,'file') || ~exist(parameter.gp.initalGroundTruth,'file')
 copyfile([pwd '/state/'],parameter.gp.stateFolder);
 end
 % Add visualization of some statistics
