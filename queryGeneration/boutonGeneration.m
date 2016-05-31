@@ -10,6 +10,9 @@ for i =1:length(cubeIndices)
 
 	m=load([p.local(i).saveFolder 'synapses.mat']); % change to p.local(i).synapseFile
 	scores = single(m.scores);
+        m = load([p.local(i).probFile]);
+        prob = m.prob;
+        scores(prob>0.5,:)=-Inf;
 	m=load(p.local(i).edgeFile);
 	edges = m.edges;
 	boutonIDs = vertcat(boutonIDs,edges(scores>0));
@@ -22,6 +25,6 @@ boutonCoMs = globalCoMList(boutonIDs,:);
 
 boutons.boutonIDs = boutonIDs;
 boutons.boutonCoMs = boutonCoMs;
-save([p.saveFolder 'Boutons.mat'],'boutons');
+save(['/gaba/u/sahilloo/gitlab/Boutons.mat'],'boutons');
 
 end
