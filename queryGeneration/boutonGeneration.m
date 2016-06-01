@@ -17,7 +17,7 @@ for i =1:length(cubeIndices)
 	edges = m.edges;
 	boutonIDs = vertcat(boutonIDs,edges(scores>0));
 end
-
+boutonIDs = unique(boutonIDs);
 %load com.mat to get CoMs of boutonIDs
 load([p.saveFolder 'globalCoMList.mat']);
 
