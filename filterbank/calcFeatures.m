@@ -33,8 +33,6 @@ for l=1:length(parameter.feature.input)
         end
     end
 
-    % Normalize data same way as before the classification
-    imfeat = parameter.norm.func(single(imfeat));
     
     for m=1:size(parameter.filter,2)
         currentFilter = parameter.filter{m};
