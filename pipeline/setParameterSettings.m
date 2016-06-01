@@ -11,19 +11,28 @@ function [p, pT] = setParameterSettings(p)
         p.raw.root = [p.raw.root, filesep];
         warning('Added trailing slash to p.raw.root');
     end
+    
+    if ~isfield(p.raw,'dtype')
+        p.raw.dtype = 'uint8';
+    end
 
     % Size of local segmentation and local graph construction
     p.tileSize =  [512; 512; 256];
+    
     % Check whether bounding box meets requirements and fix if not
     p.bbox = fixBoundingBox(p);
+    
     % Add a temp folder for storing intermediate results
     p.tempFolder = [p.saveFolder 'temp/'];
+    
     % Overlap between tiles in segmentation for gloablization
     p.tileBorder = [-256 256; -256 256; -128 128];
     p.tiles = (p.bbox(:,2) - p.bbox(:,1) + 1) ./ p.tileSize;
+    
     % Which function to use to normalize data to zero mean and one std
     [meanVal, stdVal] = determineMeanAndStdOfData(p);
     p.norm.func = @(x)normalizeStack(x,meanVal,stdVal);
+    
     % Which classifier to use
     p.cnn.dateStrings = '20130516T204040';
     p.cnn.iter = 8; 
@@ -31,15 +40,21 @@ function [p, pT] = setParameterSettings(p)
     p.cnn.first = ['/gaba/u/mberning/results/parameterSearch/' p.cnn.dateStrings ...
         '/iter' num2str(p.cnn.iter, '%.2i') '/gpu' num2str(p.cnn.gpu, '%.2i') '/saveNet0000000001.mat'];
     p.cnn.GPU = false;
+    
     % Function to use for classification
     p.class.func = @bigFwdPass;
+    
     % Location to store CNN classification
     p.class.root = [p.saveFolder 'class/'];
     p.class.prefix = p.raw.prefix;
+    p.class.dtype = 'single';
+    
     % Function to use for segmentation
     p.seg.func = @(x)watershedSeg_v1_cortex(x,{p.seg.threshold 10});
     p.seg.root = [p.saveFolder 'globalSeg/'];
     p.seg.prefix = p.raw.prefix;
+    p.seg.dtype = 'uint32';
+    
     % Specify arguments for filterbank applied to raw and aff data each
     p.filter = {{'sortedeigenvalueshessian' [3 5] []}...
         {'gaussiansmoothedgradmagnitude' [3 5] []}...
@@ -47,10 +62,13 @@ function [p, pT] = setParameterSettings(p)
         {'sortedeigenvaluesstructure' [3 5] [5 7]}...
         {'laplaceofgaussian' [3 5] []}...
         {'differenceofgaussians' [3 5] []}};
+    
     % Feature p
     p.feature.root = [p.saveFolder 'features/'];
+    
     % Function to use for feature calculation
     p.feature.func = @calcFeatures;
+    
     % Choose to filter 'raw' and 'class' data
     p.feature.input = {'raw', 'aff'};
     % Correspondence p
@@ -63,6 +81,7 @@ function [p, pT] = setParameterSettings(p)
     p.gp.normValues = [p.gp.stateFolder 'normValues.mat'];
     p.gp.hyperParameter = [p.gp.stateFolder 'hyperParameter.mat'];
     p.gp.initalGroundTruth = [p.gp.stateFolder 'initalGroundTruth.mat'];
+    
     % Define cutoff(s) for writing to knowledge DB 
     p.gp.upperCut = .95;
     p.gp.lowerCut = .15;
@@ -218,10 +237,10 @@ function [meanVal, stdVal] = determineMeanAndStdOfData(p)
         stdVal(i) = std(raw(:));
     end
     
-    if any(meanVal == 0) | any(stdVal == 0)
+    if any(meanVal == 0) || any(stdVal == 0)
         error('Found cube with 0 mean or standard deviation in bounding box');
-    elseif any(meanVal == 0) | any(stdVal == 0)
-        nZero = max(length(find(meanVal == 0)),length(find(stdVal == 0)))
+    elseif any(meanVal == 0) || any(stdVal == 0)
+        nZero = max(length(find(meanVal == 0)),length(find(stdVal == 0)));
         warning('Found %d of %d randomly chosen cubes with 0 mean or standard deviation in bounding box',nZero,nrCubesToSample);
     end
 
