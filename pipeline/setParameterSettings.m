@@ -32,8 +32,7 @@ function [p, pT] = setParameterSettings(p)
     % Which function to use to normalize data to zero mean and one std +
     % additional utility of computing a dataset specific map function p.Mapper for
     % histogram equalization
-    [meanVal, stdVal, p.Mapper] = determineMeanStdAndMapOfData(p);
-    p.norm.func = @(x)normalizeStack(x,meanVal,stdVal);
+    [p.meanVal, p.stdVal, p.Mapper] = determineMeanStdAndMapOfData(p);
     
     % Which classifier to use
     p.cnn.dateStrings = '20130516T204040';
