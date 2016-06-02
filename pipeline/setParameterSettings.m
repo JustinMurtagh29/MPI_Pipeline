@@ -265,5 +265,5 @@ function [meanVal, stdVal, mapper] = determineMeanStdAndMapOfData(p)
     CDF = [cumulProb; myVals];
     
     % Create a dataset-specific mapping function based on the CDF
-    mapper = fit(myVals,cumulProb,'linearinterp');
+    mapper = fit(myVals',cumulProb','linearinterp');
 end
