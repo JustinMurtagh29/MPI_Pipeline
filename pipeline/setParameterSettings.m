@@ -236,7 +236,7 @@ function [meanVal, stdVal, mapper] = determineMeanStdAndMapOfData(p)
         lowerLeft = [randi(sizeOfRoi(1)-99); randi(sizeOfRoi(2)-99); randi(sizeOfRoi(3)-99)];
 	lowerLeft = lowerLeft + p.bbox(:,1) - 1;
         bbox = cat(2,lowerLeft, lowerLeft + 99);
-        raw = loadRawData(p.raw.root, p.raw.prefix, bbox, false);
+        raw = loadRawData(p.raw.root, p.raw.prefix, bbox);
         meanVal(i) = mean(raw(:));
         stdVal(i) = std(raw(:));
         % Accumulate intensity values
