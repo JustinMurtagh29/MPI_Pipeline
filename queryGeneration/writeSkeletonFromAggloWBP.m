@@ -3,6 +3,7 @@ function skel = writeSkeletonFromAggloWBP(graph, com, cc, excluded, seedIds, que
     c = 1; % counter for trees in skeleton
     nodeId = 1; % counter for nodes in current skeleton
     nodeOffsetThisSkel = 0;
+    parameters.scale = [11.24, 11.24, 30]; % added by AG
     % Set colors to be used
     colors = distinguishable_colors(length(cc), [0 0 0; 1 1 1]);
     colors(:,4) = 0;
@@ -38,7 +39,7 @@ function skel = writeSkeletonFromAggloWBP(graph, com, cc, excluded, seedIds, que
                 skel{c}.nodesAsStruct(nodeId-nodeOffsetThisSkel) = generateNodeAsStruct(nodeId, com(uniqueIds(i),:), 10, uniqueReasons{i});
                 skel{c}.nodes(nodeId-nodeOffsetThisSkel,:) = [com(uniqueIds(i),:) 10];
                 nodeId = nodeId + 1;
-                [~, minIdx] = min(pdist2(bsxfun(@times, com(uniqueIds(i),:), [11.24 11.24 28]), bsxfun(@times, theseCoM, [11.24 11.24 28])));
+                [~, minIdx] = min(pdist2(bsxfun(@times, double(com(uniqueIds(i),:)), parameters.scale), bsxfun(@times, double(theseCoM), parameters.scale))); %changed to parameters.scale
                 % Generate comment for skeleton based on agglomeration
                 theseEdges(end+1,:) = [minIdx size(theseCoM,1)+i];
             end
@@ -52,10 +53,10 @@ end
 
 function skel = initializeSkeleton()
     % Set parameters
-    skel{1}.parameters.experiment.name='2012-09-28_ex145_07x2_segNew';
+    skel{1}.parameters.experiment.name='P14_L4_AG_15-09-2015';
     skel{1}.parameters.scale.x = '11.24';
     skel{1}.parameters.scale.y = '11.24';
-    skel{1}.parameters.scale.z = '28';
+    skel{1}.parameters.scale.z = '30';
     skel{1}.parameters.offset.x = '0';
     skel{1}.parameters.offset.y = '0';
     skel{1}.parameters.offset.z = '0';
