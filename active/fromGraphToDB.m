@@ -31,7 +31,7 @@ toc
 display('Mitochondria detetcion:');
 tic;
 % Mitochondria detektieren
-raw = loadRawData(p.raw.root, p.raw.prefix, p.bboxBig, 0); 
+raw = loadRawData(p.raw.root, p.raw.prefix, p.bboxBig); 
 mito = mitoDetection(raw, segNew);
 mito = uint8(mito);
 toc

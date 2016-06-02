@@ -35,7 +35,7 @@ job = startCPU(functionH, inputCell, 'segForMovie');
 Cluster.waitForJob(job);
 
 % Now low raw data
-raw = loadRawData(p.raw.root, p.raw.prefix, bbox, false);
+raw = loadRawData(p.raw.root, p.raw.prefix, bbox);
 
 % Normalize to [0 1] range as this is what matlab expects of single images
 raw = raw ./ max(raw(:));
