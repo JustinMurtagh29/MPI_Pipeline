@@ -29,12 +29,12 @@ function [p, pT] = setParameterSettings(p)
     p.tileBorder = [-256 256; -256 256; -128 128];
     p.tiles = (p.bbox(:,2) - p.bbox(:,1) + 1) ./ p.tileSize;
     
+    % Which Mapper to use to map to another dataset (07x2 for now)
+    p.OtherDatasetMapper = load('./07x2Statistics/Mapper07x2.mat')
+    
     % Determine mean and std of dataset, both before and after matching to another is applied.
     % Also determine MyDatasetMapper, a function mapping pixel intesity to value of CDF of the raw data.
     [p.meanVal, p.stdVal, p.eqMeanVal, p.eqStdVal, p.MyDatasetMapper] = determineMeanStdAndMapOfData(p);
-    
-    % Which Mapper to use to map to another dataset (07x2 for now)
-    p.OtherDatasetMapper = load('./07x2Statistics/Mapper07x2.mat')
     
     % Which classifier to use
     p.cnn.dateStrings = '20130516T204040';
@@ -277,7 +277,7 @@ function [meanVal, stdVal, eqMeanVal, eqStdVal, mapper] = determineMeanStdAndMap
         lowerLeft = lowerLeft + p.bbox(:,1) - 1;
         bbox = cat(2,lowerLeft, lowerLeft + 99);
         raw = loadRawData(p.raw.root, p.raw.prefix, bbox, false);
-        rawMapped = p.Mapper07x2(p.Mapper(raw));
+        rawMapped = p.OtherDatasetMapper(mapper(raw));
         eqMeanVal(i) = mean(rawMapped(:));
         eqStdVal(i) = std(rawMapped(:));
     end
