@@ -14,7 +14,7 @@ end
 functionH = @onlyFwdPass3DonKnossosFolder;
 tempClass.root = [p.tempFolder 'classForMovie/'];
 tempClass.prefix = 'classForMovie';
-inputCell{1} = {p.cnn.first, p.cnn.GPU, p.raw, tempClass, bbox, p};
+inputCell{1} = {p.cnn.first, p.cnn.GPU, p.raw, tempClass, bbox, p.norm.func};
 
 if flag == 1 % flag preventing the calculation classification for multiple movies
     if p.cnn.GPU
