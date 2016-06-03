@@ -1,6 +1,9 @@
 function sampling07x2
-
-    %load parameter
+    % Function which was used to generate Mapper 07x2.
+    % Feel free to run another sampling round with different number of cubes to sample.
+    % Also feel free to run on a different dataset but beware of the 07x2-specific outlier.
+    
+    % load parameter
     load('/gaba/u/mberning/results/pipeline/20151111T183414/allParameter.mat');
     
     % Specify how many 100^3 voxel cubes to sample
@@ -20,10 +23,13 @@ function sampling07x2
         % Accumulate intensity values
         counts = histc(raw(:), MyVals);
         accu = accu + counts;
+        
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        % Take care of 07x2 specific outlier, which was introduced during blood vessel masking.
+        % Remove when sampling different datasets!
         accu(122) = (accu(121) + accu(123)) / 2;
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     end
-    
-    ClassicPDF = [accu'; MyVals];
     
     % Compute CDF
     N = sum(accu);
@@ -38,12 +44,12 @@ function sampling07x2
     % Consolidate CDF to solve the interpolation problem
     [ConCumulProb,ConMyVals,ind] = consolidator(CDF(1,:),CDF(2,:));
     
-    % Save consolidated CDF
-    ConCDF = [ConCumulProb,ConMyVals];
-    
-    
     % Create an inverse mapping function
-    InverseMapper = fit(ConCumulProb',ConMyVals','linearinterp');
+    Mapper07x2 = fit(ConCumulProb',ConMyVals','linearinterp');
+    
+    % 
+
+end
     
     
     
@@ -326,6 +332,6 @@ end
 if charflag
   xcon=char(xcon);
 end
-    
-    
+
+end
     
