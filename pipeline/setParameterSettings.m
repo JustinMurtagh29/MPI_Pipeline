@@ -30,7 +30,8 @@ function [p, pT] = setParameterSettings(p)
     p.tiles = (p.bbox(:,2) - p.bbox(:,1) + 1) ./ p.tileSize;
     
     % Which Mapper to use to map to another dataset (07x2 for now)
-    p.OtherDatasetMapper = load('./07x2Statistics/Mapper07x2.mat')
+    p.OtherDatasetMapper = load('./07x2Statistics/Mapper07x2.mat');
+    p.OtherDatasetMapper = p.OtherDatasetMapper.Mapper07x2;
     
     % Determine mean and std of dataset, both before and after matching to another is applied.
     % Also determine MyDatasetMapper, a function mapping pixel intesity to value of CDF of the raw data.
