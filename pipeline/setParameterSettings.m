@@ -266,7 +266,7 @@ function [meanVal, stdVal, eqMeanVal, eqStdVal, mapper] = determineMeanStdAndMap
     CDF = [cumulProb; myVals];
     
     % Create a dataset-specific mapping function based on the CDF
-    mapper = fit(myVals,cumulProb,'linearinterp');
+    mapper = fit(myVals',cumulProb','linearinterp');
     
     % Determine mean and standard deviation after remapping is applied (to
     % be used for normalization if desired later).
