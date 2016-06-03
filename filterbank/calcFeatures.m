@@ -22,7 +22,7 @@ bbox = parameter.local(sub(1),sub(2),sub(3)).bboxSmall + [-10 10; -10 10; -10 10
 
 for l=1:length(parameter.feature.input)
     if strcmp(parameter.feature.input{l}, 'raw')
-        imfeat = loadRawData(parameter.raw.root, parameter.raw.prefix, bbox);
+        imfeat = loadRawData(parameter.raw.root, parameter.raw.prefix, bbox, 1);
     elseif strcmp(parameter.feature.input{l}, 'aff')
         % Add Manuel: Here we need to differentiate between densly labeled regions and normal regions at least if we want to process LR beforehand (for training GP)
         if isfield(parameter.local(sub(1),sub(2),sub(3)), 'class')

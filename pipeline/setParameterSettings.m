@@ -29,10 +29,9 @@ function [p, pT] = setParameterSettings(p)
     p.tileBorder = [-256 256; -256 256; -128 128];
     p.tiles = (p.bbox(:,2) - p.bbox(:,1) + 1) ./ p.tileSize;
     
-    % Which function to use to normalize data to zero mean and one std +
-    % additional utility of computing a dataset specific map function p.Mapper for
-    % histogram equalization
-    [p.meanVal, p.stdVal, p.Mapper] = determineMeanStdAndMapOfData(p);
+    % Which function to use to normalize data to zero mean and one std
+    [meanVal, stdVal] = determineMeanAndStdOfData(p);
+    p.norm.func = @(x)normalizeStack(x,meanVal,stdVal);
     
     % Which classifier to use
     p.cnn.dateStrings = '20130516T204040';
@@ -220,27 +219,22 @@ function bbox = fixBoundingBox(p)
 
 end
 
-function [meanVal, stdVal, mapper] = determineMeanStdAndMapOfData(p)
+function [meanVal, stdVal] = determineMeanAndStdOfData(p)
 
     display('Sampling mean and standard deviation values for CNN normalization');
     % How many 100^3 samples to use for determination of normalization
     % constants, 100 seems rather too much but ok as only takes 5 min
-    nrCubesToSample = 200;
+    nrCubesToSample = 50;
     sizeOfRoi = p.bbox(:,2) - p.bbox(:,1) + 1;
     meanVal = zeros(nrCubesToSample,1);
     stdVal = zeros(nrCubesToSample,1);
-    myVals = 0:255;
-    accu = zeros(256,1);
     for i=1:nrCubesToSample
         lowerLeft = [randi(sizeOfRoi(1)-99); randi(sizeOfRoi(2)-99); randi(sizeOfRoi(3)-99)];
 	lowerLeft = lowerLeft + p.bbox(:,1) - 1;
         bbox = cat(2,lowerLeft, lowerLeft + 99);
-        raw = loadRawData(p.raw.root, p.raw.prefix, bbox);
+        raw = loadRawData(p.raw.root, p.raw.prefix, bbox, false);
         meanVal(i) = mean(raw(:));
         stdVal(i) = std(raw(:));
-        % Accumulate intensity values
-        counts = histc(raw(:), myVals);
-        accu = accu + counts;
     end
     
     if any(meanVal == 0) || any(stdVal == 0)
@@ -252,17 +246,5 @@ function [meanVal, stdVal, mapper] = determineMeanStdAndMapOfData(p)
 
     meanVal = median(meanVal);
     stdVal = median(stdVal);
-    
-    % Compute CDF
-    N = sum(accu);
-    cumulProb = zeros(1,256);
-    tempCum = 0;
-    for i = 1:256
-        tempCum = tempCum + accu(i);
-        cumulProb(1,i) = tempCum/N;
-    end
-    CDF = [cumulProb; myVals];
-    
-    % Create a dataset-specific mapping function based on the CDF
-    mapper = fit(myVals',cumulProb','linearinterp');
+
 end
