@@ -17,7 +17,7 @@ for i=1:length(X)-1
     for j=1:length(Y)-1
         for k=1:length(Z)-1
 	        idx = sub2ind([length(X)-1 length(Y)-1 length(Z)-1], i, j, k);
-            inputCell{idx} = {p.cnn.first, p.cnn.GPU, p.raw, p.class, [X(i) X(i+1)-1; Y(j) Y(j+1)-1; Z(k) Z(k+1)-1], p.norm.func};
+            inputCell{idx} = {p.cnn.first, p.cnn.GPU, p.raw, p.class, [X(i) X(i+1)-1; Y(j) Y(j+1)-1; Z(k) Z(k+1)-1], p};
         end
     end
 end
