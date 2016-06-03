@@ -277,7 +277,7 @@ function [meanVal, stdVal, eqMeanVal, eqStdVal, mapper] = determineMeanStdAndMap
         lowerLeft = lowerLeft + p.bbox(:,1) - 1;
         bbox = cat(2,lowerLeft, lowerLeft + 99);
         raw = loadRawData(p.raw.root, p.raw.prefix, bbox, false);
-        rawMapped = p.Mapper07x2(p.Mapper(raw);
+        rawMapped = p.Mapper07x2(p.Mapper(raw));
         eqMeanVal(i) = mean(rawMapped(:));
         eqStdVal(i) = std(rawMapped(:));
     end
