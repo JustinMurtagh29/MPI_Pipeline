@@ -29,10 +29,12 @@ function [p, pT] = setParameterSettings(p)
     p.tileBorder = [-256 256; -256 256; -128 128];
     p.tiles = (p.bbox(:,2) - p.bbox(:,1) + 1) ./ p.tileSize;
     
-    % Which function to use to normalize data to zero mean and one std +
-    % additional utility of computing a dataset specific map function p.Mapper for
-    % histogram equalization
-    [p.meanVal, p.stdVal, p.Mapper] = determineMeanStdAndMapOfData(p);
+    % Determine mean and std of dataset, both before and after matching to another is applied.
+    % Also determine MyDatasetMapper, a function mapping pixel intesity to value of CDF of the raw data.
+    [p.meanVal, p.stdVal, p.eqMeanVal, p.eqStdVal, p.MyDatasetMapper] = determineMeanStdAndMapOfData(p);
+    
+    % Which Mapper to use to map to another dataset (07x2 for now)
+    p.OtherDatasetMapper = load('./07x2Statistics/Mapper07x2.mat')
     
     % Which classifier to use
     p.cnn.dateStrings = '20130516T204040';
@@ -220,7 +222,7 @@ function bbox = fixBoundingBox(p)
 
 end
 
-function [meanVal, stdVal, mapper] = determineMeanStdAndMapOfData(p)
+function [meanVal, stdVal, eqMeanVal, eqStdVal, mapper] = determineMeanStdAndMapOfData(p)
 
     display('Sampling mean and standard deviation values for CNN normalization');
     % How many 100^3 samples to use for determination of normalization
@@ -233,9 +235,9 @@ function [meanVal, stdVal, mapper] = determineMeanStdAndMapOfData(p)
     accu = zeros(256,1);
     for i=1:nrCubesToSample
         lowerLeft = [randi(sizeOfRoi(1)-99); randi(sizeOfRoi(2)-99); randi(sizeOfRoi(3)-99)];
-	lowerLeft = lowerLeft + p.bbox(:,1) - 1;
+        lowerLeft = lowerLeft + p.bbox(:,1) - 1;
         bbox = cat(2,lowerLeft, lowerLeft + 99);
-        raw = loadRawData(p.raw.root, p.raw.prefix, bbox);
+        raw = loadRawData(p.raw.root, p.raw.prefix, bbox, false);
         meanVal(i) = mean(raw(:));
         stdVal(i) = std(raw(:));
         % Accumulate intensity values
@@ -264,5 +266,23 @@ function [meanVal, stdVal, mapper] = determineMeanStdAndMapOfData(p)
     CDF = [cumulProb; myVals];
     
     % Create a dataset-specific mapping function based on the CDF
-    mapper = fit(myVals',cumulProb','linearinterp');
+    mapper = fit(myVals,cumulProb,'linearinterp');
+    
+    % Determine mean and standard deviation after remapping is applied (to
+    % be used for normalization if desired later).
+    eqMeanVal = zeros(nrCubesToSample,1);
+    eqStdVal = zeros(nrCubesToSample,1);
+    for i=1:nrCubesToSample
+        lowerLeft = [randi(sizeOfRoi(1)-99); randi(sizeOfRoi(2)-99); randi(sizeOfRoi(3)-99)];
+        lowerLeft = lowerLeft + p.bbox(:,1) - 1;
+        bbox = cat(2,lowerLeft, lowerLeft + 99);
+        raw = loadRawData(p.raw.root, p.raw.prefix, bbox, false);
+        rawMapped = p.Mapper07x2(p.Mapper(raw);
+        eqMeanVal(i) = mean(rawMapped(:));
+        eqStdVal(i) = std(rawMapped(:));
+    end
+    
+    eqMeanVal = median(eqMeanVal);
+    eqStdVal = median(eqStdVal);
+    
 end
