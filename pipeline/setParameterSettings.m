@@ -32,6 +32,7 @@ function [p, pT] = setParameterSettings(p)
     % Which function to use to normalize data to zero mean and one std
     [meanVal, stdVal] = determineMeanAndStdOfData(p);
     p.norm.func = @(x)normalizeStack(x,meanVal,stdVal);
+    p.norm.func = @(x)normalizeStack(x,meanVal,stdVal);
     
     % Which classifier to use
     p.cnn.dateStrings = '20130516T204040';
