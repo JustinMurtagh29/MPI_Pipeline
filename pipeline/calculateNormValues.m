@@ -4,7 +4,7 @@ function calculateNormValues(p)
 display('Calculating normValues for GP by sampling weights in random cubes');
 normFile = [p.saveFolder 'state/normValues.mat'];
 
-nrCubesToSample = 50;
+nrCubesToSample = 100;
 idxCubesToSample = randi(numel(p.local),nrCubesToSample,1);
 X = [];
 for i=1:nrCubesToSample
