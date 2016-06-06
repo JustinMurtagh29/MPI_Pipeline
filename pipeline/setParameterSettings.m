@@ -80,7 +80,7 @@ function [p, pT] = setParameterSettings(p)
     p.gp.stateFolder = [p.saveFolder 'state/'];
     p.gp.normValues = [p.gp.stateFolder 'normValues.mat'];
     p.gp.hyperParameter = [p.gp.stateFolder 'hyperParameter.mat'];
-    p.gp.initalGroundTruth = [p.gp.stateFolder 'initalGroundTruth.mat'];
+    p.gp.initialGroundTruth = [p.gp.stateFolder 'initialGroundTruth.mat'];
     
     % Define cutoff(s) for writing to knowledge DB 
     p.gp.upperCut = .95;
@@ -233,13 +233,12 @@ function [meanVal, stdVal] = determineMeanAndStdOfData(p)
 	lowerLeft = lowerLeft + p.bbox(:,1) - 1;
         bbox = cat(2,lowerLeft, lowerLeft + 99);
         raw = loadRawData(p.raw.root, p.raw.prefix, bbox);
+        raw = single(raw);
         meanVal(i) = mean(raw(:));
         stdVal(i) = std(raw(:));
     end
     
     if any(meanVal == 0) || any(stdVal == 0)
-        error('Found cube with 0 mean or standard deviation in bounding box');
-    elseif any(meanVal == 0) || any(stdVal == 0)
         nZero = max(length(find(meanVal == 0)),length(find(stdVal == 0)));
         warning('Found %d of %d randomly chosen cubes with 0 mean or standard deviation in bounding box',nZero,nrCubesToSample);
     end

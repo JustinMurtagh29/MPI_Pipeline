@@ -36,7 +36,7 @@ Cluster.waitForJob(job);
 
 % Now low raw data
 raw = loadRawData(p.raw.root, p.raw.prefix, bbox);
-
+raw = single(raw);
 % Normalize to [0 1] range as this is what matlab expects of single images
 raw = raw ./ max(raw(:));
 
