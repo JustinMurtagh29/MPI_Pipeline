@@ -25,6 +25,6 @@ boutonCoMs = globalCoMList(boutonIDs,:);
 
 boutons.boutonIDs = boutonIDs;
 boutons.boutonCoMs = boutonCoMs;
-save(['/gaba/u/sahilloo/gitlab/Boutons.mat'],'boutons');
+save([p.saveFolder 'Boutons.mat'],'boutons');
 
 end
