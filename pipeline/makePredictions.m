@@ -1,7 +1,7 @@
 function job = makePredictions(parameter,mode)
 
 %copy GP state variables to results/state
-if ~exist(parameter.gp.hyperParameter,'file') || ~exist(parameter.gp.initalGroundTruth,'file')
+if ~exist(parameter.gp.hyperParameter,'file') || ~exist(parameter.gp.initialGroundTruth,'file')
 me = mfilename;
 mydir = which(me);
 mydir = mydir(1:end-2-numel(me)); 
