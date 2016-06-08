@@ -18,7 +18,7 @@ load(parameter.local(sub(1),sub(2),sub(3)).segmentFile);
 
 % extract voxel ids
 borders = arrayfun(@(s) {s.PixelIdxList}, borders(:));
-segments = arrayfun(@(s} {s.PixelIdxList}, segments(:));
+segments = arrayfun(@(s) {s.PixelIdxList}, segments(:));
 
 % Define bounding box, add border so that 3D filter do not 
 bbox = parameter.local(sub(1),sub(2),sub(3)).bboxSmall + [-10 10; -10 10; -10 10];
