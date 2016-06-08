@@ -25,7 +25,7 @@ function extend(param, cubeIdx)
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     
     % config
-    ballRadiusInNm = 160;
+    ballRadiusInNm = 100;
     
     % get parameters
     cubeParam = param.local(cubeIdx);
