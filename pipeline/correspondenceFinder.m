@@ -3,7 +3,7 @@ function job = correspondenceFinder(p)
 % segmentation cubes using 2 planes of overlap
 
 % list of tuples of adjacent cubes
-adjCubes = getOverlaps(p.tiles));
+adjCubes = getOverlaps(p.tiles);
 
 % For every tuple of adjacent cubes: calculate correspondences of segmentation IDs between cubes using overlap
 for i = 1:size(adjCubes,1)
