@@ -4,6 +4,9 @@
 if ~exist('PIPELINE_READY', 'var') || ~PIPELINE_READY
     error('Please start MATLAB inside the pipeline directory');
 end
+if ~strcmp(version('-release'), '2015b')
+    error('Please run the pipeline code with Matlab R2015b, see README.md');
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%% EDIT BELOW THIS LINE %%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -11,8 +14,9 @@ end
 % Make sure you have WRITE access
 p.saveFolder = '/gaba/u/mberning/results/pipeline/test/';
 
-% Define ROI, make sure no black (surround) pixel are within this bbox
+% Define region of interest
 % This can be copied directly from webKNOSSOS bounding box field
+% Make sure p.bbox is always 100 pixels away from any black region in X-Y (50 in Z)
 p.bbox_wK = [1153, 769, 129, 7808, 5376, 3200]; 
   
 % Define directory and file prefix and voxel size for KNOSSOS hierachy
