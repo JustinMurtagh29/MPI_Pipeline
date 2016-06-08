@@ -97,7 +97,7 @@ function calcFeatures(param, cubeIdx)
     outStruct.featNames = featNames;
     
     outFile = [cubeDir, 'bordersExtFeats.mat'];
-    save(outFile, '-struct', outStruct);
+    save(outFile, '-struct', 'outStruct');
 end
 
 function data = loadInputData(param, inputName, box)
