@@ -70,7 +70,8 @@ function [p, pT] = setParameterSettings(p)
     p.feature.func = @calcFeatures;
     
     % Choose to filter 'raw' and 'class' data
-    p.feature.input = {'raw', 'aff'};
+    p.feature.input = {'raw', 'aff', 'mito'};
+
     % Correspondence p
     p.correspondence.overlap = 1; % overlap of local segmentation to compare on each side around a face
     p.correspondence.saveFolder = [p.tempFolder 'correspondences/'];
