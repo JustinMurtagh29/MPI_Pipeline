@@ -69,7 +69,7 @@ function extend(param, cubeIdx)
     
     % Prepare result
     outStruct = struct;
-    outStruct.borders = borderExt;
+    outStruct.borders = bordersExt;
     
     outFile = [cubeDir, 'edgesExt.mat'];
     save(outFile, '-struct', outStruct);
