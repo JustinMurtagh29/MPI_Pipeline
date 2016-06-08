@@ -15,7 +15,10 @@ end
 % Load pixel list for borders and segments
 load(parameter.local(sub(1),sub(2),sub(3)).borderFile);
 load(parameter.local(sub(1),sub(2),sub(3)).segmentFile);
-borders = borders'; % 1xN struct to Nx1 struct
+
+% extract voxel ids
+borders = arrayfun(@(s) {s.PixelIdxList}, borders(:));
+segments = arrayfun(@(s} {s.PixelIdxList}, segments(:));
 
 % Define bounding box, add border so that 3D filter do not 
 bbox = parameter.local(sub(1),sub(2),sub(3)).bboxSmall + [-10 10; -10 10; -10 10];
