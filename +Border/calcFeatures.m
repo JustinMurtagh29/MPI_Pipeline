@@ -115,7 +115,7 @@ function data = loadInputData(param, inputName, box)
             
         case 'mito'
             % mitochondria
-            error('Not yet implemented');
+            data = loadMitoData(param, box);
             
         otherwise
             error('Invalid feature input');
