@@ -27,7 +27,7 @@ function calcFeatures(param, cubeIdx)
     box(:, 2) = box(:, 2) + padSize;
 
     % prepare output
-    featVals = nan(numel(borders), 1);
+    featVals = nan(numel(borders), 0);
     featNames = cell(0);
 
     inputs = param.feature.input;
