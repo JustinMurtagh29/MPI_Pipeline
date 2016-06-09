@@ -1,4 +1,5 @@
-function calcFeatures(param, cubeIdx)
+function [featVals, featNames] = ...
+        featuresTexture(param, cubeIdx, voxelIds)
     % calcFeatures(param, cubeIdx)
     %   Calculates texture features for the extended borders
     %   of a specified cube.
@@ -10,24 +11,20 @@ function calcFeatures(param, cubeIdx)
     % config
     padSize = 10;
     
-    % get important parameters
+    % get parameters
     cubeParams = param.local(cubeIdx);
-    cubeDir = cubeParams.saveFolder;
-
-    % Load pixel list for borders and segments
-    load([cubeDir, 'bordersExt.mat'], 'borders');
-
-    % reshape borders
-    borderSize = size(borders);
-    borders = borders(:);
+    box = cubeParams.bboxSmall;
 
     % add padding to avoid border effects
-    box = cubeParams.bboxSmall;
     box(:, 1) = box(:, 1) - padSize;
     box(:, 2) = box(:, 2) + padSize;
+    
+    % reshape borders
+    voxelIdsSize = size(voxelIds);
+    voxelIds = voxelIds(:);
 
     % prepare output
-    featVals = nan(numel(borders), 0);
+    featVals = nan(numel(voxelIds), 0);
     featNames = cell(0);
 
     inputs = param.feature.input;
@@ -70,7 +67,7 @@ function calcFeatures(param, cubeIdx)
 
                     % compute features
                     [newFeatVals, newFeatNames] = ...
-                        featureDesign(filteredData{p}, borders);
+                        featureDesign(filteredData{p}, voxelIds);
 
                     % build feature names
                     newFeatNamePrefix = sprintf( ...
@@ -89,15 +86,7 @@ function calcFeatures(param, cubeIdx)
     
     % restore shape of borders
     featVals = num2cell(featVals, 2);
-    featVals = reshape(featVals, borderSize);
-    
-    % prepare output
-    outStruct = struct;
-    outStruct.feats = featVals;
-    outStruct.featNames = featNames;
-    
-    outFile = [cubeDir, 'bordersExtFeats.mat'];
-    save(outFile, '-struct', 'outStruct');
+    featVals = reshape(featVals, voxelIdsSize);
 end
 
 function data = loadInputData(param, inputName, box)
