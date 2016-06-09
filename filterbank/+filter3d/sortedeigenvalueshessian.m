@@ -50,6 +50,7 @@ function imfeat = sortedeigenvalueshessian(I, siz)
     
     % compute eigenvalues
     Ieigen = eig3S(Ieigen)';
+    Ieigen = single(Ieigen);
     
     % Eigen values are sorted based on their absolute values to be in consistency with classifiers trained on previously used 'eig' function
     [~, sortIds] = sort(abs(Ieigen), 2);
