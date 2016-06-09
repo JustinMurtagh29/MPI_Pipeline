@@ -4,7 +4,6 @@ function [weights, weightNames] = featuresShape(params, voxelIds)
     %   Manuel Berning <manuel.berning@brain.mpg.de>
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     
-    
     voxelIdsSize = size(voxelIds);
     voxelIds = voxelIds(:);
     
@@ -51,7 +50,7 @@ function weights = main(cubeSize, voxelIds)
     pcFracs = latent ./ sum(latent);
     
     % calculate features
-    weights(1) = log(objSize);
+    weights(1) = log(voxelCount);
     weights(2) = pcFracs(1);
     weights(3) = pcFracs(2);
     weights(4) = pcFracs(3);
