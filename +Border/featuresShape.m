@@ -35,6 +35,12 @@ end
 function weights = main(cubeSize, voxelIds)
     voxelCount = numel(voxelIds);
     voxelList = nan(voxelCount, 3);
+    
+    % prepare output
+    weights = zeros(1, 8);
+    
+    % skip small objects
+    if voxelCount <= 3; return; end;
 
     [voxelList(:, 1), voxelList(:, 2), voxelList(:, 3)] = ...
         ind2sub(cubeSize, voxelIds);
@@ -43,12 +49,6 @@ function weights = main(cubeSize, voxelIds)
     [~, ~, latent] = pca( ...
         voxelList, 'Economy', true);
     pcFracs = latent ./ sum(latent);
-    
-    % prepare output
-    weights = zeros(1, 8);
-    
-    % skip small objects
-    if objSize <= 3; return; end;
     
     % calculate features
     weights(1) = log(objSize);
