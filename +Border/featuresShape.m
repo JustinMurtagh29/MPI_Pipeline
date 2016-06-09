@@ -1,4 +1,17 @@
-function [weights, weightNames] = featuresShape(params, voxelIds)
+function [featVals, featNames] = ...
+        featuresShape(cubeSize, voxelIds)
+    % featuresShape
+    %   Calculates a couple of simple shape features based
+    %   on the specified lists of linear voxel IDs.
+    %
+    % cubeSize
+    %   Size of the segmentation cube from which the linear
+    %   voxel IDs in 'voxelIds' were extracted.
+    %
+    % voxelIds
+    %   Cell array. Each cell containts the list of linear
+    %   voxel ids making up a region of interest.
+    %
     % Written by
     %   Benjamin Ehret <no-email-known>
     %   Manuel Berning <manuel.berning@brain.mpg.de>
@@ -7,20 +20,18 @@ function [weights, weightNames] = featuresShape(params, voxelIds)
     voxelIdsSize = size(voxelIds);
     voxelIds = voxelIds(:);
     
-    % prepare 
-    cubeSize = params.tileSize;
-    doFunc = @(ids) main(cubeSize, ids);
-    
     % do it!
-    weights = cellfun( ...
+    doFunc = @(ids) ...
+        main(cubeSize, ids);
+    featVals = cellfun( ...
         doFunc, voxelIds, ...
         'UniformOutput', false);
     
     % reshape output
-    weights = reshape( ...
-        weights, voxelIdsSize);
+    featVals = reshape( ...
+        featVals, voxelIdsSize);
     
-    weightNames = {
+    featNames = {
         'shape: logObjSize', ...
         'shape: pcFracs(1)', ...
         'shape: pcFracs(2)', ...

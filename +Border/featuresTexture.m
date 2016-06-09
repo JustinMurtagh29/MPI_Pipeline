@@ -1,8 +1,18 @@
 function [featVals, featNames] = ...
         featuresTexture(param, cubeIdx, voxelIds)
-    % calcFeatures(param, cubeIdx)
-    %   Calculates texture features for the extended borders
-    %   of a specified cube.
+    % featuresTexture(param, cubeIdx, voxelIds)
+    %   Calculates the texture features for all the regions
+    %   specified in 'voxelIds'.
+    %
+    % param
+    %   Parameters produced by 'setParameterSettings.m'
+    %
+    % cubeIdx
+    %   Linear index of the current cube
+    %
+    % voxelIds
+    %   Cell array. Each entry contains the list of linear
+    %   indices of all voxels making up the region.
     %
     % Written by
     %   Manuel Berning <manuel.berning@brain.mpg.de>

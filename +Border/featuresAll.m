@@ -1,4 +1,18 @@
 function featuresAll(param, cubeIdx)
+    % featuresAll(param, cubeIdx)
+    %   Calculates the features (texture and shape thus far)
+    %   for all extended borders in a specified segmentation
+    %   cube.
+    %
+    % param
+    %   Parameters returned by 'setParameterSettings'
+    %
+    % cubeIdx
+    %   Linear index of current cube
+    %
+    % Written by
+    %   Alessandro Motta <alessandro.motta@brain.mpg.de>
+    
     % get important parameters
     cubeParams = param.local(cubeIdx);
     cubeDir = cubeParams.saveFolder;
@@ -8,7 +22,7 @@ function featuresAll(param, cubeIdx)
     
     disp('Shape features...');
     [shapeFeatVals, shapeFeatNames] = ...
-        Border.featuresShape(param, borders);
+        Border.featuresShape(param.tileSize, borders);
     
     disp('Texture features...');
     [texFeatVals, texFeatNames] = ...
