@@ -27,7 +27,10 @@ function extend(param, cubeIdx)
     % config
     ballRadiusInNm = 100;
     
-    % get parameters
+    % get voxel size
+    voxelSize = param.kdb.settings.scale;
+    
+    % get cube-specific parameters
     cubeParam = param.local(cubeIdx);
     cubeDir = cubeParam.saveFolder;
     cubeBoxSmall = cubeParam.bboxSmall;
@@ -47,8 +50,8 @@ function extend(param, cubeIdx)
         borders, 'UniformOutput', false);
     
     % build ball offsets
-    [ballOffIds, ballSize] = ...
-        Border.extensionBall(param, ballRadiusInNm);
+    [ballOffIds, ballSize] = Border.extensionBall( ...
+        voxelSize, cubeBoxBig, ballRadiusInNm);
     ballPadding = (ballSize - 1) / 2;
     
     % prepare output
