@@ -1,10 +1,16 @@
-function [idsOff, ballSize] = extensionBall(param, radiusInNm)
-    % idsOff = extensionBall(rad)
+function [idsOff, ballSize] = ...
+        extensionBall(voxelSize, box, radiusInNm)
+    % [idsOff, ballSize] = ...
+    %     extensionBall(voxelSize, tileSize, radiusInNm)
     %   Computes the relative linear indices of all voxels
     %   contained in the ball with radius 'radiusInNm'.
     %
-    % param
-    %   Parameter structure.
+    % voxelSize
+    %   Vector with the voxel size in nano-metres.
+    %
+    % box
+    %    Bounding box in which the produced linear indices
+    %    will be valid.
     %
     % radiuInNm
     %   Ball radius in nano-metres.
@@ -12,8 +18,8 @@ function [idsOff, ballSize] = extensionBall(param, radiusInNm)
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     
-    tileSize = param.tileSize;
-    voxelSize = param.kdb.settings.scale;
+    % compute radius in voxels
+    boxSize = 1 + box(:, 2)' - box(:, 1)';
     radiusInVox = ceil(radiusInNm ./ voxelSize);
     
     % ATTENTION
@@ -30,6 +36,7 @@ function [idsOff, ballSize] = extensionBall(param, radiusInNm)
     % build indices
     linIds = find(mask);
     ballSize = size(mask);
+    
     [idsX, idsY, idsZ] = ...
         ind2sub(ballSize, linIds);
     
@@ -40,7 +47,7 @@ function [idsOff, ballSize] = extensionBall(param, radiusInNm)
     
     % build output
     idsOff = signedSubToInd( ...
-        tileSize, [idsX, idsY, idsZ]);
+        boxSize, [idsX, idsY, idsZ]);
     idsOff = int32(idsOff);
 end
 
