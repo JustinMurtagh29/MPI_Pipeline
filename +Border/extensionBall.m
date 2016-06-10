@@ -1,4 +1,4 @@
-function idsOff = extensionBall(param, radiusInNm)
+function [idsOff, ballSize] = extensionBall(param, radiusInNm)
     % idsOff = extensionBall(rad)
     %   Computes the relative linear indices of all voxels
     %   contained in the ball with radius 'radiusInNm'.
@@ -29,8 +29,9 @@ function idsOff = extensionBall(param, radiusInNm)
     
     % build indices
     linIds = find(mask);
+    ballSize = size(mask);
     [idsX, idsY, idsZ] = ...
-        ind2sub(size(mask), linIds);
+        ind2sub(ballSize, linIds);
     
     % center indices on zero
     idsX = idsX - (radiusInVox(1) + 1);
