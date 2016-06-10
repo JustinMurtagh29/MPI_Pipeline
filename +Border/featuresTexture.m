@@ -1,5 +1,5 @@
 function [featVals, featNames] = ...
-        featuresTexture(param, cubeIdx, voxelIds)
+        featuresTexture(param, box, voxelIds)
     % featuresTexture(param, cubeIdx, voxelIds)
     %   Calculates the texture features for all the regions
     %   specified in 'voxelIds'.
@@ -7,8 +7,9 @@ function [featVals, featNames] = ...
     % param
     %   Parameters produced by 'setParameterSettings.m'
     %
-    % cubeIdx
-    %   Linear index of the current cube
+    % box
+    %   Bounding box (in global coordinates) around the region
+    %   for which the filter responses should be calculated.
     %
     % voxelIds
     %   Cell array. Each entry contains the list of linear
@@ -20,10 +21,6 @@ function [featVals, featNames] = ...
     
     % config
     padSize = 10;
-    
-    % get parameters
-    cubeParams = param.local(cubeIdx);
-    box = cubeParams.bboxSmall;
 
     % add padding to avoid border effects
     box(:, 1) = box(:, 1) - padSize;

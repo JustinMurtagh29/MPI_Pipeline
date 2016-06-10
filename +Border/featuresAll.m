@@ -18,15 +18,19 @@ function featuresAll(param, cubeIdx)
     cubeDir = cubeParams.saveFolder;
 
     % load pixel list for borders and segments
-    load([cubeDir, 'bordersExt.mat'], 'borders');
+    data = load([cubeDir, 'bordersExt.mat']);
+    
+    % get data
+    box = data.box;
+    borders = data.borders;
     
     disp('Shape features...');
     [shapeFeatVals, shapeFeatNames] = ...
-        Border.featuresShape(param.tileSize, borders);
+        Border.featuresShape(box, borders);
     
     disp('Texture features...');
     [texFeatVals, texFeatNames] = ...
-        Border.featuresTexture(param, cubeIdx, borders);
+        Border.featuresTexture(param, box, borders);
     
     % sanity check
     assert(all(size(texFeatVals) == size(shapeFeatVals)));

@@ -1,12 +1,12 @@
 function [featVals, featNames] = ...
-        featuresShape(cubeSize, voxelIds)
+        featuresShape(box, voxelIds)
     % featuresShape
     %   Calculates a couple of simple shape features based
     %   on the specified lists of linear voxel IDs.
     %
-    % cubeSize
-    %   Size of the segmentation cube from which the linear
-    %   voxel IDs in 'voxelIds' were extracted.
+    % box
+    %   Bounding box (in global coordinates) for which the
+    %   linear voxel indices in 'voxelIds' are valid.
     %
     % voxelIds
     %   Cell array. Each cell containts the list of linear
@@ -20,9 +20,11 @@ function [featVals, featNames] = ...
     voxelIdsSize = size(voxelIds);
     voxelIds = voxelIds(:);
     
+    % compute size of box
+    boxSize = 1 + box(:, 2)' - box(:, 1)';
+    doFunc = @(ids) main(boxSize, ids);
+    
     % do it!
-    doFunc = @(ids) ...
-        main(cubeSize, ids);
     featVals = cellfun( ...
         doFunc, voxelIds, ...
         'UniformOutput', false);
