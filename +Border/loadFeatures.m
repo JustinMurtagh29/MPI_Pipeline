@@ -20,13 +20,14 @@ function [outEdges, outFeats, outFeatNames] = ...
     
     % find cube ids
     cubeIds = findCubeIds(segToCubeMap, edges);
-    [uniCubeIds, ~, cubeIds] = unique(cubeIds);
     
     % skip borders across cubes
-    if ~uniCubeIds(1)
-        uniCubeIds = uniCubeIds(2:end);
-        cubeIds = cubeIds - 1;
-    end
+    dropMask = ~cubeIds;
+    cubeIds(dropMask) = [];
+    edges(dropMask, :) = [];
+    
+    % make continuous-relabeling
+    [uniCubeIds, ~, cubeIds] = unique(cubeIds);
     
     % prepare output
     uniCubeCount = numel(uniCubeIds);
