@@ -15,7 +15,7 @@ for i =1:length(cubeIndices)
         scores(prob>0.5,:)=-Inf;
 	m=load(p.local(i).edgeFile);
 	edges = m.edges;
-	boutonIDs = vertcat(boutonIDs,edges(scores>0));
+	boutonIDs = vertcat(boutonIDs,edges(scores>synScoreThr);
 end
 boutonIDs = unique(boutonIDs);
 %load com.mat to get CoMs of boutonIDs
