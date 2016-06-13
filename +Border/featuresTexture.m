@@ -111,7 +111,15 @@ function data = loadInputData(param, inputName, box)
             
         case 'mito'
             % mitochondria
-            data = loadMitoData(param, box);
+            
+            % TODO
+            %   factor out into parameter structure
+            mitoDataRoot = ...
+                '/gaba/u/mberning/results/pipeline/20141007T094904/mvm/';
+            mitoDataPrefix = ...
+                '2012-09-28_ex145_07x2_corrected_mag1';
+            data = loadMitoData( ...
+                mitoDataRoot, mitoDataPrefix, box);
             
         otherwise
             error('Invalid feature input');
