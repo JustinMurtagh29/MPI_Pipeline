@@ -195,7 +195,11 @@ function bbox = fixBoundingBox(p)
         warning('Upper edge of bounding box not aligned to KNOSSOS cubes, fixing.');
         bbox(:,2) = bbox(:,2) - upperLimitMod;
     end
-
+    if any(upperLimitMod) || any(lowerLimitMod)
+        fprintf('Knossos-cube aligned bounding box set to %s.\n', ...
+            mat2str(bbox(:)'));
+    end
+    
     % Second check whether it is 'tileable' using tileSize
     sizeOfRoi = bbox(:,2) - bbox(:,1) + 1;
     tileSize = p.tileSize;
@@ -215,8 +219,9 @@ function bbox = fixBoundingBox(p)
                 end
             end
         end
+        fprintf('Segmentation aligned bounding box set so %s.\n', ...
+            mat2str(bbox(:)'));
     end
-
 end
 
 function [meanVal, stdVal] = determineMeanAndStdOfData(p)
