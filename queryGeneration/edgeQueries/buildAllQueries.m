@@ -9,7 +9,7 @@ function buildAllQueries(param, outDir, edges,experimentName)
     
     % loading centre of mass
     m = load([param.saveFolder, 'globalCoMList.mat']);
-    com = m.globalCoMList;
+    com = m.comList;
     
     % run
     doFunc = @(idx) ...
