@@ -9,8 +9,7 @@ p_nuclei_agglo = 7;
 
 %% Load some stuff
 % Load global graph representation
-m=load([p.saveFolder 'graph.mat']);
-graphStruct = m.graph;
+graphStruct = load([p.saveFolder 'graph.mat']);
 % Load bouton seeds (presynaptic segments as detected by Benedikt)
 m= load([p.saveFolder 'Boutons.mat']);
 boutons=m.boutons;

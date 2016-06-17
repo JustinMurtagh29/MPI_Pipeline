@@ -14,6 +14,7 @@ prob = cat(1, prob, ones(length(correspondences),1));
 
 neighProb = cellfun(@(x) prob(x),neighboursIdx,'UniformOutput',false);
 
+graph = struct;
 graph.neighbours = neighbours;
 graph.neighProb = neighProb;
 graph.edges = edges;
@@ -22,7 +23,7 @@ graph.borderCentroid = borderCoM;
 graph.borderSize = borderSize;
 graph.borderArea = borderArea;
 
-save([p.saveFolder 'graph.mat'],'graph','-v7.3');
+save([p.saveFolder 'graph.mat'],'-struct','graph','-v7.3');
 
 end
 
