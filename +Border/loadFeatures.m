@@ -29,14 +29,11 @@ function [outEdges, outFeats, outFeatNames] = ...
     % make continuous-relabeling
     [uniCubeIds, ~, cubeIds] = unique(cubeIds);
     
-    % prepare output
+    % task params
     uniCubeCount = numel(uniCubeIds);
-    outEdges = cell(uniCubeCount, 1);
-    outFeats = cell(uniCubeCount, 1);
-    outFeatNames = cell(0);
+    taskParams = cell(uniCubeCount, 1);
     
     % load features
-    tic;
     for curIdx = 1:uniCubeCount
         curCubeIdx = uniCubeIds(curIdx);
         curCubeParam = param.local(curCubeIdx);
@@ -45,22 +42,37 @@ function [outEdges, outFeats, outFeatNames] = ...
         curEdgeMask = (cubeIds == curIdx);
         curEdges = edges(curEdgeMask, :);
         
-        % handle current cube
-        [curEdges, curFeats, curFeatNames] = ...
-            loadFeaturesCube(curCubeParam, curEdges);
-        
-        % write back result
-        outEdges{curIdx} = curEdges;
-        outFeats{curIdx} = curFeats;
-        outFeatNames = curFeatNames;
-        
-        % show progress
-        Util.progressBar(curIdx, uniCubeCount);
+        % build parameters
+        taskParams{curIdx} = { ...
+            curCubeParam, curEdges};
     end
     
+    % prepare cluster
+    cluster = Cluster.getCluster( ...
+        '-pe openmp 1', ...
+        '-p -500', ...
+        '-l h_vmem=12G', ...
+        '-l s_rt=0:29:00', ...
+        '-l h_rt=0:30:00');
+    
+    % create job
+    job = createJob(cluster);
+    job.Name = 'loadFeatures';
+    
+    % start and wait for job
+    createTask(job, @loadFeaturesCube, 3, taskParams);
+    
+    % wait for job
+    submit(job);
+    wait(job);
+    
+    % get output
+    out = fetchOutputs(job);
+    
     % build output
-    outEdges = vertcat(outEdges{:});
-    outFeats = vertcat(outFeats{:});
+    outEdges = vertcat(out{:, 1});
+    outFeats = vertcat(out{:, 2});
+    outFeatNames = out{end, 3};
 end
 
 function [outEdges, outFeats, outFeatNames] = ...
