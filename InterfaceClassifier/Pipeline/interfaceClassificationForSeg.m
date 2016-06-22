@@ -66,10 +66,10 @@ if all(~raw)
 end
 raw = single(raw);
 % Normalize raw data to match ex145 on which SynapseClassifier is trained
-myStd = std(raw(:));
-myMean = mean(raw(:));
-raw = (raw./myStd)*22;
-raw = raw + 122 - myMean*(22/myStd);
+%Normalize using mean and std stored in p.norm.func
+raw = p.norm.func(raw);
+raw = raw*22;
+raw = raw + 122;
 
 %prior agglomeration
 if exist('aggloT','var') && ~isempty(aggloT)
