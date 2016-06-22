@@ -37,14 +37,15 @@ function [outEdges, outFeats, outFeatNames] = ...
     for curIdx = 1:uniCubeCount
         curCubeIdx = uniCubeIds(curIdx);
         curCubeParam = param.local(curCubeIdx);
+        curCubeDir = curCubeParam.saveFolder;
         
         % get edges
         curEdgeMask = (cubeIds == curIdx);
         curEdges = edges(curEdgeMask, :);
         
         % build parameters
-        taskParams{curIdx} = { ...
-            curCubeParam, curEdges};
+        taskParams{curIdx} = ...
+            {curCubeDir, curEdges};
     end
     
     % create job
@@ -69,9 +70,8 @@ function [outEdges, outFeats, outFeatNames] = ...
 end
 
 function [outEdges, outFeats, outFeatNames] = ...
-        loadFeaturesCube(cubeParam, edges)
-    cubeDir = cubeParam.saveFolder;
-    
+        loadFeaturesCube(cubeDir, edges)
+    % load borders and edge features
     edgeFile = [cubeDir, 'edges.mat'];
     borderFeatFile = [cubeDir, 'bordersExtFeats.mat'];
     
