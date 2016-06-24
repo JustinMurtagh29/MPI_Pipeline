@@ -2,7 +2,7 @@ function [weights, weightNames] = shapeFeatures(segments,siz)
 
     for i=1:length(segments)
         % switch from ind to sub
-        [x,y,z] = ind2sub(siz,double(segments(i).PixelIdxList));
+        [x,y,z] = ind2sub(siz,double(segments{i}));
         PixelList = [x y z];             
         objSize = size(PixelList,1);
         % added MB, clean up, getting memory errors on fermat
