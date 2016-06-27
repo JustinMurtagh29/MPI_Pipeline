@@ -1,5 +1,5 @@
 before_script:
-  - submodule update --init --recursive 
+  - git submodule update --init --recursive 
 
 tests:
   script:
