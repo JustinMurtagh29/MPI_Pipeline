@@ -1,0 +1,3 @@
+mini:
+  script:
+    matlab -nosplash -nodisplay -r "runAllTests();"
