@@ -34,6 +34,10 @@ function findEdgesAndBordersFast(segFile, edgeFile, borderFile, segmentFile)
     % Find borders
     [edges,borders] = findBorders(ind, nInd, nSegId, edges, M, N, P);
 
+    % sort edges and borders
+    [edges, sortedRows] = sortrows(edges);
+    borders = borders(sortedRows);
+
     % Save to files: currently segmentation overwrites old one (now leaves are merged)
     save(edgeFile, 'edges', 'edgesToBorder');
     save(borderFile, 'borders');
