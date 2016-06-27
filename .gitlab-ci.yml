@@ -1,5 +1,4 @@
 before_script:
-  - echo -e "Host gitlab.mpcdf.mpg.de\n  IdentityFile /var/lib/gitlab-ci/gitlab-ci" > ~/.ssh/config
   - echo -e "[url \"git@gitlab.mpcdf.mpg.de:\"]\n insteadOf = \"https://gitlab.mpcdf.mpg.de/\"" > ~/.gitconfig
   - git submodule update --init --recursive 
 
