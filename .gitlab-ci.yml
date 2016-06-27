@@ -1,6 +1,6 @@
 before_script:
-  submodule update --init --recursive 
+  - submodule update --init --recursive 
 
 tests:
   script:
-    matlab -nosplash -nodisplay -r "runAllTests();"
+    - matlab -nosplash -nodisplay -r "runAllTests();"
