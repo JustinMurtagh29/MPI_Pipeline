@@ -1,5 +1,5 @@
-function [meanVal, stdVal] = estGlobalMeanAndStd(param)
-    % [meanVal, stdVal] = estGlobalMeanAndStd(param)
+function [meanVal, stdVal] = estGlobalMeanAndStd(p)
+    % [meanVal, stdVal] = estGlobalMeanAndStd(p)
     %   Estimates the global mean and standard deviation of
     %   the raw data by randomly sampling from small cubes.
     %
