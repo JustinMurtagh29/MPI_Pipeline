@@ -16,5 +16,8 @@ function runAllTests()
         exit(1);
     end
     
-    exit(0);
+    % check if there are failed tasks
+    isFailed = any(arrayfun( ...
+        @(t) t.Failed > 0, results));
+    exit(isFailed);
 end
