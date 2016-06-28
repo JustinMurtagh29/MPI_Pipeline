@@ -23,6 +23,7 @@ function testMeanAndStd(testCase)
     [meanVal, stdVal] = ...
         Knossos.calcMeanAndStd(raw);
     
-    verifyEqual(testCase, meanVal, myMean);
-    verifyEqual(testCase, stdVal, myStd);
+    % use 'eq' to test equality across types
+    verifyTrue(testCase, eq(meanVal, myMean));
+    verifyTrue(testCase, eq(stdVal, myStd));
 end
