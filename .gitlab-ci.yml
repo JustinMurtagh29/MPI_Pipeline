@@ -4,5 +4,5 @@ before_script:
 
 tests:
   script:
-    - ssh -nNT -L 27000:lic-matlab.brain.mpg.de:27000 -L 28000:lic-matlab.brain.mpg.de:28000 gaba.opt.rzg.mpg.de
+    - ssh -fN -L 27000:lic-matlab.brain.mpg.de:27000 -L 28000:lic-matlab.brain.mpg.de:28000 gaba.opt.rzg.mpg.de
     - matlab -nosplash -nodisplay -r "runAllTests();"
