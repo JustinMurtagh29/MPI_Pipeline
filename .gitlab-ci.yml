@@ -1,9 +1,8 @@
 before_script:
-  - mkdir -p ~/.ssh
-  - echo -e "Host gitlab.mpcdf.mpg.de\n IdentityFile /etc/matlab-runner/id_rsa" > ~/.ssh/config
   - echo -e "[url \"git@gitlab.mpcdf.mpg.de:\"]\n insteadOf = \"https://gitlab.mpcdf.mpg.de/\"" > ~/.gitconfig
   - git submodule update --init --recursive 
 
 tests:
   script:
+    - ssh -nNT -L 27000:lic-matlab.brain.mpg.de:27000 -L 28000:lic-matlab.brain.mpg.de:28000 gaba.opt.rzg.mpg.de
     - matlab -nosplash -nodisplay -r "runAllTests();"
