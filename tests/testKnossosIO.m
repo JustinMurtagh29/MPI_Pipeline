@@ -9,6 +9,13 @@ function testCubeAlignedIO(test)
    doIt(test, cubePos, cubeSize);
 end
 
+function testCubeNonAlignedIO(test)
+    cubeSize = [512, 512, 256];
+    cubePos = [123, 234, 345];
+    
+    doIt(test, cubePos, cubeSize);
+end
+
 function doIt(test, pos, cubeSize)
     % build fake data
     data = uint8(255 .* rand(cubeSize));
