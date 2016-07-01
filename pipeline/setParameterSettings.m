@@ -32,6 +32,7 @@ function [p, pT] = setParameterSettings(p)
     % Which function to use to normalize data to zero mean and one std
     [meanVal, stdVal] = ...
         Knossos.estGlobalMeanAndStd(p);
+    p.norm.func = @(x)normalizeStack(x,meanVal,stdVal);
     
     % Which classifier to use
     p.cnn.dateStrings = '20130516T204040';
@@ -70,7 +71,7 @@ function [p, pT] = setParameterSettings(p)
     p.feature.func = @calcFeatures;
     
     % Choose to filter 'raw' and 'class' data
-    p.feature.input = {'raw', 'aff', 'mito'};
+    p.feature.input = {'raw', 'aff'};
 
     % Correspondence p
     p.correspondence.overlap = 1; % overlap of local segmentation to compare on each side around a face
@@ -84,8 +85,8 @@ function [p, pT] = setParameterSettings(p)
     p.gp.initialGroundTruth = [p.gp.stateFolder 'initialGroundTruth.mat'];
     
     % Define cutoff(s) for writing to knowledge DB 
-    p.gp.upperCut = .95;
-    p.gp.lowerCut = .15;
+    %p.gp.upperCut = .95;
+    %p.gp.lowerCut = .15;
 
     % LOCAL SETTINGS for each tile
     for i=1:p.tiles(1)
