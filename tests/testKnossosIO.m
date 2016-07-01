@@ -23,11 +23,20 @@ function doIt(test, pos, cubeSize)
     % build bounding box
     box = repmat(pos(:), [1, 2]);
     box(:, 2) = box(:, 2) + size(data)' - 1;
-    
+
+    % create directory
     wkDir = setupDir();
+
+    % disable warnings
+    warnConfig = warning('off', 'all');
+
+    % write and read data
     writeKnossosRoi(wkDir, 'test', pos, data);
     readData = readKnossosRoi(wkDir, 'test', box);
-    
+
+    % restore warnings
+    warning(warnConfig);
+
     % check for equality
     verifyEqual(test, data(:), readData(:));
 end
