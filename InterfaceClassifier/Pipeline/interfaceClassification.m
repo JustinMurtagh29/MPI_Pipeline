@@ -1,4 +1,4 @@
-function [ scores, X,  interfaces ] = interfaceClassification( raw, seg, edges, borders, featureMap, classifier )
+function [X,  interfaces ] = interfaceClassification( raw, seg, edges, borders, featureMap, classifier )
 %INTERFACECLASSIFICATION Calculation of interfaces, features and subsequent
 % classifiation.
 % INPUT raw: 3d array of single containing the raw data.
@@ -18,8 +18,5 @@ function [ scores, X,  interfaces ] = interfaceClassification( raw, seg, edges, 
 
 [interfaces, intIdx] = calculateInterfaces(seg, edges, borders, featureMap.areaThreshold, featureMap.voxelSize, featureMap.rinclude);
 X = calculateFeaturesOld(raw, interfaces, featureMap);
-scores = NaN(length(intIdx),2);
-[~,intScores] = predict(classifier,X);
-scores(intIdx,:) = reshape(intScores,length(intScores)/2,2);
 
 end

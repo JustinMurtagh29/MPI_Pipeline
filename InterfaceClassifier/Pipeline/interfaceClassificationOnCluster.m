@@ -21,7 +21,7 @@ if ~exist('options','var') || isempty(options)
     options = struct();
 end
 if ~isfield(options,'saveFeatures')
-    options.saveFeatures = false;
+    options.saveFeatures = true;
 end
 if ~isfield(options,'aggloT')
     options.aggloT = [];

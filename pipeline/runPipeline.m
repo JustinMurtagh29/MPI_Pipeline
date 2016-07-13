@@ -63,9 +63,13 @@ function runPipeline(p)
     job = makePredictions(p,'edges');
     Cluster.waitForJob(job);
     
-    %Run interface classifier using Benedikt's trained classifier
+    %Run interface classifier using Benedikt's trained classifier and store features
     job = interfaceClassificationOnCluster(p);
     Cluster.waitForJob(job);
+    
+    % Use interface features to make predictions i.e. generate synapse scores 
+    job=makeInterfacePredictionsOnCluster(p);
+    Cluster.watiForJob(job);
 
     %Save the global SVG data
     job = collectSvgDataOnCluster(p);
