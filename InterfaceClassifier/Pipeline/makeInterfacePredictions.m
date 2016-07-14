@@ -13,7 +13,7 @@ for i=1:numel(p.local)
 	X=m.X;
 
 	% Normalize the features to map the quantiles onto 07x2 feature quantiles
-	X= normalizeDataForIC(X);
+	X= normalizeDataForIC(X,p);
 
 	% Find intIdx i.e. the borders that were considered for interface calculation
 	m=load(p.local(i).borderFile);
@@ -27,7 +27,7 @@ for i=1:numel(p.local)
 	scores(intIdx,:) = reshape(intScores,length(intScores)/2,2);
 
 	%Save scores to sunpases.mat file
-	m = matfile([p.local(cubeNo).saveFolder 'synapses.mat'], 'Writable', true);
+	m = matfile([p.local(i).saveFolder 'synapses.mat'], 'Writable', true);
 	m.scores = scores;
 
 	clear m area borders intIdx scores X 

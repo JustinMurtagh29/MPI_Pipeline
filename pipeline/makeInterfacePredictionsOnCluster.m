@@ -7,6 +7,6 @@ display('Finished calculating feature quantiles! Now making predictions');
 functionH = @makeInterfacePredictions;
 inputCell = {p};
 
-job=startCPU(functionsH,inputCell,'InterfacePredictions');
+job=startCPU(functionH,inputCell,'InterfacePredictions');
 
 end

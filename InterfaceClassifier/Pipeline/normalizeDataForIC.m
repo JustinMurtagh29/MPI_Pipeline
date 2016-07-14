@@ -1,4 +1,4 @@
-function X_out = normalizeDataForIC(X)
+function X_out = normalizeDataForIC(X,p)
 
 me=mfilename;
 mydir = which(me); mydir = mydir(1:end-2-numel(me));
