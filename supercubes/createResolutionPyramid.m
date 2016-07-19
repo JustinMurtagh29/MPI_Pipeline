@@ -39,9 +39,9 @@ end
 
 % Set according to memory limits, currently optimized for 12 GB RAM
 % Will be paralellized on cubes of this size
-cubeSize = [2048 2048 2048];
+cubeSize = [1024 1024 1024];
 % Write these magnifications, mags grouped in inside Brackets will be calculated by only reading once
-magsToWrite = {[2 4 8 16] [32 64 128 256]};
+magsToWrite = {[2 4 8] [16 32 64] [128 256 512]};
 
 functionH = @writeSupercubes;
 for i=1:length(magsToWrite)
