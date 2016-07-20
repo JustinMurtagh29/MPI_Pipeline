@@ -1,5 +1,5 @@
 % Hi there!
-%   Please do not remove the follwing lines of code.
+%   Please do not remove the following lines of code.
 %   If you cannot resist the temptation then godspeed!
 if ~exist('PIPELINE_READY', 'var') || ~PIPELINE_READY
     error('Please start MATLAB inside the pipeline directory');
