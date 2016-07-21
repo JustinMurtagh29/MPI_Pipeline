@@ -18,7 +18,7 @@ if nargin < 3
     % Get bounding box from section.json
     temp = readJson([outputDirectory 'section.json']);
     bbox = double(cell2mat(cat(2, temp.bbox{:}))');
-    % Make sure it does not start at [0 0 0]
+    % Make sure it does not start at [0 0 0] cause that would make x-0001 Knossos hierachy folder to be written
     bbox = bsxfun(@plus, [1; 1; 1], bbox);
     clear temp;
 end
@@ -43,11 +43,12 @@ cubeSize = [1024 1024 1024];
 % Write these magnifications, mags grouped in inside Brackets will be calculated by only reading once
 magsToWrite = {[2 4 8] [16 32 64] [128 256 512]};
 
+bboxTemp = bbox;
 functionH = @writeSupercubes;
 for i=1:length(magsToWrite)
-    X = unique([bbox(1,1):cubeSize(1):bbox(1,2) bbox(1,2)]);
-    Y = unique([bbox(2,1):cubeSize(2):bbox(2,2) bbox(2,2)]);
-    Z = unique([bbox(3,1):cubeSize(3):bbox(3,2) bbox(3,2)]);
+    X = unique([bboxTemp(1,1):cubeSize(1):bboxTemp(1,2) bboxTemp(1,2)]);
+    Y = unique([bboxTemp(2,1):cubeSize(2):bboxTemp(2,2) bboxTemp(2,2)]);
+    Z = unique([bboxTemp(3,1):cubeSize(3):bboxTemp(3,2) bboxTemp(3,2)]);
     idx = 1;
     for x=1:length(X)-1
         for y=1:length(Y)-1
@@ -61,7 +62,7 @@ for i=1:length(magsToWrite)
     job = startCPU(functionH, inputCell, 'supercubes');
     wait(job, 'finished');
     % Update parameter, read last resoultion written with right bbox
-    bbox = ceil(bbox ./ magsToWrite{i}(end));
+    bboxTemp = ceil((bbox - [1 1 1])./ magsToWrite{i}(end)) + [1 1 1];
     root = fullfile(outputDirectory, num2str(magsToWrite{i}(end)));
     [startIdx, endIdx] = regexp(prefix, '_mag.{1,3}');
     prefix = [prefix(1:startIdx-1) '_mag' num2str(magsToWrite{i}(end))];
