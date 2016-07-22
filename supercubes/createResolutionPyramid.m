@@ -62,7 +62,7 @@ for i=1:length(magsToWrite)
     job = startCPU(functionH, inputCell, 'supercubes');
     wait(job, 'finished');
     % Update parameter, read last resoultion written with right bbox
-    bboxTemp = ceil((bbox - [1 1 1])./ magsToWrite{i}(end)) + [1 1 1];
+    bboxTemp = ceil((bbox - 1)./ magsToWrite{i}(end)) + 1;
     root = fullfile(outputDirectory, num2str(magsToWrite{i}(end)));
     [startIdx, endIdx] = regexp(prefix, '_mag.{1,3}');
     prefix = [prefix(1:startIdx-1) '_mag' num2str(magsToWrite{i}(end))];
