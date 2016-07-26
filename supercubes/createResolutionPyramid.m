@@ -1,9 +1,11 @@
 function createResolutionPyramid( root, prefix, bbox, outputDirectory )
-%Input: 
+%Input:
+%   If using just one input argument, and normal wK hierachy with JSONs already present, rest inferred
 %   root = Directory of KNOSSOS Hierachy mag1
 %   prefix = File prefix of KNOSSOS Hierachy mag1
 %   bbox = Bounding Box of KNOSSOS Hierachy mag1 
 %       (minimal coordinates should align with start of Knossos cube (e.g. [1 1 1]))
+%       (Not sure whether it will work if lower corner in bbox is not [1 1 1], NOT tested)
 %   outputDirectory = where to write higher resolutions (subfolder named as
 %       the magnification will be created inside)
 
@@ -19,7 +21,8 @@ if nargin < 3
     temp = readJson([outputDirectory 'section.json']);
     bbox = double(cell2mat(cat(2, temp.bbox{:}))');
     % Make sure it does not start at [0 0 0] cause that would make x-0001 Knossos hierachy folder to be written
-    bbox = bsxfun(@plus, [1; 1; 1], bbox);
+    % wK vs. matlab coordinate system offset seems to create some confusion (as it should)
+    bbox = bsxfun(@max, [1; 1; 1], bbox);
     clear temp;
 end
 
@@ -30,7 +33,6 @@ if nargin < 2
     prefix = temp(1).name(1:endIdx-1);
     clear temp startIdx endIdx;
 end
-
 
 % Create output folder if it does not exist
 if ~exist(outputDirectory, 'dir');
