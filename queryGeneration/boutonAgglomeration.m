@@ -234,12 +234,12 @@ for i=1:length(q.pos)
         for j=1:size(q.pos{i},1)
             [phi, theta, psi] = calculateEulerAngles(-q.dir{i}(j,:));
             minPos = q.pos{i}(j,:) - extend; 
-            maxPos = q.pos{i}(j,:) + extend;
+            sizeBBox = 2*extend;
             linkString = ['AG_P14_st003_15-09-2015,focus_flight,focus_flight,1,' ...
                 num2str(q.pos{i}(j,1)) ',' num2str(q.pos{i}(j,2)) ',' num2str(q.pos{i}(j,3)) ',' ...
                 num2str(phi) ',' num2str(theta) ',' num2str(psi) ',100,1,Tracing crew,' ...
                 num2str(minPos(1)) ',' num2str(minPos(2)) ',' num2str(minPos(3)) ',' ...
-                num2str(maxPos(1)) ',' num2str(maxPos(2)) ',' num2str(maxPos(3)) ',' 'P14_L4_focus_flight-methodC'];
+                num2str(sizeBBox(1)) ',' num2str(sizeBBox(2)) ',' num2str(sizeBBox(3)) ',' 'P14_L4_focus_flight_1'];
             fprintf(fid, '%s\n', linkString);
             q.angles{i}(j,:) = [phi theta psi];
         end
