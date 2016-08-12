@@ -1,4 +1,4 @@
-function createResolutionPyramid( root, prefix, bbox, outputDirectory )
+function createResolutionPyramid( root, prefix, bbox, outputDirectory, subsamplingSegmentation )
 %Input:
 %   If using just one input argument, and normal wK hierachy with JSONs already present, rest inferred
 %   root = Directory of KNOSSOS Hierachy mag1
@@ -8,6 +8,12 @@ function createResolutionPyramid( root, prefix, bbox, outputDirectory )
 %       (Not sure whether it will work if lower corner in bbox is not [1 1 1], NOT tested)
 %   outputDirectory = where to write higher resolutions (subfolder named as
 %       the magnification will be created inside)
+%   subsamplingSegmentation = if you try to subsample a segmentation (instead of raw data)
+%       set this to true, will use @mode instead of @median for subsampling
+
+if nargin < 5
+    subsamplingSegmentation = false;
+end
 
 if nargin < 4
     % If no output folder is provided, assume one level up from root
@@ -39,12 +45,19 @@ if ~exist(outputDirectory, 'dir');
     mkdir(outputDirectory);
 end
 
-% Set according to memory limits, currently optimized for 12 GB RAM
+% Set according to memory limits, currently optimized for 12 GB RAM, segmentation will need 48 GB currently
 % Will be paralellized on cubes of this size
 cubeSize = [1024 1024 1024];
 % Write these magnifications, mags grouped in inside Brackets will be calculated by only reading once
 magsToWrite = {[2 4 8] [16 32 64] [128 256 512]};
+% set function for downsampling based on whether subsampling raw data or segmentation
+if subsamplingSegmentation
+    downsamplingFunction = @mode;
+else
+    downsamplingFunction = @median;
+end
 
+% Do the work, submitted to scheduler
 bboxTemp = bbox;
 functionH = @writeSupercubes;
 for i=1:length(magsToWrite)
@@ -56,7 +69,7 @@ for i=1:length(magsToWrite)
         for y=1:length(Y)-1
             for z=1:length(Z)-1
                 thisBBox = [X(x) X(x+1)-1; Y(y) Y(y+1)-1; Z(z) Z(z+1)-1];
-                inputCell{idx} = {root, prefix, thisBBox, magsToWrite{i}, outputDirectory};
+                inputCell{idx} = {root, prefix, thisBBox, magsToWrite{i}, outputDirectory, subsamplingSegmentation};
                 idx = idx + 1;
             end
         end
