@@ -1,5 +1,5 @@
 
-function boutonAgglomeration(p)
+%function boutonAgglomeration(p)
 % Set rng to state of starting matlab
 rng default;
 % First test with global agglomerations (set some parameter here)
@@ -20,7 +20,7 @@ com=globalCoMList;
 m=load([p.saveFolder 'nucleiSegIds.mat']);
 nucleiSegIds = m.segIds;
 % Output folder 
-outputFolder = ['/gaba/u/ganja/results_P14_L4_Corrected/Skeletons' datestr(clock,30) '/'];
+outputFolder = [p.saveFolder 'Skeletons' datestr(clock,30) '/'];
 mkdir(outputFolder);
 mkdir([outputFolder 'axons']);
 mkdir([outputFolder 'axonsSorted']);
@@ -159,7 +159,7 @@ end
 for i=1:length(cc)
     theseSeedIdx = chosenSeedIdxInCC == i;
     seedIds = intersect(seeds.notTraced, cc{i});
-    skelToWrite = writeSkeletonFromAggloWBP(graphStruct, com, cc(i), excluded(theseSeedIdx), seedIds, q.edges{i}(:,1), ['CC' num2str(i, '%.3i')]);
+    skelToWrite = writeSkeletonFromAggloWBP(p,graphStruct, com, cc(i), excluded(theseSeedIdx), seedIds, q.edges{i}(:,1), ['CC' num2str(i, '%.3i')]);
     skelName = [outputFolder 'axons/axons' num2str(i, '%.3i') '.nml'];
     evalc('writeNml(skelName, skelToWrite)');
 end
@@ -182,7 +182,7 @@ excludedCC = excludedCC | (cellfun(@(x)x(1), q.varianceExplained)' < 0.7 & cellf
 for i=1:length(cc)
     theseSeedIdx = chosenSeedIdxInCC == i;
     seedIds = intersect(seeds.notTraced, cc{i});
-    skelToWrite = writeSkeletonFromAggloWBP(graphStruct, com, cc(i), excluded(theseSeedIdx), seedIds, q.edges{i}(:,1), ['CC' num2str(i, '%.3i')]);
+    skelToWrite = writeSkeletonFromAggloWBP(p,graphStruct, com, cc(i), excluded(theseSeedIdx), seedIds, q.edges{i}(:,1), ['CC' num2str(i, '%.3i')]);
     if excludedCC(i)
         skelName = [outputFolder 'axonsSorted/bad' num2str(i, '%.3i') '.nml'];
     else 
@@ -235,7 +235,7 @@ for i=1:length(q.pos)
             [phi, theta, psi] = calculateEulerAngles(-q.dir{i}(j,:));
             minPos = q.pos{i}(j,:) - extend; 
             sizeBBox = 2*extend;
-            linkString = ['AG_P14_st003_15-09-2015,focus_flight,focus_flight,1,' ...
+            linkString = [p.experimentName ',focus_flight,focus_flight,1,' ...
                 num2str(q.pos{i}(j,1)) ',' num2str(q.pos{i}(j,2)) ',' num2str(q.pos{i}(j,3)) ',' ...
                 num2str(phi) ',' num2str(theta) ',' num2str(psi) ',100,1,Tracing crew,' ...
                 num2str(minPos(1)) ',' num2str(minPos(2)) ',' num2str(minPos(3)) ',' ...
@@ -276,4 +276,4 @@ variables(strcmp(variables, 'graphStruct')) = [];
 variables(strcmp(variables, 'com')) = [];
 save(['/gaba/u/mberning/' datestr(clock, 30) '_boutonAgglo.mat'], variables{:});
 %}
-end
+%end

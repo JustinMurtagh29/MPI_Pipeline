@@ -8,7 +8,7 @@ function skel = writeSkeletonFromAggloWBP(graph, com, cc, excluded, seedIds, que
     colors = distinguishable_colors(length(cc), [0 0 0; 1 1 1]);
     colors(:,4) = 0;
     % Write skeleton for check
-    skel = initializeSkeleton();
+    skel = initializeSkeleton(p);
     for tr=1:length(cc)
         if ~isempty(cc{tr})
             skel{c}.thingID = c;
@@ -51,12 +51,12 @@ function skel = writeSkeletonFromAggloWBP(graph, com, cc, excluded, seedIds, que
     end
 end
 
-function skel = initializeSkeleton()
+function skel = initializeSkeleton(p)
     % Set parameters
-    skel{1}.parameters.experiment.name='P14_L4_AG_15-09-2015';
-    skel{1}.parameters.scale.x = '11.24';
-    skel{1}.parameters.scale.y = '11.24';
-    skel{1}.parameters.scale.z = '30';
+    skel{1}.parameters.experiment.name=p.experimetnName;
+    skel{1}.parameters.scale.x = num2str(p.raw.voxelSize(1));
+    skel{1}.parameters.scale.y = num2str(p.raw.voxelSize(2);
+    skel{1}.parameters.scale.z = num2str(p.raw.voxelSize(3);
     skel{1}.parameters.offset.x = '0';
     skel{1}.parameters.offset.y = '0';
     skel{1}.parameters.offset.z = '0';
