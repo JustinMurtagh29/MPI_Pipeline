@@ -43,12 +43,10 @@ function extend(param, cubeIdx)
     % load segmentation data on the BIG bounding box
     seg = loadSegData(param, cubeIdx);
     
-    % transfer linear voxel indices from
-    % the SMALL bounding box to the BIG one
- %   borders = arrayfun(@(b) fixVoxelIds( ...
- %       cubeBoxSmall, cubeBoxBig, b.PixelIdxList), ...
- %       borders, 'UniformOutput', false);
-  borders =  arrayfun(@(b) int32(b.PixelIdxList(:)),borders,'UniformOutput', false); 
+    % collect linear voxel indices from the struct 'borders'
+    borders =  arrayfun(@(b) int32(b.PixelIdxList(:)), ...
+	borders,'UniformOutput', false); 
+
     % build ball offsets
     [ballOffIds, ballSize] = Border.extensionBall( ...
         voxelSize, cubeBoxSmall, ballRadiusInNm);
@@ -120,8 +118,7 @@ function [idsOne, idsTwo] = ...
 end
 
 function voxelIds = fixVoxelIds(oldBox, newBox, voxelIds)
-  %  voxelIds = int32(voxelIds(:)); return;  
-  % allocate temporary data
+    % allocate temporary data
     voxelCount = numel(voxelIds);
     coordMat = nan(voxelCount, 3);
     
