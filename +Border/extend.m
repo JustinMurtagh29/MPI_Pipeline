@@ -25,10 +25,10 @@ function extend(param, cubeIdx)
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     
     % config
-    ballRadiusInNm = 100;
+    ballRadiusInNm = 50;
     
     % get voxel size
-    voxelSize = param.kdb.settings.scale;
+    voxelSize = param.raw.voxelSize;
     
     % get cube-specific parameters
     cubeParam = param.local(cubeIdx);
@@ -45,13 +45,13 @@ function extend(param, cubeIdx)
     
     % transfer linear voxel indices from
     % the SMALL bounding box to the BIG one
-    borders = arrayfun(@(b) fixVoxelIds( ...
-        cubeBoxSmall, cubeBoxBig, b.PixelIdxList), ...
-        borders, 'UniformOutput', false);
-    
+ %   borders = arrayfun(@(b) fixVoxelIds( ...
+ %       cubeBoxSmall, cubeBoxBig, b.PixelIdxList), ...
+ %       borders, 'UniformOutput', false);
+  borders =  arrayfun(@(b) int32(b.PixelIdxList(:)),borders,'UniformOutput', false); 
     % build ball offsets
     [ballOffIds, ballSize] = Border.extensionBall( ...
-        voxelSize, cubeBoxBig, ballRadiusInNm);
+        voxelSize, cubeBoxSmall, ballRadiusInNm);
     ballPadding = (ballSize - 1) / 2;
     
     % prepare output
@@ -85,7 +85,7 @@ function extend(param, cubeIdx)
     
     % fix linear indices to the feature bounding box
     bordersExt = cellfun(@(b) ...
-        fixVoxelIds(cubeBoxBig, featBox, b), ...
+        fixVoxelIds(cubeBoxSmall, featBox, b), ...
         bordersExt, 'UniformOutput', false);
     
     % Prepare result
@@ -120,7 +120,8 @@ function [idsOne, idsTwo] = ...
 end
 
 function voxelIds = fixVoxelIds(oldBox, newBox, voxelIds)
-    % allocate temporary data
+  %  voxelIds = int32(voxelIds(:)); return;  
+  % allocate temporary data
     voxelCount = numel(voxelIds);
     coordMat = nan(voxelCount, 3);
     
