@@ -34,7 +34,6 @@ function extend(param, cubeIdx)
     cubeParam = param.local(cubeIdx);
     cubeDir = cubeParam.saveFolder;
     cubeBoxSmall = cubeParam.bboxSmall;
-    cubeBoxBig = cubeParam.bboxBig;
     
     % load edges and borders
     load([cubeDir, 'edges.mat'], 'edges');
