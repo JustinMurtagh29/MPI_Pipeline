@@ -25,16 +25,15 @@ function extend(param, cubeIdx)
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     
     % config
-    ballRadiusInNm = 100;
+    ballRadiusInNm = 50;
     
     % get voxel size
-    voxelSize = param.kdb.settings.scale;
+    voxelSize = param.raw.voxelSize;
     
     % get cube-specific parameters
     cubeParam = param.local(cubeIdx);
     cubeDir = cubeParam.saveFolder;
     cubeBoxSmall = cubeParam.bboxSmall;
-    cubeBoxBig = cubeParam.bboxBig;
     
     % load edges and borders
     load([cubeDir, 'edges.mat'], 'edges');
@@ -43,15 +42,13 @@ function extend(param, cubeIdx)
     % load segmentation data on the BIG bounding box
     seg = loadSegData(param, cubeIdx);
     
-    % transfer linear voxel indices from
-    % the SMALL bounding box to the BIG one
-    borders = arrayfun(@(b) fixVoxelIds( ...
-        cubeBoxSmall, cubeBoxBig, b.PixelIdxList), ...
-        borders, 'UniformOutput', false);
-    
+    % collect linear voxel indices from the struct 'borders'
+    borders =  arrayfun(@(b) int32(b.PixelIdxList(:)), ...
+	borders, 'UniformOutput', false); 
+
     % build ball offsets
     [ballOffIds, ballSize] = Border.extensionBall( ...
-        voxelSize, cubeBoxBig, ballRadiusInNm);
+        voxelSize, cubeBoxSmall, ballRadiusInNm);
     ballPadding = (ballSize - 1) / 2;
     
     % prepare output
@@ -85,7 +82,7 @@ function extend(param, cubeIdx)
     
     % fix linear indices to the feature bounding box
     bordersExt = cellfun(@(b) ...
-        fixVoxelIds(cubeBoxBig, featBox, b), ...
+        fixVoxelIds(cubeBoxSmall, featBox, b), ...
         bordersExt, 'UniformOutput', false);
     
     % Prepare result
