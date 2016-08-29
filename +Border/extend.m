@@ -44,7 +44,7 @@ function extend(param, cubeIdx)
     
     % collect linear voxel indices from the struct 'borders'
     borders =  arrayfun(@(b) int32(b.PixelIdxList(:)), ...
-	borders,'UniformOutput', false); 
+	borders, 'UniformOutput', false); 
 
     % build ball offsets
     [ballOffIds, ballSize] = Border.extensionBall( ...
