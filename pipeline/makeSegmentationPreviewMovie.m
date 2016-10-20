@@ -30,6 +30,11 @@ if size(bbox, 1) == 1 || size(bbox, 2) == 1
     bbox = reshape(bbox, [3, 2]);
 end
 
+% check size of bounding box
+if ~Util.checkBoundingBox(bbox)
+    error('Bounding box has invalid format');
+end
+
 % Classification (same function as bigFwdPass.m)
 tempClass = struct;
 tempClass.root = [p.tempFolder 'classForMovie/'];
