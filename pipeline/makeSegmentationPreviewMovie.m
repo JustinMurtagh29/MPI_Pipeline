@@ -16,6 +16,9 @@ function outputFile = makeSegmentationPreviewMovie(p, bbox, doClass)
 %     This flag can be used to disable (and reuse) old cla-
 %     ssification results for improved performance.
 %     Default: true
+%
+%   outputFile
+%     Path to generated segmentation preview movie
 
 if ~exist('doClass', 'var')
     doClass = true;
