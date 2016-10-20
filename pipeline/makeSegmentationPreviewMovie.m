@@ -1,7 +1,24 @@
-function outputFile = makeSegmentationPreviewMovie(p, bbox, flag)
-% Make movie to visualize segmentation given some parameter set p
-if nargin <3
-    flag = 1; % if this function is running in a loop this flag prevents it from calculating the classification multiple times
+function outputFile = makeSegmentationPreviewMovie(p, bbox, doClass)
+% outputFile = makeSegmentationPreviewMovie(p, bbox, doClass)
+%   Generates a segmentation preview movie (in AVI format)
+%   with a given set of parameters.
+%
+%   p
+%     Parameter structure
+%
+%   bbox
+%     Bounding box around the region of interest. This can
+%     be either a webKNOSSOS-style box (i.e., x_min, y_min,
+%     z_min, x_max, y_max, z_mat) or MATLAB-style box (i.e., 
+%     x_min, x_max; y_min, y_max; z_min, z_max).
+%
+%   doClass
+%     This flag can be used to disable (and reuse) old cla-
+%     ssification results for improved performance.
+%     Default: true
+
+if ~exist('doClass', 'var')
+    doClass = true;
 end
 
 % also accept webKNOSSOS-style bouding boxes,
@@ -16,15 +33,16 @@ tempClass.root = [p.tempFolder 'classForMovie/'];
 tempClass.prefix = 'classForMovie';
 inputCell{1} = {p.cnn.first, p.cnn.GPU, p.raw, tempClass, bbox, p.norm.func};
 
-if flag == 1 % flag preventing the calculation classification for multiple movies
+if doClass
     if p.cnn.GPU
         job = startGPU(functionH, inputCell, 'classForMovie');
     else
         job = startCPU(functionH, inputCell, 'classForMovie');
     end
+    
     Cluster.waitForJob(job);
 else
-    warning('omitting classification')
+    warning('Skipping classification');
 end
 
 % Now do segmentation as in miniSegmentation.m
