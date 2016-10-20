@@ -53,7 +53,7 @@ by pressing Control+X and then 'Y' for "yes". Finally, press enter.
 Running the pipeline
 --------------------
 
-Finally, start MATLAB with `matlab -nosplash -nodesktop`. Please make sure you are in the pipline directory when starting MATLAB. Then it's time for the kick-off:
+Finally, start MATLAB with `matlab -nosplash -nodesktop`. Please make sure you are *in the pipline directory* when starting MATLAB. Then it's time for the kick-off:
 
 1. Set configuration for pipeline you just edited by running:
 ```
