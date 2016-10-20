@@ -19,7 +19,8 @@ p.saveFolder = '/gaba/u/mberning/results/pipeline/test/';
 % Make sure p.bbox is always 100 pixels away from any black region in X-Y (50 in Z)
 p.bbox_wK = [1153, 769, 129, 7808, 5376, 3200]; 
 
-%Name of the experiment. It's the same as the Dataset name on webKnossos. Also in the "Info" section when you open your dataset in webKnossos
+% Name of the experiment. It's the same as the Dataset name on webKnossos.
+% Also in the "Info" section when you open your dataset in webKnossos.
 p.experimentName = '2012-09-28_ex145_07x2_segNew';
   
 % Define directory and file prefix and voxel size for KNOSSOS hierachy
