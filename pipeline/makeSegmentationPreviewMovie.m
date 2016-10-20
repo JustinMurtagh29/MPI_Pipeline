@@ -30,43 +30,61 @@ if size(bbox, 1) == 1 || size(bbox, 2) == 1
     bbox = reshape(bbox, [3, 2]);
 end
 
-% First use same function as bigFwdPass.m to do classification
-functionH = @onlyFwdPass3DonKnossosFolder;
+% Classification (same function as bigFwdPass.m)
+tempClass = struct;
 tempClass.root = [p.tempFolder 'classForMovie/'];
 tempClass.prefix = 'classForMovie';
-inputCell{1} = {p.cnn.first, p.cnn.GPU, p.raw, tempClass, bbox, p.norm.func};
 
 if doClass
+    classificationStep(p, tempClass, bbox);
+else
+    warning('> Skipping classification');
+end
+
+% Segmentation
+tempSegFile = [p.tempFolder 'seg.mat'];
+segmentationStep(p, tempClass, tempSegFile, bbox);
+
+% Movie
+outputFile = movieStep(p, tempSegFile, bbox);
+end
+
+function classificationStep(p, tempClass, bbox)
+    functionH = @onlyFwdPass3DonKnossosFolder;
+    inputCell{1} = {p.cnn.first, p.cnn.GPU, p.raw, tempClass, bbox, p.norm.func};
+    jobName = 'classForMovie';
+    
     if p.cnn.GPU
-        job = startGPU(functionH, inputCell, 'classForMovie');
+        job = startGPU(functionH, inputCell, jobName);
     else
-        job = startCPU(functionH, inputCell, 'classForMovie');
+        job = startCPU(functionH, inputCell, jobName);
     end
     
     Cluster.waitForJob(job);
-else
-    warning('Skipping classification');
 end
 
-% Now do segmentation as in miniSegmentation.m
-tempSegFile = [p.tempFolder 'seg.mat'];
-inputCell{1} = {tempClass.root, tempClass.prefix, bbox, p.seg.func, tempSegFile};
-functionH = @segmentForPipeline;
-job = startCPU(functionH, inputCell, 'segForMovie');
-Cluster.waitForJob(job);
-
-% Now low raw data
-raw = loadRawData(p.raw.root, p.raw.prefix, bbox);
-raw = single(raw);
-% Normalize to [0 1] range as this is what matlab expects of single images
-raw = raw ./ max(raw(:));
-
-% Load segmentation
-load(tempSegFile);
-
-% Make movie
-outputFile = [p.tempFolder datestr(clock, 30) '.avi'];
-makeSegMovie(seg, raw, outputFile);
-
+function segmentationStep(p, tempClass, tempSegFile, bbox)
+    functionH = @segmentForPipeline;
+    inputCell{1} = {tempClass.root, tempClass.prefix, bbox, p.seg.func, tempSegFile};
+    jobName = 'segForMovie';
+    
+    job = startCPU(functionH, inputCell, jobName);
+    Cluster.waitForJob(job);
 end
 
+function outputFile = movieStep(p, tempSegFile, bbox)
+    % Now low raw data
+    raw = loadRawData(p.raw.root, p.raw.prefix, bbox);
+    raw = single(raw);
+    
+    % Normalize to [0 1] range as this is
+    % what matlab expects of single images
+    raw = raw ./ max(raw(:));
+
+    % Load segmentation
+    load(tempSegFile, 'seg');
+
+    % Make movie
+    outputFile = [p.tempFolder datestr(clock, 30) '.avi'];
+    makeSegMovie(seg, raw, outputFile);
+end
