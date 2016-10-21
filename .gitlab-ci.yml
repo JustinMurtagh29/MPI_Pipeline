@@ -1,8 +1,7 @@
 before_script:
-  - echo -e "[url \"git@gitlab.mpcdf.mpg.de:\"]\n insteadOf = \"https://gitlab.mpcdf.mpg.de/\"" > ~/.gitconfig
-  - git submodule update --init --recursive 
+  - .ci/updateSubmodules.sh
 
 tests:
   script:
-    - ssh -fN -L 27000:172.16.1.10:27000 -L 28000:172.16.1.10:28000 gaba.opt.rzg.mpg.de
+    - .ci/connectToLicenseServer.sh
     - matlab -nosplash -nodisplay -r "runAllTests();"
