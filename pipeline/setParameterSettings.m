@@ -184,7 +184,8 @@ function bbox = fixBoundingBox(p)
 
     % Transform from webKNOSSOS style bounding box to bounding box format
     % used in pipeline
-    bbox = reshape(p.bbox_wK,3,2);
+    bbox = p.bbox_wK + 1;
+    bbox = reshape(bbox, 3, 2);
 
     % First check whether bounding box is aligned with KNOSSOS cubes
     lowerLimitMod = mod(bbox(:,1)-1,128);
