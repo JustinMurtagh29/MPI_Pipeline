@@ -7,9 +7,10 @@ function job = runMyelinFix(p, newPrefix)
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     
-    xIds = p.bbox(1, 1):128:p.bbox(1, 2);
-    yIds = p.bbox(2, 1):128:p.bbox(2, 2);
-    zIds = p.bbox(3, 1):128:p.bbox(3, 2);
+    tileSize = p.tileSize;
+    xIds = p.bbox(1, 1):tileSize(1):p.bbox(1, 2);
+    yIds = p.bbox(2, 1):tileSize(2):p.bbox(2, 2);
+    zIds = p.bbox(3, 1):tileSize(3):p.bbox(3, 2);
     
     % do *NOT* change X and Y!
     [xMinVec, yMinVec, zMinVec] = meshgrid(yIds, xIds, zIds);
