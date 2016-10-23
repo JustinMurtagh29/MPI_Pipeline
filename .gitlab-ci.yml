@@ -4,4 +4,5 @@ before_script:
 tests:
   script:
     - .ci/connectToLicenseServer.sh
-    - matlab -nosplash -nodisplay -r "runAllTests();"
+    - .ci/runMatlabCI.sh
+    - .ci/runTests.sh
