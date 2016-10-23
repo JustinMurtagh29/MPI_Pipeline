@@ -95,10 +95,10 @@ function [th5, th6] = buildMasks(data)
     th1 = (data > thresh);
     
     % 2 - remove shot noise
-    th2 = imopen(th1, strel('sphere', 1));
+    th2 = imopen(th1, makeSphere(1));
     
     % 3 - remove membranes
-    th3 = imdilate(th2, strel('sphere', 3));
+    th3 = imdilate(th2, makeSphere(3));
     
     % 4 - remove small crap
     th4 = ~bwareaopen(~th3, 1E4);
@@ -106,11 +106,20 @@ function [th5, th6] = buildMasks(data)
     % 5 - restore whole myelin thickness
     % NOTE: myelin and mitos are now "true"
     th5 = ~th2 & (bwdist(~th4, 'euclidean') <= 5);
-    th5 = bwmedian(th5, strel('sphere', 3));
+    th5 = bwmedian(th5, makeSphere(3));
     
     % 6 - find borders (thickness of two voxels)
     th6 = bwdist(~th5, 'euclidean');
     th6 = (th6 > 0) & (th6 <= 3);
+end
+
+function sphere = makeSphere(rad)
+    % Based on code by Benedikt Staffler
+    % From Util.getPointsInBall
+    
+    r2 = ceil(rad);
+    [xx, yy, zz] = meshgrid(-r2:r2, -r2:r2, -r2:r2);
+    sphere = sqrt(xx .^ 2 + yy .^ 2 + zz .^ 2) <= r;
 end
 
 function out = bwmedian(im, strel)
