@@ -131,10 +131,8 @@ function out = bwmedian(im, strel)
     %
     % strel
     %   Structuring element built with `strel` command
-    filterMat = strel.Neighborhood;
-    filterSum = single(sum(filterMat(:)));
     
-    out = convn(single(im), single(filterMat), 'same');
-    out = out / filterSum;
+    out = convn(single(im), single(strel), 'same');
+    out = out / sum(strel(:));
     out = (out > 0.5);
 end
