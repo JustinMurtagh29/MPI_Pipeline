@@ -10,8 +10,14 @@ cidir=`mktemp -d`
 # pull code for CI suite
 cd $cidir
 git clone git@gitlab.mpcdf.mpg.de:connectomics/matlab-ci.git .
-matlab -nosplash -nodisplay -nojvm -r "matlabCI('$codedir'); exit;"
+matlab -nosplash -nodisplay -nojvm -r "runMatlabCI('$codedir');"
+
+# capture exit code
+errcode=$?
 
 # reset
 cd $codedir
 rm -rf $cidir
+
+# repeat error
+exit $errcode
