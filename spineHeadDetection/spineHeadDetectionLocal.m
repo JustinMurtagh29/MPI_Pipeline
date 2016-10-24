@@ -1,10 +1,16 @@
-function spineHeadDetectionLocal(p,cubeNo,Ensemble)
+function spineHeadDetectionLocal(p,cubeNo)
 
 % Please Note:
 % This spine head classifier needs features calculated on segments / segment weights i.e. segmentWeightFile (instead of weightFile). You can get this segmentWeightFile
 % by re-running calcFeatures and uncommenting segmentWeights parts 
 
-% load the wright file / features
+me = mfilename;                                            % what is my filename
+mydir = which(me); mydir = mydir(1:end-2-numel(me));        % where am I located
+
+%Load classifier trained on 07x2 L4 dataset
+load([mydir 'shdEnsemble.mat']);
+
+% load the segment based features
 m = load(p.local(cubeNo).segmentWeightFile);
 segmentWeights = m.segmentWeights;
 

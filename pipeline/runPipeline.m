@@ -53,17 +53,21 @@ function runPipeline(p)
     job = startSegmentMasks(p);
     Cluster.waitForJob(job);
     
-    % Calculate features for edges as used for inital GP
     % Calculate edge based features as used in first GP training
+    % Calculate segment based features as used in spine head detection
     % see filterbank 
     job = miniFeature(p);
     Cluster.waitForJob(job);
     
-    %Make predictions on edge based features using previously trained GP
+    % Make predictions on edge based features using previously trained GP
     job = makePredictions(p,'edges');
     Cluster.waitForJob(job);
     
-    %Run interface classifier using Benedikt's trained classifier and store features
+    % Make predictions for spine heads on segment based features using previously trained spine head classifier
+    job = spineHeadDetectionOnCluster(p)
+    Cluster.waitForJob(job);
+    
+    % Run interface classifier using Benedikt's trained classifier and store features
     job = interfaceClassificationOnCluster(p);
     Cluster.waitForJob(job);
     
