@@ -14,11 +14,11 @@ end
 
 % Load pixel list for borders and segments
 load(parameter.local(sub(1),sub(2),sub(3)).borderFile);
-% load(parameter.local(sub(1),sub(2),sub(3)).segmentFile);
+load(parameter.local(sub(1),sub(2),sub(3)).segmentFile);
 
 % extract voxel ids
 borders = arrayfun(@(s) {s.PixelIdxList}, borders(:));
-% segments = arrayfun(@(s) {s.PixelIdxList}, segments(:));
+segments = arrayfun(@(s) {s.PixelIdxList}, segments(:));
 
 % Define bounding box, add border so that 3D filter do not 
 bbox = parameter.local(sub(1),sub(2),sub(3)).bboxSmall + [-10 10; -10 10; -10 10];
@@ -49,8 +49,8 @@ for l=1:length(parameter.feature.input)
                     [weights_new, weightNames_new] = featureDesign(real(filteredImFeats{p}), borders);
                     weights = [weights weights_new];
                     % Feature for nodes
-                    %[segmentWeights_new, weightNames_new] = featureDesign(real(filteredImFeats{p}), segments);
-                    %segmentWeights = [segmentWeights segmentWeights_new]; 
+                    [segmentWeights_new, weightNames_new] = featureDesign(real(filteredImFeats{p}), segments);
+                    segmentWeights = [segmentWeights segmentWeights_new]; 
                     % Names for features
                     weightNames_new = strcat({sprintf('%s %s filtersize=%d feature=%d ', currentFilter{1}, parameter.feature.input{l}, currentFilter{2}(n), p)}, weightNames_new);
                     weightNames = { weightNames{:}, weightNames_new{:} };
@@ -61,8 +61,8 @@ for l=1:length(parameter.feature.input)
                 [weights_new, weightNames_new] = featureDesign(filteredImFeats, borders);
                 weights = [weights weights_new];
                 % Feature for nodes
-                %[segmentWeights_new,weightNames_new] = featureDesign(filteredImFeats, segments);
-                %segmentWeights = [segmentWeights segmentWeights_new];
+                [segmentWeights_new,weightNames_new] = featureDesign(filteredImFeats, segments);
+                segmentWeights = [segmentWeights segmentWeights_new];
                 % Names for features
                 weightNames_new = strcat({sprintf('%s %s filtersize=%d feature=%d ', currentFilter{1}, parameter.feature.input{l}, currentFilter{2}(n), 0)}, weightNames_new);
                 weightNames = {weightNames{:}, weightNames_new{:}};                   
@@ -79,14 +79,14 @@ else
 end
 
 [weightsShape_borders, weightNames_new] = shapeFeatures(borders,siz);
-%[weightsShape_segments, weightNames_new] = shapeFeatures(segments,siz);
+[weightsShape_segments, weightNames_new] = shapeFeatures(segments,siz);
 
 weights = [weights weightsShape_borders];
-%segmentWeights = [segmentWeights weightsShape_segments];
+segmentWeights = [segmentWeights weightsShape_segments];
 weightNames = {weightNames{:}, weightNames_new{:}};
 
 save(parameter.local(sub(1),sub(2),sub(3)).weightFile, 'weights', 'weightNames');
-%save(parameter.local(sub(1),sub(2),sub(3)).segmentWeightFile, 'segmentWeights', 'weightNames');
+save(parameter.local(sub(1),sub(2),sub(3)).segmentWeightFile, 'segmentWeights', 'weightNames');
 
 end
 

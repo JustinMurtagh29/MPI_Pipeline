@@ -1,5 +1,5 @@
 
-function [spineHeadsPerUMcube,spineHeads]spineHeadPredictions(p,th)
+function [spineHeadsPerUMcube,spineHeads]=spineHeadPredictions(p,th)
 %To count the number of spine heads detected. Threshold can be set via variable 'th'
 %th=0;
 spineHeadCounterTotal=0;
