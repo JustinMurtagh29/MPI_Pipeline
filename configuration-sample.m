@@ -17,7 +17,7 @@ p.saveFolder = '/gaba/u/mberning/results/pipeline/test/';
 % Define region of interest
 % This can be copied directly from webKNOSSOS bounding box field
 % Make sure p.bbox is always 100 pixels away from any black region in X-Y (50 in Z)
-p.bbox_wK = [1153, 769, 129, 7808, 5376, 3200]; 
+p.bbox_wK = [128, 128, 128, 5573, 8508, 3413]; 
 
 % Name of the experiment. It's the same as the Dataset name on webKnossos.
 % Also in the "Info" section when you open your dataset in webKnossos.
@@ -40,3 +40,4 @@ p.seg.threshold = .25;
 % Do not change this, will add other parameters that
 % usually need no modification
 p = setParameterSettings(p);
+

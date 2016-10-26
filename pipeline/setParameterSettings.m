@@ -27,7 +27,7 @@ function [p, pT] = setParameterSettings(p)
     
     % Overlap between tiles in segmentation for gloablization
     p.tileBorder = [-256 256; -256 256; -128 128];
-    p.tiles = (p.bbox(:,2) - p.bbox(:,1) + 1) ./ p.tileSize;
+    p.tiles = ceil((p.bbox(:,2) - p.bbox(:,1) + 1) ./ p.tileSize);
     
     % Which function to use to normalize data to zero mean and one std
     [meanVal, stdVal] = ...
@@ -96,12 +96,12 @@ function [p, pT] = setParameterSettings(p)
                 p.local(i,j,k).saveFolder = [p.saveFolder 'local/' ...
                     'x' num2str(i, '%.4i') 'y' num2str(j, '%.4i') 'z' num2str(k, '%.4i') '/'];
                 % Bounding box without border for this tile
-                p.local(i,j,k).bboxSmall = [p.bbox(:,1) + [i-1; j-1; k-1] .* p.tileSize p.bbox(:,1) ...
-                    + [i; j; k] .* p.tileSize - [1; 1; 1]];
+                p.local(i,j,k).bboxSmall = [p.bbox(:,1) + [i-1; j-1; k-1] .* p.tileSize, ...
+                                            min(p.bbox(:,1) + [i; j; k] .* p.tileSize - [1; 1; 1], p.bbox(:,2))];
                 % Restrict bounding box big in order to avoid overlaps at border cubes of segmentation
                 bboxBig =  p.local(i,j,k).bboxSmall + p.tileBorder;
-                bboxBig(:,1) = arrayfun(@(x,y)max(x,y),bboxBig(:,1),p.bbox(:,1));
-                bboxBig(:,2) = arrayfun(@(x,y)min(x,y),bboxBig(:,2),p.bbox(:,2));
+                bboxBig(:,1) = max(bboxBig(:,1),p.bbox(:,1));
+                bboxBig(:,2) = min(bboxBig(:,2),p.bbox(:,2));
                 p.local(i,j,k).bboxBig = bboxBig;
                 % Where to save
                 p.local(i,j,k).segFile = [p.local(i,j,k).saveFolder 'seg.mat'];
@@ -189,40 +189,13 @@ function bbox = fixBoundingBox(p)
 
     % First check whether bounding box is aligned with KNOSSOS cubes
     lowerLimitMod = mod(bbox(:,1)-1,128);
-    upperLimitMod = mod(bbox(:,2),128);
+    upperLimitMod = mod(diff(bbox,1,2)+1, p.tileSize);
     if any(lowerLimitMod)
-        warning('Lower edge of bounding box not aligned to KNOSSOS cubes, fixing.');
-        bbox(:,1) = bbox(:,1) + mod(128 - lowerLimitMod, 128);
+        error('Lower edge of bounding box not aligned to KNOSSOS cubes.');
     end
-    if any(upperLimitMod)
-        warning('Upper edge of bounding box not aligned to KNOSSOS cubes, fixing.');
-        bbox(:,2) = bbox(:,2) - upperLimitMod;
-    end
-    if any(upperLimitMod) || any(lowerLimitMod)
-        fprintf('Knossos-cube aligned bounding box set to %s.\n', ...
-            mat2str(bbox(:)'));
+    if any(upperLimitMod < 64)
+        error('Upper edge of bounding box produces small last cube.');
     end
     
-    % Second check whether it is 'tileable' using tileSize
-    sizeOfRoi = bbox(:,2) - bbox(:,1) + 1;
-    tileSize = p.tileSize;
-    sizeToRemove = mod(sizeOfRoi, tileSize);
-    if any(sizeToRemove)
-        warning(['Bounding box not divisable by tileSize (' num2str(tileSize') '), fixing']);
-        for i=1:3
-            if sizeToRemove(i)
-                if ~mod(sizeToRemove(i),2*128)
-                    % If sizeToRemove is divisiable by 2 * knossos cube size, remove at both ends
-                    bbox(i,1) = bbox(i,1) + sizeToRemove(i)/2;
-                    bbox(i,2) = bbox(i,2) - sizeToRemove(i)/2;
-                else
-                    % Otherwise arbitrarily drop more at upper edge
-                    bbox(i,1) = bbox(i,1) + (sizeToRemove(i)-128)/2;
-                    bbox(i,2) = bbox(i,2) - ((sizeToRemove(i)-128)/2+128);
-                end
-            end
-        end
-        fprintf('Segmentation aligned bounding box set so %s.\n', ...
-            mat2str(bbox(:)'));
-    end
 end
+
