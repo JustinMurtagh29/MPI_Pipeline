@@ -57,7 +57,8 @@ function [p, pT] = setParameterSettings(p)
     p.seg.dtype = 'uint32';
     
     % Specify arguments for filterbank applied to raw and aff data each
-    p.filter = {{'sortedeigenvalueshessian' [3 5] []}...
+    p.filter = {
+        {'sortedeigenvalueshessian' [3 5] []}...
         {'gaussiansmoothedgradmagnitude' [3 5] []}...
         {'intensitygaussiansmoothed' [3 5] []}...
         {'sortedeigenvaluesstructure' [3 5] [5 7]}...
@@ -95,14 +96,20 @@ function [p, pT] = setParameterSettings(p)
                 % Save path for data relating to this tile
                 p.local(i,j,k).saveFolder = [p.saveFolder 'local/' ...
                     'x' num2str(i, '%.4i') 'y' num2str(j, '%.4i') 'z' num2str(k, '%.4i') '/'];
+                
                 % Bounding box without border for this tile
-                p.local(i,j,k).bboxSmall = [p.bbox(:,1) + [i-1; j-1; k-1] .* p.tileSize, ...
-                                            min(p.bbox(:,1) + [i; j; k] .* p.tileSize - [1; 1; 1], p.bbox(:,2))];
+                p.local(i,j,k).bboxSmall = [ ...
+                    p.bbox(:,1) + [i-1; j-1; k-1] .* p.tileSize, ...
+                    p.bbox(:,1) + [i;   j;   k  ] .* p.tileSize - [1; 1; 1]];
+                p.local(i,j,k).bboxSmall(:, 2) = ...
+                    min(p.local(i,j,k).bboxSmall(:, 2), p.bbox(:, 2));
+                                        
                 % Restrict bounding box big in order to avoid overlaps at border cubes of segmentation
                 bboxBig =  p.local(i,j,k).bboxSmall + p.tileBorder;
                 bboxBig(:,1) = max(bboxBig(:,1),p.bbox(:,1));
                 bboxBig(:,2) = min(bboxBig(:,2),p.bbox(:,2));
                 p.local(i,j,k).bboxBig = bboxBig;
+                
                 % Where to save
                 p.local(i,j,k).segFile = [p.local(i,j,k).saveFolder 'seg.mat'];
                 p.local(i,j,k).tempSegFile = strrep(p.local(i,j,k).segFile, '/local/', '/temp/');
@@ -182,20 +189,21 @@ end
 function bbox = fixBoundingBox(p)
     % Make bounding box meet requirements
 
-    % Transform from webKNOSSOS style bounding box to bounding box format
-    % used in pipeline
+    % Transform from webKNOSSOS style bounding box to
+    % bounding box format used in pipeline
     bbox = p.bbox_wK + 1;
     bbox = reshape(bbox, 3, 2);
 
     % First check whether bounding box is aligned with KNOSSOS cubes
-    lowerLimitMod = mod(bbox(:,1)-1,128);
-    upperLimitMod = mod(diff(bbox,1,2)+1, p.tileSize);
+    lowerLimitMod = mod(bbox(:,1) - 1, 128);
+    upperLimitMod = mod(diff(bbox, 1, 2) + 1, p.tileSize);
+    
     if any(lowerLimitMod)
         error('Lower edge of bounding box not aligned to KNOSSOS cubes.');
     end
+    
     if any(upperLimitMod < 64)
         error('Upper edge of bounding box produces small last cube.');
     end
-    
 end
 
