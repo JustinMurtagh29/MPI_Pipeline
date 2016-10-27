@@ -9,13 +9,13 @@ function raw = copyRoi()
     chosenOne.bbox = convertWebknossosToMatlabBbox(chosenOne.bbox);
     
     % Define destination of copy process
-    destination.root = '/gaba/u/mberning/wkCubes/2012-09-28_ex145_07x2_ROI2016/color/1/'
+    destination.root = '/gaba/u/mberning/wkCubes/2012-09-28_ex145_07x2_ROI2016/color/1/';
     destintaion.prefix = '2012-09-28_ex145_07x2_ROI2016_mag1';
     destintaion.firstCoord = 129 - [25 25 10];
 
     % Read from one, write to wKcubes
     raw = readKnossosRoi(chosenOne.root, chosenOne.prefix, chosenOne.bbox);
-    writeKnossosRoi(destination.root, destination.prefix, destination.bbox(:,1));
+    writeKnossosRoi(destination.root, destination.prefix, destination.firstCoord, raw);
 
 end
 
