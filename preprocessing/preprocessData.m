@@ -7,23 +7,25 @@ toc;
 display('Thresholding & Filling:');
 tic;
 % generate logical arrrays
-a = raw > 162 | raw < 50;
-b = zeros(size(a), 'uint8');
+bloodVesselMask = zeros(size(raw), 'uint8');
 toc;
 
 tic;
 fprintf('\nLayer Counter (max 3422): ');
-for i=1:size(a,3)
-	if i>1
+for i=1:size(raw,3)
+    % Nice counter, i Like
+    if i>1
 		for j=0:log10(i-1)
 			fprintf('\b');
 		end
 	end
 	fprintf('%d', i);
-	temp = bwareaopen(a(:,:,i), 1000, 4);
-	temp = imclose(temp, ones(5,5));
-	temp = padarray(temp, [1 1], 1);
-	idx = 1;
+
+	temp = bwareaopen(raw(:,:,i) > 162 | raw(:,:,i) < 50, 1000, 4);
+	temp = imclose(temp, ones(5,5));	
+	% Do we need to change location of hole drilling? -> test
+    temp = padarray(temp, [1 1], 1);
+    idx = 1;
 	while temp(1800,idx) == 1
 		temp(1800,idx) = 0;
 		idx = idx + 1;
@@ -31,16 +33,15 @@ for i=1:size(a,3)
 	temp = imfill(temp, 'holes');
 	temp([1 end], :) = [];
 	temp(:, [1 end]) = [];
-	b(:,:,i) = temp;
+	bloodVesselMask(:,:,i) = temp;
 end
 fprintf('\n');
-clear a temp;
+clear temp idx;
 toc;
 
 display('Saving blood vessel mask to HDF 5 file:');
 tic;
-b = uint8(b);
-h5write('/zdata/manuel/results/largeData2.h5', '/mask', b);
+h5write('/gaba/scratch/mberning/tempData07x2.h5', '/mask', bloodVesselMask);
 toc;
 
 display('Masking the raw data:');
@@ -63,7 +64,7 @@ toc;
 display('Saving masked raw data to HDF 5 file:');
 tic;
 raw = uint8(raw);
-h5write('/zdata/manuel/results/largeData2.h5', '/rawmasked', raw);
+h5write('/gaba/scratch/mberning/tempData07x2.h5', '/rawmasked', raw);
 toc;
 
 % Mean downsampling
@@ -104,8 +105,8 @@ toc;
 display('Saving gradient masked data to HDF 5 file:');
 tic;
 raw = uint8(raw);
-h5create('/zdata/manuel/results/largeData2.h5', '/rawcorrected', size(raw), 'Datatype', 'uint8');
-h5write('/zdata/manuel/results/largeData2.h5', '/rawcorrected', raw);
+h5create('/gaba/scratch/mberning/tempData07x2.h5', '/rawcorrected', size(raw), 'Datatype', 'uint8');
+h5write('/gaba/scratch/mberning/tempData07x2.h5', '/rawcorrected', raw);
 toc;
 
 display('Writing to KNOSSOS hierachy');
