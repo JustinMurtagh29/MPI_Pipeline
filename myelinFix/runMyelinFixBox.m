@@ -30,12 +30,11 @@ function runMyelinFixBox(param, newPrefix, box)
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     
     % config
-    pad = 16;
+    pad = 10;
 
     % make sure that the bounding box
     % is aligned with the KNOSSOS cube hierarchy
     assert(Util.checkBoundingBox(box));
-    % assert(all(mod(box(:), 128) == [1; 1; 1; 0; 0; 0]));
     
     % add padding
     disp('> Loading raw data...');

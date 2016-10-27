@@ -7,22 +7,9 @@ function job = runMyelinFix(p, newPrefix)
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     
-    tileSize = p.tileSize;
-    xIds = p.bbox(1, 1):tileSize(1):p.bbox(1, 2);
-    yIds = p.bbox(2, 1):tileSize(2):p.bbox(2, 2);
-    zIds = p.bbox(3, 1):tileSize(3):p.bbox(3, 2);
-    
-    % do *NOT* change X and Y!
-    [xMinVec, yMinVec, zMinVec] = meshgrid(yIds, xIds, zIds);
-    
-    % build job inputs
-    boxCount = numel(xMinVec);
-    buildBox = @(idx) [ ...
-        xMinVec(idx), xMinVec(idx) + 127;
-        yMinVec(idx), yMinVec(idx) + 127;
-        zMinVec(idx), zMinVec(idx) + 127];
-    
+    boxCount = numel(p.local);
     taskInputArguments = arrayfun( ...
-        @(idx) {{p, newPrefix, buildBox(idx)}}, 1:boxCount);
+        @(idx) {{p, newPrefix, p.local(idx).bboxSmall}}, 1:boxCount);
+    
     job = startCPU(@runMyelinFixBox, taskInputArguments, 'myelinFix');
 end
