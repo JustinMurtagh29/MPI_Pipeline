@@ -13,9 +13,9 @@ function job = bigFwdPass( p, bbox )
     cubeSize = [512 512 256];
     assert(all(mod(cubeSize, 128) == 0));
     
-    X = [bbox(1, 1):cubeSize(1):bbox(1, 2), p.bbox(1, 2)];
-    Y = [bbox(2, 1):cubeSize(2):bbox(2, 2), p.bbox(2, 2)];
-    Z = [bbox(3, 1):cubeSize(3):bbox(3, 2), p.bbox(3, 2)];
+    X = [bbox(1, 1):cubeSize(1):bbox(1, 2), p.bbox(1, 2) + 1];
+    Y = [bbox(2, 1):cubeSize(2):bbox(2, 2), p.bbox(2, 2) + 1];
+    Z = [bbox(3, 1):cubeSize(3):bbox(3, 2), p.bbox(3, 2) + 1];
     
     dimCount = cellfun(@numel, {X, Y, Z}) - 1;
     inputCell = cell(prod(dimCount), 1);
