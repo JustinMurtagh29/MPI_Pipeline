@@ -1,20 +1,25 @@
 function job = miniSegmentation(p)
 
-for i=1:size(p.local,1)
-	for j=1:size(p.local,2)
-		for k=1:size(p.local,3)
-			if ~exist(p.local(i,j,k).saveFolder, 'dir')
-				mkdir(p.local(i,j,k).saveFolder);
-			end
-			idx = sub2ind(size(p.local), i, j, k);
-			if isfield(p.local(i,j,k), 'class')
-                % This is for pT train, probably needs update at some point?
-				inputCell{idx} = {p.local(i,j,k).class.root, p.local(i,j,k).class.prefix, p.local(i,j,k).bboxBig, p.seg.func, p.local(i,j,k).segFile};
-			else
-				inputCell{idx} = {p.class.root p.class.prefix, p.local(i,j,k).bboxBig, p.seg.func, p.local(i,j,k).tempSegFile};
-			end
-		end
-	end
+% allocate task inputs
+taskCount = numel(p.local);
+inputCell = cell(taskCount, 1);
+
+for idx = 1:taskCount
+    % create cube folder, if needed
+    if ~exist(p.local(idx).saveFolder, 'dir')
+        mkdir(p.local(idx).saveFolder);
+    end
+    
+    if isfield(p.local(idx), 'class')
+        % This is for pT train, probably needs update at some point?
+        inputCell{idx} = { ...
+            p.local(idx).class.root, p.local(idx).class.prefix, ...
+            p.local(idx).bboxBig, p.seg.func, p.local(idx).segFile};
+    else
+        inputCell{idx} = { ...
+            p.class.root p.class.prefix, ....
+            p.local(idx).bboxBig, p.seg.func, p.local(idx).tempSegFile};
+    end
 end
 
 functionH = @segmentForPipeline;

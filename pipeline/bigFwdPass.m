@@ -5,21 +5,24 @@ function job = bigFwdPass( p, bbox )
     
     % sanity check
     assert(all(mod(bbox(:, 1), 128) == 1));
-    assert(all(mod(bbox(:, 2), 128) == 0));
     
     % This is not of any importance due to CNN translation invariance,
     % can be choosen for computational efficency, currenlty optimized for
     % running on GPU with 12GB, should be multiples of 128, this is same
     % as tileSize right now, no reason it has to be.
     cubeSize = [512 512 256];
+    assert(all(mod(cubeSize, 128) == 0));
     
-    X = bbox(1,1):cubeSize(1):bbox(1,2)+1;
-    Y = bbox(2,1):cubeSize(2):bbox(2,2)+1;
-    Z = bbox(3,1):cubeSize(3):bbox(3,2)+1;
+    X = [bbox(1, 1):cubeSize(1):bbox(1, 2), p.bbox(1, 2) + 1];
+    Y = [bbox(2, 1):cubeSize(2):bbox(2, 2), p.bbox(2, 2) + 1];
+    Z = [bbox(3, 1):cubeSize(3):bbox(3, 2), p.bbox(3, 2) + 1];
     
-    for i=1:length(X)-1
-        for j=1:length(Y)-1
-            for k=1:length(Z)-1
+    dimCount = cellfun(@numel, {X, Y, Z}) - 1;
+    inputCell = cell(prod(dimCount), 1);
+    
+    for i=1:dimCount(1)
+        for j=1:dimCount(2)
+            for k=1:dimCount(3)
                 idx = sub2ind( ...
                     [length(X)-1 length(Y)-1 length(Z)-1], i, j, k);
                 inputCell{idx} = { ...
