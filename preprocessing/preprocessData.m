@@ -32,7 +32,7 @@ for i=1:length(zCoords)
     writeKnossosRoi(vesselsMasked.root, vesselsMasked.prefix, thisSliceBbox(:,1)', maskedRaw);
     writeKnossosRoi(strrep(vesselsMasked.root, '/color/', '/segmentation/'), vesselsMasked.prefix, thisSliceBbox(:,1)', uint32(vessels), 'uint32', '', 'noRead');
     warning on;
-    Util.progressBar(length(zCoords), i);
+    Util.progressBar(i, length(zCoords));
 end
 clear i j;
 toc;
