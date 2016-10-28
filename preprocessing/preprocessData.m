@@ -1,116 +1,62 @@
-% Reading raw data from HDF5 file
-display('Loading data from HDF5 file');
-tic;
-raw = h5read('/gaba/scratch/mberning/tempData07x2.h5', '/raw');
-toc;
+% Settings
+dataset.root = '/gaba/u/mberning/wkCubes/2012-09-28_ex145_07x2_ROI2016/color/1/';
+dataset.prefix = '2012-09-28_ex145_07x2_ROI2016_mag1';
+dataset.bbox = [128, 128, 128, 5573, 8508, 3413];
+dataset.bbox = Util.convertWebknossosToMatlabBbox(dataset.bbox);
+dataset.bbox = dataset.bbox + [-25 25; -25 25; -10 10];
+vesselsMasked.root = '/gaba/u/mberning/wkCubes/2012-09-28_ex145_07x2_ROI2016_vessel/color/1/';
+vesselsMasked.prefix = '2012-09-28_ex145_07x2_ROI2016_vessel_mag1';
+gradientCorrected.root = '/gaba/u/mberning/wkCubes/2012-09-28_ex145_07x2_ROI2016_corrected/color/1/';
+gradientCorrected.prefix = '2012-09-28_ex145_07x2_ROI2016_corrected_mag1';
 
-display('Thresholding & Filling:');
-tic;
-% generate logical arrrays
-bloodVesselMask = zeros(size(raw), 'uint8');
-toc;
+% Define slice to be loaded in memory in paralell (one KNOSSOS cube z-plane)
+zCoords = dataset.bbox(3,1):dataset.bbox(3,2);
+lastOfKnossosCube = [find(mod(zCoords,128) == 0) length(zCoords)];
+numberValidInCube = [lastOfKnossosCube(1) diff(lastOfKnossosCube)];
+zCoords = mat2cell(zCoords, 1, numberValidInCube);
 
+% Detect vessels in each slice seperately, store raw data masked with mean at vessel locations and segmentation for detection visualization
+thisSliceBbox = dataset.bbox;
 tic;
-fprintf('\nLayer Counter (max 3422): ');
-for i=1:size(raw,3)
-    % Nice counter, i Like
-    if i>1
-		for j=0:log10(i-1)
-			fprintf('\b');
-		end
-	end
-	fprintf('%d', i);
-
-	temp = bwareaopen(raw(:,:,i) > 162 | raw(:,:,i) < 50, 1000, 4);
-	temp = imclose(temp, ones(5,5));	
-	% Do we need to change location of hole drilling? -> test
-    temp = padarray(temp, [1 1], 1);
-    idx = 1;
-	while temp(1800,idx) == 1
-		temp(1800,idx) = 0;
-		idx = idx + 1;
-	end
-	temp = imfill(temp, 'holes');
-	temp([1 end], :) = [];
-	temp(:, [1 end]) = [];
-	bloodVesselMask(:,:,i) = temp;
+for i=1:length(zCoords) 
+    thisSliceBbox(3,:) = [zCoords{i}(1) zCoords{i}(end)];
+    warning off;
+    raw = readKnossosRoi(dataset.root, dataset.prefix, thisSliceBbox);
+    warning on;
+    for j=1:size(raw,3)
+        vessels(:,:,j) = detectVesselsSingleImage(raw(:,:,j));
+    end 
+    maskedRaw = raw;
+    maskedRaw(vessels) = uint8(121);
+    warning off;
+    writeKnossosRoi(vesselsMasked.root, vesselsMasked.prefix, thisSliceBbox(:,1)', maskedRaw);
+    writeKnossosRoi(strrep(vesselsMasked.root, '/color/', '/segmentation/'), vesselsMasked.prefix, thisSliceBbox(:,1)', uint32(vessels), 'uint32', '', 'noRead');
+    warning on;
+    Util.progressBar(length(zCoords), i);
 end
-fprintf('\n');
-clear temp idx;
+clear i j;
 toc;
 
-display('Saving blood vessel mask to HDF 5 file:');
+% Calculate a mean downsampled, smoothed version of vesse
+display('Gradient estimation');
 tic;
-h5write('/gaba/scratch/mberning/tempData07x2.h5', '/mask', bloodVesselMask);
-toc;
-
-display('Masking the raw data:');
-tic;
-fprintf('\nLayer Counter (max 3422): ')
-for i=1:size(raw,3);
-	if i>1
-		for j=0:log10(i-1)
-			fprintf('\b');
-		end
-	end
-	fprintf('%d', i);
-	temp = raw(:,:,i);
-	temp(b(:,:,i)>0) = 121;
-	raw(:,:,i) = temp;
-end
-fprintf('\n')
-toc;
-
-display('Saving masked raw data to HDF 5 file:');
-tic;
-raw = uint8(raw);
-h5write('/gaba/scratch/mberning/tempData07x2.h5', '/rawmasked', raw);
-toc;
-
-% Mean downsampling
 filterSize = [64 64 29];
-display('Mean downsampling');
-tic;
-raw_mean = nlfilter3(raw, @mean, filterSize);
+rawSmoothed = approximateGradients(vesselsMasked, dataset.bbox, filterSize);
 toc;
-
-% Gradient calculation
-display('Approximating gradients');
-tic;
-raw_temp = raw_mean;
-raw_temp(raw_temp < 100 | raw_temp > 130) = 121; % Mask out somata, apical dendrites and myelin
-raw_smoothed = smooth3(raw_temp, 'gaussian', [5 5 5], 1.2);
-toc
 
 display('Gradient correction');
 tic;
-fprintf('\nLayer Counter (max 3422): ')
-for i=1:size(raw,3);
-	if i>1
-		for j=0:log10(i-1)
-			fprintf('\b');
-		end
-	end
-	fprintf('%d', i);
+for i=1:length(zCoords)
+    thisSliceBbox(3,:) = [zCoords{i}(1) zCoords{i}(end)];
 	z = ceil(i/filterSize(3));
-	planeCorrectionImage = 1./(interp(mean(raw_smoothed(:,:,z),2),filterSize(1))*interp(mean(raw_smoothed(:,:,z),1),filterSize(2))./121^2);
-	temp = raw(:,:,i);
-	temp = planeCorrectionImage.*temp;
-	temp(b(:,:,i)>0) = 121;
-	raw(:,:,i) = temp;
+	planeCorrectionImage = 1./(interp(mean(rawSmoothed(:,:,z),2),filterSize(1))*interp(mean(rawSmoothed(:,:,z),1),filterSize(2))./121^2);
+	temp = readKnossosRoi(vesselsMasked.root, vesselsMasked.prefix, thisSliceBbox);
+    vessels =  readKnossosRoi(strrep(vesselsMasked.root, '/color/', '/segmentation/'), vesselsMasked.prefix, thisSliceBbox, 'single', '', 'raw');
+    temp = planeCorrectionImage.*temp;
+	temp(vessels>0) = 121;
+    writeKnossosRoi(gradientCorrected.root, gradientCorrected.prefix, thisSliceBbox(:,1)', temp);
+    warning on
+    Util.progressBar(length(zCoords), i);
 end
-fprintf('\n')
-toc;
-
-display('Saving gradient masked data to HDF 5 file:');
-tic;
-raw = uint8(raw);
-h5create('/gaba/scratch/mberning/tempData07x2.h5', '/rawcorrected', size(raw), 'Datatype', 'uint8');
-h5write('/gaba/scratch/mberning/tempData07x2.h5', '/rawcorrected', raw);
-toc;
-
-display('Writing to KNOSSOS hierachy');
-tic;
-writeKnossosRoi('/zdata/manuel/data/cortex/2012-09-28_ex145_07x2/mag1masked/', '2012-09-28_ex145_07x2_mag1', bbox(:,1)', raw);
 toc;
 

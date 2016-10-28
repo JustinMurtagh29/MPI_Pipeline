@@ -17,10 +17,5 @@ function raw = copyRoi()
     raw = readKnossosRoi(chosenOne.root, chosenOne.prefix, chosenOne.bbox);
     writeKnossosRoi(destination.root, destination.prefix, destination.firstCoord, raw);
 
-    % Saving raw data to HDF 5 file for faster loading in case we need multiple tries for contrast normalization
-    % Saving duplicates in memory not feasible
-    h5create('/gaba/scratch/mberning/tempData07x2.h5', '/raw', size(raw), 'Datatype', 'uint8');
-    h5write('/gaba/scratch/mberning/tempData07x2.h5', '/raw', raw);
-
 end
 
