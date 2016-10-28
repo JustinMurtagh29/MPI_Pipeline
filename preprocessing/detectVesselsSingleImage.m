@@ -1,4 +1,4 @@
-function vessel = detectVessel(raw)
+function vessel = detectVesselSingleImage(raw)
 
     temp = bwareaopen(raw > 162 | raw < 50, 1000, 4);
 	temp = imclose(temp, ones(5,5));	
