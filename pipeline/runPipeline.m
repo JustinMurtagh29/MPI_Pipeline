@@ -7,6 +7,24 @@ function runPipeline(p)
     job = bigFwdPass(p, p.bbox);
     Cluster.waitForJob(job);
     
+    % If you have a lot of myelin in your dataset, you might
+    % want to consider applying the following "myelin fix".
+    % This is an ugly hack and was originally developed for
+    % Jakob's mouse M1 L6 dataset. It will need some tweaking
+    % before it works on other datasets. For more info, check
+    % out the documentation of +Myelin/runFixInBox
+    
+    % % define new classification prefix
+    % newPrefix = [p.class.prefix, '_mod'];
+    %
+    % % run myelin detection
+    % job = Myelin.runFix(p, newPrefix);
+    % Cluster.waitForJob(job);
+    %
+    % % use modified classification in subsequent steps
+    % p.class.prefix = newPrefix;
+    % clear newPrefix;
+    
     % Runs watershed based segmentation for region defined in p.bbox on p.raw and saves as p.local.segFile
     % Because watershed segmentation has FOV effects (no translation invariance), processed with large
     % overlap and later joined together (see correspondences)
