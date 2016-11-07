@@ -82,7 +82,7 @@ function runPipeline(p)
     Cluster.waitForJob(job);
     
     % Make predictions for spine heads on segment based features using previously trained spine head classifier
-    job = spineHeadDetectionOnCluster(p)
+    job = spineHeadDetectionOnCluster(p);
     Cluster.waitForJob(job);
     
     % Run interface classifier using Benedikt's trained classifier and store features
