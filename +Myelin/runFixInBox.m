@@ -1,5 +1,5 @@
-function runMyelinFixBox(param, newPrefix, box)
-    % runMyelinFixBox(param, newPrefix, box)
+function runFixInBox(param, newPrefix, box)
+    % runFixInBox(param, newPrefix, box)
     %   The current membrane detection / segmentation pipeline
     %   struggles with myelin sheaths and produces a lot of
     %   neuron-myelin mergers. This function tries to identify
