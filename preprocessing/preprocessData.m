@@ -33,30 +33,87 @@ for i=1:length(zCoords)
     writeKnossosRoi(strrep(vesselsMasked.root, '/color/', '/segmentation/'), vesselsMasked.prefix, thisSliceBbox(:,1)', uint32(vessels), 'uint32', '', 'noRead');
     warning on;
     Util.progressBar(i, length(zCoords));
+    clear vessels;
 end
-clear i j;
+clear i j lastOfKnossosCube maskedRaw numberValidInCube raw vessels thisSliceBbox;
 toc;
 
-% Calculate a mean downsampled, smoothed version of vesse
-display('Gradient estimation');
+% Approximate gradients by first (in this function) mean downsampling
+filterSize = [64; 64; 29];
+[rawMean, x, y, z] = approximateGradients(vesselsMasked, dataset.bbox, filterSize);
+save('/gaba/scratch/mberning/rawMean.mat');
+
+% Gradient calculation
+display('Smoothing gradient estimation');
 tic;
-filterSize = [64 64 29];
-rawSmoothed = approximateGradients(vesselsMasked, dataset.bbox, filterSize);
+% Calculate and smooth gradient along each axis (this will minimize effects
+% of nuclei etc. variations on 10 micron scale as averaged over 100)
+x_gradient = mean(mean(rawMean,2),3);
+y_gradient = mean(mean(rawMean,1),3);
+z_gradient = mean(mean(rawMean,1),2);
+x_gradient_smooth = smooth(x_gradient, 5, 'lowess');
+y_gradient_smooth = permute(smooth(y_gradient, 5, 'lowess'), [2 1 3]);
+z_gradient_smooth = permute(smooth(z_gradient, 5, 'lowess'), [3 2 1]);
+% Construct 3D volume with correction factors
+correctionVolume = bsxfun(@times, x_gradient_smooth*y_gradient_smooth, z_gradient_smooth);
+correctionVolume = mean(correctionVolume(:)) ./ correctionVolume;
+% Extend correction volume (used for interpolation later) to avoid border
+% effects within raw data
+correctionVolume = padarray(correctionVolume, [2 2 2], 'symmetric');
+dx = x(2)-x(1);
+dy = y(2)-z(1);
+dz = z(2)-z(1);
+x = [x(1)-2*dx x(1)-dx x x(end)+dx x(end)+2*dx];
+y = [y(1)-2*dy y(1)-dy y y(end)+dy y(end)+2*dy];
+z = [z(1)-2*dz z(1)-dz z z(end)+dz z(end)+2*dz];
+% Display some statistics to make sure everything is in a reasonable range
+display(['Mean of correction: ' num2str(mean(correctionVolume(:)))]);
+display(['Min of correction: ' num2str(min(correctionVolume(:)))]);
+display(['Max of correction: ' num2str(max(correctionVolume(:)))]);
 toc;
+
+% Need to go to quarter KNOSSOS cube z-slices for next step, interpolation requires too much memory
+zCoords = dataset.bbox(3,1):dataset.bbox(3,2);
+lastOfKnossosCube = [find(mod(zCoords,32) == 0) length(zCoords)];
+numberValidInCube = [lastOfKnossosCube(1) diff(lastOfKnossosCube)];
+zCoords = mat2cell(zCoords, 1, numberValidInCube);
 
 display('Gradient correction');
-tic;
+thisSliceBbox = dataset.bbox;
+[X,Y,Z] = meshgrid(y,x,z);
 for i=1:length(zCoords)
-    thisSliceBbox(3,:) = [zCoords{i}(1) zCoords{i}(end)];
-	z = ceil(i/filterSize(3));
-	planeCorrectionImage = 1./(interp(mean(rawSmoothed(:,:,z),2),filterSize(1))*interp(mean(rawSmoothed(:,:,z),1),filterSize(2))./121^2);
-	temp = readKnossosRoi(vesselsMasked.root, vesselsMasked.prefix, thisSliceBbox);
-    vessels =  readKnossosRoi(strrep(vesselsMasked.root, '/color/', '/segmentation/'), vesselsMasked.prefix, thisSliceBbox, 'single', '', 'raw');
-    temp = planeCorrectionImage.*temp;
-	temp(vessels>0) = 121;
-    writeKnossosRoi(gradientCorrected.root, gradientCorrected.prefix, thisSliceBbox(:,1)', temp);
-    warning on
-    Util.progressBar(length(zCoords), i);
+    % Determine bounding box and interpolation for this z-slice
+    thisSliceBbox(3,:) = [zCoords{i}(1) zCoords{i}(end)];	
+	xq = thisSliceBbox(1,1):thisSliceBbox(1,2);
+    yq = thisSliceBbox(2,1):thisSliceBbox(2,2);
+    zq = thisSliceBbox(3,1):thisSliceBbox(3,2);
+    [Xq,Yq,Zq] = meshgrid(yq,xq,zq);
+    % Read original data and detected vessel
+    % Interpolate correction voxel for each voxel and multiply
+    correctionForSlice =  interp3(X,Y,Z,correctionVolume,Xq,Yq,Zq, 'linear', 121);
+    warning off;
+    raw = readKnossosRoi(vesselsMasked.root, vesselsMasked.prefix, thisSliceBbox); 
+    vessels =  readKnossosRoi(strrep(vesselsMasked.root, '/color/', '/segmentation/'), vesselsMasked.prefix, thisSliceBbox, 'uint32', '', 'raw');
+    warning on;
+    raw = uint8(correctionForSlice .* double(raw));
+	raw(vessels > 0) = 121;
+    % Save to new datset to be used in pipeline
+    warning off;
+    writeKnossosRoi(gradientCorrected.root, gradientCorrected.prefix, thisSliceBbox(:,1)', raw);
+    warning on;
+    clear raw vessels; 
+    Util.progressBar(i, length(zCoords));
 end
-toc;
+clear X Xq Y Yq Z Zq;
+
+% Create resoution pyramids for new dataset(s)
+createResolutionPyramid(vesselsMasked.root);
+createResolutionPyramid(gradientCorrected.root);
+% Still a bit more complicated for downsampling segmentation(s)
+thisRoot = strrep(vesselsMasked.root, '/color/', '/segmentation/');
+createResolutionPyramid(thisRoot, vesselsMasked.prefix, dataset.bbox, strrep(thisRoot, '/1/', ''), true);
+
+% Does not belong here (but who really cares, I do not anymore)
+thisRoot = '/gaba/wKcubes/Connectomics department/sK15_Str_js_v3/segmentation/1/';
+createResolutionPyramid(thisRoot, 'sK15_Str_js_v3_mag1', p.bbox, strrep(thisRoot, '/1/', ''), true);
 

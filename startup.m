@@ -24,3 +24,4 @@ CLUSTER_GPU = Cluster.getCluster( ...
 % Mark as ready
 global PIPELINE_READY;
 PIPELINE_READY = true;
+
