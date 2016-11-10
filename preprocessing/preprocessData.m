@@ -38,6 +38,16 @@ end
 clear i j lastOfKnossosCube maskedRaw numberValidInCube raw vessels thisSliceBbox;
 toc;
 
+display('Downsampling KNOSSOS hierachies');
+tic;
+% Create resoution pyramids for new dataset(s)
+createResolutionPyramid(vesselsMasked.root);
+% Still a bit more complicated for downsampling segmentation(s)
+thisRoot = strrep(vesselsMasked.root, '/color/', '/segmentation/');
+thisBBox = [1 1 1; (ceil(dataset.bbox(:,2)./1024).*1024)']';
+createResolutionPyramid(thisRoot, vesselsMasked.prefix, thisBBox, strrep(thisRoot, '/1/', ''), true);
+toc;
+
 % Approximate gradients by first (in this function) mean downsampling
 filterSize = [64; 64; 29];
 [rawMean, x, y, z] = approximateGradients(vesselsMasked, dataset.bbox, filterSize);
@@ -106,14 +116,9 @@ for i=1:length(zCoords)
 end
 clear X Xq Y Yq Z Zq;
 
+display('Downsampling KNOSSOS hierachies');
+tic;
 % Create resoution pyramids for new dataset(s)
-createResolutionPyramid(vesselsMasked.root);
 createResolutionPyramid(gradientCorrected.root);
-% Still a bit more complicated for downsampling segmentation(s)
-thisRoot = strrep(vesselsMasked.root, '/color/', '/segmentation/');
-createResolutionPyramid(thisRoot, vesselsMasked.prefix, dataset.bbox, strrep(thisRoot, '/1/', ''), true);
-
-% Does not belong here (but who really cares, I do not anymore)
-thisRoot = '/gaba/wKcubes/Connectomics department/sK15_Str_js_v3/segmentation/1/';
-createResolutionPyramid(thisRoot, 'sK15_Str_js_v3_mag1', p.bbox, strrep(thisRoot, '/1/', ''), true);
+toc;
 
