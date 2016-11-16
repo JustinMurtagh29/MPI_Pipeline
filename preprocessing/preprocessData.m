@@ -47,7 +47,7 @@ regions{27} = 4:8;
 % Detect vessels in each slice seperately, store raw data masked with mean at vessel locations and segmentation for detection visualization
 thisSliceBbox = dataset.bbox;
 tic;
-for i=14:length(zCoords) 
+for i=1:length(zCoords) 
     thisSliceBbox(3,:) = [zCoords{i}(1) zCoords{i}(end)];
     warning off;
     raw = readKnossosRoi(dataset.root, dataset.prefix, thisSliceBbox);
