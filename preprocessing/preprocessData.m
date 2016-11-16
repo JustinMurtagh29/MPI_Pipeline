@@ -14,11 +14,40 @@ zCoords = dataset.bbox(3,1):dataset.bbox(3,2);
 lastOfKnossosCube = [find(mod(zCoords,128) == 0) length(zCoords)];
 numberValidInCube = [lastOfKnossosCube(1) diff(lastOfKnossosCube)];
 zCoords = mat2cell(zCoords, 1, numberValidInCube);
+zCoords(numberValidInCube == 0) = [];
+
+% Define regions (CC according to regionprops) to be deleted
+% Done manually by looking at whether FP or TP vessel detection
+% After some rounds I only checked > 10k voxel regions, all else seems wrong & unimportant
+% To do so run once with all regions set to [], look at webKnossos at locations output in next for loop
+% Errors were: Myelin, nuclei charging artifacts or close to dataset border
+regions{1} = 4;
+regions{2} = 4;
+regions{4} = 5;
+regions{7} = 6;
+regions{8} = 6;
+regions{9} = 6;
+regions{10} = [5:9 11:13];
+regions{13} = 7;
+regions{15} = 4:6;
+regions{16} = 3:6;
+regions{17} = 3;
+regions{18} = [4:13];
+regions{19} = [3:33];
+regions{20} = [1 4:15 17];
+regions{21} = [4:10 12:20];
+regions{22} = [4:44];
+regions{23} = [2:4 7:40];
+regions{24} = [3 6:30 32:73];
+regions{26} = [5 6];
+regions{27} = 4:8;
+% Uncomment to get all detected vessel, disables selection above
+%regions = cell(27,1);
 
 % Detect vessels in each slice seperately, store raw data masked with mean at vessel locations and segmentation for detection visualization
 thisSliceBbox = dataset.bbox;
 tic;
-for i=1:length(zCoords) 
+for i=14:length(zCoords) 
     thisSliceBbox(3,:) = [zCoords{i}(1) zCoords{i}(end)];
     warning off;
     raw = readKnossosRoi(dataset.root, dataset.prefix, thisSliceBbox);
@@ -27,12 +56,21 @@ for i=1:length(zCoords)
         vessels(:,:,j) = detectVesselsSingleImage(raw(:,:,j));
     end 
     maskedRaw = raw;
+    % Remove (small compared to blood vessel) FP mylein detections
+    rp = regionprops(vessels, {'Area' 'Centroid' 'PixelIdxList'});
+    %display(num2str(i));
+    %for j=1:length(rp)
+    %    display(['Region ' num2str(j) ': ' num2str(rp(j).Area) ' voxel, centroid: ' num2str(round(rp(j).Centroid([2 1 3]))+ thisSliceBbox(:,1)')]);
+    %end
+    idxToDelete = regions{i};
+    vessels(cat(1,rp(idxToDelete).PixelIdxList)) = 0;
+    vessels = imclose(vessels, ones(2, 2, 7));     
     maskedRaw(vessels) = uint8(121);
     warning off;
     writeKnossosRoi(vesselsMasked.root, vesselsMasked.prefix, thisSliceBbox(:,1)', maskedRaw);
     writeKnossosRoi(strrep(vesselsMasked.root, '/color/', '/segmentation/'), vesselsMasked.prefix, thisSliceBbox(:,1)', uint32(vessels), 'uint32', '', 'noRead');
     warning on;
-    Util.progressBar(i, length(zCoords));
+    %Util.progressBar(i, length(zCoords));
     clear vessels;
 end
 clear i j lastOfKnossosCube maskedRaw numberValidInCube raw vessels thisSliceBbox;
@@ -87,6 +125,7 @@ zCoords = dataset.bbox(3,1):dataset.bbox(3,2);
 lastOfKnossosCube = [find(mod(zCoords,32) == 0) length(zCoords)];
 numberValidInCube = [lastOfKnossosCube(1) diff(lastOfKnossosCube)];
 zCoords = mat2cell(zCoords, 1, numberValidInCube);
+zCoords(numberValidInCube == 0) = [];
 
 display('Gradient correction');
 thisSliceBbox = dataset.bbox;
