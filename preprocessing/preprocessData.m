@@ -51,7 +51,7 @@ tic;
 for i=1:length(zCoords) 
     thisSliceBbox(3,:) = [zCoords{i}(1) zCoords{i}(end)];
     raw = readKnossosRoi(dataset.root, dataset.prefix, thisSliceBbox);
-    vessels = zeros(size(vessels), 'logical');
+    vessels = zeros(size(raw), 'logical');
     for j=1:size(raw,3)
         vessels(:,:,j) = detectVesselsSingleImage(raw(:,:,j));
     end 
