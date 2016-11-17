@@ -32,11 +32,11 @@ regions{13} = 7;
 regions{15} = 4:6;
 regions{16} = 3:6;
 regions{17} = 3;
-regions{18} = [4:13];
-regions{19} = [3:33];
+regions{18} = 4:13;
+regions{19} = 3:33;
 regions{20} = [1 4:15 17];
 regions{21} = [4:10 12:20];
-regions{22} = [4:44];
+regions{22} = 4:44;
 regions{23} = [2:4 7:40];
 regions{24} = [3 6:30 32:73];
 regions{26} = [5 6];
@@ -50,9 +50,8 @@ display('Detecting blood vessels');
 tic;
 for i=1:length(zCoords) 
     thisSliceBbox(3,:) = [zCoords{i}(1) zCoords{i}(end)];
-    warning off;
     raw = readKnossosRoi(dataset.root, dataset.prefix, thisSliceBbox);
-    warning on;
+    vessels = zeros(size(vessels), 'logical');
     for j=1:size(raw,3)
         vessels(:,:,j) = detectVesselsSingleImage(raw(:,:,j));
     end 
@@ -68,10 +67,8 @@ for i=1:length(zCoords)
     vessels = imclose(vessels, ones(1, 1, 7));  
     maskedRaw = raw;
     maskedRaw(vessels) = uint8(121);
-    warning off;
-    writeKnossosRoi(vesselsMasked.root, vesselsMasked.prefix, thisSliceBbox(:,1)', maskedRaw);
+    writeKnossosRoi(vesselsMasked.root, vesselsMasked.prefix, thisSliceBbox(:,1)', maskedRaw, 'uint8', '', 'noRead');
     writeKnossosRoi(strrep(vesselsMasked.root, '/color/', '/segmentation/'), vesselsMasked.prefix, thisSliceBbox(:,1)', uint32(vessels), 'uint32', '', 'noRead');
-    warning on;
     %Util.progressBar(i, length(zCoords));
     clear vessels;
 end
@@ -142,16 +139,12 @@ for i=1:length(zCoords)
     % Read original data and detected vessel
     % Interpolate correction voxel for each voxel and multiply
     correctionForSlice =  interp3(X,Y,Z,correctionVolume,Xq,Yq,Zq, 'linear', 121);
-    warning off;
     raw = readKnossosRoi(vesselsMasked.root, vesselsMasked.prefix, thisSliceBbox); 
-    vessels =  readKnossosRoi(strrep(vesselsMasked.root, '/color/', '/segmentation/'), vesselsMasked.prefix, thisSliceBbox, 'uint32', '', 'raw');
-    warning on;
+    vessels =  readKnossosRoi(strrep(vesselsMasked.root, '/color/', '/segmentation/'), vesselsMasked.prefix, thisSliceBbox, 'uint32');
     raw = uint8(correctionForSlice .* double(raw));
 	raw(vessels > 0) = 121;
     % Save to new datset to be used in pipeline
-    warning off;
-    writeKnossosRoi(gradientCorrected.root, gradientCorrected.prefix, thisSliceBbox(:,1)', raw);
-    warning on;
+    writeKnossosRoi(gradientCorrected.root, gradientCorrected.prefix, thisSliceBbox(:,1)', raw, 'uint8', '', 'noRead');
     clear raw vessels; 
     Util.progressBar(i, length(zCoords));
 end
