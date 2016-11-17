@@ -46,6 +46,7 @@ regions{27} = 4:8;
 
 % Detect vessels in each slice seperately, store raw data masked with mean at vessel locations and segmentation for detection visualization
 thisSliceBbox = dataset.bbox;
+display('Detecting blood vessels');
 tic;
 for i=1:length(zCoords) 
     thisSliceBbox(3,:) = [zCoords{i}(1) zCoords{i}(end)];
@@ -55,16 +56,17 @@ for i=1:length(zCoords)
     for j=1:size(raw,3)
         vessels(:,:,j) = detectVesselsSingleImage(raw(:,:,j));
     end 
-    maskedRaw = raw;
-    % Remove (small compared to blood vessel) FP mylein detections
+    % Regionprops CC of pixel (small compared to blood vessel)
     rp = regionprops(vessels, {'Area' 'Centroid' 'PixelIdxList'});
-    %display(num2str(i));
-    %for j=1:length(rp)
-    %    display(['Region ' num2str(j) ': ' num2str(rp(j).Area) ' voxel, centroid: ' num2str(round(rp(j).Centroid([2 1 3]))+ thisSliceBbox(:,1)')]);
-    %end
-    idxToDelete = regions{i};
-    vessels(cat(1,rp(idxToDelete).PixelIdxList)) = 0;
-    vessels = imclose(vessels, ones(2, 2, 7));     
+    display(['Iteration: ' num2str(i)]);
+    for j=1:length(rp)
+       display(['Region ' num2str(j) ': ' num2str(rp(j).Area) ' voxel, centroid: ' num2str(round(rp(j).Centroid([2 1 3]))+ thisSliceBbox(:,1)')]);
+    end
+    display('Regions removed:');
+    display(num2str(regions{i}));
+    vessels(cat(1,rp(regions{i}).PixelIdxList)) = 0;
+    vessels = imclose(vessels, ones(1, 1, 7));  
+    maskedRaw = raw;
     maskedRaw(vessels) = uint8(121);
     warning off;
     writeKnossosRoi(vesselsMasked.root, vesselsMasked.prefix, thisSliceBbox(:,1)', maskedRaw);
