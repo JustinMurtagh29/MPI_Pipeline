@@ -51,7 +51,7 @@ tic;
 for i=1:length(zCoords) 
     thisSliceBbox(3,:) = [zCoords{i}(1) zCoords{i}(end)];
     raw = readKnossosRoi(dataset.root, dataset.prefix, thisSliceBbox);
-    vessels = zeros(size(raw), 'logical');
+    vessels = false(size(raw));
     for j=1:size(raw,3)
         vessels(:,:,j) = detectVesselsSingleImage(raw(:,:,j));
     end 
@@ -144,8 +144,8 @@ for i=1:length(zCoords)
     raw = uint8(correctionForSlice .* double(raw));
 	raw(vessels > 0) = 121;
     % Save to new datset to be used in pipeline
-    writeKnossosRoi(gradientCorrected.root, gradientCorrected.prefix, thisSliceBbox(:,1)', raw, 'uint8', '', 'noRead');
-    clear raw vessels; 
+    writeKnossosRoi(gradientCorrected.root, gradientCorrected.prefix, thisSliceBbox(:,1)', raw);
+    clear raw vessels;
     Util.progressBar(i, length(zCoords));
 end
 clear X Xq Y Yq Z Zq;
