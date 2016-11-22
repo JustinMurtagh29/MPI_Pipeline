@@ -15,6 +15,6 @@ function job = graphConstruction(parameter)
     end
 
     functionH = @findEdgesAndBordersFast;
-    job = startCPU(functionH, inputCell, 'graphConstruction');
+    job = startCPU(functionH, inputCell, 'graphConstruction', 16);
 end
 

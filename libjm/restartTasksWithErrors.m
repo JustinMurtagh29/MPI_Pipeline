@@ -9,8 +9,8 @@ function job = restartTasksWithErrors(job, gpuFlag)
     inputCell = {job.Tasks(~idxError).InputArguments};
     functionH = job.Tasks(find(~idxError,1)).Function;
     if gpuFlag
-        job = startGPU(functionH, inputCell, 'restarted tasks');
+        job = startGPU(functionH, inputCell, 'restartedTasks');
     else
-        job = startCPU(functionH, inputCell, 'restarted tasks');
+        job = startCPU(functionH, inputCell, 'restartedTasks');
     end
 end

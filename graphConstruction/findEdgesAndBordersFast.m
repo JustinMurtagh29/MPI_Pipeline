@@ -54,7 +54,7 @@ function findEdgesAndBordersFast(segFile, edgeFile, borderFile, segmentFile)
         @(curSeg) ~isempty(curSeg.MinIntensity), segments));
     
     % NOTE
-    %   We use the mean intensity to find the global segment ID.
+    %   We use the min intensity to find the global segment ID.
     [segments.Id] = segments.MinIntensity;
     
     % remove MinIntensity field
