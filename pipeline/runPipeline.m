@@ -4,8 +4,8 @@ function runPipeline(p)
     % Because CNN is translation invariant, saved as KNOSSOS hierachy again 
     % Pass bounding box as well as tileSize will be added in bigFwdPass otherwise (legacy stuff)
     % This uses CNN subfolder in code repository
-    %job = bigFwdPass(p, p.bbox);
-    %Cluster.waitForJob(job);
+    job = bigFwdPass(p, p.bbox);
+    Cluster.waitForJob(job);
     
     % If you have a lot of myelin in your dataset, you might
     % want to consider applying the following "myelin fix".
@@ -29,29 +29,29 @@ function runPipeline(p)
     % Because watershed segmentation has FOV effects (no translation invariance), processed with large
     % overlap and later joined together (see correspondences)
     % Uses segmentation subfolder in code repository
-    %job = miniSegmentation(p);
-    %Cluster.waitForJob(job);
+    job = miniSegmentation(p);
+    Cluster.waitForJob(job);
     
     % Find correspondences between tiles processed (segmented) in paralell
     % Uses correspondences subfolder in code repository
-    %job = correspondenceFinder(p);
-    %Cluster.waitForJob(job);
+    job = correspondenceFinder(p);
+    Cluster.waitForJob(job);
     
     % Transfer segmentation from tempSegFile to segFile and drop overlaps 
     % Also in correspondences subfolder
-    %job = removeOverlaps(p);
-    %Cluster.waitForJob(job);
+    job = removeOverlaps(p);
+    Cluster.waitForJob(job);
     
     % Make segmentation IDs unique over dataset (were only unique in each
     % tile before), this will be called global IDs from time to time
     % will work on correspondences and segmentation
     % see globalization subfolder 
     % globalization is run in two parts: globalizeSegmentation and globalizeCorrespondences
-    %job = globalizeSegmentation(p);
-    %Cluster.waitForJob(job);
+    job = globalizeSegmentation(p);
+    Cluster.waitForJob(job);
     
-    %job = globalizeCorrespondences(p);
-    %Cluster.waitForJob(job);
+    job = globalizeCorrespondences(p);
+    Cluster.waitForJob(job);
     
     % Construct graph on globalized version of segmentation
     % This will create p.local(:).edgeFile & borderFile
