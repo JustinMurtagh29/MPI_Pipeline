@@ -91,7 +91,7 @@ function runPipeline(p)
     
     % Use interface features to make predictions i.e. generate synapse scores 
     job=makeInterfacePredictionsOnCluster(p);
-    Cluster.watiForJob(job);
+    Cluster.waitForJob(job);
 
     %Save the global SVG data
     job = collectSvgDataOnCluster(p);
