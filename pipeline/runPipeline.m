@@ -50,6 +50,9 @@ function runPipeline(p)
     job = globalizeSegmentation(p);
     Cluster.waitForJob(job);
     
+    % Build segment meta data
+    buildSegmentMetaData(p);
+    
     job = globalizeCorrespondences(p);
     Cluster.waitForJob(job);
     
