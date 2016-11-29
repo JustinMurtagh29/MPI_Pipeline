@@ -59,18 +59,6 @@ function runPipeline(p)
     job = graphConstruction(p);
     Cluster.waitForJob(job);
     
-    % Build segment-to-cube mapping
-    job = startCPU( ...
-        @Seg.Global.buildSegToCubeMap, ...
-        {{p}}, 'segToCubeMap');
-    Cluster.waitForJob(job);
-    
-    % Build segment masks and bounding boxes
-    % This produces the 'segMasks.mat' files and is required
-    % to produce iso-surfaces for visualizations, etc.
-    job = startSegmentMasks(p);
-    Cluster.waitForJob(job);
-    
     % Calculate edge based features as used in first GP training
     % Calculate segment based features as used in spine head detection
     % see filterbank 
@@ -100,8 +88,4 @@ function runPipeline(p)
     %Create graph struct 
     job = collectGraphStructOnCluster(p);
     Cluster.waitForJob(job);
-    
-    
-
 end
-
