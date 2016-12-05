@@ -5,7 +5,7 @@ dataset.prefix = '2012-09-28_ex145_07x2_ROI2016_corrected_mag1';
 vesselsMasked.root = '/gaba/u/mberning/wkCubes/2012-09-28_ex145_07x2_ROI2016_vessel/segmentation/1/';
 vesselsMasked.prefix = '2012-09-28_ex145_07x2_ROI2016_vessel_mag1';
 % Define bounding box for detection
-dataset.bbox = [128, 128, 128, 5573, 8508, 3413];
+dataset.bbox = [128, 128, 128, 5446, 8381, 3286];
 % "Training region nuclei" (where heuristics where optimized)
 %dataset.bbox = [2105, 2606, 740, 1000, 1000, 500];
 % "Training region myelin" (where heuristics where optimized)
