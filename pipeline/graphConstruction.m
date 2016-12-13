@@ -14,7 +14,7 @@ function job = graphConstruction(parameter)
             curCube.segmentFile};
     end
 
-    functionH = @findEdgesAndBordersFast;
-    job = startCPU(functionH, inputCell, 'graphConstruction', 16);
+    functionH = @findEdgesAndBordersWrapper;
+    job = startCPU(functionH, inputCell, 'graphConstruction');
 end
 
