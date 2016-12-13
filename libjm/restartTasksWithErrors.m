@@ -5,9 +5,9 @@ function job = restartTasksWithErrors(job, gpuFlag)
         gpuFlag = false;
     end
     errorCell = {job.Tasks(:).Error};
-    idxError = cellfun(@isempty, errorCell);
-    inputCell = {job.Tasks(~idxError).InputArguments};
-    functionH = job.Tasks(find(~idxError,1)).Function;
+    idxError = ~cellfun(@isempty, errorCell);
+    inputCell = {job.Tasks(idxError).InputArguments};
+    functionH = job.Tasks(find(idxError,1)).Function;
     if gpuFlag
         job = startGPU(functionH, inputCell, 'restartedTasks');
     else
