@@ -49,7 +49,7 @@ if iscolumn(cubeIdx); cubeIdx = cubeIdx'; end
 
 %save classification data
 p.synEM = [p.saveFolder 'synapseClassifier.mat'];
-save(p.synEM, 'classifier', 'fm');
+Util.save(p.synEM, classifier, fm);
 [~,  outputFile] = fileparts(outputFile);
 outputFile = [outputFile, '.mat'];
 for i = cubeIdx
@@ -72,11 +72,11 @@ scores = SynEM.Seg.predictCube(p, i, fm, classifier);
 scores = scores(:,1); %for default matlab classifiers
 if strcmp(fm.mode,'direction')
     %both direction of one interface in a row
-    scores = reshape(scores,[],2); %#ok<NASGU>
+    scores = reshape(scores,[],2); 
 end
 outputFile = [p.local(i).saveFolder outputFile];
 fprintf(['[%s] SynEM.Seg.predictCube - Saving output to ' ...
     'cube %s.\n'], datestr(now), outputFile);
-save(outputFile,'scores');
+Util.save(outputFile,scores);
 
 end

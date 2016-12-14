@@ -107,12 +107,6 @@ for i=1:length(q.pos)
 end
 fclose(fid);
 
-% Save variables 
-variables = who;
-% Exclude large ones loaded in beginning
-variables(strcmp(variables, 'graph')) = [];
-variables(strcmp(variables, 'com')) = [];
-variables(strcmp(variables, 'groundTruth')) = [];
-save([p.saveFolder ' datestr(clock, 30) '_boutonAggloFull.mat'], variables{:});
+Util.save([p.saveFolder datestr(clock, 30) '_boutonAggloFull.mat']);
 
 end

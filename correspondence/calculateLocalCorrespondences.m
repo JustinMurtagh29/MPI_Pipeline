@@ -42,7 +42,7 @@ function calculateLocalCorrespondences(cubeCoords1, cubeCoords2, segFile1, segFi
         mkdir(saveFolder);
     end
 
-    save([saveFolder num2str(cubeCoords1, '%.2i') num2str(cubeCoords2, '%.2i') '.mat'], 'cubeCoords1', 'cubeCoords2', 'uniqueCorrespondences');
+    Util.save([saveFolder num2str(cubeCoords1, '%.2i') num2str(cubeCoords2, '%.2i') '.mat'], cubeCoords1, cubeCoords2, uniqueCorrespondences);
 
 end
 

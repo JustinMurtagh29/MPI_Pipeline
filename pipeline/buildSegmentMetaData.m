@@ -16,7 +16,7 @@ function buildSegmentMetaData(param)
     
     % write global result
     metaFile = fullfile(rootDir, 'segmentMeta.mat');
-    save(metaFile, '-struct', 'meta');
+    Util.saveStruct(metaFile, meta);
 end
 
 function buildInCube(param, cubeIdx)
@@ -28,5 +28,5 @@ function buildInCube(param, cubeIdx)
     
     % save result
     metaFile = fullfile(cubeDir, 'segmentMeta.mat');
-    save(metaFile, '-struct', 'meta');
+    Util.saveStruct(metaFile, meta);
 end

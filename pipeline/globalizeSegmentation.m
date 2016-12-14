@@ -17,7 +17,7 @@ function job = globalizeSegmentation(p)
     toc();
 
     % Save numElTotal so that it only has to be added to localID of respective cube to get global one
-    save([p.saveFolder 'numEl.mat'], 'numElTotal', 'numElTotalUpper'); 
+    Util.save([p.saveFolder 'numEl.mat'], numElTotal, numElTotalUpper); 
 
     % collect parameters
     inputCell = cell(numel(p.local), 1);

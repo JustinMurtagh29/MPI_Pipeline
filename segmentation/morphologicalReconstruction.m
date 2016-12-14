@@ -14,7 +14,7 @@ function morphologicalReconstruction(classParam, bbox, r, outputFile)
     else
         affReconRecon = -classification;
     end
-   save(outputFile, 'affReconRecon');
+   Util.save(outputFile, affReconRecon);
 
 end
 

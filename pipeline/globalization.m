@@ -17,7 +17,7 @@ function jobs = globalization(p)
         end
     end
     % Save numElTotal so that it only has to be added to localID of respective cube to get global one
-    save([p.saveFolder 'numEl.mat'], 'numElTotal', 'numElTotalUpper'); 
+    Util.save([p.saveFolder 'numEl.mat'], numElTotal, numElTotalUpper); 
     toc;
 
     % Globalize segmentation and save as KNOSSOS hierachy for Oxalis

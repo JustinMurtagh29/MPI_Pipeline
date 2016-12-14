@@ -26,12 +26,12 @@ for i=1:size(p.local,1)
             edgesToJoin = edges(joinEdges,:);
             componentsNew = findConnectedComponents(edgesToJoin);
             allComponents = [allComponents; componentsNew]; % this line is probably slowing this down substaintially, optimize if problem 
-            save([p.local(i,j,k).saveFolder 'joinedComponents.mat'], 'componentsNew');
+            Util.save([p.local(i,j,k).saveFolder 'joinedComponents.mat'], componentsNew);
         end
     end
 end
 % Save all GP probabilities
-save([p.saveFolder 'joinedComponents.mat'], 'allComponents');
+Util.save([p.saveFolder 'joinedComponents.mat'], allComponents);
 
 % Create structure & write JSON for mapping based on Gaussian process probabilities
 gpMapping.name = 'gaussianProcess';

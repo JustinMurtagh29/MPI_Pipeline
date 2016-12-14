@@ -20,7 +20,7 @@ run([mydir,'gpml/startup.m']);
 
 % save preditions to designated file
 prob = exp(lp);
-save(probFile, 'labelMean', 'labelCov', 'latentMean', 'latentCov', 'prob', 'post');
+Util.save(probFile, labelMean, labelCov, latentMean, latentCov, prob, post);
 
 end
 

@@ -114,7 +114,7 @@ function writeMissionJson(p, problems, isControl, isTutorial)
     fprintf('\n');
 
     % Save global counter variables
-    save(p.counter, 'counter');
+    Util.save(p.counter, counter);
 
     % Write mission json (named according to input file)
     missionStruct.sectionId = 'section1';

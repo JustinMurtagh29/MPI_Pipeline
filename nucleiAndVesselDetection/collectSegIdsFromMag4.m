@@ -14,4 +14,4 @@ segIds = determineSegIdsFromMag4(p,mag4);
 segIdsEmpty = cellfun(@isempty,segIds);
 segIds(segIdsEmpty)=[];
 
-save([p.saveFolder 'nucleiSegIds.mat'],'segIds'); % ...if mag4 was for nuclei. Change to vesselSegIds if mag4 was for vessels
+Util.save([p.saveFolder 'nucleiSegIds.mat'],segIds); % ...if mag4 was for nuclei. Change to vesselSegIds if mag4 was for vessels

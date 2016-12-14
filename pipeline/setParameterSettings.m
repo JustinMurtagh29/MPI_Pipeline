@@ -182,7 +182,7 @@ function [p, pT] = setParameterSettings(p)
     end
 
     % Save everything
-    save([p.saveFolder 'allParameter.mat'], 'p', 'pT');
+    Util.save([p.saveFolder 'allParameter.mat'], p, pT);
 
 end
 

@@ -29,11 +29,11 @@ function globalSegId(p, i, j, k)
     seg = reshape(seg, sizeCube);
 
     % Save to segGlobal.mat for Alessandro
-    save([p.local(i,j,k).saveFolder 'segGlobal.mat'], 'seg');
+    Util.save([p.local(i,j,k).saveFolder 'segGlobal.mat'], seg);
     % Write modified seg with globalIDs (not complete wrt IDs, e.g. localIDs in outer bounidng box of inner cube will not be present, any better idea?)
     writeKnossosRoi(p.seg.root, p.seg.prefix , p.local(i,j,k).bboxSmall(:,1)', seg, 'uint32'); 
     % Save mapping from local to global IDs
-    save([p.local(i,j,k).saveFolder 'localToGlobalSegId.mat'], 'localIds', 'globalIds');
+    Util.save([p.local(i,j,k).saveFolder 'localToGlobalSegId.mat'], localIds, globalIds);
 
 end
 

@@ -17,4 +17,3 @@ function job = graphConstruction(parameter)
     functionH = @findEdgesAndBordersWrapper;
     job = startCPU(functionH, inputCell, 'graphConstruction');
 end
-

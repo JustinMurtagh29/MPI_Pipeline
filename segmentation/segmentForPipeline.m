@@ -1,4 +1,4 @@
-function seg20141017( root, prefix, bbox, segFunction, saveFile )
+function segmentForPipeline( root, prefix, bbox, segFunction, saveFile )
 
 % Load classification
 aff = loadClassData(root, prefix, bbox);
@@ -15,7 +15,7 @@ if ~exist(saveFolder, 'dir')
 end
 
 % Save segmentation to MATLAB file in 'saveFolder'
-save(saveFile, 'seg');
+Util.save(saveFile, seg);
 
 end
 

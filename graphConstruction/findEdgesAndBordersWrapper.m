@@ -8,7 +8,7 @@ function findEdgesAndBordersWrapper(segFile, edgeFile, borderFile, segmentFile)
     [edges, borders, segments] = SynEM.Svg.findEdgesAndBorders(seg);
 
     % Save to files: currently segmentation overwrites old one (now leaves are merged)
-    save(edgeFile, 'edges');
-    save(borderFile, 'borders');
-    save(segmentFile, 'segments', '-v7.3');
+    Util.save(edgeFile, edges);
+    Util.save(borderFile, borders);
+    Util.save(segmentFile, segments);
 end

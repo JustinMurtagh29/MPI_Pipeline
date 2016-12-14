@@ -15,6 +15,6 @@ percentiles = [.1 .9];
 X_lower_cutoff = quantile(XAll,percentiles(1),1);
 X_upper_cutoff = quantile(XAll,percentiles(2),1);
 
-save([p.saveFolder 'state/featureQuantilesForIC.mat'], 'X_lower_cutoff', 'X_upper_cutoff');
+Util.save([p.saveFolder 'state/featureQuantilesForIC.mat'], X_lower_cutoff, X_upper_cutoff);
 
 end

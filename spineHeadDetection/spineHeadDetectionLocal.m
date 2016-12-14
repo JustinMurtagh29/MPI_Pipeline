@@ -20,6 +20,6 @@ m=load(p.local(cubeNo).segmentFile);
 segmentIds = [m.segments.Id]';
 
 spineHeadScores = cat(2,double(segmentIds),scores);
-save([p.local(cubeNo).saveFolder 'spineHeadScores.mat'],'spineHeadScores');
+Util.save([p.local(cubeNo).saveFolder 'spineHeadScores.mat'],spineHeadScores);
 
 end
