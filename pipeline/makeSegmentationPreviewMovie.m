@@ -79,7 +79,7 @@ end
 
 function outputFile = movieStep(p, tempSegFile, bbox)
     % Now low raw data
-    raw = loadRawData(p.raw.root, p.raw.prefix, bbox);
+    raw = loadRawData(p.raw, bbox);
     raw = single(raw);
     
     % Normalize to [0 1] range as this is

@@ -39,7 +39,7 @@ function runFixInBox(param, newPrefix, box)
     % add padding
     disp('> Loading raw data...');
     boxBig = [box(:, 1) - pad, box(:, 2) + pad];
-    raw = loadRawData(param.raw.root, param.raw.prefix, boxBig);
+    raw = loadRawData(param.raw, boxBig);
     
     % build masks around myelin (and mitos)
     disp('> Searching for myelin...');
