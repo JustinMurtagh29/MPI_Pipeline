@@ -60,7 +60,8 @@ function runFixInBox(param, newPrefix, box)
     
     % write result
     disp('> Saving modified classification...');
-    saveClassData(param.class.root, newPrefix, box, class);
+    saveClassData( ...
+        Util.modifyStruct(param.class, 'prefix', newPrefix), box, class);
 end
 
 function data = dropPadding(data, pad)
