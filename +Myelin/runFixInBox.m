@@ -51,7 +51,7 @@ function runFixInBox(param, newPrefix, box)
     minusMask = dropPadding(minusMask, pad);
     
     disp('> Loading classification data...');
-    class = loadClassData(param.class.root, param.class.prefix, box);
+    class = loadClassData(param.class, box);
     
     % find a suitably small / big value
     smallBig = prctile(class(:), [5, 95]);

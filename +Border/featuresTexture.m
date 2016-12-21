@@ -106,8 +106,7 @@ function data = loadInputData(param, inputName, box)
             
         case 'aff'
             % affinity / membrane
-            data = loadClassData( ...
-                param.class.root, param.class.prefix, box);
+            data = loadClassData(param.class, box);
             
         case 'mito'
             % mitochondria
