@@ -208,7 +208,7 @@ function bbox = fixBoundingBox(p)
         bbox(idx,1) = bbox(idx,1) + 128 - lowerLimitMod;
     end
     
-    if any(upperLimitMod < 64)
+    if any(upperLimitMod < 64 & upperLimitMod ~= 0)
         error('Upper edge of bounding box produces small last cube.');
     end
 end
