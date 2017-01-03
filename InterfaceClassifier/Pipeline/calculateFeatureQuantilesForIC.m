@@ -1,6 +1,8 @@
 function calculateFeatureQuantilesForIC(p)
 
-cubeNo = randperm(numel(p.local),100);
+numcu = numel(p.local);
+cubeNo = randperm(numcu,min(numcu,100));
+display(sprintf('Warning, only %d cubes could be sampled as no more are available',numcu)) 
 XAll=[];
 
 for i=1:length(cubeNo)
