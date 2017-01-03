@@ -17,7 +17,7 @@ dataset.bbox = Util.convertWebknossosToMatlabBbox(dataset.bbox);
 
 % Define slice to be loaded in memory in paralell (one KNOSSOS cube z-plane)
 zCoords = dataset.bbox(3,1):dataset.bbox(3,2);
-lastOfKnossosCube = [find(mod(zCoords,128) == 0) length(zCoords)];
+lastOfKnossosCube = [find(mod(zCoords,64) == 0) length(zCoords)];
 numberValidInCube = [lastOfKnossosCube(1) diff(lastOfKnossosCube)];
 zCoords = mat2cell(zCoords, 1, numberValidInCube);
 zCoords(numberValidInCube == 0) = [];
@@ -32,12 +32,13 @@ for i=1:length(zCoords)
     thisSliceBboxWithBorder = thisSliceBbox + [-borderToLoad; borderToLoad]';
     % Load raw data and vessel from new dataset
     raw = readKnossosRoi(dataset.root, dataset.prefix, thisSliceBboxWithBorder);
-    vessels = readKnossosRoi(vesselsMasked.root, vesselsMasked.prefix, thisSliceBbox, 'uint32');
-    % This line is to overwrite old results of detection(s) below
-    vessels = vessels == 1;
     % Apply new heuristics
     nuclei = detectNucleiZSlice(raw, borderToLoad);
     myelin = detectMyelinZSlice(raw, borderToLoad);
+    % Load blood vessel segmentation
+    vessels = readKnossosRoi(vesselsMasked.root, vesselsMasked.prefix, thisSliceBbox, 'uint32');
+    % This line is to overwrite old results of detection(s) below
+    vessels = vessels == 1;
     % Exlusion heuristics, e.g. vessel might be detected as nuclei, myelin
     % as mitochondria
     nuclei(vessels) = 0;
