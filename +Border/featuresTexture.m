@@ -100,14 +100,12 @@ function data = loadInputData(param, inputName, box)
     switch inputName
         case 'raw'
             % raw data
-            data = loadRawData( ...
-                param.raw.root, param.raw.prefix, box);
+            data = loadRawData(param.raw, box);
             data = param.norm.func(single(data));
             
         case 'aff'
             % affinity / membrane
-            data = loadClassData( ...
-                param.class.root, param.class.prefix, box);
+            data = loadClassData(param.class, box);
             
         case 'mito'
             % mitochondria

@@ -5,8 +5,8 @@ pNew = load('/gaba/u/mberning/results/pipeline/test/allParameter.mat');
 %% Check whether classification yields same result
 bbox = [1200 1400; 1200 1400; 1200 1400];
 
-classOld = loadClassData(pOld.p.class.root, pOld.p.class.prefix, bbox);
-classNew = loadClassData(pNew.p.class.root, pNew.p.class.prefix, bbox);
+classOld = loadClassData(pOld.p.class, bbox);
+classNew = loadClassData(pNew.p.class, bbox);
 
 sum(abs(classOld(:) - classNew(:)) < 1e-5)
 numel(classOld)

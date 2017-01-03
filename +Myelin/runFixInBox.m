@@ -39,7 +39,7 @@ function runFixInBox(param, newPrefix, box)
     % add padding
     disp('> Loading raw data...');
     boxBig = [box(:, 1) - pad, box(:, 2) + pad];
-    raw = loadRawData(param.raw.root, param.raw.prefix, boxBig);
+    raw = loadRawData(param.raw, boxBig);
     
     % build masks around myelin (and mitos)
     disp('> Searching for myelin...');
@@ -51,7 +51,7 @@ function runFixInBox(param, newPrefix, box)
     minusMask = dropPadding(minusMask, pad);
     
     disp('> Loading classification data...');
-    class = loadClassData(param.class.root, param.class.prefix, box);
+    class = loadClassData(param.class, box);
     
     % find a suitably small / big value
     smallBig = prctile(class(:), [5, 95]);
@@ -60,7 +60,8 @@ function runFixInBox(param, newPrefix, box)
     
     % write result
     disp('> Saving modified classification...');
-    saveClassData(param.class.root, newPrefix, box, class);
+    saveClassData( ...
+        Util.modifyStruct(param.class, 'prefix', newPrefix), box, class);
 end
 
 function data = dropPadding(data, pad)
