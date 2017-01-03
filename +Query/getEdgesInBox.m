@@ -8,8 +8,7 @@ function edges = getEdgesInBox(param, box)
     rootDir = param.saveFolder;
     
     % load segmentation
-    seg = loadSegDataGlobal( ...
-        param.seg.root, param.seg.prefix, box);
+    seg = loadSegDataGlobal(param.seg, box);
     
     % get segment ids
     segIds = unique(seg(:));

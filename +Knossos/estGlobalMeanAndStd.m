@@ -30,8 +30,7 @@ function [meanVal, stdVal] = estGlobalMeanAndStd(p)
             lowerLeft + (cubeSize - 1)];
 
         % load raw data
-        raw = loadRawData( ...
-            p.raw.root, p.raw.prefix, bbox);
+        raw = loadRawData(p.raw, bbox);
 
         % compute local mean and std
         [meanVal(i), stdVal(i)] = ...

@@ -1,7 +1,7 @@
 function segmentForPipeline( root, prefix, bbox, segFunction, saveFile )
 
 % Load classification
-aff = loadClassData(root, prefix, bbox);
+aff = loadClassData(struct('root', root, 'prefix', prefix), bbox);
 aff = imcomplement(aff);
 
 % Perform segmentation

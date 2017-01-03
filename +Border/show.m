@@ -27,8 +27,7 @@ function show(param, cubeIdx)
     borders = data.borders;
     
     disp('Loading raw data...');
-    raw = loadRawData( ...
-        param.raw.root, param.raw.prefix, box);
+    raw = loadRawData(param.raw, box);
     
     % picking a subset of edges
     edgeCount = size(borders, 1);

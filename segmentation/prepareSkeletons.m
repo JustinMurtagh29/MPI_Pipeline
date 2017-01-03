@@ -23,7 +23,7 @@ function prepareSkeletons(pT)
         % Otherwise writeNml will fail
         skel{i}{1}.parameters = savePar{i}.par;
         % Write skeleton video for control of training data
-        raw = loadRawData(pT.raw.root, pT.raw.prefix, pT.local(i).bboxSmall);
+        raw = loadRawData(pT.raw, pT.local(i).bboxSmall);
         raw = pT.norm.func(single(raw));
         thisSkel = skel{i};
         Util.save([pT.syncFolder 'segmentation/denseSkelData' num2str(i) '.mat'], thisSkel, raw)
@@ -60,7 +60,7 @@ function prepareSkeletons(pT)
         % Otherwise writeNml will fail
         skel{i}{1}.parameters = savePar{i}.par;
         % Write skeleton video for control of training data
-        raw = loadRawData(pT.raw.root, pT.raw.prefix, pT.local(i).bboxSmall);
+        raw = loadRawData(pT.raw, pT.local(i).bboxSmall);
         raw = pT.norm.func(single(raw));
         thisSkel = skel{i};
         Util.save([pT.syncFolder 'segmentation/denseSkelDataGlia' num2str(i) '.mat'], thisSkel, raw)
