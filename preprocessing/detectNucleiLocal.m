@@ -10,10 +10,10 @@ gradmag = filter3d.gaussiansmoothedgradmagnitude(raw, 5);
 % Extract regions that do not have edges
 edges = gradmag > 2;
 edges = bwareaopen(edges, 1e3);
-edges = imclose(edges, makeSphere(10));
+edges = imclose(edges, makeSphere(9));
 
 % Nuclei are regions without edges
-nuclei = bwareaopen(~edges, 1e6);
+nuclei = bwareaopen(imfill(~edges, 'holes'), 1e6);
 
 end
 

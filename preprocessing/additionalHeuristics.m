@@ -14,14 +14,20 @@ borderToAdd = [25 25 10];
 for x=1:numel(dataset.local)
     dataset.local(x).bboxBig = dataset.local(x).bboxSmall + [-borderToAdd; borderToAdd]';
 end
+dataset.seg = rmfield(dataset.seg, 'func');
 
 % Detect nuclei & myelin in (overlapping) cubes
-display('Detecting nuclei & myelin');
 for i=1:numel(dataset.local)
-    inputCell{i} = {dataset.raw, dataset.seg, dataset.local(i).bboxBig, dataset.local(i).bboxSmall};
+    inputCell{i} = {{dataset.local(i).bboxBig, dataset.local(i).bboxSmall}};
 end
 functionH = @localDetection;
-job = Cluster.startJob(functionH, inputCell, 'Name', 'nucleiDetection');
+tic;
+job = Cluster.startJob(functionH, inputCell, ...
+    'name', 'nucleiDetection', ...
+    'sharedInputs', {dataset.raw; dataset.seg}, ...
+    'sharedInputsLocation', [1 2], ...
+    'cluster', '-l h_vmem=12G -l h_rt=24:00:00');
+toc;
 Cluster.waitForJob(job);
 
 display('(Re)Downsampling KNOSSOS hierachies for segmentation to include updates');
