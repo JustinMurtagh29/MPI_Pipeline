@@ -16,6 +16,8 @@ function localDetection(in, out, bboxIn, bboxOut)
     % Make sure old data is not overwritten
     nuclei(vessels) = 0;
     myelin(vessels) = 0;
+    % And new labels are none overlapping (make nuclei win as they sometimes have dark interior)
+    myelin(nuclei) = 0;
     % Make sure no voxels are labeled double before pasting together
     assert(~any((vessels(:)+nuclei(:)+myelin(:)) > 1));
     vessels = uint32(vessels);
