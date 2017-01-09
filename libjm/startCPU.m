@@ -16,7 +16,7 @@ function job = startCPU(fH, iC, jN, requiredMemory, group);
         '-l s_rt=23:50:00', ...
         '-l h_rt=24:00:00');
 
-    job = Cluster.startJob(clusterCPU, fH, iC, 'name', jN, 'taskGroupSize', group);
+    job = Cluster.startJob(fH, iC, 'cluster', clusterCPU, 'name', jN, 'taskGroupSize', group);
 
 end
 

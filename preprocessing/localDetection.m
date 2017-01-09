@@ -2,17 +2,18 @@ function localDetection(in, out, bboxIn, bboxOut)
 
     % Load raw data
     raw = readKnossosRoi(in.root, in.prefix, bboxIn);
+    % Load blood vessel segmentation
+    vessels = readKnossosRoi(out.root, out.prefix, bboxIn, 'uint32');
+    % This line is to overwrite old results of detection(s) below
+    vessels = vessels == 1;
     % Perform nuclei and myelin detection
-    nuclei = detectNucleiLocal(raw);
+    nuclei = detectNucleiLocal(raw, vessels);
     myelin = detectMyelinLocal(raw);
     % Cut away additional (overlapping) context loaded to avoid border effects
     toRemove = abs(bboxIn - bboxOut);
     nuclei = cutAwayBorder(nuclei, toRemove);
     myelin = cutAwayBorder(myelin, toRemove);
-    % Load blood vessel segmentation
-    vessels = readKnossosRoi(out.root, out.prefix, bboxOut, 'uint32');
-    % This line is to overwrite old results of detection(s) below
-    vessels = vessels == 1;
+    vessels = cutAwayBorder(vessels, toRemove);
     % Make sure old data is not overwritten
     nuclei(vessels) = 0;
     myelin(vessels) = 0;

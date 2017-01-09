@@ -2,8 +2,8 @@
 dataset.saveFolder = '/gaba/scratch/mberning/temp/';
 dataset.bbox_wK = [128, 128, 128, 5446, 8381, 3286];
 dataset.experimentName = '2012-09-28_ex145_07x2_ROI2016_vessel';
-dataset.raw.root = '/gaba/u/mberning/wkCubes/2012-09-28_ex145_07x2_ROI2016_vessel/color/1/';
-dataset.raw.prefix = '2012-09-28_ex145_07x2_ROI2016_vessel_mag1';
+dataset.raw.root = '/gaba/u/mberning/wkCubes/2012-09-28_ex145_07x2_ROI2016_corrected/color/1/';
+dataset.raw.prefix = '2012-09-28_ex145_07x2_ROI2016_corrected_mag1';
 dataset.raw.voxelSize = [11.24 11.24 28];
 dataset = setParameterSettings(dataset);
 dataset.seg.root = '/gaba/u/mberning/wkCubes/2012-09-28_ex145_07x2_ROI2016_vessel/segmentation/1/';
@@ -33,6 +33,6 @@ Cluster.waitForJob(job);
 display('(Re)Downsampling KNOSSOS hierachies for segmentation to include updates');
 tic;
 thisBBox = [1 1 1; (ceil(dataset.bbox(:,2)./1024).*1024)']';
-createResolutionPyramid(vesselsMasked.root, vesselsMasked.prefix, thisBBox, strrep(vesselsMasked.root, '/1/', ''), true);
+createResolutionPyramid(dataset.seg.root, dataset.seg.prefix, thisBBox, strrep(dataset.seg.root, '/1/', ''), true);
 toc;
 
