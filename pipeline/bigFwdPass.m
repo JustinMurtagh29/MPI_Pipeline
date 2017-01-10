@@ -3,9 +3,6 @@ function job = bigFwdPass( p, bbox )
     %   Applies the CNN for membrane detection to the raw data
     %   within the specified bounding box.
     
-    % sanity check
-    assert(all(mod(bbox(:, 1), 128) == 1));
-    
     % This is not of any importance due to CNN translation invariance,
     % can be choosen for computational efficency, currenlty optimized for
     % running on GPU with 12GB, should be multiples of 128, this is same
@@ -13,9 +10,24 @@ function job = bigFwdPass( p, bbox )
     cubeSize = [512 512 256];
     assert(all(mod(cubeSize, 128) == 0));
     
-    X = [bbox(1, 1):cubeSize(1):bbox(1, 2), p.bbox(1, 2) + 1];
-    Y = [bbox(2, 1):cubeSize(2):bbox(2, 2), p.bbox(2, 2) + 1];
-    Z = [bbox(3, 1):cubeSize(3):bbox(3, 2), p.bbox(3, 2) + 1];
+    
+    if ~isfield(p,'mirrorPad') || p.mirrorPad == 0
+        p.mirrorPad = 0;
+        % sanity check
+        assert(all(mod(bbox(:, 1), 128) == 1));
+        
+        X = [bbox(1, 1):cubeSize(1):bbox(1, 2), bbox(1, 2) + 1];
+        Y = [bbox(2, 1):cubeSize(2):bbox(2, 2), bbox(2, 2) + 1];
+        Z = [bbox(3, 1):cubeSize(3):bbox(3, 2), bbox(3, 2) + 1];
+    else
+        bbox(:,2) = ceil(bbox(:,2)./cubeSize)*cubeSize
+        X = [bbox(1, 1):cubeSize(1):bbox(1, 2), bbox(1, 2) + 1];
+        Y = [bbox(2, 1):cubeSize(2):bbox(2, 2), bbox(2, 2) + 1];
+        Z = [bbox(3, 1):cubeSize(3):bbox(3, 2), bbox(3, 2) + 1];
+    end
+    
+    
+    
     
     dimCount = cellfun(@numel, {X, Y, Z}) - 1;
     inputCell = cell(prod(dimCount), 1);
@@ -27,7 +39,7 @@ function job = bigFwdPass( p, bbox )
                     [length(X)-1 length(Y)-1 length(Z)-1], i, j, k);
                 inputCell{idx} = { ...
                     p.cnn.first, p.cnn.GPU, p.raw, p.class, ...
-                    [X(i) X(i+1)-1; Y(j) Y(j+1)-1; Z(k) Z(k+1)-1], p.norm.func};
+                    [X(i) X(i+1)-1; Y(j) Y(j+1)-1; Z(k) Z(k+1)-1], p.norm.func,p.mirrorPad};
             end
         end
     end
