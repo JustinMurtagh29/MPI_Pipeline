@@ -9,10 +9,13 @@ dataset = setParameterSettings(dataset);
 dataset.seg.root = '/gaba/u/mberning/wkCubes/2012-09-28_ex145_07x2_ROI2016_vessel/segmentation/1/';
 dataset.seg.prefix = '2012-09-28_ex145_07x2_ROI2016_vessel_mag1';
 
-% Add fixed sized border to each local bounding box
-borderToAdd = [25 25 10];
+% Add border to each local bounding box
+outsideBorder = [25 25 10];
+desiredBorder = [200 200 80];
 for x=1:numel(dataset.local)
-    dataset.local(x).bboxBig = dataset.local(x).bboxSmall + [-borderToAdd; borderToAdd]';
+    dataset.local(x).bboxBig = dataset.local(x).bboxSmall + [-desiredBorder; desiredBorder]';
+    dataset.local(x).bboxBig(:,1) = max(dataset.bbox(:,1) - outsideBorder, dataset.local(x).bboxBig(:,1));
+    dataset.local(x).bboxBig(:,2) = max(dataset.bbox(:,2) + outsideBorder, dataset.local(x).bboxBig(:,2));
 end
 dataset.seg = rmfield(dataset.seg, 'func');
 
