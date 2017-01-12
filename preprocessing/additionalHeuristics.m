@@ -14,8 +14,8 @@ outsideBorder = [25 25 10];
 desiredBorder = [200 200 80];
 for x=1:numel(dataset.local)
     dataset.local(x).bboxBig = dataset.local(x).bboxSmall + [-desiredBorder; desiredBorder]';
-    dataset.local(x).bboxBig(:,1) = max(dataset.bbox(:,1) - outsideBorder, dataset.local(x).bboxBig(:,1));
-    dataset.local(x).bboxBig(:,2) = max(dataset.bbox(:,2) + outsideBorder, dataset.local(x).bboxBig(:,2));
+    dataset.local(x).bboxBig(:,1) = max(dataset.bbox(:,1) - outsideBorder', dataset.local(x).bboxBig(:,1));
+    dataset.local(x).bboxBig(:,2) = min(dataset.bbox(:,2) + outsideBorder', dataset.local(x).bboxBig(:,2));
 end
 dataset.seg = rmfield(dataset.seg, 'func');
 
@@ -29,7 +29,7 @@ job = Cluster.startJob(functionH, inputCell, ...
     'name', 'nucleiDetection', ...
     'sharedInputs', {dataset.raw; dataset.seg}, ...
     'sharedInputsLocation', [1; 2], ...
-    'cluster', '-l h_vmem=12G -l h_rt=24:00:00');
+    'cluster', '-l h_vmem=24G -l h_rt=24:00:00');
 toc;
 Cluster.waitForJob(job);
 
