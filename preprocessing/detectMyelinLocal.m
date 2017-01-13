@@ -5,7 +5,7 @@ function myelin = detectMyelinLocal( raw )
 raw = uint8(smooth3(raw, 'gaussian', 5, 3));
 
 % Detect things that are dark
-darkThings = raw < 95;
+darkThings = raw < 93;
 
 % Myelin are large dark regions
 myelin = bwareaopen(darkThings, 1e5);
