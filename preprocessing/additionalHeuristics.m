@@ -39,3 +39,12 @@ thisBBox = [1 1 1; (ceil(dataset.bbox(:,2)./1024).*1024)']';
 createResolutionPyramid(dataset.seg.root, dataset.seg.prefix, thisBBox, strrep(dataset.seg.root, '/1/', ''), true);
 toc;
 
+%% For debugging algorithm(s), look at results in webKnossos & add problematic locations here
+
+coord_wk = [2356, 492, 1261];
+coord_mat = coord_wk + 1;
+
+% Find linear indices where this data is processed and executed locally
+idx = cellfun(@(x)and(all(coord_mat >= x{1}{2}(:,1)'),all(coord_mat <= x{1}{2}(:,2)')), inputCell);
+theseInputs = cat(2, {dataset.raw, dataset.seg}, inputCell{idx}{1});
+functionH(theseInputs{:});

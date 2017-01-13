@@ -2,7 +2,7 @@ function myelin = detectMyelinLocal( raw )
 % Detect myelin on small 3D cubes
 
 % Smooth raw data with gaussian kernel
-raw = uint8(smooth3(raw, 'gaussian', 5, 3));
+raw = smooth3(raw, [7 7 3], [3 3 1.2]);
 
 % Detect things that are dark
 darkThings = raw < 93;
