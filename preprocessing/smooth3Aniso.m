@@ -20,7 +20,7 @@ function smoothed = smooth3Aniso( raw, size, sig )
     hz = hz/sum(hz(:));
     
     % Apply filter
-    smoothed = convn(raw,hx,'same');
+    smoothed = convn(single(raw),hx,'same');
     smoothed = convn(smoothed,hy,'same');
     smoothed = convn(smoothed,hz,'same');
     
