@@ -13,6 +13,18 @@ edges = bwareaopen(edges, 1e3);
 edges = imclose(edges, makeSphere([10 10 4], 10));
 
 % Nuclei are regions without edges
-nuclei = bwareaopen(imfill(~edges & raw > 120 & raw < 150, 'holes') , 1e6);
+nuclei = bwareaopen(imfill(~edges, 'holes') , 1e6);
+
+% Remove bright objects (smooth regions in apicals mostly
+stats = regionprops(nuclei, raw, {'Area', 'BoundingBox', 'Centroid', 'MinIntensity', 'MeanIntensity', 'MaxIntensity' 'PixelIdxList'});
+for i=1:length(stats)
+    if stats(i).MeanIntensity > 140
+        nuclei(stats(i).PixelIdxList) = 0;
+    end
+end
+
+% Remove small edges in detected nuclei
+nuclei = imclose(nuclei, makeSphere([10 10 4], 10));
+
 
 end

@@ -41,11 +41,11 @@ toc;
 
 %% For debugging algorithm(s), look at results in webKnossos & add problematic locations here
 
-%coord_wk = [4054, 3247, 2045];
-%coord_mat = coord_wk + 1;
-
-% Find linear indices where this data is processed and executed locally
-%idx = cellfun(@(x)and(all(coord_mat >= x{1}{2}(:,1)'),all(coord_mat <= x{1}{2}(:,2)')), inputCell);
-%theseInputs = cat(2, {dataset.raw, dataset.seg}, inputCell{idx}{1});
-%functionH(theseInputs{:});
+% coord_wk = [2961, 4272, 2914];
+% coord_mat = coord_wk + 1;
+% 
+% % Find linear indices where this data is processed and executed locally
+% idx = cellfun(@(x)and(all(coord_mat >= x{1}{2}(:,1)'),all(coord_mat <= x{1}{2}(:,2)')), inputCell);
+% theseInputs = cat(2, {dataset.raw, dataset.seg}, inputCell{idx}{1});
+% functionH(theseInputs{:});
 
