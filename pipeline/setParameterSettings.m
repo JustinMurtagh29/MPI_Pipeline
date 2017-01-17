@@ -46,7 +46,7 @@ function [p, pT] = setParameterSettings(p)
     p.class.func = @bigFwdPass;
     
     % Location to store CNN classification
-    p.class.root = [p.saveFolder 'class/'];
+    p.class.root = [p.tempFolder 'class/'];
     p.class.prefix = p.raw.prefix;
     p.class.dtype = 'single';
     
