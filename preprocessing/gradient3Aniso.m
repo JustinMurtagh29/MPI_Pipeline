@@ -18,8 +18,15 @@ function gradient = gradient3Aniso( raw, size, sig )
     
     % Apply filter
     gradient_x = convn(raw,x.*hx,'same');
+    gradient_x = convn(gradient_x,hy,'same');
+    gradient_x = convn(gradient_x,hz,'same');
     gradient_y = convn(raw,y'.*hy,'same');
+    gradient_y = convn(gradient_y,hx,'same');
+    gradient_y = convn(gradient_y,hz,'same');
     gradient_z = convn(raw,permute(z, [1,3,2]).*hz,'same');
+    gradient_z = convn(gradient_z,hx,'same');
+    gradient_z = convn(gradient_z,hy,'same');
     gradient = sqrt(gradient_x.^2+gradient_y.^2+gradient_z.^2);
+
 end
 
