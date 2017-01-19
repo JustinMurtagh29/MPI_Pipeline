@@ -24,6 +24,8 @@ for i=1:numel(dataset.local)
     inputCell{i} = {{dataset.local(i).bboxBig, dataset.local(i).bboxSmall}};
 end
 functionH = @localDetection;
+
+%% Job submission
 tic;
 job = Cluster.startJob(functionH, inputCell, ...
     'name', 'nucleiDetection', ...
@@ -41,7 +43,7 @@ toc;
 
 %% For debugging algorithm(s), look at results in webKnossos & add problematic locations here
 
-% coord_wk = [1472, 5173, 220];
+% coord_wk = [1235, 1498, 371];
 % coord_mat = coord_wk + 1;
  
 % % Find linear indices where this data is processed and executed locally
