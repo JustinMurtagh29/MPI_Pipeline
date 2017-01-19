@@ -29,7 +29,7 @@ job = Cluster.startJob(functionH, inputCell, ...
     'name', 'nucleiDetection', ...
     'sharedInputs', {dataset.raw; dataset.seg}, ...
     'sharedInputsLocation', [1; 2], ...
-    'cluster', '-l h_vmem=16G -l h_rt=24:00:00');
+    'cluster', '-l h_vmem=18G -l h_rt=24:00:00');
 toc;
 Cluster.waitForJob(job);
 
@@ -41,7 +41,7 @@ toc;
 
 %% For debugging algorithm(s), look at results in webKnossos & add problematic locations here
 
-% coord_wk = [2298, 4411, 2835];
+% coord_wk = [1472, 5173, 220];
 % coord_mat = coord_wk + 1;
  
 % % Find linear indices where this data is processed and executed locally
