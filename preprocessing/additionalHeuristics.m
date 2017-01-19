@@ -23,7 +23,9 @@ dataset.seg = rmfield(dataset.seg, 'func');
 for i=1:numel(dataset.local)
     inputCell{i} = {{dataset.local(i).bboxBig, dataset.local(i).bboxSmall}};
 end
-functionH = @localDetection;
+% Chose whether to run nuclei or myelin detection alone
+functionH = @localDetectionMyelin;
+%functionH = @localDetectionNuclei;
 
 %% Job submission
 tic;
