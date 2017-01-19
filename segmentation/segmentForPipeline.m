@@ -1,4 +1,4 @@
-function segmentForPipeline( root, prefix, bbox, segFunction, saveFile )
+function seg20141017( root, prefix, bbox, segFunction, saveFile )
 
 % Load classification
 aff = loadClassData(struct('root', root, 'prefix', prefix), bbox);
@@ -8,13 +8,11 @@ aff = imcomplement(aff);
 seg = segFunction(aff);
 seg = uint16(seg{1,1});
 
-% Remove small objects (less than 9 voxels) from segmentation
-segMask = bwareaopen(seg, 9);
-clear seg;
-affImposed = imimposemin(aff, segMask);
-clear segMask;
-seg = uint16(watershed(affImposed, 26));
-clear affImposed;
+% check for mask and, if applicable, apply mask
+if exist(fullfile(root,[prefix,'_mask']),'file')
+   mask = readKnossosRoi(root, [prefix,'_mask'], bbox, 'logical', '', 'raw');
+   seg(~mask) = 0;
+end
 
 % If folder does not exist, create it
 saveFolder = fileparts(saveFile);
@@ -23,7 +21,7 @@ if ~exist(saveFolder, 'dir')
 end
 
 % Save segmentation to MATLAB file in 'saveFolder'
-Util.save(saveFile, seg);
+save(saveFile, 'seg');
 
 end
 
