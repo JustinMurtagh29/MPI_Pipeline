@@ -7,7 +7,7 @@ function job = bigFwdPass( p, bbox )
     % can be choosen for computational efficency, currenlty optimized for
     % running on GPU with 12GB, should be multiples of 128, this is same
     % as tileSize right now, no reason it has to be.
-    cubeSize = [512 512 256];
+    cubeSize = [512 512 128];%[512 512 256];
     assert(all(mod(cubeSize, 128) == 0));
     
     
@@ -19,8 +19,16 @@ function job = bigFwdPass( p, bbox )
         X = [bbox(1, 1):cubeSize(1):bbox(1, 2), bbox(1, 2) + 1];
         Y = [bbox(2, 1):cubeSize(2):bbox(2, 2), bbox(2, 2) + 1];
         Z = [bbox(3, 1):cubeSize(3):bbox(3, 2), bbox(3, 2) + 1];
+	oX = X;
+	oY = Y;
+	oZ = Z;
     else
-        bbox(:,2) = ceil(bbox(:,2)./cubeSize)*cubeSize
+	obbox = bbox;
+        oX = [obbox(1, 1):cubeSize(1):obbox(1, 2), obbox(1, 2) + 1];
+        oY = [obbox(2, 1):cubeSize(2):obbox(2, 2), obbox(2, 2) + 1];
+        oZ = [obbox(3, 1):cubeSize(3):obbox(3, 2), obbox(3, 2) + 1];
+ 
+        bbox(:,2) = bbox(:,1) + ceil((diff(bbox,1,2)+1)./cubeSize').*cubeSize' -1;
         X = [bbox(1, 1):cubeSize(1):bbox(1, 2), bbox(1, 2) + 1];
         Y = [bbox(2, 1):cubeSize(2):bbox(2, 2), bbox(2, 2) + 1];
         Z = [bbox(3, 1):cubeSize(3):bbox(3, 2), bbox(3, 2) + 1];
@@ -39,7 +47,7 @@ function job = bigFwdPass( p, bbox )
                     [length(X)-1 length(Y)-1 length(Z)-1], i, j, k);
                 inputCell{idx} = { ...
                     p.cnn.first, p.cnn.GPU, p.raw, p.class, ...
-                    [X(i) X(i+1)-1; Y(j) Y(j+1)-1; Z(k) Z(k+1)-1], p.norm.func,p.mirrorPad};
+                    [X(i) X(i+1)-1; Y(j) Y(j+1)-1; Z(k) Z(k+1)-1], p.norm.func,p.mirrorPad, [oX(i) oX(i+1)-1; oY(j) oY(j+1)-1; oZ(k) oZ(k+1)-1]};
             end
         end
     end

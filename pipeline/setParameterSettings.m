@@ -113,6 +113,7 @@ function [p, pT] = setParameterSettings(p)
                 % Where to save
                 p.local(i,j,k).segFile = [p.local(i,j,k).saveFolder 'seg.mat'];
                 p.local(i,j,k).tempSegFile = strrep(p.local(i,j,k).segFile, '/local/', '/temp/');
+                %p.local(i,j,k).tempSegMaskFile = strrep(p.local(i,j,k).tempSegFile, 'seg.mat', 'segmask.mat');
                 p.local(i,j,k).edgeFile = [p.local(i,j,k).saveFolder 'edges.mat'];
                 p.local(i,j,k).borderFile =  [p.local(i,j,k).saveFolder 'borders.mat'];
                 p.local(i,j,k).weightFile = [p.local(i,j,k).saveFolder 'weights.mat'];
@@ -205,7 +206,7 @@ function bbox = fixBoundingBox(p)
     if any(lowerLimitMod)
         warning('Lower edge of bounding box not aligned to KNOSSOS cubes, fixing, please check p.bbox');
         idx = lowerLimitMod ~= 0;
-        bbox(idx,1) = bbox(idx,1) + 128 - lowerLimitMod;
+        bbox(idx,1) = bbox(idx,1) + 128 - lowerLimitMod(idx);
     end
     
     if any(upperLimitMod < 64 & upperLimitMod ~= 0)
