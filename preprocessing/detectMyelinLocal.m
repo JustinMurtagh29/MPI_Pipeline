@@ -18,13 +18,12 @@ myelin = bwareaopen(darkThings, 1e5);
 
 % Remove bright objects (smooth regions in apicals mostly) and
 % Regions with high average gradients
-statsRaw = regionprops(myelin, raw, {'Area', 'BoundingBox', 'Centroid', 'MinIntensity', 'MeanIntensity', 'MaxIntensity' 'PixelIdxList'});
+statsRaw = regionprops(myelin, {'PixelIdxList'});
 for i=1:length(statsRaw)
-    if statsRaw(i).MinIntensity > 75
+    deciles = quantile(raw(statsRaw(i).PixelIdxList),11);
+    if deciles(3) > 85
         myelin(statsRaw(i).PixelIdxList) = 0;
     end
 end
 
 end
-
-
