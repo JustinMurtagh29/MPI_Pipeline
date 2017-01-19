@@ -5,7 +5,7 @@ function myelin = detectMyelinLocal( raw )
 raw = smooth3Aniso(raw, [21 21 9], [3 3 1.2]);
 
 % Detect things that are dark
-darkThings = raw < 95;
+darkThings = raw < 94;
 
 % Because filter creates dark areas close to borders,
 % Remove detected darkThings there
@@ -18,10 +18,10 @@ myelin = bwareaopen(darkThings, 1e5);
 
 % Remove bright objects (smooth regions in apicals mostly) and
 % Regions with high average gradients
-statsRaw = regionprops(nuclei, raw, {'Area', 'BoundingBox', 'Centroid', 'MinIntensity', 'MeanIntensity', 'MaxIntensity' 'PixelIdxList'});
+statsRaw = regionprops(myelin, raw, {'Area', 'BoundingBox', 'Centroid', 'MinIntensity', 'MeanIntensity', 'MaxIntensity' 'PixelIdxList'});
 for i=1:length(statsRaw)
-    if statsRaw(i).MeanIntensity > 150
-        nuclei(statsRaw(i).PixelIdxList) = 0;
+    if statsRaw(i).MinIntensity > 75
+        myelin(statsRaw(i).PixelIdxList) = 0;
     end
 end
 
