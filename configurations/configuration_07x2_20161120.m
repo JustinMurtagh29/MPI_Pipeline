@@ -35,6 +35,14 @@ p.raw.voxelSize = [11.24 11.24 28];
 % decrease for more smaller segments and vice versa
 p.seg.threshold = .25;
 
+% If p.myelin.isUsed is set to true a previously run myelin detection 
+% (see preprocessing/additionalHeuristics.m) will be used to ensure that segments
+% do not cross myelin/non-myelin border 
+p.myelin.isUsed = false;
+p.myelin.root = '/gaba/u/mberning/wkCubes/2012-09-28_ex145_07x2_ROI2016_vessel/segmentation/1/';
+p.myelin.prefix = '2012-09-28_ex145_07x2_ROI2016_vessel_mag1';
+p.myelin.segId = 3; 
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%% STOP EDITING HERE %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Do not change this, will add other parameters that
