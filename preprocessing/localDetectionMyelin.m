@@ -14,7 +14,7 @@ function localDetectionMyelin(in, out, bboxIn, bboxOut)
     myelin = cutAwayBorder(myelin, toRemove);
     vessels = cutAwayBorder(vessels, toRemove);
     % Make sure old data is not overwritten
-    myelin(vessels) = 0;
+    myelin(vessels == 1) = 0;
     % Make sure no voxels are labeled double before pasting together
     vessels = uint32(vessels);
     vessels(myelin) = 3;

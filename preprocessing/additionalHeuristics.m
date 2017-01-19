@@ -52,7 +52,7 @@ toc;
 % idx = cellfun(@(x)and(all(coord_mat >= x{1}{2}(:,1)'),all(coord_mat <= x{1}{2}(:,2)')), inputCell);
 % theseInputs = cat(2, {dataset.raw, dataset.seg}, inputCell{idx}{1});
 % dbstop in detectMyelinLocal at 12; 
-% %dbstop in detectNucleiLocal at 11;
+% dbstop in detectNucleiLocal at 11;
 % functionH(theseInputs{:});
 % % Execute in function for visualization of results
 % makeSegMovie(myelin, uint8(raw), '/home/mberning/Desktop/test.avi');
