@@ -4,8 +4,8 @@ function runPipeline(p)
     % Because CNN is translation invariant, saved as KNOSSOS hierachy again 
     % Pass bounding box as well as tileSize will be added in bigFwdPass otherwise (legacy stuff)
     % This uses CNN subfolder in code repository
-    %job = bigFwdPass(p, p.bbox);
-    %Cluster.waitForJob(job);
+    job = bigFwdPass(p, p.bbox);
+    Cluster.waitForJob(job);
     
     % If you set p.myelin.isUsed = true in configuration.m, the result of a myelin detection is
     % used to ensure a voxel detected as myelin will not be in one segment with voxel not detected

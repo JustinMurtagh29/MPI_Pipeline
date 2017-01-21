@@ -12,7 +12,7 @@ function job = globalizeCorrespondences(p)
     inputCell = cell(fileCount, 1);
 
     for i = 1:fileCount
-        inputCell{i} = {{p, files(i).name}};
+        inputCell{i} = {p, files(i).name};
     end
 
     functionH = @globalCorrSeg;

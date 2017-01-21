@@ -1,4 +1,4 @@
-function buildSegmentMetaData(param)
+function job = buildSegmentMetaData(param)
     cubes = param.local;
     rootDir = param.saveFolder;
 

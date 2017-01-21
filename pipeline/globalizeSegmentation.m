@@ -25,7 +25,7 @@ function job = globalizeSegmentation(p)
     for curIdx = 1:numel(p.local)
         [curI, curJ, curK] = ind2sub( ...
             size(p.local), curIdx);
-        inputCell{curIdx} = {{p, curI, curJ, curK}};
+        inputCell{curIdx} = {p, curI, curJ, curK};
     end
 
     % Globalize segmentation and save as KNOSSOS hierachy for Oxalis
