@@ -13,7 +13,7 @@ function job = buildSegmentMetaData(param)
     % collect all local results
     loadMeta = @(p) load(fullfile(p.saveFolder, 'segmentMeta.mat'));
     meta = arrayfun(loadMeta, cubes, 'UniformOutput', false);
-    meta = Util.concatStructs(1, meta{:});
+    meta = Util.concatStructs('last', meta{:});
     
     % write global result
     metaFile = fullfile(rootDir, 'segmentMeta.mat');
