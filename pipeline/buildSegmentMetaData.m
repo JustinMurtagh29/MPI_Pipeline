@@ -4,7 +4,6 @@ function job = buildSegmentMetaData(param)
 
     taskCount = numel(cubes);
     jobParams = arrayfun(@(curIdx) {{param, curIdx}}, 1:taskCount);
-    jobParams = cellfun(@(x){x}, jobParams, 'uni', 0);
 
     % run job
     job = startCPU(@buildInCube, jobParams, mfilename());
@@ -31,3 +30,4 @@ function buildInCube(param, cubeIdx)
     metaFile = fullfile(cubeDir, 'segmentMeta.mat');
     Util.saveStruct(metaFile, meta);
 end
+
