@@ -88,8 +88,8 @@ classdef PrincipalAxis < SynEM.Feature.ShapeFeature
             end
         end
         function p = paProduct(~, X, Y)
-            pca1 = pca(X,'Algorithm','eig');
-            pca2 = pca(Y,'Algorithm','eig');
+            pca1 = pca(X,'Algorithm','svd');
+            pca2 = pca(Y,'Algorithm','svd');
             p = pca1(:,1)'*pca2(:,1);
         end
     end
