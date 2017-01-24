@@ -25,6 +25,6 @@ boutonCoMs = globalCoMList(boutonIDs,:);
 
 boutons.boutonIDs = boutonIDs;
 boutons.boutonCoMs = boutonCoMs;
-save([p.saveFolder 'Boutons.mat'],'boutons');
+Util.save([p.saveFolder 'Boutons.mat'],boutons);
 
 end

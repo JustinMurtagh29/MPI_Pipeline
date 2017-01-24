@@ -1,16 +1,12 @@
-function job = restartTasksWithErrors(job, gpuFlag)
-% Pass job object, will restart all tasks that had errors as new job, pass 2nd argument true if GPU is required
+function job = restartTasksWithErrors(job, cluster)
+% Pass job object, will restart all tasks that had errors as new job, pass 2nd argument is cluster object to be used
     
-    if nargin == 1
-        gpuFlag = false;
-    end
     errorCell = {job.Tasks(:).Error};
-    idxError = cellfun(@isempty, errorCell);
-    inputCell = {job.Tasks(~idxError).InputArguments};
-    functionH = job.Tasks(find(~idxError,1)).Function;
-    if gpuFlag
-        job = startGPU(functionH, inputCell, 'restartedTasks');
-    else
-        job = startCPU(functionH, inputCell, 'restartedTasks');
-    end
+    idxError = ~cellfun(@isempty, errorCell);
+    inputCell = {job.Tasks(idxError).InputArguments};
+    % This is now necessary with Cluster.startJob, any way to solve better?
+    inputCell = cellfun(@(x){x}, inputCell, 'uni', 0);
+    functionH = job.Tasks(find(idxError,1)).Function;
+    job = Cluster.startJob(functionH, inputCell, 'name', 'restartedTasks', 'cluster', cluster);
 end
+

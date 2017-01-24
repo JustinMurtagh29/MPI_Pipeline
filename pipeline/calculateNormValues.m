@@ -1,4 +1,3 @@
-
 function calculateNormValues(p)
 
 display('Calculating normValues for GP by sampling weights in random cubes');
@@ -16,6 +15,6 @@ percentiles = [.1 .9];
 X_lower_cutoff = quantile(X,percentiles(1),1);
 X_upper_cutoff = quantile(X,percentiles(2),1);
 
-save(normFile, 'X_lower_cutoff', 'X_upper_cutoff');
+Util.save(normFile, X_lower_cutoff, X_upper_cutoff);
 
 end

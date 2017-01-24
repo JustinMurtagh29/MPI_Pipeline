@@ -96,7 +96,7 @@ for p_i=1:length(prob)
     end
 end
 clear i p_i j k overlap keepIdx newIds idx temp;
-save([outputFolder 'nucleiAgglomeration.mat'], 'ids', 'nrAgglo', 'overlapIds', 'nrExcluded');
+Util.save([outputFolder 'nucleiAgglomeration.mat'], ids, nrAgglo, overlapIds, nrExcluded);
 
 %% Visualize results of nuclei agglomeration
 % Look at the agglomerations (minimal spanning tree on COM distances of agglomerated segments)
@@ -270,10 +270,6 @@ display(['Parameter: ' num2str(p_axon_agglo, '%3.2f') ' - ' num2str(n_axon_agglo
 display(['Average path length: ' num2str(mean(pathLength))]);
 
 % Save variables 
-variables = who;
-% Exclude large ones loaded in beginning
-variables(strcmp(variables, 'graphStruct')) = [];
-variables(strcmp(variables, 'com')) = [];
-save(['/gaba/u/mberning/' datestr(clock, 30) '_boutonAgglo.mat'], variables{:});
+Util.save(['/gaba/u/mberning/' datestr(clock, 30) '_boutonAgglo.mat']);
 %}
 %end

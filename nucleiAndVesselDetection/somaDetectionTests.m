@@ -55,7 +55,7 @@ nuclei(both) = false;
 
 %% Save
 clear x y z se both temp ans;
-save('/run/media/mberning/localStorage/07x2_mag4_vesselsAndNuclei.mat', '-v7.3');
+Util.save('/run/media/mberning/localStorage/07x2_mag4_vesselsAndNuclei.mat');
 
 %% Joint isosurface
 

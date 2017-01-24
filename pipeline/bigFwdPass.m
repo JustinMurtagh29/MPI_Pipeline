@@ -41,3 +41,4 @@ function job = bigFwdPass( p, bbox )
         job = startCPU(functionH, inputCell, 'classification');
     end
 end
+

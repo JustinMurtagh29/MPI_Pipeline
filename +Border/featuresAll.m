@@ -47,5 +47,5 @@ function featuresAll(param, cubeIdx)
     outStruct.featNames = featNames;
     
     outFile = [cubeDir, 'bordersExtFeats.mat'];
-    save(outFile, '-struct', 'outStruct');
+    Util.saveStruct(outFile, outStruct);
 end

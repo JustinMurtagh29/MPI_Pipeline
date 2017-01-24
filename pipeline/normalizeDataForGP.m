@@ -1,4 +1,4 @@
-function X_norm = normalizeTrainingDataForGP(X, renormalize, normFile)
+function X_norm = normalizeDataForGP(X, renormalize, normFile)
 
 percentiles = [.1 .9];
 
@@ -13,7 +13,7 @@ X = bsxfun(@minus, X, X_lower_cutoff);
 X_norm = bsxfun(@times, X, 1./(X_upper_cutoff-X_lower_cutoff));
 
 if renormalize
-    save(normFile, 'X_lower_cutoff', 'X_upper_cutoff');
+    Util.save(normFile, X_lower_cutoff, X_upper_cutoff);
 end
 
 end

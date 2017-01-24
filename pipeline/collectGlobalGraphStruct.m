@@ -40,7 +40,7 @@ function collectGlobalGraphStruct (p)
 
     % save output
     graphFile = [p.saveFolder, 'graph.mat'];
-    save(graphFile, '-struct', 'graph', '-v7.3');
+    Util.saveStruct(graphFile, graph);
 end
 
 

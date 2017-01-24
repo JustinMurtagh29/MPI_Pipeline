@@ -10,6 +10,6 @@ function job = runFix(p, newPrefix)
     boxCount = numel(p.local);
     taskInputArguments = arrayfun( ...
         @(idx) {{p, newPrefix, p.local(idx).bboxSmall}}, 1:boxCount);
-    
-    job = startCPU(@Myelin.runFixInBox, taskInputArguments, 'myelinFix');
+    job = startCPU(@Myelin.enforceMyelinSegments, taskInputArguments, 'myelinFix');
 end
+

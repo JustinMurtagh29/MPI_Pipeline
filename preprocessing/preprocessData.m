@@ -88,7 +88,7 @@ toc;
 % Approximate gradients by first (in this function) mean downsampling
 filterSize = [64; 64; 29];
 [rawMean, x, y, z] = approximateGradients(vesselsMasked, dataset.bbox, filterSize);
-save('/gaba/scratch/mberning/rawMean.mat');
+Util.save('/gaba/scratch/mberning/rawMean.mat');
 
 % Gradient calculation
 display('Smoothing gradient estimation');

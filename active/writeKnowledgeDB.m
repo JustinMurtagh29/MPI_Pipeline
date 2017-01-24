@@ -22,7 +22,7 @@ else
 end
 
 % Save global counter variables
-save(par.kdb.counter, 'counter');
+Util.save(par.kdb.counter, counter);
 
 % Metadata fuer Tasks generieren
 for i=1:size(edgesToAnnotate,1)
@@ -140,7 +140,7 @@ savejson('', missionStruct, 'FileName', [rootFolder 'missions.json'], 'ParseLogi
 
 % save everything to synced folder for problem inspection if flag is set
 if par.kdb.saveForProblemInspector
-	save([rootFolder 'section' num2str(counter.layerId, '%.4i')  '.mat'], 'par', 'v', '-v7.3');
+	Util.save([rootFolder 'section' num2str(counter.layerId, '%.4i')  '.mat'], par, v);
 end
 
 end

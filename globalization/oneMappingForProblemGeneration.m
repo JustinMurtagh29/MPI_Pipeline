@@ -39,7 +39,7 @@ function oneMappingForProblemGeneration(p, upperT)
         graph.edges(idx:end,:) = [];
         graph.prob(idx:end) = [];
         graph.cubeLI(idx:end) = [];
-        save([p.saveFolder 'graph.mat'], 'graph');
+        Util.save([p.saveFolder 'graph.mat'], graph);
         toc;
     else
         display('NOTE: Graph loaded from HD. Rename for recalculation');
@@ -99,7 +99,7 @@ function oneMappingForProblemGeneration(p, upperT)
             end
         end
         % Save for future use 
-        save([p.saveFolder 'graphNew.mat'], 'graph', '-v7.3');
+        Util.save([p.saveFolder 'graphNew.mat'], graph);
         toc;
     else
         display('Graph after GP and correspodence based joining of supervoxel loaded from disk, NOT recalculated')

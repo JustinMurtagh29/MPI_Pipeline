@@ -3,6 +3,6 @@ function tests = testGitLabCI()
 end
 
 function testAnswerToLifeAndUniverse(testCase)
-    answerToLifeAndUniverse = 2 * 3 * 7;
-    verifyEqual(testCase, answerToLifeAndUniverse, 42);
+    answerToLifeTheUniverseAndEverything = 2 * 3 * 7;
+    verifyEqual(testCase, answerToLifeTheUniverseAndEverything, 42);
 end
