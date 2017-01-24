@@ -36,15 +36,21 @@ classdef ConvexHull < SynEM.Feature.ShapeFeature
             
             try
                 [~,V] = convhull(X);
-            catch err
-                if length(unique(X(:,3))) == 1
-                    [~,V] = convhull(X(:,[1, 2]));
-                elseif length(unique(X(:,1))) == 1
-                    [~,V] = convhull(X(:,[2, 3]));
-                elseif length(unique(X(:,2))) == 1
-                    [~,V] = convhull(X(:,[1 3]));
-                else
-                    rethrow(err);
+            catch
+                try
+                    %points are coplanar
+                    if length(unique(X(:,3))) == 1
+                        [~,V] = convhull(X(:,[1, 2]));
+                    elseif length(unique(X(:,1))) == 1
+                        [~,V] = convhull(X(:,[2, 3]));
+                    elseif length(unique(X(:,2))) == 1
+                        [~,V] = convhull(X(:,[1 3]));
+                    else
+                        V = 0;
+                    end
+                catch
+                    %points are colinear
+                    V = 0;
                 end
             end
         end
