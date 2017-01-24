@@ -115,7 +115,7 @@ end
 
 %save results
 outputFile = [p.local(i).saveFolder outputFile];
-fprintf('[%s] SynEM.Seg.predictCube - Saving output to %s.\n', ...
+fprintf('[%s] SynEM.Seg.predictCube - Saving scores to %s.\n', ...
     datestr(now), outputFile);
 Util.save(outputFile, scores);
 
