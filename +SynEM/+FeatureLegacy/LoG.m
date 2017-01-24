@@ -1,5 +1,5 @@
-classdef LoGLegacy < SynEM.Feature.TextureFeature
-    %LOGLEGACY Old implementation of LoG feature.
+classdef LoG < SynEM.Feature.TextureFeature
+    %LOGL Laplacian of Gaussian filter.
     % Author: Benedikt Staffler <benedikt.staffler@brain.mpg.de>
     
     properties
@@ -8,7 +8,7 @@ classdef LoGLegacy < SynEM.Feature.TextureFeature
     end
     
     methods
-        function obj = LoGLegacy(sigma, filterSize)
+        function obj = LoG(sigma, filterSize)
             % INPUT sigma: Array containing standard deviation used for 
             %           gaussian filter in each dimension.
             %       filterSize: Size of the resulting filter in each 
@@ -16,7 +16,7 @@ classdef LoGLegacy < SynEM.Feature.TextureFeature
             %           size of 2*filterSize + 1 and a total boundary of
             %           2*filterSize.
 
-            obj.name = 'LoGLegacy';
+            obj.name = 'LoG';
             obj.sigma = sigma;
             obj.filterSize = filterSize;
             obj.numChannels = 1;

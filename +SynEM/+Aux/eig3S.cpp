@@ -25,6 +25,7 @@
 #include <iostream>
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include "mex.h"
 
 template<typename Scalar>

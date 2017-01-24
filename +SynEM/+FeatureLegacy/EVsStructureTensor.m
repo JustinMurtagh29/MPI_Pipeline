@@ -1,6 +1,6 @@
-classdef EVsStructureTensorLegacy < SynEM.Feature.TextureFeature
-    %EVSSTRUCTURETENSORLEGACY Old implementation of eigenvalues for
-    % structure tensor sorted by increasing absolute value.
+classdef EVsStructureTensor < SynEM.Feature.TextureFeature
+    %EVSSTRUCTURETENSOR Eigenvalues for structure tensor sorted by
+    % increasing absolute value.
     % Author: Benedikt Staffler <benedikt.staffler@brain.mpg.de>
     
     properties
@@ -11,9 +11,9 @@ classdef EVsStructureTensorLegacy < SynEM.Feature.TextureFeature
     end
 
     methods
-        function obj = EVsStructureTensorLegacy(sigmaW, filterSizW, ...
+        function obj = EVsStructureTensor(sigmaW, filterSizW, ...
                 sigmaD, filterSizD)
-            obj.name = 'EVsSTLeg';
+            obj.name = 'EVsStructureTensor';
             obj.sigmaW = sigmaW;
             obj.filterSizW = filterSizW;
             obj.sigmaD = sigmaD;

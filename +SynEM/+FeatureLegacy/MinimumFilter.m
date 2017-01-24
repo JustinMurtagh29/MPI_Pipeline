@@ -1,5 +1,5 @@
-classdef LocalPol < SynEM.Feature.TextureFeature
-    %LOCALPOL Local polynomial filter.
+classdef MinimumFilter < SynEM.Feature.TextureFeature
+    %MINIMUMFILTER Minimum filter.
     % PROPERTIES
     % nhood: [Nx1] array of integer specifying the size of the filter in
     %   each dimension.
@@ -15,8 +15,8 @@ classdef LocalPol < SynEM.Feature.TextureFeature
     end
     
     methods
-        function obj = LocalPol(nhood, sigma)
-            obj.name = 'LPol';
+        function obj = MinimumFilter(nhood, sigma)
+            obj.name = 'MinFilter';
             obj.nhood = nhood;
             if exist('sigma','var')
                 obj.sigma = sigma;
@@ -25,7 +25,6 @@ classdef LocalPol < SynEM.Feature.TextureFeature
                 obj.border = (nhood - 1);
             end
             obj.numChannels = 1;
-            
         end
         
         function feat = calc(obj, raw)
@@ -39,11 +38,8 @@ classdef LocalPol < SynEM.Feature.TextureFeature
                 raw = SynEM.Feature.GaussFilter.calculate(raw, sigma, ...
                     3, 0, 'same');
             end
-            h = ones(nhood)./prod(nhood);
-%             raw = raw./255; %legacy, could be removed at some point
-            feat = imfilter(raw.*raw,h) - imfilter(raw,h).^2;
+            feat = imerode(raw,ones(nhood));
         end
     end
-    
 end
 

@@ -69,6 +69,8 @@ classdef FeatureMap < handle
     %       This function handle is called on the raw data before feature
     %       calculation. (see FeatureMap.calculate)
     %       (Default: @(x)single(x)).
+    % verbose: logical
+    %       Verbose mode for feature calculation.
     %
     % USAGE
     %   see InterfaceClassification.makeFeatureMap for examples how to
@@ -95,6 +97,7 @@ classdef FeatureMap < handle
         mode = 'direction'
         voxelSize = [1, 1, 1];
         fRawNorm = '@(x)single(x)';
+        verbose = true;
     end
     
     methods

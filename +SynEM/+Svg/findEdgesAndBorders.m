@@ -77,7 +77,7 @@ numComb = cellfun(@(x)size(x,2),pairs)';
 %save edge for each voxel and voxel linear indices (ind)
 edges = cat(2,reshape(nSegId(lSegId(:,toKeep)),2,[]),cell2mat(pairs))';
 indExtend = repelem(ind(toExtend), numComb);
-ind = cat(1,ind(toKeep),indExtend);
+ind = cat(1,ind(toKeep), indExtend);
 [uid,~,c] = unique(indExtend);
 %these indices belong to several edges
 overlapInd = [zeros(sum(toKeep),1); c];
@@ -93,7 +93,10 @@ end
 
 %make edges contiguous
 groupIdx = zeros(length(ind),1); %resulting edge index for each ind
-%linear indices of overlapping borders
+
+%borderAdjaceny: for each membrane voxel with at least three neighboring
+% segments it contains the linear indices of all border containing that
+% voxel
 borderAdjacency = cell(length(uid),1);
 currGroupId = 1;
 edgesNew = zeros(3*size(diffEdge,1),2,'like',edges);
@@ -108,13 +111,11 @@ for i = 1:length(diffEdge) - 1
     
     %construct adjacency between voxels (using 26 neighborhood)
     adjacency_list = bsxfun(@plus, borderIdx, vec)';
-    adjacency_list = num2cell(adjacency_list, 1);
-    adjacency_list = cellfun(@(x)x(borderPixelMat(x))', adjacency_list, ...
-        'UniformOutput', false);
-    borderPixelMat(borderIdx) = false;
     
     %split into connected components
-    bordersForThisEdge = bfs(borderIdx,adjacency_list); %see below
+    bordersForThisEdge = bfs(borderIdx, adjacency_list, ...
+        borderPixelMat(adjacency_list)); %see below
+    borderPixelMat(borderIdx) = false;
     for j = 1:length(bordersForThisEdge)
         
         %add indices to border
@@ -124,8 +125,8 @@ for i = 1:length(diffEdge) - 1
         groupIdx(currGroupIdx) = currGroupId;
         edgesNew(currGroupId,1:2) = edges(diffEdge(i),:);
         
-        %get border adjacency edges
         if nargout == 4
+            %include to current border group to all borderOverlapVoxels
             tmp = setdiff(borderOverlapIdx(currGroup),0);
             for k = 1:length(tmp)
                 borderAdjacency{tmp(k)} = [borderAdjacency{tmp(k)}; ...
@@ -152,6 +153,7 @@ if nargout == 4
     borderAdjacency(cellfun(@length,borderAdjacency) < 2) = [];
     borderAdjacency = cellfun(@(x)combnk(x,2),borderAdjacency, 'uni', 0);
     borderAdjacency = cell2mat(borderAdjacency);
+    borderAdjacency = unique(borderAdjacency, 'rows');
 end
 
 %save corresponding wall voxels to borders
@@ -197,14 +199,19 @@ c = mean([x,y,z] - 1); %remove padding
 tInd = sub2ind(siz - 2,x - 1,y - 1,z - 1); %remove padding
 end
 
-function components = bfs( idx, adjList )
+function components = bfs( idx, adjList, isBorder )
 %BFS Breadth-first search for boundary connected component calculation.
-% INPUT idx: [Nx1] array of integer containing a list of linear indices
-%           for which the connected components are calculated.
-%       adjacency_list: [Nx1] cell array of integer containing the adjacend
-%           linear indices for each index in idx as a row vector, i.e. the
-%           i-th cell contains all linear indices which are adjacent to
-%           idx(i) as an [1xN] array.
+% INPUT idx: [Nx1] int
+%           Linear indices of border pixel for which the connected
+%           components are calculated.
+%       adjacency_list: [MxN] int
+%           Each column contains the linear indices of all voxels in a
+%           neighborhood of a boundary voxel. Typically M = 26 and
+%           N = length(idx).
+%       isBorder: [MxN] logical
+%           Logical matrix containing the information whether the
+%           corresponding entry in adjacency_list is actually a voxel of
+%           the border. (This was introduced for speed optimization.)
 % OUTPUT components: [Nx1] cell array. Each cell contains the linear
 %           indices of one connected component within idx.
 % Author: Benedikt Staffler <benedikt.staffler@brain.mpg.de>
@@ -225,7 +232,8 @@ while any(nonvisited)
     queuedNodes(nextIdx) = true;
     
     while any(queuedNodes)
-        queuedNodes(idxLookup(horzcat(adjList{queuedNodes}))) = true;
+        tmp = adjList(:,queuedNodes);
+        queuedNodes(idxLookup(tmp(isBorder(:,queuedNodes)))) = true;
         queuedNodes = queuedNodes & ~currComp;
         currComp = currComp | queuedNodes;
     end

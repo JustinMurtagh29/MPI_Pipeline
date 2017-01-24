@@ -14,7 +14,7 @@ function job = startJob( cluster, fh, inputCell, fhArgsOut, jobName )
 % Author: Benedikt Staffler <benedikt.staffler@brain.mpg.de>
 
 %create job object
-job = createJobPwd(cluster);
+job = SynEM.Util.createJobPwd(cluster);
 if exist('jobName','var') && ~isempty(jobName)
     job.Name = jobName;
 end

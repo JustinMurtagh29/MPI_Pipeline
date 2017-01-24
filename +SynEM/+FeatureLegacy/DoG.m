@@ -1,5 +1,5 @@
-classdef DoGLegacy < SynEM.Feature.TextureFeature
-    %DOGLEGACY Old implementation of DoG feature.
+classdef DoG < SynEM.Feature.TextureFeature
+    %DOGL Difference of Gaussians feature.
     % Author: Benedikt Staffler <benedikt.staffler@brain.mpg.de>
     
     properties
@@ -9,7 +9,7 @@ classdef DoGLegacy < SynEM.Feature.TextureFeature
     end
     
     methods
-        function obj = DoGLegacy(sigma, filterSize, k)
+        function obj = DoG(sigma, filterSize, k)
             obj.name = 'DoG';
             obj.sigma = sigma;
             obj.filterSize = filterSize;

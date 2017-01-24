@@ -23,6 +23,7 @@ function subsegmentsList = calculateSubsegments( interfaceSurfaceList, neighborI
 if ~isrow(rinclude)
     rinclude = rinclude';
 end
+rinclude = sort(rinclude);
 if ~isrow(voxelSize)
     voxelSize = voxelSize';
 end
@@ -33,14 +34,16 @@ fprintf(['[%s] SynEM.Svg.calculateSubsegments - Starting subsegment ', ...
 maxDist = ceil(max(rinclude)./voxelSize);
 segSize = size(seg);
 
-%prepare dilation mask
-h = arrayfun(@(x)sphereAverage(x, voxelSize), rinclude, 'uni', 0);
+%prepare dilation mask (applied sequentially over rinclude)
+h = arrayfun(@(x)sphereAverage(x, voxelSize), ...
+    [rinclude(1), diff(rinclude)], 'uni', 0);
 
 %prepare output
 subsegmentsList = arrayfun(@(x)cell(length(interfaceSurfaceList), 2), ...
     1:length(rinclude), 'UniformOutput', false);
 
 %calculate subsegments for each interface
+fprintf('Subsegment calculation:  0%%');
 for i = 1:length(interfaceSurfaceList)
 
     %get contact wall subscript indices
@@ -66,11 +69,11 @@ for i = 1:length(interfaceSurfaceList)
     %calculate subsegments on local cube and translate indices to large
     %cube
     for k = 1:length(rinclude)
-        dilatedContact = imdilate(localSurfaceMask,h{k});
+        localSurfaceMask = imdilate(localSurfaceMask,h{k});
         for j = 1:2
-            subsegRelativeIndices = find(dilatedContact & ...
+            subsegRelativeIndices = find(localSurfaceMask & ...
                 (localSeg == neighborIDs(i,j)));
-            [x,y,z] = ind2sub(size(dilatedContact),subsegRelativeIndices);
+            [x,y,z] = ind2sub(size(localSurfaceMask),subsegRelativeIndices);
             subsegRelativeCoords = [x,y,z];
             subsegCoords = bsxfun(@plus, subsegRelativeCoords, ...
                 roughframe(1,:) - 1);
@@ -78,7 +81,15 @@ for i = 1:length(interfaceSurfaceList)
                 subsegCoords(:,1),subsegCoords(:,2),subsegCoords(:,3)));
         end
     end
+    
+    %print progress
+    if floor(i/length(interfaceSurfaceList)*100) < 10
+        fprintf('\b\b%d%%',floor(i/length(interfaceSurfaceList)*100));
+    else
+        fprintf('\b\b\b%d%%',floor(i/length(interfaceSurfaceList)*100));
+    end
 end
+fprintf('\n');
 
 fprintf(['[%s] SynEM.Svg.calculateSubsegments - Finished subsegment ', ...
     'calculation.\n'], datestr(now));

@@ -1,5 +1,5 @@
-classdef LocalPolLegacy < SynEM.Feature.TextureFeature
-    %LOCALPOLLEGACY Local polynomial filter.
+classdef IntVar < SynEM.Feature.TextureFeature
+    % IntVar Intensity/variance filter.
     % PROPERTIES
     % nhood: [Nx1] array of integer specifying the size of the filter in
     %   each dimension.
@@ -14,8 +14,8 @@ classdef LocalPolLegacy < SynEM.Feature.TextureFeature
     end
     
     methods
-        function obj = LocalPolLegacy(nhood)
-            obj.name = 'LPol';
+        function obj = IntVar(nhood)
+            obj.name = 'IntVar';
             obj.nhood = nhood;
             obj.border = (nhood - 1);
             obj.numChannels = 1;

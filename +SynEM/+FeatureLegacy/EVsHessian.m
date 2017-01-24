@@ -1,5 +1,6 @@
-classdef EVsHessianLegacy < SynEM.Feature.TextureFeature
-    %EVSHESSIANLEGACY Old implementation of eigenvalues for hessian.
+classdef EVsHessian < SynEM.Feature.TextureFeature
+    %EVSHESSIAN Eigenvalues for hessian sorted by increasing absolute
+    % absolute value.
     % Author: Benedikt Staffler <benedikt.staffler@brain.mpg.de>
 
     properties
@@ -8,8 +9,8 @@ classdef EVsHessianLegacy < SynEM.Feature.TextureFeature
     end
 
     methods
-        function obj = EVsHessianLegacy(sigma, filterSiz)
-            obj.name = 'EVsHessianLeg';
+        function obj = EVsHessian(sigma, filterSiz)
+            obj.name = 'EVsHessian';
             obj.sigma = sigma;
             obj.numChannels = 3;
             obj.filterSiz = filterSiz;

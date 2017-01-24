@@ -1,5 +1,5 @@
-classdef GaussGradMagLegacy < SynEM.Feature.TextureFeature
-    %GAUSSGRADMAGLEGACY Old implementation of gauss gradient magnitude.
+classdef GaussGradMagnitude < SynEM.Feature.TextureFeature
+    %GAUSSGRADMAGNITUDE Gauss gradient magnitude filter.
     % Author: Benedikt Staffler <benedikt.staffler@brain.mpg.de>
     
     properties
@@ -9,8 +9,8 @@ classdef GaussGradMagLegacy < SynEM.Feature.TextureFeature
     
     methods
         
-        function obj = GaussGradMagLegacy(sigma, filterSize)
-            obj.name = 'GaussGradLegacy';
+        function obj = GaussGradMagnitude(sigma, filterSize)
+            obj.name = 'GaussGradMagnitude';
             obj.sigma = sigma;
             obj.filterSize = filterSize;
             obj.numChannels = 1;

@@ -1,5 +1,6 @@
-function [scores, X, interfaces] = predictCube( p, cubeNo, fm, classifier )
-%PREDICTCUBE Prediction for one segmentation cube.
+function [ X, interfaces ] = cubeFeatures( p, cubeNo, fm )
+%CUBEFEATURES Calculate the interfaces features for a local segmentation
+%cube.
 % INPUT p: struct
 %           SegEM segmentation parameter struct.
 %       cubeNo: int
@@ -9,10 +10,7 @@ function [scores, X, interfaces] = predictCube( p, cubeNo, fm, classifier )
 %       classifier: object or string
 %           Classifier object (e.g. SynEM.Classifier) or path to classifier
 %           object mat-file containing a 'classifier' variable.
-% OUTPUT scores: [Nx1] double
-%           Prediction score for each interface in the local segmentation
-%           cube.
-%        X: [NxM] single
+% OUTPUT X: [NxM] single
 %           The feature map used for prediction. Rows correspond to
 %           interfaces, columns to features.
 %        interfaces: struct
@@ -27,12 +25,6 @@ function [scores, X, interfaces] = predictCube( p, cubeNo, fm, classifier )
 %
 % NOTE Only borders with at least fm.areaT voxels are considered and thus
 %      size(scores,1) is length number of borders > fm.areaT.
-%      If the 'direction' mode is used than each interface produces two
-%      scores (one for each direction) which is arranged such that the
-%      first half of the scores is one direction for each interface and the
-%      second half of the scores is the other direction (i.e. typically
-%      reshape(scores,[],2) gives the two scores for one interface in the
-%      same row).
 % Author: Benedikt Staffler <benedikt.staffler@brain.mpg.de>
 
 pCube = p.local(cubeNo);
@@ -60,11 +52,5 @@ raw = SynEM.Aux.readKnossosRoi(p.raw.root, p.raw.prefix, bboxFM);
 %calculate features
 X = fm.calculate(interfaces, raw);
 
-%classify
-if ischar(classifier);
-    m = load(classifier);
-    classifier = m.classifier;
 end
-[~,scores] = classifier.predict(X);
 
-end

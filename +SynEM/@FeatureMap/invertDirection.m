@@ -6,7 +6,8 @@ function X = invertDirection(obj, X)
 % Author: Benedikt Staffler <benedikt.staffler@brain.mpg.de>
 
 if isempty(obj.selectedFeat)
-    error('Run setSelectedFeat first.')
+    %assume all features by default
+    obj.setSelectedFeat();
 end
 
 numFeatText = length(obj.featTexture);

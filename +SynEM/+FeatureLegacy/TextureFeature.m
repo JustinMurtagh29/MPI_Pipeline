@@ -19,8 +19,6 @@ classdef TextureFeature
     end
 
     methods (Abstract)
-        %fm should be a cell array of length numChannels containing the
-        %different feature maps
-        fm = calc(obj, I);
+        fm = calc(obj, I)
     end
 end

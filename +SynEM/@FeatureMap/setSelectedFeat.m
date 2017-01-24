@@ -3,11 +3,15 @@ function setSelectedFeat(obj, selectedFeat)
 % features is required. This is only relevant for the 'direction' mode
 % since in this case features always need to be calculated for both
 % subsegments.
-% INPUT selectedFeat: [Nx1] logical
+% INPUT selectedFeat: (Optional) [Nx1] logical
 %           Array of length obj.numFeatures selecting the features to
 %           calculate.
+%           (Default: all features are calculated)
 % Author: Benedikt Staffler <benedikt.staffler@brain.mpg.de>
 
+if ~exist('selectedFeat', 'var') || isempty(selectedFeat)
+    selectedFeat = true(obj.numFeatures, 1);
+end
 if isrow(selectedFeat)
     selectedFeat = selectedFeat';
 end

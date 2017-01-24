@@ -150,14 +150,16 @@ classdef BoostedEnsemble
             options = Util.modifyStruct(options, varargin{:});
             nmPairs = Util.struct2nmcell(options);
             
+            fprintf('[%s] Starting classifier training.\n', datestr(now));
             obj = SynEM.Classifier.BoostedEnsemble();
             obj.ens = fitensemble(X,y,options.method,...
                             options.nlearn,options.learners, ...
                             nmPairs{7:end});
+            fprintf('[%s] Finished classifier training.\n', datestr(now));
             options.start = t;
             obj.options = options;
             try %#ok<TRYNC>
-                obj.calculatePredVar();
+                obj = obj.calculatePredVar();
             end
         end
     end

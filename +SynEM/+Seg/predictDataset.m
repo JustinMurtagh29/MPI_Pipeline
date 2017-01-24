@@ -1,5 +1,5 @@
 function [p, job] = predictDataset( p, fm, classifier, outputFile, ...
-    cluster, cubeIdx )
+    cluster, cubeIdx, saveFeatures, saveInterfaces )
 %PREDICTDATASET SynEM prediction for a dataset.
 % INPUT p: struct
 %           SegEM segmentation parameter struct.
@@ -20,11 +20,19 @@ function [p, job] = predictDataset( p, fm, classifier, outputFile, ...
 %           (Default: 'synapseScores.mat')
 %       cluster: (optional) parallel.cluster object
 %           Cluster object to submit jobs.
-%           (Default: getCluster('cpu');
+%           (Default: parcluster())
 %       cubeIdx: (optional) [1xN] int
 %           Linear or logical indices of the cubes in p.local for which the
 %           prediction is done.
 %           (Default: 1:numel(p.local))
+%       saveFeatures: (Optional) logical
+%           Flag indicating whether to save features for each local
+%           segmentation cube.
+%           (Default: false)
+%       saveInterfaces: (Optional) logical
+%           Flag indicating whether to save interfaces for each local
+%           segmentation cube.
+%           (Default: false)
 % OUTPUT p: struct
 %           Modified segmentaton parameter struct. Classifier and feature
 %           maps are stored at 'p.synEM' and each local cube now contains a
@@ -45,38 +53,82 @@ if ~exist('cubeIdx','var') || isempty(cubeIdx)
 elseif islogical(cubeIdx)
     cubeIdx = find(cubeIdx);
 end
+if ~exist('saveFeatures','var') || isempty(saveFeatures)
+    saveFeatures = false;
+end
+if ~exist('saveInterfaces','var') || isempty(saveInterfaces)
+    saveInterfaces = false;
+end
 if iscolumn(cubeIdx); cubeIdx = cubeIdx'; end
 
 %save classification data
-p.synEM = [p.saveFolder 'synapseClassifier.mat'];
-Util.save(p.synEM, classifier, fm);
+p.synEM = [p.saveFolder 'SynapseClassifier.mat'];
+Util.save([p.synEM], classifier, fm);
 [~,  outputFile] = fileparts(outputFile);
 outputFile = [outputFile, '.mat'];
 for i = cubeIdx
     p.local(i).synapseFile = [p.local(i).saveFolder, outputFile];
+    if saveFeatures
+        p.local(i).interfaceFeatureFile = ...
+            [p.local(i).saveFolder, 'InterfaceFeatures.mat'];
+    end
+    if saveInterfaces
+        p.local(i).interfaceFile = ...
+            [p.local(i).saveFolder, 'Interfaces.mat'];
+    end
 end
 
-inputCell = arrayfun(@(i){p, i, fm, classifier, outputFile}, ...
-    cubeIdx, 'UniformOutput', false);
+inputCell = arrayfun(@(i){[p.saveFolder 'allParameter.mat'], i, ...
+    outputFile, saveFeatures, saveInterfaces}, cubeIdx, ...
+    'UniformOutput', false);
 
 if ~exist('cluster','var') || isempty(cluster)
-    cluster = getCluster('cpu');
+    try
+        cluster = getCluster('cpu');
+    catch
+        cluster = parcluster();
+    end
 end
 job = SynEM.Util.startJob(cluster, @jobWrapper, inputCell, 0, ...
     'SynapseDetection');
 end
 
-function jobWrapper(p, i, fm, classifier, outputFile)
+function jobWrapper(allParamFile, i, outputFile, ...
+    saveFeatures, saveInterfaces)
 
-scores = SynEM.Seg.predictCube(p, i, fm, classifier);
+%load parameter file
+m = load(allParamFile, 'p');
+p = m.p;
+
+%load fm and classifier
+m = load([p.saveFolder 'SynapseClassifier.mat'], 'fm', 'classifier');
+fm = m.fm;
+classifier = m.classifier;
+
+%actual prediction
+[scores, X, interfaces] = SynEM.Seg.predictCube(p, i, fm, classifier);
 scores = scores(:,1); %for default matlab classifiers
-if strcmp(fm.mode,'direction')
+if strcmp(fm.mode, 'direction')
     %both direction of one interface in a row
-    scores = reshape(scores,[],2); 
+    scores = reshape(scores, [], 2);
 end
+
+%save results
 outputFile = [p.local(i).saveFolder outputFile];
 fprintf(['[%s] SynEM.Seg.predictCube - Saving output to ' ...
     'cube %s.\n'], datestr(now), outputFile);
-Util.save(outputFile,scores);
+Util.save(outputFile, scores);
+
+if saveFeatures
+    if strcmp(fm.mode, 'direction')
+        X = X(1:end/2,:); %only save first direction
+    end
+    outputFile = [p.local(i).saveFolder 'InterfaceFeatures.mat'];
+    Util.save(outputFile, X);
+end
+if saveInterfaces
+    outputFile = [p.local(i).saveFolder 'Interfaces.mat'];
+    Util.save(outputFile, interfaces);
+end
 
 end

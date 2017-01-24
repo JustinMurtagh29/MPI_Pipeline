@@ -1,5 +1,5 @@
-classdef GaussFilterLegacy < SynEM.Feature.TextureFeature
-    %GaussFilterLegacy Multidimensional gaussian filter.
+classdef GaussFilter < SynEM.Feature.TextureFeature
+    %GaussFilter 3-dimensional gaussian filter.
     %
     % PROPERTIES
     % sigma: [3x1] array of double specifying the standard deviation
@@ -16,8 +16,8 @@ classdef GaussFilterLegacy < SynEM.Feature.TextureFeature
     end
 
     methods
-        function obj = GaussFilterLegacy(sigma, filterSiz)
-            obj.name = 'GaussFilt';
+        function obj = GaussFilter(sigma, filterSiz)
+            obj.name = 'GaussFilter';
             obj.sigma = sigma;
             obj.filterSiz = filterSiz;
             obj.border = 2.*filterSiz;
