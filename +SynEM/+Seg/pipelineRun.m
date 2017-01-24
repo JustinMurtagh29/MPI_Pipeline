@@ -23,6 +23,9 @@ curFile = mfilename('fullpath');
 curFolder = strsplit(curFolder, filesep);
 classifierPath = [fullfile(curFolder{1:end-1}) filesep 'data' filesep ...
     'SynEMPaperClassifier.mat'];
+if ~ispc
+    classifierPath = [filesep classifierPath];
+end
 
 %load classifier
 m = load(classifierPath, 'classifier');
