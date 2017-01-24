@@ -1,4 +1,4 @@
-function setSelectedFeat(obj, selectedFeat)
+function idx = setSelectedFeat(obj, selectedFeat)
 %SETSELECTEDFEAT Determine the feature to be calculated if only a subset of
 % features is required. This is only relevant for the 'direction' mode
 % since in this case features always need to be calculated for both
@@ -7,6 +7,9 @@ function setSelectedFeat(obj, selectedFeat)
 %           Array of length obj.numFeatures selecting the features to
 %           calculate.
 %           (Default: all features are calculated)
+% OUTPUT idx: [Nx1] logical
+%           Logical index of length(obj.numFeatures) specifying which
+%           features from the total feature vector were selected.
 % Author: Benedikt Staffler <benedikt.staffler@brain.mpg.de>
 
 if ~exist('selectedFeat', 'var') || isempty(selectedFeat)
@@ -59,4 +62,7 @@ end
 %save output in feature map
 obj.selectedFeat = selectedFeat;
 obj.numFeaturesSelected = sum(cellfun(@(x)sum(x(:)),selectedFeat));
+
+%output
+idx = cell2mat(cellfun(@(x)x(:),obj.selectedFeat, 'UniformOutput', false));
 end
