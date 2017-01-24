@@ -115,8 +115,8 @@ end
 
 %save results
 outputFile = [p.local(i).saveFolder outputFile];
-fprintf(['[%s] SynEM.Seg.predictCube - Saving output to ' ...
-    'cube %s.\n'], datestr(now), outputFile);
+fprintf('[%s] SynEM.Seg.predictCube - Saving output to %s.\n', ...
+    datestr(now), outputFile);
 Util.save(outputFile, scores);
 
 if saveFeatures
@@ -124,10 +124,14 @@ if saveFeatures
         X = X(1:end/2,:); %only save first direction
     end
     outputFile = [p.local(i).saveFolder 'InterfaceFeatures.mat'];
+    fprintf('[%s] SynEM.Seg.predictCube - Saving features to %s.\n', ...
+        datestr(now), outputFile);
     Util.save(outputFile, X);
 end
 if saveInterfaces
     outputFile = [p.local(i).saveFolder 'Interfaces.mat'];
+    fprintf('[%s] SynEM.Seg.predictCube - Saving interfaces to %s.\n', ...
+        datestr(now), outputFile);
     Util.save(outputFile, interfaces);
 end
 
