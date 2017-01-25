@@ -195,7 +195,7 @@ function [tInd, c] = calcCentroid(ind, siz)
 %           coordinates as x-, y- and z-coordinate.
 
 [x,y,z] = ind2sub(siz,ind);
-c = mean([x,y,z] - 1); %remove padding
+c = mean([x,y,z] - 1, 1); %remove padding
 tInd = sub2ind(siz - 2,x - 1,y - 1,z - 1); %remove padding
 end
 
