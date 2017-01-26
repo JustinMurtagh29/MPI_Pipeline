@@ -14,6 +14,9 @@ function job = buildSegmentMetaData(param)
     meta = arrayfun(loadMeta, cubes, 'UniformOutput', false);
     meta = Util.concatStructs('last', meta{:});
     
+    % find maximum segment ID
+    meta.maxSegId = max(meta.maxSegId);
+    
     % write global result
     metaFile = fullfile(rootDir, 'segmentMeta.mat');
     Util.saveStruct(metaFile, meta);
