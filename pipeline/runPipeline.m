@@ -62,11 +62,20 @@ function runPipeline(p)
     job = graphConstruction(p);
     Cluster.waitForJob(job);
     
+    % Run synapse detection as presented in Staffler et. al, 2017
+    % see: http://biorxiv.org/content/early/2017/01/22/099994
+    [p, job] = SynEM.Seg.pipelineRun(p);
+    % Save parameter file to new 
+    save([p.saveFolder 'allParameterWithSynapses.mat'], p);
+    % Wait for completion of job
+    Cluster.waitForJob(job);
+
+    % Comment MB: probably not needed anymore, features from SynEM call above used
     % Calculate edge based features as used in first GP training
     % Calculate segment based features as used in spine head detection
     % see filterbank 
-    job = miniFeature(p);
-    Cluster.waitForJob(job);
+    %job = miniFeature(p);
+    %Cluster.waitForJob(job);
     
     % Make predictions on edge based features using previously trained GP
     job = makePredictions(p,'edges');
@@ -75,14 +84,14 @@ function runPipeline(p)
     % Make predictions for spine heads on segment based features using previously trained spine head classifier
     job = spineHeadDetectionOnCluster(p);
     Cluster.waitForJob(job);
-    
+
+    % Comment MB: Also not needed anymore, make sure, then delete
     % Run interface classifier using Benedikt's trained classifier and store features
-    job = interfaceClassificationOnCluster(p);
-    Cluster.waitForJob(job);
-    
+    %job = interfaceClassificationOnCluster(p);
+    %Cluster.waitForJob(job);
     % Use interface features to make predictions i.e. generate synapse scores 
-    job=makeInterfacePredictionsOnCluster(p);
-    Cluster.waitForJob(job);
+    %job=makeInterfacePredictionsOnCluster(p);
+    %Cluster.waitForJob(job);
 
     %Save the global SVG data
     job = collectSvgDataOnCluster(p);
