@@ -92,7 +92,7 @@ classdef PrincipalAxis < SynEM.Feature.ShapeFeature
                 X = repmat(X, ceil(4/size(X, 1)), 1);
             end
             if size(Y, 1) < 4
-                X = repmat(Y, ceil(4/size(Y, 1)), 1);
+                Y = repmat(Y, ceil(4/size(Y, 1)), 1);
             end
             pca1 = pca(X,'Algorithm','svd');
             pca2 = pca(Y,'Algorithm','svd');
