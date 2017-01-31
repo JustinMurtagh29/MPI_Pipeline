@@ -205,20 +205,21 @@ classdef FeatureMap < handle
                 s = zeros(1,4);
                 lx = length(x);
                 s(1) = sum(x)/lx; %mean
-                if ind(2) || ind(3) || ind(4) %variance
+                if any(ind(2:4)) && (lx > 1) %variance (0 for delta distr)
                     x0 = bsxfun(@minus,x,s(1));
                     s(2) = sum(x0.^2);
                     s2 = s(2) / lx;
                     s(2) = s(2)/(lx - 1);
+                    if ind(3) && s2 > 0 %skewness (0 for delta distribution)
+                        m3 = sum(x0.^3)/lx;
+                        s(3) = m3/s2^(1.5);
+                    end
+                    if ind(4) && s2 > 0 %kurtosis (0 for delta distribution)
+                        m4 = sum(x0.^4)/lx;
+                        s(4) = m4/s2^2;
+                    end
                 end
-                if ind(3) && s2 > 0 %skewness (0 for delta distribution)
-                    m3 = sum(x0.^3)/lx;
-                    s(3) = m3/s2^(1.5);
-                end
-                if ind(4) && s2 > 0 %kurtosis (0 for delta distribution)
-                    m4 = sum(x0.^4)/lx;
-                    s(4) = m4/s2^2;
-                end
+                
                 y = s(ind);
             end
         end
