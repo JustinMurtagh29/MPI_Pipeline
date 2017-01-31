@@ -1,6 +1,5 @@
 function collectGlobalGraphStruct (p)
     load([p.saveFolder 'globalEdges.mat']);
-    load([p.saveFolder 'globalCoMList.mat']);
     load([p.saveFolder 'globalGPProbList.mat']);
     load([p.saveFolder 'globalBorder.mat']);
 
