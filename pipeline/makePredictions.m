@@ -21,10 +21,10 @@ for i=1:size(parameter.local,1)
 			end
 			idx = sub2ind(size(parameter.local), i, j, k);
             if strcmp(mode,'edges')
-                functionH{idx} = @edgeProbabilityPrediction;
+                functionH = @edgeProbabilityPrediction;
                 inputCell{idx} = {parameter.local(i,j,k).weightFile, parameter.gp.normValues, parameter.gp.initialGroundTruth, parameter.gp.hyperParameter, parameter.local(i,j,k).probFile};
             elseif strcmp(mode,'glia')  
-                functionH{idx} = @edgeProbabilityPrediction;
+                functionH = @edgeProbabilityPrediction;
                 inputCell{idx} = {parameter.local(i,j,k).segmentWeightFile, parameter.glia.normValues, parameter.glia.initialGroundTruth, parameter.glia.hyperParameter, parameter.local(i,j,k).gliaProbFile};
             end			
 		end

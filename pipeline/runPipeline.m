@@ -74,8 +74,8 @@ function runPipeline(p)
     % Calculate edge based features as used in first GP training
     % Calculate segment based features as used in spine head detection
     % see filterbank 
-    %job = miniFeature(p);
-    %Cluster.waitForJob(job);
+    job = miniFeature(p);
+    Cluster.waitForJob(job);
     
     % Make predictions on edge based features using previously trained GP
     job = makePredictions(p,'edges');
