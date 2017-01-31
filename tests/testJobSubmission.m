@@ -57,7 +57,7 @@ function resultJob = runJobAndReturnResult(functionHandle, inputCell, varargin)
     % Run function using generic local cluster
     cluster = parcluster();
     job = Cluster.startJob(functionHandle, inputCell, ...
-        'cluster', cluster, 'numOutputs', 1, varargin{:});
+        'cluster', cluster, 'numOutputs', 1, 'attachFolder', path, varargin{:});
     wait(job, 'finished');
     resultJob = fetchOutputs(job);
     delete(job);
