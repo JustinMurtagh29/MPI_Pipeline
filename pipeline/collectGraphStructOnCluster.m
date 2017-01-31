@@ -1,7 +1,7 @@
 function job = collectGraphStructOnCluster(p)
 
 functionH = @collectGlobalGraphStruct;
-inputCell = {p};
+inputCell{1} = {p};
 
 job = startCPU(functionH,inputCell,'globalGraphStruct');
 
