@@ -88,11 +88,11 @@ classdef PrincipalAxis < SynEM.Feature.ShapeFeature
             end
         end
         function p = paProduct(~, X, Y)
-            if size(X, 1) < 4
-                X = repmat(X, ceil(4/size(X, 1)), 1);
+            if size(X, 1) == 1
+                X = repmat(X, 2, 1);
             end
-            if size(Y, 1) < 4
-                Y = repmat(Y, ceil(4/size(Y, 1)), 1);
+            if size(Y, 1) == 1
+                Y = repmat(Y, 2, 1);
             end
             try %legacy
                 pca1 = pca(X,'Algorithm','eig');
