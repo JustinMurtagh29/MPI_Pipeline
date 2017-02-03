@@ -2,7 +2,7 @@ function calculateClassFeaturesCube(p, cubeNo, fm)
 % Calculate SynEM features for SegEM classification output on a local cube
 
 % load segmentation
-seg = loadSegData(p.seg, p.local(cubeNo).bboxSmall);
+seg = loadSegDataGlobal(p.seg, p.local(cubeNo).bboxSmall);
 
 %load svg
 load(p.local(cubeNo).edgeFile, 'edges');

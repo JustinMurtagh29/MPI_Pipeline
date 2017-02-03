@@ -5,14 +5,18 @@ function calculateClassFeatures( p )
 load([p.saveFolder 'SynapseClassifier.mat'], 'fm');
 % needed changes
 fm.areaT = 10;
-% not sure whether necessary
-fm.voxelSize = [11.24 11.24 28];
 
 % Construct data for job submission
-fH = @connectEM.Seg.predictCube;
-inputCell = cellfun(@(x){p, x, fm}, 'uni', 0);
+fH = @connectEM.calculateClassFeaturesCube;
+inputCell = cellfun(@(x){x}, mat2cell(1:numel(p.local),1,ones(1,numel(p.local))), 'uni', 0);
 
 % Start feature calculation on gaba
-startCPU(fH, inputCell);
+cluster = Cluster.getCluster( ...
+        '-pe openmp 1', ...
+        '-p -500', ...
+        '-l h_vmem=24G', ...
+        '-l s_rt=23:50:00', ...
+        '-l h_rt=24:00:00');
+Cluster.startJob(fH, inputCell, 'name', 'classFeatures', 'sharedInputs', {p fm}, 'sharedInputsLocation', [1 3], 'cluster', cluster);
 
 end
