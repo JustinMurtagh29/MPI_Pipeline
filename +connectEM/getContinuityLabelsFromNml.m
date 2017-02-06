@@ -1,7 +1,8 @@
-function gt = getContinuityLabelsFromNml(p, pT, fixOffset)
+function gt = getContinuityLabelsFromNml(p, pT)
 % Extract labels for interface continuity classification from a set of nml
 % files
 
+gt = struct();
 for i=1:length(pT.local)
     display(['----- Training region ' num2str(i) ' -----']);
     for j=1:length(pT.local(i).trainFile)
@@ -12,12 +13,7 @@ for i=1:length(pT.local)
         nodes = cellfun(@(x)x(:,1:3), skel.nodes, 'uni', 0);   
         nodesPerTree = cellfun(@(x)size(x,1), nodes);
         nodes = cat(1,nodes{:});
-        
-        if fixOffset
-            % Temporary fix: Empirical fix to not having to reuse ex145-conversion
-            nodes = bsxfun(@minus, nodes, [2 2 1]);
-        end
-        
+               
         segIdsOfGT = Seg.Global.getSegIds(p, nodes);
         segIdsOfGT = mat2cell(segIdsOfGT, nodesPerTree);
         % Remove nodes placed in background (0)
@@ -41,14 +37,14 @@ for i=1:length(pT.local)
         display(['Removing ' num2str(numel(excludedSegments)) ' of ' ...
             num2str(sum(nodesPerTree)) ' segments due to being covered by more than one tree!']);
         segIdsOfGT = cellfun(@(x)x(~ismember(x, excludedSegments)), segIdsOfGT, 'uni', 0);
-        clear segmentIdsInGT;
 
         % Remove segments not in bounding box
         segIdsOfGT = cellfun(@(x)x(ismember(x,segIdsInBBox)), segIdsOfGT, 'uni', 0);
 
         % Get all edges between segments in bounding box
         uniqueCubes = unique(segMeta.cubeIdx(ismember(segMeta.segIds, segIdsInBBox)));
-        [edges, prob] = Seg.Global.getGlobalEdges(p, uniqueCubes);
+        edges = Seg.Global.getGlobalEdges(p, uniqueCubes);
+        prob = Seg.Global.getGlobalGPProbList(p, uniqueCubes);
         edgeIdxInBbox = all(ismember(edges, segIdsInBBox),2);
         edgesInBbox = edges(edgeIdxInBbox,:);
         probInBbox = prob(edgeIdxInBbox,:);
