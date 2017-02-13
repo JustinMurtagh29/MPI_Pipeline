@@ -37,17 +37,20 @@ for t=1:length(threshold)
     toc;
 
     % Probably make own function if needed again
-    display('Writing skeletons for debugging the process:');
-    tic;
-    [~, idx] = sort(sizePartition{t}, 'descend');
-    skel = connectEM.generateSkeletonFromAgglo(graph, segmentMeta.point', initialPartition{t}(idx(1:100)), strseq('largest component ', 1:100), {});
-    writeNml([outputFolder 'largestComponents' num2str(threshold) '.nml'], skel);
-    skel = connectEM.generateSkeletonFromAgglo(graph, segmentMeta.point', initialPartition{t}(idx(end:-1:end-99)), strseq('smallest component ', 1:100), {});
-    writeNml([outputFolder 'smallestComponents' num2str(threshold) '.nml'], skel);
-    skel = connectEM.generateSkeletonFromAgglo(graph, segmentMeta.point', initialPartition{t}(randi(numel(initialPartition),100,1)), strseq('random component ', 1:100), {});
-    writeNml([outputFolder 'randomComponents' num2str(threshold) '.nml'], skel);
-    toc;
+    %display('Writing skeletons for debugging the process:');
+    %tic;
+    %[~, idx] = sort(sizePartition{t}, 'descend');
+    %skel = connectEM.generateSkeletonFromAgglo(graph, segmentMeta.point', initialPartition{t}(idx(1:100)), strseq('largest component ', 1:100), {});
+    %writeNml([outputFolder 'largestComponents' num2str(threshold) '.nml'], skel);
+    %skel = connectEM.generateSkeletonFromAgglo(graph, segmentMeta.point', initialPartition{t}(idx(end:-1:end-99)), strseq('smallest component ', 1:100), {});
+    %writeNml([outputFolder 'smallestComponents' num2str(threshold) '.nml'], skel);
+    %skel = connectEM.generateSkeletonFromAgglo(graph, segmentMeta.point', initialPartition{t}(randi(numel(initialPartition),100,1)), strseq('random component ', 1:100), {});
+    %writeNml([outputFolder 'randomComponents' num2str(threshold) '.nml'], skel);
+    %toc;
 end
+voxelCount = segmentMeta.voxelCount;
+maxSegId = segmentMeta.maxSegId;
+save([outputFolder 'initialAgglo.mat'], 'initialPartition', 'sizePartition', 'voxelCount', 'maxSegId');
 
 % FOR LATER
 %{
