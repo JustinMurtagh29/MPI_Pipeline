@@ -1,62 +1,58 @@
-% Dataset with raw data to use for additional heuristics
-dataset.root = '/gaba/u/mberning/wkCubes/2012-09-28_ex145_07x2_ROI2016_corrected/color/1/';
-dataset.prefix = '2012-09-28_ex145_07x2_ROI2016_corrected_mag1';
-% Dataset with vessel segmentation (see preprocessData.m)
-vesselsMasked.root = '/gaba/u/mberning/wkCubes/2012-09-28_ex145_07x2_ROI2016_vessel/segmentation/1/';
-vesselsMasked.prefix = '2012-09-28_ex145_07x2_ROI2016_vessel_mag1';
-% Define bounding box for detection
-dataset.bbox = [128, 128, 128, 5446, 8381, 3286];
-% "Training region nuclei" (where heuristics where optimized)
-%dataset.bbox = [2105, 2606, 740, 1000, 1000, 500];
-% "Training region myelin" (where heuristics where optimized)
-%dataset.bbox = [128, 128, 128, 1000, 1000, 500];
+% Dataset to use for additional heuristics
+dataset.saveFolder = '/gaba/scratch/mberning/temp/';
+dataset.bbox_wK = [128, 128, 128, 5446, 8381, 3286];
+dataset.experimentName = '2012-09-28_ex145_07x2_ROI2016_vessel';
+dataset.raw.root = '/gaba/u/mberning/wkCubes/2012-09-28_ex145_07x2_ROI2016_corrected/color/1/';
+dataset.raw.prefix = '2012-09-28_ex145_07x2_ROI2016_corrected_mag1';
+dataset.raw.voxelSize = [11.24 11.24 28];
+dataset = setParameterSettings(dataset);
+dataset.seg.root = '/gaba/u/mberning/wkCubes/2012-09-28_ex145_07x2_ROI2016_vessel/segmentation/1/';
+dataset.seg.prefix = '2012-09-28_ex145_07x2_ROI2016_vessel_mag1';
 
-% Due to new bounding box format
-dataset.bbox(:,4:6) = dataset.bbox(:,1:3) + dataset.bbox(:,4:6) - 1;
-dataset.bbox = Util.convertWebknossosToMatlabBbox(dataset.bbox);
-
-% Define slice to be loaded in memory in paralell (one KNOSSOS cube z-plane)
-zCoords = dataset.bbox(3,1):dataset.bbox(3,2);
-lastOfKnossosCube = [find(mod(zCoords,64) == 0) length(zCoords)];
-numberValidInCube = [lastOfKnossosCube(1) diff(lastOfKnossosCube)];
-zCoords = mat2cell(zCoords, 1, numberValidInCube);
-zCoords(numberValidInCube == 0) = [];
-
-% Detect nuclei in (slightly overlapping) small virtual slices along z
-borderToLoad = [25 25 10];
-display('Detecting nuclei & myelin');
-tic;
-for i=1:length(zCoords)
-    thisSliceBbox = dataset.bbox;
-    thisSliceBbox(3,:) = [zCoords{i}(1) zCoords{i}(end)];
-    thisSliceBboxWithBorder = thisSliceBbox + [-borderToLoad; borderToLoad]';
-    % Load raw data and vessel from new dataset
-    raw = readKnossosRoi(dataset.root, dataset.prefix, thisSliceBboxWithBorder);
-    % Apply new heuristics
-    nuclei = detectNucleiZSlice(raw, borderToLoad);
-    myelin = detectMyelinZSlice(raw, borderToLoad);
-    % Load blood vessel segmentation
-    vessels = readKnossosRoi(vesselsMasked.root, vesselsMasked.prefix, thisSliceBbox, 'uint32');
-    % This line is to overwrite old results of detection(s) below
-    vessels = vessels == 1;
-    % Exlusion heuristics, e.g. vessel might be detected as nuclei, myelin
-    % as mitochondria
-    nuclei(vessels) = 0;
-    myelin(vessels) = 0;
-    % Make sure no voxels are labeled double before pasting together
-    assert(~any((vessel+nuclei+myelin) == 2));
-    vessels(nuclei) = 2;
-    vessles(myelin) = 3;
-    writeKnossosRoi(vesselsMasked.root, vesselsMasked.prefix, thisSliceBbox(:,1)', uint32(vessels), 'uint32', '', 'noRead');
-    Util.progressBar(i, length(zCoords));
-    clear raw vessels nuclei myelin;
+% Add border to each local bounding box
+outsideBorder = [25 25 10];
+desiredBorder = [200 200 80];
+for x=1:numel(dataset.local)
+    dataset.local(x).bboxBig = dataset.local(x).bboxSmall + [-desiredBorder; desiredBorder]';
+    dataset.local(x).bboxBig(:,1) = max(dataset.bbox(:,1) - outsideBorder', dataset.local(x).bboxBig(:,1));
+    dataset.local(x).bboxBig(:,2) = min(dataset.bbox(:,2) + outsideBorder', dataset.local(x).bboxBig(:,2));
 end
-clear i lastOfKnossosCube numberValidInCube thisSliceBbox;
+dataset.seg = rmfield(dataset.seg, 'func');
+
+% Detect nuclei & myelin in (overlapping) cubes
+for i=1:numel(dataset.local)
+    inputCell{i} = {{dataset.local(i).bboxBig, dataset.local(i).bboxSmall}};
+end
+% Chose whether to run nuclei or myelin detection alone
+functionH = @localDetectionMyelin;
+%functionH = @localDetectionNuclei;
+
+%% Job submission
+tic;
+job = Cluster.startJob(functionH, inputCell, ...
+    'name', 'nucleiDetection', ...
+    'sharedInputs', {dataset.raw; dataset.seg}, ...
+    'sharedInputsLocation', [1; 2], ...
+    'cluster', '-l h_vmem=18G -l h_rt=24:00:00');
 toc;
+Cluster.waitForJob(job);
 
 display('(Re)Downsampling KNOSSOS hierachies for segmentation to include updates');
 tic;
 thisBBox = [1 1 1; (ceil(dataset.bbox(:,2)./1024).*1024)']';
-createResolutionPyramid(vesselsMasked.root, vesselsMasked.prefix, thisBBox, strrep(vesselsMasked.root, '/1/', ''), true);
+createResolutionPyramid(dataset.seg.root, dataset.seg.prefix, thisBBox, strrep(dataset.seg.root, '/1/', ''), true);
 toc;
 
+%% For debugging algorithm(s), look at results in webKnossos & add problematic locations here
+
+% coord_wk = [329, 314, 388];
+% coord_mat = coord_wk + 1;
+% 
+% % Find linear indices where this data is processed and executed locally
+% idx = cellfun(@(x)and(all(coord_mat >= x{1}{2}(:,1)'),all(coord_mat <= x{1}{2}(:,2)')), inputCell);
+% theseInputs = cat(2, {dataset.raw, dataset.seg}, inputCell{idx}{1});
+% dbstop in detectMyelinLocal at 12; 
+% dbstop in detectNucleiLocal at 11;
+% functionH(theseInputs{:});
+% % Execute in function for visualization of results
+% makeSegMovie(myelin, uint8(raw), '/home/mberning/Desktop/test.avi');

@@ -1,8 +1,6 @@
 function collectGlobalGraphStruct (p)
     load([p.saveFolder 'globalEdges.mat']);
-    load([p.saveFolder 'globalCoMList.mat']);
     load([p.saveFolder 'globalGPProbList.mat']);
-    load([p.saveFolder 'globalBorder.mat']);
 
     % The edge list only contains edges between segments in
     % the same segmentation cube. Edges between different
@@ -33,17 +31,8 @@ function collectGlobalGraphStruct (p)
     graph.edges = edges;
     graph.prob = prob;
 
-    % amotta: does this really belong here?
-    graph.borderCentroid = borderCoM;
-    graph.borderSize = borderSize;
-    graph.borderArea = borderArea;
-
     % save output
     graphFile = [p.saveFolder, 'graph.mat'];
-    save(graphFile, '-struct', 'graph', '-v7.3');
+    Util.saveStruct(graphFile, graph);
 end
-
-
-
-
 

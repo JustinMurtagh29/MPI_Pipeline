@@ -36,6 +36,6 @@ volumeUM=volumeNM/1.0000e+09;
 
 spineHeadsPerUMcube=spineHeadCounterTotal/volumeUM;
 
-save([p.saveFolder 'spineHeads.mat'],'spineHeads')
+Util.save([p.saveFolder 'spineHeads.mat'],spineHeads)
 
 end

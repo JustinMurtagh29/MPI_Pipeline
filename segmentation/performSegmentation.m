@@ -1,4 +1,4 @@
-function job = performSegmentation(paramCell, inputFile, outputFile)
+function performSegmentation(paramCell, inputFile, outputFile)
     % For each training region and radius for morphological reconstruction:
     % Perform parameter search as defined in parameters pS
 
@@ -7,7 +7,7 @@ function job = performSegmentation(paramCell, inputFile, outputFile)
     %scan
     fun = paramCell{1};
     segmentation = fun(affReconRecon,paramCell{2});
-    save(outputFile, 'segmentation');
+    Util.save(outputFile, segmentation);
 
 end
 

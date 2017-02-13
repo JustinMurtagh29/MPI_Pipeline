@@ -51,7 +51,7 @@ tic;
 [pNew, idx] = sort(pNew, 'descend');
 edgesNew = edgesNew(idx,:);
 borderNew = borderNew(idx);
-save(['/zdata/manuel/sync/problemInspector/' 'kDbBefore' strrep(p.start, '/', '-') '.mat'], '-v7.3');
+Util.save(['/zdata/manuel/sync/problemInspector/' 'kDbBefore' strrep(p.start, '/', '-') '.mat']);
 %missions = writeKnowledgeDB(p, segNew, mito, edgesNew, pNew, borderNew, edgesOld, pOld, borderOld);
 toc
 

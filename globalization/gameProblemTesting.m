@@ -30,7 +30,7 @@ function gameProblemTesting(p, coord, lowerT, upperT, nrIterations, outputFile)
     % Write to nml for visual inspection
     writeNml(outputFile, skel);
     % Write to mat for generating mission.json
-    save(strrep(outputFile, '.nml', '.mat'), 'iteration');
+   Util.save(strrep(outputFile, '.nml', '.mat'), iteration);
 end
 
 function problems = getProblemEdges(p, currentNode, alreadyVisited, graph, lowerT) 

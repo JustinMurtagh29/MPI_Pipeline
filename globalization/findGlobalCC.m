@@ -11,7 +11,7 @@ end
 % Find connected components
 uniqueIds = unique(correspondences);
 components = findConnectedComponents(correspondences, uniqueIds);
-save([p.saveFolder 'globalCorrespondences.mat'], 'components');
+Util.save([p.saveFolder 'globalCorrespondences.mat'], components);
 
 end
 

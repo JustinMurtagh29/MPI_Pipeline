@@ -79,7 +79,7 @@ for f=1:size(problemSeg,3)
 end
 set(gcf, 'PaperPositionMode', 'manual', 'PaperType', 'A4', 'PaperUnits', 'normalized', 'PaperOrientation', 'landscape', 'PaperPosition', [0 0 1 1]);
 saveas(gcf, ['C:/Users/mberning/Desktop/active/output/segID' num2str(objectID, '%.5i') '.pdf']);
-save(['C:/Users/mberning/Desktop/active/output/segID' num2str(objectID, '%.5i') '.mat'], 'problemSeg', 'problemRaw');
+Util.save(['C:/Users/mberning/Desktop/active/output/segID' num2str(objectID, '%.5i') '.mat'], problemSeg, problemRaw);
 close all;
 end
 

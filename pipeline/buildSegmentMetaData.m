@@ -1,10 +1,10 @@
-function buildSegmentMetaData(param)
+function job = buildSegmentMetaData(param)
     cubes = param.local;
     rootDir = param.saveFolder;
 
     taskCount = numel(cubes);
     jobParams = arrayfun(@(curIdx) {{param, curIdx}}, 1:taskCount);
-    
+
     % run job
     job = startCPU(@buildInCube, jobParams, mfilename());
     Cluster.waitForJob(job);
@@ -12,11 +12,14 @@ function buildSegmentMetaData(param)
     % collect all local results
     loadMeta = @(p) load(fullfile(p.saveFolder, 'segmentMeta.mat'));
     meta = arrayfun(loadMeta, cubes, 'UniformOutput', false);
-    meta = Util.concatStructs(1, meta{:});
+    meta = Util.concatStructs('last', meta{:});
+    
+    % find maximum segment ID
+    meta.maxSegId = max(meta.maxSegId);
     
     % write global result
     metaFile = fullfile(rootDir, 'segmentMeta.mat');
-    save(metaFile, '-struct', 'meta');
+    Util.saveStruct(metaFile, meta);
 end
 
 function buildInCube(param, cubeIdx)
@@ -28,5 +31,6 @@ function buildInCube(param, cubeIdx)
     
     % save result
     metaFile = fullfile(cubeDir, 'segmentMeta.mat');
-    save(metaFile, '-struct', 'meta');
+    Util.saveStruct(metaFile, meta);
 end
+

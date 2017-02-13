@@ -1,7 +1,7 @@
 function job = collectSvgDataOnCluster(p)
 
 functionH = @Seg.Global.saveGlobalSvgData;
-inputCell = {p};
+inputCell{1} = {p};
 job = startCPU(functionH,inputCell,'saveGlobalSvgData');
 
 end

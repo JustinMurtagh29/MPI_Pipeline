@@ -13,7 +13,7 @@ function globalSegMat(p, i, j, k)
     seg = segNew;
 
     % Write modified seg with globalIDs
-    save([p.local(i,j,k).saveFolder 'segGlobal.mat'], 'seg', '-v7.3');
+    Util.save([p.local(i,j,k).saveFolder 'segGlobal.mat'], seg);
 
 end
 

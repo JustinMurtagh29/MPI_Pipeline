@@ -50,6 +50,7 @@ functionH = @onlyFwdPass3DonKnossosFolder;
 if p.cnn.GPU
     job = startGPU(functionH, inputCell, 'classification');
 else
-    job = startCPU(functionH, inputCell, 'classification',cpu_time);
+    job = startCPU(functionH, inputCell, 'classification',1,-500,cpu_time);
 end
 end
+

@@ -26,7 +26,7 @@ function prepareSkeletons(pT)
         raw = loadRawData(pT.raw, pT.local(i).bboxSmall);
         raw = pT.norm.func(single(raw));
         thisSkel = skel{i};
-        save([pT.syncFolder 'segmentation/denseSkelData' num2str(i) '.mat'], 'thisSkel', 'raw')
+        Util.save([pT.syncFolder 'segmentation/denseSkelData' num2str(i) '.mat'], thisSkel, raw)
     end
     
     % Equalize inter-node distance in different dense tracings to maximal value
@@ -61,9 +61,9 @@ function prepareSkeletons(pT)
         skel{i}{1}.parameters = savePar{i}.par;
         % Write skeleton video for control of training data
         raw = loadRawData(pT.raw, pT.local(i).bboxSmall);
-	raw = pT.norm.func(single(raw));
+        raw = pT.norm.func(single(raw));
         thisSkel = skel{i};
-        save([pT.syncFolder 'segmentation/denseSkelDataGlia' num2str(i) '.mat'], 'thisSkel', 'raw')
+        Util.save([pT.syncFolder 'segmentation/denseSkelDataGlia' num2str(i) '.mat'], thisSkel, raw)
     end
 
     skelWithoutGliaEq = equalizeSkeletons(skel);

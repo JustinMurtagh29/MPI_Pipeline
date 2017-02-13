@@ -19,6 +19,6 @@ function globalCorrSeg(p, fname)
         corrGlobal2(i) = globalIds(localIds == corrLocal2(i));
     end
     % Save globalized version alongside old one
-    save([p.correspondence.saveFolder fname(1:end-4) 'global.mat'], 'corrGlobal1', 'corrGlobal2');
+    Util.save([p.correspondence.saveFolder fname(1:end-4) 'global.mat'], corrGlobal1, corrGlobal2);
 
 end

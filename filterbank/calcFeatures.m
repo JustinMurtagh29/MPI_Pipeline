@@ -85,8 +85,8 @@ weights = [weights weightsShape_borders];
 segmentWeights = [segmentWeights weightsShape_segments];
 weightNames = {weightNames{:}, weightNames_new{:}};
 
-save(parameter.local(sub(1),sub(2),sub(3)).weightFile, 'weights', 'weightNames');
-save(parameter.local(sub(1),sub(2),sub(3)).segmentWeightFile, 'segmentWeights', 'weightNames');
+Util.save([parameter.local(sub(1),sub(2),sub(3)).weightFile], weights, weightNames);
+Util.save([parameter.local(sub(1),sub(2),sub(3)).segmentWeightFile], segmentWeights, weightNames);
 
 end
 
