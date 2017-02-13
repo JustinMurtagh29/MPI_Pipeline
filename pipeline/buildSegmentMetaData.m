@@ -1,12 +1,16 @@
 function job = buildSegmentMetaData(param)
     cubes = param.local;
     rootDir = param.saveFolder;
-
-    taskCount = numel(cubes);
-    jobParams = arrayfun(@(curIdx) {{param, curIdx}}, 1:taskCount);
+    
+    jobSharedInputs = {param};
+    jobInputs = arrayfun(@(curIdx) {{curIdx}}, 1:numel(cubes));
 
     % run job
-    job = startCPU(@buildInCube, jobParams, mfilename());
+    cluster = Cluster.getCluster('-l h_vmem=12G');
+    job = Cluster.startJob( ...
+        @buildInCube, jobInputs, ...
+        'sharedInputs', jobSharedInputs, ...
+        'cluster', cluster, 'name', mfilename());
     Cluster.waitForJob(job);
     
     % collect all local results
