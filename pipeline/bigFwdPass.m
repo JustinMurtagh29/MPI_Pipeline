@@ -7,7 +7,7 @@ function job = bigFwdPass( p, bbox )
 % can be choosen for computational efficency, currenlty optimized for
 % running on GPU with 12GB, should be multiples of 128, this is same
 % as tileSize right now, no reason it has to be.
-cubeSize = [128 128 128];%[512 512 256];
+cubeSize = [512 512 256];
 cpu_time = 4; % needed time in hours
 assert(all(mod(cubeSize, 128) == 0));
 
