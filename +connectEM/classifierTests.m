@@ -13,9 +13,10 @@ annotationIds = cellfun(@(x)x{4}(1:end-4), temp, 'uni', 0);
 % Additional information needed
 % Note that trainFile has to fit bboxSmall
 files = {files(:).name};
-pT.local(1).bboxSmall = [4133 3963 2253; 4578 4408 2432]';
-pT.local(2).bboxSmall = [4438 1320 893; 4883 1765 1072]';
-pT.local(3).bboxSmall = [1824 6673 1239; 2269 7118 1418]';
+% +1 for wk vs. matlab coordinate system offset
+pT.local(1).bboxSmall = [4133 3963 2253; 4578 4408 2432]'+1;
+pT.local(2).bboxSmall = [4438 1320 893; 4883 1765 1072]'+1;
+pT.local(3).bboxSmall = [1824 6673 1239; 2269 7118 1418]'+1;
 pT.local(1).trainFile = cellfun(@(x)[newGTfolder x], files(1:3), 'uni', 0);
 pT.local(2).trainFile = cellfun(@(x)[newGTfolder x], files(4:6), 'uni', 0);
 pT.local(3).trainFile = cellfun(@(x)[newGTfolder x], files(7:9), 'uni', 0);
@@ -24,11 +25,55 @@ pT.local(3).trainFile = cellfun(@(x)[newGTfolder x], files(7:9), 'uni', 0);
 % Get a list of labels from each (redundant) training file in each region
 gt = connectEM.getContinuityLabelsFromNml(p, pT);
 
-% Consolidate redundant annotations
+%% First round of ground truth data proofreading (add leftover segments)
+outputFolder = ['trainingDataOut' filesep];
+if ~exist(outputFolder, 'dir')
+    mkdir(outputFolder);
+end
+segMeta = load([p.saveFolder 'segmentMeta.mat']);
+segMeta.point = segMeta.point';
+for i=1:length(pT.local)
+    for j=1:length(pT.local(i).trainFile)
+        [~, originalFilename] = fileparts(pT.local(i).trainFile{j});
+        skelFile = [outputFolder originalFilename '.nml'];
+        mappingFile = [outputFolder originalFilename '.txt'];
+        % Generate skeleton with additional nodes for not yet traced
+        % segments
+        skel = skeleton(pT.local(i).trainFile{j});
+        % Set all new skeletons to blue
+        skel.colors = cellfun(@(x)[0 0 1 1], skel.colors, 'uni', 0);
+        leftSegments = gt(i,j).leftSegments;
+        for k=1:length(leftSegments)
+            skel = skel.addTree(['Todo ' num2str(k, '%.4i')], segMeta.point(leftSegments(k),:));
+        end
+        skel.write(skelFile);
+        % Add mapping showing only leftover segments
+        script = WK.makeMappingScript(segMeta.maxSegId, num2cell(leftSegments));
+        fileHandle = fopen(mappingFile, 'w');
+        fwrite(fileHandle, script);
+        fclose(fileHandle);
+    end
+end
+
+%% Consolidate redundant annotations
 gt = connectEM.consolidateRedundantAnnotations(gt);
 
 %% Collect features from SynEM feature calculation for all edges in GT
 gt = connectEM.getFeaturesForEdges(p, gt);
+
+%% Write all labels extracted from dense cubes to nml's
+graph = load([p.saveFolder 'graph.mat'], 'edges');
+segmentMeta = load([p.saveFolder 'segmentMeta.mat'], 'point');
+for i=1:length(gt)
+    posEdges = gt(i).edges(gt(i).labels == 1,:);
+    negEdges = gt(i).edges(gt(i).labels == who-1,:);
+    ccPos = Graph.findConnectedComponents(posEdges, true, true);
+    ccNeg = Graph.findConnectedComponents(negEdges, true, true);
+    skel = connectEM.generateSkeletonFromAgglo(graph, segmentMeta.point', ccPos, strseq('positive edges ', 1:length(ccPos)), {});
+    writeNml(['/home/mberning/Desktop/denseSkel/' 'newRegion' num2str(i) '_pos.nml'], skel);
+    skel = connectEM.generateSkeletonFromAgglo(graph, segmentMeta.point', ccNeg, strseq('negative edges ', 1:length(ccNeg)), {});
+    writeNml(['/home/mberning/Desktop/denseSkel/' 'newRegion' num2str(i) '_neg.nml'], skel);
+end
 
 %% Divide GT into training an test set (80%/20%) in each dense cube
 
@@ -88,7 +133,6 @@ test.probOld = sigmoid(test.scoresOld(:,1));
 test.probRaw = sigmoid(test.scoresRaw(:,1));
 test.probClass = sigmoid(test.scoresClass(:,1));
 
-
 %% Visualize predicted probabilities vs. frequencies in test set
 binSize = 500;
 binLowerLimit = 1:binSize:length(test.prob);
@@ -139,38 +183,47 @@ figure;
 hold on;
 
 % Old classifier (GP), old features
-[Xpr,Ypr,~,AUCpr] = perfcurve(train.labels, train.prob, 1, 'xCrit', 'reca', 'yCrit', 'prec', 'TVals', 0:0.01:1, 'UseNearest', 'off');
+[Xpr,Ypr,~,AUCpr] = perfcurve(train.labels, train.prob, 1, 'xCrit', 'reca', 'yCrit', 'prec', 'TVals', 0:0.001:1);
+Ypr(1) = 1;
 plot(Xpr,Ypr, ':k');
 label{1} = ['Old classifier (GP), old features, train (AUC: ' num2str(AUCpr) ')'];
-[Xpr,Ypr,Tpr,AUCpr] = perfcurve(test.labels, test.prob, 1, 'xCrit', 'reca', 'yCrit', 'prec', 'TVals', 0:0.01:1, 'UseNearest', 'off');
+[Xpr,Ypr,Tpr,AUCpr] = perfcurve(test.labels, test.prob, 1, 'xCrit', 'reca', 'yCrit', 'prec', 'TVals', 0:0.001:1);
+Ypr(1) = 1;
 plot(Xpr,Ypr, '-k');
 label{2} = ['Old classifier (GP), old features, test (AUC: ' num2str(AUCpr) ')'];
 % Additionaly plt 97% precision and accuracy (used for agglomeration in
 % last meeting)
-plot(Xpr(4), Ypr(4), 'xk');
-label{3} = ['Old classifier (GP), old features, test, 97% value used for agglo, prec: ' num2str(Ypr(4)) ', reca: ' num2str(Xpr(4))];
+[~, idx] = min(abs(Tpr - 0.97));
+plot(Xpr(idx), Ypr(idx), 'xk');
+label{3} = ['Old classifier (GP), old features, test, 97% value used for agglo, prec: ' num2str(Ypr(idx)) ', reca: ' num2str(Xpr(idx))];
 
 % New classifier (Logit), old features
-[Xpr,Ypr,~,AUCpr] = perfcurve(train.labels, train.probOld, 1, 'xCrit', 'reca', 'yCrit', 'prec', 'TVals', 0:0.01:1, 'UseNearest', 'off');
+[Xpr,Ypr,~,AUCpr] = perfcurve(train.labels, train.probOld, 1, 'xCrit', 'reca', 'yCrit', 'prec', 'TVals', 0:0.001:1);
+Ypr(1) = 1;
 plot(Xpr,Ypr, ':r');
 label{4} = ['New classifier (Logit), old features, train (AUC: ' num2str(AUCpr) ')'];
-[Xpr,Ypr,~,AUCpr] = perfcurve(test.labels, test.probOld, 1, 'xCrit', 'reca', 'yCrit', 'prec', 'TVals', 0:0.01:1, 'UseNearest', 'off');
+[Xpr,Ypr,~,AUCpr] = perfcurve(test.labels, test.probOld, 1, 'xCrit', 'reca', 'yCrit', 'prec', 'TVals', 0:0.001:1);
+Ypr(1) = 1;
 plot(Xpr,Ypr, '-r');
 label{5} = ['New classifier (Logit), old features, test (AUC: ' num2str(AUCpr) ')'];
 
 % New classifier (Logit), raw SynEM features
-[Xpr,Ypr,~,AUCpr] = perfcurve(train.labels, train.probRaw, 1, 'xCrit', 'reca', 'yCrit', 'prec', 'TVals', 0:0.01:1, 'UseNearest', 'off');
+[Xpr,Ypr,~,AUCpr] = perfcurve(train.labels, train.probRaw, 1, 'xCrit', 'reca', 'yCrit', 'prec', 'TVals', 0:0.001:1);
+Ypr(1) = 1;
 plot(Xpr,Ypr, ':g');
 label{6} = ['New classifier (Logit), raw SynEM features, train (AUC: ' num2str(AUCpr) ')'];
-[Xpr,Ypr,~,AUCpr] = perfcurve(test.labels, test.probRaw, 1, 'xCrit', 'reca', 'yCrit', 'prec', 'TVals', 0:0.01:1, 'UseNearest', 'off');
+[Xpr,Ypr,~,AUCpr] = perfcurve(test.labels, test.probRaw, 1, 'xCrit', 'reca', 'yCrit', 'prec', 'TVals', 0:0.001:1);
+Ypr(1) = 1;
 plot(Xpr,Ypr, '-g');
 label{7} = ['New classifier (Logit), raw SynEM features, test (AUC: ' num2str(AUCpr) ')'];
 
 % New classifier (Logit), raw + class SynEM features
-[Xpr,Ypr,~,AUCpr] = perfcurve(train.labels, train.probClass, 1, 'xCrit', 'reca', 'yCrit', 'prec', 'TVals', 0:0.01:1, 'UseNearest', 'off');
+[Xpr,Ypr,~,AUCpr] = perfcurve(train.labels, train.probClass, 1, 'xCrit', 'reca', 'yCrit', 'prec', 'TVals', 0:0.001:1);
+Ypr(1) = 1;
 plot(Xpr,Ypr, ':b');
 label{8} = ['New classifier (Logit), raw + class SynEM features, train (AUC: ' num2str(AUCpr) ')'];
-[Xpr,Ypr,Tpr,AUCpr] = perfcurve(test.labels, test.probClass, 1, 'xCrit', 'reca', 'yCrit', 'prec', 'TVals', 0:0.01:1, 'UseNearest', 'off');
+[Xpr,Ypr,Tpr,AUCpr] = perfcurve(test.labels, test.probClass, 1, 'xCrit', 'reca', 'yCrit', 'prec', 'TVals', 0:0.001:1);
+Ypr(1) = 1;
 plot(Xpr,Ypr, '-b');
 label{9} = ['New classifier (Logit), raw + class SynEM features, test (AUC: ' num2str(AUCpr) ')'];
 % Plot range of 
@@ -185,6 +238,16 @@ label{11} = ['New classifier (Logit), raw + class SynEM features, test, lower li
 legend(label, 'Location', 'southwest');
 xlabel('Recall');
 ylabel('Precision');
-xlim([0 1]);
-ylim([0 1]);
+xlim([0 0.9]);
+ylim([0.95 1]);
 axis square;
+
+%% Determine whether compacted classifier works here
+classifier = compact(classifierNewFeatures);
+
+a = classifier.predict(cat(2, test.rawFeatures, ...
+test.classFeatures));
+b = classifierNewFeatures.predict(cat(2, test.rawFeatures, ...
+test.classFeatures));
+
+all(a(:) == b(:))

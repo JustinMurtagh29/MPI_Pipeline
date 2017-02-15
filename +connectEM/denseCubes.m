@@ -12,7 +12,7 @@ pT.local(1).trainFile = {'/home/mberning/Downloads/region1NEW.nml'};
 pT.local(2).trainFile = {'/home/mberning/Downloads/region2NEW.nml'};
 pT.local(3).trainFile = {'/home/mberning/Downloads/region3NEW.nml'};
 
-gt = connectEM.getContinuityLabelsFromNml(p, pT, true);
+gt = connectEM.getContinuityLabelsFromNml(p, pT);
 
 %% Visualize precision recall of old interface classifier
 
