@@ -13,7 +13,7 @@ function segmentation = watershedSeg_v1_cortex( aff, cell )
             bw1 = bwareaopen(bw1, vRange(v), 26);  % mask now only has objects bigger than vRange pixels (def 10)
             affImposed = imimposemin(aff, bw1);  % changes aff to remove minima that were smaller than vRange pixels
             segmentation{h,v} = watershed(affImposed, 26);  % watershed
-            segmentation{h,v}(aff == -2) = 0;   % remove mask outliers (for mirrorPad)
+            segmentation{h,v}(aff == 3) = 0;   % remove mask outliers (for mirrorPad, -2 mask became 3 by imcomplement)
         end
     end
 
