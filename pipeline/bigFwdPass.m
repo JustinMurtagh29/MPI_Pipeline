@@ -9,6 +9,7 @@ function job = bigFwdPass( p, bbox )
 % as tileSize right now, no reason it has to be.
 cubeSize = [512 512 256];
 cpu_time = 4; % needed time in hours
+reqMem = 12;
 assert(all(mod(cubeSize, 128) == 0));
 
 
@@ -50,7 +51,7 @@ functionH = @onlyFwdPass3DonKnossosFolder;
 if p.cnn.GPU
     job = startGPU(functionH, inputCell, 'classification');
 else
-    job = startCPU(functionH, inputCell, 'classification',1,-500,cpu_time);
+    job = startCPU(functionH, inputCell, 'classification',reqMem,1,-500,cpu_time);
 end
 end
 
