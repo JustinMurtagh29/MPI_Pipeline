@@ -1,17 +1,27 @@
-function job = startCPU(fH, iC, jN, requiredMemory, group, rt);
+function job = startCPU(fH, iC, jN, requiredMemory, group, priority, rt);
     % Wrapper function for startJob.m used for backward compability
-    if nargin < 6
-	rt = 24;
+    if nargin < 7 || isempty(rt)
+	rt = 23;
     end
-    if nargin < 4
-        global CLUSTER_CPU;
-    else
-        CLUSTER_CPU = Cluster.getCluster('-pe openmp 1', ['-l h_vmem=' num2str(requiredMemory) 'G'], sprintf('-l s_rt=%02d:%02d:00 -l h_rt=%02d:%02d:30',floor(rt),round((rt-floor(rt))*60),floor(rt),round((rt-floor(rt))*60)), '-p -500');
+    % Set default values for additional input arguments
+    if nargin < 4 || isempty(requiredMemory)
+        requiredMemory = 12;
     end
-    if nargin < 5
+    if nargin < 5 || isempty(group)
         group = 1;
     end
-    job = startJob(CLUSTER_CPU, fH, iC, jN, group);
+    if nargin < 6 || isempty(priority)
+        priority = -500;
+    end
+
+    clusterCPU = Cluster.getCluster( ...
+        '-pe openmp 1', ...
+        ['-p ' num2str(priority)], ...
+        ['-l h_vmem=' num2str(requiredMemory) 'G'], ...
+	sprintf('-l s_rt=%02d:%02d:00',floor(rt),round((rt-floor(rt))*60)), ...
+	sprintf('-l h_rt=%02d:%02d:30',floor(rt),round((rt-floor(rt))*60)));
+
+    job = Cluster.startJob(fH, iC, 'cluster', clusterCPU, 'name', jN, 'taskGroupSize', group);
 
 end
 
