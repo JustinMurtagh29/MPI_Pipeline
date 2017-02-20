@@ -1,36 +1,43 @@
-function skel = generateSkeletonFromAgglo(graph, com, cc, treeNames, comments)
+function generateSkeletonFromAgglo(edges, com, cc, treeNames, outputFolder, maxSegId)
 
-    c = 1; % counter for trees in skeleton
-    nodeId = 1; % counter for nodes in current skeleton
-    nodeOffsetThisSkel = 0;
     % Set colors to be used
     colors = distinguishable_colors(length(cc), [0 0 0; 1 1 1]);
     colors(:,4) = 0;
-    % Write skeleton for check
-    skel = initializeSkeleton();
     for tr=1:length(cc)
         if ~isempty(cc{tr})
-            skel{c}.thingID = c;
-            skel{c}.name = treeNames{tr};
-            skel{c}.color = colors(tr,:);
+            % Generate parameters for skeleton
+            skel = initializeSkeleton();
+            skel{1}.thingID = 1;
+            skel{1}.name = [treeNames{tr} '_' num2str(size(com,1))];
+            skel{1}.color = colors(tr,:);
+            % Get information to write to skeleton
             theseCoM = com(cc{tr},:);
-            idx = ismember(graph.edges,cc{tr});
-            idx = idx(:,1) & idx(:,2);
-            theseEdges = graph.edges(idx,:);
-            for no=1:size(theseCoM,1)
-                % Generate comment for skeleton based on agglomeration
-                if length(comments) >= tr && length(comments{tr}) >= no && ~isempty(comments{tr}{no})
-                    skel{c}.nodesAsStruct(nodeId-nodeOffsetThisSkel) = generateNodeAsStruct(nodeId, theseCoM(no,:), 10, comments{tr}{no});
-                else
-                    skel{c}.nodesAsStruct(nodeId-nodeOffsetThisSkel) = generateNodeAsStruct(nodeId, theseCoM(no,:), 10);
-                end
-                skel{c}.nodes(nodeId-nodeOffsetThisSkel,:) = [theseCoM(no,:) 10];
-                nodeId = nodeId + 1;
-                theseEdges(theseEdges == cc{tr}(no)) = no;
-            end 
-            skel{c}.edges = minimalSpanningTree(theseCoM); 
-            c = c + 1;
-            nodeOffsetThisSkel = nodeId - 1;
+            idx = all(ismember(edges,cc{tr}),2);
+            theseEdgesSegId = edges(idx,:);
+            theseEdgesNodes = changem(double(theseEdgesSegId), 1:size(theseCoM,1), cc{tr});
+            clear idx theseEdgesSegId;
+            % Downsample to 100.000 nodes at most (and use minimal spanning tree)
+            %if size(theseCoM, 1) > 10000
+            %    idx = randperm(size(theseCoM,1), 10000);
+            %    theseCoM = theseCoM(idx,:);
+            %    theseEdgesNodes = minimalSpanningTree(theseCoM);
+            %    skel{1}.name = [skel{1}.name '_downsampled'];
+            %    clear idx;
+            %end
+            % Write to structure for writeNml
+            skel{1}.nodesNumDataAll = zeros(size(theseCoM,1),14);
+            skel{1}.nodesNumDataAll(:,1) = 1:size(theseCoM,1); 
+            skel{1}.nodesNumDataAll(:,2) = 10*ones(size(theseCoM,1),1);
+            skel{1}.nodesNumDataAll(:,3:5) = theseCoM;
+            skel{1}.edges = theseEdgesNodes;
+            clear theseCoM theseEdgesNodes;
+            writeNml([outputFolder treeNames{tr} '.nml'], skel);
+            clear skel;
+            mappingFile = [outputFolder treeNames{tr} '.txt'];
+            script = WK.makeMappingScript(maxSegId, num2cell(cc{tr}));
+            fileHandle = fopen(mappingFile, 'w');
+            fwrite(fileHandle, script);
+            fclose(fileHandle);
         end
     end
 end
@@ -49,32 +56,13 @@ function skel = initializeSkeleton()
     skel{1}.branchpoints = [];
 end
 
-function nodeAsStruct = generateNodeAsStruct(id,pos,radius,comment)
-    % Why would one store everything in strings, well let's do it anyway :)
-    % Important stuff, id, position, radius
-    nodeAsStruct{1}.id = num2str(id);
-    nodeAsStruct{1}.x = num2str(pos(1));
-    nodeAsStruct{1}.y = num2str(pos(2));
-    nodeAsStruct{1}.z = num2str(pos(3));
-    nodeAsStruct{1}.radius = num2str(radius);
-    % If comment is passed, add to structure
-    if nargin > 3
-        nodeAsStruct{1}.comment = comment;
-    else
-        nodeAsStruct{1}.comment = '';
-    end
-    % Initalize user behaviour logging to default values 
-    nodeAsStruct{1}.inVp = num2str(0);
-    nodeAsStruct{1}.inMag = num2str(0);
-    nodeAsStruct{1}.time = num2str(0);
-end
-
 function edges = minimalSpanningTree(com)
     if size(com,1) < 2
         edges = [];
     else
         % Minimal spanning tree
         adj = squareform(pdist(bsxfun(@times, com, [11.24 11.24 28])));
+        adj(adj > 7200) = 0;
         tree = graphminspantree(sparse(adj), 'Method', 'Kruskal');
         [edges(:,1), edges(:,2)] = find(tree);
     end
