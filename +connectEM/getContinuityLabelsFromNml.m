@@ -30,17 +30,17 @@ for i=1:length(pT.local)
         segIdsInBBox = unique(seg(seg~=0));
         clear seg;
 
+        % Remove segments not in bounding box
+        segIdsOfGT = cellfun(@(x)x(ismember(x,segIdsInBBox)), segIdsOfGT, 'uni', 0);
+        
         % Remove merged segments from list
         allSegmentIdsInGT = unique(cat(1,segIdsOfGT{:}));
         segmentsCounts = histc(cat(1,segIdsOfGT{:}), allSegmentIdsInGT);
-        excludedSegments = allSegmentIdsInGT(segmentsCounts > 1);
-        display(['Removing ' num2str(numel(excludedSegments)) ' of ' ...
+        mergedSegments = allSegmentIdsInGT(segmentsCounts > 1);
+        display(['Removing ' num2str(numel(mergedSegments)) ' of ' ...
             num2str(sum(nodesPerTree)) ' segments due to being covered by more than one tree!']);
-        segIdsOfGT = cellfun(@(x)x(~ismember(x, excludedSegments)), segIdsOfGT, 'uni', 0);
-
-        % Remove segments not in bounding box
-        segIdsOfGT = cellfun(@(x)x(ismember(x,segIdsInBBox)), segIdsOfGT, 'uni', 0);
-
+        segIdsOfGT = cellfun(@(x)x(~ismember(x, mergedSegments)), segIdsOfGT, 'uni', 0);
+        
         % Get all edges between segments in bounding box
         uniqueCubes = unique(segMeta.cubeIdx(ismember(segMeta.segIds, segIdsInBBox)));
         edges = Seg.Global.getGlobalEdges(p, uniqueCubes);
@@ -63,6 +63,10 @@ for i=1:length(pT.local)
         gt(i,j).edges = edgesInBbox;
         gt(i,j).prob = probInBbox;
         gt(i,j).labels = labels;
+        gt(i,j).segIdsGT = segIdsOfGT;
+        gt(i,j).mergedSegments = mergedSegments;
+        leftSegments = setdiff(segIdsInBBox, allSegmentIdsInGT);
+        gt(i,j).leftSegments = leftSegments(segMeta.voxelCount(leftSegments) > 100);
     end
 end
 
@@ -105,10 +109,15 @@ function statisticsOfLabels(labels)
 end
 
 function labels = determineLabelsFromEqClass(segIdsOfGT, edgesInBbox)
+     
     labels = zeros(size(edgesInBbox,1),1, 'int8');
+    % Find edges segIdsOfGT would deem positive
+    % All combinations of all segment hit by one tree
     temp = segIdsOfGT(cellfun(@numel, segIdsOfGT) > 1);
     edgesPos = cellfun(@(x)combnk(x,2), temp, 'uni', 0);
     edgesPos = cat(1, edgesPos{:});
+    clear temp;
+    % Find edges segIdsOfGT would deem negative
     edgesNeg = cell(size(segIdsOfGT));
     for i=1:length(segIdsOfGT)
         otherSegments = cat(1, segIdsOfGT{setdiff(1:length(segIdsOfGT), i)});
