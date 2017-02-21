@@ -10,7 +10,7 @@ function runPipeline(p)
     % If you set p.myelin.isUsed = true in configuration.m, the result of a myelin detection is
     % used to ensure a voxel detected as myelin will not be in one segment with voxel not detected
     % as myelin
-    if p.myelin.isUsed
+    if isfield(p,'myelin') && p.myelin.isUsed
     
         %define new classification prefix (NOTE: This will not be saved, but temporary files anyway)
         newPrefix = [p.class.prefix, '_mod'];
@@ -30,7 +30,7 @@ function runPipeline(p)
     % Uses segmentation subfolder in code repository
     job = miniSegmentation(p);
     Cluster.waitForJob(job);
-    
+  
     % Find correspondences between tiles processed (segmented) in paralell
     % Uses correspondences subfolder in code repository
     job = correspondenceFinder(p);
@@ -48,7 +48,10 @@ function runPipeline(p)
     % globalization is run in two parts: globalizeSegmentation and globalizeCorrespondences
     job = globalizeSegmentation(p);
     Cluster.waitForJob(job);
+
     
+display('returning')
+
     % Build segment meta data
     job = buildSegmentMetaData(p);
     Cluster.waitForJob(job);
@@ -69,21 +72,25 @@ function runPipeline(p)
     save([p.saveFolder 'allParameterWithSynapses.mat'], p);
     % Wait for completion of job
     Cluster.waitForJob(job);
-
+display('returning')
+return
+ 
+    %calculateClassFeatures(p)
+    
     % Comment MB: probably not needed anymore, features from SynEM call above used
     % Calculate edge based features as used in first GP training
     % Calculate segment based features as used in spine head detection
     % see filterbank 
-    job = miniFeature(p);
-    Cluster.waitForJob(job);
+    %job = miniFeature(p);
+    %Cluster.waitForJob(job);
     
     % Make predictions on edge based features using previously trained GP
-    job = makePredictions(p,'edges');
-    Cluster.waitForJob(job);
+    %job = makePredictions(p,'edges');
+    %Cluster.waitForJob(job);
     
     % Make predictions for spine heads on segment based features using previously trained spine head classifier
-    job = spineHeadDetectionOnCluster(p);
-    Cluster.waitForJob(job);
+    %job = spineHeadDetectionOnCluster(p);
+    %Cluster.waitForJob(job);
 
     % Comment MB: Also not needed anymore, make sure, then delete
     % Run interface classifier using Benedikt's trained classifier and store features
@@ -94,10 +101,10 @@ function runPipeline(p)
     %Cluster.waitForJob(job);
 
     %Save the global SVG data
-    job = collectSvgDataOnCluster(p);
-    Cluster.waitForJob(job);
+    %job = collectSvgDataOnCluster(p);
+    %Cluster.waitForJob(job);
     
     %Create graph struct 
-    job = collectGraphStructOnCluster(p);
-    Cluster.waitForJob(job);
+    %job = collectGraphStructOnCluster(p);
+    %Cluster.waitForJob(job);
 end

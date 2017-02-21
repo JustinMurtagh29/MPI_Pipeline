@@ -162,7 +162,11 @@ ind = ind(I);
 groupIdx = [1; diff(groupIdx); 1];
 groupIdx = find(groupIdx);
 groupIdx = diff(groupIdx);
-PixelIdxList = mat2cell(ind,groupIdx);
+if isempty(ind)   % workaround for empty segmentation cubes
+    PixelIdxList = cell(0,1);
+else
+    PixelIdxList = mat2cell(ind,groupIdx);
+end
 
 %calculate area and centroid (and remove padding in calcCentroid)
 Area = cellfun(@length,PixelIdxList);

@@ -49,22 +49,28 @@ edges = m.edges;
 m = load(pCube.borderFile);
 borders = m.borders;
 
-%calculate interfaces
-interfaces = SynEM.Svg.calculateInterfaces(seg, edges, borders, ...
-    fm.areaT, p.raw.voxelSize, fm.subvolsSize);
-
-%load raw
-bboxFM = bsxfun(@plus, pCube.bboxSmall,[-fm.border', fm.border']./2);
-raw = SynEM.Aux.readKnossosRoi(p.raw.root, p.raw.prefix, bboxFM);
-
-%calculate features
-X = fm.calculate(interfaces, raw);
-
-%classify
-if ischar(classifier);
-    m = load(classifier);
-    classifier = m.classifier;
+if size(edges,1) ~= 0 % skip if all zero segmentCube (mirrorPad)
+    %calculate interfaces
+    interfaces = SynEM.Svg.calculateInterfaces(seg, edges, borders, ...
+        fm.areaT, p.raw.voxelSize, fm.subvolsSize);
+    
+    %load raw
+    bboxFM = bsxfun(@plus, pCube.bboxSmall,[-fm.border', fm.border']./2);
+    raw = SynEM.Aux.readKnossosRoi(p.raw.root, p.raw.prefix, bboxFM);
+    
+    %calculate features
+    X = fm.calculate(interfaces, raw);
+    
+    %classify
+    if ischar(classifier);
+        m = load(classifier);
+        classifier = m.classifier;
+    end
+    [~,scores] = classifier.predict(X);
+else
+    interfaces =  [];
+    scores = [];
+    X = [];
 end
-[~,scores] = classifier.predict(X);
 
 end
