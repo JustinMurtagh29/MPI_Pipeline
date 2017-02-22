@@ -49,18 +49,22 @@ end
 %get borders above area threshold
 area = [borders(:).Area];
 intIdx = area > areaT;
+
 interfaces.surface = {borders(intIdx).PixelIdxList}';
+
 if isrow(interfaces.surface{1}) %always use column vectors
     interfaces.surface = cellfun(@(x)x',interfaces.surface, ...
         'UniformOutput',false);
 end
 neighborIDs =  edges(intIdx,:);
-
-%calculate subsegments
-interfaces.subseg = SynEM.Svg.calculateSubsegments( ...
-    interfaces.surface, neighborIDs, seg, voxelSize, rinclude );
+if any(intIdx)
+    %calculate subsegments
+    interfaces.subseg = SynEM.Svg.calculateSubsegments( ...
+        interfaces.surface, neighborIDs, seg, voxelSize, rinclude );
+else
+    interfaces.subseg = cell(1,numel(rinclude));
+end
 interfaces.rinclude = rinclude;
-
 fprintf(['[%s] SynEM.Svg.calculateInterfaces - Finished interface ', ...
     'calculation.\n'], datestr(now));
 end
