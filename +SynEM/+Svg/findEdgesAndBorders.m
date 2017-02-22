@@ -57,8 +57,8 @@ end
 % connectivity)
 nInd = bsxfun(@plus, ind', vec');
 seg(padarray(false(size(seg) - 2),[1, 1, 1],1)) = 0; % set boundary to zero
-nSegId = seg(nInd);
-nSegId = sort(nSegId,1);
+nSegId = seg(nInd);  % get segment IDs of neighbors
+nSegId = sort(nSegId,1); % sort segment IDs along 1st dim
 
 %get neighbors for wall voxels
 lSegId = [false(1,size(nSegId,2)); diff(nSegId,1,1)>0];
@@ -75,19 +75,19 @@ pairs = cellfun(@(x)combnk(x,2)',nSegIdExtend,'UniformOutput',false);
 numComb = cellfun(@(x)size(x,2),pairs)';
 
 %save edge for each voxel and voxel linear indices (ind)
-edges = cat(2,reshape(nSegId(lSegId(:,toKeep)),2,[]),cell2mat(pairs))';
+edges = cat(2,reshape(nSegId(lSegId(:,toKeep)),2,[]),cell2mat(pairs))';  %reshape nSegIds with only two neighbors and add pair list
 indExtend = repelem(ind(toExtend), numComb);
 ind = cat(1,ind(toKeep), indExtend);
 [uid,~,c] = unique(indExtend);
 %these indices belong to several edges
-overlapInd = [zeros(sum(toKeep),1); c];
+overlapInd = [zeros(sum(toKeep),1); c];  % 0 where ind belongs to one edge and x where ind is uid(x)
 
 %get the edge for each ind (use sorting and grouping to avoid find)
 [edges,se] = sortrows(edges);
 ind = ind(se);
 overlapInd = overlapInd(se);
-diffEdge = find([true; any(diff(edges),2)]);
-if diffEdge(end) < size(ind,1)
+diffEdge = find([true; any(diff(edges),2)]);  % alternative to [~,diffEdge] = unique(edges,'rows')
+if diffEdge(end) -1 < size(ind,1)
     diffEdge(end + 1) = size(ind,1) + 1;
 end
 
@@ -105,7 +105,7 @@ fprintf('Border calculation:  0%%');
 for i = 1:length(diffEdge) - 1
     
     %get all voxels of unique edge
-    borderIdx = ind(diffEdge(i):(diffEdge(i+1) - 1));
+    borderIdx = ind(diffEdge(i):(diffEdge(i+1) - 1)); % get voxel indices of this unique edge
     borderPixelMat(borderIdx) = true;
     borderOverlapIdx = overlapInd(diffEdge(i):(diffEdge(i+1) - 1));
     
@@ -120,9 +120,9 @@ for i = 1:length(diffEdge) - 1
         
         %add indices to border
         currGroup = ismember(borderIdx, bordersForThisEdge{j});
-        currGroupIdx = diffEdge(i):(diffEdge(i+1) - 1);
-        currGroupIdx = currGroupIdx(currGroup);
-        groupIdx(currGroupIdx) = currGroupId;
+        currGroupIdx = diffEdge(i):(diffEdge(i+1) - 1); % get indices to voxel indices
+        currGroupIdx = currGroupIdx(currGroup);   % get only those of this c.c. border
+        groupIdx(currGroupIdx) = currGroupId;     % fill the group edge group index with current Id
         edgesNew(currGroupId,1:2) = edges(diffEdge(i),:);
         
         if nargout == 4
@@ -157,16 +157,12 @@ if nargout == 4
 end
 
 %save corresponding wall voxels to borders
-[groupIdx,I] = sort(groupIdx);
+[groupIdx,I] = sort(groupIdx);  % alternative, histogram over groupIdx
 ind = ind(I);
 groupIdx = [1; diff(groupIdx); 1];
 groupIdx = find(groupIdx);
 groupIdx = diff(groupIdx);
-if isempty(ind)   % workaround for empty segmentation cubes
-    PixelIdxList = cell(0,1);
-else
-    PixelIdxList = mat2cell(ind,groupIdx);
-end
+PixelIdxList = mat2cell(ind,groupIdx); 
 
 %calculate area and centroid (and remove padding in calcCentroid)
 Area = cellfun(@length,PixelIdxList);
