@@ -69,7 +69,7 @@ display('returning')
     % see: http://biorxiv.org/content/early/2017/01/22/099994
     [p, job] = SynEM.Seg.pipelineRun(p);
     % Save parameter file to new 
-    save([p.saveFolder 'allParameterWithSynapses.mat'], p);
+    save([p.saveFolder 'allParameterWithSynapses.mat'], 'p');
     % Wait for completion of job
     Cluster.waitForJob(job);
 display('returning')

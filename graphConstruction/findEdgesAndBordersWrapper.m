@@ -6,6 +6,9 @@ function findEdgesAndBordersWrapper(segFile, edgeFile, borderFile, segmentFile, 
 
     % Use new function from SynEM for calculation of svg data
     if nargin > 4
+	if all(excludeVoxels(:)) % skip calculation if completely in mirrorPaded region
+	    return
+	end
         [edges, borders, segments] = SynEM.Svg.findEdgesAndBorders(seg,excludeVoxels);
     else
         [edges, borders, segments] = SynEM.Svg.findEdgesAndBorders(seg);
