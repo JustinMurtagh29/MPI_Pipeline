@@ -51,13 +51,12 @@ area = [borders(:).Area];
 intIdx = area > areaT;
 
 interfaces.surface = {borders(intIdx).PixelIdxList}';
-
-if isrow(interfaces.surface{1}) %always use column vectors
-    interfaces.surface = cellfun(@(x)x',interfaces.surface, ...
-        'UniformOutput',false);
-end
 neighborIDs =  edges(intIdx,:);
 if any(intIdx)
+    if isrow(interfaces.surface{1}) %always use column vectors
+        interfaces.surface = cellfun(@(x)x',interfaces.surface, ...
+            'UniformOutput',false);
+    end
     %calculate subsegments
     interfaces.subseg = SynEM.Svg.calculateSubsegments( ...
         interfaces.surface, neighborIDs, seg, voxelSize, rinclude );
