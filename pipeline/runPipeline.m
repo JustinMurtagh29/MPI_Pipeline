@@ -24,7 +24,7 @@ function runPipeline(p)
         clear newPrefix;
     end
 
-    % Runs watershed based segmentation for region defined in p.bbox on p.raw and saves as p.local.segFile
+    % Runs watershed based segmentation for region defined in p.bbox on p.raw and saves as p.local(X).tempSegFile
     % Because watershed segmentation has FOV effects (no translation invariance), processed with large
     % overlap and later joined together (see correspondences)
     % Uses segmentation subfolder in code repository
@@ -36,10 +36,11 @@ function runPipeline(p)
     job = correspondenceFinder(p);
     Cluster.waitForJob(job);
     
-    % Transfer segmentation from tempSegFile to segFile and drop overlaps 
+    % Transfer segmentation from p.local(X).tempSegFile to p.local(X).segFile and drop overlaps 
     % Also in correspondences subfolder
-    job = removeOverlaps(p);
-    Cluster.waitForJob(job);
+    % Added routine to renumber CC of segments after cutting to non-overlapping region
+    % This also involves renumbering all correspondences if a segment is renumbered in this step
+    removeOverlaps(p);
     
     % Make segmentation IDs unique over dataset (were only unique in each
     % tile before), this will be called global IDs from time to time
