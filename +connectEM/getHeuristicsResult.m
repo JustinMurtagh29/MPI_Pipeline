@@ -11,8 +11,8 @@ function getHeuritisticResult(p)
         binaryMap(2).segId = 3;
         % Get nuclei scores
         binaryMap(3).root = '/gaba/u/mberning/wkCubes/2012-09-28_ex145_07x2_ROI2016_nuclei/segmentation/1/';
-        binaryMap(3).prefix = '2012-09-28_ex145_07x2_ROI2016_nuclei_mag1'; 
-        binaryMap(3).segId = 1;
+        binaryMap(3).prefix = 'nuclei'; 
+        binaryMap(3).segId = 2;
 
 
     for cube=1:numel(p.local)
@@ -30,8 +30,18 @@ function getHeuritisticResult(p)
         'numOutputs', 2);
     Cluster.waitForJob(job);
     scores = fetchOutputs(job);
-    
 
-    save([p.saveFolder 'heuristicResult.mat']);
+    % Reformatting for save file
+    segIds = cat(1, scores{:,2});
+    sc = cat(1, scores{:,1}); 
+    vesselScore = cat(1, sc{:,1});
+    myelinScore = cat(1, sc{:,2});
+    nucleiScore = cat(1, sc{:,3});
+
+    Util.save([p.saveFolder 'heuristicResult.mat'], segIds, vesselScore, myelinScore, nucleiScore);
 end
 
+function scoresSub = extractScores(scores, idx)
+    temp = cellfun(@(x)x{idx}, scores(:,1), 'uni', 0);
+    scoresSub = cell2mat(temp);
+end
