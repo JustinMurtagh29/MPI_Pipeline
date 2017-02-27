@@ -2,6 +2,21 @@
 % Author: Manuel Berning <manuel.berning@brain.mpg.de>
 % See agglomeration subfolder for additional functions used here
 
+%% Start by loading parameter file
+% Load parameter from newest pipeline run
+load('/gaba/u/mberning/results/pipeline/20161120_ROI/allParameter.mat');
+% To keep workspace clean here (and we are gonna have a bunch of stuff anyway) remove parameter for training (pT)
+clear pT;
+
+%display('Generating new graph struct:');
+%tic;
+%prob = Seg.Global.getGlobalLBProbList(p);
+%saveFile = [p.saveFolder 'globalLBProbList.mat'];
+%save(saveFile, prob);
+%clear prob saveFile;
+%collectGlobalGraphStruct(p);
+%toc;
+
 display('Loading data:');
 tic;
 %% Define where to store results
@@ -9,14 +24,9 @@ outputFolder = ['/gaba/scratch/mberning/' datestr(clock,30) '_agglomeration/'];
 if ~exist(outputFolder, 'dir')
     mkdir(outputFolder);
 end
-%% Start by loading parameter file
-% Load parameter from newest pipeline run
-load('/gaba/u/mberning/results/pipeline/20161120_ROI/allParameter.mat');
-% To keep workspace clean here (and we are gonna have a bunch of stuff anyway) remove parameter for training (pT)
-clear pT;
 %% Load graph and edge and segment (segments) based statistics
 % Load global graph representation
-graph = load([p.saveFolder 'graph.mat']);
+graph = load([p.saveFolder 'graphNew.mat']);
 % Load information about edges
 borderMeta = load([p.saveFolder 'globalBorder.mat']);
 % Load meta information of segments
@@ -27,30 +37,33 @@ synScore.isSynapse = connectEM.synScoresToSynEdges(graph, synScore);
 toc;
 
 rng default;
-threshold=0.99:-0.01:0.96;
+threshold=0.99;%:-0.01:0.91;
 for t=1:length(threshold)
     display('Performing agglomeration:');
     tic;
     % Agglomerate segments using only GP probabilties
-    initialPartition{t} = connectEM.partitionWholeDataset(graph, threshold(t)); 
-    sizePartition{t} = cellfun(@numel, initialPartition{t});
+    [initialPartition{t}, remainingEdges] = connectEM.partitionWholeDataset(graph, threshold(t)); 
+    sizePartition{t} = cellfun(@(x)sum(segmentMeta.voxelCount(x)), initialPartition{t});
     toc;
-
     % Probably make own function if needed again
-    %display('Writing skeletons for debugging the process:');
-    %tic;
-    %[~, idx] = sort(sizePartition{t}, 'descend');
-    %skel = connectEM.generateSkeletonFromAgglo(graph, segmentMeta.point', initialPartition{t}(idx(1:100)), strseq('largest component ', 1:100), {});
-    %writeNml([outputFolder 'largestComponents' num2str(threshold) '.nml'], skel);
-    %skel = connectEM.generateSkeletonFromAgglo(graph, segmentMeta.point', initialPartition{t}(idx(end:-1:end-99)), strseq('smallest component ', 1:100), {});
-    %writeNml([outputFolder 'smallestComponents' num2str(threshold) '.nml'], skel);
-    %skel = connectEM.generateSkeletonFromAgglo(graph, segmentMeta.point', initialPartition{t}(randi(numel(initialPartition),100,1)), strseq('random component ', 1:100), {});
-    %writeNml([outputFolder 'randomComponents' num2str(threshold) '.nml'], skel);
-    %toc;
+    display('Writing skeletons for debugging the process:');
+    tic;
+    [~, idx] = sort(sizePartition{t}, 'descend');
+    connectEM.generateSkeletonFromAgglo(remainingEdges, segmentMeta.point', ...
+        initialPartition{t}(idx(101:1000)), ...
+        strseq(['largestComponents' num2str(threshold(t)) '_'], 101:1000), ...
+        outputFolder, segmentMeta.maxSegId);
+    %idx = randi(numel(initialPartition{t}),100,1);
+    %connectEM.generateSkeletonFromAgglo(remainingEdges, segmentMeta.point', ...
+    %    initialPartition{t}(idx), ...
+    %    strseq(['randomComponents' num2str(threshold(t)) '_'], 1:100), ...
+    %    outputFolder, segmentMeta.maxSegId);
+    toc;
 end
 voxelCount = segmentMeta.voxelCount;
 maxSegId = segmentMeta.maxSegId;
 save([outputFolder 'initialAgglo.mat'], 'initialPartition', 'sizePartition', 'voxelCount', 'maxSegId');
+
 
 % FOR LATER
 %{
@@ -80,7 +93,7 @@ display('Processing queries:');
 tic;
 %% Calculate overlap of all queries with segments 
 [uniqueSegments, neighboursStartNode, nodesExcludedIdx, startNodeIdx] = cellfun(@queryAnalysis, ...
-            ff.segIds, ff.neighbours, ff.nodes', ff.startNode', 'uni', 0); 
+    ff.segIds, ff.neighbours, ff.nodes', ff.startNode', 'uni', 0); 
 %% Determine all overlaps of agglomerations with given queries
 [partition, queryOverlap] = queryAgglomerationOverlap(initialAgglomeration, uniqueSegments, neighboursStartNode);
 %% Make decision(s), here evidence/occurence threshold is applied

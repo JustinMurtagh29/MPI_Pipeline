@@ -12,16 +12,16 @@ end
 
 % Choose were to store result of the calculations
 % Make sure you have WRITE access
-p.saveFolder = '/gaba/u/mberning/results/pipeline/20161120_ROI/';
+p.saveFolder = '/gaba/u/mberning/results/pipeline/20170217_ROI/';
 
 % Define region of interest
 % This can be copied directly from webKNOSSOS bounding box field
-% Make sure p.bbox is always 25 pixels away from any black region in X-Y (10 in Z)
+% Make sure p.bbox is always 25 pixels away from any black region in X-Y (50 in Z)
 p.bbox_wK = [128, 128, 128, 5446, 8381, 3286]; 
 
 % Name of the experiment. It's the same as the Dataset name on webKnossos.
 % Also in the "Info" section when you open your dataset in webKnossos.
-p.experimentName = '2012-09-28_ex145_07x2_ROI2016_corrected';
+p.experimentName = '2012-09-28_ex145_07x2_ROI2017';
 
 % Define directory and file prefix and voxel size for KNOSSOS hierachy
 % with raw data READABLE to you on gaba
