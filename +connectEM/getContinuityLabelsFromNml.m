@@ -14,13 +14,13 @@ for i=1:length(pT.local)
         nodesPerTree = cellfun(@(x)size(x,1), nodes);
         nodes = cat(1,nodes{:});
                
-        segIdsOfGT = Seg.Global.getSegIds(p, nodes);
-        segIdsOfGT = mat2cell(segIdsOfGT, nodesPerTree);
+        segIdsOfGTnodes = Seg.Global.getSegIds(p, nodes);
+        segIdsOfGTnodes = mat2cell(segIdsOfGTnodes, nodesPerTree);
         % Remove nodes placed in background (0)
-        nrNodesInBackground = sum(cellfun(@(x)sum(x==0), segIdsOfGT));
+        nrNodesInBackground = sum(cellfun(@(x)sum(x==0), segIdsOfGTnodes));
         display(['Removing ' num2str(nrNodesInBackground) ' of ' ...
             num2str(sum(nodesPerTree)) ' nodes due to background placement!']);
-        segIdsOfGT = cellfun(@(x)x(x~=0), segIdsOfGT, 'uni', 0);
+        segIdsOfGT = cellfun(@(x)x(x~=0), segIdsOfGTnodes, 'uni', 0);
         % Keep only unique hits per tree
         segIdsOfGT = cellfun(@(x)unique(x), segIdsOfGT, 'uni', 0);
 
@@ -64,6 +64,7 @@ for i=1:length(pT.local)
         gt(i,j).prob = probInBbox;
         gt(i,j).labels = labels;
         gt(i,j).segIdsGT = segIdsOfGT;
+        gt(i,j).segIdsOfGTnodes = segIdsOfGTnodes;
         gt(i,j).mergedSegments = mergedSegments;
         leftSegments = setdiff(segIdsInBBox, allSegmentIdsInGT);
         gt(i,j).leftSegments = leftSegments(segMeta.voxelCount(leftSegments) > 100);
