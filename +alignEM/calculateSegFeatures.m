@@ -1,4 +1,4 @@
-function cluster = calculateSegFeatures( p )
+function job = calculateSegFeatures( p )
 % Calculate SynEM features for SegEM output
 
 % load fm
@@ -18,6 +18,6 @@ cluster = Cluster.getCluster( ...
         '-l h_vmem=24G', ...
         '-l s_rt=23:50:00', ...
         '-l h_rt=24:00:00');
-Cluster.startJob(fH, inputCell, 'name', 'classFeatures', 'sharedInputs', {p fm}, 'sharedInputsLocation', [1 3], 'cluster', cluster);
+job = Cluster.startJob(fH, inputCell, 'name', 'segFeatures', 'sharedInputs', {p fm}, 'sharedInputsLocation', [1 3], 'cluster', cluster);
 
 end

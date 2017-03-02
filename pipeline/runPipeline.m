@@ -70,7 +70,7 @@ function runPipeline(p)
     % Wait for completion of job
     Cluster.waitForJob(job);
     
-    job = calculateSegFeatures( p );
+    job = alignEM.calculateSegFeatures( p );
     Cluster.waitForJob(job);
 display('returning')
 return
