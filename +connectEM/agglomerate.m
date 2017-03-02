@@ -4,18 +4,9 @@
 
 %% Start by loading parameter file
 % Load parameter from newest pipeline run
-load('/gaba/u/mberning/results/pipeline/20161120_ROI/allParameter.mat');
+load('/gaba/u/mberning/results/pipeline/20170217_ROI/allParameterWithSynapses.mat');
 % To keep workspace clean here (and we are gonna have a bunch of stuff anyway) remove parameter for training (pT)
 clear pT;
-
-%display('Generating new graph struct:');
-%tic;
-%prob = Seg.Global.getGlobalLBProbList(p);
-%saveFile = [p.saveFolder 'globalLBProbList.mat'];
-%save(saveFile, prob);
-%clear prob saveFile;
-%collectGlobalGraphStruct(p);
-%toc;
 
 display('Loading data:');
 tic;
@@ -26,7 +17,7 @@ if ~exist(outputFolder, 'dir')
 end
 %% Load graph and edge and segment (segments) based statistics
 % Load global graph representation
-graph = load([p.saveFolder 'graphNew.mat']);
+graph = load([p.saveFolder 'graph.mat']);
 % Load information about edges
 borderMeta = load([p.saveFolder 'globalBorder.mat']);
 % Load meta information of segments
