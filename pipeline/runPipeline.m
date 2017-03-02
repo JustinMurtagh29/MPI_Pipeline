@@ -49,9 +49,6 @@ function runPipeline(p)
     job = globalizeSegmentation(p);
     Cluster.waitForJob(job);
 
-    
-display('returning')
-
     % Build segment meta data
     job = buildSegmentMetaData(p);
     Cluster.waitForJob(job);
@@ -71,6 +68,9 @@ display('returning')
     % Save parameter file to new 
     save([p.saveFolder 'allParameterWithSynapses.mat'], 'p');
     % Wait for completion of job
+    Cluster.waitForJob(job);
+    
+    job = calculateSegFeatures( p );
     Cluster.waitForJob(job);
 display('returning')
 return
