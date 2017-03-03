@@ -8,7 +8,7 @@ seg = loadSegDataGlobal(p.seg, bboxFM);
 
 load(p.local(cubeNo).segmentFile, 'segments');
 if ~isempty(segments)
-    interfaces.surface = {segments.PixelIdxList};
+    interfaces.surface = {segments.PixelIdxList}';
     interfaces.subseg = cell(1,0); % needed for length check in fm.calculate
     clearvars segments
     
