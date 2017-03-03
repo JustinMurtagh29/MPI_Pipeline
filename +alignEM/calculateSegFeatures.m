@@ -6,7 +6,7 @@ if nargin < 2
     load(fullfile(p.saveFolder,'SegmentFeatureMap.mat'),'fm')
 else
     load(fmloc, 'fm');
-emd
+end
 % needed changes
 % fm.areaT = 200;  % segment voxel size should exceed 200 voxels
 % fm.numSubvolumes = 0; % only each segment itself
