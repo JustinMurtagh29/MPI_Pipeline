@@ -11,10 +11,10 @@ function predictLocalCube(saveFolder, classifierFile, outputFilenameInLocalFolde
     % Load needed data
     load(classifierFile);
     load([saveFolder 'borders.mat']);
-    load([saveFolder 'InterfaceFeatures.mat']);
-    load([saveFolder 'InterfaceClassFeatures.mat']);
-    features = cat(2, X, features);
-    clear X;
+    rawF = load([saveFolder 'InterfaceRawFeatures.mat']);
+    classF = load([saveFolder 'InterfaceClassFeatures.mat']);
+    features = cat(2, rawF.features, classF.features);
+    clear rawF classF;
 
     % set all edges that are not classified to 0 probability
     classifiedBorderIdx = cat(1,borders(:).Area) > 10;
