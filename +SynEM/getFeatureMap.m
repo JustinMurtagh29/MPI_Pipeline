@@ -20,11 +20,11 @@ switch name
         sigma = 12./voxelSize;
         fS = ceil(2.*sigma);
         fRawNorm = '@(x)single(x)';
-
+        
         %construct feature map
         fm = FeatureMap(subvolsSize, areaT, ...
             quantiles, moments, 'direction', [1, 1, 1], fRawNorm);
-
+        
         %add features
         fm.addFeature(SynEM.FeatureLegacy.Identity());
         fm.addFeature(SynEM.FeatureLegacy.EVsStructureTensor(sigma, fS, ...
@@ -82,11 +82,11 @@ switch name
         moments = true(4,1);
         sigma = 12./voxelSize;
         fRawNorm = @(x)(single(x) - 122)./22;
-
+        
         %construct feature map
         fm = FeatureMap(subvolsSize, areaT, ...
             quantiles, moments, 'direction', voxelSize, fRawNorm);
-
+        
         %add features
         fm.addFeature(Identity());
         fm.addFeature(EigenvaluesStructureTensor(sigma, sigma, 2, 2));
@@ -197,11 +197,11 @@ switch name
         voxelSize = [11.24, 11.24, 28];
         sigma = 12./voxelSize;
         fRawNorm = @(x)(single(x) - 122)./22;
-
+        
         %construct feature map
         fm = FeatureMap(subvolsSize, areaT, ...
             quantiles, moments, 'direction', voxelSize, fRawNorm);
-
+        
         %add features
         fm.addFeature(Identity());
         fm.addFeature(EigenvaluesStructureTensor(sigma, sigma, 2, 2));
@@ -248,11 +248,11 @@ switch name
         voxelSize = [11.24, 11.24, 28];
         sigma = 12./voxelSize;
         fRawNorm = @(x)(single(x) - 122)./22;
-
+        
         %construct feature map
         fm = FeatureMap(subvolsSize, areaT, ...
             quantiles, moments, 'direction', voxelSize, fRawNorm);
-
+        
         %add features
         fm.addFeature(Identity());
         fm.addFeature(EigenvaluesStructureTensor(sigma, sigma, 2, 2));
@@ -318,7 +318,7 @@ switch name
         moments = true(4,1);
         voxelSize = [11.24, 11.24, 28];
         sigma = 12./voxelSize;
-
+        
         %construct feature map
         fm = FeatureMap(subvolsSize, areaT, ...
             quantiles, moments, 'direction');
@@ -327,6 +327,68 @@ switch name
         fm.addFeature(Identity());
         fm.addFeature(GaussFilter(sigma, 2));
         fm.addFeature(Volume([], 1),1,1);
+    case 'SurfaceOnly'  % by Marcel, copied from 'paper', set areaT to 200 and deleted subvolumes
+        areaT = 200;
+        subvolsSize = [];
+        quantiles = [0.25 0.5 0.75 0 1];
+        voxelSize = [11.24, 11.24, 28];
+        moments = true(4,1);
+        sigma = 12./voxelSize;
+        fS = ceil(2.*sigma);
+        fRawNorm = '@(x)single(x)';
+        
+        %construct feature map
+        fm = FeatureMap(subvolsSize, areaT, ...
+            quantiles, moments, 'direction', [1, 1, 1], fRawNorm);
+        
+        %add features
+        fm.addFeature(SynEM.FeatureLegacy.Identity());
+        fm.addFeature(SynEM.FeatureLegacy.EVsStructureTensor(sigma, fS, ...
+            sigma, fS));
+        fm.addFeature(SynEM.FeatureLegacy.EVsStructureTensor(sigma, fS, ...
+            2.*sigma, 2.*fS));
+        fm.addFeature(SynEM.FeatureLegacy.EVsStructureTensor(2.*sigma, ...
+            2.*fS, sigma, fS));
+        fm.addFeature(SynEM.FeatureLegacy.EVsStructureTensor(2.*sigma, ...
+            2.*fS, 2.*sigma, 2.*fS));
+        fm.addFeature(SynEM.FeatureLegacy.EVsStructureTensor(3.*sigma, ...
+            3.*fS, 3.*sigma, 3.*fS));
+        fm.addFeature(SynEM.FeatureLegacy.EVsHessian(sigma, fS));
+        fm.addFeature(SynEM.FeatureLegacy.EVsHessian(2.*sigma, 2.*fS));
+        fm.addFeature(SynEM.FeatureLegacy.EVsHessian(3.*sigma, 3.*fS));
+        fm.addFeature(SynEM.FeatureLegacy.EVsHessian(4.*sigma, 4.*fS));
+        fm.addFeature(SynEM.FeatureLegacy.GaussFilter(sigma, fS));
+        fm.addFeature(SynEM.FeatureLegacy.GaussFilter(2.*sigma, 2.*fS));
+        fm.addFeature(SynEM.FeatureLegacy.GaussFilter(3.*sigma, 3.*fS));
+        fm.addFeature(SynEM.FeatureLegacy.DoG(sigma, fS, 1.5));
+        fm.addFeature(SynEM.FeatureLegacy.DoG(sigma, fS, 2));
+        fm.addFeature(SynEM.FeatureLegacy.DoG(2.*sigma, 2.*fS, 1.5));
+        fm.addFeature(SynEM.FeatureLegacy.DoG(2.*sigma, 2.*fS, 2));
+        fm.addFeature(SynEM.FeatureLegacy.DoG(3.*sigma, 3.*fS, 1.5));
+        fm.addFeature(SynEM.FeatureLegacy.LoG(sigma, fS));
+        fm.addFeature(SynEM.FeatureLegacy.LoG(2.*sigma, 2.*fS));
+        fm.addFeature(SynEM.FeatureLegacy.LoG(3.*sigma, 3.*fS));
+        fm.addFeature(SynEM.FeatureLegacy.LoG(4.*sigma, 4.*fS));
+        fm.addFeature(SynEM.FeatureLegacy.GaussGradMagnitude(sigma, fS));
+        fm.addFeature(SynEM.FeatureLegacy.GaussGradMagnitude(2.*sigma, 2.*fS));
+        fm.addFeature(SynEM.FeatureLegacy.GaussGradMagnitude(3.*sigma, 3.*fS));
+        fm.addFeature(SynEM.FeatureLegacy.GaussGradMagnitude(4.*sigma, 4.*fS));
+        fm.addFeature(SynEM.FeatureLegacy.GaussGradMagnitude(5.*sigma, 5.*fS));
+        fm.addFeature(SynEM.FeatureLegacy.StdFilter([5, 5, 5]));
+        fm.addFeature(SynEM.FeatureLegacy.EntropyFilter([5, 5, 5]));
+        fm.addFeature(SynEM.FeatureLegacy.IntVar([3, 3, 3]));
+        fm.addFeature(SynEM.FeatureLegacy.IntVar([5, 5, 5]));
+        fm.addFeature(SynEM.FeatureLegacy.AverageFilter('ball',3,[1, 1, 2]));
+        fm.addFeature(SynEM.FeatureLegacy.AverageFilter('ball',6,[1, 1, 2]));
+        fm.addFeature(SynEM.FeatureLegacy.Volume([], 3),[1, 2, 3],[1 3 2]);
+        fm.addFeature(SynEM.FeatureLegacy.Volume( ...
+            '@(x)single(nthroot(6*x*(11.24*11.24*28)*pi,3))',1), ...
+            1, 1); %diameter from old fm
+        fm.addFeature(SynEM.FeatureLegacy.PrincipalAxis('length', ...
+            [1, 1, 28/11.24]), 1, [1, 2, 3]);
+        fm.addFeature(SynEM.FeatureLegacy.PrincipalAxis('prod', ...
+            [1, 1, 28/11.24]), [2 3], 1);
+        fm.addFeature(SynEM.FeatureLegacy.ConvexHull(3),[1, 2, 3],[1 3 2]);
         
     otherwise
         error('Feature map %s not defined.', name);

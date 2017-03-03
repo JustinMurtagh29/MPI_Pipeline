@@ -2,10 +2,10 @@ function job = calculateSegFeatures( p )
 % Calculate SynEM features for SegEM output
 
 % load fm
-load([p.saveFolder 'SynapseClassifier.mat'], 'fm');
+load([fileparts(p.saveFolder) 'SegmentFeatureMap.mat'], 'fm');
 % needed changes
-fm.areaT = 200;  % segment voxel size should exceed 200 voxels
-fm.numSubvolumes = 0; % only each segment itself
+% fm.areaT = 200;  % segment voxel size should exceed 200 voxels
+% fm.numSubvolumes = 0; % only each segment itself
 
 % Construct data for job submission
 fH = @alignEM.calculateSegFeaturesCube;
