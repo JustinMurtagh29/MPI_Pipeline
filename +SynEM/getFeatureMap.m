@@ -339,7 +339,7 @@ switch name
         
         %construct feature map
         fm = FeatureMap(subvolsSize, areaT, ...
-            quantiles, moments, 'direction', [1, 1, 1], fRawNorm);
+            quantiles, moments, 'single', [1, 1, 1], fRawNorm);
         
         %add features
         fm.addFeature(SynEM.FeatureLegacy.Identity());
@@ -387,16 +387,6 @@ switch name
         fm.addFeature(SynEM.FeatureLegacy.PrincipalAxis('length', ...
             [1, 1, 28/11.24]), 1, [1, 2, 3]);
         fm.addFeature(SynEM.FeatureLegacy.ConvexHull(1),1,1);
-                %fm.addFeature(FeatureLegacy.Volume([], 1),1,1);
-% fm.addFeature(SynEM.FeatureLegacy.Volume([], 3),[1, 2, 3],[1 3 2]);
-%         fm.addFeature(SynEM.FeatureLegacy.Volume( ...
-%             '@(x)single(nthroot(6*x*(11.24*11.24*28)*pi,3))',1), ...
-%             1, 1); %diameter from old fm
-%         fm.addFeature(SynEM.FeatureLegacy.PrincipalAxis('length', ...
-%             [1, 1, 28/11.24]), 1, [1, 2, 3]);
-%         fm.addFeature(SynEM.FeatureLegacy.PrincipalAxis('prod', ...
-%             [1, 1, 28/11.24]), [2 3], 1);
-%         fm.addFeature(SynEM.FeatureLegacy.ConvexHull(3),[1, 2, 3],[1 3 2]);
     otherwise
         error('Feature map %s not defined.', name);
 end

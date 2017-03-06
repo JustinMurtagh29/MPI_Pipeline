@@ -4,7 +4,8 @@ function calculateSegFeaturesCube(p, cubeNo, fm)
 
 % load segmentation
 bboxFM = bsxfun(@plus, p.local(cubeNo).bboxSmall,[-fm.border', fm.border']./2);
-seg = loadSegDataGlobal(p.seg, bboxFM);
+raw = Seg.IO.loadRaw(p, bboxFM);
+
 
 load(p.local(cubeNo).segmentFile, 'segments');
 if ~isempty(segments)
@@ -13,7 +14,7 @@ if ~isempty(segments)
     clearvars segments
     
     %calculate features
-    features = fm.calculate(interfaces, seg);
+    features = fm.calculate(interfaces, raw);
     
     % Save features
     if strcmp(fm.mode, 'direction')
