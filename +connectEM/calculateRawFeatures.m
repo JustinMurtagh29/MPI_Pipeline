@@ -6,7 +6,7 @@ load([p.saveFolder 'SynapseClassifier.mat'], 'fm');
 % needed changes
 fm.areaT = 10;
 % based on which voxel map
-voxelSource = 'Class';
+voxelSource = 'Raw';
 
 % Construct data for job submission
 fH = @connectEM.calculateFeaturesCube;
@@ -19,6 +19,6 @@ cluster = Cluster.getCluster( ...
         '-l h_vmem=24G', ...
         '-l s_rt=23:50:00', ...
         '-l h_rt=24:00:00');
-job = Cluster.startJob(fH, inputCell, 'name', 'classFeatures', 'sharedInputs', {p fm voxelSource}, 'sharedInputsLocation', [1 3 4], 'cluster', cluster);
+job = Cluster.startJob(fH, inputCell, 'name', 'rawFeatures', 'sharedInputs', {p fm voxelSource}, 'sharedInputsLocation', [1 3 4], 'cluster', cluster);
 
 end
