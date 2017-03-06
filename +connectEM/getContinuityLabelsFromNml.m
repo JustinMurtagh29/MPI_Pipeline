@@ -13,7 +13,6 @@ for i=1:length(pT.local)
         nodes = cellfun(@(x)x(:,1:3), skel.nodes, 'uni', 0);   
         nodesPerTree = cellfun(@(x)size(x,1), nodes);
         nodes = cat(1,nodes{:});
-               
         segIdsOfGTnodes = Seg.Global.getSegIds(p, nodes);
         segIdsOfGTnodes = mat2cell(segIdsOfGTnodes, nodesPerTree);
         % Remove nodes placed in background (0)
@@ -45,10 +44,10 @@ for i=1:length(pT.local)
         uniqueCubes = unique(segMeta.cubeIdx(ismember(segMeta.segIds, segIdsInBBox)));
         edges = Seg.Global.getGlobalEdges(p, uniqueCubes);
         prob = Seg.Global.getGlobalGPProbList(p, uniqueCubes);
-        edgeIdxInBbox = all(ismember(edges, segIdsInBBox),2);
-        edgesInBbox = edges(edgeIdxInBbox,:);
-        probInBbox = prob(edgeIdxInBbox,:);
-        clear edgeIdxInBbox edges uniqueCubes;
+        edgeIdxInBbox = find(all(ismember(edges, segIdsInBBox),2));
+        [edgesInBbox, idxA] = unique(edges(edgeIdxInBbox,:), 'rows');       
+        probInBbox = prob(edgeIdxInBbox(idxA));
+        clear edgeIdxInBbox edges uniqueCubes idxA;
 
         % Determine labels
         labels = determineLabelsFromEqClass(segIdsOfGT, edgesInBbox);
