@@ -5,10 +5,6 @@ load /gaba/u/mberning/results/pipeline/20161120_ROI/allParameter.mat;
 % Extract information of dense cube annotations
 newGTfolder = '+connectEM/trainingData/afterCompletion/';
 files = dir([newGTfolder '*.nml']);
-temp = cellfun(@(x)strsplit(x, '__'), {files(:).name}, 'uni', 0);
-taskIds = cellfun(@(x)x{2}, temp, 'uni', 0);
-tracer = cellfun(@(x)x{3}, temp, 'uni', 0);
-annotationIds = cellfun(@(x)x{4}(1:end-4), temp, 'uni', 0);
 
 % Define bounding box of training regions as passed to annotators
 % +1 for wk vs. matlab coordinate system offset
@@ -31,17 +27,20 @@ pT.local(1).trainFile = cellfun(@(x)[newGTfolder x], files(pTbboxIdx == 1), 'uni
 pT.local(2).trainFile = cellfun(@(x)[newGTfolder x], files(pTbboxIdx == 2), 'uni', 0);
 pT.local(3).trainFile = cellfun(@(x)[newGTfolder x], files(pTbboxIdx == 3), 'uni', 0);
 
+segMeta = load([p.saveFolder 'segmentMeta.mat']);
+segMeta.point = segMeta.point';
+
 %% Collect training data from segmentation + nmls
 % Get a list of labels from each (redundant) training file in each region
 gt = connectEM.getContinuityLabelsFromNml(p, pT);
+clear files bbox nodes skel i newGTfolder maxMergerId pTbboxIdx;
 
 %% First round of ground truth data proofreading (add leftover segments)
+% Need to load "initial" instead of "afterCompletion" in first cell above
 outputFolder = ['trainingDataOut' filesep];
 if ~exist(outputFolder, 'dir')
     mkdir(outputFolder);
 end
-segMeta = load([p.saveFolder 'segmentMeta.mat']);
-segMeta.point = segMeta.point';
 for i=1:length(pT.local)
     for j=1:length(pT.local(i).trainFile)
         [~, originalFilename] = fileparts(pT.local(i).trainFile{j});
@@ -70,8 +69,6 @@ outputFolder = ['trainingDataOut2' filesep];
 if ~exist(outputFolder, 'dir')
     mkdir(outputFolder);
 end
-segMeta = load([p.saveFolder 'segmentMeta.mat']);
-segMeta.point = segMeta.point';
 for i=1:length(pT.local)
     for j=1:length(pT.local(i).trainFile)
         [~, originalFilename] = fileparts(pT.local(i).trainFile{j});
@@ -110,6 +107,65 @@ for i=1:length(pT.local)
         fclose(fileHandle);
     end
 end
+
+%% Third step: Read data after completion (execute first + second cell again)
+% and then: modify according to merged segment decisions
+
+% Extract information of dense cube annotations
+newGTfolder = '+connectEM/trainingData/mergedSegmentDecision/';
+files = dir([newGTfolder '*.nml']);
+mergerNumberOld = arrayfun(@(x)size(x.mergedSegments,1), gt);
+
+% Determine annotated bounding box for each file (to match to training
+% region below)
+for i=1:length(files)
+    skel = skeleton([newGTfolder files(i).name]);
+    nodes = cat(1, skel.nodes{:});
+    bbox{i} = [min(nodes(:,1:3),[],1); max(nodes(:,1:3),[],1)]';
+    [~, pTbboxIdx(i)] = min(cellfun(@(x)norm((bbox{i} - x)'), {pT.local(:).bboxSmall}));
+    uniqueComments = skel.getUniqueComments();
+    temp = cellfun(@(x)regexp(x, 'merger(\d\d\d).+', 'tokens'), uniqueComments{:,1}, 'uni', 0);
+    temp = temp(~cellfun(@isempty,temp));
+    temp = cellfun(@(x)str2double(x{1}), temp);
+    maxMergerId = max(temp(:));
+    % Match to original tracing based on number of merger corrected
+    % Next time find some better way to make sure relation is right, works here
+    % because each file has different number of merger (TODO)
+    [row, col] = find(mergerNumberOld == maxMergerId);
+    pT.local(row).trainFileMerger{col} = [newGTfolder files(i).name];
+end
+
+% Cleanup, getting confused
+clear row col files bbox nodes skel i j a ans temp taskIds tracer annotationIds newGTfolder maxMergerId pTbboxIdx mergerNumberOld uniqueComments;
+save('/home/mberning/Desktop/tempMerger.mat');
+
+%% Apply merger decision to segment lists and generate new skeletons
+load('/home/mberning/Desktop/tempMerger.mat');
+skelModified = connectEM.applyMergerDecision(pT);
+
+% Then save for inspection again
+outputFolder = ['trainingDataOut3' filesep];
+if ~exist(outputFolder, 'dir')
+    mkdir(outputFolder);
+end
+for i=1:length(pT.local)
+    for j=1:length(pT.local(i).trainFile)
+        pT.local(i).trainFile{j} = [outputFolder 'trainingRegion' num2str(i) '_instance' num2str(j) '.nml'];
+        skelModified(i,j) = skelModified(i,j).clearComments();
+        skelModified(i,j) = skelModified(i,j).deleteEmptyTrees();
+        skelModified(i,j).write(pT.local(i).trainFile{j});
+    end
+end
+clear i j;
+
+% Transitition to new pipeline run
+gtNew = connectEM.getContinuityLabelsFromNml(p, pT);
+
+% Consolidate 3 redundant annotations into 1
+gtConsolidated = connectEM.consolidateRedundantAnnotations(p, gtNew);
+
+% Remove all nodes from skeletons that are not part of consensus (and regroup)
+connectEM.restrictToConsolidationAndWriteAsSkeletons(gtConsolidated, p, pT, outputFolder);
 
 %% Consolidate redundant annotations
 gt = connectEM.consolidateRedundantAnnotations(gt);
