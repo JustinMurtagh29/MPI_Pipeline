@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<things>
+	<parameters>
+		<experiment name="2012-09-28_ex145_07x2_ROI2017"/>
+		<scale x="11.24" y="11.24" z="28"/>
+		<offset x="0" y="0" z="0"/>
+	</parameters>
+	<thing id="1" name="Component3_415_15030572" color.r="2.758621e-01" color.g="2.413793e-01" color.b="2.758621e-01" color.a="0">
+		<nodes>
+			<node id="1" radius="10.000000" x="2307" y="7092" z="1230" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="2" radius="10.000000" x="2270" y="7100" z="1269" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="3" radius="10.000000" x="2266" y="7095" z="1280" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="4" radius="10.000000" x="2267" y="7083" z="1296" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="5" radius="10.000000" x="2270" y="7080" z="1309" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="6" radius="10.000000" x="2287" y="7075" z="1329" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="7" radius="10.000000" x="2269" y="7106" z="1337" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="8" radius="10.000000" x="2278" y="7084" z="1346" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="9" radius="10.000000" x="2259" y="7091" z="1339" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="10" radius="10.000000" x="2278" y="7104" z="1366" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+		</nodes>
+		<edges>
+			<edge source="1" target="2"/>
+			<edge source="1" target="3"/>
+			<edge source="2" target="3"/>
+			<edge source="3" target="4"/>
+			<edge source="4" target="5"/>
+			<edge source="5" target="6"/>
+			<edge source="6" target="7"/>
+			<edge source="6" target="8"/>
+			<edge source="6" target="9"/>
+			<edge source="7" target="8"/>
+			<edge source="7" target="9"/>
+			<edge source="8" target="9"/>
+			<edge source="8" target="10"/>
+		</edges>
+	</thing>
+	<comments> </comments>
+</things>

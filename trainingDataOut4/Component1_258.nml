@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<things>
+	<parameters>
+		<experiment name="2012-09-28_ex145_07x2_ROI2017"/>
+		<scale x="11.24" y="11.24" z="28"/>
+		<offset x="0" y="0" z="0"/>
+	</parameters>
+	<thing id="1" name="Component1_258_15030572" color.r="8.965517e-01" color.g="1.724138e-01" color.b="6.206897e-01" color.a="0">
+		<nodes>
+			<node id="1" radius="10.000000" x="4311" y="4351" z="2299" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="2" radius="10.000000" x="4313" y="4377" z="2300" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="3" radius="10.000000" x="4338" y="4345" z="2301" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="4" radius="10.000000" x="4333" y="4328" z="2304" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="5" radius="10.000000" x="4294" y="4422" z="2307" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="6" radius="10.000000" x="4264" y="4445" z="2312" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="7" radius="10.000000" x="4345" y="4254" z="2305" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="8" radius="10.000000" x="4333" y="4267" z="2307" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="9" radius="10.000000" x="4343" y="4289" z="2310" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="10" radius="10.000000" x="4337" y="4312" z="2310" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="11" radius="10.000000" x="4375" y="4235" z="2306" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="12" radius="10.000000" x="4316" y="4287" z="2316" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="13" radius="10.000000" x="4328" y="4300" z="2320" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+		</nodes>
+		<edges>
+			<edge source="1" target="2"/>
+			<edge source="1" target="3"/>
+			<edge source="1" target="4"/>
+			<edge source="1" target="5"/>
+			<edge source="1" target="6"/>
+			<edge source="1" target="9"/>
+			<edge source="1" target="10"/>
+			<edge source="1" target="12"/>
+			<edge source="1" target="13"/>
+			<edge source="3" target="4"/>
+			<edge source="4" target="9"/>
+			<edge source="4" target="10"/>
+			<edge source="5" target="6"/>
+			<edge source="7" target="8"/>
+			<edge source="7" target="9"/>
+			<edge source="7" target="11"/>
+			<edge source="8" target="9"/>
+			<edge source="8" target="12"/>
+			<edge source="9" target="10"/>
+			<edge source="9" target="12"/>
+			<edge source="9" target="13"/>
+			<edge source="10" target="12"/>
+			<edge source="10" target="13"/>
+			<edge source="12" target="13"/>
+		</edges>
+	</thing>
+	<comments> </comments>
+</things>

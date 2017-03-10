@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<things>
+	<parameters>
+		<experiment name="2012-09-28_ex145_07x2_ROI2017"/>
+		<scale x="11.24" y="11.24" z="28"/>
+		<offset x="0" y="0" z="0"/>
+	</parameters>
+	<thing id="1" name="Component3_322_15030572" color.r="1" color.g="2.758621e-01" color.b="6.896552e-02" color.a="0">
+		<nodes>
+			<node id="1" radius="10.000000" x="1878" y="6897" z="1340" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="2" radius="10.000000" x="1818" y="6917" z="1338" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="3" radius="10.000000" x="1820" y="6900" z="1342" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="4" radius="10.000000" x="1830" y="6915" z="1342" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="5" radius="10.000000" x="1832" y="6909" z="1348" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+		</nodes>
+		<edges>
+			<edge source="1" target="3"/>
+			<edge source="1" target="5"/>
+			<edge source="2" target="3"/>
+			<edge source="2" target="4"/>
+			<edge source="2" target="5"/>
+			<edge source="3" target="5"/>
+			<edge source="4" target="5"/>
+		</edges>
+	</thing>
+	<comments> </comments>
+</things>

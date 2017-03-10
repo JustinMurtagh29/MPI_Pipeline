@@ -1,0 +1,18 @@
+var mapping = Array(15030572).fill(0);
+var agglos  = [];
+agglos.push([9985023]);
+agglos.push([9985081]);
+agglos.push([9985303]);
+agglos.push([9985304]);
+agglos.push([9985333]);
+agglos.push([9985509]);
+
+for(var i = 0; i < agglos.length; i++){
+    var segIds = agglos[i];
+    for(var j = 0; j < segIds.length; j++){
+        mapping[segIds[j]] = (i + 1);
+    }
+}
+
+var cube = app.oxalis.model.getSegmentationBinary().cube;
+cube.setMapping(mapping);

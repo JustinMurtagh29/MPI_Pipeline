@@ -1,0 +1,129 @@
+<?xml version="1.0"?>
+<things>
+	<parameters>
+		<experiment name="2012-09-28_ex145_07x2_ROI2017"/>
+		<scale x="11.24" y="11.24" z="28"/>
+		<offset x="0" y="0" z="0"/>
+	</parameters>
+	<thing id="1" name="Component3_207_15030572" color.r="0" color.g="0" color.b="8.275862e-01" color.a="0">
+		<nodes>
+			<node id="1" radius="10.000000" x="1867" y="6909" z="1254" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="2" radius="10.000000" x="1873" y="6929" z="1236" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="3" radius="10.000000" x="1832" y="6931" z="1234" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="4" radius="10.000000" x="1904" y="6918" z="1240" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="5" radius="10.000000" x="1822" y="6900" z="1240" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="6" radius="10.000000" x="1814" y="6936" z="1242" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="7" radius="10.000000" x="1918" y="6968" z="1242" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="8" radius="10.000000" x="1928" y="6975" z="1246" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="9" radius="10.000000" x="1922" y="6987" z="1243" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="10" radius="10.000000" x="1920" y="6940" z="1244" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="11" radius="10.000000" x="1916" y="6925" z="1248" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="12" radius="10.000000" x="1820" y="6923" z="1252" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="13" radius="10.000000" x="1864" y="7001" z="1254" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="14" radius="10.000000" x="1832" y="6918" z="1256" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="15" radius="10.000000" x="1842" y="6876" z="1255" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="16" radius="10.000000" x="1929" y="6969" z="1256" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="17" radius="10.000000" x="1935" y="6977" z="1255" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="18" radius="10.000000" x="1848" y="6996" z="1256" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="19" radius="10.000000" x="1828" y="6918" z="1263" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="20" radius="10.000000" x="1891" y="7007" z="1258" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="21" radius="10.000000" x="1884" y="7002" z="1262" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="22" radius="10.000000" x="1913" y="6965" z="1266" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="23" radius="10.000000" x="1833" y="6974" z="1265" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="24" radius="10.000000" x="1907" y="6941" z="1268" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="25" radius="10.000000" x="1861" y="6967" z="1269" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="26" radius="10.000000" x="1880" y="6929" z="1270" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="27" radius="10.000000" x="1871" y="6950" z="1273" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="28" radius="10.000000" x="1817" y="6949" z="1273" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="29" radius="10.000000" x="1875" y="6920" z="1272" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="30" radius="10.000000" x="1891" y="6918" z="1278" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="31" radius="10.000000" x="1882" y="6916" z="1274" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="32" radius="10.000000" x="1823" y="6936" z="1281" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="33" radius="10.000000" x="1843" y="6943" z="1281" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="34" radius="10.000000" x="1881" y="6912" z="1287" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="35" radius="10.000000" x="1817" y="6926" z="1289" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="36" radius="10.000000" x="1877" y="6924" z="1308" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="37" radius="10.000000" x="1838" y="6922" z="1298" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="38" radius="10.000000" x="1815" y="6909" z="1293" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="39" radius="10.000000" x="1905" y="6921" z="1313" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="40" radius="10.000000" x="1925" y="6917" z="1320" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="41" radius="10.000000" x="1911" y="6898" z="1331" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="42" radius="10.000000" x="1934" y="6908" z="1334" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="43" radius="10.000000" x="1937" y="6897" z="1344" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="44" radius="10.000000" x="1929" y="6887" z="1355" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="45" radius="10.000000" x="1916" y="6878" z="1364" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+		</nodes>
+		<edges>
+			<edge source="1" target="2"/>
+			<edge source="1" target="3"/>
+			<edge source="1" target="14"/>
+			<edge source="1" target="15"/>
+			<edge source="1" target="19"/>
+			<edge source="1" target="24"/>
+			<edge source="1" target="26"/>
+			<edge source="1" target="27"/>
+			<edge source="1" target="29"/>
+			<edge source="1" target="30"/>
+			<edge source="1" target="31"/>
+			<edge source="1" target="33"/>
+			<edge source="1" target="34"/>
+			<edge source="1" target="36"/>
+			<edge source="1" target="37"/>
+			<edge source="2" target="4"/>
+			<edge source="3" target="5"/>
+			<edge source="3" target="6"/>
+			<edge source="4" target="10"/>
+			<edge source="4" target="11"/>
+			<edge source="6" target="12"/>
+			<edge source="7" target="8"/>
+			<edge source="7" target="10"/>
+			<edge source="8" target="9"/>
+			<edge source="8" target="10"/>
+			<edge source="8" target="11"/>
+			<edge source="8" target="16"/>
+			<edge source="8" target="17"/>
+			<edge source="8" target="24"/>
+			<edge source="10" target="11"/>
+			<edge source="12" target="14"/>
+			<edge source="12" target="19"/>
+			<edge source="13" target="18"/>
+			<edge source="13" target="20"/>
+			<edge source="13" target="21"/>
+			<edge source="13" target="25"/>
+			<edge source="14" target="19"/>
+			<edge source="16" target="17"/>
+			<edge source="16" target="22"/>
+			<edge source="18" target="23"/>
+			<edge source="20" target="21"/>
+			<edge source="21" target="25"/>
+			<edge source="21" target="27"/>
+			<edge source="22" target="24"/>
+			<edge source="23" target="28"/>
+			<edge source="24" target="26"/>
+			<edge source="24" target="30"/>
+			<edge source="25" target="27"/>
+			<edge source="26" target="27"/>
+			<edge source="26" target="30"/>
+			<edge source="26" target="31"/>
+			<edge source="28" target="32"/>
+			<edge source="29" target="31"/>
+			<edge source="30" target="31"/>
+			<edge source="30" target="34"/>
+			<edge source="32" target="35"/>
+			<edge source="34" target="36"/>
+			<edge source="35" target="38"/>
+			<edge source="36" target="37"/>
+			<edge source="36" target="39"/>
+			<edge source="36" target="40"/>
+			<edge source="36" target="41"/>
+			<edge source="39" target="40"/>
+			<edge source="40" target="41"/>
+			<edge source="40" target="42"/>
+			<edge source="41" target="42"/>
+			<edge source="42" target="43"/>
+			<edge source="43" target="44"/>
+			<edge source="44" target="45"/>
+		</edges>
+	</thing>
+	<comments> </comments>
+</things>
