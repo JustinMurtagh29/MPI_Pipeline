@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<things>
+	<parameters>
+		<experiment name="2012-09-28_ex145_07x2_ROI2017"/>
+		<scale x="11.24" y="11.24" z="28"/>
+		<offset x="0" y="0" z="0"/>
+	</parameters>
+	<thing id="1" name="Component2_350_15030572" color.r="7.931034e-01" color.g="3.448276e-01" color.b="1.724138e-01" color.a="0">
+		<nodes>
+			<node id="1" radius="10.000000" x="4553" y="1650" z="1075" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="2" radius="10.000000" x="4534" y="1652" z="1080" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="3" radius="10.000000" x="4566" y="1746" z="1040" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="4" radius="10.000000" x="4572" y="1719" z="1048" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="5" radius="10.000000" x="4606" y="1854" z="1059" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="6" radius="10.000000" x="4581" y="1829" z="1057" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="7" radius="10.000000" x="4564" y="1798" z="1071" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="8" radius="10.000000" x="4579" y="1721" z="1077" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="9" radius="10.000000" x="4519" y="1673" z="1085" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+		</nodes>
+		<edges>
+			<edge source="1" target="2"/>
+			<edge source="3" target="5"/>
+			<edge source="4" target="7"/>
+			<edge source="5" target="6"/>
+			<edge source="5" target="7"/>
+			<edge source="5" target="8"/>
+			<edge source="6" target="7"/>
+			<edge source="7" target="8"/>
+			<edge source="7" target="9"/>
+			<edge source="8" target="9"/>
+			<edge source="1" target="8"/>
+		</edges>
+	</thing>
+	<comments> </comments>
+</things>

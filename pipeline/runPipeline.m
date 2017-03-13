@@ -24,7 +24,7 @@ function runPipeline(p)
         clear newPrefix;
     end
 
-    % Runs watershed based segmentation for region defined in p.bbox on p.raw and saves as p.local.segFile
+    % Runs watershed based segmentation for region defined in p.bbox on p.raw and saves as p.local(X).tempSegFile
     % Because watershed segmentation has FOV effects (no translation invariance), processed with large
     % overlap and later joined together (see correspondences)
     % Uses segmentation subfolder in code repository
@@ -36,10 +36,11 @@ function runPipeline(p)
     job = correspondenceFinder(p);
     Cluster.waitForJob(job);
     
-    % Transfer segmentation from tempSegFile to segFile and drop overlaps 
+    % Transfer segmentation from p.local(X).tempSegFile to p.local(X).segFile and drop overlaps 
     % Also in correspondences subfolder
-    job = removeOverlaps(p);
-    Cluster.waitForJob(job);
+    % Added routine to renumber CC of segments after cutting to non-overlapping region
+    % This also involves renumbering all correspondences if a segment is renumbered in this step
+    removeOverlaps(p);
     
     % Make segmentation IDs unique over dataset (were only unique in each
     % tile before), this will be called global IDs from time to time
@@ -55,7 +56,17 @@ function runPipeline(p)
     
     job = globalizeCorrespondences(p);
     Cluster.waitForJob(job);
-    
+
+    % Create resolution pyramid for the segmentation
+    display('Downsampling segmentation:');
+    tic;
+    thisBBox = [1 1 1; (ceil(p.bbox(:,2)./1024).*1024)']';
+    % This weird command line stuff is necessary to deference symbolic links
+    [~, thisRoot] = system(['readlink -f ' p.seg.root ' < /dev/null']);
+    thisRoot = [strrep(thisRoot, sprintf('\n'), '') filesep];
+    createResolutionPyramid(thisRoot, p.seg.prefix, thisBBox, strrep(thisRoot, '/1/', ''), true);
+    toc;
+
     % Construct graph on globalized version of segmentation
     % This will create p.local(:).edgeFile & borderFile
     % See graphConstruction subfolder
@@ -70,35 +81,21 @@ function runPipeline(p)
     % Wait for completion of job
     Cluster.waitForJob(job);
     
+	%MBei: calculate features on Segments with Benedikts feature map
     job = alignEM.calculateSegFeatures( p );
     Cluster.waitForJob(job);
-display('returning')
-return
- 
-    %calculateClassFeatures(p)
-    
-    % Comment MB: probably not needed anymore, features from SynEM call above used
-    % Calculate edge based features as used in first GP training
-    % Calculate segment based features as used in spine head detection
-    % see filterbank 
-    %job = miniFeature(p);
-    %Cluster.waitForJob(job);
-    
-    % Make predictions on edge based features using previously trained GP
-    %job = makePredictions(p,'edges');
-    %Cluster.waitForJob(job);
-    
-    % Make predictions for spine heads on segment based features using previously trained spine head classifier
-    %job = spineHeadDetectionOnCluster(p);
-    %Cluster.waitForJob(job);
 
-    % Comment MB: Also not needed anymore, make sure, then delete
-    % Run interface classifier using Benedikt's trained classifier and store features
-    %job = interfaceClassificationOnCluster(p);
-    %Cluster.waitForJob(job);
-    % Use interface features to make predictions i.e. generate synapse scores 
-    %job=makeInterfacePredictionsOnCluster(p);
-    %Cluster.waitForJob(job);
+    % Calculate raw features on smaller (wrt SynEM) borders (down to 10 voxel)
+    job = connectEM.calculateRawFeatures(p);
+    Cluster.waitForJob(job);
+
+    % Calculate features on CNN output as well
+    job = connectEM.calculateClassFeatures(p);
+    Cluster.waitForJob(job);
+
+    % Calculate neurite continuity predeictions
+    job = connectEM.predictDataset(p);
+    Cluster.waitForJob(job);
 
     %Save the global SVG data
     %job = collectSvgDataOnCluster(p);
@@ -108,3 +105,9 @@ return
     %job = collectGraphStructOnCluster(p);
     %Cluster.waitForJob(job);
 end
+
+% Some comments that one might want to run in addition:
+% connectEM.getHeuristicResult(p) -> lookups result from heuritic (nuclei, vessel, myelin) detections
+% connectEM.agglomerate -> Generate CC of graph at a threshold chosen in script
+
+

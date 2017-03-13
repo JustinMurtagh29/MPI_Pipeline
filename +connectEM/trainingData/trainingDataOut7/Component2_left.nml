@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<things>
+	<parameters>
+		<experiment name="2012-09-28_ex145_07x2_ROI2017"/>
+		<scale x="11.24" y="11.24" z="28.0"/>
+		<offset x="0" y="0" z="0"/>
+		<time ms="1489064314173"/>
+		<editPosition x="4743" y="1389" z="1063"/>
+		<zoomLevel zoom="-1.1399999999999746"/>
+	</parameters>
+	<thing id="1" name="Todo 0001" color.r="1" color.g="0" color.b="0" color.a="1">
+		<nodes>
+			<node id="1" radius="1.500000" x="4803" y="1416" z="894" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+		</nodes>
+		<edges/>
+	</thing>
+	<thing id="2" name="Todo 0002" color.r="1" color.g="0" color.b="0" color.a="1">
+		<nodes>
+			<node id="2" radius="1.500000" x="4764" y="1409" z="1044" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+		</nodes>
+		<edges/>
+	</thing>
+	<thing id="3" name="Todo 0003" color.r="1" color.g="0" color.b="0" color.a="1">
+		<nodes>
+			<node id="3" radius="1.500000" x="4512" y="1768" z="909" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+		</nodes>
+		<edges/>
+	</thing>
+	<comments> </comments>
+</things>

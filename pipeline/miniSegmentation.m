@@ -23,7 +23,6 @@ for idx = 1:taskCount
 end
 
 functionH = @segmentForPipeline;
-% Needs 18 GB of memory
 job = startCPU(functionH, inputCell, 'segmentation', 36);
 
 end

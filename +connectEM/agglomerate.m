@@ -4,18 +4,9 @@
 
 %% Start by loading parameter file
 % Load parameter from newest pipeline run
-load('/gaba/u/mberning/results/pipeline/20161120_ROI/allParameter.mat');
+load('/gaba/u/mberning/results/pipeline/20170217_ROI/allParameterWithSynapses.mat');
 % To keep workspace clean here (and we are gonna have a bunch of stuff anyway) remove parameter for training (pT)
 clear pT;
-
-%display('Generating new graph struct:');
-%tic;
-%prob = Seg.Global.getGlobalLBProbList(p);
-%saveFile = [p.saveFolder 'globalLBProbList.mat'];
-%save(saveFile, prob);
-%clear prob saveFile;
-%collectGlobalGraphStruct(p);
-%toc;
 
 display('Loading data:');
 tic;
@@ -26,7 +17,7 @@ if ~exist(outputFolder, 'dir')
 end
 %% Load graph and edge and segment (segments) based statistics
 % Load global graph representation
-graph = load([p.saveFolder 'graphNew.mat']);
+graph = load([p.saveFolder 'graph.mat']);
 % Load information about edges
 borderMeta = load([p.saveFolder 'globalBorder.mat']);
 % Load meta information of segments
@@ -36,13 +27,24 @@ synScore = load([p.saveFolder 'globalSynScores.mat']);
 synScore.isSynapse = connectEM.synScoresToSynEdges(graph, synScore);
 toc;
 
+display('Removing segments detected by heuristics:');
+tic;
+% Segments classified by heuristics
+load([p.saveFolder 'heuristicResult.mat']);
+excludedIds = segIds(vesselScore > 0.5 | myelinScore > 0.5 | nucleiScore > 0.5);
+% Remove only in edges
+keepIdx = ~any(ismember(graph.edges, excludedIds),2);
+graphCut.edges = graph.edges(keepIdx,:);
+graphCut.prob = graph.prob(keepIdx);
+toc;
+
 rng default;
 threshold=0.99;%:-0.01:0.91;
 for t=1:length(threshold)
     display('Performing agglomeration:');
     tic;
     % Agglomerate segments using only GP probabilties
-    [initialPartition{t}, remainingEdges] = connectEM.partitionWholeDataset(graph, threshold(t)); 
+    [initialPartition{t}, remainingEdges] = connectEM.partitionWholeDataset(graphCut, threshold(t)); 
     sizePartition{t} = cellfun(@(x)sum(segmentMeta.voxelCount(x)), initialPartition{t});
     toc;
     % Probably make own function if needed again
@@ -50,8 +52,8 @@ for t=1:length(threshold)
     tic;
     [~, idx] = sort(sizePartition{t}, 'descend');
     connectEM.generateSkeletonFromAgglo(remainingEdges, segmentMeta.point', ...
-        initialPartition{t}(idx(101:1000)), ...
-        strseq(['largestComponents' num2str(threshold(t)) '_'], 101:1000), ...
+        initialPartition{t}(idx(1:1000)), ...
+        strseq(['largestComponents' num2str(threshold(t)) '_'], 1:1000), ...
         outputFolder, segmentMeta.maxSegId);
     %idx = randi(numel(initialPartition{t}),100,1);
     %connectEM.generateSkeletonFromAgglo(remainingEdges, segmentMeta.point', ...

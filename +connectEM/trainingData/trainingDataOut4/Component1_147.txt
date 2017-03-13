@@ -1,0 +1,32 @@
+var mapping = Array(15030572).fill(0);
+var agglos  = [];
+agglos.push([9910391]);
+agglos.push([9910408]);
+agglos.push([9910436]);
+agglos.push([9916126]);
+agglos.push([9916231]);
+agglos.push([9916385]);
+agglos.push([9916571]);
+agglos.push([9916798]);
+agglos.push([9917144]);
+agglos.push([9917253]);
+agglos.push([9917328]);
+agglos.push([9917420]);
+agglos.push([9917479]);
+agglos.push([9917494]);
+agglos.push([9917807]);
+agglos.push([9917913]);
+agglos.push([9917945]);
+agglos.push([9917978]);
+agglos.push([11100463]);
+agglos.push([11100473]);
+
+for(var i = 0; i < agglos.length; i++){
+    var segIds = agglos[i];
+    for(var j = 0; j < segIds.length; j++){
+        mapping[segIds[j]] = (i + 1);
+    }
+}
+
+var cube = app.oxalis.model.getSegmentationBinary().cube;
+cube.setMapping(mapping);

@@ -1,87 +1,48 @@
 %% Settings
 % Load parameter of pipeline run
-load /gaba/u/mberning/results/pipeline/20161120_ROI/allParameter.mat;
+load /gaba/u/mberning/results/pipeline/20170217_ROI/allParameterWithSynapses.mat;
 
 % Extract information of dense cube annotations
-newGTfolder = '+connectEM/trainingData/';
-files = dir([newGTfolder '*.nml']);
-temp = cellfun(@(x)strsplit(x, '__'), {files(:).name}, 'uni', 0);
-taskIds = cellfun(@(x)x{2}, temp, 'uni', 0);
-tracer = cellfun(@(x)x{3}, temp, 'uni', 0);
-annotationIds = cellfun(@(x)x{4}(1:end-4), temp, 'uni', 0);
+newGTfolder = '+connectEM/trainingData/afterExpertAnnotation6/';
 
-% Additional information needed
-% Note that trainFile has to fit bboxSmall
-files = {files(:).name};
+% Define bounding box of training regions as passed to annotators
 % +1 for wk vs. matlab coordinate system offset
 pT.local(1).bboxSmall = [4133 3963 2253; 4578 4408 2432]'+1;
 pT.local(2).bboxSmall = [4438 1320 893; 4883 1765 1072]'+1;
 pT.local(3).bboxSmall = [1824 6673 1239; 2269 7118 1418]'+1;
-pT.local(1).trainFile = cellfun(@(x)[newGTfolder x], files(1:3), 'uni', 0);
-pT.local(2).trainFile = cellfun(@(x)[newGTfolder x], files(4:6), 'uni', 0);
-pT.local(3).trainFile = cellfun(@(x)[newGTfolder x], files(7:9), 'uni', 0);
+
+pT.local(1).trainFile{1} = [newGTfolder 'trainingRegion1.nml'];
+pT.local(2).trainFile{1} = [newGTfolder 'trainingRegion2.nml'];
+pT.local(3).trainFile{1} = [newGTfolder 'trainingRegion3.nml'];
+
+segMeta = load([p.saveFolder 'segmentMeta.mat']);
+segMeta.point = segMeta.point';
 
 %% Collect training data from segmentation + nmls
 % Get a list of labels from each (redundant) training file in each region
 gt = connectEM.getContinuityLabelsFromNml(p, pT);
 
-%% First round of ground truth data proofreading (add leftover segments)
-outputFolder = ['trainingDataOut' filesep];
-if ~exist(outputFolder, 'dir')
-    mkdir(outputFolder);
-end
-segMeta = load([p.saveFolder 'segmentMeta.mat']);
-segMeta.point = segMeta.point';
-for i=1:length(pT.local)
-    for j=1:length(pT.local(i).trainFile)
-        [~, originalFilename] = fileparts(pT.local(i).trainFile{j});
-        skelFile = [outputFolder originalFilename '.nml'];
-        mappingFile = [outputFolder originalFilename '.txt'];
-        % Generate skeleton with additional nodes for not yet traced
-        % segments
-        skel = skeleton(pT.local(i).trainFile{j});
-        % Set all new skeletons to blue
-        skel.colors = cellfun(@(x)[0 0 1 1], skel.colors, 'uni', 0);
-        leftSegments = gt(i,j).leftSegments;
-        for k=1:length(leftSegments)
-            skel = skel.addTree(['Todo ' num2str(k, '%.4i')], segMeta.point(leftSegments(k),:));
-        end
-        skel.write(skelFile);
-        % Add mapping showing only leftover segments
-        script = WK.makeMappingScript(segMeta.maxSegId, num2cell(leftSegments));
-        fileHandle = fopen(mappingFile, 'w');
-        fwrite(fileHandle, script);
-        fclose(fileHandle);
-    end
-end
-
-%% Consolidate redundant annotations
-gt = connectEM.consolidateRedundantAnnotations(gt);
-
 %% Collect features from SynEM feature calculation for all edges in GT
 gt = connectEM.getFeaturesForEdges(p, gt);
+gt = rmfield(gt, {'prob', 'segIdsOfGTnodes', 'segIdsGT', 'mergedSegments', 'leftSegments'});
+
+%{
 
 %% Write all labels extracted from dense cubes to nml's
-graph = load([p.saveFolder 'graph.mat'], 'edges');
-segmentMeta = load([p.saveFolder 'segmentMeta.mat'], 'point');
 for i=1:length(gt)
     posEdges = gt(i).edges(gt(i).labels == 1,:);
-    negEdges = gt(i).edges(gt(i).labels == who-1,:);
+    negEdges = gt(i).edges(gt(i).labels == -1,:);
     ccPos = Graph.findConnectedComponents(posEdges, true, true);
     ccNeg = Graph.findConnectedComponents(negEdges, true, true);
-    skel = connectEM.generateSkeletonFromAgglo(graph, segmentMeta.point', ccPos, strseq('positive edges ', 1:length(ccPos)), {});
-    writeNml(['/home/mberning/Desktop/denseSkel/' 'newRegion' num2str(i) '_pos.nml'], skel);
-    skel = connectEM.generateSkeletonFromAgglo(graph, segmentMeta.point', ccNeg, strseq('negative edges ', 1:length(ccNeg)), {});
-    writeNml(['/home/mberning/Desktop/denseSkel/' 'newRegion' num2str(i) '_neg.nml'], skel);
+    connectEM.generateSkeletonFromAgglo(posEdges, segMeta.point, ccPos, strseq('positiveEdges ', 1:length(ccPos)), ... 
+    '+connectEM/trainingData/denseSkel/', segMeta.maxSegId);
+    connectEM.generateSkeletonFromAgglo(negEdges, segMeta.point, ccNeg, strseq('negativeEdges ', 1:length(ccNeg)), ...
+    '+connectEM/trainingData/denseSkel/', segMeta.maxSegId);
 end
+
+%}
 
 %% Divide GT into training an test set (80%/20%) in each dense cube
-
-% Make dimensionality of labels and prob consitent
-for i=1:length(gt)
-    gt(i).labels = gt(i).labels';
-    gt(i).prob = gt(i).prob';
-end
 
 train = struct();
 test = struct();
@@ -106,33 +67,23 @@ test = Util.concatStructs(1, test(1), test(2), test(3));
 % end
 
 %% Train different classifier on all 3 feature training sets
-classifierOldFeatures = connectEM.trainClassifier( train.oldFeatures, train.labels );
-classifierRawFeatures = connectEM.trainClassifier( train.rawFeatures, train.labels );
 classifierNewFeatures = connectEM.trainClassifier( cat(2, train.rawFeatures, ...
     train.classFeatures), train.labels );
 
 %% Calculate predicition values for all classifiers (training & test)
-[~, train.scoresOld] = classifierOldFeatures.predict(train.oldFeatures);
-[~, train.scoresRaw] = classifierRawFeatures.predict(train.rawFeatures);
 [~, train.scoresClass] = classifierNewFeatures.predict(cat(2, train.rawFeatures, ...
     train.classFeatures));
 
-[~, test.scoresOld] = classifierOldFeatures.predict(test.oldFeatures);
-[~, test.scoresRaw] = classifierRawFeatures.predict(test.rawFeatures);
 [~, test.scoresClass] = classifierNewFeatures.predict(cat(2, test.rawFeatures, ...
     test.classFeatures));
 
 %% Transfer to proabilities
 sigmoid = @(x)1./(1+exp(-1.*x));
 
-train.probOld = sigmoid(train.scoresOld(:,1));
-train.probRaw = sigmoid(train.scoresRaw(:,1));
 train.probClass = sigmoid(train.scoresClass(:,1));
 
-test.probOld = sigmoid(test.scoresOld(:,1));
-test.probRaw = sigmoid(test.scoresRaw(:,1));
 test.probClass = sigmoid(test.scoresClass(:,1));
-
+%{
 %% Visualize predicted probabilities vs. frequencies in test set
 binSize = 500;
 binLowerLimit = 1:binSize:length(test.prob);
@@ -251,3 +202,5 @@ b = classifierNewFeatures.predict(cat(2, test.rawFeatures, ...
 test.classFeatures));
 
 all(a(:) == b(:))
+%}
+

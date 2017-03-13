@@ -1,4 +1,4 @@
-function gtConsolidated = consolidateRedundantAnnotations( gt )
+function gtConsolidated = consolidateRedundantAnnotations( p, gt )
 % Consolidate redundant annotations as extracted by
 % getContinuityLabelsFromNml
 
@@ -6,26 +6,29 @@ gtConsolidated = struct();
 for i=1:size(gt,1)
     allEdges = cat(1,gt(i,:).edges);
     allLabels = cat(1,gt(i,:).labels);
-    allProb = cat(1,gt(i,:).prob);
-    [uniqueEdges, ~, idx] = unique(allEdges, 'rows');
-    gtConsolidated(i).edges = uniqueEdges;
-    for j=1:size(uniqueEdges,1)
-        theseIdx = idx == j;
-        labels = allLabels(theseIdx);
-        if ~isempty(labels(labels ~= 0)) && all(labels(labels ~= 0) == 1)
-            gtConsolidated(i).labels(j) = 1;
-        elseif ~isempty(labels(labels ~= 0)) && all(labels(labels ~= 0) == -1)
-            gtConsolidated(i).labels(j) = -1;
-        else
-            gtConsolidated(i).labels(j) = 0;
-        end
-        prob = allProb(theseIdx);
-        gtConsolidated(i).prob(j) = max(prob);
-    end
-    keepIdx = gtConsolidated(i).labels ~= 0;
-    gtConsolidated(i).edges = gtConsolidated(i).edges(keepIdx,:);
-    gtConsolidated(i).labels = gtConsolidated(i).labels(keepIdx);
-    gtConsolidated(i).prob = gtConsolidated(i).prob(keepIdx);
+    uniqueSegments = unique(allEdges(:));
+    [~, allEdgesIdx] = ismember(allEdges, uniqueSegments);
+    edgeVoteMatrix = accumarray(allEdgesIdx, allLabels, repmat(length(uniqueSegments),1,2));
+    % Need to add all correspondences here, otherwise splits up skeletons
+    corr = Seg.Global.getGlobalCorrespondences(p);
+    idx = all(ismember(corr, uniqueSegments),2);
+    [~, allCorrIdx] = ismember(corr, uniqueSegments);
+    corrMatrix = accumarray(allCorrIdx(idx,:), 4, repmat(length(uniqueSegments),1,2));
+    edgeVoteMatrix = edgeVoteMatrix + corrMatrix;
+    [edges(:,1), edges(:,2)] = find(edgeVoteMatrix >= 2);
+    edges = changem(edges, uniqueSegments, 1:length(uniqueSegments));
+    gtConsolidated(i,1).edges = edges;
+    gtConsolidated(i,1).segIds = Graph.findConnectedComponents(edges, false, true);
+    clear edges;
 end
+
+end
+
+% This function is supposed to be present in Matlab Mapping Toolbox, just
+% reimplemented here as I was not able to checkout the toolbox
+function newmap = changem(map, newcode, oldcode)
+
+    [~, idx] = ismember(map, oldcode);
+    newmap = newcode(idx);
 
 end

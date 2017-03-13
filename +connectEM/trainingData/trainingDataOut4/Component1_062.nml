@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<things>
+	<parameters>
+		<experiment name="2012-09-28_ex145_07x2_ROI2017"/>
+		<scale x="11.24" y="11.24" z="28"/>
+		<offset x="0" y="0" z="0"/>
+	</parameters>
+	<thing id="1" name="Component1_062_15030572" color.r="8.620690e-01" color.g="0" color.b="4.827586e-01" color.a="0">
+		<nodes>
+			<node id="1" radius="10.000000" x="4216" y="4143" z="2331" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+		</nodes>
+		<edges/>
+	</thing>
+	<comments> </comments>
+</things>
