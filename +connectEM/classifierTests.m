@@ -60,11 +60,11 @@ train = Util.concatStructs(1, train(1), train(2), train(3));
 test = Util.concatStructs(1, test(1), test(2), test(3));
 
 % plot class distribution of some collected features
-% for i=1:40
-%     figure('Position', [1 1 1920 999]);
-%     histogram(train.oldFeatures(train.labels == 1,i))
-%     hold on; histogram(train.oldFeatures(train.labels == -1,i))
-% end
+for i=1:10
+    figure('Position', [1 1 1920 999]);
+    histogram(train.classFeatures(train.labels == 1,i))
+    hold on; histogram(train.classFeatures(train.labels == -1,i))
+end
 
 %% Train different classifier on all 3 feature training sets
 classifierNewFeatures = connectEM.trainClassifier( cat(2, train.rawFeatures, ...
@@ -83,41 +83,41 @@ sigmoid = @(x)1./(1+exp(-1.*x));
 train.probClass = sigmoid(train.scoresClass(:,1));
 
 test.probClass = sigmoid(test.scoresClass(:,1));
-%{
+
 %% Visualize predicted probabilities vs. frequencies in test set
 binSize = 500;
-binLowerLimit = 1:binSize:length(test.prob);
-binUpperLimit = [(binSize):binSize:length(test.prob) length(test.prob)];
+binLowerLimit = 1:binSize:length(test.probClass);
+binUpperLimit = [(binSize):binSize:length(test.probClass) length(test.probClass)];
 binCenter = (binLowerLimit + binUpperLimit) ./ 2;
 figure;
-subplot(2,2,1);
-[sortedProb, idx] = sort(test.prob);
-sortedLabels = test.labels(idx);
-sortedProbBinned = arrayfun(@(x,y)sum(sortedLabels(x:y) == 1)./numel(sortedLabels(x:y)), ...
-    binLowerLimit, binUpperLimit);
-plot(sortedProb, '-k');
-hold on;
-plot(binCenter, sortedProbBinned, 'xk');
-title('Old classifier, old features: Probability vs. Frequency in test set');
-subplot(2,2,2);
-[sortedProb, idx] = sort(test.probOld);
-sortedLabels = test.labels(idx);
-sortedProbBinned = arrayfun(@(x,y)sum(sortedLabels(x:y) == 1)./numel(sortedLabels(x:y)), ...
-    binLowerLimit, binUpperLimit);
-plot(sortedProb, '-r');
-hold on;
-plot(binCenter, sortedProbBinned, 'xr');
-title('New classifier, old features: Probability vs. Frequency in test set');
-subplot(2,2,3);
-[sortedProb, idx] = sort(test.probRaw);
-sortedLabels = test.labels(idx);
-sortedProbBinned = arrayfun(@(x,y)sum(sortedLabels(x:y) == 1)./numel(sortedLabels(x:y)), ...
-    binLowerLimit, binUpperLimit);
-plot(sortedProb, '-g');
-hold on;
-plot(binCenter, sortedProbBinned, 'xg');
-title('New classifier, raw SynEM features: Probability vs. Frequency in test set');
-subplot(2,2,4);
+% subplot(2,2,1);
+% [sortedProb, idx] = sort(test.prob);
+% sortedLabels = test.labels(idx);
+% sortedProbBinned = arrayfun(@(x,y)sum(sortedLabels(x:y) == 1)./numel(sortedLabels(x:y)), ...
+%     binLowerLimit, binUpperLimit);
+% plot(sortedProb, '-k');
+% hold on;
+% plot(binCenter, sortedProbBinned, 'xk');
+% title('Old classifier, old features: Probability vs. Frequency in test set');
+% subplot(2,2,2);
+% [sortedProb, idx] = sort(test.probOld);
+% sortedLabels = test.labels(idx);
+% sortedProbBinned = arrayfun(@(x,y)sum(sortedLabels(x:y) == 1)./numel(sortedLabels(x:y)), ...
+%     binLowerLimit, binUpperLimit);
+% plot(sortedProb, '-r');
+% hold on;
+% plot(binCenter, sortedProbBinned, 'xr');
+% title('New classifier, old features: Probability vs. Frequency in test set');
+% subplot(2,2,3);
+% [sortedProb, idx] = sort(test.probRaw);
+% sortedLabels = test.labels(idx);
+% sortedProbBinned = arrayfun(@(x,y)sum(sortedLabels(x:y) == 1)./numel(sortedLabels(x:y)), ...
+%     binLowerLimit, binUpperLimit);
+% plot(sortedProb, '-g');
+% hold on;
+% plot(binCenter, sortedProbBinned, 'xg');
+% title('New classifier, raw SynEM features: Probability vs. Frequency in test set');
+% subplot(2,2,4);
 [sortedProb, idx] = sort(test.probClass);
 sortedLabels = test.labels(idx);
 sortedProbBinned = arrayfun(@(x,y)sum(sortedLabels(x:y) == 1)./numel(sortedLabels(x:y)), ...
@@ -133,65 +133,74 @@ title('New classifier, raw + class SynEM features: Probability vs. Frequency in 
 figure;
 hold on;
 
-% Old classifier (GP), old features
-[Xpr,Ypr,~,AUCpr] = perfcurve(train.labels, train.prob, 1, 'xCrit', 'reca', 'yCrit', 'prec', 'TVals', 0:0.001:1);
-Ypr(1) = 1;
-plot(Xpr,Ypr, ':k');
-label{1} = ['Old classifier (GP), old features, train (AUC: ' num2str(AUCpr) ')'];
-[Xpr,Ypr,Tpr,AUCpr] = perfcurve(test.labels, test.prob, 1, 'xCrit', 'reca', 'yCrit', 'prec', 'TVals', 0:0.001:1);
-Ypr(1) = 1;
-plot(Xpr,Ypr, '-k');
-label{2} = ['Old classifier (GP), old features, test (AUC: ' num2str(AUCpr) ')'];
-% Additionaly plt 97% precision and accuracy (used for agglomeration in
-% last meeting)
-[~, idx] = min(abs(Tpr - 0.97));
-plot(Xpr(idx), Ypr(idx), 'xk');
-label{3} = ['Old classifier (GP), old features, test, 97% value used for agglo, prec: ' num2str(Ypr(idx)) ', reca: ' num2str(Xpr(idx))];
+% % Old classifier (GP), old features
+% [Xpr,Ypr,~,AUCpr] = perfcurve(train.labels, train.prob, 1, 'xCrit', 'reca', 'yCrit', 'prec', 'TVals', 0:0.001:1);
+% Ypr(1) = 1;
+% plot(Xpr,Ypr, ':k');
+% label{1} = ['Old classifier (GP), old features, train (AUC: ' num2str(AUCpr) ')'];
+% [Xpr,Ypr,Tpr,AUCpr] = perfcurve(test.labels, test.prob, 1, 'xCrit', 'reca', 'yCrit', 'prec', 'TVals', 0:0.001:1);
+% Ypr(1) = 1;
+% plot(Xpr,Ypr, '-k');
+% label{2} = ['Old classifier (GP), old features, test (AUC: ' num2str(AUCpr) ')'];
+% % Additionaly plt 97% precision and accuracy (used for agglomeration in
+% % last meeting)
+% [~, idx] = min(abs(Tpr - 0.97));
+% plot(Xpr(idx), Ypr(idx), 'xk');
+% label{3} = ['Old classifier (GP), old features, test, 97% value used for agglo, prec: ' num2str(Ypr(idx)) ', reca: ' num2str(Xpr(idx))];
 
-% New classifier (Logit), old features
-[Xpr,Ypr,~,AUCpr] = perfcurve(train.labels, train.probOld, 1, 'xCrit', 'reca', 'yCrit', 'prec', 'TVals', 0:0.001:1);
-Ypr(1) = 1;
-plot(Xpr,Ypr, ':r');
-label{4} = ['New classifier (Logit), old features, train (AUC: ' num2str(AUCpr) ')'];
-[Xpr,Ypr,~,AUCpr] = perfcurve(test.labels, test.probOld, 1, 'xCrit', 'reca', 'yCrit', 'prec', 'TVals', 0:0.001:1);
-Ypr(1) = 1;
-plot(Xpr,Ypr, '-r');
-label{5} = ['New classifier (Logit), old features, test (AUC: ' num2str(AUCpr) ')'];
-
-% New classifier (Logit), raw SynEM features
-[Xpr,Ypr,~,AUCpr] = perfcurve(train.labels, train.probRaw, 1, 'xCrit', 'reca', 'yCrit', 'prec', 'TVals', 0:0.001:1);
-Ypr(1) = 1;
-plot(Xpr,Ypr, ':g');
-label{6} = ['New classifier (Logit), raw SynEM features, train (AUC: ' num2str(AUCpr) ')'];
-[Xpr,Ypr,~,AUCpr] = perfcurve(test.labels, test.probRaw, 1, 'xCrit', 'reca', 'yCrit', 'prec', 'TVals', 0:0.001:1);
-Ypr(1) = 1;
-plot(Xpr,Ypr, '-g');
-label{7} = ['New classifier (Logit), raw SynEM features, test (AUC: ' num2str(AUCpr) ')'];
+% % New classifier (Logit), old features
+% [Xpr,Ypr,~,AUCpr] = perfcurve(train.labels, train.probOld, 1, 'xCrit', 'reca', 'yCrit', 'prec', 'TVals', 0:0.001:1);
+% Ypr(1) = 1;
+% plot(Xpr,Ypr, ':r');
+% label{4} = ['New classifier (Logit), old features, train (AUC: ' num2str(AUCpr) ')'];
+% [Xpr,Ypr,~,AUCpr] = perfcurve(test.labels, test.probOld, 1, 'xCrit', 'reca', 'yCrit', 'prec', 'TVals', 0:0.001:1);
+% Ypr(1) = 1;
+% plot(Xpr,Ypr, '-r');
+% label{5} = ['New classifier (Logit), old features, test (AUC: ' num2str(AUCpr) ')'];
+% 
+% % New classifier (Logit), raw SynEM features
+% [Xpr,Ypr,~,AUCpr] = perfcurve(train.labels, train.probRaw, 1, 'xCrit', 'reca', 'yCrit', 'prec', 'TVals', 0:0.001:1);
+% Ypr(1) = 1;
+% plot(Xpr,Ypr, ':g');
+% label{6} = ['New classifier (Logit), raw SynEM features, train (AUC: ' num2str(AUCpr) ')'];
+% [Xpr,Ypr,~,AUCpr] = perfcurve(test.labels, test.probRaw, 1, 'xCrit', 'reca', 'yCrit', 'prec', 'TVals', 0:0.001:1);
+% Ypr(1) = 1;
+% plot(Xpr,Ypr, '-g');
+% label{7} = ['New classifier (Logit), raw SynEM features, test (AUC: ' num2str(AUCpr) ')'];
 
 % New classifier (Logit), raw + class SynEM features
 [Xpr,Ypr,~,AUCpr] = perfcurve(train.labels, train.probClass, 1, 'xCrit', 'reca', 'yCrit', 'prec', 'TVals', 0:0.001:1);
 Ypr(1) = 1;
 plot(Xpr,Ypr, ':b');
-label{8} = ['New classifier (Logit), raw + class SynEM features, train (AUC: ' num2str(AUCpr) ')'];
+label{1} = ['New classifier (Logit), raw + class SynEM features, train (AUC: ' num2str(AUCpr) ')'];
 [Xpr,Ypr,Tpr,AUCpr] = perfcurve(test.labels, test.probClass, 1, 'xCrit', 'reca', 'yCrit', 'prec', 'TVals', 0:0.001:1);
 Ypr(1) = 1;
 plot(Xpr,Ypr, '-b');
-label{9} = ['New classifier (Logit), raw + class SynEM features, test (AUC: ' num2str(AUCpr) ')'];
+label{2} = ['New classifier (Logit), raw + class SynEM features, test (AUC: ' num2str(AUCpr) ')'];
 % Plot range of 
-idx = find(Ypr > 0.99, 1, 'last');
+idx = find(Ypr > 0.95, 1, 'last');
 plot(Xpr(idx), Ypr(idx), 'xb');
-label{10} = ['New classifier (Logit), raw + class SynEM features, test, upper limit probability to test: ' num2str(Tpr(idx)) ' , prec: ' num2str(Ypr(idx)) ', reca: ' num2str(Xpr(idx))];
-idx = find(Ypr > 0.97, 1, 'last');
+label{3} = ['New classifier (Logit), raw + class SynEM features, test, upper limit probability to test: ' num2str(Tpr(idx)) ' , prec: ' num2str(Ypr(idx)) ', reca: ' num2str(Xpr(idx))];
+idx = find(Ypr > 0.94, 1, 'last');
 plot(Xpr(idx), Ypr(idx), 'xb');
-label{11} = ['New classifier (Logit), raw + class SynEM features, test, lower limit probability to test: ' num2str(Tpr(idx)) ' , prec: ' num2str(Ypr(idx)) ', reca: ' num2str(Xpr(idx))];
+label{4} = ['New classifier (Logit), raw + class SynEM features, test, lower limit probability to test: ' num2str(Tpr(idx)) ' , prec: ' num2str(Ypr(idx)) ', reca: ' num2str(Xpr(idx))];
 
 
 legend(label, 'Location', 'southwest');
 xlabel('Recall');
 ylabel('Precision');
-xlim([0 0.9]);
-ylim([0.95 1]);
+xlim([0 1]);
+ylim([0 1]);
 axis square;
+
+%% Write out skeletons of FP detections on test set (to debug inital dip in precision)
+idx = find(test.labels == -1 & test.probClass > .9);
+cc = mat2cell(test.edges(idx,:), ones(size(test.edges(idx,:),1),1), 2);
+treeNames = arrayfun(@(x)['predictedScore' num2str(test.probClass(x), '%3.2f') '_component' num2str(x, '%.2i') ], idx, 'uni', 0);
+connectEM.generateSkeletonFromAgglo(test.edges(idx,:), segMeta.point, cc, treeNames, ... 
+    '+connectEM/trainingData/denseSkel/', segMeta.maxSegId);
+
+
 
 %% Determine whether compacted classifier works here
 classifier = compact(classifierNewFeatures);
@@ -202,5 +211,5 @@ b = classifierNewFeatures.predict(cat(2, test.rawFeatures, ...
 test.classFeatures));
 
 all(a(:) == b(:))
-%}
+
 
