@@ -17,10 +17,10 @@ clear idx;
 probM = accumarray(double(graphCut.edges), graphCut.prob, ...
     double(repmat(maxSegId, 1, 2)), @max, 0, true);
 % Inital guess
-x0 = probM > 0.96;
+x0 = probM > 0.99;
 
 % Evaluate objective function at starting conditions
-value = connectEM.aggloObjective(probM, x0);
+tic; value = connectEM.aggloObjective(probM, x0); toc;
 
 % Try some global optimization approaches
 opts = optimoptions(@fmincon,'Algorithm','interior-point');
