@@ -93,7 +93,7 @@ function runPipeline(p)
     job = connectEM.calculateClassFeatures(p);
     Cluster.waitForJob(job);
 
-    % Calculate neurite continuity predeictions
+    % Calculate neurite continuity predictions
     job = connectEM.predictDataset(p);
     Cluster.waitForJob(job);
 
