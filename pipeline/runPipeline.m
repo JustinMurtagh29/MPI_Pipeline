@@ -98,8 +98,11 @@ function runPipeline(p)
     Cluster.waitForJob(job);
 
     %Save the global SVG data
-    %job = collectSvgDataOnCluster(p);
-    %Cluster.waitForJob(job);
+    for cubeIdx = 1:numel(p.local) % change name of probFile because gp is old
+	p.local(cubeIdx).probFile = fullfile(fileparts(p.local(cubeIdx).probFile),'neuriteContinuityProb.mat');
+    end
+    job = collectSvgDataOnCluster(p);
+    Cluster.waitForJob(job);
     
     %Create graph struct 
     %job = collectGraphStructOnCluster(p);
