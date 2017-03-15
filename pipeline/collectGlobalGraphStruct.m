@@ -1,6 +1,4 @@
 function collectGlobalGraphStruct (p)
-    load([p.saveFolder 'globalEdges.mat']);
-    load([p.saveFolder 'globalGPProbList.mat']);
 
     % The edge list only contains edges between segments in
     % the same segmentation cube. Edges between different
@@ -10,9 +8,12 @@ function collectGlobalGraphStruct (p)
     corrProb  = ones(size(corrEdges, 1), 1);
 
     % build total edges and prob fields
-    edges = [edges; corrEdges];
-    prob  = [prob ; corrProb ];
-
+    m = load([p.saveFolder 'globalEdges.mat']);
+    edges = [m.edges; corrEdges];
+    m = load([p.saveFolder 'globalGPProbList.mat']);
+    prob  = [m.prob ; corrProb ];
+    clear m
+    
     % sort edges and probabilities
     [edges, edgeRows] = sortrows(edges);
     prob = prob(edgeRows);
