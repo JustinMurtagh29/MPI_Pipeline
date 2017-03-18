@@ -9,7 +9,7 @@ function job = startCPU(fH, iC, jN, requiredMemory, group, priority)
         group = 1;
     end
     if nargin < 6
-        priority = -200;
+        priority = -500;
     end
 
     clusterCPU = Cluster.getCluster( ...
