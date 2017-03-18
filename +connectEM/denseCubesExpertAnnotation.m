@@ -170,3 +170,48 @@ for i=1:length(pT.local)
     fwrite(fileHandle, script);
     fclose(fileHandle);
 end
+
+%% Settings: 4th round for checking results
+% Load parameter of pipeline run
+load /gaba/u/mberning/results/pipeline/20170217_ROI/allParameterWithSynapses.mat;
+
+% Extract information of dense cube annotations
+newGTfolder = '+connectEM/trainingData/afterFNandMergerAnnotationMB/';
+
+% Define bounding box of training regions as passed to annotators
+% +1 for wk vs. matlab coordinate system offset
+pT.local(1).bboxSmall = [4133 3963 2253; 4578 4408 2432]'+1;
+pT.local(2).bboxSmall = [4438 1320 893; 4883 1765 1072]'+1;
+pT.local(3).bboxSmall = [1824 6673 1239; 2269 7118 1418]'+1;
+
+pT.local(1).trainFile{1} = [newGTfolder 'region-1.nml'];
+pT.local(2).trainFile{1} = [newGTfolder 'region-2.nml'];
+pT.local(3).trainFile{1} = [newGTfolder 'region-3.nml'];
+
+segMeta = load([p.saveFolder 'segmentMeta.mat'], 'point', 'maxSegId');
+segMeta.point = segMeta.point';
+
+%% Collect training data from segmentation + nmls
+% Get a list of labels from each (redundant) training file in each region
+gt = connectEM.getContinuityLabelsFromNml(p, pT);
+
+%% Find edges where labels and edges disagree & write to skeleton file
+outputFolder = ['+connectEM' filesep 'trainingData' filesep 'trainingDataOut10' filesep];
+if ~exist(outputFolder, 'dir')
+    mkdir(outputFolder);
+end
+
+for i=1:length(gt)
+    idx = find(gt(i).labels == -1 & gt(i).prob > .9);
+    cc = mat2cell(gt(i).edges(idx,:), ones(size(gt(i).edges(idx,:),1),1), 2);
+    treeNames = arrayfun(@(x)['region' num2str(i) '_fnCanidates_score' num2str(gt(i).prob(x), '%3.2f') '_component' num2str(x, '%.2i') ], idx, 'uni', 0);
+    connectEM.generateSkeletonFromAgglo(gt(i).edges(idx,:), segMeta.point, cc, treeNames, ... 
+        outputFolder, segMeta.maxSegId);
+
+    idx = find(gt(i).labels == 1 & gt(i).prob < .1);
+    cc = mat2cell(gt(i).edges(idx,:), ones(size(gt(i).edges(idx,:),1),1), 2);
+    treeNames = arrayfun(@(x)['region' num2str(i) '_fpCanidates_score' num2str(gt(i).prob(x), '%3.2f') '_component' num2str(x, '%.2i') ], idx, 'uni', 0);
+    connectEM.generateSkeletonFromAgglo(gt(i).edges(idx,:), segMeta.point, cc, treeNames, ... 
+        outputFolder, segMeta.maxSegId);
+end
+
