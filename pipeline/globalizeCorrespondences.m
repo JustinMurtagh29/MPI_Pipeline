@@ -4,6 +4,8 @@ function job = globalizeCorrespondences(p)
 
     % Bad but internal: Sort out global correspondences in case pipeline has already run
     % amotta: why the == 16? what does it mean?
+    % Length of the file name, here we only want the mat files without global suffix in case this function ran before
+    % Agreed that this is suboptimal
     idx = cellfun(@length, {files(:).name}) == 16;
     files = files(idx);
 
