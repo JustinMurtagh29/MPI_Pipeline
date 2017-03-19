@@ -176,7 +176,7 @@ end
 load /gaba/u/mberning/results/pipeline/20170217_ROI/allParameterWithSynapses.mat;
 
 % Extract information of dense cube annotations
-newGTfolder = '+connectEM/trainingData/afterFNandMergerAnnotationMB/';
+newGTfolder = '+connectEM/trainingData/afterTreeAnnotationByAM/';
 
 % Define bounding box of training regions as passed to annotators
 % +1 for wk vs. matlab coordinate system offset
@@ -196,7 +196,7 @@ segMeta.point = segMeta.point';
 gt = connectEM.getContinuityLabelsFromNml(p, pT);
 
 %% Find edges where labels and edges disagree & write to skeleton file
-outputFolder = ['+connectEM' filesep 'trainingData' filesep 'trainingDataOut10' filesep];
+outputFolder = ['+connectEM' filesep 'trainingData' filesep 'trainingDataOut11' filesep];
 if ~exist(outputFolder, 'dir')
     mkdir(outputFolder);
 end
