@@ -1,8 +1,10 @@
-function agglomerate(p)
-% This script was used for testing automated agglomeration + focus flight queries for reconstruction of axons in 07x2
-% Author: Manuel Berning <manuel.berning@brain.mpg.de>
-% See agglomeration subfolder for additional functions used here
-
+function agglomerate(p,writenml)
+% This function does automated agglomeration
+% Author: Manuel Berning <manuel.berning@brain.mpg.de>, modified by Marcel
+% Beining
+if nargin < 2
+    writenml = 1;
+end
 %% Start by loading parameter file
 
 display('Loading data:');
@@ -40,20 +42,22 @@ rng default;
 threshold=0.99;%:-0.01:0.91;
 initialPartition = cell(length(threshold),1);
 sizePartition = initialPartition;
+remainingEdges = initialPartition;
 for t=1:length(threshold)
     display('Performing agglomeration:');
     tic;
     % Agglomerate segments using only GP probabilties
-    [initialPartition{t}, remainingEdges] = connectEM.partitionWholeDataset(graphCut, threshold(t)); 
+    [initialPartition{t}, remainingEdges{t}] = connectEM.partitionWholeDataset(graphCut, threshold(t)); 
     sizePartition{t} = cellfun(@(x)sum(segmentMeta.voxelCount(x)), initialPartition{t});
     toc;
+    if writenml
     % Probably make own function if needed again
     display('Writing skeletons for debugging the process:');
     tic;
     [~, idx] = sort(sizePartition{t}, 'descend');
     parameters.experiment.name = p.experimentName;
-    parameters.scale = struct('x',p.raw.voxelSize(1),'y',p.raw.voxelSize(2),'z',p.raw.voxelSize(3));
-    connectEM.generateSkeletonFromAgglo(remainingEdges, segmentMeta.point', ...
+    parameters.scale = struct('x',num2str(p.raw.voxelSize(1)),'y',num2str(p.raw.voxelSize(2)),'z',num2str(p.raw.voxelSize(3)));
+    connectEM.generateSkeletonFromAgglo(remainingEdges{t}, segmentMeta.point', ...
         initialPartition{t}(idx(1:1000)), ...
         strseq(['largestComponents' num2str(threshold(t)) '_'], 1:1000), ...
         outputFolder, segmentMeta.maxSegId,parameters);
@@ -63,8 +67,9 @@ for t=1:length(threshold)
     %    strseq(['randomComponents' num2str(threshold(t)) '_'], 1:100), ...
     %    outputFolder, segmentMeta.maxSegId);
     toc;
+    end 
 end
 voxelCount = segmentMeta.voxelCount;
 maxSegId = segmentMeta.maxSegId;
-save([outputFolder 'initialAgglo.mat'], 'initialPartition', 'sizePartition', 'voxelCount', 'maxSegId');
+save([outputFolder 'initialAgglo.mat'], 'initialPartition', 'sizePartition', 'voxelCount', 'maxSegId','remainingEdges');
 

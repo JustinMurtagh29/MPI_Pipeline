@@ -1,4 +1,4 @@
-function predictLocalCube(saveFolder, classifierFile, outputFilenameInLocalFolder);
+function predictLocalCube(saveFolder, classifierFile, outputFilenameInLocalFolder)
 
     if nargin < 3
         outputFilenameInLocalFolder = 'neuriteContinuityProb.mat';
