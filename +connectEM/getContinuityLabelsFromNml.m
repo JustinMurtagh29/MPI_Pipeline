@@ -14,10 +14,22 @@ for i=1:length(pT.local)
             display(['----- Training file ' num2str(j) ' -----']);
             % Load & process dense merger mode skeleton files
             skel = skeleton(pT.local(i).trainFile{j}, false, nodeOffset);
-            % Extract node positions and corresponding segment ids
+            % Remove trees which name and nodes whose comment
+            % contains 'Merger' (note: case SENSITIVE)
+            mergerTreeIdx = skel.getTreeWithName('Merger', 'partial');
+            skel = skel.deleteTrees(mergerTreeIdx);
+            mergerNodeIdx = skel.getNodesWithComment('Merger', [], 'partial');
+            for k=1:length(mergerNodeIdx)
+                if ~isempty(mergerNodeIdx{k})
+                    skel = skel.deleteNodes(k, mergerNodeIdx{k});
+                end
+            end
+            
+            % Extract node positions 
             nodes = cellfun(@(x)x(:,1:3), skel.nodes, 'uni', 0);   
             nodesPerTree = cellfun(@(x)size(x,1), nodes);
             nodes = cat(1,nodes{:});
+            % Get corresponding segment ids for all nodes
             segIdsOfGTnodes = Seg.Global.getSegIds(p, nodes);
             segIdsOfGTnodes = mat2cell(segIdsOfGTnodes, nodesPerTree);
             % Remove nodes placed in background (0)

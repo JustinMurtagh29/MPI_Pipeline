@@ -1,4 +1,6 @@
-function collectGlobalGraphStruct (p)
+function collectGlobalGraphStruct(p)
+    load([p.saveFolder 'globalEdges.mat']);
+    load([p.saveFolder 'globalGPProbList.mat']);
 
     % The edge list only contains edges between segments in
     % the same segmentation cube. Edges between different

@@ -33,7 +33,6 @@ function new = renumberCorrespondences(p, old)
     cube2 = load(p.local(idx(1),idx(2),idx(3)).segFile, 'oldSegments', 'newSegments');
     new = old;
     new.uniqueCorrespondences = modifyCorrespondences(new.uniqueCorrespondences, cube1, cube2);
-    new.doubleCorrespondences = modifyCorrespondences(new.doubleCorrespondences, cube1, cube2);
 end
 
 function newCorr = modifyCorrespondences(corr, cube1, cube2)

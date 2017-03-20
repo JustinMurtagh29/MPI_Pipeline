@@ -31,35 +31,39 @@ display('Removing segments detected by heuristics:');
 tic;
 % Segments classified by heuristics
 load([p.saveFolder 'heuristicResult.mat']);
-excludedIds = segIds(vesselScore > 0.5 | myelinScore > 0.5 | nucleiScore > 0.5);
-% Remove only in edges
-keepIdx = ~any(ismember(graph.edges, excludedIds),2);
+assert(length(segIds) == max(segIds));
+excludedIds1 = vesselScore > 0.5 | myelinScore > 0.5 | nucleiScore > 0.5;
+% Keep only segments larger than 100 voxel
+excludedIds2 = segmentMeta.voxelCount <= 100;
+% Remove from graph
+keepIdx = ~any(ismember(graph.edges, find(excludedIds1 | excludedIds2)),2);
 graphCut.edges = graph.edges(keepIdx,:);
 graphCut.prob = graph.prob(keepIdx);
 toc;
 
 rng default;
-threshold=0.99;%:-0.01:0.91;
-for t=1:length(threshold)
+threshold=0.99:-0.01:0.91;
+for t=1:5%:length(threshold)
     display('Performing agglomeration:');
     tic;
-    % Agglomerate segments using only GP probabilties
+    %% Agglomerate segments using only GP probabilties
     [initialPartition{t}, remainingEdges] = connectEM.partitionWholeDataset(graphCut, threshold(t)); 
     sizePartition{t} = cellfun(@(x)sum(segmentMeta.voxelCount(x)), initialPartition{t});
+    [sizePartition{t}, idx] = sort(sizePartition{t}, 'descend');
+    initialPartition{t} = initialPartition{t}(idx);
     toc;
     % Probably make own function if needed again
     display('Writing skeletons for debugging the process:');
     tic;
-    [~, idx] = sort(sizePartition{t}, 'descend');
     connectEM.generateSkeletonFromAgglo(remainingEdges, segmentMeta.point', ...
-        initialPartition{t}(idx(1:1000)), ...
+        initialPartition{t}(1:1000), ...
         strseq(['largestComponents' num2str(threshold(t)) '_'], 1:1000), ...
         outputFolder, segmentMeta.maxSegId);
-    %idx = randi(numel(initialPartition{t}),100,1);
-    %connectEM.generateSkeletonFromAgglo(remainingEdges, segmentMeta.point', ...
-    %    initialPartition{t}(idx), ...
-    %    strseq(['randomComponents' num2str(threshold(t)) '_'], 1:100), ...
-    %    outputFolder, segmentMeta.maxSegId);
+    idx = randi(numel(initialPartition{t}),100,1);
+    connectEM.generateSkeletonFromAgglo(remainingEdges, segmentMeta.point', ...
+        initialPartition{t}(idx), ...
+        strseq(['randomComponents' num2str(threshold(t)) '_'], 1:100), ...
+        outputFolder, segmentMeta.maxSegId);
     toc;
 end
 voxelCount = segmentMeta.voxelCount;

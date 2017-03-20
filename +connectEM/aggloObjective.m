@@ -1,10 +1,10 @@
-function value = aggloObjective( probMatrix, edgeMatrix )
+function [value, edgeMatrixNew, intraCostPos, intraCostNeg, interCostPos, interCostNeg] = aggloObjective( probMatrix, edgeMatrix )
 % Calculate probability within and between connected components
 % Similar to Graph.findConnectedComponents but optimized for this specific
 % task (and its speed)
 
 % Find permutation needed for block diagonal form & block boundaries
-[rowPermutation, ~, rowBlockBoundaries] = dmperm(edgeMatrix + ...
+[rowPermutation, ~, rowBlockBoundaries, ~] = dmperm(edgeMatrix + ...
     edgeMatrix' + speye(size(edgeMatrix)));
 % Modify probMatrix into this block diagonal form, now probMatrix has
 % rectangles along diagonal with components
@@ -17,34 +17,34 @@ idx = sizeBlocks > 1;
 blockStart = rowBlockBoundaries(idx);
 blockEnd = blockStart + sizeBlocks(idx) - 1;
 
-% Get nonzero elements and positions for summing (tried indexing in sparse
-% matrices but seems to be very costly, at least more costly than this)
-[r, c, v] = find(ccSortedProbMatrix);
-withinComponent = false(size(r));
-for i=1:length(r)
-    idx1 = r(i) > blockStart & r(i) < blockEnd;
-    if any(idx1)
-        idx2 = c(i) > blockStart & c(i) < blockEnd;
-        if any(idx2) && all(idx1 == idx2)
-            withinComponent(i) = true;
-        end
-    end
-end
+% Construct logical sparse matrix with blocks
+blockIdx = arrayfun(@(x,y)combnk(x:y,2), blockStart, blockEnd, 'uni', false);
+blockIdx = cat(1, blockIdx{:});
+ccBlockMatrix = sparse(cat(1, blockIdx(:,1), blockIdx(:,2)), ...
+    cat(1, blockIdx(:,2), blockIdx(:,1)), true, ...
+    size(ccSortedProbMatrix,1), size(ccSortedProbMatrix,2));
+intraProbMatrix = ccSortedProbMatrix(and(ccSortedProbMatrix,ccBlockMatrix));
 
-% Calculate intra und inter component probability sum
-intraProbability = zeros(length(rowBlockBoundaries)-1,1);
-for i=1:length(rowBlockBoundaries)-1
-    if sizeBlocks(i) > 1
-        idxStart = rowBlockBoundaries(i);
-        idxEnd = rowBlockBoundaries(i+1)-1;
-        tempMatrix = ccSortedProbMatrix(idxStart:idxEnd, idxStart:idxEnd);
-        intraProbability(i) = sum(tempMatrix(:));
-    end
-end
+% Construct new edge matrix (given CC)
+rowPermutationInv(rowPermutation) = 1:length(rowPermutation);
+edgeMatrixNew = edgeMatrix;
+% TODO
+% ccBlockMatrixOld = and(ccBlockMatrix(rowPermutationInv, rowPermutationInv), probMatrix);
+% edgeMatrixNew(ccBlockMatrixOld) = true;
+% clear ccBlockMatrixOld;
 
-% Something like this is what we might want as a metric?
-intraProbability = sum(intraProbability);
-interProbability = sum(ccSortedProbMatrix(:)) - intraProbability;
-value = interProbability - intraProbability;
+% within components reward high probability edges and punish low
+% probability edges, vice-versa between components
+intraCosts = nonzeros(intraProbMatrix) - 0.5;
+intraCostPos = sum(intraCosts(intraCosts > 0));
+intraCostNeg = 100 * sum(intraCosts(intraCosts < 0));
+interCosts = nonzeros(ccSortedProbMatrix) - 0.5;
+interCostPos = sum(interCosts(interCosts > 0)) - intraCostPos;
+interCostNeg = sum(interCosts(interCosts < 0)) - intraCostNeg;
+% Idea behind chosing the 2 weights above: intraCostNeg should be really
+% expensive (= below 50% probability within component), 1e7 to make all
+% terms similar order of magnitude, not sure whether important
+value = interCostPos + interCostNeg ...
+    - intraCostPos - intraCostNeg;
 
 end

@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<things>
+	<parameters>
+		<experiment name="2012-09-28_ex145_07x2_ROI2017"/>
+		<scale x="11.24" y="11.24" z="28"/>
+		<offset x="0" y="0" z="0"/>
+	</parameters>
+	<thing id="1" name="region3_fpCanidates_score0.00_component31069_15030572" color.r="5.172414e-01" color.g="3.793103e-01" color.b="0" color.a="0">
+		<nodes>
+			<node id="1" radius="10.000000" x="2022" y="7072" z="1413" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="2" radius="10.000000" x="2072" y="7067" z="1430" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+		</nodes>
+		<edges>
+			<edge source="1" target="2"/>
+		</edges>
+	</thing>
+	<comments> </comments>
+</things>

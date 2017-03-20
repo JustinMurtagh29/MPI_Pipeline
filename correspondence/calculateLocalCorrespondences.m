@@ -37,26 +37,13 @@ function calculateLocalCorrespondences(cubeCoords1, cubeCoords2, segFile1, segFi
     % find unique correspondences
     uniqueCorrespondences = unique(correspondences, 'rows');
 
-    % sort out correspondences that are not 1:1
-    [uniqueCorrespondences, doubleCorrespondences] = sortOutDoubleCorrespondences(uniqueCorrespondences);
-
     % Create main correspondence folder if necessary
     if ~exist(saveFolder, 'dir')
         mkdir(saveFolder);
     end
 
     Util.save([saveFolder num2str(cubeCoords1, '%.2i') num2str(cubeCoords2, '%.2i') '.mat'], ...
-        cubeCoords1, cubeCoords2, uniqueCorrespondences, doubleCorrespondences);
+        cubeCoords1, cubeCoords2, uniqueCorrespondences);
 
-end
-
-function [corr, dCorr] = sortOutDoubleCorrespondences(corr);
-    % Sort out all correspondences that are not 1:1 correspondences
-    corrUnique = unique(corr(:));
-    corrCount = histc(corr(:), corrUnique);
-    multipleHits = corrCount > 1;
-    idx = any(ismember(corr, corrUnique(multipleHits)),2);
-    dCorr = corr(idx,:);
-    corr = corr(~idx,:);
 end
 
