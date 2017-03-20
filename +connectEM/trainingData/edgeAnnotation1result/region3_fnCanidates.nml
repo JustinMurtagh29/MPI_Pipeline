@@ -1,0 +1,211 @@
+<things>
+  <parameters>
+    <experiment name="2012-09-28_ex145_07x2_ROI2017" />
+    <scale x="11.24" y="11.24" z="28.0" />
+    <offset x="0" y="0" z="0" />
+    <time ms="1490031341147" />
+    <editPosition x="2026" y="6765" z="1279" />
+    <editRotation xRot="0.0" yRot="0.0" zRot="0.0" />
+    <zoomLevel zoom="-1.6399999999999986" />
+  </parameters>
+  <thing id="1" color.r="0.0" color.g="0.0" color.b="1.0" color.a="1.0" name="region3_score0.93_component00290 (Yes)">
+    <nodes>
+      <node id="1" radius="10.0" x="1910" y="6769" z="1239" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+      <node id="2" radius="10.0" x="1916" y="6730" z="1243" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+      <node id="3" radius="10.0" x="1917" y="6714" z="1245" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+    </nodes>
+    <edges>
+      <edge source="2" target="1" />
+      <edge source="3" target="2" />
+    </edges>
+  </thing>
+  <thing id="2" color.r="1.0" color.g="0.0" color.b="0.0" color.a="1.0" name="region3_score0.91_component00679 (No)">
+    <nodes>
+      <node id="4" radius="10.0" x="2005" y="6763" z="1271" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+      <node id="5" radius="10.0" x="2026" y="6765" z="1279" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+      <node id="6" radius="10.0" x="2030" y="6747" z="1276" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+    </nodes>
+    <edges>
+      <edge source="5" target="4" />
+      <edge source="6" target="5" />
+    </edges>
+  </thing>
+  <thing id="3" color.r="0.0" color.g="1.0" color.b="0.0" color.a="1.0" name="region3_score0.93_component02225 (Yes)">
+    <nodes>
+      <node id="7" radius="10.0" x="2086" y="6764" z="1297" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+      <node id="8" radius="10.0" x="2163" y="6772" z="1355" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+      <node id="9" radius="10.0" x="2164" y="6779" z="1357" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+    </nodes>
+    <edges>
+      <edge source="8" target="7" />
+      <edge source="9" target="8" />
+    </edges>
+  </thing>
+  <thing id="4" color.r="1.0" color.g="0.10196078568696976" color.b="0.7215686440467834" color.a="1.0" name="region3_score0.96_component04327 (Yes)">
+    <nodes>
+      <node id="10" radius="10.0" x="1975" y="6721" z="1346" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+      <node id="11" radius="10.0" x="2012" y="6700" z="1351" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+      <node id="12" radius="10.0" x="2088" y="6674" z="1360" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+    </nodes>
+    <edges>
+      <edge source="11" target="10" />
+      <edge source="12" target="11" />
+    </edges>
+  </thing>
+  <thing id="5" color.r="1.0" color.g="0.8274509906768799" color.b="0.0" color.a="1.0" name="region3_score0.91_component05181 (Yes)">
+    <nodes>
+      <node id="13" radius="10.0" x="2067" y="6679" z="1383" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+      <node id="14" radius="10.0" x="2087" y="6687" z="1389" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+      <node id="15" radius="10.0" x="2089" y="6688" z="1391" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+    </nodes>
+    <edges>
+      <edge source="14" target="13" />
+      <edge source="15" target="14" />
+    </edges>
+  </thing>
+  <thing id="6" color.r="0.0" color.g="0.5137255191802979" color.b="0.9647058844566345" color.a="1.0" name="region3_score0.98_component05317 (Yes)">
+    <nodes>
+      <node id="16" radius="10.0" x="2121" y="6774" z="1386" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+      <node id="17" radius="10.0" x="2133" y="6781" z="1384" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+      <node id="18" radius="10.0" x="2135" y="6781" z="1383" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+    </nodes>
+    <edges>
+      <edge source="17" target="16" />
+      <edge source="18" target="17" />
+    </edges>
+  </thing>
+  <thing id="7" color.r="0.0" color.g="0.5490196347236633" color.b="0.27450981736183167" color.a="1.0" name="region3_score0.91_component06683 (Yes)">
+    <nodes>
+      <node id="19" radius="10.0" x="2244" y="6716" z="1305" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+      <node id="20" radius="10.0" x="2226" y="6729" z="1308" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+      <node id="21" radius="10.0" x="2226" y="6731" z="1309" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+    </nodes>
+    <edges>
+      <edge source="20" target="19" />
+      <edge source="21" target="20" />
+    </edges>
+  </thing>
+  <thing id="8" color.r="0.6549019813537598" color.g="0.3764705955982208" color.b="0.239215686917305" color.a="1.0" name="region3_score0.91_component06734 (No)">
+    <nodes>
+      <node id="22" radius="10.0" x="2191" y="6725" z="1320" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+      <node id="23" radius="10.0" x="2177" y="6708" z="1313" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+      <node id="24" radius="10.0" x="2181" y="6685" z="1319" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+    </nodes>
+    <edges>
+      <edge source="23" target="22" />
+      <edge source="24" target="23" />
+    </edges>
+  </thing>
+  <thing id="9" color.r="0.30980393290519714" color.g="0.0" color.b="0.4117647111415863" color.a="1.0" name="region3_score0.93_component08637 (Yes)">
+    <nodes>
+      <node id="25" radius="10.0" x="2080" y="7025" z="1259" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+      <node id="26" radius="10.0" x="2068" y="6985" z="1262" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+      <node id="27" radius="10.0" x="2054" y="6977" z="1265" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+    </nodes>
+    <edges>
+      <edge source="26" target="25" />
+      <edge source="27" target="26" />
+    </edges>
+  </thing>
+  <thing id="10" color.r="0.0" color.g="1.0" color.b="0.9647058844566345" color.a="1.0" name="region3_score0.92_component10753 (Yes)">
+    <nodes>
+      <node id="28" radius="10.0" x="1924" y="6978" z="1270" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+      <node id="29" radius="10.0" x="1922" y="6974" z="1280" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+      <node id="30" radius="10.0" x="1919" y="6962" z="1287" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+    </nodes>
+    <edges>
+      <edge source="29" target="28" />
+      <edge source="30" target="29" />
+    </edges>
+  </thing>
+  <thing id="11" color.r="0.239215686917305" color.g="0.48235294222831726" color.b="0.5490196347236633" color.a="1.0" name="region3_score0.92_component12807 (Yes)">
+    <nodes>
+      <node id="31" radius="10.0" x="1865" y="7118" z="1281" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+      <node id="32" radius="10.0" x="1880" y="7122" z="1300" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+      <node id="33" radius="10.0" x="1885" y="7116" z="1303" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+    </nodes>
+    <edges>
+      <edge source="32" target="31" />
+      <edge source="33" target="32" />
+    </edges>
+  </thing>
+  <thing id="12" color.r="0.929411768913269" color.g="0.6549019813537598" color.b="1.0" color.a="1.0" name="region3_score0.93_component13694 (No)">
+    <nodes>
+      <node id="34" radius="10.0" x="2044" y="7045" z="1304" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+      <node id="35" radius="10.0" x="2162" y="7014" z="1307" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+      <node id="36" radius="10.0" x="2171" y="7011" z="1306" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+    </nodes>
+    <edges>
+      <edge source="35" target="34" />
+      <edge source="36" target="35" />
+    </edges>
+  </thing>
+  <thing id="13" color.r="0.8274509906768799" color.g="1.0" color.b="0.5843137502670288" color.a="1.0" name="region3_score0.97_component22627 (Yes)">
+    <nodes>
+      <node id="37" radius="10.0" x="2171" y="6803" z="1376" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+      <node id="38" radius="10.0" x="2132" y="6786" z="1384" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+      <node id="39" radius="10.0" x="2129" y="6786" z="1384" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+    </nodes>
+    <edges>
+      <edge source="38" target="37" />
+      <edge source="39" target="38" />
+    </edges>
+  </thing>
+  <thing id="14" color.r="0.7215686440467834" color.g="0.30980393290519714" color.b="1.0" color.a="1.0" name="region3_score0.91_component23785 (Yes)">
+    <nodes>
+      <node id="40" radius="10.0" x="1968" y="7124" z="1397" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+      <node id="41" radius="10.0" x="2004" y="7130" z="1403" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+      <node id="42" radius="10.0" x="2011" y="7129" z="1403" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+    </nodes>
+    <edges>
+      <edge source="41" target="40" />
+      <edge source="42" target="41" />
+    </edges>
+  </thing>
+  <thing id="15" color.r="0.8941176533699036" color.g="0.10196078568696976" color.b="0.34117648005485535" color.a="1.0" name="region3_score0.93_component24800 (Yes)">
+    <nodes>
+      <node id="43" radius="10.0" x="2195" y="7107" z="1241" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+      <node id="44" radius="10.0" x="2210" y="7118" z="1241" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+      <node id="45" radius="10.0" x="2214" y="7116" z="1241" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+    </nodes>
+    <edges>
+      <edge source="44" target="43" />
+      <edge source="45" target="44" />
+    </edges>
+  </thing>
+  <thing id="16" color.r="0.5137255191802979" color.g="0.5137255191802979" color.b="0.0" color.a="1.0" name="region3_score0.92_component25118 (Yes)">
+    <nodes>
+      <node id="46" radius="10.0" x="2250" y="7113" z="1259" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+      <node id="47" radius="10.0" x="2253" y="7103" z="1262" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+      <node id="48" radius="10.0" x="2249" y="7101" z="1266" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+    </nodes>
+    <edges>
+      <edge source="47" target="46" />
+      <edge source="48" target="47" />
+    </edges>
+  </thing>
+  <thing id="17" color.r="0.0" color.g="1.0" color.b="0.5843137502670288" color.a="1.0" name="region3_score0.98_component28505 (Yes)">
+    <nodes>
+      <node id="49" radius="10.0" x="2185" y="6814" z="1377" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+      <node id="50" radius="10.0" x="2177" y="6806" z="1375" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+      <node id="51" radius="10.0" x="2176" y="6809" z="1372" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+    </nodes>
+    <edges>
+      <edge source="50" target="49" />
+      <edge source="51" target="50" />
+    </edges>
+  </thing>
+  <thing id="18" color.r="0.3764705955982208" color.g="0.0" color.b="0.16862745583057404" color.a="1.0" name="region3_score0.94_component31238 (No)">
+    <nodes>
+      <node id="52" radius="10.0" x="1905" y="7070" z="1427" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+      <node id="53" radius="10.0" x="1921" y="7040" z="1420" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+      <node id="54" radius="10.0" x="1930" y="7028" z="1419" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+    </nodes>
+    <edges>
+      <edge source="53" target="52" />
+      <edge source="54" target="53" />
+    </edges>
+  </thing>
+  <branchpoints />
+  <comments />
+</things>
