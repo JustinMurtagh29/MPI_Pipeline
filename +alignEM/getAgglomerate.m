@@ -34,20 +34,21 @@ switch mode
             inthisbox = intersect(meta.segIds,segIdsAgglomerate.initialPartition{1}{n}); % get only segIds of agglomerate that are exist in the meta (i.e. are in the bbox)
             if ~isempty(inthisbox)
                 im = ismember(segIdsAgglomerate.remainingEdges{1},inthisbox);
-                edgesAgglomerate{n} = segIdsAgglomerate.remainingEdges{1}(all(im,2),:);
-                IdsNotConsidered = setdiff(segIdsAgglomerate.remainingEdges{1}(im),edgesAgglomerate{n});  % find Ids that are in the box but lost their edge
-                if ~isempty(IdsNotConsidered)
-                    if isempty(edgesAgglomerate{n})
-                        IdsNotConsidered = setdiff(IdsNotConsidered,inthisbox(1));
-                        if ~isempty(IdsNotConsidered)
-                            edgesAgglomerate{n} = cat(1,edgesAgglomerate{n},cat(2,ones(numel(IdsNotConsidered),1,'uint32')*inthisbox(1),IdsNotConsidered)); % connect these to first entry of agglomerate
-                        end
-                    else
-                        edgesAgglomerate{n} = cat(1,edgesAgglomerate{n},cat(2,ones(numel(IdsNotConsidered),1,'uint32')*edgesAgglomerate{n}(1),IdsNotConsidered)); % connect these to first entry of agglomerate
-                    end
-                end
-                segIdsAgglomerate.remainingEdges{1}(all(im,2),:) = []; % delete edges to speed up intersect of next iteration
-                
+                edgesAgglomerate{n} = segIdsAgglomerate.remainingEdges{1}(any(im,2),:); % get any edge that contains such a segId
+                edgesAgglomerate{n}(~ismember(edgesAgglomerate{n},inthisbox)) = inthisbox(1);  % replace edge partners not in bbox with first segID entry
+                edgesAgglomerate{n} = unique(edgesAgglomerate{n},'rows');  % delete duplicate rows
+%                 IdsNotConsidered = setdiff(segIdsAgglomerate.remainingEdges{1}(im),edgesAgglomerate{n});  % find Ids that are in the box but lost their edge
+%                 if ~isempty(IdsNotConsidered)
+%                     if isempty(edgesAgglomerate{n})
+%                         IdsNotConsidered = setdiff(IdsNotConsidered,inthisbox(1));
+%                         if ~isempty(IdsNotConsidered)
+%                             edgesAgglomerate{n} = cat(1,edgesAgglomerate{n},cat(2,ones(numel(IdsNotConsidered),1,'uint32')*inthisbox(1),IdsNotConsidered)); % connect these to first entry of agglomerate
+%                         end
+%                     else
+%                         edgesAgglomerate{n} = cat(1,edgesAgglomerate{n},cat(2,ones(numel(IdsNotConsidered),1,'uint32')*edgesAgglomerate{n}(1),IdsNotConsidered)); % connect these to first entry of agglomerate
+%                     end
+%                 end
+                segIdsAgglomerate.remainingEdges{1}(any(im,2),:) = []; % delete edges to speed up intersect of next iteration
             end
             segIdsAgglomerate.initialPartition{1}{n} = inthisbox;
         end
