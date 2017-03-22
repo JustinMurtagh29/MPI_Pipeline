@@ -167,10 +167,89 @@ train.probClass = sigmoid(train.scoresClass(:,1));
 
 test.probClass = sigmoid(test.scoresClass(:,1));
 
+%% augmentation: probability edge vs. inverted/augmented edge
+% Load state of training data and predicted proabilities of classifier
+% trained afterEdgeAnnotation1 update for one more round of edge updates
+load('/gaba/u/mberning/results/edgeClassifier/stateAfterEdgeAnnotation1.mat');
+
+lastElement = size(test.probClass,1)./2;
+plot(test.probClass(1:lastElement), test.probClass(lastElement+1:end), 'xb');
+title('Test set: Edge vs. inverted edge');
+xlabel('Probability edge');
+ylabel('Probability inverted edge');
+
+lastElement = size(train.probClass,1)./2;
+plot(train.probClass(1:lastElement), train.probClass(lastElement+1:end), 'xb');
+title('Training set: Edge vs. inverted edge');
+xlabel('Probability edge');
+ylabel('Probability inverted edge');
+
+%% comparison to last classifier
+
+lastElement = size(test.probClass,1)./2;
+plot(test.probClass(1:lastElement), test.prob, 'xb');
+title('Test set: Changes of probabilities wrt to old classifier');
+xlabel('Probability edge');
+ylabel('Probability edge last classifier');
+
+lastElement = size(train.probClass,1)./2;
+plot(train.probClass(1:lastElement), train.prob, 'xb');
+title('Training set: Changes of probabilities wrt to old classifier');
+xlabel('Probability edge');
+ylabel('Probability edge last classifier');
+
+%% Write FN and FP for annotation (based on edge annotation from now on) again
+
+outputFolder = ['+connectEM' filesep 'trainingData' filesep 'edgeAnnotation2' filesep];
+if ~exist(outputFolder, 'dir')
+    mkdir(outputFolder);
+end
+
+% Now including border node as suggested by Benedikt (and connecting nodes
+% linearly now)
+
+% test
+i = 1;
+idx = find(test(i).labels == -1 & test(i).probClass(1:length(test(i).probClass)/2) > .9);
+nodes = mat2cell([segMeta.point(test(i).edges(idx,1),:) round(test(i).borderCoM(idx,:)) segMeta.point(test(i).edges(idx,2),:)], ...
+    ones(size(test(i).edges(idx,:),1),1), 9);
+nodes = cellfun(@(x)reshape(x,3,3)', nodes, 'uni', 0);
+treeNames = arrayfun(@(x)['test_score' num2str(test(i).probClass(x), '%3.2f') '_component' num2str(x, '%.5i') ], idx, 'uni', 0);
+connectEM.generateSkeletonFromNodes([outputFolder 'test_fnCanidates.nml'], nodes, treeNames, [], true);
+idx = find(test(i).labels == 1 & test(i).probClass(1:length(test(i).probClass)/2) < .1);
+nodes = mat2cell([segMeta.point(test(i).edges(idx,1),:) round(test(i).borderCoM(idx,:)) segMeta.point(test(i).edges(idx,2),:)], ...
+    ones(size(test(i).edges(idx,:),1),1), 9);
+nodes = cellfun(@(x)reshape(x,3,3)', nodes, 'uni', 0);
+treeNames = arrayfun(@(x)['test_score' num2str(test(i).probClass(x), '%3.2f') '_component' num2str(x, '%.5i') ], idx, 'uni', 0);
+connectEM.generateSkeletonFromNodes([outputFolder 'test_fpCanidates.nml'], nodes, treeNames, [], true);
+% training
+i = 1;
+idx = find(train(i).labels == -1 & train(i).probClass(1:length(train(i).probClass)/2) > .9);
+nodes = mat2cell([segMeta.point(train(i).edges(idx,1),:) round(train(i).borderCoM(idx,:)) segMeta.point(train(i).edges(idx,2),:)], ...
+    ones(size(train(i).edges(idx,:),1),1), 9);
+nodes = cellfun(@(x)reshape(x,3,3)', nodes, 'uni', 0);
+treeNames = arrayfun(@(x)['train_score' num2str(train(i).probClass(x), '%3.2f') '_component' num2str(x, '%.5i') ], idx, 'uni', 0);
+connectEM.generateSkeletonFromNodes([outputFolder 'train_fnCanidates.nml'], nodes, treeNames, [], true);
+idx = find(train(i).labels == 1 & train(i).probClass(1:length(train(i).probClass)/2) < .1);
+nodes = mat2cell([segMeta.point(train(i).edges(idx,1),:) round(train(i).borderCoM(idx,:)) segMeta.point(train(i).edges(idx,2),:)], ...
+    ones(size(train(i).edges(idx,:),1),1), 9);
+nodes = cellfun(@(x)reshape(x,3,3)', nodes, 'uni', 0);
+treeNames = arrayfun(@(x)['train_score' num2str(train(i).probClass(x), '%3.2f') '_component' num2str(x, '%.5i') ], idx, 'uni', 0);
+connectEM.generateSkeletonFromNodes([outputFolder 'train_fpCanidates.nml'], nodes, treeNames, [], true);
+
+%% most changed probabilities
+idx = find(abs(test(i).probClass(1:length(test(i).probClass)/2) - test(i).prob) > 0.5);
+nodes = mat2cell([segMeta.point(test(i).edges(idx,1),:) round(test(i).borderCoM(idx,:)) segMeta.point(test(i).edges(idx,2),:)], ...
+    ones(size(test(i).edges(idx,:),1),1), 9);
+nodes = cellfun(@(x)reshape(x,3,3)', nodes, 'uni', 0);
+treeNames = arrayfun(@(x)['region' num2str(i) '_score' num2str(test(i).probClass(x), '%3.2f') '_scoreOld' num2str(test(i).prob(x), '%3.2f') ], idx, 'uni', 0);
+connectEM.generateSkeletonFromNodes([outputFolder 'region' num2str(i) 'changedProbs.nml'], nodes, treeNames, []);
+
+
 %% Visualize predicted probabilities vs. frequencies in test set
 binSize = 500;
-binLowerLimit = 1:binSize:length(test.probClass);
-binUpperLimit = [(binSize):binSize:length(test.probClass) length(test.probClass)];
+binLowerLimit = 1:binSize:length(test.probClass)/2;
+binUpperLimit = [(binSize):binSize:length(test.probClass)/2 length(test.probClass)/2];
 binCenter = (binLowerLimit + binUpperLimit) ./ 2;
 figure;
 % subplot(2,2,1);
@@ -201,7 +280,7 @@ figure;
 % plot(binCenter, sortedProbBinned, 'xg');
 % title('New classifier, raw SynEM features: Probability vs. Frequency in test set');
 % subplot(2,2,4);
-[sortedProb, idx] = sort(test.probClass);
+[sortedProb, idx] = sort(test.probClass(1:length(test.probClass)/2));
 sortedLabels = test.labels(idx);
 sortedProbBinned = arrayfun(@(x,y)sum(sortedLabels(x:y) == 1)./numel(sortedLabels(x:y)), ...
     binLowerLimit, binUpperLimit);
@@ -252,11 +331,11 @@ hold on;
 % label{7} = ['New classifier (Logit), raw SynEM features, test (AUC: ' num2str(AUCpr) ')'];
 
 % New classifier (Logit), raw + class SynEM features
-[Xpr,Ypr,~,AUCpr] = perfcurve(train.labels, train.probClass, 1, 'xCrit', 'reca', 'yCrit', 'prec', 'TVals', 0:0.001:1);
+[Xpr,Ypr,~,AUCpr] = perfcurve(cat(1,train.labels,train.labels), train.probClass, 1, 'xCrit', 'reca', 'yCrit', 'prec', 'TVals', 0:0.001:1);
 Ypr(1) = 1;
 plot(Xpr,Ypr, ':b');
 label{1} = ['New classifier (Logit), raw + class SynEM features, train (AUC: ' num2str(AUCpr) ')'];
-[Xpr,Ypr,Tpr,AUCpr] = perfcurve(test.labels, test.probClass, 1, 'xCrit', 'reca', 'yCrit', 'prec', 'TVals', 0:0.001:1);
+[Xpr,Ypr,Tpr,AUCpr] = perfcurve(cat(1, test.labels, test.labels), test.probClass, 1, 'xCrit', 'reca', 'yCrit', 'prec', 'TVals', 0:0.001:1);
 Ypr(1) = 1;
 plot(Xpr,Ypr, '-b');
 label{2} = ['New classifier (Logit), raw + class SynEM features, test (AUC: ' num2str(AUCpr) ')'];
@@ -276,17 +355,9 @@ xlim([0 1]);
 ylim([0 1]);
 axis square;
 
-%% Write out skeletons of FP detections on test set (to debug inital dip in precision)
-idx = find(test.labels == -1 & test.probClass > .9);
-cc = mat2cell(test.edges(idx,:), ones(size(test.edges(idx,:),1),1), 2);
-treeNames = arrayfun(@(x)['predictedScore' num2str(test.probClass(x), '%3.2f') '_component' num2str(x, '%.2i') ], idx, 'uni', 0);
-connectEM.generateSkeletonFromAgglo(test.edges(idx,:), segMeta.point, cc, treeNames, ... 
-    '+connectEM/trainingData/denseSkel/', segMeta.maxSegId);
-
-
-
 %% Determine whether compacted classifier works here
 classifier = compact(classifierNewFeatures);
+save(['/gaba/u/mberning/results/edgeClassifier/' datestr(clock,30) '.mat'], 'classifier');
 
 a = classifier.predict(cat(2, test.rawFeatures, ...
 test.classFeatures));
@@ -295,4 +366,92 @@ test.classFeatures));
 
 all(a(:) == b(:))
 
+%%  Comparison of performance old classifier on new test set
+a = load('/gaba/u/mberning/results/edgeClassifier/20170210T121156.mat', 'classifier');
 
+[~, test.scoresClassOld] = a.classifier.predict( ...
+    cat(2, test.rawFeatures, test.classFeatures));
+[~, train.scoresClassOld] = a.classifier.predict( ...
+    cat(2, train.rawFeatures, train.classFeatures));
+
+test.probClassOld = sigmoid(test.scoresClassOld(:,1));
+train.probClassOld = sigmoid(train.scoresClassOld(:,1));
+
+%% Plotting
+figure;
+hold on;
+
+[Xpr,Ypr,~,AUCpr] = perfcurve(test.labels, test.probClassOld, 1, 'xCrit', 'reca', 'yCrit', 'prec', 'TVals', 0:0.001:1);
+Ypr(1) = 1;
+plot(Xpr,Ypr, '-g');
+label{1} = ['Old classifier (the one with the good PR curve before) on new GT, test (AUC: ' num2str(AUCpr) ')'];
+[Xpr,Ypr,Tpr,AUCpr] = perfcurve(cat(1, test.labels, test.labels), test.probClass, 1, 'xCrit', 'reca', 'yCrit', 'prec', 'TVals', 0:0.001:1);
+Ypr(1) = 1;
+plot(Xpr,Ypr, '-b');
+label{2} = ['New classifier on new GT, test (AUC: ' num2str(AUCpr) ')'];
+% Plot range of 
+idx = find(Ypr > 0.95, 1, 'last');
+plot(Xpr(idx), Ypr(idx), 'xb');
+label{3} = ['New classifier (Logit), raw + class SynEM features, test, upper limit probability to test: ' num2str(Tpr(idx)) ' , prec: ' num2str(Ypr(idx)) ', reca: ' num2str(Xpr(idx))];
+idx = find(Ypr > 0.94, 1, 'last');
+plot(Xpr(idx), Ypr(idx), 'xb');
+label{4} = ['New classifier (Logit), raw + class SynEM features, test, lower limit probability to test: ' num2str(Tpr(idx)) ' , prec: ' num2str(Ypr(idx)) ', reca: ' num2str(Xpr(idx))];
+
+legend(label, 'Location', 'southwest');
+xlabel('Recall');
+ylabel('Precision');
+xlim([0 1]);
+ylim([0 1]);
+axis square;
+
+%%  Comparison of performance old classifier on old test set
+load /home/mberning/Desktop/oldGT.mat;
+
+figure;
+hold on;
+
+labels = cat(2, gtOld(:).labels)';
+[oldEdges, idx] = unique(cat(1, gtOld(:).edges), 'rows');
+labels = labels(idx);
+
+prob = cat(1, train.probClass(1:size(train.probClass)/2), test.probClass(1:size(test.probClass)/2));
+probOld = cat(1, train.probClassOld, test.probClassOld);
+[newEdges, idx] = unique(cat(1, train.edges, test.edges), 'rows');
+prob = prob(idx);
+probOld = probOld(idx);
+edges = intersect(newEdges, oldEdges, 'rows');
+idx1 = ismember(oldEdges, edges, 'rows');
+idx2 = ismember(newEdges, edges, 'rows');
+labels = labels(idx1);
+prob = prob(idx2);
+probOld = probOld(idx2);
+
+[Xpr,Ypr,~,AUCpr] = perfcurve(labels, probOld, 1, 'xCrit', 'reca', 'yCrit', 'prec', 'TVals', 0:0.001:1);
+Ypr(1) = 1;
+plot(Xpr,Ypr, '-g');
+label{1} = ['Old classifier (the one with the good PR curve before) on old GT, test (AUC: ' num2str(AUCpr) ')'];
+[Xpr,Ypr,Tpr,AUCpr] = perfcurve(labels, prob, 1, 'xCrit', 'reca', 'yCrit', 'prec', 'TVals', 0:0.001:1);
+Ypr(1) = 1;
+plot(Xpr,Ypr, '-b');
+label{2} = ['New classifier on old GT, test (AUC: ' num2str(AUCpr) ')'];
+% Plot range of 
+idx = find(Ypr > 0.95, 1, 'last');
+plot(Xpr(idx), Ypr(idx), 'xb');
+label{3} = ['New classifier (Logit), raw + class SynEM features, test, upper limit probability to test: ' num2str(Tpr(idx)) ' , prec: ' num2str(Ypr(idx)) ', reca: ' num2str(Xpr(idx))];
+idx = find(Ypr > 0.94, 1, 'last');
+plot(Xpr(idx), Ypr(idx), 'xb');
+label{4} = ['New classifier (Logit), raw + class SynEM features, test, lower limit probability to test: ' num2str(Tpr(idx)) ' , prec: ' num2str(Ypr(idx)) ', reca: ' num2str(Xpr(idx))];
+
+legend(label, 'Location', 'southwest');
+xlabel('Recall');
+ylabel('Precision');
+xlim([0 1]);
+ylim([0 1]);
+axis square;
+
+%% Debug something
+
+plot(train.scoresClassOld, train.scoresClass(1:size(train.scoresClass,1)/2), 'x');
+plot(test.scoresClassOld, test.scoresClass(1:size(test.scoresClass,1)/2), 'x');
+plot(train.probClassOld, train.probClass(1:size(train.probClass,1)/2), 'x');
+plot(test.probClassOld, test.probClass(1:size(test.probClass,1)/2), 'x');
