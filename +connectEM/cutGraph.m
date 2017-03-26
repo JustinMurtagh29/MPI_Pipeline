@@ -1,7 +1,6 @@
-function graphCut = cutGraph(p, segmentMeta, borderMeta, outputFolder, borderSizeThreshold, segmentSizeThreshold)
+function [graphCut, mapping] = cutGraph(p, segmentMeta, borderMeta, outputFolder, borderSizeThreshold, segmentSizeThreshold)
 % Restrict graph based on heuristics results
 
-tic;
 % Segments classified by heuristics
 load([p.saveFolder 'heuristicResult.mat']);
 assert(length(segIds) == max(segIds));
@@ -9,12 +8,14 @@ vesselIds = vesselScore > 0.5;
 nucleiIds = nucleiScore > 0.5 & ~vesselIds;
 myelinIds = myelinScore > 0.5 & ~vesselIds & ~nucleiIds;
 heuristicIds = vesselIds | nucleiIds | myelinIds;
-% Keep only segments larger than 100 voxel and that have more than 50% connection probability to another segment
+% Keep only segments larger than segmentSizeThreshold voxel and ...
+% that have more than 50% connection probability to another segment after removing border smaller than borderSizeThreshold
 load([p.saveFolder  'globalGPProbList.mat']);
 load([p.saveFolder 'globalEdges.mat']);
 edgeIdx = find(borderMeta.borderSize > borderSizeThreshold);
-remainingEdges = double(edges(edgeIdx, :));
+remainingEdges = edges(edgeIdx, :);
 remainingProb = prob(edgeIdx);
+% Add correspondences
 corrEdges = Seg.Global.getGlobalCorrespondences(p);
 corrProb  = ones(size(corrEdges, 1), 1);
 remainingEdges = [remainingEdges; corrEdges];
@@ -30,17 +31,15 @@ script = WK.makeMappingScript(segmentMeta.maxSegId, mapping);
 fileHandle = fopen(mappingFile, 'w');
 fwrite(fileHandle, script);
 fclose(fileHandle);
-% Remove from graph
+% Remove heuristics and small or disconnected segments from graph for now
 removedIds = cat(1, mapping{:});
 keptIds = setdiff(1:segmentMeta.maxSegId, removedIds);
-keepIdx = all(ismember(remainingEdges, keptIds), 2);
-graphCut.edges = remainingEdges(keepIdx,:);
-graphCut.prob = remainingProb(keepIdx);
+keepEdgeIdx = all(ismember(remainingEdges, keptIds), 2);
+graphCut.edges = remainingEdges(keepEdgeIdx,:);
+graphCut.prob = remainingProb(keepEdgeIdx);
+% Sort edges again (e.g. make correspondences find their place
 [graphCut.edges, edgeRows] = sortrows(graphCut.edges);
 graphCut.prob = graphCut.prob(edgeRows);
-[graphCut.neighbours, neighboursIdx] = Graph.edges2Neighbors(graphCut.edges);
-graphCut.neighProb = cellfun(@(x) graphCut.prob(x), neighboursIdx, 'UniformOutput', false);
-toc;
 
 end
 
