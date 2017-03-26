@@ -28,18 +28,10 @@ synScore.isSynapse = connectEM.synScoresToSynEdges(graph, synScore);
 toc;
 
 display('Removing segments detected by heuristics:');
-tic;
-% Segments classified by heuristics
-load([p.saveFolder 'heuristicResult.mat']);
-assert(length(segIds) == max(segIds));
-excludedIds1 = vesselScore > 0.5 | myelinScore > 0.5 | nucleiScore > 0.5;
-% Keep only segments larger than 100 voxel
-excludedIds2 = segmentMeta.voxelCount <= 100;
-% Remove from graph
-keepIdx = ~any(ismember(graph.edges, find(excludedIds1 | excludedIds2)),2);
-graphCut.edges = graph.edges(keepIdx,:);
-graphCut.prob = graph.prob(keepIdx);
-toc;
+%graphCut = connectEM.cutGraph(p, segmentMeta, borderMeta, outputFolder, 10, 100); 
+%graphCut = connectEM.cutGraph(p, segmentMeta, borderMeta, outputFolder, 50, 500); 
+graphCut = connectEM.cutGraph(p, segmentMeta, borderMeta, outputFolder, 100, 1000); 
+%graphCut = connectEM.cutGraph(p, segmentMeta, borderMeta, outputFolder, 1000, 10000); 
 
 rng default;
 threshold=0.99:-0.01:0.91;
