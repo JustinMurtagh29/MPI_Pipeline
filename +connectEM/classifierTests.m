@@ -455,3 +455,152 @@ plot(train.scoresClassOld, train.scoresClass(1:size(train.scoresClass,1)/2), 'x'
 plot(test.scoresClassOld, test.scoresClass(1:size(test.scoresClass,1)/2), 'x');
 plot(train.probClassOld, train.probClass(1:size(train.probClass,1)/2), 'x');
 plot(test.probClassOld, test.probClass(1:size(test.probClass,1)/2), 'x');
+%save('/run/media/mberning/da025ffc-5a1f-4d39-8ca0-52811e1659ee/classifierComparison.mat', '-v7.3');
+
+
+%% Check whether changing test set to larger borders helps
+
+% Load some data
+load('/run/media/mberning/da025ffc-5a1f-4d39-8ca0-52811e1659ee/classifierComparison.mat');
+borderMeta = load([p.saveFolder 'globalBorder.mat']);
+globalEdges = load([p.saveFolder 'globalEdges.mat']);
+% Modify struct
+test.probClass = test.probClass(1:length(test.probClass)/2);
+test = rmfield(test, {'scoresClass' 'scoresClassOld'});
+% Use only single border edges
+[~, idx] = unique(test.edges, 'rows');
+uniqueIdx = unique(idx);
+counts = histc(idx, uniqueIdx);
+idx = uniqueIdx(counts == 1);
+fieldNames = fieldnames(test);
+for j=1:length(fieldNames)
+    test.(fieldNames{j}) = test.(fieldNames{j})(idx,:);
+end
+% Add info about size of border and smaller segment to test structure
+[~, idx] = unique(globalEdges.edges, 'rows');
+uniqueIdx = unique(idx);
+counts = histc(idx, uniqueIdx);
+idx = uniqueIdx(counts == 1);
+globalEdges.edges = globalEdges.edges(idx,:);
+borderMeta.borderSize = borderMeta.borderSize(idx);
+idx = ismember(globalEdges.edges, test.edges, 'rows');
+test.borderSize = borderMeta.borderSize(idx);
+test.smallerSegmentSize = min(segMeta.voxelCount(test.edges),[],2);
+
+%% Save as VPN is so bad
+%save('/run/media/mberning/da025ffc-5a1f-4d39-8ca0-52811e1659ee/classifierComparison_v3.mat', '-v7.3');
+
+%%
+figure;
+hold on;
+
+sizeThreshold = [10 100 200 300 500 1000];
+colors = {'r' 'g' 'b' 'c' 'y' 'm'};
+
+for i=1:length(sizeThreshold);
+
+    [Xpr,Ypr,~,AUCpr] = perfcurve(test.labels(test.borderSize > sizeThreshold(i)), ...
+        test.probClassOld(test.borderSize > sizeThreshold(i)), ...
+        1, 'xCrit', 'reca', 'yCrit', 'prec', 'TVals', 0:0.001:1);
+    Ypr(1) = 1;
+    plot(Xpr,Ypr, ['-' colors{i}]);
+    label{2*i-1} = ['ROI2017 ".bak" classifier on new GT, test, border > ' ...
+        num2str(sizeThreshold(i)) ' (AUC: ' num2str(AUCpr) ')'];
+    
+    [Xpr,Ypr,~,AUCpr] = perfcurve(test.labels(test.borderSize > sizeThreshold(i)), ...
+        test.probClass(test.borderSize > sizeThreshold(i)), ...
+        1, 'xCrit', 'reca', 'yCrit', 'prec', 'TVals', 0:0.001:1);
+    Ypr(1) = 1;
+    plot(Xpr,Ypr, ['--' colors{i}]);
+    label{2*i} = ['ROI2017 ".mat" classifier on new GT, test, border > ' ...
+        num2str(sizeThreshold(i)) ' (AUC: ' num2str(AUCpr) ')'];
+
+end
+
+legend(label, 'Location', 'southwest');
+xlabel('Recall');
+ylabel('Precision');
+xlim([0 1]);
+ylim([0 1]);
+axis square;
+
+
+%%
+figure;
+hold on;
+
+sizeThreshold = [100 500 1000 5000 10000 50000];
+colors = {'r' 'g' 'b' 'c' 'y' 'm'};
+
+for i=1:length(sizeThreshold);
+
+    [Xpr,Ypr,~,AUCpr] = perfcurve(test.labels(test.smallerSegmentSize > sizeThreshold(i)), ...
+        test.probClassOld(test.smallerSegmentSize > sizeThreshold(i)), ...
+        1, 'xCrit', 'reca', 'yCrit', 'prec', 'TVals', 0:0.001:1);
+    Ypr(1) = 1;
+    plot(Xpr,Ypr, ['-' colors{i}]);
+    label{2*i-1} = ['ROI2017 ".bak" classifier on new GT, test, border > ' ...
+        num2str(sizeThreshold(i)) ' (AUC: ' num2str(AUCpr) ')'];
+    
+    [Xpr,Ypr,~,AUCpr] = perfcurve(test.labels(test.smallerSegmentSize > sizeThreshold(i)), ...
+        test.probClass(test.smallerSegmentSize > sizeThreshold(i)), ...
+        1, 'xCrit', 'reca', 'yCrit', 'prec', 'TVals', 0:0.001:1);
+    Ypr(1) = 1;
+    plot(Xpr,Ypr, ['--' colors{i}]);
+    label{2*i} = ['ROI2017 ".mat" classifier on new GT, test, border > ' ...
+        num2str(sizeThreshold(i)) ' (AUC: ' num2str(AUCpr) ')'];
+
+end
+
+legend(label, 'Location', 'southwest');
+xlabel('Recall');
+ylabel('Precision');
+xlim([0 1]);
+ylim([0 1]);
+axis square;
+
+%% Histograms (Note: activate right sizeThreshold above)
+
+3figure;
+histogram(test.borderSize, 'Normalization', 'probability');
+set(gca, 'YScale', 'log');
+title('Border Size');
+xlabel('Size of border [#voxel]');
+ylabel('Normalized occurence');
+hold on;
+for i=1:length(sizeThreshold)
+    plot(repmat(sizeThreshold(i),1,2),[1e-6 1], 'r');
+end
+
+figure;
+histogram(test.smallerSegmentSize, 'Normalization', 'probability');
+set(gca, 'YScale', 'log');
+title('Size of smaller segment');
+xlabel('Size of smaller of segments for edge [#voxel]');
+ylabel('Normalized occurence');
+hold on;
+for i=1:length(sizeThreshold)
+    plot(repmat(sizeThreshold(i),1,2),[1e-6 1], 'r');
+end
+
+%% Compare 
+
+test.isinOldGT = all(ismember(test.edges, cat(1,gtOld(:).edges)),2);
+
+figure;
+subplot(1,2,1);
+plot(test.probClass, test.probClassOld, 'x');
+xlabel('Probability .mat');
+ylabel('Probability .bak');
+title('Test set after expert annotation');
+subplot(1,2,2);
+plot(test.probClass(~test.isinOldGT), test.probClassOld(~test.isinOldGT), 'x');
+xlabel('Probability .mat');
+ylabel('Probability .bak');
+title('Test set after Hiwi annotation');
+
+
+
+
+
+
