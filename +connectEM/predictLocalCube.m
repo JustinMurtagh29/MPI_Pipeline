@@ -5,7 +5,7 @@ function predictLocalCube(saveFolder, classifierFile, outputFilenameInLocalFolde
     end
 
     if nargin < 2
-        classifierFile = '/gaba/u/mberning/results/edgeClassifier/20170312T134940.mat';
+        classifierFile = '/gaba/u/mberning/results/edgeClassifier/20170322T153247.mat';
     end
     if exist([saveFolder 'InterfaceRawFeatures.mat'],'file')
        % Load needed data

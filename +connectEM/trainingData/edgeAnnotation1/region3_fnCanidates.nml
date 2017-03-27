@@ -1,0 +1,207 @@
+<?xml version="1.0"?>
+<things>
+	<parameters>
+		<experiment name="2012-09-28_ex145_07x2_ROI2017"/>
+		<scale x="11.24" y="11.24" z="28"/>
+		<offset x="0" y="0" z="0"/>
+	</parameters>
+	<thing id="1" name="region3_score0.93_component00290" color.r="0" color.g="0" color.b="1" color.a="0">
+		<nodes>
+			<node id="1" radius="10.000000" x="1910" y="6769" z="1239"/>
+			<node id="2" radius="10.000000" x="1916" y="6730" z="1243"/>
+			<node id="3" radius="10.000000" x="1917" y="6714" z="1245"/>
+		</nodes>
+		<edges>
+			<edge source="2" target="1"/>
+			<edge source="3" target="2"/>
+		</edges>
+	</thing>
+	<thing id="2" name="region3_score0.91_component00679" color.r="1" color.g="0" color.b="0" color.a="0">
+		<nodes>
+			<node id="4" radius="10.000000" x="2005" y="6763" z="1271"/>
+			<node id="5" radius="10.000000" x="2026" y="6765" z="1279"/>
+			<node id="6" radius="10.000000" x="2030" y="6747" z="1276"/>
+		</nodes>
+		<edges>
+			<edge source="5" target="4"/>
+			<edge source="6" target="5"/>
+		</edges>
+	</thing>
+	<thing id="3" name="region3_score0.93_component02225" color.r="0" color.g="1" color.b="0" color.a="0">
+		<nodes>
+			<node id="7" radius="10.000000" x="2086" y="6764" z="1297"/>
+			<node id="8" radius="10.000000" x="2163" y="6772" z="1355"/>
+			<node id="9" radius="10.000000" x="2164" y="6779" z="1357"/>
+		</nodes>
+		<edges>
+			<edge source="8" target="7"/>
+			<edge source="9" target="8"/>
+		</edges>
+	</thing>
+	<thing id="4" name="region3_score0.96_component04327" color.r="1" color.g="1.034483e-01" color.b="7.241379e-01" color.a="0">
+		<nodes>
+			<node id="10" radius="10.000000" x="1975" y="6721" z="1346"/>
+			<node id="11" radius="10.000000" x="2012" y="6700" z="1351"/>
+			<node id="12" radius="10.000000" x="2088" y="6674" z="1360"/>
+		</nodes>
+		<edges>
+			<edge source="11" target="10"/>
+			<edge source="12" target="11"/>
+		</edges>
+	</thing>
+	<thing id="5" name="region3_score0.91_component05181" color.r="1" color.g="8.275862e-01" color.b="0" color.a="0">
+		<nodes>
+			<node id="13" radius="10.000000" x="2067" y="6679" z="1383"/>
+			<node id="14" radius="10.000000" x="2087" y="6687" z="1389"/>
+			<node id="15" radius="10.000000" x="2089" y="6688" z="1391"/>
+		</nodes>
+		<edges>
+			<edge source="14" target="13"/>
+			<edge source="15" target="14"/>
+		</edges>
+	</thing>
+	<thing id="6" name="region3_score0.98_component05317" color.r="0" color.g="5.172414e-01" color.b="9.655172e-01" color.a="0">
+		<nodes>
+			<node id="16" radius="10.000000" x="2121" y="6774" z="1386"/>
+			<node id="17" radius="10.000000" x="2133" y="6781" z="1384"/>
+			<node id="18" radius="10.000000" x="2135" y="6781" z="1383"/>
+		</nodes>
+		<edges>
+			<edge source="17" target="16"/>
+			<edge source="18" target="17"/>
+		</edges>
+	</thing>
+	<thing id="7" name="region3_score0.91_component06683" color.r="0" color.g="5.517241e-01" color.b="2.758621e-01" color.a="0">
+		<nodes>
+			<node id="19" radius="10.000000" x="2244" y="6716" z="1305"/>
+			<node id="20" radius="10.000000" x="2226" y="6729" z="1308"/>
+			<node id="21" radius="10.000000" x="2226" y="6731" z="1309"/>
+		</nodes>
+		<edges>
+			<edge source="20" target="19"/>
+			<edge source="21" target="20"/>
+		</edges>
+	</thing>
+	<thing id="8" name="region3_score0.91_component06734" color.r="6.551724e-01" color.g="3.793103e-01" color.b="2.413793e-01" color.a="0">
+		<nodes>
+			<node id="22" radius="10.000000" x="2191" y="6725" z="1320"/>
+			<node id="23" radius="10.000000" x="2177" y="6708" z="1313"/>
+			<node id="24" radius="10.000000" x="2181" y="6685" z="1319"/>
+		</nodes>
+		<edges>
+			<edge source="23" target="22"/>
+			<edge source="24" target="23"/>
+		</edges>
+	</thing>
+	<thing id="9" name="region3_score0.93_component08637" color.r="3.103448e-01" color.g="0" color.b="4.137931e-01" color.a="0">
+		<nodes>
+			<node id="25" radius="10.000000" x="2080" y="7025" z="1259"/>
+			<node id="26" radius="10.000000" x="2068" y="6985" z="1262"/>
+			<node id="27" radius="10.000000" x="2054" y="6977" z="1265"/>
+		</nodes>
+		<edges>
+			<edge source="26" target="25"/>
+			<edge source="27" target="26"/>
+		</edges>
+	</thing>
+	<thing id="10" name="region3_score0.92_component10753" color.r="0" color.g="1" color.b="9.655172e-01" color.a="0">
+		<nodes>
+			<node id="28" radius="10.000000" x="1924" y="6978" z="1270"/>
+			<node id="29" radius="10.000000" x="1922" y="6974" z="1280"/>
+			<node id="30" radius="10.000000" x="1919" y="6962" z="1287"/>
+		</nodes>
+		<edges>
+			<edge source="29" target="28"/>
+			<edge source="30" target="29"/>
+		</edges>
+	</thing>
+	<thing id="11" name="region3_score0.92_component12807" color.r="2.413793e-01" color.g="4.827586e-01" color.b="5.517241e-01" color.a="0">
+		<nodes>
+			<node id="31" radius="10.000000" x="1865" y="7118" z="1281"/>
+			<node id="32" radius="10.000000" x="1880" y="7122" z="1300"/>
+			<node id="33" radius="10.000000" x="1885" y="7116" z="1303"/>
+		</nodes>
+		<edges>
+			<edge source="32" target="31"/>
+			<edge source="33" target="32"/>
+		</edges>
+	</thing>
+	<thing id="12" name="region3_score0.93_component13694" color.r="9.310345e-01" color.g="6.551724e-01" color.b="1" color.a="0">
+		<nodes>
+			<node id="34" radius="10.000000" x="2044" y="7045" z="1304"/>
+			<node id="35" radius="10.000000" x="2162" y="7014" z="1307"/>
+			<node id="36" radius="10.000000" x="2171" y="7011" z="1306"/>
+		</nodes>
+		<edges>
+			<edge source="35" target="34"/>
+			<edge source="36" target="35"/>
+		</edges>
+	</thing>
+	<thing id="13" name="region3_score0.97_component22627" color.r="8.275862e-01" color.g="1" color.b="5.862069e-01" color.a="0">
+		<nodes>
+			<node id="37" radius="10.000000" x="2171" y="6803" z="1376"/>
+			<node id="38" radius="10.000000" x="2132" y="6786" z="1384"/>
+			<node id="39" radius="10.000000" x="2129" y="6786" z="1384"/>
+		</nodes>
+		<edges>
+			<edge source="38" target="37"/>
+			<edge source="39" target="38"/>
+		</edges>
+	</thing>
+	<thing id="14" name="region3_score0.91_component23785" color.r="7.241379e-01" color.g="3.103448e-01" color.b="1" color.a="0">
+		<nodes>
+			<node id="40" radius="10.000000" x="1968" y="7124" z="1397"/>
+			<node id="41" radius="10.000000" x="2004" y="7130" z="1403"/>
+			<node id="42" radius="10.000000" x="2011" y="7129" z="1403"/>
+		</nodes>
+		<edges>
+			<edge source="41" target="40"/>
+			<edge source="42" target="41"/>
+		</edges>
+	</thing>
+	<thing id="15" name="region3_score0.93_component24800" color.r="8.965517e-01" color.g="1.034483e-01" color.b="3.448276e-01" color.a="0">
+		<nodes>
+			<node id="43" radius="10.000000" x="2195" y="7107" z="1241"/>
+			<node id="44" radius="10.000000" x="2210" y="7118" z="1241"/>
+			<node id="45" radius="10.000000" x="2214" y="7116" z="1241"/>
+		</nodes>
+		<edges>
+			<edge source="44" target="43"/>
+			<edge source="45" target="44"/>
+		</edges>
+	</thing>
+	<thing id="16" name="region3_score0.92_component25118" color.r="5.172414e-01" color.g="5.172414e-01" color.b="0" color.a="0">
+		<nodes>
+			<node id="46" radius="10.000000" x="2250" y="7113" z="1259"/>
+			<node id="47" radius="10.000000" x="2253" y="7103" z="1262"/>
+			<node id="48" radius="10.000000" x="2249" y="7101" z="1266"/>
+		</nodes>
+		<edges>
+			<edge source="47" target="46"/>
+			<edge source="48" target="47"/>
+		</edges>
+	</thing>
+	<thing id="17" name="region3_score0.98_component28505" color.r="0" color.g="1" color.b="5.862069e-01" color.a="0">
+		<nodes>
+			<node id="49" radius="10.000000" x="2185" y="6814" z="1377"/>
+			<node id="50" radius="10.000000" x="2177" y="6806" z="1375"/>
+			<node id="51" radius="10.000000" x="2176" y="6809" z="1372"/>
+		</nodes>
+		<edges>
+			<edge source="50" target="49"/>
+			<edge source="51" target="50"/>
+		</edges>
+	</thing>
+	<thing id="18" name="region3_score0.94_component31238" color.r="3.793103e-01" color.g="0" color.b="1.724138e-01" color.a="0">
+		<nodes>
+			<node id="52" radius="10.000000" x="1905" y="7070" z="1427"/>
+			<node id="53" radius="10.000000" x="1921" y="7040" z="1420"/>
+			<node id="54" radius="10.000000" x="1930" y="7028" z="1419"/>
+		</nodes>
+		<edges>
+			<edge source="53" target="52"/>
+			<edge source="54" target="53"/>
+		</edges>
+	</thing>
+	<comments> </comments>
+</things>
