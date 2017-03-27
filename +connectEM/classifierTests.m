@@ -461,9 +461,9 @@ plot(test.probClassOld, test.probClass(1:size(test.probClass,1)/2), 'x');
 %% Check whether changing test set to larger borders helps
 
 % Load some data
-load('/run/media/mberning/da025ffc-5a1f-4d39-8ca0-52811e1659ee/classifierComparison.mat');
-borderMeta = load([p.saveFolder 'globalBorder.mat']);
-globalEdges = load([p.saveFolder 'globalEdges.mat']);
+load('/run/media/mberning/da025ffc-5a1f-4d39-8ca0-52811e1659ee/classifierComparison_v2.mat'); clear gt;
+% borderMeta = load([p.saveFolder 'globalBorder.mat']);
+% globalEdges = load([p.saveFolder 'globalEdges.mat']);
 % Modify struct
 test.probClass = test.probClass(1:length(test.probClass)/2);
 test = rmfield(test, {'scoresClass' 'scoresClassOld'});
@@ -483,8 +483,9 @@ counts = histc(idx, uniqueIdx);
 idx = uniqueIdx(counts == 1);
 globalEdges.edges = globalEdges.edges(idx,:);
 borderMeta.borderSize = borderMeta.borderSize(idx);
-idx = ismember(globalEdges.edges, test.edges, 'rows');
-test.borderSize = borderMeta.borderSize(idx);
+% BUG WAS HERE
+[idx, loc] = ismember(globalEdges.edges, test.edges, 'rows');
+test.borderSize(loc(idx)) = borderMeta.borderSize(idx);
 test.smallerSegmentSize = min(segMeta.voxelCount(test.edges),[],2);
 
 %% Save as VPN is so bad
@@ -561,7 +562,7 @@ axis square;
 
 %% Histograms (Note: activate right sizeThreshold above)
 
-3figure;
+figure;
 histogram(test.borderSize, 'Normalization', 'probability');
 set(gca, 'YScale', 'log');
 title('Border Size');
@@ -599,8 +600,67 @@ xlabel('Probability .mat');
 ylabel('Probability .bak');
 title('Test set after Hiwi annotation');
 
+%% Feedback Benedikt on 
+% https://mhlablog.net/2017/03/24/effect-of-border-or-segment-size-selection-on-agglomeration
 
+figure;
+idx = test.labels == 1 & test.borderSize >= 10;
+plot(test.borderSize(idx), test.probClass(idx), 'xb');
+hold on;
+idx = test.labels == -1 & test.borderSize >= 10;
+plot(test.borderSize(idx), test.probClass(idx), 'xr');
+xlabel('border size [voxel]');
+ylabel('predicted probability');
+legend('positive in test set', 'negative in test set');
+set(gca, 'XScale', 'log');
 
+figure;
+idx = test.labels == 1 & test.smallerSegmentSize >= 100;
+plot(test.smallerSegmentSize(idx), test.probClass(idx), 'xb');
+hold on;
+idx = test.labels == -1 & test.smallerSegmentSize >= 100;
+plot(test.smallerSegmentSize(idx), test.probClass(idx), 'xr');
+xlabel('smaller segment size [voxel]');
+ylabel('predicted probability');
+legend('positive in test set', 'negative in test set');
+set(gca, 'XScale', 'log');
 
+outputFolder = '/home/mberning/Desktop/fpEval/';
+idx = find(test(i).labels == -1 & test(i).probClass > .90);
+nodes = mat2cell([segMeta.point(test(i).edges(idx,1),:) round(test(i).borderCoM(idx,:)) segMeta.point(test(i).edges(idx,2),:)], ...
+    ones(size(test(i).edges(idx,:),1),1), 9);
+nodes = cellfun(@(x)reshape(x,3,3)', nodes, 'uni', 0);
+treeNames = arrayfun(@(x)['test_score' num2str(test(i).probClass(x), '%3.2f') ...
+    '_borderSize' num2str(test.borderSize(x), '%.5i') ...
+    '_segmentSize' num2str(test.smallerSegmentSize(x), '%.5i') ...
+    '_component' num2str(x, '%.5i') ], idx, 'uni', 0);
+connectEM.generateSkeletonFromNodes([outputFolder 'test_fpCanidates.nml'], nodes, treeNames, [], true);
 
+%% Correct FP detections
+% Transfer old state of label and correct
 
+test.labelCorrected = test.label;
+fpSkel = skeleton([outputFolder 'test_fpCanidates_result.nml']);
+fpResult = cellfun(@(x)regexp(x, 'test_score(\d{1}.\d{2})_borderSize(\d{5})_segmentSize(\d{5})_component(\d{5}) - (.*)', 'tokens'), fpSkel.names, 'uni', false);
+fpResult = cat(1, fpResult{~cellfun(@isempty, fpResult)});
+fpResult = cat(1, fpResult{:});
+ffpAnnotations = ~cellfun(@isempty, strfind(fpResult(:,5), 'FFP'));
+segEMmergerAnnotations = ~cellfun(@isempty, strfind(fpResult(:,5), 'SegEM'));
+
+fpResult = cellfun(@str2double, fpResult(:,1:3));
+assert(all(fpResult(:,1) == i));
+assert(all(fpResult(:,2) == arrayfun(@(x)str2double(num2str(x, '%3.2f')), gt(i).prob(fpResult(:,3)))));
+assert(all(gt(i).labels(fpResult(:,3)) == 1));
+gt(i).labels(fpResult(:,3)) = decision;
+
+%% Use single segment class probabilities and test again
+
+figure;
+idx = test.smallerSegmentSize > 1000 & test.borderSize > 100;
+[Xpr,Ypr,~,AUCpr] = perfcurve(test.labels(idx), ...
+    test.probClass(idx), ...
+    1, 'xCrit', 'reca', 'yCrit', 'prec', 'TVals', 0:0.001:1);
+Ypr(1) = 1;
+plot(Xpr,Ypr, '--r');
+label{1} = ['ROI2017 ".mat" classifier on new GT, test, border > 100, smaller segment size > 1000' ...
+    ' (AUC: ' num2str(AUCpr) ')'];
