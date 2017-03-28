@@ -23,42 +23,85 @@ borderMeta = load([p.saveFolder 'globalBorder.mat'], 'borderSize', 'borderCoM');
 % Load meta information of segments
 segmentMeta = load([p.saveFolder 'segmentMeta.mat'], 'voxelCount', 'point', 'maxSegId');
 segmentMeta.point = segmentMeta.point';
+% Load and preprocess segment class predictions on single segments from Alessandro
+temp = load([p.saveFolder 'segmentPredictions.mat']);
+% ... axon
+segmentMeta.axonProb = zeros(segmentMeta.maxSegId, 1);
+idx = ~isnan(temp.probs(:,2));
+segmentMeta.axonProb(temp.segId(idx)) = temp.probs(idx,2);
+segmentMeta.isAxon = segmentMeta.axonProb > 0.42;
+% ... dendrite
+segmentMeta.dendriteProb = zeros(segmentMeta.maxSegId, 1);
+idx = ~isnan(temp.probs(:,3));
+segmentMeta.dendriteProb(temp.segId(idx)) = temp.probs(idx,3);
+segmentMeta.isDendrite = segmentMeta.dendriteProb > 0.20;
+clear temp idx;
 %% Load synapse scores from SynEM
 synScore = load([p.saveFolder 'globalSynScores.mat']);
 synScore.isSynapse = connectEM.synScoresToSynEdges(graph, synScore);
 toc;
 
-display('Removing segments detected by heuristics:');
+display('Removing segments detected by heuristics & small & disconnected segments:');
 tic;
-[graphCut, eqClassesExcluded] = connectEM.cutGraph(p, segmentMeta, borderMeta, outputFolder, 100, 1000); 
+[graphCut, eqClassesExcluded] = connectEM.cutGraph(p, segmentMeta, borderMeta, outputFolder, 100, 1000);
 [vessel, sizeVessel] = connectEM.findCCaccordingToGraph(graph, eqClassesExcluded{1}, segmentMeta);
 [nuclei, sizeNuclei] = connectEM.findCCaccordingToGraph(graph, eqClassesExcluded{2}, segmentMeta);
 [myelin, sizeMyelin] = connectEM.findCCaccordingToGraph(graph, eqClassesExcluded{3}, segmentMeta);
 toc;
 
-% Lets stick with 99% for now as we have 'large enough' components
-rng default;
-threshold = 0.99;
-display('Performing agglomeration:');
+display('Generating subgraphs for axon and dendrite agglomeration:');
 tic;
-% Agglomerate segments using only GP probabilties
-[initialPartition, remainingEdges] = connectEM.partitionWholeDataset(graphCut, threshold); 
-sizePartition = cellfun(@(x)sum(segmentMeta.voxelCount(x)), initialPartition);
-[sizePartition, idx] = sort(sizePartition, 'descend');
-initialPartition = initialPartition(idx);
-% Keep only agglomerates that have at least 1 million voxels
-idx = sizePartition > 1e6; 
-initialPartition = initialPartition(idx);
-sizePartition = sizePartition(idx);
+idx = all(ismember(graphCut.edges, find(segmentMeta.isDendrite)), 2);
+graphCutDendrites.edges = graphCut.edges(idx,:);
+graphCutDendrites.prob = graphCut.prob(idx);
+idx = all(ismember(graphCut.edges, find(segmentMeta.isAxon)), 2);
+graphCutAxons.edges = graphCut.edges(idx,:);
+graphCutAxons.prob = graphCut.prob(idx);
 clear idx;
 toc;
 
-% Probably make own function if needed again
+% Lets stick with 99% for now as we have 'large enough' components
+rng default;
+thresholdDendrite = 0.99;
+display('Performing agglomeration on dendrite subgraph:');
+tic;
+% Agglomerate segments using only GP probabilties
+[dendrites, dendriteEdges] = connectEM.partitionWholeDataset(graphCutDendrites, thresholdDendrite); 
+dendriteSize = cellfun(@(x)sum(segmentMeta.voxelCount(x)), dendrites);
+[dendriteSize, idx] = sort(dendriteSize, 'descend');
+dendrites = dendrites(idx);
+% Keep only agglomerates that have at least 1 million voxels
+idx = dendriteSize > 1e6; 
+dendrites = dendrites(idx);
+dendriteSize = dendriteSize(idx);
+clear idx;
+toc;
+
+rng default;
+thresholdAxon = 0.99;
+display('Performing agglomeration on axon subgraph:');
+tic;
+% Agglomerate segments using only GP probabilties
+[axons, axonEdges] = connectEM.partitionWholeDataset(graphCutAxons, thresholdAxon); 
+axonSize = cellfun(@(x)sum(segmentMeta.voxelCount(x)), axons);
+[axonSize, idx] = sort(axonSize, 'descend');
+axons = axons(idx);
+% Keep only agglomerates that have at least 1 million voxels
+idx = axonSize > 1e6; 
+axons = axons(idx);
+axonSize = axonSize(idx);
+clear idx;
+toc;
+
 display('Writing skeletons for debugging the process:');
 tic;
-connectEM.generateSkeletonFromAgglo(remainingEdges, segmentMeta.point, ...
-    initialPartition, ...
-    strseq(['allComponents' num2str(threshold) '_'], 1:length(initialPartition)), ...
+connectEM.generateSkeletonFromAgglo(dendriteEdges, segmentMeta.point, ...
+    dendrites, ...
+    strseq(['dendrites_' num2str(thresholdDendrite) '_'], 1:length(dendrites)), ...
+    outputFolder, segmentMeta.maxSegId);
+connectEM.generateSkeletonFromAgglo(axonEdges, segmentMeta.point, ...
+    axons, ...
+    strseq(['axons_' num2str(thresholdAxon) '_'], 1:length(axons)), ...
     outputFolder, segmentMeta.maxSegId);
 connectEM.generateSkeletonFromAgglo(graph.edges, segmentMeta.point, ...
     vessel, ...
@@ -76,7 +119,7 @@ toc;
 
 display('Display collected volume, write mapping of current state, save everything:');
 tic;
-eqClasses = cat(1, initialPartition, vessel, nuclei, myelin);
+eqClasses = cat(1, dendrites, axons, vessel, nuclei, myelin);
 voxelCollected = sum(segmentMeta.voxelCount(cat(1, eqClasses{:})));
 voxelTotal = sum(segmentMeta.voxelCount);
 display(['Fraction of total (foreground) voxel collected: ' num2str(voxelCollected./voxelTotal, '%3.2f')]);
