@@ -25,16 +25,17 @@ segmentMeta = load([p.saveFolder 'segmentMeta.mat'], 'voxelCount', 'point', 'max
 segmentMeta.point = segmentMeta.point';
 % Load and preprocess segment class predictions on single segments from Alessandro
 temp = load([p.saveFolder 'segmentPredictions.mat']);
+temp.probs(:,1:3) = bsxfun(@rdivide, temp.probs(:,1:3), sum(temp.probs(:,1:3),2));
 % ... axon
 segmentMeta.axonProb = zeros(segmentMeta.maxSegId, 1);
 idx = ~isnan(temp.probs(:,2));
 segmentMeta.axonProb(temp.segId(idx)) = temp.probs(idx,2);
-segmentMeta.isAxon = segmentMeta.axonProb > 0.42;
+segmentMeta.isAxon = segmentMeta.axonProb > 0.5;
 % ... dendrite
 segmentMeta.dendriteProb = zeros(segmentMeta.maxSegId, 1);
 idx = ~isnan(temp.probs(:,3));
 segmentMeta.dendriteProb(temp.segId(idx)) = temp.probs(idx,3);
-segmentMeta.isDendrite = segmentMeta.dendriteProb > 0.20;
+segmentMeta.isDendrite = segmentMeta.dendriteProb > 0.5;
 clear temp idx;
 %% Load synapse scores from SynEM
 synScore = load([p.saveFolder 'globalSynScores.mat']);
@@ -125,6 +126,14 @@ voxelTotal = sum(segmentMeta.voxelCount);
 display(['Fraction of total (foreground) voxel collected: ' num2str(voxelCollected./voxelTotal, '%3.2f')]);
 script = WK.makeMappingScript(segmentMeta.maxSegId, eqClasses);
 fileHandle = fopen([outputFolder 'stateAfterInitialAgglo.txt'], 'w');
+fwrite(fileHandle, script);
+fclose(fileHandle);
+script = WK.makeMappingScript(segmentMeta.maxSegId, axons);
+fileHandle = fopen([outputFolder '__axonState.txt'], 'w');
+fwrite(fileHandle, script);
+fclose(fileHandle);
+script = WK.makeMappingScript(segmentMeta.maxSegId, dendrites);
+fileHandle = fopen([outputFolder '__dendriteState.txt'], 'w');
 fwrite(fileHandle, script);
 fclose(fileHandle);
 clear fileHandle script;
