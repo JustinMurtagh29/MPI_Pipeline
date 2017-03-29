@@ -11,8 +11,15 @@ if nargin < 4
 end
 switch mode
     case 'manual'
-        [fname,pname] = uigetfile('.nml','Please give merger mode tracing of %s.');
-        skel = skeleton(fullfile(pname,fname));
+        [fname,pname] = uigetfile('.nml','Please give merger mode tracing of PC.','MultiSelect','On');
+        for f = 1:numel(fname)
+            skeltmp = skeleton(fullfile(pname,fname{f}));
+            if f == 1
+                skel = skeltmp;
+            else
+                skel = skel.mergeSkels(skeltmp);
+            end
+        end
         if islocal && isempty(strfind(p.seg.root,'G:'))
             p.seg.root = strcat('G:',p.seg.root);
         end
@@ -20,8 +27,9 @@ switch mode
         allNodes = cat(1,skel.nodes{:});
         segIdsAgglomerate = Seg.Global.getSegIds(p,allNodes(:,1:3));
         segIdsAgglomerate = mat2cell(segIdsAgglomerate,numNodes);
-        edgesAgglomerate = skel.edges;
-%         remainingEdges = cat(1,skel.edges{:});
+        edgesAgglomerate = cellfun(@(x,y) y(x),skel.edges,segIdsAgglomerate,'uni',0);  % put global seg Ids in edge vector
+        
+        %         remainingEdges = cat(1,skel.edges{:});
     case 'automatic'
         if ~exist(fullfile(p.saveFolder,'agglomeration','initialAgglo.mat'),'file')
             alignEM.agglomerate(p,0)
