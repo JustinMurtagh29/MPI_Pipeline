@@ -1,0 +1,26 @@
+function result = agglomerate_fast_makeM(graph, lower_threshold, limited_exclusion, toexclude, values)
+result.good_edges =  ...
+    graph.prob > lower_threshold;
+for idx = 1 : size(limited_exclusion, 1)
+    result.good_edges = result.good_edges & ...
+    (~any(ismember(graph.edges, limited_exclusion{idx, 1}),2) | ...
+        graph.prob > limited_exclusion{idx, 2});
+end
+todo = graph.edges(result.good_edges, :);
+todo = unique(todo(:));
+todo = [todo, todo];
+if ~isempty(values)
+    values = [ones(length(todo), 1); values];
+end
+todo = [todo; graph.edges(result.good_edges, :)];
+
+todo(any(ismember(todo, toexclude), 2), :) = [];
+if isempty(values)
+    values = ones(length(todo), 1);
+end
+result.connM = sparse(...
+    todo(:, 2), ...
+    todo(:, 1), ...
+    values, ...
+    max(graph.edges(:)), ...
+    max(graph.edges(:)));
