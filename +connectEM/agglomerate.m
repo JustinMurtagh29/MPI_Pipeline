@@ -17,7 +17,7 @@ if ~exist(outputFolder, 'dir')
 end
 %% Load graph and edge and segment (segments) based statistics
 % Load global graph representation
-graph = load([p.saveFolder 'graph.mat'], 'prob', 'edges');
+graph = load([p.saveFolder 'graph.mat'], 'prob', 'edges', 'neighbours');
 % Load information about edges
 borderMeta = load([p.saveFolder 'globalBorder.mat'], 'borderSize', 'borderCoM');
 % Load meta information of segments
@@ -36,6 +36,11 @@ segmentMeta.dendriteProb = zeros(segmentMeta.maxSegId, 1);
 idx = ~isnan(temp.probs(:,3));
 segmentMeta.dendriteProb(temp.segId(idx)) = temp.probs(idx,3);
 segmentMeta.isDendrite = segmentMeta.dendriteProb > 0.5;
+% ... spine head
+segmentMeta.spineProb = zeros(segmentMeta.maxSegId, 1);
+idx = ~isnan(temp.probs(:,4));
+segmentMeta.spineProb(temp.segId(idx)) = temp.probs(idx,4);
+segmentMeta.isSpine = segmentMeta.spineProb > 0.5;
 clear temp idx;
 %% Load synapse scores from SynEM
 synScore = load([p.saveFolder 'globalSynScores.mat']);
@@ -78,9 +83,8 @@ dendriteSize = dendriteSize(idx);
 clear idx;
 toc;
 
-rng default;
-thresholdAxon = 0.99;
-display('Performing agglomeration on axon subgraph:');
+thresholdAxon = 0.90;
+display('Performing high probability agglomeration on axon subgraph:');
 tic;
 % Agglomerate segments using only GP probabilties
 [axons, axonEdges] = connectEM.partitionWholeDataset(graphCutAxons, thresholdAxon); 
@@ -94,11 +98,45 @@ axonSize = axonSize(idx);
 clear idx;
 toc;
 
+display('Removing components bordering on vessel or nuclei segments from axon graph:');
+tic;
+axonNeighbours = cellfun(@(x)unique(cat(2, graph.neighbours{x})), axons, 'uni', 0);
+% Find fraction of neighbours for each axon component that are vessel or nuclei segments
+vesselIdAll = cat(1, vessel{:});
+vesselNeighbours = cellfun(@(x)sum(ismember(x, vesselIdAll)), axonNeighbours);
+vesselFraction = vesselNeighbours ./ cellfun(@numel, axonNeighbours);
+nucleiIdAll = cat(1, nuclei{:});
+nucleiNeighbours = cellfun(@(x)sum(ismember(x, nucleiIdAll)), axonNeighbours);
+nucleiFraction = nucleiNeighbours ./ cellfun(@numel, axonNeighbours);
+clear axonNeighbours vesselIdAll vesselNeighbours nucleiIdAll nucleiNeighbours;
+% Endothelial cells border on vessel, not axons
+endo = axons(vesselFraction > 0);
+% ER is part of soma, not axons
+er = axons(nucleiFraction > 0 & vesselFraction == 0);
+% Keep the rest
+axons = axons(nucleiFraction == 0 & vesselFraction == 0); 
+toc;
+
+display('Attaching ER to dendrite class: ');
+tic;
+dendritesWithER = connectEM.attachER(graph, dendrites, er);
+toc;
+
+% Attach spines to dendrite class
+display('Attaching spines to dendrite class: ');
+tic;
+[dendritesWithSpines, spinePaths] = connectEM.attachSpines(graph, segmentMeta, dendritesWithER, 10);
+toc;
+
 display('Writing skeletons for debugging the process:');
 tic;
 connectEM.generateSkeletonFromAgglo(dendriteEdges, segmentMeta.point, ...
     dendrites, ...
     strseq(['dendrites_' num2str(thresholdDendrite) '_'], 1:length(dendrites)), ...
+    outputFolder, segmentMeta.maxSegId);
+connectEM.generateSkeletonFromAgglo(graph.edges, segmentMeta.point, ...
+    dendritesWithSpines, ...
+    strseq(['dendritesWithAttachments_' num2str(thresholdDendrite) '_'], 1:length(dendritesWithSpines)), ...
     outputFolder, segmentMeta.maxSegId);
 connectEM.generateSkeletonFromAgglo(axonEdges, segmentMeta.point, ...
     axons, ...
@@ -115,6 +153,14 @@ connectEM.generateSkeletonFromAgglo(graph.edges, segmentMeta.point, ...
 connectEM.generateSkeletonFromAgglo(graph.edges, segmentMeta.point, ...
     myelin, ...
     strseq('myelin_', 1:length(myelin)), ...
+    outputFolder, segmentMeta.maxSegId);
+connectEM.generateSkeletonFromAgglo(graph.edges, segmentMeta.point, ...
+    endo, ...
+    strseq('endo_', 1:length(endo)), ...
+    outputFolder, segmentMeta.maxSegId);
+connectEM.generateSkeletonFromAgglo(graph.edges, segmentMeta.point, ...
+    er, ...
+    strseq('er_', 1:length(er)), ...
     outputFolder, segmentMeta.maxSegId);
 toc;
 

@@ -31,13 +31,13 @@ function generateSkeletonFromAgglo(edges, com, cc, treeNames, outputFolder, maxS
             skel{1}.nodesNumDataAll(:,3:5) = theseCoM;
             skel{1}.edges = theseEdgesNodes;
             clear theseCoM theseEdgesNodes;
-            writeNml([outputFolder treeNames{tr} '.nml'], skel, 1);
+            writeNmlSilent([outputFolder treeNames{tr} '.nml'], skel, 1);
             clear skel;
-            mappingFile = [outputFolder treeNames{tr} '.txt'];
-            script = WK.makeMappingScript(maxSegId, num2cell(cc{tr}));
-            fileHandle = fopen(mappingFile, 'w');
-            fwrite(fileHandle, script);
-            fclose(fileHandle);
+            %mappingFile = [outputFolder treeNames{tr} '.txt'];
+            %script = WK.makeMappingScript(maxSegId, num2cell(cc{tr}));
+            %fileHandle = fopen(mappingFile, 'w');
+            %fwrite(fileHandle, script);
+            %fclose(fileHandle);
         end
     end
 end
