@@ -17,7 +17,7 @@ if ~exist(outputFolder, 'dir')
 end
 %% Load graph and edge and segment (segments) based statistics
 % Load global graph representation
-graph = load([p.saveFolder 'graph.mat'], 'prob', 'edges', 'neighbours');
+graph = load([p.saveFolder 'graph.mat'], 'prob', 'edges', 'neighbours', 'neighProb');
 % Load information about edges
 borderMeta = load([p.saveFolder 'globalBorder.mat'], 'borderSize', 'borderCoM');
 % Load meta information of segments
