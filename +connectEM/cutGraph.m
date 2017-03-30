@@ -27,7 +27,7 @@ lowProbIds = segmentMeta.voxelCount > segmentSizeThreshold & maxProb <= 0.5 & ~h
 mapping = {vesselIds nucleiIds myelinIds smallIds lowProbIds};
 mapping = cellfun(@find, mapping, 'uni', 0);
 mappingFile = [outputFolder 'cutFromGraph_' num2str(borderSizeThreshold, '%.5i') '_' num2str(segmentSizeThreshold, '%.5i') '.txt'];
-script = WK.makeMappingScript(segmentMeta.maxSegId, mapping);
+script = WK.makeMappingScript(segmentMeta.maxSegId, mapping, false);
 fileHandle = fopen(mappingFile, 'w');
 fwrite(fileHandle, script);
 fclose(fileHandle);
