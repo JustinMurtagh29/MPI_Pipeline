@@ -9,12 +9,18 @@ function job = globalizeCorrespondences(p)
 
     % collect parameters
     fileCount = numel(files);
+    sharedInputs = {p};
     inputCell = cell(fileCount, 1);
 
     for i = 1:fileCount
-        inputCell{i} = {p, files(i).name};
+        inputCell{i} = {files(i).name};
     end
 
     functionH = @globalCorrSeg;
-    job = startCPU(functionH, inputCell, 'globalCorrespondences', 12, 100);
+    job = Cluster.startJob( ...
+        functionH, inputCell, ...
+        'name', 'globalCorrespondences', ...
+        'sharedInputs', sharedInputs, ...
+        'cluster', '-l h_vmem=12G', ...
+        'taskGroupSize', 100);
 end
