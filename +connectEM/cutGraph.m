@@ -1,4 +1,4 @@
-function [graphCut, mapping, mappingNames, mappingSize] = cutGraph(p, graph, segmentMeta, borderMeta, outputFolder, borderSizeThreshold, segmentSizeThreshold)
+function [graphCut, mapping, mappingNames, mappingSize] = cutGraph(p, graph, segmentMeta, borderMeta, borderSizeThreshold, segmentSizeThreshold)
     % Restrict graph based on heuristics results
 
     % Segments classified by heuristics
@@ -32,8 +32,8 @@ function [graphCut, mapping, mappingNames, mappingSize] = cutGraph(p, graph, seg
     remainingProb  = [remainingProb ; corrProb];
     % Calculate maximum probability remaining for each segment and exclude based on both thresholds
     maxProb = accumarray(cat(1,remainingEdges(:,1),remainingEdges(:,2)), cat(1,remainingProb, remainingProb),[segmentMeta.maxSegId 1], @max);
-    smallIdx = segmentMeta.voxelCount <= segmentSizeThreshold & ~heuristicIds;
-    lowProbIdx = segmentMeta.voxelCount > segmentSizeThreshold & maxProb <= 0.5 & ~heuristicIds;
+    smallIdx = segmentMeta.voxelCount <= segmentSizeThreshold & ~heuristicIdx;
+    lowProbIdx = segmentMeta.voxelCount > segmentSizeThreshold & maxProb <= 0.5 & ~heuristicIdx;
 
     % Concatenate exclusions for output
     mapping = {vesselIdx endoIdx nucleiIdx addedNucleiIdx myelinIdx addedMyelinIdx smallIdx lowProbIdx};
@@ -58,10 +58,10 @@ end
 function addedSegmentIdx = growOutHeuristics(graph, segmentMeta, initialSegmentIdx, probThreshold, sizeThreshold)
     % Grow out heuristics to avoid merger into endothelial, missed myelin etc.
 
-    [partition, partitionSize] = partitionSortAndKeepOnlyLarge(graph, segmentMeta, probThreshold, sizeThreshold);
+    [partition, partitionSize] = connectEM.partitionSortAndKeepOnlyLarge(graph, segmentMeta, probThreshold, sizeThreshold);
     initialSegmentIds = find(initialSegmentIdx);
     sizeComponent = cellfun(@numel, partition);
-    initialSegmentsPerComponent = cellfun(@(x)ismember(x, initialSegmentIds), partition);
+    initialSegmentsPerComponent = cellfun(@(x)sum(ismember(x, initialSegmentIds)), partition);
     initialSegmentFraction = initialSegmentsPerComponent ./ sizeComponent;
     allSegmentIdx = false(segmentMeta.maxSegId, 1);
     allSegmentIdx(cat(1, partition{initialSegmentFraction > 0.1})) = true;

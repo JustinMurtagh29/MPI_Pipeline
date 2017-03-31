@@ -16,15 +16,7 @@ function generateSkeletonFromAgglo(edges, com, cc, treeNames, outputFolder, maxS
             theseEdgesSegId = edges(idx,:);
             theseEdgesNodes = changem(double(theseEdgesSegId), 1:size(theseCoM,1), cc{tr});
             clear idx theseEdgesSegId;
-            % Downsample to 100.000 nodes at most (and use minimal spanning tree)
-            %if size(theseCoM, 1) > 10000
-            %    idx = randperm(size(theseCoM,1), 10000);
-            %    theseCoM = theseCoM(idx,:);
-            %    theseEdgesNodes = minimalSpanningTree(theseCoM);
-            %    skel{1}.name = [skel{1}.name '_downsampled'];
-            %    clear idx;
-            %end
-            % Write to structure for writeNml
+           % Write to structure for writeNml
             skel{1}.nodesNumDataAll = zeros(size(theseCoM,1),14);
             skel{1}.nodesNumDataAll(:,1) = 1:size(theseCoM,1); 
             skel{1}.nodesNumDataAll(:,2) = 10*ones(size(theseCoM,1),1);
@@ -33,13 +25,14 @@ function generateSkeletonFromAgglo(edges, com, cc, treeNames, outputFolder, maxS
             clear theseCoM theseEdgesNodes;
             writeNmlSilent([outputFolder treeNames{tr} '.nml'], skel, 1);
             clear skel;
-            %mappingFile = [outputFolder treeNames{tr} '.txt'];
-            %script = WK.makeMappingScript(maxSegId, num2cell(cc{tr}));
-            %fileHandle = fopen(mappingFile, 'w');
-            %fwrite(fileHandle, script);
-            %fclose(fileHandle);
         end
     end
+    mappingFile = [outputFolder treeNames{1} '.txt'];
+    script = WK.makeMappingScript(maxSegId, cc, false);
+    fileHandle = fopen(mappingFile, 'w');
+    fwrite(fileHandle, script);
+    fclose(fileHandle);
+
 end
 
 function skel = initializeSkeleton()
