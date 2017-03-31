@@ -23,7 +23,7 @@ borderMeta = load([p.saveFolder 'globalBorder.mat'], 'borderSize', 'borderCoM');
 segmentMeta = load([p.saveFolder 'segmentMeta.mat'], 'voxelCount', 'point', 'maxSegId');
 segmentMeta.point = segmentMeta.point';
 % Load and preprocess segment class predictions on single segments from Alessandro
-segmentMeta = addSegmentClassInformation(p, segmentMeta);
+segmentMeta = connectEM.addSegmentClassInformation(p, segmentMeta);
 % Load synapse scores from SynEM
 synScore = load([p.saveFolder 'globalSynScores.mat']);
 synScore.isSynapse = connectEM.synScoresToSynEdges(graph, synScore);
@@ -39,6 +39,7 @@ tic;
 for i=1:length(excClasses)
     connectEM.skeletonFromAgglo(graph.edges, segmentMeta, ...
         excClasses{i}, excNames{i}, outputFolder);
+    display(['Finished writing ' excNames{i} ' skeletons.']);
 end
 toc;
 
@@ -109,15 +110,11 @@ connectEM.skeletonFromAgglo(graph.edges, segmentMeta, ...
 connectEM.skeletonFromAgglo(graph.edges, segmentMeta, ...
     axons, 'axons', outputFolder);
 % Probably not needed after refactoring as endo should already be excluded
-connectEM.generateSkeletonFromAgglo(graph.edges, segmentMeta.point, ...
-    endo, ...
-    strseq('endo_', 1:length(endo)), ...
-    outputFolder, segmentMeta.maxSegId);
+connectEM.skeletonFromAgglo(graph.edges, segmentMeta, ...
+    endo, 'endo', outputFolder);
 % Here we need to check whether new probabilities still misclassify ER segments
-connectEM.generateSkeletonFromAgglo(graph.edges, segmentMeta.point, ...
-    er, ...
-    strseq('er_', 1:length(er)), ...
-    outputFolder, segmentMeta.maxSegId);
+connectEM.skeletonFromAgglo(graph.edges, segmentMeta, ...
+    er, 'er', outputFolder);
 toc;
 
 display('Display collected volume, save everything (except graph, which will be ignored due to size):');

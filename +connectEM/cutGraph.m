@@ -6,14 +6,14 @@ function [graphCut, mapping, mappingNames, mappingSize] = cutGraph(p, graph, seg
     assert(length(segIds) == max(segIds));
     % Vessel and endothelial cells
     vesselIdx = vesselScore > 0.5;
-    endoIdx = growOutHeuristics(graph, segmentMeta, vesselIdx, 0.99, 1e6);
+    endoIdx = growOutHeuristics(graph, segmentMeta, vesselIdx, 1, 1e6);
     % Nuclei + added if not grown to completion
     nucleiIdx = nucleiScore > 0.5 & ~vesselIdx & ~endoIdx;
-    addedNucleiIdx = growOutHeuristics(graph, segmentMeta, nucleiIdx, 0.99, 1e6);
+    addedNucleiIdx = growOutHeuristics(graph, segmentMeta, nucleiIdx, 1, 1e6);
     addedNucleiIdx = addedNucleiIdx & ~ vesselIdx & ~endoIdx;
     % Myelin + added to try to avoid merger with myelin
     myelinIdx = myelinScore > 0.5 & ~vesselIdx & ~endoIdx & ~nucleiIdx & ~addedNucleiIdx;
-    addedMyelinIdx = growOutHeuristics(graph, segmentMeta, myelinIdx, 0.99, 1e6);
+    addedMyelinIdx = growOutHeuristics(graph, segmentMeta, myelinIdx, 1, 1e6);
     addedMyelinIdx = addedMyelinIdx & ~vesselIdx & ~endoIdx & ~nucleiIdx & ~addedNucleiIdx;
     % All heuristics exclusions
     heuristicIdx = vesselIdx | endoIdx | nucleiIdx | addedNucleiIdx | myelinIdx | addedMyelinIdx;
@@ -45,7 +45,8 @@ function [graphCut, mapping, mappingNames, mappingSize] = cutGraph(p, graph, seg
 
     % Remove heuristics and small or disconnected segments from graph
     removedIds = cat(1, mapping{:});
-    keptIds = setdiff(1:segmentMeta.maxSegId, removedIds);
+    removedIds = cat(1, removedIds{:});
+    keptIds = setdiff(1:double(segmentMeta.maxSegId), removedIds);
     keepEdgeIdx = all(ismember(remainingEdges, keptIds), 2);
     graphCut.edges = remainingEdges(keepEdgeIdx,:);
     graphCut.prob = remainingProb(keepEdgeIdx);
