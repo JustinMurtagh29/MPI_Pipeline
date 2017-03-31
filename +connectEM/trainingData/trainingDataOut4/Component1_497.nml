@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<things>
+	<parameters>
+		<experiment name="2012-09-28_ex145_07x2_ROI2017"/>
+		<scale x="11.24" y="11.24" z="28"/>
+		<offset x="0" y="0" z="0"/>
+	</parameters>
+	<thing id="1" name="Component1_497_15030572" color.r="5.517241e-01" color.g="2.068966e-01" color.b="7.586207e-01" color.a="0">
+		<nodes>
+			<node id="1" radius="10.000000" x="4586" y="4293" z="2355" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="2" radius="10.000000" x="4498" y="4359" z="2365" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="3" radius="10.000000" x="4569" y="4309" z="2356" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="4" radius="10.000000" x="4558" y="4312" z="2358" inVp="0" inMag="0" rotX="0.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+		</nodes>
+		<edges>
+			<edge source="1" target="3"/>
+			<edge source="2" target="4"/>
+			<edge source="3" target="4"/>
+		</edges>
+	</thing>
+	<comments> </comments>
+</things>

@@ -1,72 +1,91 @@
-function gt = getContinuityLabelsFromNml(p, pT)
+function gt = getContinuityLabelsFromNml(p, pT, nodeOffset)
 % Extract labels for interface continuity classification from a set of nml
 % files
+
+if nargin < 3
+    nodeOffset = 1;
+end
 
 gt = struct();
 for i=1:length(pT.local)
     display(['----- Training region ' num2str(i) ' -----']);
-    for j=1:length(pT.local(i).trainFile)
-        display(['----- Training file ' num2str(j) ' -----']);
-        % Load & process dense merger mode skeleton files
-        skel = skeleton(pT.local(i).trainFile{j});
-        % Extract node positions and corresponding segment ids
-        nodes = cellfun(@(x)x(:,1:3), skel.nodes, 'uni', 0);   
-        nodesPerTree = cellfun(@(x)size(x,1), nodes);
-        nodes = cat(1,nodes{:});
-        segIdsOfGTnodes = Seg.Global.getSegIds(p, nodes);
-        segIdsOfGTnodes = mat2cell(segIdsOfGTnodes, nodesPerTree);
-        % Remove nodes placed in background (0)
-        nrNodesInBackground = sum(cellfun(@(x)sum(x==0), segIdsOfGTnodes));
-        display(['Removing ' num2str(nrNodesInBackground) ' of ' ...
-            num2str(sum(nodesPerTree)) ' nodes due to background placement!']);
-        segIdsOfGT = cellfun(@(x)x(x~=0), segIdsOfGTnodes, 'uni', 0);
-        % Keep only unique hits per tree
-        segIdsOfGT = cellfun(@(x)unique(x), segIdsOfGT, 'uni', 0);
+    for j=1:length(pT.local(i).trainFile) 
+        if exist(pT.local(i).trainFile{j}, 'file')
+            display(['----- Training file ' num2str(j) ' -----']);
+            % Load & process dense merger mode skeleton files
+            skel = skeleton(pT.local(i).trainFile{j}, false, nodeOffset);
+            % Remove trees which name and nodes whose comment
+            % contains 'Merger' (note: case SENSITIVE)
+            mergerTreeIdx = skel.getTreeWithName('Merger', 'partial');
+            skel = skel.deleteTrees(mergerTreeIdx);
+            mergerNodeIdx = skel.getNodesWithComment('Merger', [], 'partial');
+            for k=1:length(mergerNodeIdx)
+                if ~isempty(mergerNodeIdx{k})
+                    skel = skel.deleteNodes(k, mergerNodeIdx{k});
+                end
+            end
+            
+            % Extract node positions 
+            nodes = cellfun(@(x)x(:,1:3), skel.nodes, 'uni', 0);   
+            nodesPerTree = cellfun(@(x)size(x,1), nodes);
+            nodes = cat(1,nodes{:});
+            % Get corresponding segment ids for all nodes
+            segIdsOfGTnodes = Seg.Global.getSegIds(p, nodes);
+            segIdsOfGTnodes = mat2cell(segIdsOfGTnodes, nodesPerTree);
+            % Remove nodes placed in background (0)
+            nrNodesInBackground = sum(cellfun(@(x)sum(x==0), segIdsOfGTnodes));
+            display(['Removing ' num2str(nrNodesInBackground) ' of ' ...
+                num2str(sum(nodesPerTree)) ' nodes due to background placement!']);
+            segIdsOfGT = cellfun(@(x)x(x~=0), segIdsOfGTnodes, 'uni', 0);
+            % Keep only unique hits per tree
+            segIdsOfGT = cellfun(@(x)unique(x), segIdsOfGT, 'uni', 0);
 
-        % Load segmentation data to determine all segments in bounding box
-        seg = loadSegDataGlobal(p.seg, pT.local(i).bboxSmall);
-        segMeta = load([p.saveFolder 'segmentMeta.mat'], 'cubeIdx', 'segIds', 'voxelCount');
-        segIdsInBBox = unique(seg(seg~=0));
-        clear seg;
+            % Load segmentation data to determine all segments in bounding box
+            seg = loadSegDataGlobal(p.seg, pT.local(i).bboxSmall);
+            segMeta = load([p.saveFolder 'segmentMeta.mat'], 'cubeIdx', 'segIds', 'voxelCount');
+            segIdsInBBox = unique(seg(seg~=0));
+            clear seg;
 
-        % Remove segments not in bounding box
-        segIdsOfGT = cellfun(@(x)x(ismember(x,segIdsInBBox)), segIdsOfGT, 'uni', 0);
-        
-        % Remove merged segments from list
-        allSegmentIdsInGT = unique(cat(1,segIdsOfGT{:}));
-        segmentsCounts = histc(cat(1,segIdsOfGT{:}), allSegmentIdsInGT);
-        mergedSegments = allSegmentIdsInGT(segmentsCounts > 1);
-        display(['Removing ' num2str(numel(mergedSegments)) ' of ' ...
-            num2str(sum(nodesPerTree)) ' segments due to being covered by more than one tree!']);
-        segIdsOfGT = cellfun(@(x)x(~ismember(x, mergedSegments)), segIdsOfGT, 'uni', 0);
-        
-        % Get all edges between segments in bounding box
-        uniqueCubes = unique(segMeta.cubeIdx(ismember(segMeta.segIds, segIdsInBBox)));
-        edges = Seg.Global.getGlobalEdges(p, uniqueCubes);
-        prob = Seg.Global.getGlobalGPProbList(p, uniqueCubes);
-        edgeIdxInBbox = find(all(ismember(edges, segIdsInBBox),2));
-        [edgesInBbox, idxA] = unique(edges(edgeIdxInBbox,:), 'rows');       
-        probInBbox = prob(edgeIdxInBbox(idxA));
-        clear edgeIdxInBbox edges uniqueCubes idxA;
+            % Remove segments not in bounding box
+            segIdsOfGT = cellfun(@(x)x(ismember(x,segIdsInBBox)), segIdsOfGT, 'uni', 0);
 
-        % Determine labels
-        labels = determineLabelsFromEqClass(segIdsOfGT, edgesInBbox);
+            % Remove merged segments from list
+            allSegmentIdsInGT = unique(cat(1,segIdsOfGT{:}));
+            segmentsCounts = histc(cat(1,segIdsOfGT{:}), allSegmentIdsInGT);
+            mergedSegments = allSegmentIdsInGT(segmentsCounts > 1);
+            display(['Removing ' num2str(numel(mergedSegments)) ' of ' ...
+                num2str(sum(nodesPerTree)) ' segments due to being covered by more than one tree!']);
+            segIdsOfGT = cellfun(@(x)x(~ismember(x, mergedSegments)), segIdsOfGT, 'uni', 0);
+            segIdsOfGT = segIdsOfGT(~cellfun(@isempty, segIdsOfGT));
+            
+            % Get all edges between segments in bounding box
+            uniqueCubes = unique(segMeta.cubeIdx(ismember(segMeta.segIds, segIdsInBBox)));
+            edges = Seg.Global.getGlobalEdges(p, uniqueCubes);
+            prob = Seg.Global.getGlobalGPProbList(p, uniqueCubes);
+            edgeIdxInBbox = find(all(ismember(edges, segIdsInBBox),2));
+            [edgesInBbox, idxA] = unique(edges(edgeIdxInBbox,:), 'rows');       
+            probInBbox = prob(edgeIdxInBbox(idxA));
+            clear edgeIdxInBbox edges uniqueCubes idxA;
 
-        % Calculate and output some statistics
-        statisticsOfDenseTracing(segMeta, segIdsInBBox, segIdsOfGT)
+            % Determine labels
+            labels = determineLabelsFromEqClass(segIdsOfGT, edgesInBbox);
 
-        % Some statistics as well
-        statisticsOfLabels(labels);
+            % Calculate and output some statistics
+            statisticsOfDenseTracing(segMeta, segIdsInBBox, segIdsOfGT)
 
-        % Transfer to structure with clear naming
-        gt(i,j).edges = edgesInBbox;
-        gt(i,j).prob = probInBbox;
-        gt(i,j).labels = labels;
-        gt(i,j).segIdsGT = segIdsOfGT;
-        gt(i,j).segIdsOfGTnodes = segIdsOfGTnodes;
-        gt(i,j).mergedSegments = mergedSegments;
-        leftSegments = setdiff(segIdsInBBox, allSegmentIdsInGT);
-        gt(i,j).leftSegments = leftSegments(segMeta.voxelCount(leftSegments) > 100);
+            % Some statistics as well
+            statisticsOfLabels(labels);
+
+            % Transfer to structure with clear naming
+            gt(i,j).edges = edgesInBbox;
+            gt(i,j).prob = probInBbox;
+            gt(i,j).labels = labels;
+            gt(i,j).segIdsGT = segIdsOfGT;
+            gt(i,j).segIdsOfGTnodes = segIdsOfGTnodes;
+            gt(i,j).mergedSegments = mergedSegments;
+            leftSegments = setdiff(segIdsInBBox, allSegmentIdsInGT);
+            gt(i,j).leftSegments = leftSegments(segMeta.voxelCount(leftSegments) > 100);
+        end
     end
 end
 

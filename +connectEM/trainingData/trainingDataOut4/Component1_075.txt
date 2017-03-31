@@ -1,0 +1,44 @@
+var mapping = Array(15030572).fill(0);
+var agglos  = [];
+agglos.push([9907542]);
+agglos.push([9907580]);
+agglos.push([9907581]);
+agglos.push([9907620]);
+agglos.push([9907692]);
+agglos.push([9907823]);
+agglos.push([9907902]);
+agglos.push([9907937]);
+agglos.push([9907975]);
+agglos.push([9908030]);
+agglos.push([9908031]);
+agglos.push([9908151]);
+agglos.push([9908240]);
+agglos.push([9915423]);
+agglos.push([9915559]);
+agglos.push([9915639]);
+agglos.push([9915667]);
+agglos.push([9915718]);
+agglos.push([9915844]);
+agglos.push([9915871]);
+agglos.push([9915928]);
+agglos.push([9916078]);
+agglos.push([9916135]);
+agglos.push([9916150]);
+agglos.push([9916271]);
+agglos.push([9916327]);
+agglos.push([9916332]);
+agglos.push([9916634]);
+agglos.push([9916669]);
+agglos.push([9985404]);
+agglos.push([9985405]);
+agglos.push([9985452]);
+
+for(var i = 0; i < agglos.length; i++){
+    var segIds = agglos[i];
+    for(var j = 0; j < segIds.length; j++){
+        mapping[segIds[j]] = (i + 1);
+    }
+}
+
+var cube = app.oxalis.model.getSegmentationBinary().cube;
+cube.setMapping(mapping);

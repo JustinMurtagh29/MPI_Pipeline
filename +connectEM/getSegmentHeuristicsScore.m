@@ -9,7 +9,12 @@ function [segmentOverlap, uniqueSegId] = getSegmentHeuritsicsScore(seg, binaryMa
         class = class == binaryMap(i).segId;
         segOccurences = histc(seg(seg~=0), uniqueSegId); 
         classVoxels = histc(seg(seg~=0 & class), uniqueSegId);
-        segmentOverlap{i} = classVoxels ./ segOccurences;       
+        if size(classVoxels,2) > 1
+            % If only one voxel is found, histc switches dimensionality of output for some reason
+            segmentOverlap{i} = classVoxels' ./ segOccurences;
+        else
+            segmentOverlap{i} = classVoxels ./ segOccurences;
+        end
     end
 
 end

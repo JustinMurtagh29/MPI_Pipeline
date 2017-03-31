@@ -1,4 +1,4 @@
-function collectGlobalGraphStruct (p)
+function collectGlobalGraphStruct(p)
     load([p.saveFolder 'globalEdges.mat']);
     load([p.saveFolder 'globalGPProbList.mat']);
 

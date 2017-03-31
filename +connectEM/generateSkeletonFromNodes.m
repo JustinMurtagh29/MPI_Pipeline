@@ -1,4 +1,9 @@
-function generateSkeletonFromNodes(filename, nodes, treeNames, comments)
+function generateSkeletonFromNodes(filename, nodes, treeNames, comments, linearNodes)
+
+    if nargin < 5
+        linearNodes = false;
+    end
+
 
     c = 1; % counter for trees in skeleton
     nodeId = 1; % counter for nodes in current skeleton
@@ -22,7 +27,11 @@ function generateSkeletonFromNodes(filename, nodes, treeNames, comments)
             skel{c}.nodes(nodeId-nodeOffsetThisSkel,:) = [nodes{tr}(no,:) 10];
             nodeId = nodeId + 1;
         end
-        skel{c}.edges = minimalSpanningTree(nodes{tr}); 
+        if linearNodes
+            skel{c}.edges = cat(1, 1:size(skel{c}.nodes, 1)-1, 2:size(skel{c}.nodes))';
+        else
+            skel{c}.edges = minimalSpanningTree(nodes{tr}); 
+        end
         c = c + 1;
         nodeOffsetThisSkel = nodeId - 1;
     end

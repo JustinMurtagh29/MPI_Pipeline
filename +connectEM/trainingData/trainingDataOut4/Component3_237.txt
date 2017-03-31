@@ -1,0 +1,58 @@
+var mapping = Array(15030572).fill(0);
+var agglos  = [];
+agglos.push([5673331]);
+agglos.push([5673562]);
+agglos.push([5674129]);
+agglos.push([5674566]);
+agglos.push([5674769]);
+agglos.push([5675012]);
+agglos.push([5675039]);
+agglos.push([5675069]);
+agglos.push([5675106]);
+agglos.push([5675405]);
+agglos.push([5675441]);
+agglos.push([5675483]);
+agglos.push([5675486]);
+agglos.push([5675633]);
+agglos.push([5675721]);
+agglos.push([5675790]);
+agglos.push([5675851]);
+agglos.push([5676070]);
+agglos.push([5676284]);
+agglos.push([5676312]);
+agglos.push([5676365]);
+agglos.push([5676444]);
+agglos.push([5676545]);
+agglos.push([5676616]);
+agglos.push([5676757]);
+agglos.push([5676823]);
+agglos.push([5676854]);
+agglos.push([5676958]);
+agglos.push([5677336]);
+agglos.push([5677364]);
+agglos.push([5681845]);
+agglos.push([5681908]);
+agglos.push([5681940]);
+agglos.push([5681941]);
+agglos.push([5682065]);
+agglos.push([5682274]);
+agglos.push([5682548]);
+agglos.push([5682654]);
+agglos.push([5682709]);
+agglos.push([5684707]);
+agglos.push([5685312]);
+agglos.push([5685578]);
+agglos.push([5685605]);
+agglos.push([5685606]);
+agglos.push([6791715]);
+agglos.push([6791732]);
+
+for(var i = 0; i < agglos.length; i++){
+    var segIds = agglos[i];
+    for(var j = 0; j < segIds.length; j++){
+        mapping[segIds[j]] = (i + 1);
+    }
+}
+
+var cube = app.oxalis.model.getSegmentationBinary().cube;
+cube.setMapping(mapping);

@@ -1,0 +1,1846 @@
+<?xml version="1.0"?>
+<things>
+	<parameters>
+		<experiment name="2012-09-28_ex145_07x2_ROI2017"/>
+		<scale x="11.24" y="11.24" z="28"/>
+		<offset x="0" y="0" z="0"/>
+	</parameters>
+	<thing id="1" name="region3_score0.00_component01760" color.r="0" color.g="0" color.b="1" color.a="0">
+		<nodes>
+			<node id="1" radius="10.000000" x="1957" y="6777" z="1280"/>
+			<node id="2" radius="10.000000" x="1947" y="6781" z="1281"/>
+			<node id="3" radius="10.000000" x="1928" y="6781" z="1279"/>
+		</nodes>
+		<edges>
+			<edge source="2" target="1"/>
+			<edge source="3" target="2"/>
+		</edges>
+	</thing>
+	<thing id="2" name="region3_score0.01_component02629" color.r="1" color.g="0" color.b="0" color.a="0">
+		<nodes>
+			<node id="4" radius="10.000000" x="1867" y="6713" z="1286"/>
+			<node id="5" radius="10.000000" x="1866" y="6716" z="1288"/>
+			<node id="6" radius="10.000000" x="1859" y="6724" z="1290"/>
+		</nodes>
+		<edges>
+			<edge source="5" target="4"/>
+			<edge source="6" target="5"/>
+		</edges>
+	</thing>
+	<thing id="3" name="region3_score0.01_component02792" color.r="0" color.g="1" color.b="0" color.a="0">
+		<nodes>
+			<node id="7" radius="10.000000" x="1845" y="6762" z="1294"/>
+			<node id="8" radius="10.000000" x="1850" y="6764" z="1297"/>
+			<node id="9" radius="10.000000" x="1868" y="6766" z="1302"/>
+		</nodes>
+		<edges>
+			<edge source="8" target="7"/>
+			<edge source="9" target="8"/>
+		</edges>
+	</thing>
+	<thing id="4" name="region3_score0.03_component02956" color.r="1" color.g="1.034483e-01" color.b="7.241379e-01" color.a="0">
+		<nodes>
+			<node id="10" radius="10.000000" x="1990" y="6688" z="1298"/>
+			<node id="11" radius="10.000000" x="1992" y="6702" z="1300"/>
+			<node id="12" radius="10.000000" x="1997" y="6713" z="1300"/>
+		</nodes>
+		<edges>
+			<edge source="11" target="10"/>
+			<edge source="12" target="11"/>
+		</edges>
+	</thing>
+	<thing id="5" name="region3_score0.02_component03318" color.r="1" color.g="8.275862e-01" color.b="0" color.a="0">
+		<nodes>
+			<node id="13" radius="10.000000" x="1948" y="6747" z="1310"/>
+			<node id="14" radius="10.000000" x="1928" y="6746" z="1310"/>
+			<node id="15" radius="10.000000" x="1925" y="6738" z="1309"/>
+		</nodes>
+		<edges>
+			<edge source="14" target="13"/>
+			<edge source="15" target="14"/>
+		</edges>
+	</thing>
+	<thing id="6" name="region3_score0.01_component03371" color.r="0" color.g="5.172414e-01" color.b="9.655172e-01" color.a="0">
+		<nodes>
+			<node id="16" radius="10.000000" x="1935" y="6777" z="1315"/>
+			<node id="17" radius="10.000000" x="1934" y="6775" z="1332"/>
+			<node id="18" radius="10.000000" x="1935" y="6769" z="1337"/>
+		</nodes>
+		<edges>
+			<edge source="17" target="16"/>
+			<edge source="18" target="17"/>
+		</edges>
+	</thing>
+	<thing id="7" name="region3_score0.04_component03431" color.r="0" color.g="5.517241e-01" color.b="2.758621e-01" color.a="0">
+		<nodes>
+			<node id="19" radius="10.000000" x="1931" y="6763" z="1312"/>
+			<node id="20" radius="10.000000" x="1924" y="6761" z="1314"/>
+			<node id="21" radius="10.000000" x="1953" y="6755" z="1325"/>
+		</nodes>
+		<edges>
+			<edge source="20" target="19"/>
+			<edge source="21" target="19"/>
+		</edges>
+	</thing>
+	<thing id="8" name="region3_score0.02_component03480" color.r="6.551724e-01" color.g="3.793103e-01" color.b="2.413793e-01" color.a="0">
+		<nodes>
+			<node id="22" radius="10.000000" x="1839" y="6671" z="1345"/>
+			<node id="23" radius="10.000000" x="1857" y="6669" z="1348"/>
+			<node id="24" radius="10.000000" x="1864" y="6671" z="1351"/>
+		</nodes>
+		<edges>
+			<edge source="23" target="22"/>
+			<edge source="24" target="23"/>
+		</edges>
+	</thing>
+	<thing id="9" name="region3_score0.05_component03483" color.r="3.103448e-01" color.g="0" color.b="4.137931e-01" color.a="0">
+		<nodes>
+			<node id="25" radius="10.000000" x="1839" y="6671" z="1345"/>
+			<node id="26" radius="10.000000" x="1860" y="6696" z="1354"/>
+			<node id="27" radius="10.000000" x="1864" y="6689" z="1355"/>
+		</nodes>
+		<edges>
+			<edge source="26" target="25"/>
+			<edge source="27" target="26"/>
+		</edges>
+	</thing>
+	<thing id="10" name="region3_score0.04_component03582" color.r="0" color.g="1" color.b="9.655172e-01" color.a="0">
+		<nodes>
+			<node id="28" radius="10.000000" x="1809" y="6668" z="1335"/>
+			<node id="29" radius="10.000000" x="1871" y="6704" z="1352"/>
+			<node id="30" radius="10.000000" x="1869" y="6719" z="1356"/>
+		</nodes>
+		<edges>
+			<edge source="29" target="28"/>
+			<edge source="30" target="29"/>
+		</edges>
+	</thing>
+	<thing id="11" name="region3_score0.03_component03638" color.r="2.413793e-01" color.g="4.827586e-01" color.b="5.517241e-01" color.a="0">
+		<nodes>
+			<node id="31" radius="10.000000" x="1881" y="6766" z="1321"/>
+			<node id="32" radius="10.000000" x="1904" y="6748" z="1332"/>
+			<node id="33" radius="10.000000" x="1908" y="6743" z="1333"/>
+		</nodes>
+		<edges>
+			<edge source="32" target="31"/>
+			<edge source="33" target="32"/>
+		</edges>
+	</thing>
+	<thing id="12" name="region3_score0.02_component03665" color.r="9.310345e-01" color.g="6.551724e-01" color.b="1" color.a="0">
+		<nodes>
+			<node id="34" radius="10.000000" x="1756" y="6739" z="1329"/>
+			<node id="35" radius="10.000000" x="1785" y="6751" z="1331"/>
+			<node id="36" radius="10.000000" x="1811" y="6777" z="1333"/>
+		</nodes>
+		<edges>
+			<edge source="35" target="34"/>
+			<edge source="36" target="35"/>
+		</edges>
+	</thing>
+	<thing id="13" name="region3_score0.02_component03681" color.r="8.275862e-01" color.g="1" color.b="5.862069e-01" color.a="0">
+		<nodes>
+			<node id="37" radius="10.000000" x="1803" y="6743" z="1330"/>
+			<node id="38" radius="10.000000" x="1818" y="6738" z="1341"/>
+			<node id="39" radius="10.000000" x="1795" y="6759" z="1349"/>
+		</nodes>
+		<edges>
+			<edge source="38" target="37"/>
+			<edge source="39" target="38"/>
+		</edges>
+	</thing>
+	<thing id="14" name="region3_score0.02_component03742" color.r="7.241379e-01" color.g="3.103448e-01" color.b="1" color.a="0">
+		<nodes>
+			<node id="40" radius="10.000000" x="1840" y="6752" z="1334"/>
+			<node id="41" radius="10.000000" x="1844" y="6745" z="1339"/>
+			<node id="42" radius="10.000000" x="1915" y="6742" z="1350"/>
+		</nodes>
+		<edges>
+			<edge source="41" target="40"/>
+			<edge source="42" target="41"/>
+		</edges>
+	</thing>
+	<thing id="15" name="region3_score0.04_component03750" color.r="8.965517e-01" color.g="1.034483e-01" color.b="3.448276e-01" color.a="0">
+		<nodes>
+			<node id="43" radius="10.000000" x="1840" y="6752" z="1334"/>
+			<node id="44" radius="10.000000" x="1822" y="6750" z="1341"/>
+			<node id="45" radius="10.000000" x="1795" y="6759" z="1349"/>
+		</nodes>
+		<edges>
+			<edge source="44" target="43"/>
+			<edge source="45" target="44"/>
+		</edges>
+	</thing>
+	<thing id="16" name="region3_score0.05_component03782" color.r="5.172414e-01" color.g="5.172414e-01" color.b="0" color.a="0">
+		<nodes>
+			<node id="46" radius="10.000000" x="1915" y="6742" z="1350"/>
+			<node id="47" radius="10.000000" x="1841" y="6731" z="1337"/>
+			<node id="48" radius="10.000000" x="1839" y="6732" z="1334"/>
+		</nodes>
+		<edges>
+			<edge source="47" target="46"/>
+			<edge source="48" target="47"/>
+		</edges>
+	</thing>
+	<thing id="17" name="region3_score0.01_component03783" color.r="0" color.g="1" color.b="5.862069e-01" color.a="0">
+		<nodes>
+			<node id="49" radius="10.000000" x="1915" y="6742" z="1350"/>
+			<node id="50" radius="10.000000" x="1824" y="6729" z="1344"/>
+			<node id="51" radius="10.000000" x="1803" y="6703" z="1344"/>
+		</nodes>
+		<edges>
+			<edge source="50" target="49"/>
+			<edge source="51" target="50"/>
+		</edges>
+	</thing>
+	<thing id="18" name="region3_score0.03_component03789" color.r="3.793103e-01" color.g="0" color.b="1.724138e-01" color.a="0">
+		<nodes>
+			<node id="52" radius="10.000000" x="1915" y="6742" z="1350"/>
+			<node id="53" radius="10.000000" x="1907" y="6755" z="1342"/>
+			<node id="54" radius="10.000000" x="1902" y="6763" z="1339"/>
+		</nodes>
+		<edges>
+			<edge source="53" target="52"/>
+			<edge source="54" target="53"/>
+		</edges>
+	</thing>
+	<thing id="19" name="region3_score0.03_component03813" color.r="9.655172e-01" color.g="5.172414e-01" color.b="6.896552e-02" color.a="0">
+		<nodes>
+			<node id="55" radius="10.000000" x="1915" y="6742" z="1350"/>
+			<node id="56" radius="10.000000" x="1944" y="6765" z="1358"/>
+			<node id="57" radius="10.000000" x="1952" y="6775" z="1359"/>
+		</nodes>
+		<edges>
+			<edge source="56" target="55"/>
+			<edge source="57" target="56"/>
+		</edges>
+	</thing>
+	<thing id="20" name="region3_score0.02_component03827" color.r="7.931034e-01" color.g="1" color.b="0" color.a="0">
+		<nodes>
+			<node id="58" radius="10.000000" x="1915" y="6742" z="1350"/>
+			<node id="59" radius="10.000000" x="1969" y="6734" z="1360"/>
+			<node id="60" radius="10.000000" x="1991" y="6736" z="1369"/>
+		</nodes>
+		<edges>
+			<edge source="59" target="58"/>
+			<edge source="60" target="59"/>
+		</edges>
+	</thing>
+	<thing id="21" name="region3_score0.02_component03834" color.r="1.724138e-01" color.g="2.413793e-01" color.b="0" color.a="0">
+		<nodes>
+			<node id="61" radius="10.000000" x="1915" y="6742" z="1350"/>
+			<node id="62" radius="10.000000" x="1916" y="6749" z="1367"/>
+			<node id="63" radius="10.000000" x="1926" y="6743" z="1374"/>
+		</nodes>
+		<edges>
+			<edge source="62" target="61"/>
+			<edge source="63" target="62"/>
+		</edges>
+	</thing>
+	<thing id="22" name="region3_score0.02_component03835" color.r="0" color.g="2.068966e-01" color.b="7.586207e-01" color.a="0">
+		<nodes>
+			<node id="64" radius="10.000000" x="1915" y="6742" z="1350"/>
+			<node id="65" radius="10.000000" x="1936" y="6751" z="1370"/>
+			<node id="66" radius="10.000000" x="1926" y="6743" z="1374"/>
+		</nodes>
+		<edges>
+			<edge source="65" target="64"/>
+			<edge source="66" target="65"/>
+		</edges>
+	</thing>
+	<thing id="23" name="region3_score0.02_component03941" color.r="1" color.g="7.931034e-01" color.b="5.172414e-01" color.a="0">
+		<nodes>
+			<node id="67" radius="10.000000" x="1803" y="6703" z="1344"/>
+			<node id="68" radius="10.000000" x="1827" y="6725" z="1348"/>
+			<node id="69" radius="10.000000" x="1834" y="6726" z="1347"/>
+		</nodes>
+		<edges>
+			<edge source="68" target="67"/>
+			<edge source="69" target="68"/>
+		</edges>
+	</thing>
+	<thing id="24" name="region3_score0.02_component04088" color.r="0" color.g="1.724138e-01" color.b="3.793103e-01" color.a="0">
+		<nodes>
+			<node id="70" radius="10.000000" x="2131" y="6659" z="1336"/>
+			<node id="71" radius="10.000000" x="2160" y="6670" z="1339"/>
+			<node id="72" radius="10.000000" x="2168" y="6699" z="1339"/>
+		</nodes>
+		<edges>
+			<edge source="71" target="70"/>
+			<edge source="72" target="71"/>
+		</edges>
+	</thing>
+	<thing id="25" name="region3_score0.02_component04089" color.r="6.206897e-01" color.g="4.482759e-01" color.b="5.517241e-01" color.a="0">
+		<nodes>
+			<node id="73" radius="10.000000" x="2131" y="6659" z="1336"/>
+			<node id="74" radius="10.000000" x="2150" y="6679" z="1340"/>
+			<node id="75" radius="10.000000" x="2168" y="6699" z="1339"/>
+		</nodes>
+		<edges>
+			<edge source="74" target="73"/>
+			<edge source="75" target="74"/>
+		</edges>
+	</thing>
+	<thing id="26" name="region3_score0.04_component04385" color.r="3.103448e-01" color.g="7.241379e-01" color.b="6.896552e-02" color.a="0">
+		<nodes>
+			<node id="76" radius="10.000000" x="1920" y="6714" z="1356"/>
+			<node id="77" radius="10.000000" x="1919" y="6726" z="1368"/>
+			<node id="78" radius="10.000000" x="1903" y="6728" z="1365"/>
+		</nodes>
+		<edges>
+			<edge source="78" target="76"/>
+			<edge source="78" target="77"/>
+		</edges>
+	</thing>
+	<thing id="27" name="region3_score0.04_component04408" color.r="6.206897e-01" color.g="7.586207e-01" color.b="1" color.a="0">
+		<nodes>
+			<node id="79" radius="10.000000" x="1920" y="6714" z="1356"/>
+			<node id="80" radius="10.000000" x="1928" y="6745" z="1384"/>
+			<node id="81" radius="10.000000" x="1923" y="6750" z="1382"/>
+		</nodes>
+		<edges>
+			<edge source="81" target="79"/>
+			<edge source="81" target="80"/>
+		</edges>
+	</thing>
+	<thing id="28" name="region3_score0.05_component04482" color.r="5.862069e-01" color.g="6.206897e-01" color.b="4.827586e-01" color.a="0">
+		<nodes>
+			<node id="82" radius="10.000000" x="1869" y="6719" z="1356"/>
+			<node id="83" radius="10.000000" x="1877" y="6708" z="1355"/>
+			<node id="84" radius="10.000000" x="1880" y="6703" z="1355"/>
+		</nodes>
+		<edges>
+			<edge source="83" target="82"/>
+			<edge source="84" target="83"/>
+		</edges>
+	</thing>
+	<thing id="29" name="region3_score0.03_component04492" color.r="1" color.g="4.827586e-01" color.b="6.896552e-01" color.a="0">
+		<nodes>
+			<node id="85" radius="10.000000" x="1946" y="6717" z="1360"/>
+			<node id="86" radius="10.000000" x="1974" y="6711" z="1370"/>
+			<node id="87" radius="10.000000" x="1980" y="6705" z="1371"/>
+		</nodes>
+		<edges>
+			<edge source="86" target="85"/>
+			<edge source="87" target="86"/>
+		</edges>
+	</thing>
+	<thing id="30" name="region3_score0.04_component04597" color.r="6.206897e-01" color.g="3.448276e-02" color.b="0" color.a="0">
+		<nodes>
+			<node id="88" radius="10.000000" x="1970" y="6755" z="1362"/>
+			<node id="89" radius="10.000000" x="1971" y="6770" z="1363"/>
+			<node id="90" radius="10.000000" x="1979" y="6773" z="1377"/>
+		</nodes>
+		<edges>
+			<edge source="89" target="88"/>
+			<edge source="90" target="89"/>
+		</edges>
+	</thing>
+	<thing id="31" name="region3_score0.04_component04729" color.r="1" color.g="7.241379e-01" color.b="7.241379e-01" color.a="0">
+		<nodes>
+			<node id="91" radius="10.000000" x="1960" y="6738" z="1368"/>
+			<node id="92" radius="10.000000" x="1985" y="6742" z="1381"/>
+			<node id="93" radius="10.000000" x="1979" y="6773" z="1377"/>
+		</nodes>
+		<edges>
+			<edge source="92" target="91"/>
+			<edge source="93" target="92"/>
+		</edges>
+	</thing>
+	<thing id="32" name="region3_score0.04_component04730" color.r="5.172414e-01" color.g="3.793103e-01" color.b="7.931034e-01" color.a="0">
+		<nodes>
+			<node id="94" radius="10.000000" x="1960" y="6738" z="1368"/>
+			<node id="95" radius="10.000000" x="1972" y="6752" z="1370"/>
+			<node id="96" radius="10.000000" x="1997" y="6770" z="1370"/>
+		</nodes>
+		<edges>
+			<edge source="95" target="94"/>
+			<edge source="96" target="95"/>
+		</edges>
+	</thing>
+	<thing id="33" name="region3_score0.02_component04733" color.r="6.206897e-01" color.g="0" color.b="4.482759e-01" color.a="0">
+		<nodes>
+			<node id="97" radius="10.000000" x="1960" y="6738" z="1368"/>
+			<node id="98" radius="10.000000" x="1965" y="6744" z="1374"/>
+			<node id="99" radius="10.000000" x="1977" y="6764" z="1398"/>
+		</nodes>
+		<edges>
+			<edge source="98" target="97"/>
+			<edge source="99" target="98"/>
+		</edges>
+	</thing>
+	<thing id="34" name="region3_score0.02_component04734" color.r="5.172414e-01" color.g="8.620690e-01" color.b="6.551724e-01" color.a="0">
+		<nodes>
+			<node id="100" radius="10.000000" x="1960" y="6738" z="1368"/>
+			<node id="101" radius="10.000000" x="1993" y="6736" z="1381"/>
+			<node id="102" radius="10.000000" x="1977" y="6764" z="1398"/>
+		</nodes>
+		<edges>
+			<edge source="101" target="100"/>
+			<edge source="102" target="101"/>
+		</edges>
+	</thing>
+	<thing id="35" name="region3_score0.04_component04779" color.r="1" color.g="0" color.b="9.655172e-01" color.a="0">
+		<nodes>
+			<node id="103" radius="10.000000" x="1980" y="6705" z="1371"/>
+			<node id="104" radius="10.000000" x="1975" y="6713" z="1366"/>
+			<node id="105" radius="10.000000" x="1991" y="6736" z="1369"/>
+		</nodes>
+		<edges>
+			<edge source="104" target="103"/>
+			<edge source="105" target="104"/>
+		</edges>
+	</thing>
+	<thing id="36" name="region3_score0.01_component04835" color.r="0" color.g="8.275862e-01" color.b="1" color.a="0">
+		<nodes>
+			<node id="106" radius="10.000000" x="2035" y="6761" z="1369"/>
+			<node id="107" radius="10.000000" x="2015" y="6771" z="1368"/>
+			<node id="108" radius="10.000000" x="1997" y="6770" z="1370"/>
+		</nodes>
+		<edges>
+			<edge source="107" target="106"/>
+			<edge source="108" target="107"/>
+		</edges>
+	</thing>
+	<thing id="37" name="region3_score0.01_component04836" color.r="1" color.g="4.482759e-01" color.b="3.448276e-01" color.a="0">
+		<nodes>
+			<node id="109" radius="10.000000" x="2035" y="6761" z="1369"/>
+			<node id="110" radius="10.000000" x="2020" y="6755" z="1373"/>
+			<node id="111" radius="10.000000" x="2008" y="6742" z="1375"/>
+		</nodes>
+		<edges>
+			<edge source="110" target="109"/>
+			<edge source="111" target="110"/>
+		</edges>
+	</thing>
+	<thing id="38" name="region3_score0.01_component04840" color.r="3.448276e-01" color.g="2.413793e-01" color.b="2.068966e-01" color.a="0">
+		<nodes>
+			<node id="112" radius="10.000000" x="2035" y="6761" z="1369"/>
+			<node id="113" radius="10.000000" x="2031" y="6765" z="1374"/>
+			<node id="114" radius="10.000000" x="1977" y="6764" z="1398"/>
+		</nodes>
+		<edges>
+			<edge source="113" target="112"/>
+			<edge source="114" target="113"/>
+		</edges>
+	</thing>
+	<thing id="39" name="region3_score0.03_component04855" color.r="0" color.g="2.413793e-01" color.b="2.068966e-01" color.a="0">
+		<nodes>
+			<node id="115" radius="10.000000" x="1979" y="6773" z="1377"/>
+			<node id="116" radius="10.000000" x="1976" y="6739" z="1389"/>
+			<node id="117" radius="10.000000" x="1965" y="6728" z="1390"/>
+		</nodes>
+		<edges>
+			<edge source="116" target="115"/>
+			<edge source="117" target="116"/>
+		</edges>
+	</thing>
+	<thing id="40" name="region3_score0.04_component04897" color.r="8.620690e-01" color.g="3.793103e-01" color.b="8.620690e-01" color.a="0">
+		<nodes>
+			<node id="118" radius="10.000000" x="2008" y="6742" z="1375"/>
+			<node id="119" radius="10.000000" x="2000" y="6725" z="1371"/>
+			<node id="120" radius="10.000000" x="2008" y="6695" z="1371"/>
+		</nodes>
+		<edges>
+			<edge source="119" target="118"/>
+			<edge source="120" target="119"/>
+		</edges>
+	</thing>
+	<thing id="41" name="region3_score0.04_component05152" color.r="3.793103e-01" color.g="4.482759e-01" color.b="6.896552e-01" color.a="0">
+		<nodes>
+			<node id="121" radius="10.000000" x="1977" y="6764" z="1398"/>
+			<node id="122" radius="10.000000" x="1994" y="6751" z="1402"/>
+			<node id="123" radius="10.000000" x="1998" y="6747" z="1401"/>
+		</nodes>
+		<edges>
+			<edge source="122" target="121"/>
+			<edge source="123" target="122"/>
+		</edges>
+	</thing>
+	<thing id="42" name="region3_score0.03_component05285" color.r="7.241379e-01" color.g="7.931034e-01" color.b="1.724138e-01" color.a="0">
+		<nodes>
+			<node id="124" radius="10.000000" x="2134" y="6654" z="1384"/>
+			<node id="125" radius="10.000000" x="2152" y="6662" z="1393"/>
+			<node id="126" radius="10.000000" x="2142" y="6656" z="1401"/>
+		</nodes>
+		<edges>
+			<edge source="125" target="124"/>
+			<edge source="126" target="125"/>
+		</edges>
+	</thing>
+	<thing id="43" name="region3_score0.02_component05356" color.r="6.896552e-02" color.g="6.896552e-01" color.b="6.551724e-01" color.a="0">
+		<nodes>
+			<node id="127" radius="10.000000" x="2006" y="6753" z="1391"/>
+			<node id="128" radius="10.000000" x="2004" y="6753" z="1397"/>
+			<node id="129" radius="10.000000" x="1998" y="6747" z="1401"/>
+		</nodes>
+		<edges>
+			<edge source="128" target="127"/>
+			<edge source="129" target="128"/>
+		</edges>
+	</thing>
+	<thing id="44" name="region3_score0.02_component05519" color.r="3.793103e-01" color.g="6.896552e-02" color.b="0" color.a="0">
+		<nodes>
+			<node id="130" radius="10.000000" x="2011" y="6738" z="1396"/>
+			<node id="131" radius="10.000000" x="2004" y="6743" z="1399"/>
+			<node id="132" radius="10.000000" x="1998" y="6747" z="1401"/>
+		</nodes>
+		<edges>
+			<edge source="131" target="130"/>
+			<edge source="132" target="131"/>
+		</edges>
+	</thing>
+	<thing id="45" name="region3_score0.02_component05590" color.r="1.724138e-01" color.g="0" color.b="1.724138e-01" color.a="0">
+		<nodes>
+			<node id="133" radius="10.000000" x="1998" y="6747" z="1401"/>
+			<node id="134" radius="10.000000" x="1995" y="6743" z="1405"/>
+			<node id="135" radius="10.000000" x="1993" y="6736" z="1405"/>
+		</nodes>
+		<edges>
+			<edge source="134" target="133"/>
+			<edge source="135" target="134"/>
+		</edges>
+	</thing>
+	<thing id="46" name="region3_score0.04_component06210" color.r="3.448276e-01" color.g="0" color.b="7.931034e-01" color.a="0">
+		<nodes>
+			<node id="136" radius="10.000000" x="2228" y="6715" z="1277"/>
+			<node id="137" radius="10.000000" x="2223" y="6703" z="1283"/>
+			<node id="138" radius="10.000000" x="2226" y="6700" z="1290"/>
+		</nodes>
+		<edges>
+			<edge source="137" target="136"/>
+			<edge source="138" target="137"/>
+		</edges>
+	</thing>
+	<thing id="47" name="region3_score0.04_component06376" color.r="5.862069e-01" color.g="7.586207e-01" color.b="7.931034e-01" color.a="0">
+		<nodes>
+			<node id="139" radius="10.000000" x="2192" y="6771" z="1309"/>
+			<node id="140" radius="10.000000" x="2178" y="6736" z="1290"/>
+			<node id="141" radius="10.000000" x="2182" y="6727" z="1297"/>
+		</nodes>
+		<edges>
+			<edge source="141" target="139"/>
+			<edge source="141" target="140"/>
+		</edges>
+	</thing>
+	<thing id="48" name="region3_score0.00_component07048" color.r="8.275862e-01" color.g="6.206897e-01" color.b="1.379310e-01" color.a="0">
+		<nodes>
+			<node id="142" radius="10.000000" x="2244" y="6745" z="1351"/>
+			<node id="143" radius="10.000000" x="2240" y="6753" z="1355"/>
+			<node id="144" radius="10.000000" x="2238" y="6764" z="1359"/>
+		</nodes>
+		<edges>
+			<edge source="143" target="142"/>
+			<edge source="144" target="143"/>
+		</edges>
+	</thing>
+	<thing id="49" name="region3_score0.04_component07431" color.r="5.172414e-01" color.g="6.896552e-01" color.b="3.448276e-01" color.a="0">
+		<nodes>
+			<node id="145" radius="10.000000" x="2192" y="6771" z="1375"/>
+			<node id="146" radius="10.000000" x="2185" y="6761" z="1377"/>
+			<node id="147" radius="10.000000" x="2180" y="6754" z="1377"/>
+		</nodes>
+		<edges>
+			<edge source="146" target="145"/>
+			<edge source="147" target="146"/>
+		</edges>
+	</thing>
+	<thing id="50" name="region3_score0.01_component08745" color.r="8.965517e-01" color.g="9.310345e-01" color.b="7.241379e-01" color.a="0">
+		<nodes>
+			<node id="148" radius="10.000000" x="2067" y="7158" z="1232"/>
+			<node id="149" radius="10.000000" x="2101" y="7069" z="1238"/>
+			<node id="150" radius="10.000000" x="2099" y="7040" z="1242"/>
+		</nodes>
+		<edges>
+			<edge source="149" target="148"/>
+			<edge source="150" target="149"/>
+		</edges>
+	</thing>
+	<thing id="51" name="region3_score0.04_component08746" color.r="9.655172e-01" color.g="8.275862e-01" color.b="1" color.a="0">
+		<nodes>
+			<node id="151" radius="10.000000" x="2067" y="7158" z="1232"/>
+			<node id="152" radius="10.000000" x="2086" y="7105" z="1239"/>
+			<node id="153" radius="10.000000" x="2078" y="7106" z="1237"/>
+		</nodes>
+		<edges>
+			<edge source="153" target="151"/>
+			<edge source="153" target="152"/>
+		</edges>
+	</thing>
+	<thing id="52" name="region3_score0.05_component08750" color.r="7.241379e-01" color.g="3.103448e-01" color.b="3.793103e-01" color.a="0">
+		<nodes>
+			<node id="154" radius="10.000000" x="2067" y="7158" z="1232"/>
+			<node id="155" radius="10.000000" x="2074" y="7145" z="1240"/>
+			<node id="156" radius="10.000000" x="2106" y="7173" z="1250"/>
+		</nodes>
+		<edges>
+			<edge source="155" target="154"/>
+			<edge source="156" target="155"/>
+		</edges>
+	</thing>
+	<thing id="53" name="region3_score0.01_component10961" color.r="5.517241e-01" color.g="3.448276e-02" color.b="6.551724e-01" color.a="0">
+		<nodes>
+			<node id="157" radius="10.000000" x="1969" y="6880" z="1254"/>
+			<node id="158" radius="10.000000" x="1972" y="6877" z="1257"/>
+			<node id="159" radius="10.000000" x="1951" y="6871" z="1259"/>
+		</nodes>
+		<edges>
+			<edge source="158" target="157"/>
+			<edge source="159" target="158"/>
+		</edges>
+	</thing>
+	<thing id="54" name="region3_score0.00_component11159" color.r="4.137931e-01" color.g="3.103448e-01" color.b="0" color.a="0">
+		<nodes>
+			<node id="160" radius="10.000000" x="2067" y="6808" z="1259"/>
+			<node id="161" radius="10.000000" x="2072" y="6799" z="1263"/>
+			<node id="162" radius="10.000000" x="2066" y="6791" z="1264"/>
+		</nodes>
+		<edges>
+			<edge source="161" target="160"/>
+			<edge source="162" target="161"/>
+		</edges>
+	</thing>
+	<thing id="55" name="region3_score0.02_component11215" color.r="0" color.g="2.413793e-01" color.b="6.206897e-01" color.a="0">
+		<nodes>
+			<node id="163" radius="10.000000" x="2105" y="6947" z="1257"/>
+			<node id="164" radius="10.000000" x="2162" y="7016" z="1302"/>
+			<node id="165" radius="10.000000" x="2155" y="7022" z="1303"/>
+		</nodes>
+		<edges>
+			<edge source="164" target="163"/>
+			<edge source="165" target="164"/>
+		</edges>
+	</thing>
+	<thing id="56" name="region3_score0.01_component11607" color.r="4.827586e-01" color.g="2.413793e-01" color.b="4.827586e-01" color.a="0">
+		<nodes>
+			<node id="166" radius="10.000000" x="2144" y="7031" z="1266"/>
+			<node id="167" radius="10.000000" x="2169" y="7032" z="1283"/>
+			<node id="168" radius="10.000000" x="2169" y="7040" z="1288"/>
+		</nodes>
+		<edges>
+			<edge source="167" target="166"/>
+			<edge source="168" target="167"/>
+		</edges>
+	</thing>
+	<thing id="57" name="region3_score0.03_component11924" color.r="2.413793e-01" color.g="4.827586e-01" color.b="3.793103e-01" color.a="0">
+		<nodes>
+			<node id="169" radius="10.000000" x="1905" y="7099" z="1279"/>
+			<node id="170" radius="10.000000" x="1867" y="7111" z="1304"/>
+			<node id="171" radius="10.000000" x="1862" y="7114" z="1308"/>
+		</nodes>
+		<edges>
+			<edge source="170" target="169"/>
+			<edge source="171" target="170"/>
+		</edges>
+	</thing>
+	<thing id="58" name="region3_score0.01_component12123" color.r="6.551724e-01" color.g="1" color.b="3.793103e-01" color.a="0">
+		<nodes>
+			<node id="172" radius="10.000000" x="2142" y="6794" z="1273"/>
+			<node id="173" radius="10.000000" x="2159" y="6845" z="1271"/>
+			<node id="174" radius="10.000000" x="2169" y="6848" z="1270"/>
+		</nodes>
+		<edges>
+			<edge source="173" target="172"/>
+			<edge source="174" target="173"/>
+		</edges>
+	</thing>
+	<thing id="59" name="region3_score0.03_component13300" color.r="0" color.g="5.862069e-01" color.b="8.275862e-01" color.a="0">
+		<nodes>
+			<node id="175" radius="10.000000" x="2172" y="7045" z="1279"/>
+			<node id="176" radius="10.000000" x="2170" y="7040" z="1283"/>
+			<node id="177" radius="10.000000" x="2169" y="7040" z="1288"/>
+		</nodes>
+		<edges>
+			<edge source="176" target="175"/>
+			<edge source="177" target="176"/>
+		</edges>
+	</thing>
+	<thing id="60" name="region3_score0.05_component14402" color.r="2.413793e-01" color.g="4.482759e-01" color.b="0" color.a="0">
+		<nodes>
+			<node id="178" radius="10.000000" x="2008" y="7116" z="1294"/>
+			<node id="179" radius="10.000000" x="2027" y="7113" z="1296"/>
+			<node id="180" radius="10.000000" x="2032" y="7118" z="1300"/>
+		</nodes>
+		<edges>
+			<edge source="179" target="178"/>
+			<edge source="180" target="179"/>
+		</edges>
+	</thing>
+	<thing id="61" name="region3_score0.05_component14403" color.r="6.896552e-01" color.g="3.448276e-01" color.b="0" color.a="0">
+		<nodes>
+			<node id="181" radius="10.000000" x="2008" y="7116" z="1294"/>
+			<node id="182" radius="10.000000" x="2036" y="7114" z="1297"/>
+			<node id="183" radius="10.000000" x="2032" y="7118" z="1300"/>
+		</nodes>
+		<edges>
+			<edge source="183" target="181"/>
+			<edge source="183" target="182"/>
+		</edges>
+	</thing>
+	<thing id="62" name="region3_score0.05_component14488" color.r="8.620690e-01" color.g="0" color.b="4.827586e-01" color.a="0">
+		<nodes>
+			<node id="184" radius="10.000000" x="2138" y="7025" z="1295"/>
+			<node id="185" radius="10.000000" x="2142" y="7022" z="1299"/>
+			<node id="186" radius="10.000000" x="2155" y="7022" z="1303"/>
+		</nodes>
+		<edges>
+			<edge source="185" target="184"/>
+			<edge source="186" target="185"/>
+		</edges>
+	</thing>
+	<thing id="63" name="region3_score0.05_component14802" color.r="6.206897e-01" color.g="6.206897e-01" color.b="1" color.a="0">
+		<nodes>
+			<node id="187" radius="10.000000" x="2162" y="7045" z="1304"/>
+			<node id="188" radius="10.000000" x="2153" y="7034" z="1304"/>
+			<node id="189" radius="10.000000" x="2155" y="7022" z="1303"/>
+		</nodes>
+		<edges>
+			<edge source="188" target="187"/>
+			<edge source="189" target="188"/>
+		</edges>
+	</thing>
+	<thing id="64" name="region3_score0.00_component15143" color.r="3.103448e-01" color.g="2.758621e-01" color.b="3.793103e-01" color.a="0">
+		<nodes>
+			<node id="190" radius="10.000000" x="2032" y="7091" z="1302"/>
+			<node id="191" radius="10.000000" x="2029" y="7093" z="1306"/>
+			<node id="192" radius="10.000000" x="2015" y="7105" z="1311"/>
+		</nodes>
+		<edges>
+			<edge source="191" target="190"/>
+			<edge source="192" target="191"/>
+		</edges>
+	</thing>
+	<thing id="65" name="region3_score0.00_component15562" color.r="6.551724e-01" color.g="1" color.b="9.655172e-01" color.a="0">
+		<nodes>
+			<node id="193" radius="10.000000" x="1983" y="7103" z="1311"/>
+			<node id="194" radius="10.000000" x="1970" y="7087" z="1319"/>
+			<node id="195" radius="10.000000" x="1974" y="7071" z="1321"/>
+		</nodes>
+		<edges>
+			<edge source="194" target="193"/>
+			<edge source="195" target="194"/>
+		</edges>
+	</thing>
+	<thing id="66" name="region3_score0.00_component15563" color.r="8.965517e-01" color.g="0" color.b="1.724138e-01" color.a="0">
+		<nodes>
+			<node id="196" radius="10.000000" x="1983" y="7103" z="1311"/>
+			<node id="197" radius="10.000000" x="1991" y="7079" z="1326"/>
+			<node id="198" radius="10.000000" x="1974" y="7071" z="1321"/>
+		</nodes>
+		<edges>
+			<edge source="198" target="196"/>
+			<edge source="198" target="197"/>
+		</edges>
+	</thing>
+	<thing id="67" name="region3_score0.05_component15738" color.r="4.482759e-01" color.g="8.620690e-01" color.b="4.482759e-01" color.a="0">
+		<nodes>
+			<node id="199" radius="10.000000" x="1964" y="6786" z="1307"/>
+			<node id="200" radius="10.000000" x="1966" y="6785" z="1311"/>
+			<node id="201" radius="10.000000" x="1965" y="6786" z="1314"/>
+		</nodes>
+		<edges>
+			<edge source="200" target="199"/>
+			<edge source="201" target="200"/>
+		</edges>
+	</thing>
+	<thing id="68" name="region3_score0.02_component15930" color.r="1" color.g="9.310345e-01" color.b="4.827586e-01" color.a="0">
+		<nodes>
+			<node id="202" radius="10.000000" x="2015" y="7105" z="1311"/>
+			<node id="203" radius="10.000000" x="2030" y="7096" z="1310"/>
+			<node id="204" radius="10.000000" x="2034" y="7096" z="1310"/>
+		</nodes>
+		<edges>
+			<edge source="203" target="202"/>
+			<edge source="204" target="203"/>
+		</edges>
+	</thing>
+	<thing id="69" name="region3_score0.00_component15932" color.r="6.896552e-01" color.g="5.517241e-01" color.b="2.758621e-01" color.a="0">
+		<nodes>
+			<node id="205" radius="10.000000" x="2015" y="7105" z="1311"/>
+			<node id="206" radius="10.000000" x="2031" y="7106" z="1315"/>
+			<node id="207" radius="10.000000" x="2054" y="7111" z="1316"/>
+		</nodes>
+		<edges>
+			<edge source="206" target="205"/>
+			<edge source="207" target="206"/>
+		</edges>
+	</thing>
+	<thing id="70" name="region3_score0.04_component15974" color.r="3.793103e-01" color.g="4.482759e-01" color.b="1" color.a="0">
+		<nodes>
+			<node id="208" radius="10.000000" x="2111" y="6818" z="1334"/>
+			<node id="209" radius="10.000000" x="2099" y="6787" z="1341"/>
+			<node id="210" radius="10.000000" x="2095" y="6786" z="1340"/>
+		</nodes>
+		<edges>
+			<edge source="209" target="208"/>
+			<edge source="210" target="209"/>
+		</edges>
+	</thing>
+	<thing id="71" name="region3_score0.00_component16013" color.r="8.620690e-01" color.g="2.758621e-01" color.b="0" color.a="0">
+		<nodes>
+			<node id="211" radius="10.000000" x="2135" y="6869" z="1325"/>
+			<node id="212" radius="10.000000" x="2135" y="6859" z="1348"/>
+			<node id="213" radius="10.000000" x="2139" y="6851" z="1357"/>
+		</nodes>
+		<edges>
+			<edge source="212" target="211"/>
+			<edge source="213" target="212"/>
+		</edges>
+	</thing>
+	<thing id="72" name="region3_score0.00_component17696" color.r="0" color.g="0" color.b="4.482759e-01" color.a="0">
+		<nodes>
+			<node id="214" radius="10.000000" x="2016" y="6958" z="1336"/>
+			<node id="215" radius="10.000000" x="2036" y="6956" z="1351"/>
+			<node id="216" radius="10.000000" x="2040" y="6944" z="1365"/>
+		</nodes>
+		<edges>
+			<edge source="215" target="214"/>
+			<edge source="216" target="215"/>
+		</edges>
+	</thing>
+	<thing id="73" name="region3_score0.00_component18360" color.r="3.448276e-02" color.g="0" color.b="2.758621e-01" color.a="0">
+		<nodes>
+			<node id="217" radius="10.000000" x="1818" y="7119" z="1327"/>
+			<node id="218" radius="10.000000" x="1820" y="7102" z="1332"/>
+			<node id="219" radius="10.000000" x="1805" y="7100" z="1335"/>
+		</nodes>
+		<edges>
+			<edge source="218" target="217"/>
+			<edge source="219" target="218"/>
+		</edges>
+	</thing>
+	<thing id="74" name="region3_score0.02_component18541" color.r="2.068966e-01" color.g="9.310345e-01" color.b="3.103448e-01" color.a="0">
+		<nodes>
+			<node id="220" radius="10.000000" x="1965" y="6923" z="1342"/>
+			<node id="221" radius="10.000000" x="1928" y="6917" z="1348"/>
+			<node id="222" radius="10.000000" x="1933" y="6908" z="1349"/>
+		</nodes>
+		<edges>
+			<edge source="222" target="220"/>
+			<edge source="222" target="221"/>
+		</edges>
+	</thing>
+	<thing id="75" name="region3_score0.04_component18549" color.r="1.724138e-01" color.g="0" color.b="0" color.a="0">
+		<nodes>
+			<node id="223" radius="10.000000" x="1965" y="6923" z="1342"/>
+			<node id="224" radius="10.000000" x="1947" y="6905" z="1353"/>
+			<node id="225" radius="10.000000" x="1940" y="6900" z="1355"/>
+		</nodes>
+		<edges>
+			<edge source="224" target="223"/>
+			<edge source="225" target="224"/>
+		</edges>
+	</thing>
+	<thing id="76" name="region3_score0.01_component18831" color.r="6.551724e-01" color.g="0" color.b="1" color.a="0">
+		<nodes>
+			<node id="226" radius="10.000000" x="1877" y="6896" z="1339"/>
+			<node id="227" radius="10.000000" x="1849" y="6895" z="1349"/>
+			<node id="228" radius="10.000000" x="1831" y="6908" z="1347"/>
+		</nodes>
+		<edges>
+			<edge source="227" target="226"/>
+			<edge source="228" target="227"/>
+		</edges>
+	</thing>
+	<thing id="77" name="region3_score0.00_component18837" color.r="0" color.g="9.655172e-01" color.b="7.586207e-01" color.a="0">
+		<nodes>
+			<node id="229" radius="10.000000" x="1877" y="6896" z="1339"/>
+			<node id="230" radius="10.000000" x="1846" y="6890" z="1354"/>
+			<node id="231" radius="10.000000" x="1842" y="6895" z="1359"/>
+		</nodes>
+		<edges>
+			<edge source="230" target="229"/>
+			<edge source="231" target="230"/>
+		</edges>
+	</thing>
+	<thing id="78" name="region3_score0.03_component19014" color.r="6.206897e-01" color.g="0" color.b="1.724138e-01" color.a="0">
+		<nodes>
+			<node id="232" radius="10.000000" x="1817" y="6916" z="1337"/>
+			<node id="233" radius="10.000000" x="1826" y="6913" z="1340"/>
+			<node id="234" radius="10.000000" x="1829" y="6914" z="1341"/>
+		</nodes>
+		<edges>
+			<edge source="233" target="232"/>
+			<edge source="234" target="233"/>
+		</edges>
+	</thing>
+	<thing id="79" name="region3_score0.03_component19015" color.r="0" color.g="2.413793e-01" color.b="1" color.a="0">
+		<nodes>
+			<node id="235" radius="10.000000" x="1817" y="6916" z="1337"/>
+			<node id="236" radius="10.000000" x="1825" y="6911" z="1342"/>
+			<node id="237" radius="10.000000" x="1831" y="6908" z="1347"/>
+		</nodes>
+		<edges>
+			<edge source="236" target="235"/>
+			<edge source="237" target="236"/>
+		</edges>
+	</thing>
+	<thing id="80" name="region3_score0.00_component19205" color.r="9.655172e-01" color.g="6.206897e-01" color.b="4.827586e-01" color.a="0">
+		<nodes>
+			<node id="238" radius="10.000000" x="2124" y="6977" z="1335"/>
+			<node id="239" radius="10.000000" x="2122" y="6981" z="1341"/>
+			<node id="240" radius="10.000000" x="2103" y="6988" z="1342"/>
+		</nodes>
+		<edges>
+			<edge source="239" target="238"/>
+			<edge source="240" target="239"/>
+		</edges>
+	</thing>
+	<thing id="81" name="region3_score0.00_component19477" color.r="4.137931e-01" color.g="4.482759e-01" color.b="2.068966e-01" color.a="0">
+		<nodes>
+			<node id="241" radius="10.000000" x="1969" y="6834" z="1349"/>
+			<node id="242" radius="10.000000" x="1989" y="6834" z="1351"/>
+			<node id="243" radius="10.000000" x="1997" y="6826" z="1349"/>
+		</nodes>
+		<edges>
+			<edge source="242" target="241"/>
+			<edge source="243" target="242"/>
+		</edges>
+	</thing>
+	<thing id="82" name="region3_score0.04_component19726" color.r="1" color.g="1" color.b="2.758621e-01" color.a="0">
+		<nodes>
+			<node id="244" radius="10.000000" x="2086" y="7048" z="1368"/>
+			<node id="245" radius="10.000000" x="1977" y="7027" z="1359"/>
+			<node id="246" radius="10.000000" x="1975" y="7022" z="1361"/>
+		</nodes>
+		<edges>
+			<edge source="245" target="244"/>
+			<edge source="246" target="245"/>
+		</edges>
+	</thing>
+	<thing id="83" name="region3_score0.02_component19877" color.r="7.586207e-01" color.g="6.896552e-01" color.b="6.896552e-01" color.a="0">
+		<nodes>
+			<node id="247" radius="10.000000" x="1933" y="6908" z="1349"/>
+			<node id="248" radius="10.000000" x="1921" y="6916" z="1351"/>
+			<node id="249" radius="10.000000" x="1920" y="6920" z="1351"/>
+		</nodes>
+		<edges>
+			<edge source="248" target="247"/>
+			<edge source="249" target="248"/>
+		</edges>
+	</thing>
+	<thing id="84" name="region3_score0.04_component19880" color.r="4.482759e-01" color.g="4.482759e-01" color.b="4.482759e-01" color.a="0">
+		<nodes>
+			<node id="250" radius="10.000000" x="1933" y="6908" z="1349"/>
+			<node id="251" radius="10.000000" x="1918" y="6912" z="1355"/>
+			<node id="252" radius="10.000000" x="1916" y="6915" z="1357"/>
+		</nodes>
+		<edges>
+			<edge source="251" target="250"/>
+			<edge source="252" target="251"/>
+		</edges>
+	</thing>
+	<thing id="85" name="region3_score0.01_component19881" color.r="7.586207e-01" color.g="4.137931e-01" color.b="6.551724e-01" color.a="0">
+		<nodes>
+			<node id="253" radius="10.000000" x="1933" y="6908" z="1349"/>
+			<node id="254" radius="10.000000" x="1939" y="6905" z="1352"/>
+			<node id="255" radius="10.000000" x="1940" y="6900" z="1355"/>
+		</nodes>
+		<edges>
+			<edge source="254" target="253"/>
+			<edge source="255" target="254"/>
+		</edges>
+	</thing>
+	<thing id="86" name="region3_score0.00_component20144" color.r="0" color.g="3.448276e-01" color.b="1.379310e-01" color.a="0">
+		<nodes>
+			<node id="256" radius="10.000000" x="2040" y="6944" z="1365"/>
+			<node id="257" radius="10.000000" x="2028" y="6965" z="1368"/>
+			<node id="258" radius="10.000000" x="2023" y="6985" z="1379"/>
+		</nodes>
+		<edges>
+			<edge source="257" target="256"/>
+			<edge source="258" target="257"/>
+		</edges>
+	</thing>
+	<thing id="87" name="region3_score0.05_component20198" color.r="1" color.g="5.172414e-01" color.b="5.517241e-01" color.a="0">
+		<nodes>
+			<node id="259" radius="10.000000" x="1823" y="7112" z="1352"/>
+			<node id="260" radius="10.000000" x="1817" y="7110" z="1356"/>
+			<node id="261" radius="10.000000" x="1817" y="7100" z="1362"/>
+		</nodes>
+		<edges>
+			<edge source="260" target="259"/>
+			<edge source="261" target="260"/>
+		</edges>
+	</thing>
+	<thing id="88" name="region3_score0.04_component20221" color.r="6.896552e-01" color.g="5.172414e-01" color.b="4.482759e-01" color.a="0">
+		<nodes>
+			<node id="262" radius="10.000000" x="2130" y="6902" z="1379"/>
+			<node id="263" radius="10.000000" x="2121" y="6915" z="1370"/>
+			<node id="264" radius="10.000000" x="2098" y="6926" z="1372"/>
+		</nodes>
+		<edges>
+			<edge source="263" target="262"/>
+			<edge source="264" target="263"/>
+		</edges>
+	</thing>
+	<thing id="89" name="region3_score0.02_component20245" color.r="0" color.g="2.758621e-01" color.b="3.793103e-01" color.a="0">
+		<nodes>
+			<node id="265" radius="10.000000" x="2130" y="6902" z="1379"/>
+			<node id="266" radius="10.000000" x="2127" y="6889" z="1395"/>
+			<node id="267" radius="10.000000" x="2124" y="6880" z="1397"/>
+		</nodes>
+		<edges>
+			<edge source="266" target="265"/>
+			<edge source="267" target="266"/>
+		</edges>
+	</thing>
+	<thing id="90" name="region3_score0.01_component20256" color.r="5.517241e-01" color.g="1" color.b="6.896552e-02" color.a="0">
+		<nodes>
+			<node id="268" radius="10.000000" x="1913" y="6929" z="1353"/>
+			<node id="269" radius="10.000000" x="1891" y="6905" z="1354"/>
+			<node id="270" radius="10.000000" x="1911" y="6893" z="1357"/>
+		</nodes>
+		<edges>
+			<edge source="269" target="268"/>
+			<edge source="270" target="269"/>
+		</edges>
+	</thing>
+	<thing id="91" name="region3_score0.01_component20257" color.r="6.896552e-01" color.g="5.517241e-01" color.b="7.931034e-01" color.a="0">
+		<nodes>
+			<node id="271" radius="10.000000" x="1913" y="6929" z="1353"/>
+			<node id="272" radius="10.000000" x="1916" y="6910" z="1361"/>
+			<node id="273" radius="10.000000" x="1911" y="6893" z="1357"/>
+		</nodes>
+		<edges>
+			<edge source="272" target="271"/>
+			<edge source="273" target="272"/>
+		</edges>
+	</thing>
+	<thing id="92" name="region3_score0.03_component20261" color.r="4.482759e-01" color.g="3.103448e-01" color.b="9.655172e-01" color.a="0">
+		<nodes>
+			<node id="274" radius="10.000000" x="1913" y="6929" z="1353"/>
+			<node id="275" radius="10.000000" x="1904" y="6909" z="1357"/>
+			<node id="276" radius="10.000000" x="1906" y="6906" z="1356"/>
+		</nodes>
+		<edges>
+			<edge source="275" target="274"/>
+			<edge source="276" target="275"/>
+		</edges>
+	</thing>
+	<thing id="93" name="region3_score0.04_component20267" color.r="4.482759e-01" color.g="6.206897e-01" color.b="0" color.a="0">
+		<nodes>
+			<node id="277" radius="10.000000" x="1913" y="6929" z="1353"/>
+			<node id="278" radius="10.000000" x="1903" y="6916" z="1364"/>
+			<node id="279" radius="10.000000" x="1918" y="6898" z="1368"/>
+		</nodes>
+		<edges>
+			<edge source="278" target="277"/>
+			<edge source="279" target="278"/>
+		</edges>
+	</thing>
+	<thing id="94" name="region3_score0.01_component20421" color.r="8.275862e-01" color.g="3.448276e-02" color.b="7.586207e-01" color.a="0">
+		<nodes>
+			<node id="280" radius="10.000000" x="1911" y="6893" z="1357"/>
+			<node id="281" radius="10.000000" x="1917" y="6911" z="1359"/>
+			<node id="282" radius="10.000000" x="1916" y="6915" z="1357"/>
+		</nodes>
+		<edges>
+			<edge source="281" target="280"/>
+			<edge source="282" target="281"/>
+		</edges>
+	</thing>
+	<thing id="95" name="region3_score0.01_component20423" color.r="6.206897e-01" color.g="0" color.b="3.103448e-01" color.a="0">
+		<nodes>
+			<node id="283" radius="10.000000" x="1911" y="6893" z="1357"/>
+			<node id="284" radius="10.000000" x="1908" y="6904" z="1356"/>
+			<node id="285" radius="10.000000" x="1906" y="6906" z="1356"/>
+		</nodes>
+		<edges>
+			<edge source="284" target="283"/>
+			<edge source="285" target="284"/>
+		</edges>
+	</thing>
+	<thing id="96" name="region3_score0.01_component20428" color.r="7.586207e-01" color.g="4.827586e-01" color.b="1" color.a="0">
+		<nodes>
+			<node id="286" radius="10.000000" x="1911" y="6893" z="1357"/>
+			<node id="287" radius="10.000000" x="1910" y="6889" z="1365"/>
+			<node id="288" radius="10.000000" x="1908" y="6881" z="1371"/>
+		</nodes>
+		<edges>
+			<edge source="287" target="286"/>
+			<edge source="288" target="287"/>
+		</edges>
+	</thing>
+	<thing id="97" name="region3_score0.03_component20937" color.r="5.517241e-01" color.g="5.862069e-01" color.b="7.241379e-01" color.a="0">
+		<nodes>
+			<node id="289" radius="10.000000" x="1987" y="6895" z="1371"/>
+			<node id="290" radius="10.000000" x="1969" y="6890" z="1373"/>
+			<node id="291" radius="10.000000" x="1965" y="6892" z="1374"/>
+		</nodes>
+		<edges>
+			<edge source="290" target="289"/>
+			<edge source="291" target="290"/>
+		</edges>
+	</thing>
+	<thing id="98" name="region3_score0.05_component20948" color.r="9.655172e-01" color.g="6.551724e-01" color.b="8.275862e-01" color.a="0">
+		<nodes>
+			<node id="292" radius="10.000000" x="1987" y="6895" z="1371"/>
+			<node id="293" radius="10.000000" x="1981" y="6855" z="1383"/>
+			<node id="294" radius="10.000000" x="1987" y="6853" z="1390"/>
+		</nodes>
+		<edges>
+			<edge source="293" target="292"/>
+			<edge source="294" target="293"/>
+		</edges>
+	</thing>
+	<thing id="99" name="region3_score0.01_component20971" color.r="1.379310e-01" color.g="1.379310e-01" color.b="3.448276e-02" color.a="0">
+		<nodes>
+			<node id="295" radius="10.000000" x="1908" y="7010" z="1357"/>
+			<node id="296" radius="10.000000" x="1896" y="7029" z="1357"/>
+			<node id="297" radius="10.000000" x="1901" y="7031" z="1367"/>
+		</nodes>
+		<edges>
+			<edge source="296" target="295"/>
+			<edge source="297" target="296"/>
+		</edges>
+	</thing>
+	<thing id="100" name="region3_score0.01_component21179" color.r="1" color.g="4.137931e-01" color.b="7.931034e-01" color.a="0">
+		<nodes>
+			<node id="298" radius="10.000000" x="2164" y="6930" z="1379"/>
+			<node id="299" radius="10.000000" x="2167" y="6964" z="1381"/>
+			<node id="300" radius="10.000000" x="2144" y="6977" z="1383"/>
+		</nodes>
+		<edges>
+			<edge source="299" target="298"/>
+			<edge source="300" target="299"/>
+		</edges>
+	</thing>
+	<thing id="101" name="region3_score0.01_component21180" color.r="0" color.g="5.517241e-01" color.b="6.896552e-02" color.a="0">
+		<nodes>
+			<node id="301" radius="10.000000" x="2164" y="6930" z="1379"/>
+			<node id="302" radius="10.000000" x="2152" y="6975" z="1391"/>
+			<node id="303" radius="10.000000" x="2144" y="6977" z="1383"/>
+		</nodes>
+		<edges>
+			<edge source="303" target="301"/>
+			<edge source="303" target="302"/>
+		</edges>
+	</thing>
+	<thing id="102" name="region3_score0.03_component21183" color.r="1" color.g="6.551724e-01" color.b="3.448276e-01" color.a="0">
+		<nodes>
+			<node id="304" radius="10.000000" x="2164" y="6930" z="1379"/>
+			<node id="305" radius="10.000000" x="2148" y="6959" z="1388"/>
+			<node id="306" radius="10.000000" x="2138" y="6965" z="1384"/>
+		</nodes>
+		<edges>
+			<edge source="305" target="304"/>
+			<edge source="306" target="305"/>
+		</edges>
+	</thing>
+	<thing id="103" name="region3_score0.02_component21203" color.r="8.965517e-01" color.g="7.586207e-01" color.b="6.206897e-01" color.a="0">
+		<nodes>
+			<node id="307" radius="10.000000" x="1901" y="7031" z="1367"/>
+			<node id="308" radius="10.000000" x="1910" y="7020" z="1364"/>
+			<node id="309" radius="10.000000" x="1925" y="7012" z="1363"/>
+		</nodes>
+		<edges>
+			<edge source="308" target="307"/>
+			<edge source="309" target="308"/>
+		</edges>
+	</thing>
+	<thing id="104" name="region3_score0.03_component21208" color.r="0" color.g="6.896552e-02" color.b="1.724138e-01" color.a="0">
+		<nodes>
+			<node id="310" radius="10.000000" x="1901" y="7031" z="1367"/>
+			<node id="311" radius="10.000000" x="1883" y="6995" z="1373"/>
+			<node id="312" radius="10.000000" x="1872" y="6991" z="1371"/>
+		</nodes>
+		<edges>
+			<edge source="311" target="310"/>
+			<edge source="312" target="311"/>
+		</edges>
+	</thing>
+	<thing id="105" name="region3_score0.02_component21214" color.r="7.586207e-01" color.g="7.241379e-01" color.b="3.448276e-01" color.a="0">
+		<nodes>
+			<node id="313" radius="10.000000" x="1901" y="7031" z="1367"/>
+			<node id="314" radius="10.000000" x="1886" y="6994" z="1374"/>
+			<node id="315" radius="10.000000" x="1879" y="7000" z="1381"/>
+		</nodes>
+		<edges>
+			<edge source="314" target="313"/>
+			<edge source="315" target="314"/>
+		</edges>
+	</thing>
+	<thing id="106" name="region3_score0.00_component21382" color.r="0" color.g="7.586207e-01" color.b="4.827586e-01" color.a="0">
+		<nodes>
+			<node id="316" radius="10.000000" x="1925" y="7012" z="1363"/>
+			<node id="317" radius="10.000000" x="1931" y="7012" z="1372"/>
+			<node id="318" radius="10.000000" x="1932" y="7017" z="1376"/>
+		</nodes>
+		<edges>
+			<edge source="317" target="316"/>
+			<edge source="318" target="317"/>
+		</edges>
+	</thing>
+	<thing id="107" name="region3_score0.03_component21383" color.r="2.758621e-01" color.g="1.724138e-01" color.b="0" color.a="0">
+		<nodes>
+			<node id="319" radius="10.000000" x="1925" y="7012" z="1363"/>
+			<node id="320" radius="10.000000" x="1919" y="7011" z="1370"/>
+			<node id="321" radius="10.000000" x="1923" y="7011" z="1384"/>
+		</nodes>
+		<edges>
+			<edge source="320" target="319"/>
+			<edge source="321" target="320"/>
+		</edges>
+	</thing>
+	<thing id="108" name="region3_score0.02_component21687" color.r="4.827586e-01" color.g="2.413793e-01" color.b="3.448276e-01" color.a="0">
+		<nodes>
+			<node id="322" radius="10.000000" x="2021" y="6787" z="1357"/>
+			<node id="323" radius="10.000000" x="2016" y="6787" z="1364"/>
+			<node id="324" radius="10.000000" x="2009" y="6831" z="1384"/>
+		</nodes>
+		<edges>
+			<edge source="323" target="322"/>
+			<edge source="324" target="323"/>
+		</edges>
+	</thing>
+	<thing id="109" name="region3_score0.05_component21850" color.r="6.206897e-01" color.g="2.758621e-01" color.b="6.551724e-01" color.a="0">
+		<nodes>
+			<node id="325" radius="10.000000" x="2070" y="6899" z="1366"/>
+			<node id="326" radius="10.000000" x="2079" y="6892" z="1368"/>
+			<node id="327" radius="10.000000" x="2102" y="6900" z="1372"/>
+		</nodes>
+		<edges>
+			<edge source="326" target="325"/>
+			<edge source="327" target="326"/>
+		</edges>
+	</thing>
+	<thing id="110" name="region3_score0.05_component21851" color.r="3.103448e-01" color.g="3.448276e-01" color.b="2.413793e-01" color.a="0">
+		<nodes>
+			<node id="328" radius="10.000000" x="2070" y="6899" z="1366"/>
+			<node id="329" radius="10.000000" x="2077" y="6908" z="1370"/>
+			<node id="330" radius="10.000000" x="2098" y="6926" z="1372"/>
+		</nodes>
+		<edges>
+			<edge source="329" target="328"/>
+			<edge source="330" target="329"/>
+		</edges>
+	</thing>
+	<thing id="111" name="region3_score0.04_component21865" color.r="4.137931e-01" color.g="2.068966e-01" color.b="7.241379e-01" color.a="0">
+		<nodes>
+			<node id="331" radius="10.000000" x="2123" y="6965" z="1365"/>
+			<node id="332" radius="10.000000" x="2131" y="6955" z="1374"/>
+			<node id="333" radius="10.000000" x="2133" y="6936" z="1376"/>
+		</nodes>
+		<edges>
+			<edge source="332" target="331"/>
+			<edge source="333" target="332"/>
+		</edges>
+	</thing>
+	<thing id="112" name="region3_score0.04_component21934" color.r="4.482759e-01" color.g="6.896552e-01" color.b="5.862069e-01" color.a="0">
+		<nodes>
+			<node id="334" radius="10.000000" x="2116" y="6949" z="1364"/>
+			<node id="335" radius="10.000000" x="2131" y="6943" z="1368"/>
+			<node id="336" radius="10.000000" x="2133" y="6936" z="1376"/>
+		</nodes>
+		<edges>
+			<edge source="335" target="334"/>
+			<edge source="336" target="335"/>
+		</edges>
+	</thing>
+	<thing id="113" name="region3_score0.02_component21957" color.r="1" color.g="6.896552e-01" color.b="0" color.a="0">
+		<nodes>
+			<node id="337" radius="10.000000" x="2129" y="6986" z="1371"/>
+			<node id="338" radius="10.000000" x="2137" y="6977" z="1377"/>
+			<node id="339" radius="10.000000" x="2144" y="6977" z="1383"/>
+		</nodes>
+		<edges>
+			<edge source="338" target="337"/>
+			<edge source="339" target="338"/>
+		</edges>
+	</thing>
+	<thing id="114" name="region3_score0.03_component22003" color.r="3.103448e-01" color.g="2.068966e-01" color.b="5.172414e-01" color.a="0">
+		<nodes>
+			<node id="340" radius="10.000000" x="1918" y="6898" z="1368"/>
+			<node id="341" radius="10.000000" x="1911" y="6887" z="1370"/>
+			<node id="342" radius="10.000000" x="1908" y="6881" z="1371"/>
+		</nodes>
+		<edges>
+			<edge source="341" target="340"/>
+			<edge source="342" target="341"/>
+		</edges>
+	</thing>
+	<thing id="115" name="region3_score0.02_component22179" color.r="7.241379e-01" color.g="2.758621e-01" color.b="2.068966e-01" color.a="0">
+		<nodes>
+			<node id="343" radius="10.000000" x="2149" y="6972" z="1369"/>
+			<node id="344" radius="10.000000" x="2150" y="6963" z="1374"/>
+			<node id="345" radius="10.000000" x="2133" y="6936" z="1376"/>
+		</nodes>
+		<edges>
+			<edge source="344" target="343"/>
+			<edge source="345" target="344"/>
+		</edges>
+	</thing>
+	<thing id="116" name="region3_score0.02_component22181" color.r="3.793103e-01" color.g="6.551724e-01" color.b="1" color.a="0">
+		<nodes>
+			<node id="346" radius="10.000000" x="2149" y="6972" z="1369"/>
+			<node id="347" radius="10.000000" x="2157" y="6973" z="1375"/>
+			<node id="348" radius="10.000000" x="2144" y="6977" z="1383"/>
+		</nodes>
+		<edges>
+			<edge source="347" target="346"/>
+			<edge source="348" target="347"/>
+		</edges>
+	</thing>
+	<thing id="117" name="region3_score0.05_component22205" color.r="8.275862e-01" color.g="5.172414e-01" color.b="5.862069e-01" color.a="0">
+		<nodes>
+			<node id="349" radius="10.000000" x="1978" y="6807" z="1375"/>
+			<node id="350" radius="10.000000" x="1972" y="6823" z="1374"/>
+			<node id="351" radius="10.000000" x="1971" y="6824" z="1371"/>
+		</nodes>
+		<edges>
+			<edge source="350" target="349"/>
+			<edge source="351" target="350"/>
+		</edges>
+	</thing>
+	<thing id="118" name="region3_score0.03_component22431" color.r="4.827586e-01" color.g="3.793103e-01" color.b="2.413793e-01" color.a="0">
+		<nodes>
+			<node id="352" radius="10.000000" x="2136" y="6997" z="1380"/>
+			<node id="353" radius="10.000000" x="2150" y="7001" z="1381"/>
+			<node id="354" radius="10.000000" x="2149" y="6988" z="1386"/>
+		</nodes>
+		<edges>
+			<edge source="353" target="352"/>
+			<edge source="354" target="353"/>
+		</edges>
+	</thing>
+	<thing id="119" name="region3_score0.03_component22454" color.r="4.137931e-01" color.g="0" color.b="3.103448e-01" color.a="0">
+		<nodes>
+			<node id="355" radius="10.000000" x="1909" y="7060" z="1379"/>
+			<node id="356" radius="10.000000" x="1910" y="7067" z="1383"/>
+			<node id="357" radius="10.000000" x="1918" y="7070" z="1379"/>
+		</nodes>
+		<edges>
+			<edge source="356" target="355"/>
+			<edge source="357" target="356"/>
+		</edges>
+	</thing>
+	<thing id="120" name="region3_score0.01_component22467" color.r="9.310345e-01" color.g="3.448276e-01" color.b="1" color.a="0">
+		<nodes>
+			<node id="358" radius="10.000000" x="1906" y="7082" z="1377"/>
+			<node id="359" radius="10.000000" x="1910" y="7083" z="1380"/>
+			<node id="360" radius="10.000000" x="1918" y="7070" z="1379"/>
+		</nodes>
+		<edges>
+			<edge source="359" target="358"/>
+			<edge source="360" target="359"/>
+		</edges>
+	</thing>
+	<thing id="121" name="region3_score0.01_component22541" color.r="5.862069e-01" color.g="8.275862e-01" color.b="0" color.a="0">
+		<nodes>
+			<node id="361" radius="10.000000" x="2007" y="6878" z="1379"/>
+			<node id="362" radius="10.000000" x="2001" y="6859" z="1387"/>
+			<node id="363" radius="10.000000" x="1987" y="6853" z="1390"/>
+		</nodes>
+		<edges>
+			<edge source="362" target="361"/>
+			<edge source="363" target="362"/>
+		</edges>
+	</thing>
+	<thing id="122" name="region3_score0.02_component22546" color.r="2.068966e-01" color.g="6.551724e-01" color.b="7.586207e-01" color.a="0">
+		<nodes>
+			<node id="364" radius="10.000000" x="2007" y="6878" z="1379"/>
+			<node id="365" radius="10.000000" x="2001" y="6874" z="1388"/>
+			<node id="366" radius="10.000000" x="1991" y="6874" z="1390"/>
+		</nodes>
+		<edges>
+			<edge source="365" target="364"/>
+			<edge source="366" target="365"/>
+		</edges>
+	</thing>
+	<thing id="123" name="region3_score0.00_component22603" color.r="0" color.g="0" color.b="6.206897e-01" color.a="0">
+		<nodes>
+			<node id="367" radius="10.000000" x="1879" y="7000" z="1381"/>
+			<node id="368" radius="10.000000" x="1893" y="6995" z="1381"/>
+			<node id="369" radius="10.000000" x="1897" y="6995" z="1378"/>
+		</nodes>
+		<edges>
+			<edge source="368" target="367"/>
+			<edge source="369" target="368"/>
+		</edges>
+	</thing>
+	<thing id="124" name="region3_score0.03_component22681" color.r="4.827586e-01" color.g="2.068966e-01" color.b="2.068966e-01" color.a="0">
+		<nodes>
+			<node id="370" radius="10.000000" x="1897" y="6995" z="1378"/>
+			<node id="371" radius="10.000000" x="1901" y="6994" z="1385"/>
+			<node id="372" radius="10.000000" x="1904" y="6994" z="1390"/>
+		</nodes>
+		<edges>
+			<edge source="371" target="370"/>
+			<edge source="372" target="371"/>
+		</edges>
+	</thing>
+	<thing id="125" name="region3_score0.01_component22708" color.r="8.620690e-01" color.g="1" color.b="4.137931e-01" color.a="0">
+		<nodes>
+			<node id="373" radius="10.000000" x="1964" y="7091" z="1376"/>
+			<node id="374" radius="10.000000" x="1969" y="7089" z="1378"/>
+			<node id="375" radius="10.000000" x="1979" y="7103" z="1387"/>
+		</nodes>
+		<edges>
+			<edge source="374" target="373"/>
+			<edge source="375" target="374"/>
+		</edges>
+	</thing>
+	<thing id="126" name="region3_score0.01_component22740" color.r="5.862069e-01" color.g="8.275862e-01" color.b="3.103448e-01" color.a="0">
+		<nodes>
+			<node id="376" radius="10.000000" x="1883" y="6901" z="1392"/>
+			<node id="377" radius="10.000000" x="1890" y="6874" z="1388"/>
+			<node id="378" radius="10.000000" x="1886" y="6868" z="1389"/>
+		</nodes>
+		<edges>
+			<edge source="377" target="376"/>
+			<edge source="378" target="377"/>
+		</edges>
+	</thing>
+	<thing id="127" name="region3_score0.03_component22741" color.r="5.172414e-01" color.g="1" color.b="6.896552e-01" color.a="0">
+		<nodes>
+			<node id="379" radius="10.000000" x="1883" y="6901" z="1392"/>
+			<node id="380" radius="10.000000" x="1863" y="6881" z="1391"/>
+			<node id="381" radius="10.000000" x="1853" y="6880" z="1385"/>
+		</nodes>
+		<edges>
+			<edge source="380" target="379"/>
+			<edge source="381" target="380"/>
+		</edges>
+	</thing>
+	<thing id="128" name="region3_score0.02_component22752" color.r="5.172414e-01" color.g="2.068966e-01" color.b="0" color.a="0">
+		<nodes>
+			<node id="382" radius="10.000000" x="1883" y="6901" z="1392"/>
+			<node id="383" radius="10.000000" x="1891" y="6877" z="1396"/>
+			<node id="384" radius="10.000000" x="1887" y="6877" z="1398"/>
+		</nodes>
+		<edges>
+			<edge source="383" target="382"/>
+			<edge source="384" target="383"/>
+		</edges>
+	</thing>
+	<thing id="129" name="region3_score0.02_component22753" color.r="3.103448e-01" color.g="8.620690e-01" color.b="8.965517e-01" color.a="0">
+		<nodes>
+			<node id="385" radius="10.000000" x="1883" y="6901" z="1392"/>
+			<node id="386" radius="10.000000" x="1865" y="6883" z="1396"/>
+			<node id="387" radius="10.000000" x="1862" y="6884" z="1398"/>
+		</nodes>
+		<edges>
+			<edge source="386" target="385"/>
+			<edge source="387" target="386"/>
+		</edges>
+	</thing>
+	<thing id="130" name="region3_score0.00_component22755" color.r="2.758621e-01" color.g="1.379310e-01" color.b="2.068966e-01" color.a="0">
+		<nodes>
+			<node id="388" radius="10.000000" x="1883" y="6901" z="1392"/>
+			<node id="389" radius="10.000000" x="1879" y="6900" z="1400"/>
+			<node id="390" radius="10.000000" x="1874" y="6896" z="1403"/>
+		</nodes>
+		<edges>
+			<edge source="389" target="388"/>
+			<edge source="390" target="389"/>
+		</edges>
+	</thing>
+	<thing id="131" name="region3_score0.01_component22756" color.r="0" color.g="1.724138e-01" color.b="3.448276e-02" color.a="0">
+		<nodes>
+			<node id="391" radius="10.000000" x="1883" y="6901" z="1392"/>
+			<node id="392" radius="10.000000" x="1898" y="6882" z="1401"/>
+			<node id="393" radius="10.000000" x="1896" y="6879" z="1403"/>
+		</nodes>
+		<edges>
+			<edge source="392" target="391"/>
+			<edge source="393" target="392"/>
+		</edges>
+	</thing>
+	<thing id="132" name="region3_score0.01_component23000" color.r="7.241379e-01" color.g="8.620690e-01" color.b="7.586207e-01" color.a="0">
+		<nodes>
+			<node id="394" radius="10.000000" x="1933" y="7091" z="1381"/>
+			<node id="395" radius="10.000000" x="1941" y="7109" z="1381"/>
+			<node id="396" radius="10.000000" x="1939" y="7116" z="1386"/>
+		</nodes>
+		<edges>
+			<edge source="395" target="394"/>
+			<edge source="396" target="395"/>
+		</edges>
+	</thing>
+	<thing id="133" name="region3_score0.02_component23138" color.r="3.448276e-01" color.g="5.517241e-01" color.b="3.103448e-01" color.a="0">
+		<nodes>
+			<node id="397" radius="10.000000" x="1886" y="6868" z="1389"/>
+			<node id="398" radius="10.000000" x="1870" y="6875" z="1387"/>
+			<node id="399" radius="10.000000" x="1872" y="6877" z="1387"/>
+		</nodes>
+		<edges>
+			<edge source="399" target="397"/>
+			<edge source="399" target="398"/>
+		</edges>
+	</thing>
+	<thing id="134" name="region3_score0.04_component23139" color.r="6.206897e-01" color.g="4.482759e-01" color.b="0" color.a="0">
+		<nodes>
+			<node id="400" radius="10.000000" x="1886" y="6868" z="1389"/>
+			<node id="401" radius="10.000000" x="1879" y="6876" z="1391"/>
+			<node id="402" radius="10.000000" x="1877" y="6887" z="1389"/>
+		</nodes>
+		<edges>
+			<edge source="401" target="400"/>
+			<edge source="402" target="401"/>
+		</edges>
+	</thing>
+	<thing id="135" name="region3_score0.03_component23140" color.r="7.931034e-01" color.g="2.758621e-01" color.b="5.172414e-01" color.a="0">
+		<nodes>
+			<node id="403" radius="10.000000" x="1886" y="6868" z="1389"/>
+			<node id="404" radius="10.000000" x="1902" y="6868" z="1391"/>
+			<node id="405" radius="10.000000" x="1906" y="6870" z="1391"/>
+		</nodes>
+		<edges>
+			<edge source="404" target="403"/>
+			<edge source="405" target="404"/>
+		</edges>
+	</thing>
+	<thing id="136" name="region3_score0.02_component23144" color.r="0" color.g="7.586207e-01" color.b="2.758621e-01" color.a="0">
+		<nodes>
+			<node id="406" radius="10.000000" x="1853" y="6880" z="1385"/>
+			<node id="407" radius="10.000000" x="1856" y="6885" z="1386"/>
+			<node id="408" radius="10.000000" x="1855" y="6889" z="1386"/>
+		</nodes>
+		<edges>
+			<edge source="407" target="406"/>
+			<edge source="408" target="407"/>
+		</edges>
+	</thing>
+	<thing id="137" name="region3_score0.01_component23146" color.r="7.931034e-01" color.g="3.448276e-02" color.b="9.310345e-01" color.a="0">
+		<nodes>
+			<node id="409" radius="10.000000" x="1853" y="6880" z="1385"/>
+			<node id="410" radius="10.000000" x="1855" y="6886" z="1392"/>
+			<node id="411" radius="10.000000" x="1862" y="6892" z="1393"/>
+		</nodes>
+		<edges>
+			<edge source="410" target="409"/>
+			<edge source="411" target="410"/>
+		</edges>
+	</thing>
+	<thing id="138" name="region3_score0.04_component23171" color.r="7.931034e-01" color.g="8.620690e-01" color.b="1" color.a="0">
+		<nodes>
+			<node id="412" radius="10.000000" x="2138" y="6965" z="1384"/>
+			<node id="413" radius="10.000000" x="2160" y="6966" z="1390"/>
+			<node id="414" radius="10.000000" x="2170" y="6963" z="1392"/>
+		</nodes>
+		<edges>
+			<edge source="413" target="412"/>
+			<edge source="414" target="413"/>
+		</edges>
+	</thing>
+	<thing id="139" name="region3_score0.00_component23331" color.r="0" color.g="3.448276e-01" color.b="6.551724e-01" color.a="0">
+		<nodes>
+			<node id="415" radius="10.000000" x="1925" y="7027" z="1393"/>
+			<node id="416" radius="10.000000" x="1920" y="7020" z="1396"/>
+			<node id="417" radius="10.000000" x="1911" y="7004" z="1399"/>
+		</nodes>
+		<edges>
+			<edge source="416" target="415"/>
+			<edge source="417" target="416"/>
+		</edges>
+	</thing>
+	<thing id="140" name="region3_score0.00_component23336" color.r="1.724138e-01" color.g="6.551724e-01" color.b="4.827586e-01" color.a="0">
+		<nodes>
+			<node id="418" radius="10.000000" x="1925" y="7027" z="1393"/>
+			<node id="419" radius="10.000000" x="1931" y="7022" z="1399"/>
+			<node id="420" radius="10.000000" x="1926" y="7012" z="1401"/>
+		</nodes>
+		<edges>
+			<edge source="419" target="418"/>
+			<edge source="420" target="419"/>
+		</edges>
+	</thing>
+	<thing id="141" name="region3_score0.00_component23337" color.r="5.517241e-01" color.g="8.620690e-01" color.b="1" color.a="0">
+		<nodes>
+			<node id="421" radius="10.000000" x="1925" y="7027" z="1393"/>
+			<node id="422" radius="10.000000" x="1936" y="7025" z="1398"/>
+			<node id="423" radius="10.000000" x="1955" y="7030" z="1402"/>
+		</nodes>
+		<edges>
+			<edge source="422" target="421"/>
+			<edge source="423" target="422"/>
+		</edges>
+	</thing>
+	<thing id="142" name="region3_score0.05_component23589" color.r="1.379310e-01" color.g="1.724138e-01" color.b="2.068966e-01" color.a="0">
+		<nodes>
+			<node id="424" radius="10.000000" x="1967" y="6850" z="1399"/>
+			<node id="425" radius="10.000000" x="1990" y="6876" z="1399"/>
+			<node id="426" radius="10.000000" x="1992" y="6878" z="1397"/>
+		</nodes>
+		<edges>
+			<edge source="425" target="424"/>
+			<edge source="426" target="425"/>
+		</edges>
+	</thing>
+	<thing id="143" name="region3_score0.04_component23692" color.r="7.586207e-01" color.g="1" color.b="7.241379e-01" color.a="0">
+		<nodes>
+			<node id="427" radius="10.000000" x="2128" y="6878" z="1390"/>
+			<node id="428" radius="10.000000" x="2128" y="6882" z="1395"/>
+			<node id="429" radius="10.000000" x="2124" y="6880" z="1397"/>
+		</nodes>
+		<edges>
+			<edge source="428" target="427"/>
+			<edge source="429" target="428"/>
+		</edges>
+	</thing>
+	<thing id="144" name="region3_score0.01_component23802" color.r="0" color.g="4.137931e-01" color.b="6.206897e-01" color.a="0">
+		<nodes>
+			<node id="430" radius="10.000000" x="1862" y="6892" z="1393"/>
+			<node id="431" radius="10.000000" x="1859" y="6889" z="1397"/>
+			<node id="432" radius="10.000000" x="1862" y="6884" z="1398"/>
+		</nodes>
+		<edges>
+			<edge source="431" target="430"/>
+			<edge source="432" target="431"/>
+		</edges>
+	</thing>
+	<thing id="145" name="region3_score0.01_component23803" color.r="0" color.g="3.448276e-01" color.b="1" color.a="0">
+		<nodes>
+			<node id="433" radius="10.000000" x="1862" y="6892" z="1393"/>
+			<node id="434" radius="10.000000" x="1865" y="6896" z="1399"/>
+			<node id="435" radius="10.000000" x="1874" y="6896" z="1403"/>
+		</nodes>
+		<edges>
+			<edge source="434" target="433"/>
+			<edge source="435" target="434"/>
+		</edges>
+	</thing>
+	<thing id="146" name="region3_score0.03_component23891" color.r="9.655172e-01" color.g="3.448276e-01" color.b="5.172414e-01" color.a="0">
+		<nodes>
+			<node id="436" radius="10.000000" x="1912" y="6869" z="1397"/>
+			<node id="437" radius="10.000000" x="1907" y="6868" z="1399"/>
+			<node id="438" radius="10.000000" x="1887" y="6877" z="1398"/>
+		</nodes>
+		<edges>
+			<edge source="437" target="436"/>
+			<edge source="438" target="437"/>
+		</edges>
+	</thing>
+	<thing id="147" name="region3_score0.02_component23893" color.r="8.620690e-01" color.g="4.827586e-01" color.b="2.758621e-01" color.a="0">
+		<nodes>
+			<node id="439" radius="10.000000" x="1912" y="6869" z="1397"/>
+			<node id="440" radius="10.000000" x="1916" y="6865" z="1404"/>
+			<node id="441" radius="10.000000" x="1912" y="6861" z="1404"/>
+		</nodes>
+		<edges>
+			<edge source="440" target="439"/>
+			<edge source="441" target="440"/>
+		</edges>
+	</thing>
+	<thing id="148" name="region3_score0.00_component25185" color.r="7.931034e-01" color.g="2.068966e-01" color.b="6.551724e-01" color.a="0">
+		<nodes>
+			<node id="442" radius="10.000000" x="2254" y="6854" z="1260"/>
+			<node id="443" radius="10.000000" x="2263" y="6849" z="1266"/>
+			<node id="444" radius="10.000000" x="2270" y="6841" z="1266"/>
+		</nodes>
+		<edges>
+			<edge source="443" target="442"/>
+			<edge source="444" target="443"/>
+		</edges>
+	</thing>
+	<thing id="149" name="region3_score0.01_component25189" color.r="6.551724e-01" color.g="7.931034e-01" color.b="5.517241e-01" color.a="0">
+		<nodes>
+			<node id="445" radius="10.000000" x="2254" y="6854" z="1260"/>
+			<node id="446" radius="10.000000" x="2258" y="6856" z="1268"/>
+			<node id="447" radius="10.000000" x="2257" y="6856" z="1272"/>
+		</nodes>
+		<edges>
+			<edge source="446" target="445"/>
+			<edge source="447" target="446"/>
+		</edges>
+	</thing>
+	<thing id="150" name="region3_score0.03_component25465" color.r="3.103448e-01" color.g="8.620690e-01" color.b="7.586207e-01" color.a="0">
+		<nodes>
+			<node id="448" radius="10.000000" x="2253" y="7075" z="1275"/>
+			<node id="449" radius="10.000000" x="2246" y="7099" z="1279"/>
+			<node id="450" radius="10.000000" x="2249" y="7079" z="1293"/>
+		</nodes>
+		<edges>
+			<edge source="449" target="448"/>
+			<edge source="450" target="449"/>
+		</edges>
+	</thing>
+	<thing id="151" name="region3_score0.03_component25466" color.r="3.793103e-01" color.g="4.482759e-01" color.b="8.275862e-01" color.a="0">
+		<nodes>
+			<node id="451" radius="10.000000" x="2253" y="7075" z="1275"/>
+			<node id="452" radius="10.000000" x="2245" y="7080" z="1284"/>
+			<node id="453" radius="10.000000" x="2249" y="7079" z="1293"/>
+		</nodes>
+		<edges>
+			<edge source="452" target="451"/>
+			<edge source="453" target="452"/>
+		</edges>
+	</thing>
+	<thing id="152" name="region3_score0.02_component25561" color.r="4.137931e-01" color.g="1.379310e-01" color.b="1" color.a="0">
+		<nodes>
+			<node id="454" radius="10.000000" x="2204" y="6855" z="1275"/>
+			<node id="455" radius="10.000000" x="2188" y="6860" z="1273"/>
+			<node id="456" radius="10.000000" x="2181" y="6861" z="1273"/>
+		</nodes>
+		<edges>
+			<edge source="455" target="454"/>
+			<edge source="456" target="455"/>
+		</edges>
+	</thing>
+	<thing id="153" name="region3_score0.01_component25630" color.r="5.517241e-01" color.g="3.448276e-02" color.b="7.931034e-01" color.a="0">
+		<nodes>
+			<node id="457" radius="10.000000" x="2212" y="7042" z="1277"/>
+			<node id="458" radius="10.000000" x="2184" y="7044" z="1285"/>
+			<node id="459" radius="10.000000" x="2193" y="7041" z="1299"/>
+		</nodes>
+		<edges>
+			<edge source="458" target="457"/>
+			<edge source="459" target="458"/>
+		</edges>
+	</thing>
+	<thing id="154" name="region3_score0.01_component25730" color.r="8.620690e-01" color.g="7.586207e-01" color.b="1.724138e-01" color.a="0">
+		<nodes>
+			<node id="460" radius="10.000000" x="2194" y="7029" z="1279"/>
+			<node id="461" radius="10.000000" x="2180" y="7031" z="1285"/>
+			<node id="462" radius="10.000000" x="2193" y="7041" z="1299"/>
+		</nodes>
+		<edges>
+			<edge source="461" target="460"/>
+			<edge source="462" target="461"/>
+		</edges>
+	</thing>
+	<thing id="155" name="region3_score0.05_component25750" color.r="7.586207e-01" color.g="7.241379e-01" color.b="4.827586e-01" color.a="0">
+		<nodes>
+			<node id="463" radius="10.000000" x="2193" y="6944" z="1290"/>
+			<node id="464" radius="10.000000" x="2233" y="6962" z="1283"/>
+			<node id="465" radius="10.000000" x="2244" y="6972" z="1292"/>
+		</nodes>
+		<edges>
+			<edge source="464" target="463"/>
+			<edge source="465" target="464"/>
+		</edges>
+	</thing>
+	<thing id="156" name="region3_score0.05_component25851" color.r="2.413793e-01" color.g="1.379310e-01" color.b="3.448276e-01" color.a="0">
+		<nodes>
+			<node id="466" radius="10.000000" x="2233" y="7092" z="1277"/>
+			<node id="467" radius="10.000000" x="2234" y="7094" z="1280"/>
+			<node id="468" radius="10.000000" x="2249" y="7079" z="1293"/>
+		</nodes>
+		<edges>
+			<edge source="467" target="466"/>
+			<edge source="468" target="467"/>
+		</edges>
+	</thing>
+	<thing id="157" name="region3_score0.01_component26203" color.r="4.827586e-01" color.g="3.793103e-01" color.b="5.862069e-01" color.a="0">
+		<nodes>
+			<node id="469" radius="10.000000" x="2249" y="7079" z="1293"/>
+			<node id="470" radius="10.000000" x="2240" y="7067" z="1297"/>
+			<node id="471" radius="10.000000" x="2233" y="7055" z="1298"/>
+		</nodes>
+		<edges>
+			<edge source="470" target="469"/>
+			<edge source="471" target="470"/>
+		</edges>
+	</thing>
+	<thing id="158" name="region3_score0.00_component26740" color.r="7.241379e-01" color.g="4.827586e-01" color.b="8.620690e-01" color.a="0">
+		<nodes>
+			<node id="472" radius="10.000000" x="2194" y="7013" z="1304"/>
+			<node id="473" radius="10.000000" x="2215" y="6990" z="1306"/>
+			<node id="474" radius="10.000000" x="2222" y="6971" z="1306"/>
+		</nodes>
+		<edges>
+			<edge source="473" target="472"/>
+			<edge source="474" target="473"/>
+		</edges>
+	</thing>
+	<thing id="159" name="region3_score0.02_component26849" color.r="1" color.g="8.620690e-01" color.b="8.275862e-01" color.a="0">
+		<nodes>
+			<node id="475" radius="10.000000" x="2229" y="6912" z="1332"/>
+			<node id="476" radius="10.000000" x="2212" y="6895" z="1318"/>
+			<node id="477" radius="10.000000" x="2211" y="6888" z="1320"/>
+		</nodes>
+		<edges>
+			<edge source="477" target="475"/>
+			<edge source="477" target="476"/>
+		</edges>
+	</thing>
+	<thing id="160" name="region3_score0.01_component27891" color.r="9.310345e-01" color.g="3.448276e-01" color.b="3.793103e-01" color.a="0">
+		<nodes>
+			<node id="478" radius="10.000000" x="2219" y="6874" z="1359"/>
+			<node id="479" radius="10.000000" x="2211" y="6881" z="1365"/>
+			<node id="480" radius="10.000000" x="2207" y="6885" z="1366"/>
+		</nodes>
+		<edges>
+			<edge source="479" target="478"/>
+			<edge source="480" target="479"/>
+		</edges>
+	</thing>
+	<thing id="161" name="region3_score0.05_component28654" color.r="7.931034e-01" color.g="7.241379e-01" color.b="1" color.a="0">
+		<nodes>
+			<node id="481" radius="10.000000" x="2180" y="6966" z="1381"/>
+			<node id="482" radius="10.000000" x="2177" y="6978" z="1383"/>
+			<node id="483" radius="10.000000" x="2181" y="6993" z="1387"/>
+		</nodes>
+		<edges>
+			<edge source="482" target="481"/>
+			<edge source="483" target="482"/>
+		</edges>
+	</thing>
+	<thing id="162" name="region3_score0.04_component28678" color.r="2.413793e-01" color.g="3.448276e-01" color.b="3.448276e-01" color.a="0">
+		<nodes>
+			<node id="484" radius="10.000000" x="2181" y="6794" z="1383"/>
+			<node id="485" radius="10.000000" x="2207" y="6816" z="1385"/>
+			<node id="486" radius="10.000000" x="2214" y="6811" z="1387"/>
+		</nodes>
+		<edges>
+			<edge source="485" target="484"/>
+			<edge source="486" target="485"/>
+		</edges>
+	</thing>
+	<thing id="163" name="region3_score0.04_component28684" color.r="4.482759e-01" color.g="5.862069e-01" color.b="5.862069e-01" color.a="0">
+		<nodes>
+			<node id="487" radius="10.000000" x="2216" y="6805" z="1381"/>
+			<node id="488" radius="10.000000" x="2216" y="6815" z="1384"/>
+			<node id="489" radius="10.000000" x="2214" y="6811" z="1387"/>
+		</nodes>
+		<edges>
+			<edge source="488" target="487"/>
+			<edge source="489" target="488"/>
+		</edges>
+	</thing>
+	<thing id="164" name="region3_score0.04_component30125" color.r="4.827586e-01" color.g="1" color.b="4.827586e-01" color.a="0">
+		<nodes>
+			<node id="490" radius="10.000000" x="1973" y="6871" z="1416"/>
+			<node id="491" radius="10.000000" x="1982" y="6900" z="1413"/>
+			<node id="492" radius="10.000000" x="1982" y="6924" z="1415"/>
+		</nodes>
+		<edges>
+			<edge source="491" target="490"/>
+			<edge source="492" target="491"/>
+		</edges>
+	</thing>
+	<thing id="165" name="region3_score0.00_component30673" color.r="5.862069e-01" color.g="2.068966e-01" color.b="4.137931e-01" color.a="0">
+		<nodes>
+			<node id="493" radius="10.000000" x="1950" y="6976" z="1413"/>
+			<node id="494" radius="10.000000" x="1943" y="6986" z="1411"/>
+			<node id="495" radius="10.000000" x="1939" y="6993" z="1410"/>
+		</nodes>
+		<edges>
+			<edge source="494" target="493"/>
+			<edge source="495" target="494"/>
+		</edges>
+	</thing>
+	<thing id="166" name="region3_score0.02_component30681" color.r="7.931034e-01" color.g="6.206897e-01" color.b="7.241379e-01" color.a="0">
+		<nodes>
+			<node id="496" radius="10.000000" x="1950" y="6976" z="1413"/>
+			<node id="497" radius="10.000000" x="1946" y="6977" z="1419"/>
+			<node id="498" radius="10.000000" x="1948" y="6973" z="1425"/>
+		</nodes>
+		<edges>
+			<edge source="497" target="496"/>
+			<edge source="498" target="497"/>
+		</edges>
+	</thing>
+	<thing id="167" name="region3_score0.03_component31183" color.r="4.482759e-01" color.g="2.413793e-01" color.b="1.034483e-01" color.a="0">
+		<nodes>
+			<node id="499" radius="10.000000" x="1967" y="6979" z="1424"/>
+			<node id="500" radius="10.000000" x="1960" y="6976" z="1427"/>
+			<node id="501" radius="10.000000" x="1948" y="6973" z="1425"/>
+		</nodes>
+		<edges>
+			<edge source="500" target="499"/>
+			<edge source="501" target="500"/>
+		</edges>
+	</thing>
+	<comments> </comments>
+</things>

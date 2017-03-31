@@ -17,189 +17,172 @@ if ~exist(outputFolder, 'dir')
 end
 %% Load graph and edge and segment (segments) based statistics
 % Load global graph representation
-graph = load([p.saveFolder 'graph.mat']);
+graph = load([p.saveFolder 'graph.mat'], 'prob', 'edges', 'neighbours', 'neighProb');
 % Load information about edges
-borderMeta = load([p.saveFolder 'globalBorder.mat']);
+borderMeta = load([p.saveFolder 'globalBorder.mat'], 'borderSize', 'borderCoM');
 % Load meta information of segments
-segmentMeta = load([p.saveFolder 'segmentMeta.mat']);
+segmentMeta = load([p.saveFolder 'segmentMeta.mat'], 'voxelCount', 'point', 'maxSegId');
+segmentMeta.point = segmentMeta.point';
+% Load and preprocess segment class predictions on single segments from Alessandro
+temp = load([p.saveFolder 'segmentPredictions.mat']);
+temp.probs(:,1:3) = bsxfun(@rdivide, temp.probs(:,1:3), sum(temp.probs(:,1:3),2));
+% ... axon
+segmentMeta.axonProb = zeros(segmentMeta.maxSegId, 1);
+idx = ~isnan(temp.probs(:,2));
+segmentMeta.axonProb(temp.segId(idx)) = temp.probs(idx,2);
+segmentMeta.isAxon = segmentMeta.axonProb > 0.5;
+% ... dendrite
+segmentMeta.dendriteProb = zeros(segmentMeta.maxSegId, 1);
+idx = ~isnan(temp.probs(:,3));
+segmentMeta.dendriteProb(temp.segId(idx)) = temp.probs(idx,3);
+segmentMeta.isDendrite = segmentMeta.dendriteProb > 0.5;
+% ... spine head
+segmentMeta.spineProb = zeros(segmentMeta.maxSegId, 1);
+idx = ~isnan(temp.probs(:,4));
+segmentMeta.spineProb(temp.segId(idx)) = temp.probs(idx,4);
+segmentMeta.isSpine = segmentMeta.spineProb > 0.5;
+clear temp idx;
 %% Load synapse scores from SynEM
 synScore = load([p.saveFolder 'globalSynScores.mat']);
 synScore.isSynapse = connectEM.synScoresToSynEdges(graph, synScore);
 toc;
 
-display('Removing segments detected by heuristics:');
+display('Removing segments detected by heuristics & small & disconnected segments:');
 tic;
-% Segments classified by heuristics
-load([p.saveFolder 'heuristicResult.mat']);
-excludedIds = segIds(vesselScore > 0.5 | myelinScore > 0.5 | nucleiScore > 0.5);
-% Remove only in edges
-keepIdx = ~any(ismember(graph.edges, excludedIds),2);
-graphCut.edges = graph.edges(keepIdx,:);
-graphCut.prob = graph.prob(keepIdx);
+[graphCut, eqClassesExcluded] = connectEM.cutGraph(p, segmentMeta, borderMeta, outputFolder, 100, 1000);
+[vessel, sizeVessel] = connectEM.findCCaccordingToGraph(graph, eqClassesExcluded{1}, segmentMeta);
+[nuclei, sizeNuclei] = connectEM.findCCaccordingToGraph(graph, eqClassesExcluded{2}, segmentMeta);
+[myelin, sizeMyelin] = connectEM.findCCaccordingToGraph(graph, eqClassesExcluded{3}, segmentMeta);
 toc;
 
+display('Generating subgraphs for axon and dendrite agglomeration:');
+tic;
+idx = all(ismember(graphCut.edges, find(segmentMeta.isDendrite)), 2);
+graphCutDendrites.edges = graphCut.edges(idx,:);
+graphCutDendrites.prob = graphCut.prob(idx);
+idx = all(ismember(graphCut.edges, find(segmentMeta.isAxon)), 2);
+graphCutAxons.edges = graphCut.edges(idx,:);
+graphCutAxons.prob = graphCut.prob(idx);
+clear idx;
+toc;
+
+% Lets stick with 99% for now as we have 'large enough' components
 rng default;
-threshold=0.99;%:-0.01:0.91;
-for t=1:length(threshold)
-    display('Performing agglomeration:');
-    tic;
-    % Agglomerate segments using only GP probabilties
-    [initialPartition{t}, remainingEdges] = connectEM.partitionWholeDataset(graphCut, threshold(t)); 
-    sizePartition{t} = cellfun(@(x)sum(segmentMeta.voxelCount(x)), initialPartition{t});
-    toc;
-    % Probably make own function if needed again
-    display('Writing skeletons for debugging the process:');
-    tic;
-    [~, idx] = sort(sizePartition{t}, 'descend');
-    connectEM.generateSkeletonFromAgglo(remainingEdges, segmentMeta.point', ...
-        initialPartition{t}(idx(1:1000)), ...
-        strseq(['largestComponents' num2str(threshold(t)) '_'], 1:1000), ...
-        outputFolder, segmentMeta.maxSegId);
-    %idx = randi(numel(initialPartition{t}),100,1);
-    %connectEM.generateSkeletonFromAgglo(remainingEdges, segmentMeta.point', ...
-    %    initialPartition{t}(idx), ...
-    %    strseq(['randomComponents' num2str(threshold(t)) '_'], 1:100), ...
-    %    outputFolder, segmentMeta.maxSegId);
-    toc;
-end
-voxelCount = segmentMeta.voxelCount;
-maxSegId = segmentMeta.maxSegId;
-save([outputFolder 'initialAgglo.mat'], 'initialPartition', 'sizePartition', 'voxelCount', 'maxSegId');
-
-
-% FOR LATER
-%{
-%% Read query results
-skeletonSaveFile = [outputFolder 'querySkeletonReadout.mat'];
-if rereadSkeletons
-    % Where to find skeletons that were returned from the queries
-    scratchFolder = '/gaba/scratch/mberning/focusFlightTasks/extracted/';
-    % These are the downloaded queries (see wK projects: L4_focus_flight-1 & 2, L4_focus_flight-reseed-1 & 2 (2 contains 2nd and 3rd round of reseeding now))
-    % And new queries from after switching to new (agglomerate based) query analysis: L4_focus_flight-new-1
-    skeletonFolders = {'L4_focus_flight-1', 'L4_focus_flight-2', 'L4_focus_flight-reseed-1', 'L4_focus_flight-reseed-2', ...
-        'L4_focus_flight_new_1', 'L4_focus_flight_new_2' 'L4_focus_flight-new-3'};
-    skeletonFolders = cellfun(@(x)[scratchFolder x filesep], skeletonFolders, 'uni', 0);
-    % Lookup segment ids of nodes+neighbours of nmls in all folders defined above
-    [ff.segIds, ff.neighbours, ff.filenames, ff.nodes, ff.startNode] = lookupNmlMulti(p, skeletonFolders);
-    % Read proofread subset (removed wrong seeds and proofread redundancies) of 100 5-fold subset
-    [gt.segIds, gt.neighbours, gt.filenames, gt.nodes] = lookupNmlMulti(p, {'/gaba/scratch/mberning/100axons/training/'}, false);
-    % Save for future reloading (above steps take hours otherwise (segmentation lookup)
-    save(skeletonSaveFile, 'ff', 'gt');
-else
-    % Load skeleton readout including segmentation ids at nodes & all neighbours
-    load(skeletonSaveFile, 'ff', 'gt');
-end
+thresholdDendrite = 0.99;
+display('Performing agglomeration on dendrite subgraph:');
+tic;
+% Agglomerate segments using only GP probabilties
+[dendrites, dendriteEdges] = connectEM.partitionWholeDataset(graphCutDendrites, thresholdDendrite); 
+dendriteSize = cellfun(@(x)sum(segmentMeta.voxelCount(x)), dendrites);
+[dendriteSize, idx] = sort(dendriteSize, 'descend');
+dendrites = dendrites(idx);
+% Keep only agglomerates that have at least 1 million voxels
+idx = dendriteSize > 1e6; 
+dendrites = dendrites(idx);
+dendriteSize = dendriteSize(idx);
+clear idx;
 toc;
 
-display('Processing queries:');
+thresholdAxon = 0.90;
+display('Performing high probability agglomeration on axon subgraph:');
 tic;
-%% Calculate overlap of all queries with segments 
-[uniqueSegments, neighboursStartNode, nodesExcludedIdx, startNodeIdx] = cellfun(@queryAnalysis, ...
-    ff.segIds, ff.neighbours, ff.nodes', ff.startNode', 'uni', 0); 
-%% Determine all overlaps of agglomerations with given queries
-[partition, queryOverlap] = queryAgglomerationOverlap(initialAgglomeration, uniqueSegments, neighboursStartNode);
-%% Make decision(s), here evidence/occurence threshold is applied
-% Always one (or none if evidence below 14, 1/2 node) start eqClass
-startAgglo = arrayfun(@(x)x.eqClasses(x.occurences > 13), queryOverlap.start, 'uni', 0);
-% Exclude all queries that do not have a clear starting point (6.5% on first 200k 07x2)
-idxNoClearStart = cellfun('isempty', startAgglo);
-% Multiple ends (all above 53vx evidence, corresponds to 2 full nodes)
-endAgglo = arrayfun(@(x)x.eqClasses(x.occurences > 53), queryOverlap.ends, 'uni', 0);
-% Exclude all queries that do not have (at least one) clear end
-idxNoClearEnd = cellfun('isempty', endAgglo); 
-% 18.5% of queries excluded overall due to missing start or end (or both)
-idxGood = ~(idxNoClearStart | idxNoClearEnd);
-%% Find CC of eqClasses to be joined
-edges = cellfun(@(x,y)combnk([x y], 2), startAgglo(idxGood), endAgglo(idxGood), 'uni', 0);
-edges = cat(1,edges{:});
-edges(edges(:,1) == edges(:,2),:) = [];
-eqClassCC = Graph.findConnectedComponents(edges, true, true);
+% Agglomerate segments using only GP probabilties
+[axons, axonEdges] = connectEM.partitionWholeDataset(graphCutAxons, thresholdAxon); 
+axonSize = cellfun(@(x)sum(segmentMeta.voxelCount(x)), axons);
+[axonSize, idx] = sort(axonSize, 'descend');
+axons = axons(idx);
+% Keep only agglomerates that have at least 1 million voxels
+idx = axonSize > 1e6; 
+axons = axons(idx);
+axonSize = axonSize(idx);
+clear idx;
 toc;
 
-display('Merging agglomerates based on queries:');
+display('Removing components bordering on vessel or nuclei segments from axon graph:');
 tic;
-% Build data structure for faster (?) merging and merge
-partitionNew.segIds = partition.segIds;
-partitionNew.eqClass = partition.eqClass;
-for i=1:length(eqClassCC)
-    partitionNew.eqClass(ismember(partitionNew.eqClass, eqClassCC{i}(2:end))) = eqClassCC{i}(1);
-end
-[partitionNew.eqClass, idx] = sort(partitionNew.eqClass);
-partitionNew.segIds = partitionNew.segIds(idx);
-eqClassEnds = cat(1, find(diff(partitionNew.eqClass)), length(partitionNew.eqClass));
-eqClassSize = cat(1, eqClassEnds(1), eqClassEnds(2:end) - eqClassEnds(1:end-1));
-possibleAxons = mat2cell(partition.segIds, eqClassSize);
+axonNeighbours = cellfun(@(x)unique(cat(2, graph.neighbours{x})), axons, 'uni', 0);
+% Find fraction of neighbours for each axon component that are vessel or nuclei segments
+vesselIdAll = cat(1, vessel{:});
+vesselNeighbours = cellfun(@(x)sum(ismember(x, vesselIdAll)), axonNeighbours);
+vesselFraction = vesselNeighbours ./ cellfun(@numel, axonNeighbours);
+nucleiIdAll = cat(1, nuclei{:});
+nucleiNeighbours = cellfun(@(x)sum(ismember(x, nucleiIdAll)), axonNeighbours);
+nucleiFraction = nucleiNeighbours ./ cellfun(@numel, axonNeighbours);
+clear axonNeighbours vesselIdAll vesselNeighbours nucleiIdAll nucleiNeighbours;
+% Endothelial cells border on vessel, not axons
+endo = axons(vesselFraction > 0);
+% ER is part of soma, not axons
+er = axons(nucleiFraction > 0 & vesselFraction == 0);
+% Keep the rest
+axons = axons(nucleiFraction == 0 & vesselFraction == 0); 
 toc;
 
-display('Generate new queries:');
+display('Attaching ER to dendrite class: ');
 tic;
-% Decide which positions to querry and calculate some statistics
-[q.pos, q.dir, q.varianceExplained, q.voxelSize, q.lengthAlongPC1] = cellfun(@(x)determineQueryLocation(graph, segments, x), initialAgglomeration.partition, 'uni', 0);
-% Keep only axons which have a length along PC 1 direction >1 micron and 4000 voxel (40 voxel in z a 28 ~1 micron)
-% Sort out all queries that are within 2 micron (query distance from border)
-extend = round(2000 ./ [11.24 11.24 28]);
-bbox(:,1) = p.bbox(:,1) + extend';
-bbox(:,2) = p.bbox(:,2) - extend';
-q.outsideBBox = cellfun(@(x)any(bsxfun(@le, x, bbox(:,1)'),2) | any(bsxfun(@ge, x, bbox(:,2)'),2), q.pos, 'uni', 0);
-q.tooSmall = cellfun(@(x)x < 5e3, q.voxelSize);
-q.tooShort = cellfun(@(x)x < 1.5e3, q.lengthAlongPC1);
-q.tooUnstraight = cellfun(@(x)x(1) < .9, q.varianceExplained) & cellfun(@numel, initialAgglomeration.partition) > 2;
-%nrBoutons = cellfun(@(x)sum(ismember(x, boutons.boutonIDs)), initialAgglomeration.partition);
-%q.noSynapses = nrBoutons == 0;
-q.exclude = arrayfun(@(x,y,z,t,u) x{:} | y | z | t, q.outsideBBox, q.tooShort, q.tooSmall, q.tooUnstraight, 'uni', 0);
-% 'Write' problems to flight mode webKNOSSOS
-extend = round(1000 ./ [11.24 11.24 28]);
-fid = fopen([outputFolder 'webKnossos.txt'], 'w');
-for i=1:length(q.pos)
-    for j=1:size(q.pos{i},1)
-        if ~q.exclude{i}(j)
-            [phi, theta, psi] = calculateEulerAngles(-q.dir{i}(j,:));
-            minPos = q.pos{i}(j,:) - extend;
-            sizeBbox = 2*extend;
-            linkString = ['2012-09-28_ex145_07x2,56d6a7c6140000d81030701e,focus_flight,1,' ...
-                num2str(q.pos{i}(j,1)-1) ',' num2str(q.pos{i}(j,2)-1) ',' num2str(q.pos{i}(j,3)-1) ',' ...
-                num2str(phi) ',' num2str(theta) ',' num2str(psi) ',1,Tracing crew,' ...
-                num2str(minPos(1)) ',' num2str(minPos(2)) ',' num2str(minPos(3)) ',' ...
-                num2str(sizeBbox(1)) ',' num2str(sizeBbox(2)) ',' num2str(sizeBbox(3)) ',' 'L4_focus_flight-new-4'];
-            fprintf(fid, '%s\n', linkString);
-            q.angles{i}(j,:) = [phi theta psi];
-        end
-    end
-end
-fclose(fid);
+dendritesWithER = connectEM.attachER(graph, dendrites, er);
+toc;
+
+% Attach spines to dendrite class
+display('Attaching spines to dendrite class: ');
+tic;
+[dendritesWithSpines, spinePaths] = connectEM.attachSpines(graph, segmentMeta, dendritesWithER, 10);
 toc;
 
 display('Writing skeletons for debugging the process:');
 tic;
-% TODO: Fix and make silent
-% Write a debug & visualization for the queries overlaps (now with agglomerations instead of segments
-debugQueryAttachment(graph, segments.pointMap, initialAgglomeration, ff, outputFolder);
-% Write skeletons for comparing agglomerations merged by querries vs. ground truth
-%debugAgglomerationToGtOverlap(graph, segments, gt, ff, partition, initialAgglomeration, boutons, eqClassCC, startAgglo, endAgglo, outputFolder);
-debugAgglomerationToGtOverlap2(graph, segments, gt, initialAgglomeration, boutons, initialAgglomeration.partition, outputFolder);
-debugAgglomerationToGtOverlap2(graph, segments, gt, initialAgglomeration, boutons, possibleAxons, outputFolder);
-debugAgglomerationToGtOverlap3(graph, segments, gt, initialAgglomeration, boutons, partition, ff, startAgglo, endAgglo, outputFolder);
-% Write skeletons for debugging new queries generated here in combination with agglomeration they are generated from
-debugAgglomerationWithNewQueries(graph, segments, possibleAxons, q, outputFolder);
+connectEM.generateSkeletonFromAgglo(dendriteEdges, segmentMeta.point, ...
+    dendrites, ...
+    strseq(['dendrites_' num2str(thresholdDendrite) '_'], 1:length(dendrites)), ...
+    outputFolder, segmentMeta.maxSegId);
+connectEM.generateSkeletonFromAgglo(graph.edges, segmentMeta.point, ...
+    dendritesWithSpines, ...
+    strseq(['dendritesWithAttachments_' num2str(thresholdDendrite) '_'], 1:length(dendritesWithSpines)), ...
+    outputFolder, segmentMeta.maxSegId);
+connectEM.generateSkeletonFromAgglo(axonEdges, segmentMeta.point, ...
+    axons, ...
+    strseq(['axons_' num2str(thresholdAxon) '_'], 1:length(axons)), ...
+    outputFolder, segmentMeta.maxSegId);
+connectEM.generateSkeletonFromAgglo(graph.edges, segmentMeta.point, ...
+    vessel, ...
+    strseq('vessel_', 1:length(vessel)), ...
+    outputFolder, segmentMeta.maxSegId);
+connectEM.generateSkeletonFromAgglo(graph.edges, segmentMeta.point, ...
+    nuclei, ...
+    strseq('nuclei_', 1:length(nuclei)), ...
+    outputFolder, segmentMeta.maxSegId);
+connectEM.generateSkeletonFromAgglo(graph.edges, segmentMeta.point, ...
+    myelin, ...
+    strseq('myelin_', 1:length(myelin)), ...
+    outputFolder, segmentMeta.maxSegId);
+connectEM.generateSkeletonFromAgglo(graph.edges, segmentMeta.point, ...
+    endo, ...
+    strseq('endo_', 1:length(endo)), ...
+    outputFolder, segmentMeta.maxSegId);
+connectEM.generateSkeletonFromAgglo(graph.edges, segmentMeta.point, ...
+    er, ...
+    strseq('er_', 1:length(er)), ...
+    outputFolder, segmentMeta.maxSegId);
 toc;
 
-display('Saving all data in one humoungous file for bookkeeping purposes');
+display('Display collected volume, write mapping of current state, save everything:');
 tic;
-% Currently without flag which will loose us the graph variable (too large), but ok
-% Add -v7.3 flag in case variables get to large?
-save([outputFolder 'allData.mat']);
+eqClasses = cat(1, dendrites, axons, vessel, nuclei, myelin);
+voxelCollected = sum(segmentMeta.voxelCount(cat(1, eqClasses{:})));
+voxelTotal = sum(segmentMeta.voxelCount);
+display(['Fraction of total (foreground) voxel collected: ' num2str(voxelCollected./voxelTotal, '%3.2f')]);
+script = WK.makeMappingScript(segmentMeta.maxSegId, eqClasses, false);
+fileHandle = fopen([outputFolder 'stateAfterInitialAgglo.txt'], 'w');
+fwrite(fileHandle, script);
+fclose(fileHandle);
+script = WK.makeMappingScript(segmentMeta.maxSegId, axons, false);
+fileHandle = fopen([outputFolder '__axonState.txt'], 'w');
+fwrite(fileHandle, script);
+fclose(fileHandle);
+script = WK.makeMappingScript(segmentMeta.maxSegId, dendrites, false);
+fileHandle = fopen([outputFolder '__dendriteState.txt'], 'w');
+fwrite(fileHandle, script);
+fclose(fileHandle);
+clear fileHandle script;
+save([outputFolder 'initialAgglo.mat']);
 toc;
 
-display('Calculating some statistics');
-tic;
-% How many (possible) axons with a certain number of boutons
-for i=1:5
-    display(['Number of axons with more than ' num2str(i) ' synapses: ' num2str(sum(nrBoutons > i))]);
-end
-nrEndsAtBorder = cellfun(@sum, q.outsideBBox);
-lengthPC1 = cellfun(@(x)norm((x(1,:)-x(2,:)) .* [11.24 11.24 28]), q.pos);
-for i=0:1
-    display(['Number of axons with more than 10 micron path length and ' num2str(i) ' ends at dataset border: ' num2str(sum(nrEndsAtBorder > i & lengthPC1 > 10e3))]);
-end
-toc;
-%}

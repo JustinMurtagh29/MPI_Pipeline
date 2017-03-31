@@ -31,20 +31,20 @@ function generateSkeletonFromAgglo(edges, com, cc, treeNames, outputFolder, maxS
             skel{1}.nodesNumDataAll(:,3:5) = theseCoM;
             skel{1}.edges = theseEdgesNodes;
             clear theseCoM theseEdgesNodes;
-            writeNml([outputFolder treeNames{tr} '.nml'], skel);
+            writeNmlSilent([outputFolder treeNames{tr} '.nml'], skel, 1);
             clear skel;
-            mappingFile = [outputFolder treeNames{tr} '.txt'];
-            script = WK.makeMappingScript(maxSegId, num2cell(cc{tr}));
-            fileHandle = fopen(mappingFile, 'w');
-            fwrite(fileHandle, script);
-            fclose(fileHandle);
+            %mappingFile = [outputFolder treeNames{tr} '.txt'];
+            %script = WK.makeMappingScript(maxSegId, num2cell(cc{tr}));
+            %fileHandle = fopen(mappingFile, 'w');
+            %fwrite(fileHandle, script);
+            %fclose(fileHandle);
         end
     end
 end
 
 function skel = initializeSkeleton()
     % Set parameters
-    skel{1}.parameters.experiment.name='2012-09-28_ex145_07x2_ROI2016_corrected';
+    skel{1}.parameters.experiment.name='2012-09-28_ex145_07x2_ROI2017';
     skel{1}.parameters.scale.x = '11.24';
     skel{1}.parameters.scale.y = '11.24';
     skel{1}.parameters.scale.z = '28';
@@ -56,15 +56,11 @@ function skel = initializeSkeleton()
     skel{1}.branchpoints = [];
 end
 
-function edges = minimalSpanningTree(com)
-    if size(com,1) < 2
-        edges = [];
-    else
-        % Minimal spanning tree
-        adj = squareform(pdist(bsxfun(@times, com, [11.24 11.24 28])));
-        adj(adj > 7200) = 0;
-        tree = graphminspantree(sparse(adj), 'Method', 'Kruskal');
-        [edges(:,1), edges(:,2)] = find(tree);
-    end
-end
+% This function is supposed to be present in Matlab Mapping Toolbox, just
+% reimplemented here as I was not able to checkout the toolbox
+function newmap = changem(map, newcode, oldcode)
 
+    [~, idx] = ismember(map, oldcode);
+    newmap = newcode(idx);
+
+end
