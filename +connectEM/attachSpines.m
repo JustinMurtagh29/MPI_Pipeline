@@ -9,6 +9,14 @@ for i=1:length(dendrites)
 end
 spineIds = find(segmentMeta.isSpine & targetLabel == 0 & ~excluded);
 
+% Display some stats
+nrSpineSegments = sum(segmentMeta.isSpine);
+display(['Total #segments classified as spines: ' num2str(nrSpineSegments)]);
+nrSpineSegmentsCollected = sum(segmentMeta.isSpine & targetLabel ~= 0);
+nrSpineSegmentsExcluded = sum(segmentMeta.isSpine & excluded);
+display(['Total #segments already agglomerated in dendrites: ' num2str(nrSpineSegmentsCollected)]);
+display(['Total #segments not in dendrite class: ' num2str(nrSpineSegmentsExcluded)]);
+
 % Perform maximum probaility search for each spine head
 spinePaths = cell(numel(spineIds),1);
 for i=1:length(spineIds)
@@ -29,7 +37,7 @@ for i=1:length(spineIds)
         neighbours = neighbours(idx);
         % Add maximum probability segment to path if there is still a neighbour around
         [maxProb, idx] = max(neighProb);
-        if ~isempty(neighbours) && maxProb > 0.5
+        if ~isempty(neighbours) %&& maxProb > 0.5
             takenPath(end+1) = neighbours(idx);
         else
             break;
@@ -43,6 +51,10 @@ end
 
 % Add to dendritic equivalence classes
 idx = find(~cellfun(@isempty, spinePaths));
+nrSpinesAttachted = numel(idx);
+nrSegmentsCollected = numel(unique(cat(1, spinePaths{:})));
+display(['Total #segments attachted to dendrite class: ' num2str(nrSpinesAttachted)]);
+display(['Total segments added to dendrite agglomerations in the process: ' num2str(nrSegmentsCollected)]);
 dendritesNew = dendrites;
 for i=1:length(idx)
     dendriteIdx = targetLabel(spinePaths{idx(i)}(end)); 
