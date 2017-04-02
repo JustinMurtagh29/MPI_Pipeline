@@ -6,7 +6,7 @@ function [graphCut, mapping, mappingNames, mappingSize] = cutGraph(p, graph, seg
     assert(length(segIds) == max(segIds));
     % Vessel and endothelial cells
     vesselIdx = vesselScore > 0.5;
-    endoIdx = growOutHeuristics(graph, segmentMeta, vesselIdx, 0.999, 1000);
+    endoIdx = growOutHeuristics(graph, segmentMeta, vesselIdx, 0.99, 1000);
     % Nuclei + added if not grown to completion
     nucleiIdx = nucleiScore > 0.5 & ~vesselIdx & ~endoIdx;
     addedNucleiIdx = growOutHeuristics(graph, segmentMeta, nucleiIdx, 0.999, 1000);

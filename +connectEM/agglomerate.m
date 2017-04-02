@@ -74,10 +74,10 @@ display('Removing components bordering on vessel or nuclei segments from axon gr
 tic;
 axonNeighbours = cellfun(@(x)unique(cat(2, graph.neighbours{x})), axons, 'uni', 0);
 % Find fraction of neighbours for each axon component that are vessel or nuclei segments
-vesselIdAll = cat(1, excClasses{1}{:});
+vesselIdAll = cat(1, excClasses{1}, excClasses{2});
 vesselNeighbours = cellfun(@(x)sum(ismember(x, vesselIdAll)), axonNeighbours);
 vesselFraction = vesselNeighbours ./ cellfun(@numel, axonNeighbours);
-nucleiIdAll = cat(1, excClasses{3}{:});
+nucleiIdAll = cat(1, excClasses{3}, excClasses{4});
 nucleiNeighbours = cellfun(@(x)sum(ismember(x, nucleiIdAll)), axonNeighbours);
 nucleiFraction = nucleiNeighbours ./ cellfun(@numel, axonNeighbours);
 clear axonNeighbours vesselIdAll vesselNeighbours nucleiIdAll nucleiNeighbours;
@@ -119,10 +119,14 @@ toc;
 display('Display collected volume, save everything (except graph, which will be ignored due to size):');
 tic;
 % Take all classes (except removed small and disconnected segments as they do not have any good meaning)
-eqClasses = cat(1, excClasses{1:6}, dendritesWithSpines, axons);
-voxelCollected = sum(segmentMeta.voxelCount(cat(1, eqClasses{:})));
-voxelTotal = sum(segmentMeta.voxelCount);
-display(['Fraction of total (foreground) voxel collected: ' num2str(voxelCollected./voxelTotal, '%3.2f')]);
+collectedSegments = false(segmentMeta.maxSegId, 1);
+collectedSegments(cat(1, excClasses{1:6}, dendritesWithSpines{:}, axons{:})) = true;
+voxelCollected = sum(segmentMeta.voxelCount(collectedSegments & segmentMeta.isDendrite));
+voxelTotal = sum(segmentMeta.voxelCount(segmentMeta.isDendrite));
+display(['Fraction of total dendrite voxel collected: ' num2str(voxelCollected./voxelTotal, '%3.2f')]);
+voxelCollected = sum(segmentMeta.voxelCount(collectedSegments & segmentMeta.isAxon));
+voxelTotal = sum(segmentMeta.voxelCount(segmentMeta.isAxon));
+display(['Fraction of total axon voxel collected: ' num2str(voxelCollected./voxelTotal, '%3.2f')]);
 save([outputFolder 'agglo.mat']);
 toc;
 
