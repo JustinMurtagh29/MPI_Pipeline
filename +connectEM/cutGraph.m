@@ -6,14 +6,14 @@ function [graphCut, mapping, mappingNames, mappingSize] = cutGraph(p, graph, seg
     assert(length(segIds) == max(segIds));
     % Vessel and endothelial cells
     vesselIdx = vesselScore > 0.5;
-    endoIdx = growOutHeuristics(graph, segmentMeta, vesselIdx, 1, 1e6);
+    endoIdx = growOutHeuristics(graph, segmentMeta, vesselIdx, 0.999, 1000);
     % Nuclei + added if not grown to completion
     nucleiIdx = nucleiScore > 0.5 & ~vesselIdx & ~endoIdx;
-    addedNucleiIdx = growOutHeuristics(graph, segmentMeta, nucleiIdx, 1, 1e6);
+    addedNucleiIdx = growOutHeuristics(graph, segmentMeta, nucleiIdx, 0.999, 1000);
     addedNucleiIdx = addedNucleiIdx & ~ vesselIdx & ~endoIdx;
     % Myelin + added to try to avoid merger with myelin
     myelinIdx = myelinScore > 0.5 & ~vesselIdx & ~endoIdx & ~nucleiIdx & ~addedNucleiIdx;
-    addedMyelinIdx = growOutHeuristics(graph, segmentMeta, myelinIdx, 1, 1e6);
+    addedMyelinIdx = growOutHeuristics(graph, segmentMeta, myelinIdx, 0.999, 1000);
     addedMyelinIdx = addedMyelinIdx & ~vesselIdx & ~endoIdx & ~nucleiIdx & ~addedNucleiIdx;
     % All heuristics exclusions
     heuristicIdx = vesselIdx | endoIdx | nucleiIdx | addedNucleiIdx | myelinIdx | addedMyelinIdx;
@@ -39,13 +39,10 @@ function [graphCut, mapping, mappingNames, mappingSize] = cutGraph(p, graph, seg
     mapping = {vesselIdx endoIdx nucleiIdx addedNucleiIdx myelinIdx addedMyelinIdx smallIdx lowProbIdx};
     mapping = cellfun(@find, mapping, 'uni', 0);
     mappingNames = {'vessel' 'endothelial' 'nuclei' 'addedNuclei' 'myelin' 'addedMyelin' 'smallSegments' 'disconnectedSegments'};
-    for i=1:length(mapping)
-        [mapping{i}, mappingSize{i}] = connectEM.findCCaccordingToGraph(graph, mapping{i}, segmentMeta);
-    end
+    mappingSize = cellfun(@numel, mapping);
 
     % Remove heuristics and small or disconnected segments from graph
     removedIds = cat(1, mapping{:});
-    removedIds = cat(1, removedIds{:});
     keptIds = setdiff(1:double(segmentMeta.maxSegId), removedIds);
     keepEdgeIdx = all(ismember(remainingEdges, keptIds), 2);
     graphCut.edges = remainingEdges(keepEdgeIdx,:);
@@ -59,7 +56,7 @@ end
 function addedSegmentIdx = growOutHeuristics(graph, segmentMeta, initialSegmentIdx, probThreshold, sizeThreshold)
     % Grow out heuristics to avoid merger into endothelial, missed myelin etc.
 
-    [partition, partitionSize] = connectEM.partitionSortAndKeepOnlyLarge(graph, segmentMeta, probThreshold, sizeThreshold);
+    partition = connectEM.partitionSortAndKeepOnlyLarge(graph, segmentMeta, probThreshold, sizeThreshold);
     initialSegmentIds = find(initialSegmentIdx);
     sizeComponent = cellfun(@numel, partition);
     initialSegmentsPerComponent = cellfun(@(x)sum(ismember(x, initialSegmentIds)), partition);

@@ -34,13 +34,12 @@ tic;
 [graphCut, excClasses, excNames, excSize] = connectEM.cutGraph(p, graph, segmentMeta, borderMeta, 100, 1000);
 toc;
 
-display('Writing skeletons and mappings of excluded components:');
+display('Writing skeletons (probably not useable due to not being CC) and mappings of excluded components:');
 tic;
-for i=1:length(excClasses)
-    connectEM.skeletonFromAgglo(graph.edges, segmentMeta, ...
-        excClasses{i}, excNames{i}, outputFolder);
-    display(['Finished writing ' excNames{i} ' skeletons.']);
-end
+connectEM.skeletonFromAgglo(graph.edges, segmentMeta, ...
+    excClasses(1:6), 'heuristics', outputFolder);
+connectEM.skeletonFromAgglo(graph.edges, segmentMeta, ...
+    excClasses(7:8), 'smallAndDisconnected', outputFolder);
 toc;
 
 display('Generating subgraphs for axon and dendrite agglomeration:');
@@ -58,27 +57,27 @@ toc;
 
 % Lets stick with 99% for now as we have 'large enough' components
 probThresholdDendrite = 0.99;
-sizeThesholdDendrite = 1e6;
+sizeThresholdDendrite = 1e6;
 display('Performing agglomeration on dendrite subgraph:');
 tic;
-[dendrites, dendriteSize] = partitionSortAndKeepOnlyLarge(graphCutDendrites, segmentMeta, probThresholdDendrite, sizeThresholdDendrite);
+[dendrites, dendriteSize, dendriteEdges] = connectEM.partitionSortAndKeepOnlyLarge(graphCutDendrites, segmentMeta, probThresholdDendrite, sizeThresholdDendrite);
 toc;
 
 probThresholdAxon = 0.90;
 sizeThresholdAxon = 1e6;
 display('Performing agglomeration on axon subgraph:');
 tic;
-[axons, axonsSize] = partitionSortAndKeepOnlyLarge(graphCutAxons, segmentMeta, probThresholdAxon, sizeThresholdAxon);
+[axons, axonsSize, axonEdges] = connectEM.partitionSortAndKeepOnlyLarge(graphCutAxons, segmentMeta, probThresholdAxon, sizeThresholdAxon);
 toc;
 
 display('Removing components bordering on vessel or nuclei segments from axon graph:');
 tic;
 axonNeighbours = cellfun(@(x)unique(cat(2, graph.neighbours{x})), axons, 'uni', 0);
 % Find fraction of neighbours for each axon component that are vessel or nuclei segments
-vesselIdAll = cat(1, vessel{:});
+vesselIdAll = cat(1, excClasses{1}{:});
 vesselNeighbours = cellfun(@(x)sum(ismember(x, vesselIdAll)), axonNeighbours);
 vesselFraction = vesselNeighbours ./ cellfun(@numel, axonNeighbours);
-nucleiIdAll = cat(1, nuclei{:});
+nucleiIdAll = cat(1, excClasses{3}{:});
 nucleiNeighbours = cellfun(@(x)sum(ismember(x, nucleiIdAll)), axonNeighbours);
 nucleiFraction = nucleiNeighbours ./ cellfun(@numel, axonNeighbours);
 clear axonNeighbours vesselIdAll vesselNeighbours nucleiIdAll nucleiNeighbours;
@@ -103,11 +102,11 @@ toc;
 
 display('Writing skeletons for debugging the process:');
 tic;
-connectEM.skeletonFromAgglo(graph.edges, segmentMeta, ...
+connectEM.skeletonFromAgglo(dendriteEdges, segmentMeta, ...
     dendrites, 'dendrites', outputFolder);
 connectEM.skeletonFromAgglo(graph.edges, segmentMeta, ...
     dendritesWithSpines, 'dendritesWithSpines', outputFolder);
-connectEM.skeletonFromAgglo(graph.edges, segmentMeta, ...
+connectEM.skeletonFromAgglo(axonEdges, segmentMeta, ...
     axons, 'axons', outputFolder);
 % Probably not needed after refactoring as endo should already be excluded
 connectEM.skeletonFromAgglo(graph.edges, segmentMeta, ...
