@@ -74,30 +74,29 @@ display('Removing components bordering on vessel or nuclei segments from axon gr
 tic;
 axonNeighbours = cellfun(@(x)unique(cat(2, graph.neighbours{x})), axons, 'uni', 0);
 % Find fraction of neighbours for each axon component that are vessel or nuclei segments
-vesselIdAll = cat(1, excClasses{1}, excClasses{2});
+vesselIdAll = cat(1, excClasses{1});
 vesselNeighbours = cellfun(@(x)sum(ismember(x, vesselIdAll)), axonNeighbours);
 vesselFraction = vesselNeighbours ./ cellfun(@numel, axonNeighbours);
-nucleiIdAll = cat(1, excClasses{3}, excClasses{4});
+nucleiIdAll = cat(1, excClasses{3});
 nucleiNeighbours = cellfun(@(x)sum(ismember(x, nucleiIdAll)), axonNeighbours);
 nucleiFraction = nucleiNeighbours ./ cellfun(@numel, axonNeighbours);
-clear axonNeighbours vesselIdAll vesselNeighbours nucleiIdAll nucleiNeighbours;
 % Endothelial cells border on vessel, not axons
-endo = axons(vesselFraction > 0);
+endo = axons(vesselNeighbours > 0);
 % ER is part of soma, not axons
-er = axons(nucleiFraction > 0 & vesselFraction == 0);
+er = axons(nucleiNeighbours > 5 & vesselNeighbours == 0);
 % Keep the rest
-axons = axons(nucleiFraction == 0 & vesselFraction == 0); 
+axons = axons(nucleiFraction <= 5 & vesselNeighbours == 0); 
 toc;
 
-display('Attaching ER to dendrite class: ');
-tic;
-dendritesWithER = connectEM.attachER(graph, dendrites, er);
-toc;
+%display('Attaching ER to dendrite class: ');
+%tic;
+%dendritesWithER = connectEM.attachER(graph, dendrites, er);
+%toc;
 
 % Attach spines to dendrite class
 display('Attaching spines to dendrite class: ');
 tic;
-[dendritesWithSpines, spinePaths] = connectEM.attachSpines(graph, segmentMeta, dendritesWithER, 10);
+[dendritesWithSpines, spinePaths] = connectEM.attachSpines(graph, segmentMeta, dendrites, 10);
 toc;
 
 display('Writing skeletons for debugging the process:');
