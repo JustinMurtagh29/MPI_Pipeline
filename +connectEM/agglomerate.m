@@ -126,6 +126,7 @@ toc;
 
 display('Generating isosurfaces of final axon and dendrite components:');
 tic;
-
+job1 = connectEM.buildIsosurfaceOfAggloStart(p, outputFolder, dendritesFinalWithSpines(1:10), 'dendritesFinalWithSpines');
+%job2 = connectEM.buildIsosurfaceOfAggloStart(p, outputFolder, axonsFinal, 'axonsFinal');
 toc;
 
