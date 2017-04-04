@@ -6,7 +6,12 @@ function [graphCut, mapping, mappingNames, mappingSize] = cutGraph(p, graph, seg
     assert(length(segIds) == max(segIds));
     % Vessel and endothelial cells
     vesselIdx = vesselScore > 0.5;
-    endoIdx = growOutHeuristics(graph, segmentMeta, vesselIdx, 0.995, 1000);
+    %endoIdx = growOutHeuristics(graph, segmentMeta, vesselIdx, 0.995, 1000);
+    temp = load([p.saveFolder 'perivessel.mat']);
+    endoIdx = false(segmentMeta.maxSegId, 1);
+    endoIdx(cat(1, temp.comps{:})) = true;
+    endoIdx = endoIdx & ~vesselIdx;
+    clear temp;
     % Nuclei + added if not grown to completion
     nucleiIdx = nucleiScore > 0.5 & ~vesselIdx & ~endoIdx;
     addedNucleiIdx = growOutHeuristics(graph, segmentMeta, nucleiIdx, 0.999, 1000);

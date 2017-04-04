@@ -20,7 +20,7 @@ function segmentMeta = addSegmentClassInformation(p, segmentMeta)
     segmentMeta.axonProb = zeros(segmentMeta.maxSegId, 1);
     idx = ~isnan(segmentPredictions.probsMulti(:,2));
     segmentMeta.axonProb(segmentPredictions.segId(idx)) = segmentPredictions.probsMulti(idx,2);
-    segmentMeta.isAxon = segmentMeta.axonProb > 0.5;
+    segmentMeta.isAxon = segmentMeta.axonProb > 0.6;
     % ... dendrite
     segmentMeta.dendriteProb = zeros(segmentMeta.maxSegId, 1);
     idx = ~isnan(segmentPredictions.probsMulti(:,3));

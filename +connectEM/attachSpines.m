@@ -1,4 +1,4 @@
-function [dendritesNew, spinePaths] = attachSpines(graph, segmentMeta, dendrites, maxSteps )
+function [dendritesNew, spinePaths, comment] = attachSpines(graph, segmentMeta, dendrites, maxSteps )
     % Attach spines to a set of dendritic equivalence classes based on shortest path
 
     % Starting points are spines (not yet collected or excluded) and stop if non dendritic segment reached
@@ -7,52 +7,56 @@ function [dendritesNew, spinePaths] = attachSpines(graph, segmentMeta, dendrites
     for i=1:length(dendrites)
         targetLabel(dendrites{i}) = i;
     end
-    spineIds = find(segmentMeta.isSpine & targetLabel == 0 & ~excluded);
+    spineIds = find(segmentMeta.isSpine & ~excluded);
 
     % Display some stats
     nrSpineSegments = sum(segmentMeta.isSpine);
     display(['Total #segments classified as spines: ' num2str(nrSpineSegments)]);
-    nrSpineSegmentsCollected = sum(segmentMeta.isSpine & targetLabel ~= 0);
     nrSpineSegmentsExcluded = sum(segmentMeta.isSpine & excluded);
-    display(['Total #segments already agglomerated in dendrites: ' num2str(nrSpineSegmentsCollected)]);
     display(['Total #segments not in dendrite class: ' num2str(nrSpineSegmentsExcluded)]);
 
     % Perform maximum probaility search for each spine head
     spinePaths = cell(numel(spineIds),1);
+    comment = cell(numel(spineIds),1);
     for i=1:length(spineIds)
         takenPath = spineIds(i);
-        nrSteps = 1;
+        nrSteps = 0;
         neighProb = [];
         neighbours = [];
-        while nrSteps <= maxSteps && targetLabel(takenPath(end)) == 0;
+        while true
+            % Update neighbour list based on new agglomerate
             neighProb = cat(1, neighProb, graph.neighProb{takenPath(end)});
             neighbours = cat(2, neighbours, graph.neighbours{takenPath(end)});
-            % Exclude excluded neighbours
             idx = excluded(neighbours);
             neighbours(idx) = [];
             neighProb(idx) = [];
-            % Exclude already visited
             idx = ~ismember(neighbours, takenPath);
             neighProb = neighProb(idx);
             neighbours = neighbours(idx);
-            % Add maximum probability segment to path if there is still a neighbour around
-            [maxProb, idx] = max(neighProb);
-            if ~isempty(neighbours) %&& maxProb > 0.5
-                takenPath(end+1) = neighbours(idx);
-            else
+
+            % Add maximum probability segment to path if none of the terminal conditions are met
+            if targetLabel(takenPath(end)) ~= 0
+                comment{i} = 'attachted';
+                break; 
+            elseif isempty(neighbours)
+                comment{i} = 'no more dendritic neighbours';
                 break;
+            elseif nrSteps >= maxSteps
+                comment{i} = 'maximum steps reached';
+                break;
+            else
+                [maxProb, idx] = max(neighProb);
+                takenPath(end+1) = neighbours(idx);
             end
             nrSteps = nrSteps + 1;
         end
-        if targetLabel(takenPath(end)) ~= 0
-            spinePaths{i} = takenPath';
-        end
+        spinePaths{i} = takenPath';
     end
 
     % Add to dendritic equivalence classes
-    idx = find(~cellfun(@isempty, spinePaths));
+    idx = find(strcmp(comment, 'attachted'));
     nrSpinesAttachted = numel(idx);
-    nrSegmentsCollected = numel(unique(cat(1, spinePaths{:})));
+    nrSegmentsCollected = numel(unique(cat(1, spinePaths{idx})));
     display(['Total #segments attachted to dendrite class: ' num2str(nrSpinesAttachted)]);
     display(['Total segments added to dendrite agglomerations in the process: ' num2str(nrSegmentsCollected)]);
     dendritesNew = dendrites;

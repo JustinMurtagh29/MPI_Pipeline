@@ -2,6 +2,7 @@
 % Author: Manuel Berning <manuel.berning@brain.mpg.de>
 % See +connectEM for additional functions used here
 
+clearvars -except graph borderMeta segmentMeta synScore graphCut excClasses excNames excSize;
 %% Start by loading parameter file
 % Load parameter from newest pipeline run
 load('/gaba/u/mberning/results/pipeline/20170217_ROI/allParameterWithSynapses.mat');
@@ -13,6 +14,7 @@ if ~exist(outputFolder, 'dir')
     mkdir(outputFolder);
 end
 
+%{
 display('Loading data:');
 tic;
 % Load global graph representation
@@ -41,6 +43,7 @@ connectEM.skeletonFromAgglo(graph.edges, segmentMeta, ...
 connectEM.skeletonFromAgglo(graph.edges, segmentMeta, ...
     excClasses(7:8), 'smallAndDisconnected', outputFolder);
 toc;
+%}
 
 display('Generating subgraphs for axon and dendrite agglomeration:');
 tic;
@@ -70,49 +73,41 @@ tic;
 [axons, axonsSize, axonEdges] = connectEM.partitionSortAndKeepOnlyLarge(graphCutAxons, segmentMeta, probThresholdAxon, sizeThresholdAxon);
 toc;
 
-display('Removing components bordering on vessel or nuclei segments from axon graph:');
+display('Reassigning ER from axon to dendrite class: ');
 tic;
-axonNeighbours = cellfun(@(x)unique(cat(2, graph.neighbours{x})), axons, 'uni', 0);
-% Find fraction of neighbours for each axon component that are vessel or nuclei segments
-vesselIdAll = cat(1, excClasses{1});
-vesselNeighbours = cellfun(@(x)sum(ismember(x, vesselIdAll)), axonNeighbours);
-vesselFraction = vesselNeighbours ./ cellfun(@numel, axonNeighbours);
-nucleiIdAll = cat(1, excClasses{3});
-nucleiNeighbours = cellfun(@(x)sum(ismember(x, nucleiIdAll)), axonNeighbours);
-nucleiFraction = nucleiNeighbours ./ cellfun(@numel, axonNeighbours);
-% Endothelial cells border on vessel, not axons
-endo = axons(vesselNeighbours > 0);
-% ER is part of soma, not axons
-er = axons(nucleiNeighbours > 5 & vesselNeighbours == 0);
-% Keep the rest
-axons = axons(nucleiFraction <= 5 & vesselNeighbours == 0); 
+[dendritesAfterEr, axonsAfterEr, er] = connectEM.extractAndTransferER(graph, dendrites, axons);
 toc;
 
-%display('Attaching ER to dendrite class: ');
-%tic;
-%dendritesWithER = connectEM.attachER(graph, dendrites, er);
-%toc;
+display('Garbage collection');
+tic;
+[axonsFinal, dendritesFinal] = connectEM.garbageCollection(graph, segmentMeta, axonsAfterEr, dendritesAfterEr, excClasses(1:6));
+toc;
 
-% Attach spines to dendrite class
 display('Attaching spines to dendrite class: ');
 tic;
-[dendritesWithSpines, spinePaths] = connectEM.attachSpines(graph, segmentMeta, dendrites, 10);
+[dendritesFinalWithSpines, spinePaths, comment] = connectEM.attachSpines(graph, segmentMeta, dendritesFinal, 10);
 toc;
 
 display('Writing skeletons for debugging the process:');
 tic;
-connectEM.skeletonFromAgglo(dendriteEdges, segmentMeta, ...
-    dendrites, 'dendrites', outputFolder);
-connectEM.skeletonFromAgglo(graph.edges, segmentMeta, ...
-    dendritesWithSpines, 'dendritesWithSpines', outputFolder);
-connectEM.skeletonFromAgglo(axonEdges, segmentMeta, ...
-    axons, 'axons', outputFolder);
-% Probably not needed after refactoring as endo should already be excluded
-connectEM.skeletonFromAgglo(graph.edges, segmentMeta, ...
-    endo, 'endo', outputFolder);
-% Here we need to check whether new probabilities still misclassify ER segments
 connectEM.skeletonFromAgglo(graph.edges, segmentMeta, ...
     er, 'er', outputFolder);
+rng default;
+randIdx = randi(numel(spinePaths), 100);
+thisSpinePath = spinePaths(randIdx);
+thisTreeName = cellfun(@(x,y)[num2str(y) '_' x], comment(randIdx), num2cell(1:100));
+thisNodes = cellfun(@(x)segmentMeta.point(x,:), thisSpinePath);
+connectEM.generateSkeletonFromNodes([outputFolder 'spineTestSet.nml'], thisNodes, thisTreeName, {}, true);
+connectEM.skeletonFromAgglo(graph.edges, segmentMeta, ...
+    er, 'er', outputFolder);
+connectEM.skeletonFromAgglo(graph.edges, segmentMeta, ...
+    dendritesFinal, 'dendrites', outputFolder);
+connectEM.skeletonFromAgglo(graph.edges, segmentMeta, ...
+    dendritesFinal, 'dendrites', outputFolder);
+connectEM.skeletonFromAgglo(graph.edges, segmentMeta, ...
+    dendritesFinalWithSpines, 'dendritesWithSpines', outputFolder);
+connectEM.skeletonFromAgglo(axonEdges, segmentMeta, ...
+    axonsFinal, 'axons', outputFolder);
 toc;
 
 display('Display collected volume, save everything (except graph, which will be ignored due to size):');
@@ -127,5 +122,10 @@ voxelCollected = sum(segmentMeta.voxelCount(collectedSegments & segmentMeta.isAx
 voxelTotal = sum(segmentMeta.voxelCount(segmentMeta.isAxon));
 display(['Fraction of total axon voxel collected: ' num2str(voxelCollected./voxelTotal, '%3.2f')]);
 save([outputFolder 'agglo.mat']);
+toc;
+
+display('Generating isosurfaces of final axon and dendrite components:');
+tic;
+
 toc;
 
