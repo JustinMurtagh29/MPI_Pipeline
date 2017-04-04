@@ -1,8 +1,9 @@
-function [dendritesNew, spinePaths, comment] = attachSpines(graph, segmentMeta, dendrites, maxSteps )
+function [dendritesNew, spinePaths, comment] = attachSpines(graph, segmentMeta, dendrites, axons, maxSteps )
     % Attach spines to a set of dendritic equivalence classes based on shortest path
 
     % Starting points are spines (not yet collected or excluded) and stop if non dendritic segment reached
     excluded = ~segmentMeta.isDendrite;
+    excluded(cat(1, axons{:})) = true;
     targetLabel = zeros(segmentMeta.maxSegId,1);
     for i=1:length(dendrites)
         targetLabel(dendrites{i}) = i;
@@ -33,7 +34,7 @@ function [dendritesNew, spinePaths, comment] = attachSpines(graph, segmentMeta, 
             idx = ~ismember(neighbours, takenPath);
             neighProb = neighProb(idx);
             neighbours = neighbours(idx);
-
+            
             % Add maximum probability segment to path if none of the terminal conditions are met
             if targetLabel(takenPath(end)) ~= 0
                 comment{i} = 'attachted';
@@ -65,6 +66,13 @@ function [dendritesNew, spinePaths, comment] = attachSpines(graph, segmentMeta, 
         dendritesNew{dendriteIdx} = cat(1, dendritesNew{dendriteIdx}, spinePaths{idx(i)});
     end
     dendritesNew = cellfun(@unique, dendritesNew, 'uni', 0);
+
+    % Remove 8 segments that are in more than 1 component
+    segIds = cat(1, dendritesNew{:});
+    uniqueSegIds = unique(segIds);
+    counts = histc(segIds, uniqueSegIds);
+    segIdsToExclude = uniqueSegIds(counts > 1);
+    dendritesNew = cellfun(@(x)x(~ismember(x, segIdsToExclude)), dendritesNew, 'uni', 0);
 
 end
 

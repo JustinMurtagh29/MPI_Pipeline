@@ -85,7 +85,7 @@ toc;
 
 display('Attaching spines to dendrite class: ');
 tic;
-[dendritesFinalWithSpines, spinePaths, comment] = connectEM.attachSpines(graph, segmentMeta, dendritesFinal, 10);
+[dendritesFinalWithSpines, spinePaths, comment] = connectEM.attachSpines(graph, segmentMeta, dendritesFinal, axonsFinal, 10);
 toc;
 
 display('Writing skeletons for debugging the process:');
@@ -114,7 +114,7 @@ display('Display collected volume, save everything (except graph, which will be 
 tic;
 % Take all classes (except removed small and disconnected segments as they do not have any good meaning)
 collectedSegments = false(segmentMeta.maxSegId, 1);
-collectedSegments(cat(1, excClasses{1:6}, dendritesWithSpines{:}, axons{:})) = true;
+collectedSegments(cat(1, excClasses{1:6}, dendritesFinalWithSpines{:}, axons{:})) = true;
 voxelCollected = sum(segmentMeta.voxelCount(collectedSegments & segmentMeta.isDendrite));
 voxelTotal = sum(segmentMeta.voxelCount(segmentMeta.isDendrite));
 display(['Fraction of total dendrite voxel collected: ' num2str(voxelCollected./voxelTotal, '%3.2f')]);
