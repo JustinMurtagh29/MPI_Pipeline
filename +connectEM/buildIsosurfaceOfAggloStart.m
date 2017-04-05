@@ -1,6 +1,6 @@
 function job = buildIsosurfaceOfAggloStart(p, outputFolder, segIds, namePrefix)
 
-    fileNames = arrayfun(@(x)[namePrefix num2str(x) '.ply'], 1:length(segIds), 'uni', 0)';
+    fileNames = arrayfun(@(x)[outputFolder namePrefix num2str(x) '.ply'], 1:length(segIds), 'uni', 0)';
     functionH = @connectEM.buildIsosurfaceOfAgglo;
     inputCell = cellfun(@(x,y){x y}, segIds, fileNames, 'uni', 0);
     sharedInputs = {p};
