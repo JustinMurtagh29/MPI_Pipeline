@@ -1,4 +1,4 @@
-function [ segIdsAgglomerate,edgesAgglomerate ] = getAgglomerate( p,meta,mode,islocal )
+function getAgglomerate( p,meta,mode,targetfile)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 % get seg ids of agglomeration and transform meta data to agglomeration meta data
@@ -6,9 +6,6 @@ if nargin < 3
     mode = 'automatic';
 end
     
-if nargin < 4
-    islocal = 1;
-end
 switch mode
     case 'manual'
         [fname,pname] = uigetfile('.nml','Please give merger mode tracing of PC.','MultiSelect','On');
@@ -20,16 +17,16 @@ switch mode
                 skel = skel.mergeSkels(skeltmp);
             end
         end
-        if islocal && isempty(strfind(p.seg.root,'G:'))
-            p.seg.root = strcat('G:',p.seg.root);
-        end
         numNodes = cellfun(@(x) size(x,1),skel.nodes);
         allNodes = cat(1,skel.nodes{:});
         segIdsAgglomerate = Seg.Global.getSegIds(p,allNodes(:,1:3));
         segIdsAgglomerate = mat2cell(segIdsAgglomerate,numNodes);
-        edgesAgglomerate = cellfun(@(x,y) y(x),skel.edges,segIdsAgglomerate,'uni',0);  % put global seg Ids in edge vector
+        edgesAgglomerate = cellfun(@(x,y) unique([min(reshape(y(x),[],2),[],2), max(reshape(y(x),[],2),[],2)],'rows') ,skel.edges,segIdsAgglomerate,'uni',0);  % put global seg Ids in edge vector, put lower number left, and return only unique rows; reshape necessary if only one edge, otherwise its a column vector....
+        edgesAgglomerate = cellfun(@(x) x(diff(x,1,2)~=0,:),edgesAgglomerate,'uni',0);  % delete edge with itself
+%         segIdsAgglomerate = cellfun(@unique,segIdsAgglomerate,'uni',0);
+        segIdsAgglomerate = cellfun(@(x) intersect(meta.segIds,x),segIdsAgglomerate,'uni',0);  % delete segIds not in bbox
+        edgesAgglomerate = cellfun(@(x,y) x(all(ismember(x,y),2),:),edgesAgglomerate,segIdsAgglomerate,'uni',0);
         
-        %         remainingEdges = cat(1,skel.edges{:});
     case 'automatic'
         if ~exist(fullfile(p.saveFolder,'agglomeration','initialAgglo.mat'),'file')
             alignEM.agglomerate(p,0)
@@ -72,5 +69,7 @@ end
 % edgesAgglomerate = edgesAgglomerate(~cellfun(@isempty,segIdsAgglomerate));
 % segIdsAgglomerate = segIdsAgglomerate(~cellfun(@isempty,segIdsAgglomerate)); % delete segs not in bbox
 
+save(targetfile,'segIdsAgglomerate','edgesAgglomerate')
+[targetpath,targetfile,ext] = fileparts(targetfile);
+saveAgglomerateMeta(meta,segIdsAgglomerate,edgesAgglomerate,fullfile(targetpath,strcat('Meta_',targetfile,ext)));
 end
-

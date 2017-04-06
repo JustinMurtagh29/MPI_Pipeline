@@ -30,9 +30,9 @@ function generateSkeletonFromAgglo(edges, com, cc, treeNames, outputFolder, maxS
             skel{1}.nodesNumDataAll(:,2) = 10*ones(size(com{tr},2),1);
             skel{1}.nodesNumDataAll(:,3:5) = com{tr}';
             skel{1}.edges = theseEdgesNodes;
-            writeNml([outputFolder treeNames{tr} '.nml'], skel, 1);
+            writeNml(fullfile(outputFolder,[treeNames{tr} '.nml']), skel, 1);
             clear skel;
-            mappingFile = [outputFolder treeNames{tr} '.txt'];
+            mappingFile = fullfile(outputFolder,[treeNames{tr} '.txt']);
             script = WK.makeMappingScript(maxSegId, num2cell(cc{tr}),0);
             fileHandle = fopen(mappingFile, 'w');
             fwrite(fileHandle, script);
