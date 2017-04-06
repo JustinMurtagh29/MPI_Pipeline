@@ -1,43 +1,22 @@
-function [value, intraCostPos, intraCostNeg, interCostPos, interCostNeg] = aggloObjective2( probMatrix, edgeList, prob )
+function [value, goodWeight, badWeight, nrEdgesGood, nrEdgesBad] = aggloObjective2( graph, cc )
 % Calculate probability within and between connected components
-% Similar to Graph.findConnectedComponents but optimized for this specific
-% task (and its speed)
 
-% Create sparse matrix with current probabilities
-edgeMatrix = sparse([edgeList(:,1); edgeList(:,2)],[edgeList(:,2); edgeList(:,1)], 1);
-% Find permutation needed for block diagonal form & block boundaries
-[rowPermutation, ~, rowBlockBoundaries] = dmperm(edgeMatrix + speye(size(edgeMatrix)));
-% Modify probMatrix into this block diagonal form, now probMatrix has
-% rectangles along diagonal with components
-ccSortedProbMatrix = probMatrix(rowPermutation, rowPermutation);
+% Design parameter (higher means more oversegmentation)
+beta = 0.3;
 
-% Remove single segments from rowBlockBoundaries as they cannot have a
-% probability with themselves
-sizeBlocks = diff(rowBlockBoundaries);
-idx = sizeBlocks > 1;
-blockStart = rowBlockBoundaries(idx);
-blockEnd = blockStart + sizeBlocks(idx) - 1;
+% Get all edges & corresponding prob & weights in component
+idx = all(ismember(graph.edges, cc),2);
+theseProbabilities =  max(graph.prob(idx), 0.01);
+theseWeights = log(theseProbabilities) + log((1-beta)./beta);
 
-% Construct logical sparse matrix with blocks
-blockIdx = arrayfun(@(x,y)combnk(x:y,2), blockStart, blockEnd, 'uni', false);
-blockIdx = cat(1, blockIdx{:});
-ccBlockMatrix = sparse(cat(1, blockIdx(:,1), blockIdx(:,2)), ...
-    cat(1, blockIdx(:,2), blockIdx(:,1)), true, ...
-    size(ccSortedProbMatrix,1), size(ccSortedProbMatrix,2));
-intraProbMatrix = ccSortedProbMatrix(and(ccSortedProbMatrix,ccBlockMatrix));
+% Sum over positive and negative edges respectively
+goodWeight = sum(theseWeights(theseWeights > 0));
+badWeight = sum(theseWeights(theseWeights < 0));
+value = goodWeight + badWeight;
 
-% within components reward high probability edges and punish low
-% probability edges, vice-versa between components
-intraCosts = nonzeros(intraProbMatrix) - 0.5;
-intraCostPos = sum(intraCosts(intraCosts > 0));
-intraCostNeg = 100 * sum(intraCosts(intraCosts < 0));
-interCosts = nonzeros(ccSortedProbMatrix) - 0.5;
-interCostPos = sum(interCosts(interCosts > 0)) - intraCostPos;
-interCostNeg = sum(interCosts(interCosts < 0)) - intraCostNeg;
-% Idea behind chosing the 2 weights above: intraCostNeg should be really
-% expensive (= below 50% probability within component), 1e7 to make all
-% terms similar order of magnitude, not sure whether important
-value = interCostPos + interCostNeg ...
-    - intraCostPos - intraCostNeg;
+% Number of edges with good or bad weight
+nrEdgesGood = sum(theseWeights > 0);
+nrEdgesBad = sum(theseWeights < 0);
+
 
 end

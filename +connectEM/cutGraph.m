@@ -1,46 +1,74 @@
-function graphCut = cutGraph(p, segmentMeta, borderMeta, outputFolder, borderSizeThreshold, segmentSizeThreshold)
-% Restrict graph based on heuristics results
+function [graphCut, mapping, mappingNames, mappingSize] = cutGraph(p, graph, segmentMeta, borderMeta, borderSizeThreshold, segmentSizeThreshold)
+    % Restrict graph based on heuristics results
 
-tic;
-% Segments classified by heuristics
-load([p.saveFolder 'heuristicResult.mat']);
-assert(length(segIds) == max(segIds));
-vesselIds = vesselScore > 0.5;
-nucleiIds = nucleiScore > 0.5 & ~vesselIds;
-myelinIds = myelinScore > 0.5 & ~vesselIds & ~nucleiIds;
-heuristicIds = vesselIds | nucleiIds | myelinIds;
-% Keep only segments larger than 100 voxel and that have more than 50% connection probability to another segment
-load([p.saveFolder  'globalGPProbList.mat']);
-load([p.saveFolder 'globalEdges.mat']);
-edgeIdx = find(borderMeta.borderSize > borderSizeThreshold);
-remainingEdges = double(edges(edgeIdx, :));
-remainingProb = prob(edgeIdx);
-corrEdges = Seg.Global.getGlobalCorrespondences(p);
-corrProb  = ones(size(corrEdges, 1), 1);
-remainingEdges = [remainingEdges; corrEdges];
-remainingProb  = [remainingProb ; corrProb];
-maxProb = accumarray(cat(1,remainingEdges(:,1),remainingEdges(:,2)), cat(1,remainingProb, remainingProb),[segmentMeta.maxSegId 1], @max);
-smallIds = segmentMeta.voxelCount <= segmentSizeThreshold & ~heuristicIds;
-lowProbIds = segmentMeta.voxelCount > segmentSizeThreshold & maxProb <= 0.5 & ~heuristicIds;
-% Write mapping script for visualization
-mapping = {vesselIds nucleiIds myelinIds smallIds lowProbIds};
-mapping = cellfun(@find, mapping, 'uni', 0);
-mappingFile = [outputFolder 'cutFromGraph_' num2str(borderSizeThreshold, '%.5i') '_' num2str(segmentSizeThreshold, '%.5i') '.txt'];
-script = WK.makeMappingScript(segmentMeta.maxSegId, mapping);
-fileHandle = fopen(mappingFile, 'w');
-fwrite(fileHandle, script);
-fclose(fileHandle);
-% Remove from graph
-removedIds = cat(1, mapping{:});
-keptIds = setdiff(1:segmentMeta.maxSegId, removedIds);
-keepIdx = all(ismember(remainingEdges, keptIds), 2);
-graphCut.edges = remainingEdges(keepIdx,:);
-graphCut.prob = remainingProb(keepIdx);
-[graphCut.edges, edgeRows] = sortrows(graphCut.edges);
-graphCut.prob = graphCut.prob(edgeRows);
-[graphCut.neighbours, neighboursIdx] = Graph.edges2Neighbors(graphCut.edges);
-graphCut.neighProb = cellfun(@(x) graphCut.prob(x), neighboursIdx, 'UniformOutput', false);
-toc;
+    % Segments classified by heuristics
+    load([p.saveFolder 'heuristicResult.mat']);
+    assert(length(segIds) == max(segIds));
+    % Vessel and endothelial cells
+    vesselIdx = vesselScore > 0.5;
+    %endoIdx = growOutHeuristics(graph, segmentMeta, vesselIdx, 0.995, 1000);
+    temp = load([p.saveFolder 'perivessel.mat']);
+    endoIdx = false(segmentMeta.maxSegId, 1);
+    endoIdx(cat(1, temp.comps{:})) = true;
+    endoIdx = endoIdx & ~vesselIdx;
+    clear temp;
+    % Nuclei + added if not grown to completion
+    nucleiIdx = nucleiScore > 0.5 & ~vesselIdx & ~endoIdx;
+    addedNucleiIdx = growOutHeuristics(graph, segmentMeta, nucleiIdx, 0.999, 1000);
+    addedNucleiIdx = addedNucleiIdx & ~ vesselIdx & ~endoIdx;
+    % Myelin + added to try to avoid merger with myelin
+    myelinIdx = myelinScore > 0.5 & ~vesselIdx & ~endoIdx & ~nucleiIdx & ~addedNucleiIdx;
+    addedMyelinIdx = growOutHeuristics(graph, segmentMeta, myelinIdx, 0.995, 1000);
+    addedMyelinIdx = addedMyelinIdx & ~vesselIdx & ~endoIdx & ~nucleiIdx & ~addedNucleiIdx;
+    % All heuristics exclusions
+    heuristicIdx = vesselIdx | endoIdx | nucleiIdx | addedNucleiIdx | myelinIdx | addedMyelinIdx;
+
+    % Keep only segments larger than segmentSizeThreshold voxel and ...
+    % that have more than 50% connection probability to another segment after removing border smaller than borderSizeThreshold
+    load([p.saveFolder  'globalGPProbList.mat']);
+    load([p.saveFolder 'globalEdges.mat']);
+    edgeIdx = find(borderMeta.borderSize > borderSizeThreshold);
+    remainingEdges = edges(edgeIdx, :);
+    remainingProb = prob(edgeIdx);
+    % Add correspondences
+    corrEdges = Seg.Global.getGlobalCorrespondences(p);
+    corrProb  = ones(size(corrEdges, 1), 1);
+    remainingEdges = [remainingEdges; corrEdges];
+    remainingProb  = [remainingProb ; corrProb];
+    % Calculate maximum probability remaining for each segment and exclude based on both thresholds
+    maxProb = accumarray(cat(1,remainingEdges(:,1),remainingEdges(:,2)), cat(1,remainingProb, remainingProb),[segmentMeta.maxSegId 1], @max);
+    smallIdx = segmentMeta.voxelCount <= segmentSizeThreshold & ~heuristicIdx;
+    lowProbIdx = segmentMeta.voxelCount > segmentSizeThreshold & maxProb <= 0.5 & ~heuristicIdx;
+
+    % Concatenate exclusions for output
+    mapping = {vesselIdx endoIdx nucleiIdx addedNucleiIdx myelinIdx addedMyelinIdx smallIdx lowProbIdx};
+    mapping = cellfun(@find, mapping, 'uni', 0);
+    mappingNames = {'vessel' 'endothelial' 'nuclei' 'addedNuclei' 'myelin' 'addedMyelin' 'smallSegments' 'disconnectedSegments'};
+    mappingSize = cellfun(@numel, mapping);
+
+    % Remove heuristics and small or disconnected segments from graph
+    removedIds = cat(1, mapping{:});
+    keptIds = setdiff(1:double(segmentMeta.maxSegId), removedIds);
+    keepEdgeIdx = all(ismember(remainingEdges, keptIds), 2);
+    graphCut.edges = remainingEdges(keepEdgeIdx,:);
+    graphCut.prob = remainingProb(keepEdgeIdx);
+    % Sort edges again (e.g. make correspondences find their place)
+    [graphCut.edges, edgeRows] = sortrows(graphCut.edges);
+    graphCut.prob = graphCut.prob(edgeRows);
+
+end
+
+function addedSegmentIdx = growOutHeuristics(graph, segmentMeta, initialSegmentIdx, probThreshold, sizeThreshold)
+    % Grow out heuristics to avoid merger into endothelial, missed myelin etc.
+
+    partition = connectEM.partitionSortAndKeepOnlyLarge(graph, segmentMeta, probThreshold, sizeThreshold);
+    initialSegmentIds = find(initialSegmentIdx);
+    sizeComponent = cellfun(@numel, partition);
+    initialSegmentsPerComponent = cellfun(@(x)sum(ismember(x, initialSegmentIds)), partition);
+    initialSegmentFraction = initialSegmentsPerComponent ./ sizeComponent;
+    allSegmentIdx = false(segmentMeta.maxSegId, 1);
+    allSegmentIdx(cat(1, partition{initialSegmentFraction > 0.1})) = true;
+    addedSegmentIdx = allSegmentIdx & ~initialSegmentIdx;
 
 end
 

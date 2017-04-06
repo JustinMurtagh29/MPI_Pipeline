@@ -1,14 +1,12 @@
-function generateSkeletonFromAgglo(edges, com, cc, treeNames, outputFolder, maxSegId,skelParameters)
-    if nargin < 7 || isempty(skelParameters)
-        skelParameters = struct();
-    end
+function generateSkeletonFromAgglo(edges, com, cc, treeNames, outputFolder, maxSegId)
+
     % Set colors to be used
     colors = distinguishable_colors(length(cc), [0 0 0; 1 1 1]);
     colors(:,4) = 0;
     for tr=1:length(cc)
         if ~isempty(cc{tr})
             % Generate parameters for skeleton
-            skel = initializeSkeleton(skelParameters);
+            skel = initializeSkeleton();
             skel{1}.thingID = 1;
             skel{1}.name = [treeNames{tr} '_' num2str(size(com,1))];
             skel{1}.color = colors(tr,:);
@@ -18,51 +16,34 @@ function generateSkeletonFromAgglo(edges, com, cc, treeNames, outputFolder, maxS
             theseEdgesSegId = edges(idx,:);
             theseEdgesNodes = changem(double(theseEdgesSegId), 1:size(theseCoM,1), cc{tr});
             clear idx theseEdgesSegId;
-            % Downsample to 100.000 nodes at most (and use minimal spanning tree)
-            %if size(theseCoM, 1) > 10000
-            %    idx = randperm(size(theseCoM,1), 10000);
-            %    theseCoM = theseCoM(idx,:);
-            %    theseEdgesNodes = minimalSpanningTree(theseCoM);
-            %    skel{1}.name = [skel{1}.name '_downsampled'];
-            %    clear idx;
-            %end
-            % Write to structure for writeNml
+           % Write to structure for writeNml
             skel{1}.nodesNumDataAll = zeros(size(theseCoM,1),14);
             skel{1}.nodesNumDataAll(:,1) = 1:size(theseCoM,1); 
             skel{1}.nodesNumDataAll(:,2) = 10*ones(size(theseCoM,1),1);
             skel{1}.nodesNumDataAll(:,3:5) = theseCoM;
             skel{1}.edges = theseEdgesNodes;
             clear theseCoM theseEdgesNodes;
-            writeNml([outputFolder treeNames{tr} '.nml'], skel, 1);
+            writeNmlSilent([outputFolder treeNames{tr} '.nml'], skel, 1);
             clear skel;
-            mappingFile = [outputFolder treeNames{tr} '.txt'];
-            script = WK.makeMappingScript(maxSegId, num2cell(cc{tr}),0);
-            fileHandle = fopen(mappingFile, 'w');
-            fwrite(fileHandle, script);
-            fclose(fileHandle);
         end
     end
+    mappingFile = [outputFolder treeNames{1} '.txt'];
+    script = WK.makeMappingScript(maxSegId, cc, false);
+    fileHandle = fopen(mappingFile, 'w');
+    fwrite(fileHandle, script);
+    fclose(fileHandle);
+
 end
 
-function skel = initializeSkeleton(parameters)
+function skel = initializeSkeleton()
     % Set parameters
-    if nargin < 1 || isempty(parameters)
-       parameters = struct(); 
-    end
-    if ~isfield(parameters,'experiment')
-        parameters.experiment.name='2012-09-28_ex145_07x2_ROI2017';
-    end
-    if ~isfield(parameters,'scale')
-        parameters.scale.x = '11.24';
-        parameters.scale.y = '11.24';
-        parameters.scale.z = '28';
-    end
-    if ~isfield(parameters,'offset')
-        parameters.offset.x = '0';
-        parameters.offset.y = '0';
-        parameters.offset.z = '0';
-    end
-    skel{1}. parameters = parameters;
+    skel{1}.parameters.experiment.name='2012-09-28_ex145_07x2_ROI2017';
+    skel{1}.parameters.scale.x = '11.24';
+    skel{1}.parameters.scale.y = '11.24';
+    skel{1}.parameters.scale.z = '28';
+    skel{1}.parameters.offset.x = '0';
+    skel{1}.parameters.offset.y = '0';
+    skel{1}.parameters.offset.z = '0';
     skel{1}.commentsString = {'<comments></comments>'};
     skel{1}.branchpointsString = {};
     skel{1}.branchpoints = [];
