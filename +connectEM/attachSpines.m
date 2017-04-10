@@ -2,7 +2,7 @@ function [dendritesNew, spinePaths, comment] = attachSpines(graph, segmentMeta, 
     % Attach spines to a set of dendritic equivalence classes based on shortest path
 
     % Starting points are spines (not yet collected or excluded) and stop if non dendritic segment reached
-    excluded = ~segmentMeta.isDendrite;
+    excluded = ~(segmentMeta.dendriteProb > 0.05);
     excluded(cat(1, axons{:})) = true;
     targetLabel = zeros(segmentMeta.maxSegId,1);
     for i=1:length(dendrites)
@@ -36,6 +36,7 @@ function [dendritesNew, spinePaths, comment] = attachSpines(graph, segmentMeta, 
             neighbours = neighbours(idx);
             
             % Add maximum probability segment to path if none of the terminal conditions are met
+            [maxProb, idx] = max(neighProb);
             if targetLabel(takenPath(end)) ~= 0
                 comment{i} = 'attachted';
                 break; 
@@ -45,8 +46,10 @@ function [dendritesNew, spinePaths, comment] = attachSpines(graph, segmentMeta, 
             elseif nrSteps >= maxSteps
                 comment{i} = 'maximum steps reached';
                 break;
+            elseif maxProb < 0.05
+                comment{i} = 'low probability';
+                break;
             else
-                [maxProb, idx] = max(neighProb);
                 takenPath(end+1) = neighbours(idx);
             end
             nrSteps = nrSteps + 1;

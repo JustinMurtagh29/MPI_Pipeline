@@ -7,7 +7,7 @@ function isSynapse = synScoresToSynEdges(graph, synScore)
 
     thisProb = graph.prob(synScore.edgeIdx,:);
     isSynapse = zeros(size(synScore.edgeIdx), 'int8');
-    idx = thisProb < 0.5 & (synScore.synScores(:,1) > 0 | synScore.synScores(:,2) > 0);
+    idx = thisProb < 0.5 & (synScore.synScores(:,1) > -1.23 | synScore.synScores(:,2) > -1.23);
     direction = int8((single(synScore.synScores(:,1) > synScore.synScores(:,2)) - 0.5) * 2);
     isSynapse(idx) = direction(idx);
     isSynapse(synScore.synScores(:,2) > 0 & thisProb < 0.5) = -1;

@@ -1,4 +1,8 @@
-function [cc, sizeCC] = findCCaccordingToGraph(graph, ids, segmentMeta)
+function [cc, sizeCC] = findCCaccordingToGraph(graph, ids, segmentMeta, sizeThreshold)
+
+    if nargin < 4
+        sizeThreshold = 1e6;
+    end
 
     % All possible edges between ids
     idx = all(ismember(graph.edges, ids),2);
@@ -17,7 +21,7 @@ function [cc, sizeCC] = findCCaccordingToGraph(graph, ids, segmentMeta)
     cc = cc(idxResort);
 
     % Restrict to 1 million voxel for now as well
-    idx = sizeCC > 1e6;
+    idx = sizeCC > sizeThreshold;
     cc = cc(idx);
     sizeCC = sizeCC(idx);
     

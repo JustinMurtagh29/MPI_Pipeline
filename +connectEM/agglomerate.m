@@ -92,12 +92,6 @@ display('Writing skeletons for debugging the process:');
 tic;
 connectEM.skeletonFromAgglo(graph.edges, segmentMeta, ...
     er, 'er', outputFolder);
-rng default;
-randIdx = randi(numel(spinePaths), 100);
-thisSpinePath = spinePaths(randIdx);
-thisTreeName = cellfun(@(x,y)[num2str(y) '_' x], comment(randIdx), num2cell(1:100));
-thisNodes = cellfun(@(x)segmentMeta.point(x,:), thisSpinePath);
-connectEM.generateSkeletonFromNodes([outputFolder 'spineTestSet.nml'], thisNodes, thisTreeName, {}, true);
 connectEM.skeletonFromAgglo(graph.edges, segmentMeta, ...
     er, 'er', outputFolder);
 connectEM.skeletonFromAgglo(graph.edges, segmentMeta, ...
@@ -130,4 +124,48 @@ job1 = connectEM.buildIsosurfaceOfAggloStart(p, outputFolder, dendritesFinalWith
 job2 = connectEM.buildIsosurfaceOfAggloStart(p, outputFolder, axonsFinal, 'axonsFinal');
 job3 = connectEM.buildIsosurfaceOfAggloStart(p, outputFolder, excClasses(1:6)', 'heuristics');
 toc;
+
+display('Write 100 random dendritic components and 100 spine paths for error annotation:');
+tic;
+rng default;
+randIdx = randperm(length(dendritesFinalWithSpines), 100);
+connectEM.skeletonFromAgglo(graph.edges, segmentMeta, ...
+    dendritesFinal(randIdx), 'dendritesForErrorAnnotation', outputFolder);
+rng default;
+randIdx = randperm(numel(spinePaths), 100);
+thisSpinePath = spinePaths(randIdx);
+thisTreeName = cellfun(@(x,y)[num2str(y) '_' x], comment(randIdx), num2cell(1:100)', 'uni', 0);
+thisNodes = cellfun(@(x)segmentMeta.point(x,:), thisSpinePath, 'uni', 0);
+connectEM.generateSkeletonFromNodes([outputFolder 'spinesForErrorAnnotation.nml'], thisNodes, thisTreeName, {}, true);
+toc;
+
+% Split up nuclei and render individually
+[nuclei, nucleiSize] = connectEM.findCCaccordingToGraph(graph, excClasses{3}, segmentMeta);
+% Determine which cell each nucleus belongs to
+resortedNuclei = connectEM.attachNuclei(graph, nuclei, dendrites);
+job4 = connectEM.buildIsosurfaceOfAggloStart(p, outputFolder, resortedNuclei', 'nuclei');
+myelin = connectEM.findCCaccordingToGraph(graph, excClasses{5}, segmentMeta, 1e5);
+job5 = connectEM.buildIsosurfaceOfAggloStart(p, outputFolder, myelin', 'myelin');
+
+% New axon agglomeration, old one was shit!
+% Then axon
+tic;
+idx = all(ismember(graphCut.edges, find(segmentMeta.axonProb > .9)), 2);
+graphCutAxons.edges = graphCut.edges(idx,:);
+graphCutAxons.prob = graphCut.prob(idx);
+probThresholdAxon = 0.9;
+sizeThresholdAxon = 5e5;
+[axonsNew, axonsSize, axonEdges] = connectEM.partitionSortAndKeepOnlyLarge(graphCutAxons, segmentMeta, probThresholdAxon, sizeThresholdAxon);
+connectEM.skeletonFromAgglo(axonEdges, segmentMeta, ...
+        axonsNew, 'axonsNew', outputFolder);
+toc;
+
+% Select "good" axons
+[~, ~, latent] = cellfun(@(x)princomp(segmentMeta.point(x,:)), axonsNew);
+explainedVariance = cellfun(@(x)cumsum(x)./sum(x), latent, 'uni', 0);
+explainedVariance1 = cellfun(@(x)x(1), explainedVariance, 'uni', 0);
+axonsGood = axonsNew(explainedVariance1 > 0.95);
+connectEM.skeletonFromAgglo(axonEdges, segmentMeta, ...                       
+        axonsGood, 'axonsGood', outputFolder); 
+jobAxons = connectEM.buildIsosurfaceOfAggloStart(p, outputFolder, axonsGood', 'axonsGood');
 
