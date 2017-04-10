@@ -490,6 +490,9 @@ test.smallerSegmentSize = min(segMeta.voxelCount(test.edges),[],2);
 
 %% Save as VPN is so bad
 %save('/run/media/mberning/da025ffc-5a1f-4d39-8ca0-52811e1659ee/classifierComparison_v3.mat', '-v7.3');
+load('/run/media/mberning/da025ffc-5a1f-4d39-8ca0-52811e1659ee/classifierComparison_v3.mat');
+test.borderSize = test.borderSize';
+outputFolder = '/home/mberning/Desktop/fpEval/';
 
 %%
 figure;
@@ -499,17 +502,17 @@ sizeThreshold = [10 100 200 300 500 1000];
 colors = {'r' 'g' 'b' 'c' 'y' 'm'};
 
 for i=1:length(sizeThreshold);
-
-    [Xpr,Ypr,~,AUCpr] = perfcurve(test.labels(test.borderSize > sizeThreshold(i)), ...
-        test.probClassOld(test.borderSize > sizeThreshold(i)), ...
+    idx = test.borderSize > sizeThreshold(i) & test.labels ~= 0;
+    [Xpr,Ypr,~,AUCpr] = perfcurve(test.labels(idx), ...
+        test.probClassOld(idx), ...
         1, 'xCrit', 'reca', 'yCrit', 'prec', 'TVals', 0:0.001:1);
     Ypr(1) = 1;
     plot(Xpr,Ypr, ['-' colors{i}]);
     label{2*i-1} = ['ROI2017 ".bak" classifier on new GT, test, border > ' ...
         num2str(sizeThreshold(i)) ' (AUC: ' num2str(AUCpr) ')'];
     
-    [Xpr,Ypr,~,AUCpr] = perfcurve(test.labels(test.borderSize > sizeThreshold(i)), ...
-        test.probClass(test.borderSize > sizeThreshold(i)), ...
+    [Xpr,Ypr,~,AUCpr] = perfcurve(test.labels(idx), ...
+        test.probClass(idx), ...
         1, 'xCrit', 'reca', 'yCrit', 'prec', 'TVals', 0:0.001:1);
     Ypr(1) = 1;
     plot(Xpr,Ypr, ['--' colors{i}]);
@@ -535,20 +538,21 @@ colors = {'r' 'g' 'b' 'c' 'y' 'm'};
 
 for i=1:length(sizeThreshold);
 
-    [Xpr,Ypr,~,AUCpr] = perfcurve(test.labels(test.smallerSegmentSize > sizeThreshold(i)), ...
-        test.probClassOld(test.smallerSegmentSize > sizeThreshold(i)), ...
+    idx = test.smallerSegmentSize > sizeThreshold(i) & test.labels ~= 0;
+    [Xpr,Ypr,~,AUCpr] = perfcurve(test.labels(idx), ...
+        test.probClassOld(idx), ...
         1, 'xCrit', 'reca', 'yCrit', 'prec', 'TVals', 0:0.001:1);
     Ypr(1) = 1;
     plot(Xpr,Ypr, ['-' colors{i}]);
-    label{2*i-1} = ['ROI2017 ".bak" classifier on new GT, test, border > ' ...
+    label{2*i-1} = ['ROI2017 ".bak" classifier on new GT, test, segment size > ' ...
         num2str(sizeThreshold(i)) ' (AUC: ' num2str(AUCpr) ')'];
     
-    [Xpr,Ypr,~,AUCpr] = perfcurve(test.labels(test.smallerSegmentSize > sizeThreshold(i)), ...
-        test.probClass(test.smallerSegmentSize > sizeThreshold(i)), ...
+    [Xpr,Ypr,~,AUCpr] = perfcurve(test.labels(idx), ...
+        test.probClass(idx), ...
         1, 'xCrit', 'reca', 'yCrit', 'prec', 'TVals', 0:0.001:1);
     Ypr(1) = 1;
     plot(Xpr,Ypr, ['--' colors{i}]);
-    label{2*i} = ['ROI2017 ".mat" classifier on new GT, test, border > ' ...
+    label{2*i} = ['ROI2017 ".mat" classifier on new GT, test, segment size > ' ...
         num2str(sizeThreshold(i)) ' (AUC: ' num2str(AUCpr) ')'];
 
 end
@@ -639,24 +643,24 @@ connectEM.generateSkeletonFromNodes([outputFolder 'test_fpCanidates.nml'], nodes
 %% Correct FP detections
 % Transfer old state of label and correct
 
-test.labelCorrected = test.label;
+test.labelsCorrected = test.labels;
 fpSkel = skeleton([outputFolder 'test_fpCanidates_result.nml']);
 fpResult = cellfun(@(x)regexp(x, 'test_score(\d{1}.\d{2})_borderSize(\d{5})_segmentSize(\d{5})_component(\d{5}) - (.*)', 'tokens'), fpSkel.names, 'uni', false);
 fpResult = cat(1, fpResult{~cellfun(@isempty, fpResult)});
 fpResult = cat(1, fpResult{:});
 ffpAnnotations = ~cellfun(@isempty, strfind(fpResult(:,5), 'FFP'));
 segEMmergerAnnotations = ~cellfun(@isempty, strfind(fpResult(:,5), 'SegEM'));
+fpResult = cellfun(@str2double, fpResult(:,2:4));
+assert(all(fpResult(:,1) == arrayfun(@(x)str2double(num2str(x, '%3.2f')), test.borderSize(fpResult(:,3)))));
+assert(all(fpResult(:,2) == arrayfun(@(x)str2double(num2str(x, '%3.2f')), test.smallerSegmentSize(fpResult(:,3)))));
+test.labelsCorrected(fpResult(ffpAnnotations,3)) = 1;
+test.labelsCorrected(fpResult(segEMmergerAnnotations,3)) = 0;
 
-fpResult = cellfun(@str2double, fpResult(:,1:3));
-assert(all(fpResult(:,1) == i));
-assert(all(fpResult(:,2) == arrayfun(@(x)str2double(num2str(x, '%3.2f')), gt(i).prob(fpResult(:,3)))));
-assert(all(gt(i).labels(fpResult(:,3)) == 1));
-gt(i).labels(fpResult(:,3)) = decision;
+%% Compare before and after FP proofreading
 
-%% Use single segment class probabilities and test again
-
+label = [];
 figure;
-idx = test.smallerSegmentSize > 1000 & test.borderSize > 100;
+idx = test.smallerSegmentSize > 1000 & test.borderSize > 100 & test.labels ~= 0;
 [Xpr,Ypr,~,AUCpr] = perfcurve(test.labels(idx), ...
     test.probClass(idx), ...
     1, 'xCrit', 'reca', 'yCrit', 'prec', 'TVals', 0:0.001:1);
@@ -664,3 +668,147 @@ Ypr(1) = 1;
 plot(Xpr,Ypr, '--r');
 label{1} = ['ROI2017 ".mat" classifier on new GT, test, border > 100, smaller segment size > 1000' ...
     ' (AUC: ' num2str(AUCpr) ')'];
+hold on;
+idx = test.smallerSegmentSize > 1000 & test.borderSize > 100 & test.labelsCorrected ~= 0;
+[Xpr,Ypr,~,AUCpr] = perfcurve(test.labelsCorrected(idx), ...
+    test.probClass(idx), ...
+    1, 'xCrit', 'reca', 'yCrit', 'prec', 'TVals', 0:0.001:1);
+Ypr(1) = 1;
+plot(Xpr,Ypr, '--b');
+label{2} = ['ROI2017 ".mat" classifier on new GT with FP proofreading, test, border > 100, smaller segment size > 1000' ...
+    ' (AUC: ' num2str(AUCpr) ')'];
+legend(label);
+
+%% First quantifications based on dendrites and axons seperately
+
+segmentClass = load([p.saveFolder 'segmentAggloPredictions.mat']);
+% Extract axon probability
+segmentClass.axonProb = zeros(segMeta.maxSegId, 1);
+idx = ~isnan(segmentClass.probsMulti(:,2));
+segmentClass.axonProb(segmentClass.segId(idx)) = segmentClass.probsMulti(idx,2);
+test.axonProb = arrayfun(@(x)segmentClass.axonProb(x), test.edges);
+% Extract dendrite probability
+segmentClass.dendriteProb = zeros(segMeta.maxSegId, 1);
+idx = ~isnan(segmentClass.probsMulti(:,3));
+segmentClass.dendriteProb(segmentClass.segId(idx)) = segmentClass.probsMulti(idx,3);
+test.dendriteProb = arrayfun(@(x)segmentClass.dendriteProb(x), test.edges);
+
+%% Visualize
+
+label = [];
+figure;
+idx = test.smallerSegmentSize > 1000 & test.borderSize > 100 & test.labelsCorrected ~= 0;
+[Xpr,Ypr,Tpr,AUCpr] = perfcurve(test.labelsCorrected(idx), ...
+    test.probClass(idx), ...
+    1, 'xCrit', 'reca', 'yCrit', 'prec', 'TVals', 0:0.001:1);
+Ypr(1) = 1;
+plot(Xpr,Ypr, '--b');
+label{1} = ['ROI2017 ".mat" classifier on new GT with FP proofreading, test, border > 100, smaller segment size > 1000' ...
+    ' (AUC: ' num2str(AUCpr) ')'];
+hold on;
+[~,idx] = min(abs(Tpr - 0.99));
+plot(Xpr(idx), Ypr(idx), 'xb');
+label{2} = ['@Threshold: ' num2str(Tpr(idx), '%3.3f') ', Precision: ' num2str(Ypr(idx), '%3.3f') ', Recall: ' num2str(Xpr(idx), '%3.3f')];
+[~,idx] = min(abs(Ypr - 0.995));
+plot(Xpr(idx), Ypr(idx), 'ob');
+label{3} = ['@Threshold: ' num2str(Tpr(idx), '%3.3f') ', Precision: ' num2str(Ypr(idx), '%3.3f') ', Recall: ' num2str(Xpr(idx), '%3.3f')];
+% This is just restricted to axon/dendrite segments
+idx = test.smallerSegmentSize > 1000 & test.borderSize > 100 & test.labelsCorrected ~= 0 & min(test.axonProb, [], 2) > 0.5;
+[Xpr,Ypr,Tpr,AUCpr] = perfcurve(test.labelsCorrected(idx), ...
+    test.probClass(idx), ...
+    1, 'xCrit', 'reca', 'yCrit', 'prec', 'TVals', 0:0.001:1);
+Ypr(1) = 1;
+plot(Xpr,Ypr, '--g');
+label{4} = ['... only on axon segments recovered 50% probability' ...
+    ' (AUC: ' num2str(AUCpr) ')'];
+[~,idx] = min(abs(Tpr - 0.99));
+plot(Xpr(idx), Ypr(idx), 'xg');
+label{5} = ['@Threshold: ' num2str(Tpr(idx), '%3.3f') ', Precision: ' num2str(Ypr(idx), '%3.3f') ', Recall: ' num2str(Xpr(idx), '%3.3f')];
+[~,idx] = min(abs(Ypr - 0.995));
+plot(Xpr(idx), Ypr(idx), 'og');
+label{6} = ['@Threshold: ' num2str(Tpr(idx), '%3.3f') ', Precision: ' num2str(Ypr(idx), '%3.3f') ', Recall: ' num2str(Xpr(idx), '%3.3f')];
+idx = test.smallerSegmentSize > 1000 & test.borderSize > 100 & test.labelsCorrected ~= 0 & min(test.dendriteProb, [], 2) > 0.5;
+[Xpr,Ypr,Tpr,AUCpr] = perfcurve(test.labelsCorrected(idx), ...
+    test.probClass(idx), ...
+    1, 'xCrit', 'reca', 'yCrit', 'prec', 'TVals', 0:0.001:1);
+Ypr(1) = 1;
+plot(Xpr,Ypr, '--r');
+label{7} = ['... only on dendrite segments recovered 50% probability, ' ...
+    ' (AUC: ' num2str(AUCpr) ')'];
+[~,idx] = min(abs(Tpr - 0.99));
+plot(Xpr(idx), Ypr(idx), 'xr');
+label{8} = ['@Threshold: ' num2str(Tpr(idx), '%3.3f') ', Precision: ' num2str(Ypr(idx), '%3.3f') ', Recall: ' num2str(Xpr(idx), '%3.3f')];
+[~,idx] = min(abs(Ypr - 0.995));
+plot(Xpr(idx), Ypr(idx), 'or');
+label{9} = ['@Threshold: ' num2str(Tpr(idx), '%3.3f') ', Precision: ' num2str(Ypr(idx), '%3.3f') ', Recall: ' num2str(Xpr(idx), '%3.3f')];
+% Now also modify neurite continuity probabilities based on segment class
+% scores
+idx = test.smallerSegmentSize > 1000 & test.borderSize > 100 & test.labelsCorrected ~= 0 & min(test.axonProb, [], 2) > 0.50;
+[Xpr,Ypr,Tpr,AUCpr] = perfcurve(test.labelsCorrected(idx), ...
+    test.probClass(idx).*test.axonProb(idx,1).*test.axonProb(idx,2), ...
+    1, 'xCrit', 'reca', 'yCrit', 'prec', 'TVals', 0:0.001:1);
+Ypr(1) = 1;
+plot(Xpr,Ypr, '-g');
+label{10} = ['... only on axon segments recovered 50% probability, probability modified ' ...
+    ' (AUC: ' num2str(AUCpr) ')'];
+idx = test.smallerSegmentSize > 1000 & test.borderSize > 100 & test.labelsCorrected ~= 0 & min(test.dendriteProb, [], 2) > 0.50;
+[Xpr,Ypr,Tpr,AUCpr] = perfcurve(test.labelsCorrected(idx), ...
+    test.probClass(idx).*test.dendriteProb(idx,1).*test.dendriteProb(idx,2), ...
+    1, 'xCrit', 'reca', 'yCrit', 'prec', 'TVals', 0:0.001:1);
+Ypr(1) = 1;
+plot(Xpr,Ypr, '-r');
+label{11} = ['... only on dendrite segments recovered 50% probability, probability modified ' ...
+    ' (AUC: ' num2str(AUCpr) ')'];
+
+legend(label, 'Location', 'Best');
+
+%% Little bit cleaner for connectomics 2017
+
+label = [];
+figure;
+hold on;
+set(gca,'FontSize',14);
+set(gca,'LineWidth',2);
+
+idx = test.labelsCorrected ~= 0;
+[Xpr,Ypr,Tpr,AUCpr] = perfcurve(test.labelsCorrected(idx), ...
+    test.probClass(idx), ...
+    1, 'xCrit', 'reca', 'yCrit', 'prec', 'TVals', 0:0.001:1);
+Ypr(1) = 1;
+plot(Xpr,Ypr, '-b', 'LineWidth', 2);
+label{1} = ['on whole test set' ...
+    ' (AUC: ' num2str(AUCpr) ')'];
+
+idx = test.smallerSegmentSize > 1000 & test.borderSize > 100 & test.labelsCorrected ~= 0;
+[Xpr,Ypr,Tpr,AUCpr] = perfcurve(test.labelsCorrected(idx), ...
+    test.probClass(idx), ...
+    1, 'xCrit', 'reca', 'yCrit', 'prec', 'TVals', 0:0.001:1);
+Ypr(1) = 1;
+plot(Xpr,Ypr, '--b', 'LineWidth', 2);
+label{2} = ['restricted to above 100 voxel border and 1000 voxel segment size,' ...
+    ' (AUC: ' num2str(AUCpr) ')'];
+
+% This is just restricted to axon segments
+idx = test.smallerSegmentSize > 1000 & test.borderSize > 100 & test.labelsCorrected ~= 0 & min(test.axonProb, [], 2) > 0.5;
+[Xpr,Ypr,Tpr,AUCpr] = perfcurve(test.labelsCorrected(idx), ...
+    test.probClass(idx), ...
+    1, 'xCrit', 'reca', 'yCrit', 'prec', 'TVals', 0:0.001:1);
+Ypr(1) = 1;
+plot(Xpr,Ypr, '-g', 'LineWidth', 2);
+label{3} = ['and only on axon segments recovered 50% probability (90% precision, 91% recall),' ...
+    ' (AUC: ' num2str(AUCpr) ')'];
+
+% This is just restricted to dendrite segments
+idx = test.smallerSegmentSize > 1000 & test.borderSize > 100 & test.labelsCorrected ~= 0 & min(test.dendriteProb, [], 2) > 0.5;
+[Xpr,Ypr,Tpr,AUCpr] = perfcurve(test.labelsCorrected(idx), ...
+    test.probClass(idx), ...
+    1, 'xCrit', 'reca', 'yCrit', 'prec', 'TVals', 0:0.001:1);
+Ypr(1) = 1;
+plot(Xpr,Ypr, '-r', 'LineWidth', 2);
+label{4} = ['and only on dendrite segments recovered 50% probability (90% precision, 85% recall), ' ...
+    ' (AUC: ' num2str(AUCpr) ')'];
+
+xlim([0 1]);
+ylim([0 1]);
+axis square;
+legend(label, 'Location', 'Best');
