@@ -1,6 +1,8 @@
-function [graphCut, mapping, mappingNames, mappingSize] = cutGraph(p, graph, segmentMeta, borderMeta, borderSizeThreshold, segmentSizeThreshold)
+function [graphCut, mapping, mappingNames, mappingSize] = cutGraph(p, graph, segmentMeta, borderMeta, ...
+        borderSizeThreshold, segmentSizeThreshold)
     % Restrict graph based on heuristics results
 
+    %{
     % Segments classified by heuristics
     load([p.saveFolder 'heuristicResult.mat']);
     assert(length(segIds) == max(segIds));
@@ -27,14 +29,18 @@ function [graphCut, mapping, mappingNames, mappingSize] = cutGraph(p, graph, seg
     % that have more than 50% connection probability to another segment after removing border smaller than borderSizeThreshold
     load([p.saveFolder  'globalGPProbList.mat']);
     load([p.saveFolder 'globalEdges.mat']);
+    corrEdges = Seg.Global.getGlobalCorrespondences(p);
+    corrProb  = ones(size(corrEdges, 1), 1);
+    %}
+    % Load saved state as this will not change
+    load([p.saveFolder 'graphCut.mat']);
+
     edgeIdx = find(borderMeta.borderSize > borderSizeThreshold);
     remainingEdges = edges(edgeIdx, :);
     remainingProb = prob(edgeIdx);
     % Add correspondences
-    corrEdges = Seg.Global.getGlobalCorrespondences(p);
-    corrProb  = ones(size(corrEdges, 1), 1);
     remainingEdges = [remainingEdges; corrEdges];
-    remainingProb  = [remainingProb ; corrProb];
+    remainingProb  = [remainingProb; corrProb];
     % Calculate maximum probability remaining for each segment and exclude based on both thresholds
     maxProb = accumarray(cat(1,remainingEdges(:,1),remainingEdges(:,2)), cat(1,remainingProb, remainingProb),[segmentMeta.maxSegId 1], @max);
     smallIdx = segmentMeta.voxelCount <= segmentSizeThreshold & ~heuristicIdx;
