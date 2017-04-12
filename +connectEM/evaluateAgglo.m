@@ -5,7 +5,7 @@ function [recall, splits, mergers] = evaluateAgglo(agglomerates, CoMs, skel, ske
     mergers = 0;
     scalize = @(x)bsxfun(@times,x,[11.24, 11.24, 28]);
     for idx = 1 : length(allAgglomerates)
-        if min(max(pdist2(scalize(CoMs(agglomerates{allAgglomerates(idx)}, :)), scalize(CoMs(skelAsIds(skelAsIds > 0), :))))) > maxTube
+        if max(min(pdist2(scalize(CoMs(agglomerates{allAgglomerates(idx)}, :)), scalize(CoMs(skelAsIds(skelAsIds > 0), :))), [], 2)) > maxTube
             mergers = mergers + 1;
         end
     end
