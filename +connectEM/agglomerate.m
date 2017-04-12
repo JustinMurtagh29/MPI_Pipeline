@@ -169,3 +169,11 @@ connectEM.skeletonFromAgglo(axonEdges, segmentMeta, ...
         axonsGood, 'axonsGood', outputFolder); 
 jobAxons = connectEM.buildIsosurfaceOfAggloStart(p, outputFolder, axonsGood', 'axonsGood');
 
+% Write spines in 5 micron^3
+spineSegments = find(segmentMeta.isSpine);
+spinePosition = segmentMeta.point(spineSegments,:);
+bbox_wk = [2800, 4267, 1712, 445, 445, 179];
+bbox = Util.convertWebknossosToMatlabBbox(bbox_wk);
+idx = all(bsxfun(@minus, spinePosition, bbox(:,1)') > 0,2) & all(bsxfun(@minus, spinePosition, bbox(:,2)') < 0,2);
+connectEM.generateSkeletonFromNodes([outputFolder 'spinesBbox.nml'], spinePosition(idx), strseq('spines', 1:sum(idx), {}, true);
+

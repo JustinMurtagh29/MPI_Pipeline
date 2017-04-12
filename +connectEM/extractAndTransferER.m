@@ -1,4 +1,6 @@
-function [dendrites, axons, er] = extractAndTransferER(graph, dendrites, axons)
+function [dendrites, axons, er] = extractAndTransferER(graph, dendrites, axons, erProbThreshold)
+    % Reassign all axon components that have more than a given probability threshold
+    % into a dendrite component into dendrites (filling holes in somata due to ER being detected as axons)
 
     % Find pairwise proabability between each dendrite and axon component
     axonNeighbours = cellfun(@(x)unique(cat(2, graph.neighbours{x})), axons, 'uni', 0);
@@ -11,7 +13,7 @@ function [dendrites, axons, er] = extractAndTransferER(graph, dendrites, axons)
 
     % Find maximal probability of each axon, reassign if above 200% summed
     [maxProb, maxIdx] = max(probabilities, [], 1);
-    isEr = maxProb > 2;
+    isEr = maxProb > erProbThreshold;
     er = axons(isEr);
     assignTo = maxIdx(isEr);
 
