@@ -1,10 +1,11 @@
-function [splits, mergers] = evaluate(agglomerates, CoMs, skel, skelIdx, skelAsIds, neighbours)
+function [recall, splits, mergers] = evaluateAgglo(agglomerates, CoMs, skel, skelIdx, skelAsIds, neighbours)
     maxTube = 10000;
     allAglomerates = find(cellfun(@(x)any(ismember(x, skelAsIds(skelAsIds ~= 0))), agglomerates));
+    recall = [length(intersect(cell2mat(agglomerates(allAglomerates)), skelAsIds(skelAsIds ~= 0))), length(skelAsIds(skelAsIds ~= 0))]
     mergers = 0;
     scalize = @(x)bsxfun(@times,x,[11.24, 11.24, 28]);
     for idx = 1 : length(allAglomerates)
-        if min(max(pdist2(scalize(CoMs(allAglomerates, :)), scalize(CoMs(skelAsIds(skelAsIds > 0), :))))) > maxTube
+        if min(max(pdist2(scalize(CoMs(aglomerates{allAglomerates(idx)}, :)), scalize(CoMs(skelAsIds(skelAsIds > 0), :))))) > maxTube
             mergers = mergers + 1;
         end
     end
