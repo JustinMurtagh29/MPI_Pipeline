@@ -1,20 +1,20 @@
 function [recall, splits, mergers, validnodes, numagglomerates] = evaluateAgglo(agglomerates, CoMs, skel, skelIdx, skelAsIds, neighbours)
     maxTube = 10000;
-    allAgglomerates = find(cellfun(@(x)any(ismember(x, skelAsIds(skelAsIds ~= 0))), agglomerates));
-    numagglomerates = length(allAgglomerates);
-    recall = [length(intersect(cell2mat(agglomerates(allAgglomerates)), skelAsIds(skelAsIds ~= 0))), length(skelAsIds(skelAsIds ~= 0))];
-    validnodes = find(ismember(skelAsIds, cell2mat(agglomerates(allAgglomerates))));
+    foundAgglomerates = find(cellfun(@(x)any(ismember(x, skelAsIds(skelAsIds ~= 0))), agglomerates));
+    numagglomerates = length(foundAgglomerates);
+    recall = [length(intersect(cell2mat(agglomerates(foundAgglomerates)), skelAsIds(skelAsIds ~= 0))), length(skelAsIds(skelAsIds ~= 0))];
+    validnodes = find(ismember(skelAsIds, cell2mat(agglomerates(foundAgglomerates))));
     mergers = 0;
     scalize = @(x)bsxfun(@times,x,[11.24, 11.24, 28]);
-    for idx = 1 : length(allAgglomerates)
-        if max(min(pdist2(scalize(CoMs(agglomerates{allAgglomerates(idx)}, :)), scalize(CoMs(skelAsIds(skelAsIds > 0), :))), [], 2)) > maxTube
+    for idx = 1 : length(foundAgglomerates)
+        if max(min(pdist2(scalize(CoMs(agglomerates{foundAgglomerates(idx)}, :)), scalize(CoMs(skelAsIds(skelAsIds > 0), :))), [], 2)) > maxTube
             mergers = mergers + 1;
         end
     end
-    metaConnectivityMatrix = zeros(length(allAgglomerates));
-    for idx1 = 1 : length(allAgglomerates)
-        for idx2 = idx1 : length(allAgglomerates)
-            if any(cellfun(@(x)any(ismember(x, agglomerates{allAgglomerates(idx2)})), neighbours(agglomerates{allAgglomerates(idx1)})))
+    metaConnectivityMatrix = zeros(length(foundAgglomerates));
+    for idx1 = 1 : length(foundAgglomerates)
+        for idx2 = idx1 : length(foundAgglomerates)
+            if any(cellfun(@(x)any(ismember(x, agglomerates{foundAgglomerates(idx2)})), neighbours(agglomerates{foundAgglomerates(idx1)})))
                 metaConnectivityMatrix(idx2, idx1) = 1; %only set the lower diagonal matrix
             end
         end
@@ -25,7 +25,7 @@ function [recall, splits, mergers, validnodes, numagglomerates] = evaluateAgglo(
         return;
     end
     endpoints = skelAsIds(sum(skel.createAdjacencyMatrix(1))==1); % we assured in the outer function that endpoints don't have seg id 0
-    endpointsMeta = find(cellfun(@(x)any(ismember(x, endpoints)), agglomerates(allAgglomerates)));
+    endpointsMeta = find(cellfun(@(x)any(ismember(x, endpoints)), agglomerates(foundAgglomerates)));
     if isempty(endpointsMeta)
         splits = -2;
     else
