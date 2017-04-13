@@ -1,7 +1,6 @@
-function [recall, splits, mergers, validnodes, numagglomerates] = evaluateAgglo(agglomerates, CoMs, skel, skelIdx, skelAsIds, neighbours)
+function [recall, splits, mergers, validnodes, foundAgglomerates] = evaluateAgglo(agglomerates, CoMs, skel, skelIdx, skelAsIds, neighbours, limitagglo)
     maxTube = 10000;
-    foundAgglomerates = find(cellfun(@(x)any(ismember(x, skelAsIds(skelAsIds ~= 0))), agglomerates));
-    numagglomerates = length(foundAgglomerates);
+    foundAgglomerates = find(cellfun(@(x)sum(ismember(skelAsIds(skelAsIds ~= 0), x)) > limitagglo, agglomerates));
     recall = [length(intersect(cell2mat(agglomerates(foundAgglomerates)), skelAsIds(skelAsIds ~= 0))), length(skelAsIds(skelAsIds ~= 0))];
     validnodes = find(ismember(skelAsIds, cell2mat(agglomerates(foundAgglomerates))));
     mergers = 0;
