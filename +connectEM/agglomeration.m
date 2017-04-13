@@ -1,4 +1,4 @@
-function [dendritesFinalWithSpines, dendritesFinal, axonsFinal] = agglomeration( ... 
+function agglomeration( ... 
         borderSizeDendrites, segmentSizeDendrites, borderSizeAxons, segmentSizeAxons, ...
         axonProbThreshold, dendriteProbThreshold, spineProbThreshold, ...
         probThresholdDendrite, sizeThresholdDendrite, probThresholdAxon, sizeThresholdAxon, ...
@@ -15,22 +15,22 @@ function [dendritesFinalWithSpines, dendritesFinal, axonsFinal] = agglomeration(
     display('Loading data:');
     tic;
     % Load global graph representation
-    graph = load([p.saveFolder 'graph.mat'], 'prob', 'edges', 'neighbours', 'neighProb');
+    % graph = load([p.saveFolder 'graph.mat'], 'prob', 'edges', 'neighbours', 'neighProb'); 
+    graph = load([p.saveFolder 'graph.mat'], 'prob', 'edges');
     % Load information about edges
     borderMeta = load([p.saveFolder 'globalBorder.mat'], 'borderSize', 'borderCoM');
     % Load meta information of segments
     segmentMeta = load([p.saveFolder 'segmentMeta.mat'], 'voxelCount', 'point', 'maxSegId');
     segmentMeta.point = segmentMeta.point';
     % Load and preprocess segment class predictions on single segments from Alessandro
-    segmentMeta = connectEM.addSegmentClassInformation(p, segmentMeta, ...
-        0.5, axonProbThreshold, dendriteProbThreshold, spineProbThreshold);
+    segmentMeta = connectEM.addSegmentClassInformation(p, segmentMeta);
     toc;
 
     display('Removing segments detected by heuristics & small & disconnected segments:');
     tic;
     [graphCutDendrites, excClassesDendrites, excNamesDendrites, excSizeDendrites] = connectEM.cutGraph(p, graph, segmentMeta, ...
         borderMeta, borderSizeDendrites, segmentSizeDendrites);
-    [graphCutAxons, excClassesAxons, excNamesAxons, excSizeAxons] = connectEM.cutGraph(p, graph, segmentMeta, ...
+    graphCutAxons = connectEM.cutGraph(p, graph, segmentMeta, ...
         borderMeta, borderSizeAxons, segmentSizeAxons);
     toc;
 
@@ -56,27 +56,37 @@ function [dendritesFinalWithSpines, dendritesFinal, axonsFinal] = agglomeration(
     tic;
     [axons, axonsSize, axonEdges] = connectEM.partitionSortAndKeepOnlyLarge(graphCutAxons, segmentMeta, probThresholdAxon, sizeThresholdAxon);
     toc;
-
+    
+    %{
     display('Reassigning ER from axon to dendrite class: ');
     tic;
     [dendritesAfterEr, axonsAfterEr, er] = connectEM.extractAndTransferER(graph, dendrites, axons, erProbThreshold);
     toc;
+    %}
 
     display('Garbage collection');
     tic;
     % Note: Exlusions classes 1-6 consitent between dendrites and axons
-    [axonsFinal, dendritesFinal] = connectEM.garbageCollection(graph, segmentMeta, axonsAfterEr, dendritesAfterEr, excClassesDendrites(1:6));
+    [axonsFinal, dendritesFinal] = connectEM.garbageCollection(graph, segmentMeta, axons, dendrites, excClassesDendrites(1:6));
     toc;
 
+    %{
     display('Attaching spines to dendrite class: ');
     tic;
     [dendritesFinalWithSpines, spinePaths, comment] = connectEM.attachSpines(graph, segmentMeta, ...
         dendritesFinal, axonsFinal, spineProbThreshold, dendriteProbSpines, probThresholdSpines, maxStepsSpines);
     toc;
 
+    display('Evaluating on a set of ground truth skeletons');
+    tic;
+    metrics = evalutateAggloMetaMeta(graph, cat(1, dendritesFinal, axonsFinal));  
+    toc;
+    %}
+
     display('Saving:');
     tic;
-    save(outputFile, 'dendritesFinalWithSpines', 'dendritesFinal', 'axonsFinal');
+    % Lets save some more so that we can always understand whats happening
+    save(outputFile, 'dendritesFinal', 'axonsFinal');
     toc;
 
 end

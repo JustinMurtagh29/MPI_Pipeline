@@ -1,5 +1,4 @@
-function segmentMeta = addSegmentClassInformation(p, segmentMeta, ...
-        gliaProbThreshold, axonProbThreshold, dendriteProbThreshold, spineProbThreshold)
+function segmentMeta = addSegmentClassInformation(p, segmentMeta)
     % This function loads the segment class probabilties stored by Alessandro
     % It creates seperate fields in the structure for each segment class and changes to indexing vector
     % Convenience funtion
