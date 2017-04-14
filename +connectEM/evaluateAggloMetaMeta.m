@@ -1,4 +1,4 @@
-function y = evalutateAggloMetaMeta(graph, agglos_axon, agglos_dendrite)
+function y = evalutateAggloMetaMeta(graph, agglos_axon, agglos_dendrite, nameOfAgglo)
 addpath(genpath('/gaba/u/kboerg/code/auxiliaryMethods'))
 load('/gaba/u/mberning/results/pipeline/20170217_ROI/allParameter.mat', 'p')
 segmentMeta = load('/gaba/u/mberning/results/pipeline/20170217_ROI/segmentMeta.mat')
@@ -12,8 +12,10 @@ for meta_idx = 1 : 3
         skelpath{end + 1} = [evalfolder meta_liste{meta_idx} filesep liste(file_idx).name];
     end
 end
-dendrite_selector = [1, 3:12];
+mainFolder = ['/gaba/scratch/kboerg/eval_agglo/' nameOfAgglo '/'];
+mkdir(mainFolder);
+dendrite_selector = [1]%, 3:12];
 axon_selector = setdiff(1:32, dendrite_selector);
-
-y.axon = connectEM.evaluateAggloMeta(skelpath(axon_selector), graph, segmentMeta, agglos_axon, p)
-y.dendrite = connectEM.evaluateAggloMeta(skelpath(dendrite_selector), graph, segmentMeta, agglos_dendrite, p)
+y.dendrite = connectEM.evaluateAggloMeta(skelpath(dendrite_selector), graph, segmentMeta, agglos_dendrite, p, 'dendrites', mainFolder)
+y.dendrite.percolators = cellfun(@(x)sum(segmentMeta.voxelCount(x)), agglos_dendrite(1:10));
+%y.axon = connectEM.evaluateAggloMeta(skelpath(axon_selector), graph, segmentMeta, agglos_axon, p)
