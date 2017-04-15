@@ -21,7 +21,7 @@ for i = 1:size(adjCubes,1)
         saveFolder};
 end
 functionH = @calculateGlobalCorrespondences;
-job = startCPU(functionH, inputCell, 'correspondence', 12, 100);
+job = startCPU(functionH, inputCell, 'correspondence', 12, 100, 0);
 
 end
 

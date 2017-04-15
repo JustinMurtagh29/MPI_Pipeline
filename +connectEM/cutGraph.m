@@ -29,11 +29,15 @@ function [graphCut, mapping, mappingNames, mappingSize] = cutGraph(p, graph, seg
     % that have more than 50% connection probability to another segment after removing border smaller than borderSizeThreshold
     load([p.saveFolder  'globalGPProbList.mat']);
     load([p.saveFolder 'globalEdges.mat']);
-    corrEdges = Seg.Global.getGlobalCorrespondences(p);
+    %corrEdges = Seg.Global.getGlobalCorrespondences(p);
+    load([p.saveFolder 'correspondencesNew.mat']);
     corrProb  = ones(size(corrEdges, 1), 1);
     %}
+
     % Load saved state as this will not change
-    load([p.saveFolder 'graphCut.mat']);
+    %load([p.saveFolder 'graphCut.mat']);
+    % Now with updated correspondences
+    load([p.saveFolder 'graphCutNew.mat']);
 
     edgeIdx = find(borderMeta.borderSize > borderSizeThreshold);
     remainingEdges = edges(edgeIdx, :);
