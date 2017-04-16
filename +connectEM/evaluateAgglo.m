@@ -1,24 +1,26 @@
-function [recall, splits, mergers, validnodes, foundAgglomerates] = evaluateAgglo(agglomerates, CoMs, skel, skelIdx, skelAsIds, neighbours, limitagglo)
+function [recall, splits, mergers, validnodes, foundAgglomerates, connM] = evaluateAgglo(agglomerates, segmentMeta2, skel, skelIdx, skelAsIds, neighbours, limitaggloNum, limitaggloSize)
     maxTube = 10000;
-    foundAgglomerates = find(cellfun(@(x)sum(ismember(skelAsIds(skelAsIds ~= 0), x)) > limitagglo, agglomerates));
-    recall = [length(intersect(cell2mat(agglomerates(foundAgglomerates)), skelAsIds(skelAsIds ~= 0))), length(skelAsIds(skelAsIds ~= 0))];
+    foundAgglomerates = find(cellfun(@(x)sum(ismember(skelAsIds(skelAsIds ~= 0), x)) > limitaggloNum, agglomerates));
+    aggloSize = cellfun(@(x)sum(segmentMeta2.point(x)), agglomerates(foundAgglomerates));
+    foundAgglomerates(aggloSize < limitaggloSize) = [];
+    recall = [length(intersect(cell2mat(agglomerates(foundAgglomerates)), skelAsIds(skelAsIds ~= 0))), length(unique(skelAsIds(skelAsIds ~= 0)))];
     validnodes = find(ismember(skelAsIds, cell2mat(agglomerates(foundAgglomerates))));
     mergers = 0;
     scalize = @(x)bsxfun(@times,x,[11.24, 11.24, 28]);
     for idx = 1 : length(foundAgglomerates)
-        if max(min(pdist2(scalize(CoMs(agglomerates{foundAgglomerates(idx)}, :)), scalize(CoMs(skelAsIds(skelAsIds > 0), :))), [], 2)) > maxTube
+        if max(min(pdist2(scalize(segmentMeta2.point(agglomerates{foundAgglomerates(idx)}, :)), scalize(segmentMeta2.point(skelAsIds(skelAsIds > 0), :))), [], 2)) > maxTube
             mergers = mergers + 1;
         end
     end
-    metaConnectivityMatrix = zeros(length(foundAgglomerates));
+    connM = zeros(length(foundAgglomerates));
     for idx1 = 1 : length(foundAgglomerates)
         for idx2 = idx1 : length(foundAgglomerates)
             if any(cellfun(@(x)any(ismember(x, agglomerates{foundAgglomerates(idx2)})), neighbours(agglomerates{foundAgglomerates(idx1)})))
-                metaConnectivityMatrix(idx2, idx1) = 1; %only set the lower diagonal matrix
+                connM(idx2, idx1) = 1; %only set the lower diagonal matrix
             end
         end
     end
-    if graphconncomp(sparse(metaConnectivityMatrix), 'Directed', false) ~= 1
+    if graphconncomp(sparse(connM), 'Directed', false) ~= 1
         disp('skeleton does not stick together')  % todo interpolate nodes
         splits = -1;
         return;
@@ -31,9 +33,9 @@ function [recall, splits, mergers, validnodes, foundAgglomerates] = evaluateAggl
         inThere = [endpointsMeta(1)];
         splits = 0;
         for idx = 2 : length(endpointsMeta)
-            distances = graphallshortestpaths(sparse(metaConnectivityMatrix), 'Directed', false);
+            distances = graphallshortestpaths(sparse(connM), 'Directed', false);
             [~, idx2] = min(distances(inThere, endpointsMeta(idx)));
-            [~, path] = graphshortestpath(sparse(metaConnectivityMatrix), endpointsMeta(idx), endpointsMeta(idx2));
+            [~, path] = graphshortestpath(sparse(connM), endpointsMeta(idx), endpointsMeta(idx2));
             inThere = [inThere, path];
             splits = splits + length(path);
         end
