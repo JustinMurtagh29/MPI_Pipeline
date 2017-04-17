@@ -3,7 +3,7 @@ function obj = addNodesNaked(obj, tree_index, pos, diameter)
          diameter=1.5;
      end
      obj.nodes{tree_index} = [obj.nodes{tree_index}; pos diameter];
-     % obj.nodesNumDataAll{tree_index} = [obj.nodesNumDataAll{tree_index}; obj.largestID+1 diameter pos 0 0 0 0];
+     obj.nodesNumDataAll{tree_index} = [obj.nodesNumDataAll{tree_index}; obj.largestID+1 diameter pos 0 0 0];
      ts.id = num2str(obj.largestID+1);
      ts.radius = num2str(diameter);
      ts.x = num2str(pos(1));
