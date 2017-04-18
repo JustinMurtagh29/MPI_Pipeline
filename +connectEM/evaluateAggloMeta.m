@@ -1,4 +1,4 @@
-function y = evalutateAggloMeta(skelpath, graph, segmentMeta, agglos, p, nameOfRun, mainFolder, limitaggloNum, limitaggloSize)
+function y = evalutateAggloMeta(skelpath, graph, segmentMeta, agglos, p, nameOfRun, mainFolder, limitaggloNum, limitaggloSize, agglos_reverse)
 segmentMeta2 = segmentMeta;
 segmentMeta2.point = segmentMeta2.point'
 doc_folder = [mainFolder, nameOfRun, '/'];
@@ -18,7 +18,7 @@ for file_idx = 1 : length(skelpath)
     ids = Seg.Global.getSegIds(p, skel.nodes{idx}(:, 1 : 3));
     skel = connectEM.evaluateAggloCleanSkel(skel, idx, ids == 0);
     ids = Seg.Global.getSegIds(p, skel.nodes{idx}(:, 1 : 3));
-    [recall, splits, mergers, validnodes, foundAgglomerates, connM] = connectEM.evaluateAgglo(agglos, segmentMeta2, skel, idx, ids, graph.neighbours, limitaggloNum, limitaggloSize);
+    [recall, splits, mergers, validnodes, foundAgglomerates, connM] = connectEM.evaluateAgglo(agglos, segmentMeta2, skel, idx, ids, graph.neighbours, limitaggloNum, limitaggloSize, agglos_reverse);
     y.recall_col{file_idx} = recall;
     y.splits_col(file_idx) = splits;
     y.mergers_col(file_idx) = mergers;
@@ -28,6 +28,6 @@ for file_idx = 1 : length(skelpath)
     y.foundAgglomerates_col{file_idx} = foundAgglomerates;
 
     y.connM{file_idx} = connM;
-    connectEM.skeletonFromAgglo(graph.edges, segmentMeta2, agglos(foundAgglomerates), num2str(file_idx), doc_folder)
-    skel.write([doc_folder, 'skel_' num2str(file_idx)  '.nml']);
+    % connectEM.skeletonFromAgglo(graph.edges, segmentMeta2, agglos(foundAgglomerates), num2str(file_idx), doc_folder)
+    % skel.write([doc_folder, 'skel_' num2str(file_idx)  '.nml']);
 end
