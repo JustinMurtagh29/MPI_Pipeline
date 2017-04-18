@@ -14,24 +14,28 @@ function agglomeration( ...
 
     display('Loading data:');
     tic;
-    % Load global graph representation
-    % graph = load([p.saveFolder 'graph.mat'], 'prob', 'edges', 'neighbours', 'neighProb'); 
-    graph = load([p.saveFolder 'graph.mat'], 'prob', 'edges');
+    % Load new graph representation including (resorted) borderIdx [p.saveFolder 'graphNew.mat']
+    % These indicate which index in [p.saveFolder 'globalBorder.mat'] each edge corresponds to
+    % Correspondences have NaN as borderIdx
+    % Load 'neighbours' and 'neighProb' in addition if you want to do (many) local searches in the graph
+    graph = load([p.saveFolder 'graphNew.mat'], 'prob', 'edges', 'borderIdx');
     % Load information about edges
     borderMeta = load([p.saveFolder 'globalBorder.mat'], 'borderSize', 'borderCoM');
     % Load meta information of segments
     segmentMeta = load([p.saveFolder 'segmentMeta.mat'], 'voxelCount', 'point', 'maxSegId');
     segmentMeta.point = segmentMeta.point';
-    % Load and preprocess segment class predictions on single segments from Alessandro
+    % Load and preprocess segment class predictions from Alessandro
     segmentMeta = connectEM.addSegmentClassInformation(p, segmentMeta);
+    % Load exclusion of segments based on heuristics
+    heuristics = load([p.saveFolder 'heuristicSegmentExclusions.mat'], 'mapping', 'heuristicIdx');
     toc;
 
     display('Removing segments detected by heuristics & small & disconnected segments:');
     tic;
-    [graphCutDendrites, excClassesDendrites, excNamesDendrites, excSizeDendrites] = connectEM.cutGraph(p, graph, segmentMeta, ...
-        borderMeta, borderSizeDendrites, segmentSizeDendrites);
-    graphCutAxons = connectEM.cutGraph(p, graph, segmentMeta, ...
-        borderMeta, borderSizeAxons, segmentSizeAxons);
+    graphCutDendrites = connectEM.cutGraph(p, graph, segmentMeta, borderMeta, heuristics, ...
+        borderSizeDendrites, segmentSizeDendrites);
+    graphCutAxons = connectEM.cutGraph(p, graph, segmentMeta, borderMeta, heuristics, ...
+        borderSizeAxons, segmentSizeAxons);
     toc;
 
     display('Generating subgraphs for axon and dendrite agglomeration:');
@@ -66,8 +70,7 @@ function agglomeration( ...
 
     display('Garbage collection');
     tic;
-    % Note: Exlusions classes 1-6 consitent between dendrites and axons
-    [axonsFinal, dendritesFinal] = connectEM.garbageCollection(graph, segmentMeta, axons, dendrites, excClassesDendrites(1:6));
+    [axonsFinal, dendritesFinal] = connectEM.garbageCollection(graph, segmentMeta, axons, dendrites, heuristics.mapping);
     toc;
 
     %{
