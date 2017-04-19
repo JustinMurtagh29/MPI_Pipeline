@@ -27,6 +27,7 @@ function [recall, splits, mergers, validnodes, foundAgglomerates, connM] = evalu
     end
     % Connectivity matrix of found agglomerates (which touch ...)
     connM = zeros(length(foundAgglomerates));
+    %{
     for idx1 = 1 : length(foundAgglomerates)
         for idx2 = idx1 : length(foundAgglomerates)
             if any(cellfun(@(x)any(ismember(x, agglomerates{foundAgglomerates(idx2)})), neighbours(agglomerates{foundAgglomerates(idx1)})))
@@ -34,6 +35,7 @@ function [recall, splits, mergers, validnodes, foundAgglomerates, connM] = evalu
             end
         end
     end
+    %}
     % Split calculation: Not currently in use
     if graphconncomp(sparse(connM), 'Directed', false) ~= 1
         disp('skeleton does not stick together')  % todo interpolate nodes

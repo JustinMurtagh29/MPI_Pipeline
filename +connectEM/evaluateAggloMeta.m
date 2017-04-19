@@ -12,6 +12,7 @@ for file_idx = 1 : length(skelpath)
     if isempty(strfind(skel.parameters.experiment.name, 'ROI2017'))
         skel.nodes{idx}(:, 1 : 3) = bsxfun(@minus, skel.nodes{idx}(:, 1 : 3),  [1195, 1515, 115]-(129 - [25 25 10]));
     end
+    skel.nodes{idx}(skel.nodes{idx} <= 0) = 1;
     skel.nodesNumDataAll{idx}(:, 3 : 5)= skel.nodes{idx}(:, 1 : 3);
     % Make sure skeleton is one CC and has no circles
     assert(graphconncomp(skel.createAdjacencyMatrix(idx)) == 1);
@@ -34,8 +35,8 @@ for file_idx = 1 : length(skelpath)
     y.foundAgglomerates_col{file_idx} = foundAgglomerates;
     y.connM{file_idx} = connM;
     % Write output results
-    connectEM.skeletonFromAgglo(graph.edges, segmentMeta2, agglos(foundAgglomerates), num2str(file_idx), doc_folder)
-    skel.write([doc_folder, 'skel_' num2str(file_idx)  '.nml']);
+    %connectEM.skeletonFromAgglo(graph.edges, segmentMeta2, agglos(foundAgglomerates), num2str(file_idx), doc_folder)
+    %skel.write([doc_folder, 'skel_' num2str(file_idx)  '.nml']);
 end
 
 end

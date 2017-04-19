@@ -23,19 +23,19 @@ mainFolder = ['/gaba/scratch/kboerg/eval_agglo/' nameOfAgglo '/'];
 mkdir(mainFolder);
 % Choose which GT in skelpath to use for evaluation
 dendrite_selector = 2:5;
-axon_selector = [1 16:35];
+axon_selector = 1;%[1 16:35];
 % Dendrite
-agglos_dendrite_reverse = createLookup(agglos_dendrite);
-y.dendrite1 = connectEM.evaluateAggloMeta(skelpath(dendrite_selector), graph, segmentMeta, agglos_dendrite, p, 'dendrites1', mainFolder, 0, 1E4, agglos_dendrite_reverse);
-y.dendrite4 = connectEM.evaluateAggloMeta(skelpath(dendrite_selector), graph, segmentMeta, agglos_dendrite, p, 'dendrites4', mainFolder, 3, 1E4, agglos_dendrite_reverse);
-y.dendritePercolators = cellfun(@(x)sum(segmentMeta.voxelCount(x)), agglos_dendrite(1:10));
+%agglos_dendrite_reverse = createLookup(segmentMeta, agglos_dendrite);
+%y.dendrite1 = connectEM.evaluateAggloMeta(skelpath(dendrite_selector), graph, segmentMeta, agglos_dendrite, p, 'dendrites1', mainFolder, 0, 1E4, agglos_dendrite_reverse);
+%y.dendrite4 = connectEM.evaluateAggloMeta(skelpath(dendrite_selector), graph, segmentMeta, agglos_dendrite, p, 'dendrites4', mainFolder, 3, 1E4, agglos_dendrite_reverse);
+%y.dendritePercolators = cellfun(@(x)sum(segmentMeta.voxelCount(x)), agglos_dendrite(1:10));
 % Axon evaluation
-agglos_axon_reverse = createLookup(agglos_axon);
+agglos_axon_reverse = createLookup(segmentMeta, agglos_axon);
 y.axon = connectEM.evaluateAggloMeta(skelpath(axon_selector), graph, segmentMeta, agglos_axon, p, 'axons', mainFolder, 0, 0, agglos_axon_reverse);
 
 end
 
-function agglos_reverse = createLookup(agglos)
+function agglos_reverse = createLookup(segmentMeta, agglos)
 
 agglos_reverse = zeros(size(segmentMeta.point, 2), 1);
 for idx = 1 : length(agglos)
