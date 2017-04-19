@@ -23,7 +23,7 @@ for file_idx = 1 : length(skelpath)
     % Could modify ids directly instead of looking up again
     ids = Seg.Global.getSegIds(p, skel.nodes{idx}(:, 1 : 3));
     % Main function calculating the metrics
-    [recall, splits, mergers, validnodes, foundAgglomerates, connM] = connectEM.evaluateAgglo(agglos, segmentMeta, skel, idx, ids, graph.neighbours, limitaggloNum, limitaggloSize, agglos_reverse);
+    [recall, splits, mergers, validnodes, foundAgglomerates, connM] = connectEM.evaluateAgglo(agglos, segmentMeta, skel, ids, graph.neighbours, limitaggloNum, limitaggloSize, agglos_reverse);
     % Collect results in structure
     y.recall_col{file_idx} = recall;
     y.splits_col(file_idx) = splits;
