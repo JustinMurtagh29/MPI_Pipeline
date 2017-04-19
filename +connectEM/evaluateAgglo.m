@@ -6,7 +6,7 @@ function [recall, splits, mergers, validnodes, foundAgglomerates, connM] = evalu
     else
         foundAgglomerates = [];
     end
-    aggloSize = cellfun(@(x)sum(segmentMeta2.point(x)), agglomerates(foundAgglomerates));
+    aggloSize = cellfun(@(x)sum(segmentMeta2.voxelCount(x)), agglomerates(foundAgglomerates));
     foundAgglomerates(aggloSize < limitaggloSize) = [];
     recall = [length(intersect(cell2mat(agglomerates(foundAgglomerates)), skelAsIds(skelAsIds ~= 0))), length(unique(skelAsIds(skelAsIds ~= 0)))];
     validnodes = find(ismember(skelAsIds, cell2mat(agglomerates(foundAgglomerates))));
