@@ -50,7 +50,7 @@ display('Detecting blood vessels');
 tic;
 for i=1:length(zCoords) 
     thisSliceBbox(3,:) = [zCoords{i}(1) zCoords{i}(end)];
-    raw = readKnossosRoi(dataset.root, dataset.prefix, thisSliceBbox);
+    raw = loadRawData(dataset, thisSliceBbox);
     vessels = false(size(raw));
     for j=1:size(raw,3)
         vessels(:,:,j) = detectVesselsSingleImage(raw(:,:,j));
@@ -139,8 +139,10 @@ for i=1:length(zCoords)
     % Read original data and detected vessel
     % Interpolate correction voxel for each voxel and multiply
     correctionForSlice =  interp3(X,Y,Z,correctionVolume,Xq,Yq,Zq, 'linear', 121);
-    raw = readKnossosRoi(vesselsMasked.root, vesselsMasked.prefix, thisSliceBbox); 
-    vessels =  readKnossosRoi(strrep(vesselsMasked.root, '/color/', '/segmentation/'), vesselsMasked.prefix, thisSliceBbox, 'uint32');
+    raw = loadRawData(vesselsMasked, thisSliceBbox); 
+    vessels =  loadSegDataGlobal(struct( ...
+        'root', strrep(vesselsMasked.root, '/color/', '/segmentation/'), ...
+        'prefix', vesselsMasked.prefix), thisSliceBbox);
     raw = uint8(correctionForSlice .* double(raw));
 	raw(vessels > 0) = 121;
     % Save to new datset to be used in pipeline

@@ -40,8 +40,7 @@ fprintf(['[%s] SynEM.Seg.predictCube - Predicting segmentation ' ...
     'cube %s.\n'], datestr(now), pCube.saveFolder);
 
 %load segmentation
-seg = SynEM.Aux.readKnossosRoi(p.seg.root, p.seg.prefix, ...
-    pCube.bboxSmall, 'uint32', '', 'raw');
+seg = loadSegDataGlobal(p.seg, pCube.bboxSmall);
 
 %load svg
 m = load(pCube.edgeFile);

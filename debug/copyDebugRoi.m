@@ -10,8 +10,9 @@ function raw = copyDebugRoi()
     cnetBorder = [25, 25, 10];
     
     % Define source of copy process
-    srcRoot = '/gaba/u/kboerg/st07x2_new2/color/1/';
-    srcPrefix = '2012-09-28_ex145_07x2_new2_mag1';
+    src = struct;
+    src.root = '/gaba/u/kboerg/st07x2_new2/color/1/';
+    src.prefix = '2012-09-28_ex145_07x2_new2_mag1';
     
     srcBox = nan(3, 2);
     srcBox(:, 1) = round(center - roiSize / 2);
@@ -26,6 +27,6 @@ function raw = copyDebugRoi()
     destOffset = 129 - cnetBorder;
 
     % Read from one, write to wKcubes
-    raw = readKnossosRoi(srcRoot, srcPrefix, srcBox);
+    raw = loadRawData(src, srcBox);
     writeKnossosRoi(destRoot, destPrefix, destOffset, raw);
 end

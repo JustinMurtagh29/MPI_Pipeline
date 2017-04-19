@@ -39,7 +39,7 @@ borders = m.borders;
 
 %load raw
 bboxRaw = pCube.bboxSmall + [-featureMap.border,featureMap.border];
-raw = readKnossosRoi(p.raw.root,p.raw.prefix,bboxRaw,'uint8');
+raw = loadRawData(p.raw,bboxRaw);
 if all(~raw)
     error('The raw file read from %s is empty.',p.raw.root);
 end

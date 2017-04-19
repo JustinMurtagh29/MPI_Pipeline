@@ -1,9 +1,9 @@
-function localDetectionMyelin(in, out, bboxIn, bboxOut)
+function localDetectionNuclei(in, out, bboxIn, bboxOut)
 
     % Load raw data
-    raw = readKnossosRoi(in.root, in.prefix, bboxIn);
+    raw = loadRawData(in, bboxIn);
     % Load blood vessel segmentation
-    vessels = readKnossosRoi(out.root, out.prefix, bboxIn, 'uint32');
+    vessels = loadSegDataGlobal(out, bboxIn);
     % This line is to overwrite old results of detection(s) below
     vessels = vessels == 1;
     % Perform nuclei and myelin detection
