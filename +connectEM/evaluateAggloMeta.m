@@ -22,8 +22,9 @@ for file_idx = 1 : length(skelpath)
     skel = connectEM.evaluateAggloCleanSkel(skel, idx, ids == 0);
     % Could modify ids directly instead of looking up again
     ids = Seg.Global.getSegIds(p, skel.nodes{idx}(:, 1 : 3));
-    % 
+    % Main function calculating the metrics
     [recall, splits, mergers, validnodes, foundAgglomerates, connM] = connectEM.evaluateAgglo(agglos, segmentMeta, skel, idx, ids, graph.neighbours, limitaggloNum, limitaggloSize, agglos_reverse);
+    % Collect results in structure
     y.recall_col{file_idx} = recall;
     y.splits_col(file_idx) = splits;
     y.mergers_col(file_idx) = mergers;
@@ -31,8 +32,8 @@ for file_idx = 1 : length(skelpath)
     good_edges = skel.edges{idx}(all(ismember(skel.edges{idx}, validnodes), 2), :);
     y.covered_col(file_idx) = sum(sqrt(sum(bsxfun(@times, skel.nodes{idx}(good_edges(:, 1), 1 : 3) - skel.nodes{idx}(good_edges(:, 2), 1 : 3), [11.24, 11.24, 28]).^2, 2)));
     y.foundAgglomerates_col{file_idx} = foundAgglomerates;
-
     y.connM{file_idx} = connM;
+    % Write output results
     connectEM.skeletonFromAgglo(graph.edges, segmentMeta2, agglos(foundAgglomerates), num2str(file_idx), doc_folder)
     skel.write([doc_folder, 'skel_' num2str(file_idx)  '.nml']);
 end
