@@ -1,6 +1,6 @@
 function [recall, splits, mergers, validnodes, foundAgglomerates, connM] = evaluateAgglo(agglomerates, segmentMeta2, skel, skelIdx, skelAsIds, neighbours, limitaggloNum, limitaggloSize, agglos_reverse)
     maxTube = 10000;
-    foundAgglomeratesPre = setdiff(agglos_reverse(intersect(skelAsIds(skelAsIds ~= 0), 1:agglos_reverse)), 0);
+    foundAgglomeratesPre = setdiff(agglos_reverse(skelAsIds(skelAsIds ~= 0)), 0);
     if ~isempty(foundAgglomeratesPre)
         foundAgglomerates = feval(@(x)x(x(:, 2) > limitaggloNum, 1), tabulate(foundAgglomeratesPre));
     else
