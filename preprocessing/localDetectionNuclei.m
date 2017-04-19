@@ -24,7 +24,7 @@ function localDetectionNuclei(in, out, bboxIn, bboxOut)
     vessels = uint32(vessels);
     %vessels(nuclei) = 2;
     vessels(myelin) = 3;
-    writeKnossosRoi(out.root, out.prefix, bboxOut(:,1)', uint32(vessels), 'uint32', '', 'noRead');
+    saveSegDataGlobal(out, bboxOut(:, 1)', uint32(vessels));
 
 end
 

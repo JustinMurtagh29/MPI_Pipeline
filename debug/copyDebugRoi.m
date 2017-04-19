@@ -22,11 +22,12 @@ function raw = copyDebugRoi()
     srcBox(:, 2) = srcBox(:, 2) + cnetBorder(:);
     
     % Define destination of copy process
-    destRoot = '/u/amotta/pipeline/2012-09-28_ex145_07x2_ROI2016/data/knossos/raw/';
-    destPrefix = '2012-09-28_ex145_07x2_ROI2016_mag1';
+    dest = struct;
+    dest.root = '/u/amotta/pipeline/2012-09-28_ex145_07x2_ROI2016/data/knossos/raw/';
+    dest.prefix = '2012-09-28_ex145_07x2_ROI2016_mag1';
     destOffset = 129 - cnetBorder;
 
     % Read from one, write to wKcubes
     raw = loadRawData(src, srcBox);
-    writeKnossosRoi(destRoot, destPrefix, destOffset, raw);
+    saveRawData(dest, destOffset, raw);
 end

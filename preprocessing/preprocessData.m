@@ -67,8 +67,10 @@ for i=1:length(zCoords)
     vessels = imclose(vessels, ones(1, 1, 7));  
     maskedRaw = raw;
     maskedRaw(vessels) = uint8(121);
-    writeKnossosRoi(vesselsMasked.root, vesselsMasked.prefix, thisSliceBbox(:,1)', maskedRaw, 'uint8', '', 'noRead');
-    writeKnossosRoi(strrep(vesselsMasked.root, '/color/', '/segmentation/'), vesselsMasked.prefix, thisSliceBbox(:,1)', uint32(vessels), 'uint32', '', 'noRead');
+    saveRawData(vesselsMasked, thisSliceBbox(:,1)', maskedRaw);
+    saveSegDataGlobal(struct( ...
+        'root', strrep(vesselsMasked.root, '/color/', '/segmentation/'), ...
+        'prefix', vesselsMasked.prefix), thisSliceBbox(:, 1)', uint32(vessels));
     %Util.progressBar(i, length(zCoords));
     clear vessels;
 end
@@ -146,7 +148,7 @@ for i=1:length(zCoords)
     raw = uint8(correctionForSlice .* double(raw));
 	raw(vessels > 0) = 121;
     % Save to new datset to be used in pipeline
-    writeKnossosRoi(gradientCorrected.root, gradientCorrected.prefix, thisSliceBbox(:,1)', raw);
+    saveRawData(gradientCorrected, thisSliceBbox(:, 1)', raw);
     clear raw vessels;
     Util.progressBar(i, length(zCoords));
 end

@@ -15,7 +15,7 @@ function raw = copyRoi()
 
     % Read from one, write to wKcubes
     raw = loadRawData(chosenOne, chosenOne.bbox);
-    writeKnossosRoi(destination.root, destination.prefix, destination.firstCoord, raw);
+    saveRawData(destination, destination.firstCoord, raw);
 
 end
 

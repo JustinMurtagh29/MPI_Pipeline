@@ -18,7 +18,7 @@ function localDetectionMyelin(in, out, bboxIn, bboxOut)
     % Make sure no voxels are labeled double before pasting together
     vessels = uint32(vessels);
     vessels(myelin) = 3;
-    writeKnossosRoi(out.root, out.prefix, bboxOut(:,1)', uint32(vessels), 'uint32', '', 'noRead');
+    saveSegDataGlobal(out, bboxOut(:,1)', uint32(vessels));
 
 end
 
