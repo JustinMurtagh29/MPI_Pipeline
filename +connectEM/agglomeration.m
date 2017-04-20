@@ -79,12 +79,13 @@ function agglomeration( ...
     [dendritesFinalWithSpines, spinePaths, comment] = connectEM.attachSpines(graph, segmentMeta, ...
         dendritesFinal, axonsFinal, spineProbThreshold, dendriteProbSpines, probThresholdSpines, maxStepsSpines);
     toc;
+    %}
 
     display('Evaluating on a set of ground truth skeletons');
     tic;
-    metrics = evalutateAggloMetaMeta(graph, cat(1, dendritesFinal, axonsFinal));  
+    [~, runName] = fileparts(outputFile);
+    metrics = evalutateAggloMetaMeta(graph, axonsFinal, dendritesFinal, runName, segmentMeta); 
     toc;
-    %}
 
     display('Saving:');
     tic;
