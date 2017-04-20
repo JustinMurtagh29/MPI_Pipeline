@@ -8,6 +8,10 @@ if nargin == 1
     stdValue = 22;
 end
 
+if ~isfloat(in)
+    in = single(in);
+end
+
 out = in-meanValue;
 out = out./stdValue; 
 
