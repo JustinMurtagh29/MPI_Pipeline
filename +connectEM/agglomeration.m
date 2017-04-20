@@ -89,7 +89,8 @@ function agglomeration( ...
     display('Saving:');
     tic;
     % Lets save some more so that we can always understand whats happening
-    save(outputFile, 'dendritesFinal', 'axonsFinal');
+    clearvars borderMeta segmentMeta graph graphCutAxons graphCutDendrites;
+    save(outputFile);
     toc;
 
 end
