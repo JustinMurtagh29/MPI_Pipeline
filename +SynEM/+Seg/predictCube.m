@@ -54,7 +54,7 @@ interfaces = SynEM.Svg.calculateInterfaces(seg, edges, borders, ...
 
 %load raw
 bboxFM = bsxfun(@plus, pCube.bboxSmall,[-fm.border', fm.border']./2);
-raw = SynEM.Aux.readKnossosRoi(p.raw.root, p.raw.prefix, bboxFM);
+raw = loadRawData(p.raw, bboxFM);
 
 %calculate features
 X = fm.calculate(interfaces, raw);
