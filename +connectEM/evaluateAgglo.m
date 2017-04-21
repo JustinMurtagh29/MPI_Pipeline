@@ -1,7 +1,5 @@
-function [recall, splits, mergers, validnodes, foundAgglomerates, connM] = evaluateAgglo(agglomerates, segmentMeta, skel, skelAsIds, neighbours, limitaggloNum, limitaggloSize, agglos_reverse)
-    
-    % Merger cutoff
-    maxTube = 10000;
+function [recall, splits, mergers, validnodes, foundAgglomerates, connM] = evaluateAgglo(agglomerates, segmentMeta, skel, skelAsIds, neighbours, limitaggloNum, limitaggloSize, agglos_reverse, maxTube)
+
     % Occurences of each agglomerate
     foundAgglomeratesPre = agglos_reverse(skelAsIds(skelAsIds ~= 0));
     foundAgglomeratesPre(foundAgglomeratesPre == 0) = [];
