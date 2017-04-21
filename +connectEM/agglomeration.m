@@ -84,7 +84,7 @@ function agglomeration( ...
     display('Evaluating on a set of ground truth skeletons');
     tic;
     [~, runName] = fileparts(outputFile);
-    metrics = connectEM.evalutateAggloMetaMeta(graph, axonsFinal, dendritesFinal, runName, segmentMeta); 
+    metrics = connectEM.evaluateAggloMetaMeta(graph, axonsFinal, dendritesFinal, runName, segmentMeta); 
     toc;
 
     display('Saving:');
