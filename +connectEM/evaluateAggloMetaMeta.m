@@ -41,20 +41,21 @@ maxTubeDendrite = 5000;
 agglos_dendrite_reverse = createLookup(segmentMeta, agglos_dendrite);
 y.dendrite1 = connectEM.evaluateAggloMeta(skelpath(dendrite_selector), graph, segmentMeta, agglos_dendrite, p, 'dendrites1', mainFolder, 0, 2.5E4, agglos_dendrite_reverse, maxTubeDendrite);
 y.dendrite4 = connectEM.evaluateAggloMeta(skelpath(dendrite_selector), graph, segmentMeta, agglos_dendrite, p, 'dendrites4', mainFolder, 3, 2.5E4, agglos_dendrite_reverse, maxTubeDendrite);
-y.dendritePercolators = cellfun(@(x)sum(segmentMeta.voxelCount(x)), agglos_dendrite(1:10));
+y.dendritePercolators = cellfun(@(x)sum(segmentMeta.voxelCount(x)), agglos_dendrite(1:min(10,numel(agglos_dendrite))));
 % Axon evaluation
 maxTubeAxon = 3000;
 agglos_axon_reverse = createLookup(segmentMeta, agglos_axon);
 y.axon = connectEM.evaluateAggloMeta(skelpath(axon_selector), graph, segmentMeta, agglos_axon, p, 'axons', mainFolder, 0, 0, agglos_axon_reverse,maxTubeAxon);
-y.axonPercolators = cellfun(@(x)sum(segmentMeta.voxelCount(x)), agglos_axon(1:10));
+y.axonPercolators = cellfun(@(x)sum(segmentMeta.voxelCount(x)), agglos_axon(1:min(10,numel(agglos_dendrite))));
 
 end
 
 function agglos_reverse = createLookup(segmentMeta, agglos)
 
-agglos_reverse = zeros(size(segmentMeta.point, 2), 1);
+agglos_reverse = zeros(size(segmentMeta.point, 1), 1);
 for idx = 1 : length(agglos)
     agglos_reverse(agglos{idx}) = idx;
 end
 
 end
+

@@ -1,6 +1,5 @@
 function y = evaluateAggloMeta(skelpath, graph, segmentMeta, agglos, p, nameOfRun, mainFolder, limitaggloNum, limitaggloSize, agglos_reverse, maxTube)
 
-segmentMeta.point = segmentMeta.point';
 doc_folder = [mainFolder, nameOfRun, '/'];
 mkdir(doc_folder);
 for file_idx = 1 : length(skelpath)
