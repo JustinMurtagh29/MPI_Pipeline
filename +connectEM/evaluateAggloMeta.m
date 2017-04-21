@@ -25,7 +25,7 @@ for file_idx = 1 : length(skelpath)
     % %Main function calculating the metrics
     s = strsplit(skelpath{file_idx}, '/');
     load(['/gaba/scratch/kboerg/' s{end} '.mat'], 'skel', 'ids');
-    [recall, splits, mergers, validnodes, foundAgglomerates, connM] = connectEM.evaluateAgglo(agglos, segmentMeta, skel, ids, graph.neighbours, limitaggloNum, limitaggloSize, agglos_reverse, maxTube);
+    [recall, splits, mergers, validnodes, foundAgglomerates, connM] = connectEM.evaluateAgglo(agglos, segmentMeta, skel, ids, [], limitaggloNum, limitaggloSize, agglos_reverse, maxTube);
     % Collect results in structure
     y.recall_col{file_idx} = recall;
     y.splits_col(file_idx) = splits;
