@@ -19,7 +19,10 @@ function [recall, splits, mergers, validnodes, foundAgglomerates, connM] = evalu
     mergers = 0;
     scalize = @(x)bsxfun(@times,x,[11.24, 11.24, 28]);
     for idx = 1 : length(foundAgglomerates)
-        if max(min(pdist2(scalize(segmentMeta.point(agglomerates{foundAgglomerates(idx)}, :)), scalize(segmentMeta.point(skelAsIds(skelAsIds > 0), :))), [], 2)) > maxTube
+        points = segmentMeta.point(agglomerates{foundAgglomerates(idx)}, :));
+        if size(points, 1) > 1000
+            points = points(randperm(size(points, 1), 1000), :);
+        if max(min(pdist2(scalize(points), scalize(segmentMeta.point(skelAsIds(skelAsIds > 0), :))), [], 2)) > maxTube
             mergers = mergers + 1;
         end
     end
