@@ -2,11 +2,6 @@ function graphCut = cutGraph(p, graph, segmentMeta, borderMeta, heuristics, ...
         borderSizeThreshold, segmentSizeThreshold)
     % Restrict graph based on heuristics results and border and segment size threshold
 
-    heuristics = load([p.saveFolder 'graphCutNew.mat']);
-    heuristics.mapping = {heuristics.vesselIdx heuristics.endoIdx heuristics.nucleiIdx ...
-        heuristics.addedNucleiIdx heuristics.myelinIdx heuristics.addedMyelinIdx};
-    heuristics.mapping = cellfun(@find, heuristics.mapping, 'uni', 0);
-
     % Keep only edges above borderSizeThreshold (and correspondences)
     corrIdx = isnan(graph.borderIdx);
     edgeIdx = false(size(corrIdx));
