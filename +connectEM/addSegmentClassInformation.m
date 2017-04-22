@@ -4,7 +4,7 @@ function segmentMeta = addSegmentClassInformation(p, segmentMeta)
     % Convenience funtion
 
     % Use agglomerate based statistics for everything else
-    segmentPredictions = load([p.saveFolder 'segmentAggloPredictionsHybrid.mat']);
+    segmentPredictions = load([p.saveFolder 'segmentAggloPredictions.mat']);
     % ... glia
     segmentMeta.gliaProb = zeros(segmentMeta.maxSegId, 1);
     idx = ~isnan(segmentPredictions.probsMulti(:,1));
