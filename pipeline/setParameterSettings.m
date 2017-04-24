@@ -11,10 +11,6 @@ function [p, pT] = setParameterSettings(p)
         p.raw.root = [p.raw.root, filesep];
         warning('Added trailing slash to p.raw.root');
     end
-    
-    if ~isfield(p.raw,'dtype')
-        p.raw.dtype = 'uint8';
-    end
 
     % Size of local segmentation and local graph construction
     p.tileSize =  [512; 512; 256];
@@ -42,19 +38,15 @@ function [p, pT] = setParameterSettings(p)
         '/iter' num2str(p.cnn.iter, '%.2i') '/gpu' num2str(p.cnn.gpu, '%.2i') '/saveNet0000000001.mat'];
     p.cnn.GPU = false;
     
-    % Function to use for classification
-    p.class.func = @bigFwdPass;
-    
     % Location to store CNN classification
+    p.class = p.raw;
+    p.class.func = @bigFwdPass;
     p.class.root = [p.tempFolder 'class/'];
-    p.class.prefix = p.raw.prefix;
-    p.class.dtype = 'single';
     
     % Function to use for segmentation
+    p.seg = p.raw;
     p.seg.func = @(x)watershedSeg_v1_cortex(x,{p.seg.threshold 10});
     p.seg.root = [p.saveFolder 'globalSeg/'];
-    p.seg.prefix = p.raw.prefix;
-    p.seg.dtype = 'uint32';
     
     % Specify arguments for filterbank applied to raw and aff data each
     p.filter = {
