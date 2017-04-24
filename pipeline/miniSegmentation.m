@@ -17,8 +17,8 @@ for idx = 1:taskCount
             p.local(idx).bboxBig, p.seg.func, p.local(idx).segFile};
     else
         inputCell{idx} = { ...
-            p.class.root p.class.prefix, ....
-            p.local(idx).bboxBig, p.seg.func, p.local(idx).tempSegFile};
+            p.class, p.local(idx).bboxBig, ...
+            p.seg.func, p.local(idx).tempSegFile};
     end
 end
 
