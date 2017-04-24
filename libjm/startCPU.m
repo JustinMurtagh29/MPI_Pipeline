@@ -12,7 +12,7 @@ function job = startCPU(fH, iC, jN, requiredMemory, group, priority)
         priority = -500;
     end
     
-    cluster = parcluster('local');
+    clusterCPU = parcluster('local');
     job = Cluster.startJob(fH, iC, 'cluster', clusterCPU, 'name', jN, 'taskGroupSize', group);
 
 end
