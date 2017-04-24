@@ -5,24 +5,15 @@ wkParam = struct;
 wkParam.root = '/gaba/u/mberning/wkCubes/2012-09-28_ex145_07x2_ROI2016_corrected/color/1/';
 wkParam.prefix = '2012-09-28_ex145_07x2_ROI2016_corrected_mag1';
 
-wkwParam = struct;
-wkwParam.root = '/home/amotta/Desktop/wkw';
-
 roiSize = 1.5 .* [512; 512; 256] + 1;
 padSize = [25; 25; 10];
 
 wkOffset = [129; 129; 129];
 wkwOffset = [513; 513; 513];
 
-%% copy ROI from KNOSSOS to .wkw
-wkBox = bsxfun(@plus, wkOffset, [zeros(3, 1), roiSize]);
-raw = readKnossosRoi(wkParam.root, wkParam.prefix, wkBox);
-saveRawData(wkwParam, wkwOffset, raw);
-
 %% build base configuration
-
-thisDir = pwd();
-rootDir = fullfile(thisDir, 'wkwrap-test');
+rootDir = Util.getTempDir();
+rootDir = fullfile(rootDir, 'data', 'wkwrap-test');
 assert(not(exist(rootDir, 'dir')));
 mkdir(rootDir);
 
@@ -58,6 +49,16 @@ p.seg.threshold = .25;
 % (see preprocessing/additionalHeuristics.m) will be used to ensure that segments
 % do not cross myelin/non-myelin border 
 p.myelin.isUsed = false;
+
+%% copy ROI from KNOSSOS to .wkw
+copyBoxWk = bsxfun(@plus, wkOffset, [zeros(3, 1), roiSize - 1]);
+copyBoxWk = copyBoxWk + bsxfun(@times, padSize, [-1, +1]);
+copyOffWkw = wkwOffset - padSize;
+
+fprintf('Copying raw data... ');
+raw = readKnossosRoi(wkParam.root, wkParam.prefix, copyBoxWk);
+saveRawData(p.raw, copyOffWkw, raw);
+disp('Done!');
 
 %% complete parameter structure
 p = setParameterSettings(p);
