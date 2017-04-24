@@ -39,14 +39,15 @@ function [p, pT] = setParameterSettings(p)
     p.cnn.GPU = false;
     
     % Location to store CNN classification
-    p.class = p.raw;
-    p.class.func = @bigFwdPass;
-    p.class.root = [p.tempFolder 'class/'];
+    p.class = Util.modifyStruct(p.raw, ...
+        'func', @bigFwdPass, ...
+        'root', [p.tempFolder 'class/']);
     
     % Function to use for segmentation
-    p.seg = p.raw;
-    p.seg.func = @(x)watershedSeg_v1_cortex(x,{p.seg.threshold 10});
-    p.seg.root = [p.saveFolder 'globalSeg/'];
+    p.seg = Util.modifyStruct(p.raw, ...
+        'func', @(x) watershedSeg_v1_cortex(x, {p.seg.threshold, 10}), ...
+        'root', [p.saveFolder 'globalSeg/'], ...
+        'threshold', p.seg.threshold);
     
     % Specify arguments for filterbank applied to raw and aff data each
     p.filter = {
