@@ -1,24 +1,24 @@
 % ... for cutting down graph
-borderSizeDendrites = 100; % border below this size are excluded from dendrite subgraph during inital agglomeration
-segmentSizeDendrites = 100; % segment below ...
-borderSizeAxons = 100; % border below this size are excluded from axon subgraph during inital agglomeration
+borderSizeDendrites = 300; % border below this size are excluded from dendrite subgraph during inital agglomeration
+segmentSizeDendrites = 500; % segment below ...
+borderSizeAxons = 50; % border below this size are excluded from axon subgraph during inital agglomeration
 segmentSizeAxons = 100; % segment below ...
 
 % Restrictions of graph based on segment class proability
-axonProbThreshold = 0.3;
-dendriteProbThreshold = 0;
-% For deciding in which segments to seed spine attachment greedy search
-spineProbThreshold = 0.5;
-
+axonProbThreshold = 0.5;;
+dendriteProbThreshold = 0.3;
 % Threshold on neurite continuity probability for CC (and final agglomerate size in voxels) 
-probThresholdDendrite = 0.99;
+probThresholdDendrite = 0.98;
 sizeThresholdDendrite = 100;
-probThresholdAxon = 0.90;
+probThresholdAxon = 0.95;
 sizeThresholdAxon = 100;
 
-% NOTE: Parameters currently have no effect, commented routines for first tests
 % ... for ER reassignment
-erProbThreshold = 2;
+erProbThreshold = 5;
+
+% NOTE: Parameters currently have no effect, commented routines for first tests
+% For deciding in which segments to seed spine attachment greedy search
+spineProbThreshold = 0.5;
 % ... for spine attachment
 dendriteProbSpines = 0.05;
 probThresholdSpines = 0.05;
@@ -31,5 +31,5 @@ connectEM.agglomeration( ...
         probThresholdDendrite, sizeThresholdDendrite, probThresholdAxon, sizeThresholdAxon, ...
         erProbThreshold, ...
         dendriteProbSpines, probThresholdSpines, maxStepsSpines, ...
-        '/gaba/scratch/mberning/aggloSearch/00020.mat');
+        '/gaba/scratch/mberning/aggloSearch/00021.mat', graph);
 
