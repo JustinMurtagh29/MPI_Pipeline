@@ -3,15 +3,15 @@ function job = aggloGridSearch()
     % dendrite related parameter in this run
     borderSizeDendrites = [50 100 200 300 500]; % border below this size are excluded from dendrite subgraph during inital agglomeration
     segmentSizeDendrites = [100 300 500 700 1000]; % segment below ...
-    dendriteProbThreshold = [0 0.1 0.2 0.3 0.4 0.5]; % restrictions of graph based on segment class proability
+    dendriteProbThreshold = [0.3 0.4 0.5 0.6 0.7]; % restrictions of graph based on segment class proability
     probThresholdDendrite = [0.94 0.95 0.96 0.97 0.98 0.99]; % threshold on neurite continuity probability for CC
     sizeThresholdDendrite = 100; % threshold on final agglomerate size in voxels (single segments not collected!)
 
     % axon related parameter in this run
     borderSizeAxons = [0 25 50 100 200]; % border below this size are excluded from axon subgraph during inital agglomeration
     segmentSizeAxons = [50 100 200 300 400]; % segment below ...
-    axonProbThreshold = [0 0.1 0.2 0.3 0.4 0.5]; % restrictions of graph based on segment class proability
-    probThresholdAxon = [0.90 0.91 0.92 0.93 0.94 0.95]; % threshold on neurite continuity probability for CC
+    axonProbThreshold = [0.3 0.4 0.5 0.6 0.7]; % restrictions of graph based on segment class proability
+    probThresholdAxon = [0.93 0.94 0.95 0.96 0.97 0.98]; % threshold on neurite continuity probability for CC
     sizeThresholdAxon = 100; % threshold on final agglomerate size in voxels (single segments not collected!)
 
     % NOTE: Parameters currently have no effect, commented routines for first tests
@@ -32,7 +32,7 @@ function job = aggloGridSearch()
     % Currently 'static' parameter and filenames to save results to
     inputArgumentsStatic = repmat([erProbThreshold spineProbThreshold dendriteProbSpines probThresholdSpines maxStepsSpines], ...
         size(inputArgumentsDendrites, 1), 1);
-    inputArgumentFilename = arrayfun(@(x)['/gaba/scratch/mberning/aggloGridSearch/search02_' num2str(x, '%.5i') '.mat'], ...
+    inputArgumentFilename = arrayfun(@(x)['/gaba/scratch/mberning/aggloGridSearch/search03_' num2str(x, '%.5i') '.mat'], ...
         1:size(inputArgumentsDendrites,1), 'uni', 0)';
     % Collect and reorder input arguments together
     inputArguments = cat(2, inputArgumentsDendrites(:,1:2), inputArgumentsAxons(:,1:2), ...
