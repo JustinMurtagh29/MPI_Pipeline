@@ -18,7 +18,7 @@ function agglomeration( ...
     % These indicate which index in [p.saveFolder 'globalBorder.mat'] each edge corresponds to
     % Correspondences have NaN as borderIdx
     % Load 'neighbours' and 'neighProb' in addition if you want to do (many) local searches in the graph
-    graph = load([p.saveFolder 'graphNew.mat'], 'prob', 'edges', 'borderIdx');
+    graph = load([p.saveFolder 'graph.mat'], 'prob', 'edges', 'borderIdx');
     % Load information about edges
     borderMeta = load([p.saveFolder 'globalBorder.mat'], 'borderSize', 'borderCoM');
     % Load meta information of segments
