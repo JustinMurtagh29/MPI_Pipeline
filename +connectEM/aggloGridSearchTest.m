@@ -9,9 +9,9 @@ axonProbThreshold = 0.5;;
 dendriteProbThreshold = 0.3;
 % Threshold on neurite continuity probability for CC (and final agglomerate size in voxels) 
 probThresholdDendrite = 0.98;
-sizeThresholdDendrite = 100;
+sizeThresholdDendrite = 100000;
 probThresholdAxon = 0.95;
-sizeThresholdAxon = 100;
+sizeThresholdAxon = 100000;
 
 % ... for ER reassignment
 erProbThreshold = 5;
