@@ -13,6 +13,8 @@ function graphCut = cutGraph(p, graph, segmentMeta, borderMeta, heuristics, ...
     edgeIdx(corrIdx) = true;
     borderSizes = borderMeta.borderSize(graph.borderIdx(~corrIdx));
     edgeIdx(~corrIdx) =  borderSizes > borderSizeThreshold;
+    % Hack 42 part 11:
+    edgeIdx(corrIdx) = false;
     remainingEdges = graph.edges(edgeIdx, :);
     remainingProb = graph.prob(edgeIdx);
     % Calculate maximum probability remaining for each segment and exclude based on both thresholds

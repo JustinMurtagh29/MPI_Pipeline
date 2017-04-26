@@ -1,4 +1,4 @@
-function agglomeration( ... 
+function agglomerationHack( ... 
         borderSizeDendrites, segmentSizeDendrites, borderSizeAxons, segmentSizeAxons, ...
         axonProbThreshold, dendriteProbThreshold, spineProbThreshold, ...
         probThresholdDendrite, sizeThresholdDendrite, probThresholdAxon, sizeThresholdAxon, ...
@@ -61,14 +61,16 @@ function agglomeration( ...
     [axons, axonsSize, axonEdges] = connectEM.partitionSortAndKeepOnlyLarge(graphCutAxons, segmentMeta, probThresholdAxon, sizeThresholdAxon);
     toc;
     
+    %{
     display('Reassigning ER from axon to dendrite class: ');
     tic;
     [dendritesAfterEr, axonsAfterEr, er] = connectEM.extractAndTransferER(graph, dendrites, axons, erProbThreshold);
     toc;
+    %}
 
     display('Garbage collection');
     tic;
-    [axonsFinal, dendritesFinal] = connectEM.garbageCollection(graph, segmentMeta, axonsAfterEr, dendritesAfterEr, heuristics.mapping);
+    [axonsFinal, dendritesFinal] = connectEM.garbageCollection(graph, segmentMeta, axons, dendrites, heuristics.mapping);
     toc;
 
     %{

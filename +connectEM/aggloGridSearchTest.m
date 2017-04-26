@@ -9,9 +9,9 @@ axonProbThreshold = 0.5;;
 dendriteProbThreshold = 0.3;
 % Threshold on neurite continuity probability for CC (and final agglomerate size in voxels) 
 probThresholdDendrite = 0.98;
-sizeThresholdDendrite = 1e6;
-probThresholdAxon = 0.98;
-sizeThresholdAxon = 1e6;
+sizeThresholdDendrite = 1e5;
+probThresholdAxon = 0.90;
+sizeThresholdAxon = 1e5;
 
 % ... for ER reassignment
 erProbThreshold = 5;
@@ -31,5 +31,5 @@ connectEM.agglomerationHack( ...
         probThresholdDendrite, sizeThresholdDendrite, probThresholdAxon, sizeThresholdAxon, ...
         erProbThreshold, ...
         dendriteProbSpines, probThresholdSpines, maxStepsSpines, ...
-        '/gaba/scratch/mberning/aggloSearch/00022.mat', graph);
+        '/gaba/scratch/mberning/aggloSearch/00023.mat', graph);
 
