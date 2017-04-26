@@ -4,7 +4,7 @@ function agglomeration( ...
         probThresholdDendrite, sizeThresholdDendrite, probThresholdAxon, sizeThresholdAxon, ...
         erProbThreshold, ...
         dendriteProbSpines, probThresholdSpines, maxStepsSpines, ...
-        outputFile, graph);
+        outputFile);
 
     %% Start by loading parameter file
     % Load parameter from newest pipeline run
@@ -18,7 +18,7 @@ function agglomeration( ...
     % These indicate which index in [p.saveFolder 'globalBorder.mat'] each edge corresponds to
     % Correspondences have NaN as borderIdx
     % Load 'neighbours' and 'neighProb' in addition if you want to do (many) local searches in the graph
-    %graph = load([p.saveFolder 'graph.mat'], 'prob', 'edges', 'borderIdx', 'neighbours', 'neighProb');
+    graph = load([p.saveFolder 'graph.mat'], 'prob', 'edges', 'borderIdx');
     % Load information about edges
     borderMeta = load([p.saveFolder 'globalBorder.mat'], 'borderSize', 'borderCoM');
     % Load meta information of segments
@@ -59,18 +59,18 @@ function agglomeration( ...
     display('Performing agglomeration on axon subgraph:');
     tic;
     [axons, axonsSize, axonEdges] = connectEM.partitionSortAndKeepOnlyLarge(graphCutAxons, segmentMeta, probThresholdAxon, sizeThresholdAxon);
-    axons(axonsSize > 10e10) = [];
-    axonsSize(axonsSize > 10e10) = [];
     toc;
     
+    %{
     display('Reassigning ER from axon to dendrite class: ');
     tic;
     [dendritesAfterEr, axonsAfterEr, er] = connectEM.extractAndTransferER(graph, dendrites, axons, erProbThreshold);
     toc;
+    %}
 
     display('Garbage collection');
     tic;
-    [axonsFinal, dendritesFinal] = connectEM.garbageCollection(graph, segmentMeta, axonsAfterEr, dendritesAfterEr, heuristics.mapping);
+    [axonsFinal, dendritesFinal] = connectEM.garbageCollection(graph, segmentMeta, axons, dendrites, heuristics.mapping);
     toc;
 
     %{
