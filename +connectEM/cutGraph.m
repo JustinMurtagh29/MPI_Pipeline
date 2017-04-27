@@ -4,7 +4,7 @@ function graphCut = cutGraph(p, graph, segmentMeta, borderMeta, heuristics, ...
 
     % Hack number 42 part 10: Exclude all ER components as well
     er = connectEM.getERcomponents();
-    heuristics.mapping = cat(1, heuristics.mapping, num2cell(cat(1, er{:})));
+    heuristics.mapping = cat(2, heuristics.mapping, {cat(1, er{:})});
     heuristicIdx(cat(1, er{:})) = true;
 
     % Keep only edges above borderSizeThreshold (and correspondences)
