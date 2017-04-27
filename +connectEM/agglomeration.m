@@ -22,7 +22,7 @@ function agglomeration( ...
     % Load information about edges
     borderMeta = load([p.saveFolder 'globalBorder.mat'], 'borderSize', 'borderCoM');
     % Load meta information of segments
-    segmentMeta = load([p.saveFolder 'segmentMeta.mat'], 'voxelCount', 'point', 'maxSegId');
+    segmentMeta = load([p.saveFolder 'segmentMeta.mat'], 'voxelCount', 'point', 'maxSegId', 'cubeIdx');
     segmentMeta.point = segmentMeta.point';
     % Load and preprocess segment class predictions from Alessandro
     segmentMeta = connectEM.addSegmentClassInformation(p, segmentMeta);
