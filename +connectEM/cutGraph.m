@@ -2,10 +2,12 @@ function graphCut = cutGraph(p, graph, segmentMeta, borderMeta, heuristics, ...
         borderSizeThreshold, segmentSizeThreshold)
     % Restrict graph based on heuristics results and border and segment size threshold
 
-    % Hack number 42 part 10: Exclude all ER components as well
-    er = connectEM.getERcomponents();
+    % Still hacky, but keep for now: Exclude all ER components and all cube containing catastrphic merger
+    [er, cm] = connectEM.getERcomponents();
     heuristics.mapping = cat(2, heuristics.mapping, {cat(1, er{:})});
     heuristicIdx(cat(1, er{:})) = true;
+    excludedCubeIdx = unique(cellfun(@(x)mode(segmentMeta.cubeIdx(x)), cm));
+    excludedSegmentIdx = ismember(segmentMeta.cubeIdx, excludedCubeIdx);
 
     % Keep only edges above borderSizeThreshold (and correspondences)
     corrIdx = isnan(graph.borderIdx);
@@ -13,8 +15,6 @@ function graphCut = cutGraph(p, graph, segmentMeta, borderMeta, heuristics, ...
     edgeIdx(corrIdx) = true;
     borderSizes = borderMeta.borderSize(graph.borderIdx(~corrIdx));
     edgeIdx(~corrIdx) =  borderSizes > borderSizeThreshold;
-    % Hack 42 part 11:
-    edgeIdx(corrIdx) = false;
     remainingEdges = graph.edges(edgeIdx, :);
     remainingProb = graph.prob(edgeIdx);
     % Calculate maximum probability remaining for each segment and exclude based on both thresholds
@@ -22,8 +22,8 @@ function graphCut = cutGraph(p, graph, segmentMeta, borderMeta, heuristics, ...
     smallIdx = segmentMeta.voxelCount <= segmentSizeThreshold & ~heuristics.heuristicIdx;
     lowProbIdx = segmentMeta.voxelCount > segmentSizeThreshold & maxProb <= 0.5 & ~heuristics.heuristicIdx;
 
-    % Remove heuristics and small or 'disconnected' segments from graph
-    removedIds = cat(1, heuristics.mapping{:}, find(smallIdx), find(lowProbIdx));
+    % Remove heuristics and small or 'disconnected' segments from graph (and cubes excluded due to catastrpohic merger/alignment)
+    removedIds = cat(1, heuristics.mapping{:}, find(smallIdx), find(lowProbIdx), find(excludedSegmentIdx));
     keptIds = setdiff(1:double(segmentMeta.maxSegId), removedIds);
     keepEdgeIdx = all(ismember(remainingEdges, keptIds), 2);
     graphCut.edges = remainingEdges(keepEdgeIdx,:);
