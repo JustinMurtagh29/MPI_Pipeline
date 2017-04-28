@@ -1,7 +1,4 @@
-function [recall, splits, mergers, validnodes, foundAgglomerates, connM] = evaluateAgglo(agglomerates, segmentMeta, skel, skelAsIds, neighbours, limitaggloNum, limitaggloSize, agglos_reverse)
-    
-    % Merger cutoff
-    maxTube = 10000;
+function [recall, splits, mergers, validnodes, foundAgglomerates, connM] = evaluateAgglo(agglomerates, segmentMeta, skel, skelAsIds, neighbours, limitaggloNum, limitaggloSize, agglos_reverse, maxTube)
     % Occurences of each agglomerate
     foundAgglomeratesPre = agglos_reverse(skelAsIds(skelAsIds ~= 0));
     foundAgglomeratesPre(foundAgglomeratesPre == 0) = [];
@@ -21,7 +18,11 @@ function [recall, splits, mergers, validnodes, foundAgglomerates, connM] = evalu
     mergers = 0;
     scalize = @(x)bsxfun(@times,x,[11.24, 11.24, 28]);
     for idx = 1 : length(foundAgglomerates)
-        if max(min(pdist2(scalize(segmentMeta.point(agglomerates{foundAgglomerates(idx)}, :)), scalize(segmentMeta.point(skelAsIds(skelAsIds > 0), :))), [], 2)) > maxTube
+        points = segmentMeta.point(agglomerates{foundAgglomerates(idx)}, :);
+        if size(points, 1) > 1000
+            points = points(randperm(size(points, 1), 1000), :);
+        end
+        if max(min(pdist2(scalize(points), scalize(segmentMeta.point(skelAsIds(skelAsIds > 0), :))), [], 2)) > maxTube
             mergers = mergers + 1;
         end
     end

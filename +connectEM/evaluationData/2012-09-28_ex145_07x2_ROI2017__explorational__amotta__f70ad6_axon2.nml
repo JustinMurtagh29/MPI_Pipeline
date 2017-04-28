@@ -9,9 +9,9 @@
     <zoomLevel zoom="0.4787840987383257" />
   </parameters>
  
-  <thing id="0" color.r="1.0" color.g="0.0" color.b="0.0" color.a="1.0" name="explorative_2017-04-20_Alessandro_Motta_00">
+  <thing id="1" color.r="1.0" color.g="0.0" color.b="0.0" color.a="1.0" name="explorative_2017-04-20_Alessandro_Motta_00">
     <nodes>
-      <node id="0" radius="112.399994" x="2014" y="6692" z="2453" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="0" bitDepth="8" interpolation="false" time="1492675025071" />
+      <node id="1000" radius="112.399994" x="2014" y="6692" z="2453" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="0" bitDepth="8" interpolation="false" time="1492675025071" />
       <node id="1" radius="112.399994" x="1982" y="6701" z="2466" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="0" bitDepth="8" interpolation="false" time="1492675034597" />
       <node id="2" radius="112.399994" x="1956" y="6708" z="2485" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="8" interpolation="false" time="1492675037891" />
       <node id="3" radius="112.399994" x="1937" y="6723" z="2499" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="8" interpolation="false" time="1492675039121" />
@@ -387,7 +387,7 @@
       <edge source="67" target="68" />
       <edge source="230" target="232" />
       <edge source="36" target="37" />
-      <edge source="0" target="93" />
+      <edge source="1000" target="93" />
       <edge source="220" target="221" />
       <edge source="119" target="120" />
       <edge source="250" target="251" />
@@ -449,7 +449,7 @@
       <edge source="151" target="152" />
       <edge source="229" target="230" />
       <edge source="206" target="207" />
-      <edge source="0" target="1" />
+      <edge source="1000" target="1" />
       <edge source="108" target="109" />
       <edge source="219" target="220" />
       <edge source="20" target="21" />
