@@ -1,10 +1,10 @@
-function agglomeration( ... 
+function agglomeration( ...
         borderSizeDendrites, segmentSizeDendrites, borderSizeAxons, segmentSizeAxons, ...
         axonProbThreshold, dendriteProbThreshold, spineProbThreshold, ...
         probThresholdDendrite, sizeThresholdDendrite, probThresholdAxon, sizeThresholdAxon, ...
         erProbThreshold, ...
         dendriteProbSpines, probThresholdSpines, maxStepsSpines, ...
-        outputFile);
+        outputFile, graph, segmentMeta, borderMeta);
 
     %% Start by loading parameter file
     % Load parameter from newest pipeline run
@@ -18,14 +18,20 @@ function agglomeration( ...
     % These indicate which index in [p.saveFolder 'globalBorder.mat'] each edge corresponds to
     % Correspondences have NaN as borderIdx
     % Load 'neighbours' and 'neighProb' in addition if you want to do (many) local searches in the graph
-    graph = load([p.saveFolder 'graph.mat'], 'prob', 'edges', 'borderIdx');
+    if ~exist('graph', 'var')
+        graph = load([p.saveFolder 'graph.mat'], 'prob', 'edges', 'borderIdx');
+    end
     % Load information about edges
-    borderMeta = load([p.saveFolder 'globalBorder.mat'], 'borderSize', 'borderCoM');
+    if ~exist('borderMeta', 'var')
+        borderMeta = load([p.saveFolder 'globalBorder.mat'], 'borderSize', 'borderCoM');
+    end
     % Load meta information of segments
-    segmentMeta = load([p.saveFolder 'segmentMeta.mat'], 'voxelCount', 'point', 'maxSegId', 'cubeIdx');
-    segmentMeta.point = segmentMeta.point';
-    % Load and preprocess segment class predictions from Alessandro
-    segmentMeta = connectEM.addSegmentClassInformation(p, segmentMeta);
+    if ~exist('segmentMeta', 'var')
+        segmentMeta = load([p.saveFolder 'segmentMeta.mat'], 'voxelCount', 'point', 'maxSegId', 'cubeIdx');
+        segmentMeta.point = segmentMeta.point';
+        % Load and preprocess segment class predictions from Alessandro
+        segmentMeta = connectEM.addSegmentClassInformation(p, segmentMeta);
+    end
     % Load exclusion of segments based on heuristics
     heuristics = load([p.saveFolder 'heuristicSegmentExclusions.mat'], 'mapping', 'heuristicIdx');
     toc;
@@ -60,7 +66,7 @@ function agglomeration( ...
     tic;
     [axons, axonsSize, axonEdges] = connectEM.partitionSortAndKeepOnlyLarge(graphCutAxons, segmentMeta, probThresholdAxon, sizeThresholdAxon);
     toc;
-    
+
     %{
     display('Reassigning ER from axon to dendrite class: ');
     tic;
@@ -84,7 +90,7 @@ function agglomeration( ...
     display('Evaluating on a set of ground truth skeletons');
     tic;
     [~, runName] = fileparts(outputFile);
-    metrics = connectEM.evaluateAggloMetaMeta(graph, axonsFinal, dendritesFinal, runName, segmentMeta); 
+    metrics = connectEM.evaluateAggloMetaMeta(graph, axonsFinal, dendritesFinal, runName, segmentMeta);
     toc;
 
     display('Saving:');
@@ -95,4 +101,3 @@ function agglomeration( ...
     toc;
 
 end
-
