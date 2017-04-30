@@ -17,7 +17,9 @@ function yy = evaluateRankToGlueSegmentsOn(ygrid5, segmentMeta,excludedSegmentId
             tempfff{idx} = setdiff(tempddd{idx}, [tempbbb{idx}; tempaaa{idx}]);
         end
         yy.VV{idx} = [];
+        yy.VVinfo{idx} = [];
         yy.VVrank{idx} = [];
+        yy.VVrankInfo{idx} = {};
         for idx2 = 1 : length(tempfff{idx})
             connectedAgglos = cellfun(@(x)[-1; graph.neighProb{tempfff{idx}(idx2)}(ismember(graph.neighbours{tempfff{idx}(idx2)},x))], gridAgglo_05{564}.axonsFinal(ygrid5{564}.axon1.foundAgglomerates_col{idx}), 'uni', 0);
             [V, I] = max(cellfun(@max, connectedAgglos));
@@ -33,8 +35,9 @@ function yy = evaluateRankToGlueSegmentsOn(ygrid5, segmentMeta,excludedSegmentId
                     tann(idx3) = max(cell2mat(cellfun(@(x, y) max(y(x==tann3(idx3))), graph.neighbours(thisagglo),graph.neighProb(thisagglo), 'uni', 0)));
                 end
                 yy.VV{idx}(end + 1) = V;
+                yy.VVinfo{idx}(end + 1) = tempfff{idx}(idx2);
                 yy.VVrank{idx}(end + 1) = sum(tann > V);
-
+                yy.VVrankInfo{idx}{end + 1} = tann3(tann > V);
             end
         end
     end
