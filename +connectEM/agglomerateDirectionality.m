@@ -13,7 +13,7 @@ function agglomerateDirectionality(axonsFinal, graph, segmentMeta, borderMeta)
             otherbboxes = segmentMeta.box(:, : , currentAgglo);
             surround = union(currentAgglo(idx2), surround, currentAgglo(bsxfun(@(x,y)bboxOverlap(x), thisbbox, otherbboxes)));
             % calculate PCA of local surround (Alessandro)
-            [pca, latent] = blabla;
+            [mypca, latent] = blabla;
             if latent(1) < 0.7
                 continue;
             end
@@ -23,7 +23,7 @@ function agglomerateDirectionality(axonsFinal, graph, segmentMeta, borderMeta)
             localSurroundCoM = sum(bsxfun(@times, segmentMeta.point(:, surround), segmentMeta.voxelCount(surround))) / sum(segmentMeta.voxelCount(surround));
             borderCoMs = borderMeta.borderCoM(graph.neighBordIdx(ismember(graph.neighbours, outgoing)));
             borderCoMsLocalized = borderCoMs - localSurroundCoM;
-            result = pca * borderCoMsLocalized;
+            result = borderCoMsLocalized * mypca;
             score = (result(:, 1) - min(result(:, 1))) / (max(result(:, 1)) - min(result(:, 1))) * 2 - 1;
 
             directionScore(sub2ind(size(directionScore),graph.neighBordIdx(ismember(graph.neighbours, outgoing), (outgoing < currentAgglo(idx2))+1))) = score;
