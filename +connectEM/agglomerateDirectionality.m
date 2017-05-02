@@ -14,7 +14,7 @@ for idx = 1 : length(axonsFinalAll)
 
         surround = union(currentAgglo(idx2), surround, currentAgglo(bsxfun(@(x,y)overlap(x), otherbboxes, otherbboxes)));
         % calculate PCA of local surround (Alessandro)
-        [pca, latent] = blabla;
+        [mypca, latent] = blabla;
         if latent(1) < 0.7
             continue;
         end
@@ -24,7 +24,7 @@ for idx = 1 : length(axonsFinalAll)
         localSurroundCoM = sum(bsxfun(@times, segmentMeta.point(:, surround), segmentMeta.voxelCount(surround))) / sum(segmentMeta.voxelCount(surround));
         borderCoMs = borderMeta.borderCoM(graph.neighBordIdx(ismember(graph.neighbours, outgoing)));
         borderCoMsLocalized = borderCoMs - localSurroundCoM;
-        result = pca * borderComLocalized;
+        result = borderComLocalized * mypca;
         score = (result(:, 1) - min(result(:, 1))) / (max(result(:, 1)) - min(result(:, 1))) * 2 - 1;
 
         directionScore(sub2ind(size(directionScore),graph.neighBordIdx(ismember(graph.neighbours, outgoing), (outgoing < currentAgglo(idx2))+1))) = score;
