@@ -1,5 +1,10 @@
 function y = agglomerateDirectionality(axonsFinalAll, graph, segmentMeta, borderMeta, globalSegmentPCA, bboxDist, visualize)
     y.latent = sparse(1, max(cell2mat(axonsFinalAll)));
+    y.edges = [];
+    y.scores = [];
+    axonsFinalAllSize = cellfun(@(x)sum(segmentMeta.voxelCount(x)), axonsFinalAll);
+    minSize = 100;
+    axonsFinalAll(axonsFinalAllSize < minSize) = [];
     for idx = 1 : length(axonsFinalAll)
         currentAgglo = axonsFinalAll{idx};
         for idx2 = 1 : length(currentAgglo)
@@ -16,16 +21,16 @@ function y = agglomerateDirectionality(axonsFinalAll, graph, segmentMeta, border
             agglos = {1: length(surround)};
             [massesOut, comVecsOut, covMatsOut] = Agglo.mergeStatisticalMoments(massesIn, comVecsIn, covMatsIn, agglos);
             [mypca, latent] = eig(covMatsOut);
-            assert(all(all(latent>=0)));
+            assert(min(latent(:))>-1E5);
             latent = latent / sum(sum(latent));
             [latent1, idxLatent1] = max(sum(latent));
 
             % find all outgoing edges of current segment
-            borderIdxs = cat(1, graph.neighBordIdx{currentAgglo});
-            borderSegId = cat(1, graph.neighours{currentAgglo});
+            borderIdxs = cat(1, graph.neighBorderIdx{currentAgglo});
+            borderSegId = cat(2, graph.neighbours{currentAgglo});
 
-            outgoing = ~isnan(borderIdxs) & ~ismember(borderSegId, currentAgglo)
-            currentOutgoing = outgoing & ~ismember(borderSegId, currentAgglo(idx2))
+            outgoing = ~isnan(borderIdxs) & ~ismember(borderSegId', currentAgglo);
+            currentOutgoing = outgoing & ~ismember(borderSegId', currentAgglo(idx2));
             if ~any(currentOutgoing)
                 continue;
             end
@@ -38,13 +43,12 @@ function y = agglomerateDirectionality(axonsFinalAll, graph, segmentMeta, border
             scorePre = (result(:, idxLatent1) - min(result(:, idxLatent1))) / (max(result(:, idxLatent1)) - min(result(:, idxLatent1))) * 2 - 1;
             score = scorePre(currentOutgoing(outgoing));
             y.latent(currentAgglo(idx2)) = latent1;
-            y.borders = [y.borders; repmat(currentAgglo(idx2), size(score)), currentBorderIdxs, score];
+            y.edges = [y.edges; repmat(currentAgglo(idx2), size(score)), borderSegId(currentOutgoing(outgoing))'];
+            y.scores = [y.scores; score];
             if visualize
-                borderProb = cat(1, graph.neighProb{currentAgglo});
-
-                currentBorderIdxs = borderIdxs(currentOutgoing);
+                borderProb = borderIdxs; %cat(1, graph.neighProb{currentAgglo});
                 currentBorderProb = borderProb(currentOutgoing);
-
+                currentBorderIdxs = borderIdxs(currentOutgoing);
                 treename= ['size' num2str(sum(segmentMeta.voxelCount(currentAgglo))) '_latent' num2str(latent1)];
                 if latent1 < 0.7
                     treename = [treename, 'unused'];
@@ -67,7 +71,7 @@ function overlap = bboxOverlap(bbox1, bbox2, bboxDist)
     bbox2 = bsxfun(@times, bbox2', [11.24, 11.24, 28]);
     bbox1 = [bbox1(1, :) - bboxDist / 2; bbox1(2, :) + bboxDist / 2];
     bbox2 = [bbox2(1, :) - bboxDist / 2; bbox2(2, :) + bboxDist / 2];
-    if ~exist(cornerIdx, 'var')
+    if isempty(cornerIdx)
         [A,B,C] = ndgrid(1:2,1:2,1:2);
         cornerIdx = cat(2, A(:), B(:), C(:)) +  repmat(0:2:4, 8, 1);
     end
