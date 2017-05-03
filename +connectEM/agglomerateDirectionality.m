@@ -1,30 +1,14 @@
-function agglomerateDirectionality(axonsFinal, graph, segmentMeta, borderMeta, globalSegmentPCA)
-    minSize = 2500;
-    axonsFinalAll = [axonsFinal
-        num2cell(setdiff(find(segmentMeta.axonProb > 0.5 & segmentMeta.voxelCount >= minSize), cell2mat(axonsFinal)))];
-    disp('measuring agglo size');
-    % axonsFinalAllSize = cellfun(@(x)sum(segmentMeta.voxelCount(x)), axonsFinalAll);
-    % axonsFinalAll(axonsFinalAllSize < minSize) = [];
-    % disp('preallocating direction score');
-    % directionScore = nan(length(borderMeta.borderSize), 2);
-    selection = randperm(length(axonsFinalAll), 20);
-    for idx = selection %1 : length(axonsFinalAll)
-        idx
-
+function y = agglomerateDirectionality(axonsFinalAll, graph, segmentMeta, borderMeta, globalSegmentPCA, bboxDist, visualize)
+    y.latent = sparse(1, max(cell2mat(axonsFinalAll)));
+    for idx = 1 : length(axonsFinalAll)
         currentAgglo = axonsFinalAll{idx};
-        if sum(segmentMeta.voxelCount(currentAgglo)) < minSize
-            continue
-        end
-        if sum(segmentMeta.voxelCount(currentAgglo)) < minSize
-            continue
-        end
         for idx2 = 1 : length(currentAgglo)
             % detect local surround
             surround = intersect(graph.neighbours{currentAgglo(idx2)}', currentAgglo);
             thisbbox = segmentMeta.box(:, :, currentAgglo(idx2));
             otherbboxes = segmentMeta.box(:, : , currentAgglo);
 
-            surround = unique([currentAgglo(idx2); surround; currentAgglo(cellfun(@(x)bboxOverlap(thisbbox, x), num2cell(otherbboxes, [1,2])))]);
+            surround = unique([currentAgglo(idx2); surround; currentAgglo(cellfun(@(x)bboxOverlap(thisbbox, x, bboxDist), num2cell(otherbboxes, [1,2])))]);
             % calculate PCA of local surround (Alessandro)
             massesIn = segmentMeta.voxelCount(surround);
             comVecsIn = bsxfun(@times, segmentMeta.centroid(:, surround)', [11.24, 11.24, 28]);
@@ -35,20 +19,17 @@ function agglomerateDirectionality(axonsFinal, graph, segmentMeta, borderMeta, g
             assert(all(all(latent>=0)));
             latent = latent / sum(sum(latent));
             [latent1, idxLatent1] = max(sum(latent));
-            treename= ['size' num2str(sum(segmentMeta.voxelCount(currentAgglo))) '_latent' num2str(latent1)];
-            if latent1 < 0.7
-                treename = [treename, 'unused'];
-                %continue;
-            end
+
             % find all outgoing edges of current segment
-            % outgoing = setdiff(graph.neighbours{currentAgglo(idx2)}(~isnan(graph.neighBordIdx{currentAgglo(idx2)})), currentAgglo);
-            edgeIdxs = find(any(ismember(graph.edges,currentAgglo),2));
-            borderIdxs = graph.borderIdx(edgeIdxs);
-            outgoing = ~all(ismember(graph.edges(edgeIdxs, :), currentAgglo), 2) & ~isnan(borderIdxs);
-            currentOutgoing = outgoing & any(ismember(graph.edges(edgeIdxs, :), currentAgglo(idx2)), 2);
+            borderIdxs = cat(1, graph.neighBordIdx{currentAgglo});
+            borderSegId = cat(1, graph.neighours{currentAgglo});
+
+            outgoing = ~isnan(borderIdxs) & ~ismember(borderSegId, currentAgglo)
+            currentOutgoing = outgoing & ~ismember(borderSegId, currentAgglo(idx2))
             if ~any(currentOutgoing)
                 continue;
             end
+
             % calculate minmax score of those
             borderCoMs = bsxfun(@times, single(borderMeta.borderCoM(borderIdxs(outgoing), :)), [11.24, 11.24, 28]);
 
@@ -56,27 +37,40 @@ function agglomerateDirectionality(axonsFinal, graph, segmentMeta, borderMeta, g
             result = borderCoMsLocalized * mypca;
             scorePre = (result(:, idxLatent1) - min(result(:, idxLatent1))) / (max(result(:, idxLatent1)) - min(result(:, idxLatent1))) * 2 - 1;
             score = scorePre(currentOutgoing(outgoing));
-            filename = ['/gaba/scratch/kboerg/direction/' num2str(idx,'%.5i') '_' num2str(idx2, '%.5i') '.nml'];
-            nodesHere = {double(borderMeta.borderCoM(borderIdxs(currentOutgoing), :))};
-            treenames =  {[treename 'tree1' num2str(idx,'%.5i') '_' num2str(idx2, '%.5i')]};
-            currentEdgeIdxs = edgeIdxs(currentOutgoing);
-            currentBorderIdxs = borderIdxs(currentOutgoing);
-            comments = {arrayfun(@(x)['score_' num2str(score(x)), '_p_' num2str(graph.prob(currentEdgeIdxs(x))) '_size_' num2str(borderMeta.borderSize(currentBorderIdxs(x)))], 1:length(score),'uni', 0)};
+            y.latent(currentAgglo(idx2)) = latent1;
+            y.borders = [y.borders; repmat(currentAgglo(idx2), size(score)), currentBorderIdxs, score];
+            if visualize
+                borderProb = cat(1, graph.neighProb{currentAgglo});
 
-            connectEM.generateSkeletonFromNodes(filename, nodesHere, treenames, comments);
-            % directionScore(sub2ind(size(directionScore),graph.neighBordIdx(ismember(graph.neighbours, outgoing), (outgoing < currentAgglo(idx2))+1))) = score;
+                currentBorderIdxs = borderIdxs(currentOutgoing);
+                currentBorderProb = borderProb(currentOutgoing);
+
+                treename= ['size' num2str(sum(segmentMeta.voxelCount(currentAgglo))) '_latent' num2str(latent1)];
+                if latent1 < 0.7
+                    treename = [treename, 'unused'];
+                end
+
+                filename = ['/gaba/scratch/kboerg/direction/' num2str(idx,'%.5i') '_' num2str(idx2, '%.5i') '.nml'];
+                nodesHere = {double(borderMeta.borderCoM(borderIdxs(currentOutgoing), :))};
+                treenames =  {[treename 'tree1' num2str(idx,'%.5i') '_' num2str(idx2, '%.5i')]};
+
+                comments = {arrayfun(@(x)['score_' num2str(score(x)), '_p_' num2str(currentBorderProb(x)) '_size_' num2str(borderMeta.borderSize(currentBorderIdxs(x)))], 1:length(score),'uni', 0)};
+                connectEM.generateSkeletonFromNodes(filename, nodesHere, treenames, comments);
+            end
         end
     end
 end
 
-function overlap = bboxOverlap(bbox1, bbox2)
-    threshold = 500;
+function overlap = bboxOverlap(bbox1, bbox2, bboxDist)
+    persistent cornerIdx;
     bbox1 = bsxfun(@times, bbox1', [11.24, 11.24, 28]);
     bbox2 = bsxfun(@times, bbox2', [11.24, 11.24, 28]);
-    bbox1 = [bbox1(1, :) - threshold; bbox1(2, :) + threshold];
-    bbox2 = [bbox2(1, :) - threshold; bbox2(2, :) + threshold];
-    [A,B,C] = ndgrid(1:2,1:2,1:2);
-    cornerIdx = cat(2, A(:), B(:), C(:)) +  repmat(0:2:4, 8, 1);
+    bbox1 = [bbox1(1, :) - bboxDist / 2; bbox1(2, :) + bboxDist / 2];
+    bbox2 = [bbox2(1, :) - bboxDist / 2; bbox2(2, :) + bboxDist / 2];
+    if ~exist(cornerIdx, 'var')
+        [A,B,C] = ndgrid(1:2,1:2,1:2);
+        cornerIdx = cat(2, A(:), B(:), C(:)) +  repmat(0:2:4, 8, 1);
+    end
     corners = bbox1(cornerIdx);
     overlap = any(all(bsxfun(@gt, corners, bbox2(1,:)), 2) & all(bsxfun(@lt, corners, bbox2(2,:)), 2));
 end
