@@ -28,7 +28,7 @@ function y = agglomerateDirectionality(axonsFinalAll, graph, segmentMeta, border
             % find all outgoing edges of current segment
             borderIdxs = cat(1, graph.neighBorderIdx{surround});
             borderSegId = cat(2, graph.neighbours{surround});
-            borderLookUp = repelem(surround, cellfun(@length, graph.neighbours(surround)));
+            borderLookUp = repelem(surround', cellfun(@length, graph.neighbours(surround)))';
             outgoing = ~isnan(borderIdxs) & ~ismember(borderSegId', surround);
             currentOutgoing = outgoing & borderLookUp == currentAgglo(idx2);
             if ~any(currentOutgoing)
