@@ -26,11 +26,11 @@ function y = agglomerateDirectionality(axonsFinalAll, graph, segmentMeta, border
             [latent1, idxLatent1] = max(sum(latent));
 
             % find all outgoing edges of current segment
-            borderIdxs = cat(1, graph.neighBorderIdx{currentAgglo});
-            borderSegId = cat(2, graph.neighbours{currentAgglo});
-
-            outgoing = ~isnan(borderIdxs) & ~ismember(borderSegId', currentAgglo);
-            currentOutgoing = outgoing & ~ismember(borderSegId', currentAgglo(idx2));
+            borderIdxs = cat(1, graph.neighBorderIdx{surround});
+            borderSegId = cat(2, graph.neighbours{surround});
+            borderLookUp = repelem(surround', cellfun(@length, graph.neighbours(surround)))';
+            outgoing = ~isnan(borderIdxs) & ~ismember(borderSegId', surround);
+            currentOutgoing = outgoing & borderLookUp == currentAgglo(idx2);
             if ~any(currentOutgoing)
                 continue;
             end
@@ -46,10 +46,10 @@ function y = agglomerateDirectionality(axonsFinalAll, graph, segmentMeta, border
             y.edges = [y.edges; repmat(currentAgglo(idx2), size(score)), borderSegId(currentOutgoing(outgoing))'];
             y.scores = [y.scores; score];
             if visualize
-                borderProb = borderIdxs; %cat(1, graph.neighProb{currentAgglo});
+                borderProb = borderIdxs; %cat(1, graph.neighProb{surround});
                 currentBorderProb = borderProb(currentOutgoing);
                 currentBorderIdxs = borderIdxs(currentOutgoing);
-                treename= ['size' num2str(sum(segmentMeta.voxelCount(currentAgglo))) '_latent' num2str(latent1)];
+                treename= ['size' num2str(sum(segmentMeta.voxelCount(surround))) '_latent' num2str(latent1)];
                 if latent1 < 0.7
                     treename = [treename, 'unused'];
                 end
