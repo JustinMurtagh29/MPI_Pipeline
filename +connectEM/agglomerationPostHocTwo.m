@@ -11,7 +11,7 @@ function agglomerationPostHocTwo(options, filename)
     % find relevant edges in graph.edge
     forceKeepEdges = borderMeta.borderSize(graph.borderIdx(direction.edgepositions)) > options.borderSizeThreshold;
     forceKeepEdges = forceKeepEdges & graph.prob(direction.edgespositions) > options.probThreshold;
-    forceKeepEdges = forceKeepEdges & directions.score > options.scoreThreshold;
+    forceKeepEdges = forceKeepEdges & directions.scores > options.scoreThreshold;
     forceKeepEdges = forceKeepEdges & directions.latent(graph.edges(direction.edgepositions, 1)) > options.latentThreshold;
     forceKeepEdges = forceKeepEdges & segmentMeta.voxelCount(graph.edges(direction.edgeposition, 2)) > options.sizeThreshold;
     forceKeepEdges = forceKeepEdges & segmentMeta.axonProb(graph.edges(direction.edgeposition, 2)) > options.axonProbThreshold;
