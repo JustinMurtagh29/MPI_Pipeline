@@ -1,12 +1,15 @@
 folder = '/gaba/scratch/mberning/aggloGridSearch/';
-files = dir([folder 'search05_*.mat']);
+files = dir([folder 'search06_*.mat']);
 for i=1:length(files)
     result(i) = load([folder files(i).name], 'metrics', ...
         'borderSizeDendrites', 'segmentSizeDendrites', 'dendriteProbThreshold', 'probThresholdDendrite', ...
         'borderSizeAxons', 'segmentSizeAxons', 'axonProbThreshold', 'probThresholdAxon');
 end
 clear i;
-outputFolder = '/home/mberning/Desktop/plots3/';
+outputFolder = '/home/mberning/Desktop/plots4/';
+if ~exist(outputFolder, 'dir')
+    mkdir(outputFolder);
+end
 
 %% Dendrite viusalization
 clearvars -except result files folder outputFolder;
@@ -64,9 +67,9 @@ end
 %% Axon visualization
 clearvars -except result files folder outputFolder;
 
-valuesToPlot1 = arrayfun(@(x)cellfun(@(y)y(1)./y(2), x.metrics.axon1.recall_col), result, 'uni', 0);
-valuesToPlot2 = arrayfun(@(x)x.metrics.axon1.mergers_col./x.metrics.axon1.length_col*1e6, result, 'uni', 0);
-valuesToPlot3 = arrayfun(@(x)(cellfun(@numel, x.metrics.axon1.foundAgglomerates_col)-1)./x.metrics.axon1.length_col*1e6, result, 'uni', 0);
+valuesToPlot1 = arrayfun(@(x)cellfun(@(y)y(1)./y(2), x.metrics.axon2.recall_col), result, 'uni', 0);
+valuesToPlot2 = arrayfun(@(x)x.metrics.axon2.mergers_col./x.metrics.axon2.length_col*1e6, result, 'uni', 0);
+valuesToPlot3 = arrayfun(@(x)(cellfun(@numel, x.metrics.axon2.foundAgglomerates_col)-1)./x.metrics.axon2.length_col*1e6, result, 'uni', 0);
 valuesToPlot4 = arrayfun(@(x)x.metrics.axonPercolators(1:10), result, 'uni', 0);
 valuesToPlot1All = cat(2,valuesToPlot1{:})';
 valuesToPlot2All = cat(2,valuesToPlot2{:})';
