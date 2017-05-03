@@ -46,10 +46,13 @@ function agglomeration( ...
     tic;
     if (~isfield(optional, 'skipDendrites')) || (~optional.skipDendrites)
         graphCutDendrites = connectEM.cutGraph(p, graph, segmentMeta, borderMeta, heuristics, ...
-            borderSizeDendrites, segmentSizeDendrites);
+            borderSizeDendrites, segmentSizeDendrites, []);
+    end
+    if ~isfield(optional, 'forceKeepEdges')
+        optional.forceKeepEdges = [];
     end
     graphCutAxons = connectEM.cutGraph(p, graph, segmentMeta, borderMeta, heuristics, ...
-        borderSizeAxons, segmentSizeAxons);
+        borderSizeAxons, segmentSizeAxons, optional.forceKeepEdges);
     toc;
 
     display('Generating subgraphs for axon and dendrite agglomeration:');
