@@ -3,14 +3,21 @@ function agglomerateDirectionality(axonsFinal, graph, segmentMeta, borderMeta, g
     axonsFinalAll = [axonsFinal
         num2cell(setdiff(find(segmentMeta.axonProb > 0.5 & segmentMeta.voxelCount >= minSize), cell2mat(axonsFinal)))];
     disp('measuring agglo size');
-    axonsFinalAllSize = cellfun(@(x)sum(segmentMeta.voxelCount(x)), axonsFinalAll);
-    axonsFinalAll(axonsFinalAllSize < minSize) = [];
-    disp('preallocating direction score');
-    directionScore = nan(length(borderMeta.borderSize), 2);
-    selection = randperm(length(axonsFinalAll), 10);
+    % axonsFinalAllSize = cellfun(@(x)sum(segmentMeta.voxelCount(x)), axonsFinalAll);
+    % axonsFinalAll(axonsFinalAllSize < minSize) = [];
+    % disp('preallocating direction score');
+    % directionScore = nan(length(borderMeta.borderSize), 2);
+    selection = randperm(length(axonsFinalAll), 20);
     for idx = selection %1 : length(axonsFinalAll)
         idx
+
         currentAgglo = axonsFinalAll{idx};
+        if sum(segmentMeta.voxelCount(currentAgglo)) < minSize
+            continue
+        end
+        if sum(segmentMeta.voxelCount(currentAgglo)) < minSize
+            continue
+        end
         for idx2 = 1 : length(currentAgglo)
             % detect local surround
             surround = intersect(graph.neighbours{currentAgglo(idx2)}', currentAgglo);
@@ -25,9 +32,13 @@ function agglomerateDirectionality(axonsFinal, graph, segmentMeta, borderMeta, g
             agglos = {1: length(surround)};
             [massesOut, comVecsOut, covMatsOut] = Agglo.mergeStatisticalMoments(massesIn, comVecsIn, covMatsIn, agglos);
             [mypca, latent] = eig(covMatsOut);
+            assert(all(all(latent>=0)));
+            latent = latent / sum(sum(latent));
             [latent1, idxLatent1] = max(sum(latent));
+            treename= ['size' num2str(sum(segmentMeta.voxelCount(currentAgglo))) '_latent' num2str(latent1)];
             if latent1 < 0.7
-                continue;
+                treename = [treename, 'unused'];
+                %continue;
             end
             % find all outgoing edges of current segment
             % outgoing = setdiff(graph.neighbours{currentAgglo(idx2)}(~isnan(graph.neighBordIdx{currentAgglo(idx2)})), currentAgglo);
@@ -35,7 +46,9 @@ function agglomerateDirectionality(axonsFinal, graph, segmentMeta, borderMeta, g
             borderIdxs = graph.borderIdx(edgeIdxs);
             outgoing = ~all(ismember(graph.edges(edgeIdxs, :), currentAgglo), 2) & ~isnan(borderIdxs);
             currentOutgoing = outgoing & any(ismember(graph.edges(edgeIdxs, :), currentAgglo(idx2)), 2);
-
+            if ~any(currentOutgoing)
+                continue;
+            end
             % calculate minmax score of those
             borderCoMs = bsxfun(@times, single(borderMeta.borderCoM(borderIdxs(outgoing), :)), [11.24, 11.24, 28]);
 
@@ -45,8 +58,11 @@ function agglomerateDirectionality(axonsFinal, graph, segmentMeta, borderMeta, g
             score = scorePre(currentOutgoing(outgoing));
             filename = ['/gaba/scratch/kboerg/direction/' num2str(idx,'%.5i') '_' num2str(idx2, '%.5i') '.nml'];
             nodesHere = {double(borderMeta.borderCoM(borderIdxs(currentOutgoing), :))};
-            treenames =  {['tree1' num2str(idx,'%.5i') '_' num2str(idx2, '%.5i')]};
-            comments = {arrayfun(@num2str,score,'uni', 0)};
+            treenames =  {[treename 'tree1' num2str(idx,'%.5i') '_' num2str(idx2, '%.5i')]};
+            currentEdgeIdxs = edgeIdxs(currentOutgoing);
+            currentBorderIdxs = borderIdxs(currentOutgoing);
+            comments = {arrayfun(@(x)['score_' num2str(score(x)), '_p_' num2str(graph.prob(currentEdgeIdxs(x))) '_size_' num2str(borderMeta.borderSize(currentBorderIdxs(x)))], 1:length(score),'uni', 0)};
+
             connectEM.generateSkeletonFromNodes(filename, nodesHere, treenames, comments);
             % directionScore(sub2ind(size(directionScore),graph.neighBordIdx(ismember(graph.neighbours, outgoing), (outgoing < currentAgglo(idx2))+1))) = score;
         end
