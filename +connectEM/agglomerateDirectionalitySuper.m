@@ -15,6 +15,6 @@ axonsFinalAll = [gridAgglo_05{564}.axonsFinal,
     num2cell(setdiff(1 : length(segmentMeta.voxelCount), cell2mat(gridAgglo_05{564}.axonsFinal)))'];
 selection = slice:200:length(axonsFinalAll);
 y = connectEM.agglomerateDirectionality(axonsFinalAll(selection), graph, segmentMeta, borderMeta, globalSegmentPCA, bboxDist, visualize);
-Util.save(['/gaba/scratch/kboerg/cluster_directionality_run/', num2str(slice, '%.4u') '.mat'], y);
+Util.save(['/gaba/scratch/kboerg/cluster_directionality_run2/', num2str(slice, '%.4u') '.mat'], y);
 
 end
