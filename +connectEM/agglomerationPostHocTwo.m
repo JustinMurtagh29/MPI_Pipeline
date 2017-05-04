@@ -27,7 +27,7 @@ function agglomerationPostHocTwo(options, filename, graph, borderMeta, segmentMe
     optional.borderMeta = borderMeta;
     optional.skipDendrites = true;
     optional.calculateMetrics = false;
-    connectEM.agglomerationModify(gridAgglo_05{564}, filename, graph, optional);
+    connectEM.agglomerationModify(agglo, filename, graph, optional);
 end
 function donothing()
 end

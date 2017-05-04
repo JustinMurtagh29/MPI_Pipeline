@@ -5,21 +5,21 @@ borderMeta = load('/gaba/u/mberning/results/pipeline/20170217_ROI/globalBorder.m
 segmentMeta = load([p.saveFolder 'segmentMeta.mat'], 'voxelCount', 'point', 'maxSegId', 'cubeIdx');
 segmentMeta.point = segmentMeta.point';
 segmentMeta = connectEM.addSegmentClassInformation(p, segmentMeta);
-options.borderSizeThreshold = 30
-options.sizeThreshold = 100
-options.axonProbThreshold = 0.5000
-options.probThreshold = 0.8000
-options.scoreThreshold = 0.9000
-options.latentThreshold = 0.7000
+options.borderSizeThreshold = 30;
+options.sizeThreshold = 100;
+options.axonProbThreshold = 0.5000;
+options.probThreshold = 0.8000;
+options.scoreThreshold = 0.9000;
+options.latentThreshold = 0.7000;
+options.agglomerationSizeThreshold = 2500;
 
-    agglomerationSizeThreshold: 2500
 for idx = 1 : 10
     tempfolder = [topfolder 'temp' , num2str(idx, '%0.3u')];
-    agglo = load([topfolder, 'cycle001.mat', num2str(idx, '%0.3u')]);
-    job = agglomerateDirectionalitySuperStart([topfolder, 'cycle001.mat', num2str(idx, '%0.3u')], 0.5, tempfolder);
+    agglo = load([topfolder, 'cycle', num2str(idx, '%0.3u')]);
+    job = agglomerateDirectionalitySuperStart([topfolder, 'cycle', num2str(idx, '%0.3u')], 0.5, tempfolder);
     while isempty(job.FinishTime)
         pause(1);
     end
     directions = agglomerateDirectionalityCollect(tempfolder);
-    agglomerationPostHocTwo(options, filename_orig, filename, graph, agglo);
+    agglomerationPostHocTwo(options, [topfolder, 'cycle', num2str(idx, '%0.3u')], graph, borderMeta, segmentMeta, directions, agglo);
 end
