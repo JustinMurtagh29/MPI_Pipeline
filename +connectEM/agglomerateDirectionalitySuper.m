@@ -18,3 +18,4 @@ y = connectEM.agglomerateDirectionality(axonsFinalAll(selection), graph, segment
 Util.save(['/gaba/scratch/kboerg/cluster_directionality_run2/', num2str(slice, '%.4u') '.mat'], y);
 
 end
+
