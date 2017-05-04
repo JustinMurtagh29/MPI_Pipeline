@@ -14,6 +14,11 @@ function y = agglomerateDirectionality(axonsFinalAll, graph, segmentMeta, border
             otherbboxes = segmentMeta.box(:, : , currentAgglo);
 
             surround = unique([currentAgglo(idx2); surround; currentAgglo(cellfun(@(x)bboxOverlap(thisbbox, x, bboxDist), num2cell(otherbboxes, [1,2])))]);
+            covMatsIn = num2cell(reshape(globalSegmentPCA.covMat(surround, :), [length(surround), 3, 3]), [2 3]);
+            surround = surround(~cellfun(@(x)any(isnan(x(:)) | isinf(x(:))), covMatsIn));
+            if isempty(surround)
+                continue
+            end
             % calculate PCA of local surround (Alessandro)
             massesIn = segmentMeta.voxelCount(surround);
             comVecsIn = bsxfun(@times, segmentMeta.centroid(:, surround)', [11.24, 11.24, 28]);
