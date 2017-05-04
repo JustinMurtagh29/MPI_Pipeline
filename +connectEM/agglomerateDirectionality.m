@@ -43,7 +43,7 @@ function y = agglomerateDirectionality(axonsFinalAll, graph, segmentMeta, border
             scorePre = (result(:, idxLatent1) - min(result(:, idxLatent1))) / (max(result(:, idxLatent1)) - min(result(:, idxLatent1))) * 2 - 1;
             score = scorePre(currentOutgoing(outgoing));
             y.latent(currentAgglo(idx2)) = latent1;
-            y.edges = [y.edges; repmat(currentAgglo(idx2), size(score)), borderSegId(currentOutgoing(outgoing))'];
+            y.edges = [y.edges; repmat(currentAgglo(idx2), size(score)), borderSegId(currentOutgoing)'];
             y.scores = [y.scores; score];
             if visualize
                 borderProb = borderIdxs; %cat(1, graph.neighProb{surround});
