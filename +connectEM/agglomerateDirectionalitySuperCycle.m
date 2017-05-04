@@ -17,10 +17,10 @@ for idx = 1 : 10
     tempfolder = [topfolder 'temp' , num2str(idx, '%0.3u')];
     mkdir(tempfolder);
     agglo = load([topfolder, 'cycle', num2str(idx, '%0.3u')]);
-    job = agglomerateDirectionalitySuperStart([topfolder, 'cycle', num2str(idx, '%0.3u')], 0.5, tempfolder);
+    job = connectEM.agglomerateDirectionalitySuperStart([topfolder, 'cycle', num2str(idx, '%0.3u')], 0.5, tempfolder);
     while isempty(job.FinishTime)
         pause(1);
     end
-    directions = agglomerateDirectionalityCollect(tempfolder);
-    agglomerationPostHocTwo(options, [topfolder, 'cycle', num2str(idx, '%0.3u')], graph, borderMeta, segmentMeta, directions, agglo);
+    directions = connectEM.agglomerateDirectionalityCollect(tempfolder);
+    connectEM.agglomerationPostHocTwo(options, [topfolder, 'cycle', num2str(idx + 1, '%0.3u')], graph, borderMeta, segmentMeta, directions, agglo);
 end
