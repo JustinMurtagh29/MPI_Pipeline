@@ -1,15 +1,4 @@
-function agglomerationPostHocTwo(options, filename, graph)
-    load('/gaba/u/mberning/results/pipeline/20170217_ROI/allParameterWithSynapses.mat', 'p');
-    if ~exist('graph', 'var')
-        graph = load([p.saveFolder 'graph.mat'], 'prob', 'edges', 'borderIdx');
-    end
-    load([p.saveFolder 'directions.mat']);
-    borderMeta = load('/gaba/u/mberning/results/pipeline/20170217_ROI/globalBorder.mat', 'borderSize', 'borderCoM');
-    gridAgglo_05{564} = load('/gaba/scratch/mberning/aggloGridSearch/search05_00564.mat');
-    segmentMeta = load([p.saveFolder 'segmentMeta.mat'], 'voxelCount', 'point', 'maxSegId', 'cubeIdx');
-    segmentMeta.point = segmentMeta.point';
-    segmentMeta = connectEM.addSegmentClassInformation(p, segmentMeta);
-
+function agglomerationPostHocTwo(options, filename, graph, borderMeta, segmentMeta, directions, agglo)
     % find relevant edges in graph.edge
     borderIdxs = graph.borderIdx(directions.edgeposition);
     borderSizeFake = inf(size(directions.edgeposition));
@@ -22,17 +11,22 @@ function agglomerationPostHocTwo(options, filename, graph)
     forceKeepEdges = forceKeepEdges & all(segmentMeta.axonProb(graph.edges(directions.edgeposition, :)) > options.axonProbThreshold, 2);
     forceKeepEdges = forceKeepEdges & directions.agglomerationSize(graph.edges(directions.edgeposition, 1))' > options.agglomerationSizeThreshold;
 
+    % force correspondences
+    forceCorrespondences = isnan(graph.borderIdx) & any(segmentMeta.axonProb(graph.edges) > 0.5, 2)
+
     % force graph probability
     graph.prob(directions.edgeposition(forceKeepEdges)) = 17;
+    graph.prob(forceCorrespondences) = 19;
     % force axon probability
     segmentMeta.axonProb(directions.edges(forceKeepEdges, :)) = 18;
-    gridAgglo_05{564}.axonProbThreshold = options.axonProbThreshold;
+    segmentMeta.axonProb(graph.edges(forceCorrespondences)) = 20;
+    agglo.axonProbThreshold = options.axonProbThreshold;
 
-    optional.forceKeepEdges = directions.edgeposition(forceKeepEdges);
+    optional.forceKeepEdges = [directions.edgeposition(forceKeepEdges); find(forceCorrespondences)];
     optional.segmentMeta = segmentMeta;
     optional.borderMeta = borderMeta;
     optional.skipDendrites = true;
-    optional.calculateMetrics = true;
+    optional.calculateMetrics = false;
     connectEM.agglomerationModify(gridAgglo_05{564}, filename, graph, optional);
 end
 function donothing()
