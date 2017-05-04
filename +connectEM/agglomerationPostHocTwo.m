@@ -1,4 +1,4 @@
-function agglomerationPostHocTwo(options, filename, graph, borderMeta, segmentMeta, directions, agglo)
+function forcingNum = agglomerationPostHocTwo(options, filename, graph, borderMeta, segmentMeta, directions, agglo)
     % find relevant edges in graph.edge
     borderIdxs = graph.borderIdx(directions.edgeposition);
     borderSizeFake = inf(size(directions.edgeposition));
@@ -28,6 +28,7 @@ function agglomerationPostHocTwo(options, filename, graph, borderMeta, segmentMe
     optional.skipDendrites = true;
     optional.calculateMetrics = false;
     connectEM.agglomerationModify(agglo, filename, graph, optional);
+    forcingNum = sum(forceKeepEdges);
 end
 function donothing()
 end

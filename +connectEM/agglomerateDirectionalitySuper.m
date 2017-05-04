@@ -12,7 +12,7 @@ globalSegmentPCA = load('/gaba/u/mberning/results/pipeline/20170217_ROI/globalSe
 agglo_col = load(startagglo, 'axonsFinal');
 bboxDist = 1000;
 axonsFinalAll = [agglo_col,
-    num2cell(find(segmentMeta.axonProb > axonProbThreshold), cell2mat(agglo_col)))'];
+    num2cell(setdiff(find(segmentMeta.axonProb > axonProbThreshold), cell2mat(agglo_col)))'];
 selection = slice:200:length(axonsFinalAll);
 y = connectEM.agglomerateDirectionality(axonsFinalAll(selection), graph, segmentMeta, borderMeta, globalSegmentPCA, bboxDist, visualize);
 Util.save([outputfolder, num2str(slice, '%.4u') '.mat'], y);
