@@ -19,7 +19,7 @@ function agglomerationPostHocTwo(options, filename, graph)
     forceKeepEdges = forceKeepEdges & directions.scores > options.scoreThreshold;
     forceKeepEdges = forceKeepEdges & directions.latent(graph.edges(directions.edgeposition, 1))' > options.latentThreshold;
     forceKeepEdges = forceKeepEdges & segmentMeta.voxelCount(graph.edges(directions.edgeposition, 2)) > options.sizeThreshold;
-    forceKeepEdges = forceKeepEdges & segmentMeta.axonProb(graph.edges(directions.edgeposition, 2)) > options.axonProbThreshold;
+    forceKeepEdges = forceKeepEdges & all(segmentMeta.axonProb(graph.edges(directions.edgeposition, :)) > options.axonProbThreshold, 2);
     forceKeepEdges = forceKeepEdges & directions.agglomerationSize(graph.edges(directions.edgeposition, 1))' > options.agglomerationSizeThreshold;
 
     % force graph probability
