@@ -18,6 +18,10 @@ function graphCut = cutGraph(p, graph, segmentMeta, borderMeta, heuristics, ...
     edgeIdx(forceKeepEdges) = true;
     remainingEdges = graph.edges(edgeIdx, :);
     remainingProb = graph.prob(edgeIdx);
+    proxyFilter = false(size(graph.prob));
+    proxyFilter(forceKeepEdges) = true;
+    proxyFilter = proxyFilter(edgeIdx);
+
     % Calculate maximum probability remaining for each segment and exclude based on both thresholds
     maxProb = accumarray(cat(1,remainingEdges(:,1),remainingEdges(:,2)), cat(1,remainingProb, remainingProb),[segmentMeta.maxSegId 1], @max);
     smallIdx = segmentMeta.voxelCount <= segmentSizeThreshold & ~heuristics.heuristicIdx;
@@ -27,8 +31,7 @@ function graphCut = cutGraph(p, graph, segmentMeta, borderMeta, heuristics, ...
     removedIds = cat(1, heuristics.mapping{:}, find(smallIdx), find(lowProbIdx), find(excludedSegmentIdx));
     keptIds = setdiff(1:double(segmentMeta.maxSegId), removedIds);
     keepEdgeIdx = all(ismember(remainingEdges, keptIds), 2);
-    keepEdgeIdx(forceKeepEdges) = true;
-    graphCut.edges = remainingEdges(keepEdgeIdx,:);
-    graphCut.prob = remainingProb(keepEdgeIdx);
+    graphCut.edges = remainingEdges(keepEdgeIdx | proxyFilter,:);
+    graphCut.prob = remainingProb(keepEdgeIdx | proxyFilter);
 
 end
