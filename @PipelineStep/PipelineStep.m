@@ -18,13 +18,14 @@ classdef PipelineStep < uint8
       GraphConstruction       (9)  % graphConstruction
       SynapseDetection        (10) % SynEM.Seg.pipelineRun
       RawFeatures             (11) % connectEM.calculateRawFeatures
-      ClassFeatures           (12) % connectEM.calculateClassFeatures
-  NeuriteContinuityPrediction (13) % connectEM.predictDataset
-      SaveGlobalSvgData       (14) % collectSvgDataOnCluster
-      GlobalGraphStruct       (15) % collectGraphStructOnCluster
+      SegmentationPyramid     (12) % createResolutionPyramid
+      ClassFeatures           (13) % connectEM.calculateClassFeatures
+  NeuriteContinuityPrediction (14) % connectEM.predictDataset
+      SaveGlobalSvgData       (15) % collectSvgDataOnCluster
+      GlobalGraphStruct       (16) % collectGraphStructOnCluster
       
       % additional steps from comment at bottom of pipeline
-      HeuristicLookup         (16) % connectEM.getHeuristicResult
-      Agglomeration           (17) % connectEM.agglomerate
+      HeuristicLookup         (17) % connectEM.getHeuristicResult
+      Agglomeration           (18) % connectEM.agglomerate
    end
 end

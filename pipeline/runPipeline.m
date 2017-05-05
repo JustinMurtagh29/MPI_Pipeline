@@ -76,16 +76,18 @@ function runPipeline(p, pipelineStep)
         Cluster.waitForJob(job);
     end
         
-    % Create resolution pyramid for the segmentation
-    display('Downsampling segmentation:');
-    tic;
-    thisBBox = [1 1 1; (ceil(p.bbox(:,2)./1024).*1024)']';
-    % This weird command line stuff is necessary to deference symbolic links
-    [~, thisRoot] = system(['readlink -f ' p.seg.root ' < /dev/null']);
-    thisRoot = [strrep(thisRoot, sprintf('\n'), '') filesep];
-    createResolutionPyramid(thisRoot, p.seg.prefix, thisBBox, strrep(thisRoot, '/1/', ''), true);
-    toc;
-
+    if pipelineStep <= PipelineStep.SegmentationPyramid
+        % Create resolution pyramid for the segmentation
+        display('Downsampling segmentation:');
+        tic;
+        thisBBox = [1 1 1; (ceil(p.bbox(:,2)./1024).*1024)']';
+        % This weird command line stuff is necessary to deference symbolic links
+        [~, thisRoot] = system(['readlink -f ' p.seg.root ' < /dev/null']);
+        thisRoot = [strrep(thisRoot, sprintf('\n'), '') filesep];
+        createResolutionPyramid(thisRoot, p.seg.prefix, thisBBox, strrep(thisRoot, '/1/', ''), true);
+        toc;
+    end
+        
     % Construct graph on globalized version of segmentation
     % This will create p.local(:).edgeFile & borderFile
     % See graphConstruction subfolder
