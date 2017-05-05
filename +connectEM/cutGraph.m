@@ -28,10 +28,14 @@ function graphCut = cutGraph(p, graph, segmentMeta, borderMeta, heuristics, ...
     lowProbIdx = segmentMeta.voxelCount > segmentSizeThreshold & maxProb <= 0.5 & ~heuristics.heuristicIdx;
 
     % Remove heuristics and small or 'disconnected' segments from graph (and cubes excluded due to catastrpohic merger/alignment)
-    removedIds = cat(1, heuristics.mapping{:}, find(smallIdx), find(lowProbIdx), find(excludedSegmentIdx));
+    removedIds = cat(1, find(smallIdx), find(lowProbIdx));
     keptIds = setdiff(1:double(segmentMeta.maxSegId), removedIds);
-    keepEdgeIdx = all(ismember(remainingEdges, keptIds), 2);
-    graphCut.edges = remainingEdges(keepEdgeIdx | proxyFilter,:);
-    graphCut.prob = remainingProb(keepEdgeIdx | proxyFilter);
+    keepEdgeIdx1 = all(ismember(remainingEdges, keptIds), 2);
+
+    removedIds = cat(1, heuristics.mapping{:}, find(excludedSegmentIdx));
+    keptIds = setdiff(1:double(segmentMeta.maxSegId), removedIds);
+    keepEdgeIdx2 = all(ismember(remainingEdges, keptIds), 2);
+    graphCut.edges = remainingEdges((keepEdgeIdx1 | proxyFilter) & keepEdgeIdx2,:);
+    graphCut.prob = remainingProb((keepEdgeIdx1 | proxyFilter) & keepEdgeIdx2);
 
 end

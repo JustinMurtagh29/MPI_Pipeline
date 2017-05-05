@@ -1,10 +1,10 @@
-function y = agglomerateDirectionality2(axonsFinalAll, graph, segmentMeta, borderMeta, globalSegmentPCA, bboxDist, visualize)
+function y = agglomerateDirectionality2(axonsFinalAll, graph, segmentMeta, borderMeta, globalSegmentPCA, bboxDist)
 
     % Preallocation
     y.latent = cell(numel(axonsFinalAll),1);
     y.edges = cell(numel(axonsFinalAll),1);
     y.scores = cell(numel(axonsFinalAll),1);
-
+    y.segIds = cell(numel(axonsFinalAll),1);
     % Loop over all agglomerates and all segments within each agglomerate
     for idx1 = 1:length(axonsFinalAll)
         currentAgglo = axonsFinalAll{idx1};
@@ -14,6 +14,7 @@ function y = agglomerateDirectionality2(axonsFinalAll, graph, segmentMeta, borde
         % Preallocation
         edges = [];
         scores = [];
+        segIds = [];
         surround = cell(numel(currentAgglo), 1);
         for idx2 = 1:length(currentAgglo)
             % If more than 2 segments in agglo -> find the surround, otherwise whole agglo is surround
@@ -33,7 +34,7 @@ function y = agglomerateDirectionality2(axonsFinalAll, graph, segmentMeta, borde
         idx = cellfun(@isempty, surround);
         surround(idx) = [];
         currentAgglo(idx) = [];
-        if numel(currentAgglo > 1) 
+        if numel(currentAgglo > 1)
             massesIn = segmentMeta.voxelCount(currentAgglo);
             comVecsIn = bsxfun(@times, segmentMeta.centroid(:, currentAgglo)', [11.24, 11.24, 28]);
             covMatsIn = reshape(globalSegmentPCA.covMat(currentAgglo, :), [length(currentAgglo), 3, 3]);
@@ -41,7 +42,7 @@ function y = agglomerateDirectionality2(axonsFinalAll, graph, segmentMeta, borde
             [~, comVecsOut, covMatsOut] = Agglo.mergeStatisticalMoments(massesIn, comVecsIn, covMatsIn, agglos);
         else
             comVecsOut = bsxfun(@times, segmentMeta.centroid(:, surround)', [11.24, 11.24, 28]);
-            covMatsOut = squeeze(reshape(globalSegmentPCA.covMat(surround, :), [length(surround), 3, 3]));              
+            covMatsOut = squeeze(reshape(globalSegmentPCA.covMat(surround, :), [length(surround), 3, 3]));
         end
         for idx2=1:length(surround)
             [mypca, latent] = eig(squeeze(covMatsOut(idx2,:,:)));
@@ -70,10 +71,11 @@ function y = agglomerateDirectionality2(axonsFinalAll, graph, segmentMeta, borde
             y.latent{idx1}(idx2) = latent1;
             edges = [edges; repmat(currentAgglo(idx2), size(score)), borderSegId(currentOutgoing)'];
             scores = [scores; score];
-
+            segIds = [segIds; currentAgglo(idx2)];
         end
         y.edges{idx1} = edges;
         y.scores{idx1} = scores;
+        y.segIds{idx1} = segIds;
     end
 end
 
