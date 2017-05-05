@@ -8,52 +8,52 @@ function y = agglomerateDirectionality(axonsFinalAll, graph, segmentMeta, border
     % Loop over all agglomerates and all segments within each agglomerate
     for idx1 = 1:length(axonsFinalAll)
         currentAgglo = axonsFinalAll{idx1};
+        % Remove segments from currentAgglo if covMatsIn contains NaN or Inf (small segments)
+        covMatsIn = globalSegmentPCA.covMat(currentAgglo, :);
+        currentAgglo(any(isnan(covMatsIn) | isinf(covMatsIn),2)) = [];
+        % Preallocation
         edges = [];
         scores = [];
+        surround = cell(numel(currentAgglo), 1);
         for idx2 = 1:length(currentAgglo)
-            
             % If more than 2 segments in agglo -> find the surround, otherwise whole agglo is surround
             if numel(currentAgglo) > 2
                 % Detect local surround: All direct neighbours
-                surround = intersect(graph.neighbours{currentAgglo(idx2)}', currentAgglo);
+                surround{idx2} = intersect(graph.neighbours{currentAgglo(idx2)}', currentAgglo);
                 thisbbox = segmentMeta.box(:, :, currentAgglo(idx2));
                 otherbboxes = segmentMeta.box(:, : , currentAgglo);
                 % Add to local surround: All segments whose bouding box overlap when each bounding box is expanded
                 closeSegments = currentAgglo(bboxOverlap(thisbbox, otherbboxes, bboxDist));
-                surround = unique([currentAgglo(idx2); surround; closeSegments]);
+                surround{idx2} = unique([currentAgglo(idx2); surround{idx2}; closeSegments]);
             else
-                surround = currentAgglo;    
+                surround{idx2} = currentAgglo;
             end
-
-            % Remove segments from surround if covMatsIn is NaN (small segments)
-            covMatsIn = globalSegmentPCA.covMat(surround, :);
-            surround = surround(any(isnan(covMatsIn) | isinf(covMatsIn),2));
-            % Skip current segment if surround is empty
-            if isempty(surround)
-                continue
-            end
-
-            % Calculate PCA of local surround
-            if numel(surround) > 1
-                massesIn = segmentMeta.voxelCount(surround);
-                comVecsIn = bsxfun(@times, segmentMeta.centroid(:, surround)', [11.24, 11.24, 28]);
-                covMatsIn = reshape(globalSegmentPCA.covMat(surround, :), [length(surround), 3, 3]);
-                agglos = {1: length(surround)};
-                [~, comVecsOut, covMatsOut] = Agglo.mergeStatisticalMoments(massesIn, comVecsIn, covMatsIn, agglos);
-            else
-                comVecsOut = bsxfun(@times, segmentMeta.centroid(:, surround)', [11.24, 11.24, 28]);
-                covMatsOut = squeeze(reshape(globalSegmentPCA.covMat(surround, :), [length(surround), 3, 3]));
-            end
-            [mypca, latent] = eig(covMatsOut);
+        end
+        % Keep only nonempty surrounds
+        idx = cellfun(@isempty, surround);
+        surround(idx) = [];
+        currentAgglo(idx) = [];
+        if numel(currentAgglo > 1) 
+            massesIn = segmentMeta.voxelCount(currentAgglo);
+            comVecsIn = bsxfun(@times, segmentMeta.centroid(:, currentAgglo)', [11.24, 11.24, 28]);
+            covMatsIn = reshape(globalSegmentPCA.covMat(currentAgglo, :), [length(currentAgglo), 3, 3]);
+            agglos = cellfun(@(x)find(ismember(currentAgglo,x)), surround, 'uni', 0);
+            [~, comVecsOut, covMatsOut] = Agglo.mergeStatisticalMoments(massesIn, comVecsIn, covMatsIn, agglos);
+        else
+            comVecsOut = bsxfun(@times, segmentMeta.centroid(:, surround)', [11.24, 11.24, 28]);
+            covMatsOut = squeeze(reshape(globalSegmentPCA.covMat(surround, :), [length(surround), 3, 3]));              
+        end
+        for idx2=1:length(surround)
+            [mypca, latent] = eig(squeeze(covMatsOut(idx2,:,:)));
             assert(min(latent(:))>-1E5);
             latent = latent / sum(sum(latent));
             [latent1, idxLatent1] = max(sum(latent));
 
             % Find all outgoing edges of current segment
-            borderIdxs = cat(1, graph.neighBorderIdx{surround});
-            borderSegId = cat(2, graph.neighbours{surround});
-            borderLookUp = repelem(surround', cellfun(@length, graph.neighbours(surround)))';
-            outgoing = ~isnan(borderIdxs) & ~ismember(borderSegId', surround);
+            borderIdxs = cat(1, graph.neighBorderIdx{surround{idx2}});
+            borderSegId = cat(2, graph.neighbours{surround{idx2}});
+            borderLookUp = repelem(surround{idx2}', cellfun(@length, graph.neighbours(surround{idx2})))';
+            outgoing = ~isnan(borderIdxs) & ~ismember(borderSegId', surround{idx2});
             currentOutgoing = outgoing & borderLookUp == currentAgglo(idx2);
             if ~any(currentOutgoing)
                 continue;
@@ -61,7 +61,7 @@ function y = agglomerateDirectionality(axonsFinalAll, graph, segmentMeta, border
 
             % calculate minmax score of those
             borderCoMs = bsxfun(@times, single(borderMeta.borderCoM(borderIdxs(outgoing), :)), [11.24, 11.24, 28]);
-            borderCoMsLocalized = bsxfun(@minus, borderCoMs, comVecsOut);
+            borderCoMsLocalized = bsxfun(@minus, borderCoMs, comVecsOut(idx2,:));
             result = borderCoMsLocalized * mypca;
             scorePre = (result(:, idxLatent1) - min(result(:, idxLatent1))) / (max(result(:, idxLatent1)) - min(result(:, idxLatent1))) * 2 - 1;
             score = scorePre(currentOutgoing(outgoing));
@@ -73,10 +73,10 @@ function y = agglomerateDirectionality(axonsFinalAll, graph, segmentMeta, border
 
             % Write out skeletons if flag is set
             if visualize
-                borderProb = cat(1, graph.neighProb{surround});
+                borderProb = cat(1, graph.neighProb{surround{idx2}});
                 currentBorderProb = borderProb(currentOutgoing);
                 currentBorderIdxs = borderIdxs(currentOutgoing);
-                treename= ['size' num2str(sum(segmentMeta.voxelCount(surround))) '_latent' num2str(latent1)];
+                treename= ['size' num2str(sum(segmentMeta.voxelCount(surround{idx2}))) '_latent' num2str(latent1)];
                 if latent1 < 0.7
                     treename = [treename, 'unused'];
                 end
