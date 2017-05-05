@@ -15,23 +15,22 @@ function forcingNum = agglomerationPostHocTwo(options, filename, graph, borderMe
     forceCorrespondences = isnan(graph.borderIdx) & any(segmentMeta.axonProb(graph.edges) > 0.5, 2);
 
     % force graph probability
-    forceKeepEdgesStore = directions.edgeposition(forceKeepEdges);
+    oldForce = load([topfolder, 'forceKeepEdges_' num2str(idx - 1, '%0.3u')], 'forceKeepEdgesStore')
+    forceKeepEdgesStore = [oldForce.forceKeepEdgesStore; directions.edgeposition(forceKeepEdges)];
+    save([topfolder, 'forceKeepEdges_' num2str(idx, '%0.3u')], 'forceKeepEdgesStore');
 
     graph.prob(forceKeepEdgesStore) = 17;
     graph.prob(forceCorrespondences) = 19;
     % force axon probability
-    segmentMeta.axonProb(directions.edges(forceKeepEdges, :)) = 18;
+    segmentMeta.axonProb(graph.edges(forceKeepEdgesStore, :)) = 18;
     segmentMeta.axonProb(graph.edges(forceCorrespondences, :)) = 20;
     agglo.axonProbThreshold = options.axonProbThreshold;
-    oldForce = load([topfolder, 'forceKeepEdges_' num2str(idx - 1, '%0.3u')], 'forceKeepEdgesStore')
-    disp('start merging forceKeepEdges')
-    optional.forceKeepEdges = unique([forceKeepEdgesStore; find(forceCorrespondences); oldForce.forceKeepEdgesStore]);
-    disp('end merging forceKeepEdges')
+    optional.forceKeepEdges = [forceKeepEdgesStore; find(forceCorrespondences)];
     optional.segmentMeta = segmentMeta;
     optional.borderMeta = borderMeta;
     optional.skipDendrites = true;
     optional.calculateMetrics = false;
-    save([topfolder, 'forceKeepEdges_' num2str(idx, '%0.3u')], 'forceKeepEdgesStore');
+
     connectEM.agglomerationModify(agglo, filename, graph, optional);
     forcingNum = sum(forceKeepEdges);
 end

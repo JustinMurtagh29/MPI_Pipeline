@@ -24,7 +24,7 @@ options.agglomerationSizeThreshold = 2500;
 
 % iterate
 tempfolder = @(k)[topfolder 'temp' , num2str(k, '%0.3u') filesep];
-for idx = 1 : 10
+for idx = 2
     mkdir(tempfolder(idx));
     agglo = load([topfolder, 'cycle', num2str(idx, '%0.3u')]);
     job = connectEM.agglomerateDirectionalitySuperStart([topfolder, 'cycle', num2str(idx, '%0.3u')], 0.5, tempfolder(idx));
