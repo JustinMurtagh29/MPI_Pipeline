@@ -1,4 +1,4 @@
-function directions = agglomerateDirectionalityCollect(tempfolder)
+function directions = agglomerateDirectionalityCollect(tempfolder, segmentMeta, agglo, graph)
     directions.edges = [];
     directions.scores = [];
     directions.latent = zeros(1, length(segmentMeta.voxelCount));
@@ -9,8 +9,8 @@ function directions = agglomerateDirectionalityCollect(tempfolder)
         directions.edges = [directions.edges; directionsPre.y.edges];
         directions.scores = [directions.scores; directionsPre.y.scores];
     end
-    axonsFinalAll = [gridAgglo_05{564}.axonsFinal,
-        num2cell(setdiff(1 : length(segmentMeta.voxelCount), cell2mat(gridAgglo_05{564}.axonsFinal)))'];
+    axonsFinalAll = [agglo.axonsFinal,
+        num2cell(setdiff(find(segmentMeta.axonProb > 0.5), cell2mat(agglo.axonsFinal)))];
     aggloLookup = [cell2mat(axonsFinalAll), repelem(1 : length(axonsFinalAll), cellfun(@length, axonsFinalAll))'];
 
     dl = find(directions.latent); % get all segments that have been used

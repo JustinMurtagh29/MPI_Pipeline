@@ -13,14 +13,12 @@ options.scoreThreshold = 0.9000;
 options.latentThreshold = 0.7000;
 options.agglomerationSizeThreshold = 2500;
 
-for idx = 1 : 10
-    tempfolder = [topfolder 'temp' , num2str(idx, '%0.3u')];
+for idx = 2 : 10
+    tempfolder = [topfolder 'temp' , num2str(idx, '%0.3u') filesep];
     mkdir(tempfolder);
     agglo = load([topfolder, 'cycle', num2str(idx, '%0.3u')]);
     job = connectEM.agglomerateDirectionalitySuperStart([topfolder, 'cycle', num2str(idx, '%0.3u')], 0.5, tempfolder);
-    while isempty(job.FinishTime)
-        pause(1);
-    end
-    directions = connectEM.agglomerateDirectionalityCollect(tempfolder);
-    connectEM.agglomerationPostHocTwo(options, [topfolder, 'cycle', num2str(idx + 1, '%0.3u')], graph, borderMeta, segmentMeta, directions, agglo);
+    Cluster.waitForJob(job);
+    directions = connectEM.agglomerateDirectionalityCollect(tempfolder, segmentMeta, agglo, graph);
+    forcingNum(idx) = connectEM.agglomerationPostHocTwo(options, [topfolder, 'cycle', num2str(idx + 1, '%0.3u')], graph, borderMeta, segmentMeta, directions, agglo);
 end

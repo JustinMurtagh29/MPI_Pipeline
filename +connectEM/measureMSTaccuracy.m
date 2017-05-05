@@ -8,5 +8,5 @@ for idx = 1 : 10
         [Tree, pred] = graphminspantree(sparse(squareform(pdist(bsxfun(@times, segmentMeta.point(gridAgglo_05{564}.axonsFinal{agglos(idx2)}, :), [11.24, 11.24, 28])))));
         store(idx) = store(idx) + sum(Tree(:));
     end
-    store(idx) = store(idx) / full(sum(sum(skel.createWeightedAdjacencyMatrix(1))))/2 /gridAgglo_05{564}.metrics.axon1.recall_col{idx}(1)*gridAgglo_05{564}.metrics.axon1.recall_col{idx}(2);
+    store(idx) = store(idx) / (full(sum(sum(skel.createWeightedAdjacencyMatrix(1))))/2) /gridAgglo_05{564}.metrics.axon1.recall_col{idx}(1)*gridAgglo_05{564}.metrics.axon1.recall_col{idx}(2);
 end

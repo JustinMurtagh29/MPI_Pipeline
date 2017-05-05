@@ -12,14 +12,14 @@ function forcingNum = agglomerationPostHocTwo(options, filename, graph, borderMe
     forceKeepEdges = forceKeepEdges & directions.agglomerationSize(graph.edges(directions.edgeposition, 1))' > options.agglomerationSizeThreshold;
 
     % force correspondences
-    forceCorrespondences = isnan(graph.borderIdx) & any(segmentMeta.axonProb(graph.edges) > 0.5, 2)
+    forceCorrespondences = isnan(graph.borderIdx) & any(segmentMeta.axonProb(graph.edges) > 0.5, 2);
 
     % force graph probability
     graph.prob(directions.edgeposition(forceKeepEdges)) = 17;
     graph.prob(forceCorrespondences) = 19;
     % force axon probability
     segmentMeta.axonProb(directions.edges(forceKeepEdges, :)) = 18;
-    segmentMeta.axonProb(graph.edges(forceCorrespondences)) = 20;
+    segmentMeta.axonProb(graph.edges(forceCorrespondences, :)) = 20;
     agglo.axonProbThreshold = options.axonProbThreshold;
 
     optional.forceKeepEdges = [directions.edgeposition(forceKeepEdges); find(forceCorrespondences)];
