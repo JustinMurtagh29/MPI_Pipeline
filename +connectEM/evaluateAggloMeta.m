@@ -35,9 +35,13 @@ for file_idx = 1 : length(skelpath)
     y.covered_col(file_idx) = sum(sqrt(sum(bsxfun(@times, skel.nodes{idx}(good_edges(:, 1), 1 : 3) - skel.nodes{idx}(good_edges(:, 2), 1 : 3), [11.24, 11.24, 28]).^2, 2)));
     y.foundAgglomerates_col{file_idx} = foundAgglomerates;
     y.connM{file_idx} = connM;
+    y.ids{file_idx} = ids;
     % Write output results
-    %connectEM.skeletonFromAgglo(graph.edges, segmentMeta, agglos(foundAgglomerates), [num2str(file_idx) '_'], doc_folder)
-    %skel.write([doc_folder, 'skel_' num2str(file_idx)  '.nml']);
+    lonelyids = setdiff(ids(ids~=0), cell2mat(agglos(foundAgglomerates)));
+    lonelyids(segmentMeta.axonProb(lonelyids)<0.5) = [];
+    connectEM.skeletonFromAgglo(graph.edges, segmentMeta, num2cell(lonelyids), [num2str(file_idx) 'single_'], doc_folder)
+    connectEM.skeletonFromAgglo(graph.edges, segmentMeta, agglos(foundAgglomerates), [num2str(file_idx) '_'], doc_folder)
+    skel.write([doc_folder, 'skel_' num2str(file_idx)  '.nml']);
 end
 
 end
