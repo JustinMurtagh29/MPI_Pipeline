@@ -18,17 +18,17 @@ function q = generateQueriesFromAgglos(p, segmentMeta, agglos, outputFolder)
     fid = fopen([outputFolder datestr(clock,30) '_flightTasks.txt'], 'w');
     for i=1:length(q.pos)
         for j=1:size(q.pos{i},1)
+            [phi, theta, psi] = calculateEulerAngles(-q.dir{i}(j,:)); 
+            q.angles{i}(j,:) = [phi theta psi];
+            minPos = q.pos{i}(j,:) - extend;
+            sizeBbox = 2*extend;
+            taskString = ['2012-09-28_ex145_07x2_ROI2017,56d6a7c6140000d81030701e,focus_flight,1,' ...
+                num2str(q.pos{i}(j,1)-1) ',' num2str(q.pos{i}(j,2)-1) ',' num2str(q.pos{i}(j,3)-1) ',' ...
+                num2str(phi) ',' num2str(theta) ',' num2str(psi) ',1,Tracing crew,' ...
+                num2str(minPos(1)) ',' num2str(minPos(2)) ',' num2str(minPos(3)) ',' ...
+                num2str(sizeBbox(1)) ',' num2str(sizeBbox(2)) ',' num2str(sizeBbox(3)) ',' 'L4_focus_flight_2017_test'];
             if ~q.exclude{i}(j)
-                [phi, theta, psi] = calculateEulerAngles(-q.dir{i}(j,:));
-                minPos = q.pos{i}(j,:) - extend;
-                sizeBbox = 2*extend;
-                taskString = ['2012-09-28_ex145_07x2_ROI2017,56d6a7c6140000d81030701e,focus_flight,1,' ...
-                    num2str(q.pos{i}(j,1)-1) ',' num2str(q.pos{i}(j,2)-1) ',' num2str(q.pos{i}(j,3)-1) ',' ...
-                    num2str(phi) ',' num2str(theta) ',' num2str(psi) ',1,Tracing crew,' ...
-                    num2str(minPos(1)) ',' num2str(minPos(2)) ',' num2str(minPos(3)) ',' ...
-                    num2str(sizeBbox(1)) ',' num2str(sizeBbox(2)) ',' num2str(sizeBbox(3)) ',' 'L4_focus_flight_2017_test'];
                 fprintf(fid, '%s\n', taskString);
-                q.angles{i}(j,:) = [phi theta psi];
             end
         end
     end
