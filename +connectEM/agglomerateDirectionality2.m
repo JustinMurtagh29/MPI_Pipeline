@@ -1,4 +1,4 @@
-function y = agglomerateDirectionality(axonsFinalAll, graph, segmentMeta, borderMeta, globalSegmentPCA, bboxDist, visualize)
+function y = agglomerateDirectionality2(axonsFinalAll, graph, segmentMeta, borderMeta, globalSegmentPCA, bboxDist, visualize)
 
     % Preallocation
     y.latent = cell(numel(axonsFinalAll),1);
@@ -66,27 +66,11 @@ function y = agglomerateDirectionality(axonsFinalAll, graph, segmentMeta, border
             scorePre = (result(:, idxLatent1) - min(result(:, idxLatent1))) / (max(result(:, idxLatent1)) - min(result(:, idxLatent1))) * 2 - 1;
             score = scorePre(currentOutgoing(outgoing));
 
-            % Save output in output structure
+            % Collect output
             y.latent{idx1}(idx2) = latent1;
             edges = [edges; repmat(currentAgglo(idx2), size(score)), borderSegId(currentOutgoing)'];
             scores = [scores; score];
 
-            % Write out skeletons if flag is set
-            if visualize
-                borderProb = cat(1, graph.neighProb{surround{idx2}});
-                currentBorderProb = borderProb(currentOutgoing);
-                currentBorderIdxs = borderIdxs(currentOutgoing);
-                treename= ['size' num2str(sum(segmentMeta.voxelCount(surround{idx2}))) '_latent' num2str(latent1)];
-                if latent1 < 0.7
-                    treename = [treename, 'unused'];
-                end
-                filename = ['/gaba/scratch/kboerg/direction/' num2str(idx,'%.5i') '_' num2str(idx2, '%.5i') '.nml'];
-                nodesHere = {double(borderMeta.borderCoM(borderIdxs(currentOutgoing), :))};
-                treenames =  {[treename 'tree1' num2str(idx,'%.5i') '_' num2str(idx2, '%.5i')]};
-                comments = {arrayfun(@(x)['score_' num2str(score(x)), '_p_' num2str(currentBorderProb(x)) ...
-                    '_size_' num2str(borderMeta.borderSize(currentBorderIdxs(x)))], 1:length(score),'uni', 0)};
-                connectEM.generateSkeletonFromNodes(filename, nodesHere, treenames, comments);
-            end
         end
         y.edges{idx1} = edges;
         y.scores{idx1} = scores;
