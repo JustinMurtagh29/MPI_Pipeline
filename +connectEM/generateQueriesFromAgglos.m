@@ -1,39 +1,42 @@
-function q = generateQueriesFromAgglos(p, segmentMeta, agglos, outputFolder)
+function q = generateQueriesFromAgglos(p, segmentMeta, agglos, outputFolder, options)
 
     voxelSize = p.raw.voxelSize;
     % Decide which positions to querry and calculate some statistics
     [q.pos, q.dir, q.varianceExplained, q.voxelCount, q.lengthAlongPC1] = ...
         cellfun(@(x)determineQueryLocation(segmentMeta, x, voxelSize), agglos, 'uni', 0);
     % Sort out all queries based on some heuristics
-    borderSize = round(1000 ./ voxelSize);
+    borderSize = round(options.datasetBorderExclusionSize ./ voxelSize);
     bbox(:,1) = p.bbox(:,1) + borderSize';
     bbox(:,2) = p.bbox(:,2) - borderSize';
     q.outsideBBox = cellfun(@(x)any(bsxfun(@le, x, bbox(:,1)'),2) | any(bsxfun(@ge, x, bbox(:,2)'),2), q.pos, 'uni', 0);
-    q.tooSmall = cellfun(@(x)x < 5000, q.voxelCount);
-    q.tooShort = cellfun(@(x)x < 1500, q.lengthAlongPC1);
-    q.tooUnstraight = cellfun(@(x)x(1) < .7, q.varianceExplained);
-    q.exclude = arrayfun(@(x,y,z,t,u) x{:} | y | z | t, q.outsideBBox, q.tooShort, q.tooSmall, q.tooUnstraight, 'uni', 0);
+    % MH does not want these exclusion criteria anymore (for now)
+    %q.tooSmall = cellfun(@(x)x < 5000, q.voxelCount);
+    %q.tooShort = cellfun(@(x)x < 1500, q.lengthAlongPC1);
+    %q.tooUnstraight = cellfun(@(x)x(1) < .7, q.varianceExplained);
+    %q.exclude = arrayfun(@(x,y,z,t,u) x{:} | y | z | t, q.outsideBBox, q.tooShort, q.tooSmall, q.tooUnstraight, 'uni', 0);
+    q.exclude = arrayfun(@(x)x{:}, q.outsideBBox, 'uni', 0);
     % 'Write' problems to flight mode webKNOSSOS
-    extend = round(1000 ./ voxelSize);
-    fid = fopen([outputFolder datestr(clock,30) '_flightTasks.txt'], 'w');
-    for i=1:length(q.pos)
-        for j=1:size(q.pos{i},1)
-            [phi, theta, psi] = calculateEulerAngles(q.dir{i}(j,:), voxelSize); 
-            q.angles{i}(j,:) = [phi theta psi];
-            minPos = q.pos{i}(j,:) - extend;
-            sizeBbox = 2*extend;
-            taskString = ['2012-09-28_ex145_07x2_ROI2017,56d6a7c6140000d81030701e,focus_flight,1,' ...
-                num2str(q.pos{i}(j,1)-1) ',' num2str(q.pos{i}(j,2)-1) ',' num2str(q.pos{i}(j,3)-1) ',' ...
-                num2str(phi) ',' num2str(theta) ',' num2str(psi) ',1,Tracing crew,' ...
-                num2str(minPos(1)) ',' num2str(minPos(2)) ',' num2str(minPos(3)) ',' ...
-                num2str(sizeBbox(1)) ',' num2str(sizeBbox(2)) ',' num2str(sizeBbox(3)) ',' 'L4_focus_flight_2017_test'];
-            if ~q.exclude{i}(j)
-                fprintf(fid, '%s\n', taskString);
+    if options.writeTasksToFile
+        extend = round(options.queryBoundingBoxSize ./ voxelSize);
+        fid = fopen([outputFolder datestr(clock,30) '_flightTasks.txt'], 'w');
+        for i=1:length(q.pos)
+            for j=1:size(q.pos{i},1)
+                [phi, theta, psi] = calculateEulerAngles(q.dir{i}(j,:), voxelSize); 
+                q.angles{i}(j,:) = [phi theta psi];
+                minPos = q.pos{i}(j,:) - extend;
+                sizeBbox = 2*extend;
+                taskString = ['2012-09-28_ex145_07x2_ROI2017,56d6a7c6140000d81030701e,flighttest225,1,' ...
+                    num2str(q.pos{i}(j,1)-1) ',' num2str(q.pos{i}(j,2)-1) ',' num2str(q.pos{i}(j,3)-1) ',' ...
+                    num2str(phi) ',' num2str(theta) ',' num2str(psi) ',1,Tracing crew,' ...
+                    num2str(minPos(1)) ',' num2str(minPos(2)) ',' num2str(minPos(3)) ',' ...
+                    num2str(sizeBbox(1)) ',' num2str(sizeBbox(2)) ',' num2str(sizeBbox(3)) ',' 'TestProjectForAll'];
+                if ~q.exclude{i}(j)
+                    fprintf(fid, '%s\n', taskString);
+                end
             end
         end
+        fclose(fid);
     end
-    fclose(fid);
-
 end
 
 function [p, d, vE, s, l] = determineQueryLocation(segmentMeta, agglo, voxelSize)
