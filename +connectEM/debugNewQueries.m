@@ -16,9 +16,10 @@ function debugNewQueries(segmentMeta, agglos, q, outputFolder)
             if q.exclude{i}(j)
                 theseNames{end} = [theseNames{end} '_excluded'];
             end
-            theseComments{end+1}{2} = ['#' num2str(q.pos{i}(j,1)) ',' num2str(q.pos{i}(j,2)) ',' num2str(q.pos{i}(j,3)) ',' ...
-                '1,2,' num2str(q.angles{i}(j,1)) ',' num2str(q.angles{i}(j,2)) ',' num2str(q.angles{i}(j,3))];
+            theseComments{end+1}{1} = ['Pos: ' num2str(q.pos{i}(j,1)) ',' num2str(q.pos{i}(j,2)) ',' num2str(q.pos{i}(j,3)) ',' ...
+                ' Angles: ' num2str(q.angles{i}(j,1)) ',' num2str(q.angles{i}(j,2)) ',' num2str(q.angles{i}(j,3))];
         end
     end
     connectEM.generateSkeletonFromNodes([outputFolder datestr(clock, 30) '_skel.nml'], theseNodes, theseNames, theseComments); 
 end
+
