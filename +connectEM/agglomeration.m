@@ -88,12 +88,15 @@ function agglomeration( ...
     [dendritesAfterEr, axonsAfterEr, er] = connectEM.extractAndTransferER(graph, dendrites, axons, erProbThreshold);
     toc;
     %}
-
-    display('Garbage collection');
-    tic;
-    [axonsFinal, dendritesFinal] = connectEM.garbageCollection(graph, segmentMeta, axons, dendrites, heuristics.mapping);
-    toc;
-
+    if (~isfield(optional, 'doGarbageCollection')) || optional.doGarbageCollection
+        display('Garbage collection');
+        tic;
+        [axonsFinal, dendritesFinal] = connectEM.garbageCollection(graph, segmentMeta, axons, dendrites, heuristics.mapping);
+        toc;
+    else
+        axonsFinal = axons;
+        dendritesFinal = dendrites;
+    end
     %{
     display('Attaching spines to dendrite class: ');
     tic;

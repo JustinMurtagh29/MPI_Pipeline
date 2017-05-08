@@ -5,17 +5,19 @@ function forcingNum = agglomerationPostHocTwo(options, filename, graph, borderMe
     borderSizeFake(~isnan(borderIdxs)) = borderMeta.borderSize(borderIdxs(~isnan(borderIdxs)));
     forceKeepEdges = borderSizeFake > options.borderSizeThreshold;
     forceKeepEdges = forceKeepEdges & graph.prob(directions.edgeposition) > options.probThreshold;
-    forceKeepEdges = forceKeepEdges & directions.scores > options.scoreThreshold;
-    forceKeepEdges = forceKeepEdges & directions.latent(graph.edges(directions.edgeposition, 1))' > options.latentThreshold;
-    forceKeepEdges = forceKeepEdges & segmentMeta.voxelCount(graph.edges(directions.edgeposition, 2)) > options.sizeThreshold;
+    forceKeepEdges = forceKeepEdges & abs(directions.scores) > options.scoreThreshold;
+    outgoingIndices = sub2ind(size(graph.edges), directions.edgeposition, 2 - (directions.edges(:, 2) - directions.edges(:, 1)>0));
+    forceKeepEdges = forceKeepEdges & directions.latent(graph.edges(outgoingIndices))' > options.latentThreshold;
+    outgoingIndices2 = sub2ind(size(graph.edges), directions.edgeposition, 1 +  (directions.edges(:, 2) - directions.edges(:, 1)>0));
+    forceKeepEdges = forceKeepEdges & segmentMeta.voxelCount(graph.edges(outgoingIndices2)) > options.sizeThreshold;
     forceKeepEdges = forceKeepEdges & all(segmentMeta.axonProb(graph.edges(directions.edgeposition, :)) > options.axonProbThreshold, 2);
-    forceKeepEdges = forceKeepEdges & directions.agglomerationSize(graph.edges(directions.edgeposition, 1))' > options.agglomerationSizeThreshold;
+    forceKeepEdges = forceKeepEdges & directions.agglomerationSize(graph.edges(outgoingIndices))' > options.agglomerationSizeThreshold;
 
     % force correspondences
     forceCorrespondences = isnan(graph.borderIdx) & any(segmentMeta.axonProb(graph.edges) > 0.5, 2);
 
     % force graph probability
-    oldForce = load([topfolder, 'forceKeepEdges_' num2str(idx - 1, '%0.3u')], 'forceKeepEdgesStore')
+    oldForce = load([topfolder, 'forceKeepEdges_' num2str(idx - 1, '%0.3u')], 'forceKeepEdgesStore');
     forceKeepEdgesStore = [oldForce.forceKeepEdgesStore; directions.edgeposition(forceKeepEdges)];
     save([topfolder, 'forceKeepEdges_' num2str(idx, '%0.3u')], 'forceKeepEdgesStore');
 
@@ -29,8 +31,8 @@ function forcingNum = agglomerationPostHocTwo(options, filename, graph, borderMe
     optional.segmentMeta = segmentMeta;
     optional.borderMeta = borderMeta;
     optional.skipDendrites = true;
-    optional.calculateMetrics = false;
-
+    optional.calculateMetrics = true;
+    optional.doGarbageCollection = false;
     connectEM.agglomerationModify(agglo, filename, graph, optional);
     forcingNum = sum(forceKeepEdges);
 end

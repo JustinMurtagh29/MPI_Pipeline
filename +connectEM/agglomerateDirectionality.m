@@ -25,7 +25,7 @@ function y = agglomerateDirectionality(axonsFinalAll, graph, segmentMeta, border
             covMatsIn = reshape(globalSegmentPCA.covMat(surround, :), [length(surround), 3, 3]);
             agglos = {1: length(surround)};
             [massesOut, comVecsOut, covMatsOut] = Agglo.mergeStatisticalMoments(massesIn, comVecsIn, covMatsIn, agglos);
-            [mypca, latent] = eig(covMatsOut);
+            [mypca, latent] = eig(squeeze(covMatsOut));
             assert(min(latent(:))>-1E5);
             latent = latent / sum(sum(latent));
             [latent1, idxLatent1] = max(sum(latent));
