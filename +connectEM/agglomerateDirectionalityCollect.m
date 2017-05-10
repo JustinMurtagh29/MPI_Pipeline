@@ -1,4 +1,26 @@
 function directions = agglomerateDirectionalityCollect(tempfolder, segmentMeta, agglo, graph)
+    % directions = agglomerateDirectionalityCollect(tempfolder, segmentMeta, agglo, graph)
+    %   Builds a structure with the following fields
+    %
+    %   edges
+    %     Nx2 matrix with directed edges. Columns are source and destiations.
+    %
+    %   scores
+    %     Nx1 vector with border scores. The scores ranges from -1 from to + 1
+    %     and mark the borders relative position along the principal axis.
+    %
+    %   latent
+    %     1xN vector with latent score `latent(idx)` (i.e., fraction of variance
+    %     along principal axis) for the surround centered on segment `idx`.
+    %
+    %   agglomerationSize
+    %     1xN vector. `agglomerationSize(idx)` contains the number of voxels in
+    %     the agglomerate which also contains segment `idx`.
+    %
+    %   edgeposition
+    %     Nx1 vector which contains the graph row indices corresponding to the
+    %    `edges` of `directions`.
+    
     directions.edges = [];
     directions.scores = [];
     directions.latent = zeros(1, length(segmentMeta.voxelCount));
