@@ -30,7 +30,7 @@ function y = agglomerateDirectionality(axonsFinalAll, graph, segmentMeta, border
             latent = latent / sum(sum(latent));
             [latent1, idxLatent1] = max(sum(latent));
 
-            % find all outgoing edges of current segment
+            % find all outgoing edges of current surround
             borderIdxs = cat(1, graph.neighBorderIdx{surround});
             borderSegId = cat(2, graph.neighbours{surround});
             borderLookUp = repelem(surround', cellfun(@length, graph.neighbours(surround)))';
