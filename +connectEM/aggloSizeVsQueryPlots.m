@@ -3,7 +3,7 @@ load /home/mberning/Desktop/flightQueries/allQueries.mat;
 % Plot cumulative histogram for MH
 queriesNotExcluded = cellfun(@(x)sum(~x), q.exclude);
 voxelCount = cell2mat(q.voxelCount);
-edges = linspace(quantile(voxelCount, 0.0001), quantile(voxelCount, 0.9999), 10002);
+edges = linspace(quantile(voxelCount, 0.0001), quantile(voxelCount, 0.9), 10002);
 voxelCountTemp = voxelCount;
 voxelCountTemp(voxelCountTemp >= edges(end)) = edges(end)-eps;
 voxelCountTemp(voxelCountTemp <= edges(1)) = edges(1)+eps;

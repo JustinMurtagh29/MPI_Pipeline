@@ -21,15 +21,15 @@ function q = generateQueriesFromAgglos(p, segmentMeta, agglos, outputFolder, opt
         fid = fopen([outputFolder datestr(clock,30) '_flightTasks.txt'], 'w');
         for i=1:length(q.pos)
             for j=1:size(q.pos{i},1)
-                [phi, theta, psi] = calculateEulerAngles(q.dir{i}(j,:), voxelSize); 
+                [phi, theta, psi] = calculateEulerAngles(q.dir{i}(j,:), voxelSize);
                 q.angles{i}(j,:) = [phi theta psi];
                 minPos = q.pos{i}(j,:) - extend;
                 sizeBbox = 2*extend;
-                taskString = ['2012-09-28_ex145_07x2_ROI2017,56d6a7c6140000d81030701e,flighttest250,1,' ...
+                taskString = ['2012-09-28_ex145_07x2_ROI2017,56d6a7c6140000d81030701e,flighttest225,1,' ...
                     num2str(q.pos{i}(j,1)-1) ',' num2str(q.pos{i}(j,2)-1) ',' num2str(q.pos{i}(j,3)-1) ',' ...
                     num2str(phi) ',' num2str(theta) ',' num2str(psi) ',1,Tracing crew,' ...
                     num2str(minPos(1)) ',' num2str(minPos(2)) ',' num2str(minPos(3)) ',' ...
-                    num2str(sizeBbox(1)) ',' num2str(sizeBbox(2)) ',' num2str(sizeBbox(3)) ',' 'GTaxonAnnotation'];
+                    num2str(sizeBbox(1)) ',' num2str(sizeBbox(2)) ',' num2str(sizeBbox(3)) ',' 'TestProjectForAll'];
                 if ~q.exclude{i}(j)
                     fprintf(fid, '%s\n', taskString);
                 end
@@ -45,7 +45,7 @@ function [p, d, vE, s, l] = determineQueryLocation(segmentMeta, agglo, voxelSize
     thesePoints = segmentMeta.point(:,agglo)';
     [coeff,score,latent] = pca(bsxfun(@times, thesePoints, voxelSize));
     [~,minIdx] = min(score(:,1));
-    [~,maxIdx] = max(score(:,1)); 
+    [~,maxIdx] = max(score(:,1));
     p(1,:) = thesePoints(minIdx,:);
     p(2,:) = thesePoints(maxIdx,:);
     % Transform direction (1.PC) back into voxel space for wK and normalize again
@@ -62,7 +62,7 @@ function [p, d, vE, s, l] = determineQueryLocation(segmentMeta, agglo, voxelSize
 end
 
 function [phi, thetha, psi] = calculateEulerAngles(di, voxelSize)
-    % Calculate angles (as deinfed in wK) in degrees from direction vector 
+    % Calculate angles (as deinfed in wK) in degrees from direction vector
 
     % Make sure direction is normalized
     di = di .* voxelSize;
@@ -74,4 +74,3 @@ function [phi, thetha, psi] = calculateEulerAngles(di, voxelSize)
     psi = round(eulerAngles(3));
 
 end
-

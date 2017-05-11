@@ -15,7 +15,7 @@ function runPipeline(p, startStep, endStep)
         startStep = PipelineStep.Classification;
     end
     if ~exist('endStep','var') || isempty(endStep)
-        endStep = PipelineStep.GraphConstruction;
+        endStep = PipelineStep.GlobalGraphStruct;
     end
     
 
