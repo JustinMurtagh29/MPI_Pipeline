@@ -15,10 +15,10 @@ classdef PipelineStep < uint8
       GlobalSegmentID         (6)  % globalizeSegmentation
       BuildSegmentMetaData    (7)  % buildSegmentMetaData
       GlobalCorrespondences   (8)  % globalizeCorrespondences
-      GraphConstruction       (9)  % graphConstruction
-      SynapseDetection        (10) % SynEM.Seg.pipelineRun
-      RawFeatures             (11) % connectEM.calculateRawFeatures
-      SegmentationPyramid     (12) % createResolutionPyramid
+      SegmentationPyramid     (9)  % createResolutionPyramid
+      GraphConstruction       (10) % graphConstruction
+      SynapseDetection        (11) % SynEM.Seg.pipelineRun
+      RawFeatures             (12) % connectEM.calculateRawFeatures
       ClassFeatures           (13) % connectEM.calculateClassFeatures
   NeuriteContinuityPrediction (14) % connectEM.predictDataset
       SaveGlobalSvgData       (15) % collectSvgDataOnCluster
