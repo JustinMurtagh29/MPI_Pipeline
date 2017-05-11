@@ -36,7 +36,7 @@ p.experimentName = 'wkwrap-test';
 % Define directory and file prefix and voxel size for KNOSSOS hierachy
 % with raw data READABLE to you on gaba
 p.raw.root = fullfile(rootDir, 'wkw', 'color', '1');
-p.raw.driver = 'wkwrap';
+p.raw.backend = 'wkwrap';
 
 % Voxel size in nano metres
 p.raw.voxelSize = [11.24 11.24 28];
