@@ -10,7 +10,6 @@ function isSynapse = synScoresToSynEdges(graph, synScore)
     idx = thisProb < 0.5 & (synScore.synScores(:,1) > -1.23 | synScore.synScores(:,2) > -1.23);
     direction = int8((single(synScore.synScores(:,1) > synScore.synScores(:,2)) - 0.5) * 2);
     isSynapse(idx) = direction(idx);
-    isSynapse(synScore.synScores(:,2) > 0 & thisProb < 0.5) = -1;
 
 end
 
