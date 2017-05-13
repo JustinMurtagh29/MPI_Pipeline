@@ -4,10 +4,11 @@ function [axons, result] = agglomerateDirectionalitySuper2(graph, segmentMeta, b
     recursionSteps = 3;
     minSize = 100;
     bboxDist = 1000;
+    voxelSize = [11.24 11.24 28];
     
     % Load needed meta data if not passed (NOTE: this will take some time)
     if ~exist('graph', 'var') 
-        graph = load('/gaba/u/mberning/results/pipeline/20170217_ROI/graphNew.mat', 'neighbours', 'neighProb', 'neighBorderIdx');
+        graph = load('/gaba/u/mberning/results/pipeline/20170217_ROI/graphNew.mat');
     end
     if ~exist('segmentMeta', 'var')
         segmentMeta = load('/gaba/u/mberning/results/pipeline/20170217_ROI/segmentMeta.mat', 'voxelCount', 'centroid', 'box', 'maxSegId', 'cubeIdx');
@@ -28,7 +29,7 @@ function [axons, result] = agglomerateDirectionalitySuper2(graph, segmentMeta, b
     excludedSegmentIdx = ismember(segmentMeta.cubeIdx, excludedCubeIdx);
     % Add single segments if not excluded due to catastrohic merger
     axons{1} = cat(1, gridAgglo_05{564}.axonsFinal, ...
-        num2cell(setdiff(find(segmentMeta.axonProb > 0.5 & ~excludedSegmentIdx), cell2mat(gridAgglo_05{564}.axonsFinal))));
+        num2cell(setdiff(find(segmentMeta.axonProb > 0.3 & ~excludedSegmentIdx), cell2mat(gridAgglo_05{564}.axonsFinal))));
     clear gridAgglo_05 excluded* cm;
     
     % Keep only agglomerates (including single segment agglomerados) over minSize voxel 
@@ -38,8 +39,9 @@ function [axons, result] = agglomerateDirectionalitySuper2(graph, segmentMeta, b
     axons{1} = axons{1}(randperm(numel(axons{1}), 10000));
 
     for i=1:recursionSteps
-        result(i) = connectEM.agglomerateDirectionality2(axons{1}, graph, segmentMeta, borderMeta, globalSegmentPCA, bboxDist);
+        result(i) = connectEM.agglomerateDirectionality2(axons{i}, graph, segmentMeta, borderMeta, globalSegmentPCA, bboxDist, voxelSize);
         axons{i+1} = connectEM.agglomerateMerge(graph, segmentMeta, borderMeta, axons{i}, result(i));
+        Util.save(['/gaba/scratch/mberning/dirTest/' num2str(i, '%.2i') '.mat'], result, axons);
     end
 
 end
