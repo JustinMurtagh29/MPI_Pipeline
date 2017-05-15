@@ -1,7 +1,8 @@
 function y = agglomerateDirectionality(axonsFinalAll, graph, segmentMeta, borderMeta, globalSegmentPCA, bboxDist, visualize)
-    y.latent = sparse(1, max(cell2mat(axonsFinalAll)));
+    y.latent = sparse(max(cell2mat(axonsFinalAll)), 3);
     y.edges = [];
     y.scores = [];
+    y.mypca = sparse(max(cell2mat(axonsFinalAll)), 9);
     axonsFinalAllSize = cellfun(@(x)sum(segmentMeta.voxelCount(x)), axonsFinalAll);
     minSize = 100;
     axonsFinalAll(axonsFinalAllSize < minSize) = [];
@@ -47,9 +48,10 @@ function y = agglomerateDirectionality(axonsFinalAll, graph, segmentMeta, border
             result = borderCoMsLocalized * mypca;
             scorePre = (result(:, idxLatent1) - min(result(:, idxLatent1))) / (max(result(:, idxLatent1)) - min(result(:, idxLatent1))) * 2 - 1;
             score = scorePre(currentOutgoing(outgoing));
-            y.latent(currentAgglo(idx2)) = latent1;
+            y.latent(currentAgglo(idx2), :) = latent;
             y.edges = [y.edges; repmat(currentAgglo(idx2), size(score)), borderSegId(currentOutgoing)'];
             y.scores = [y.scores; score];
+            y.mypca(currentAgglo(idx2), :) = mypca(:)';
             if visualize
                 borderProb = borderIdxs; %cat(1, graph.neighProb{surround});
                 currentBorderProb = borderProb(currentOutgoing);

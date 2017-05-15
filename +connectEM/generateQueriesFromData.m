@@ -1,21 +1,6 @@
-function q = generateQueriesFromChiasmata(p, segmentMeta, input, outputFolder, options)
+function q = generateQueriesFromData(p, segmentMeta, q, outputFolder, options)
 %connectEM.generateQueriesFromChiasmata(p,segmentMeta,output,'/gaba/scratch/kboerg/queriesMHchiasma/',struct('queryBoundingBoxSize',4000,'writeTasksToFile',1))
-    q.pos = {};
-    q.dir = {};
-    q.order = {};
     voxelSize = p.raw.voxelSize;
-    % Decide which positions to querry and calculate some statistics
-    for idx = 1 : 10
-        for idx2 = 1 : length(input{idx})
-            if isfield(input{idx}{idx2}, 'position')
-            for idx3 = 1 : length(input{idx}{idx2}.position)
-                q.pos{end +1} = input{idx}{idx2}.position{idx3};
-                q.dir{end +1} = -input{idx}{idx2}.direction{idx3}; %chiasma queries are reversed, see line dir{i} = bsxfun(@minus, pos{i}, nodesV(cc{i}(centerOfCC(i)),:));
-                q.order{end + 1} = repmat(idx2 * 100 + idx, size(input{idx}{idx2}.position{idx3},1), 1);
-            end
-        end
-        end
-    end
     % Sort out all queries based on some heuristics
     % borderSize = round(options.datasetBorderExclusionSize ./ voxelSize);
     % bbox(:,1) = p.bbox(:,1) + borderSize';
@@ -37,11 +22,11 @@ function q = generateQueriesFromChiasmata(p, segmentMeta, input, outputFolder, o
                 q.angles{i}(j,:) = [phi theta psi];
                 minPos = q.pos{i}(j,:) - extend;
                 sizeBbox = 2*extend;
-                taskString = ['2012-09-28_ex145_07x2_ROI2017,56d6a7c6140000d81030701e,queriesMHchiasma,1,' ...
+                taskString = ['2012-09-28_ex145_07x2_ROI2017,56d6a7c6140000d81030701e,testFlightQuery20170514,1,' ...
                     num2str(q.pos{i}(j,1)-1) ',' num2str(q.pos{i}(j,2)-1) ',' num2str(q.pos{i}(j,3)-1) ',' ...
                     num2str(phi) ',' num2str(theta) ',' num2str(psi) ',1,Connectomics department,' ...
                     num2str(minPos(1)) ',' num2str(minPos(2)) ',' num2str(minPos(3)) ',' ...
-                    num2str(sizeBbox(1)) ',' num2str(sizeBbox(2)) ',' num2str(sizeBbox(3)) ',' 'queriesMHchiasma'];
+                    num2str(sizeBbox(1)) ',' num2str(sizeBbox(2)) ',' num2str(sizeBbox(3)) ',' 'testFlightQuery20170514'];
                 %if ~q.exclude{i}(j)
                     fprintf(fid, '%s\n', taskString);
                 %send
