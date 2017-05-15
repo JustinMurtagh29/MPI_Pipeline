@@ -102,7 +102,7 @@ function y = agglomerateDirectionality2(axonsFinalAll, graph, segmentMeta, borde
         % Use (possible) redundancy in surround calculations to find "global" endings
         if numel(surround) > 1
             % We like to extract the minimal absolute score and in case of quality: highest latent score
-            [~, sortIdx] = sortrows([abs(scores) -latent(:,1)], [1 2], 'ascend');
+            [~, sortIdx] = sortrows([abs(scores) latent(:,1)], [1 -2]);
             [~, idx] = unique(borderIdx(sortIdx));
             latent = latent(sortIdx(idx), :);
             pca = pca(:,:,sortIdx(idx));
