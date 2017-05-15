@@ -1,6 +1,7 @@
 function directions = agglomerateDirectionalityCollect(tempfolder, segmentMeta, agglo, graph)
     directions.edges = [];
     directions.scores = [];
+    directions.mypca = zeros(length(segmentMeta.voxelCount),9);
     directions.latent = zeros(1, length(segmentMeta.voxelCount));
     for idx = 1 : 200
         idx
@@ -8,6 +9,7 @@ function directions = agglomerateDirectionalityCollect(tempfolder, segmentMeta, 
         directions.latent(find(directionsPre.y.latent)) = directionsPre.y.latent(find(directionsPre.y.latent));
         directions.edges = [directions.edges; directionsPre.y.edges];
         directions.scores = [directions.scores; directionsPre.y.scores];
+        directions.mypca(find(directionsPre.y.latent), :) = directionsPre.y.mypca(find(directionsPre.y.latent), :);
     end
     axonsFinalAll = [agglo.axonsFinal,
         num2cell(setdiff(find(segmentMeta.axonProb > 0.5), cell2mat(agglo.axonsFinal)))];
