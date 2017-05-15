@@ -36,12 +36,21 @@ function [axons, result] = agglomerateDirectionalitySuper2(graph, segmentMeta, b
     axonsSize = cellfun(@(x)sum(segmentMeta.voxelCount(x)), axons{1});
     axons{1}(axonsSize < minSize) = [];
     % For debugging: Keep only 10000 random components
-    axons{1} = axons{1}(randperm(numel(axons{1}), 10000));
+    %axons{1} = axons{1}(randperm(numel(axons{1}), 10000));
 
     for i=1:recursionSteps
+        display('Calculating directionality measures:');
+        tic;
         result(i) = connectEM.agglomerateDirectionality2(axons{i}, graph, segmentMeta, borderMeta, globalSegmentPCA, bboxDist, voxelSize);
+        toc;
+        display('Merging agglomerates:');
+        tic;
         axons{i+1} = connectEM.agglomerateMerge(graph, segmentMeta, borderMeta, axons{i}, result(i));
-        Util.save(['/gaba/scratch/mberning/dirTest/' num2str(i, '%.2i') '.mat'], result, axons);
+        toc;
+        display('Saving (intermediate) results:');
+        tic;
+        Utilsave(['/gaba/scratch/mberning/dirTest/' num2str(i, '%.2i') '.mat'], result, axons, '-v7.3');
+        toc;
     end
 
 end
