@@ -71,11 +71,11 @@ function y = agglomerateDirectionality2(axonsFinalAll, graph, segmentMeta, borde
             borderIdxs = cat(1, graph.neighBorderIdx{surround{idx2}});
             borderSegId = cat(2, graph.neighbours{surround{idx2}})';
             borderProb = cat(1, graph.neighProb{surround{idx2}});
-            borderLookUp = repelem(surround{idx2}', cellfun(@numel, graph.neighbours(surround{idx2})))';
             % Indices to border* that are not correspondences
             outgoing = ~isnan(borderIdxs) & ~ismember(borderSegId, surround{idx2});
             % Indices to border* that originate for current segment
-            currentOutgoing = outgoing & borderLookUp == currentAgglo(idx2);
+            currentOutgoing = outgoing & ~ismember(borderSegId, currentAgglo);
+
             if ~any(currentOutgoing)
                 continue;
             end
@@ -90,13 +90,29 @@ function y = agglomerateDirectionality2(axonsFinalAll, graph, segmentMeta, borde
             score = scorePre(currentOutgoing(outgoing));
 
             % Collect output
-            latent = [latent; repmat(thisLatent',size(score,1),1)]; 
+            latent = [latent; repmat(thisLatent', size(score,1), 1)]; 
             pca = cat(3, pca, repmat(thisPca, 1, 1, size(score,1)));
             neighbours = [neighbours; borderSegId(currentOutgoing)];
             prob = [prob; borderProb(currentOutgoing)];
             borderIdx = [borderIdx; borderIdxs(currentOutgoing)];
             scores = [scores; score];
+
         end
+        
+        % Use (possible) redundancy in surround calculations to find "global" endings
+        if numel(surround) > 1
+            % We like to extract the minimal absolute score and in case of quality: highest latent score
+            [~, sortIdx] = sortrows([abs(scores) -latent(:,1)], [1 2], 'ascend');
+            [~, idx] = unique(borderIdx(sortIdx));
+            latent = latent(sortIdx(idx), :);
+            pca = pca(:,:,sortIdx(idx));
+            neighbours = neighbours(sortIdx(idx));
+            prob = prob(sortIdx(idx));
+            borderIdx = borderIdx(sortIdx(idx));
+            scores = scores(sortIdx(idx));
+            clear sortIdx idx;
+        end
+
         % More collecting
         y.latent{idx1} = latent;
         y.pca{idx1} = pca;
@@ -104,6 +120,7 @@ function y = agglomerateDirectionality2(axonsFinalAll, graph, segmentMeta, borde
         y.prob{idx1} = prob;
         y.borderIdx{idx1} = borderIdx;
         y.scores{idx1} = scores;
+
     end
 end
 
