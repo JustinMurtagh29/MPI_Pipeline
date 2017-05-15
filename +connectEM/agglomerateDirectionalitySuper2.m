@@ -21,11 +21,12 @@ function [axons, result] = agglomerateDirectionalitySuper2(options, outputFolder
     end
     if ~exist('graph', 'var') 
         graph = load('/gaba/u/mberning/results/pipeline/20170217_ROI/graphNew.mat', 'edges', 'prob', 'borderIdx');
-        [graph.neighbours, neighboursIdx] = Graph.edges2Neighbors(edges);
-        graph.neighProb = cellfun(@(x)prob(x), neighboursIdx, 'uni', 0);
-        graph.neighBorderIdx = cellfun(@(x)borderIdx(x), neighboursIdx, 'uni', 0);
+        [graph.neighbours, neighboursIdx] = Graph.edges2Neighbors(graph.edges);
+        graph.neighProb = cellfun(@(x)graph.prob(x), neighboursIdx, 'uni', 0);
+        graph.neighBorderIdx = cellfun(@(x)graph.borderIdx(x), neighboursIdx, 'uni', 0);
     end
     if ~exist('segmentMeta', 'var')
+        load('/gaba/u/mberning/results/pipeline/20170217_ROI/allParameterWithSynapses.mat');
         segmentMeta = load('/gaba/u/mberning/results/pipeline/20170217_ROI/segmentMeta.mat');
         segmentMeta = connectEM.addSegmentClassInformation(p, segmentMeta);
     end
@@ -50,8 +51,6 @@ function [axons, result] = agglomerateDirectionalitySuper2(options, outputFolder
     % Keep only agglomerates (including single segment agglomerados) over minSize voxel 
     axonsSize = cellfun(@(x)sum(segmentMeta.voxelCount(x)), axons);
     axons(axonsSize < minSize) = [];
-    % For debugging: Keep only 10000 random components
-    axons = axons(randperm(numel(axons), 10000));
 
     % Initialize variables that keep track of changed agglomerates over recursion for first round 
     changedIdx = 1:length(axons);
