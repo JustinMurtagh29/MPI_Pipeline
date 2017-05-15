@@ -134,14 +134,14 @@ function runPipeline(p, startStep, endStep)
     % Calculate raw features on smaller (wrt SynEM) borders (down to 10 voxel)
     if startStep <= PipelineStep.RawFeatures && ...
        endStep >= PipelineStep.RawFeatures
-        job = connectEM.calculateRawFeatures(p);
+        job = connectEM.calculateFeatures(p, 'Raw');
         Cluster.waitForJob(job);
     end
     
     % Calculate features on CNN output as well
     if startStep <= PipelineStep.ClassFeatures && ...
        endStep >= PipelineStep.ClassFeatures
-        job = connectEM.calculateClassFeatures(p);
+        job = connectEM.calculateFeatures(p, 'Class');
         Cluster.waitForJob(job);
     end
     
