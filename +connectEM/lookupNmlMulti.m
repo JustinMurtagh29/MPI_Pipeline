@@ -58,4 +58,3 @@ function [segIds, neighbours, filenames, nodes, startNode, comments] = lookupNml
     [segIds, neighbours] = connectEM.lookupSkelGT(p, temp);
 
 end
-
