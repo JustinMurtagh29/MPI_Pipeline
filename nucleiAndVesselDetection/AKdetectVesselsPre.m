@@ -1,4 +1,4 @@
-function vessels = AKdetectVesselsPre(raw, visualize, tunnelCoord, threshold)
+function vessels = AKdetectVesselsPre(raw, visualize, tunnelCoord)
 sizeRaw = size(raw);
 vessels = false(size(raw));
 
@@ -9,19 +9,23 @@ if visualize
 end
 
 tic;
+           D=2;
 for z=1:sizeRaw(3)
-       if z<310
-            threshold=180;
-            D=2;
-       else
-           if  z<835
-            threshold=200;
-            D=1.5;
-           else 
-            threshold=190;
-            D=1.5;
-           end
+    
+    if z<150
+        threshold=190;
+    else
+        if z<575
+        threshold=170;
+        else
+            if  z<630
+        threshold=160;
+            else
+        threshold=170;
+            end
         end
+    end
+
     display(['Processing slice: ' num2str(z)]);
     thisImage = raw(:,:,z);
     theseVessels = false(size(thisImage));
@@ -63,6 +67,6 @@ if all(vesselMasked(1 : 400, tunnelCoord))
     warning('Tunnel doesn''t cut through');
 end
 vesselMasked(end-1400 : end, tunnelCoord) = 0;
-vesselMasked(1 : 350, tunnelCoord) = 0;
+vesselMasked(1 : 80, tunnelCoord) = 0;
 vessel = imfill(vesselMasked, 'holes') & ~mask;
 end
