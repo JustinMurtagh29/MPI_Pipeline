@@ -1,4 +1,4 @@
-function vesselsPost = AKdetectVessels( raw, visualize, tunnelCoord, threshold,output)
+function vesselsPost = AKdetectVessels( raw, visualize, tunnelCoord,output)
 % Pass raw data array (tested with 07x2 mag4) and detect vessel in dataset,
 % pass visualize flag in order to tune parameter on new dataset, goal
 % should be to detect vessels with 0 FP rate, some FN are no problem, due to
@@ -15,7 +15,7 @@ end
 if nargin <= 3
     threshold = 150;
 end
-vessels = detectVesselsPre( raw, visualize, tunnelCoord, threshold);
-save(fullfile(output,'vesselsPrermv'),'vessels','-v7.3');
+vessels = AKdetectVesselsPre( raw, visualize, tunnelCoord);
+save(fullfile(output,'vesselsPre'),'vessels','-v7.3');
 
 vesselsPost = detectVesselsPost(vessels);
