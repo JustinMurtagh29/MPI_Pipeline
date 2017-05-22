@@ -32,7 +32,9 @@ skelpath = [skelpath, {[evalfolder '2012-09-28_ex145_07x2_new2__explorational__k
 
 % Where to store results
 mainFolder = ['/gaba/scratch/kboerg/eval_agglo/' nameOfAgglo '/'];
-mkdir(mainFolder);
+if ~exist(mainFolder, 'dir')
+    mkdir(mainFolder);
+end
 % Choose which GT in skelpath to use for evaluation
 dendrite_selector = [2:5, 36:39];
 axon_selector = 16:25;%[1, 26, 27, 34, 35, 40:43];
