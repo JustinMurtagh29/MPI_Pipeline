@@ -1,3 +1,4 @@
+%{
 % Load needed information
 graph = load('/gaba/u/mberning/results/pipeline/20170217_ROI/graphNew.mat', 'edges', 'prob', 'borderIdx');
 [graph.neighbours, neighboursIdx] = Graph.edges2Neighbors(graph.edges);
@@ -15,20 +16,26 @@ runs = dir([workingFolder 'search01_*']);
 for i=1:length(runs)
     results{i} = dir([workingFolder runs(i).name filesep '*.mat']);
 end
+%}
 
 % Now everything including old and some new metrics, see:
 % https://mhlablog.net/2017/05/16/focusem-path-length-leverage/
 
-% Metrics on all runs
-tic;
-for i=1:length(results)
-    metrics(i).nrRuns = numel(results{i});
-    load([workingFolder runs(i).name filesep results{i}(metrics.nrRuns).name], 'axonsNew');
-    metrics(i).y = connectEM.evaluateAggloMetaMeta(graph, axonsNew, [], [runs(i).name '_' metrics.nrRuns], segmentMeta);
-    metrics(i).pathLength  = connectEM.getPathLengthFromAgglomeration(axonsNew, segmentMeta.point);
-    metrics(i).nrLargeAgglos = sum(metrics(i).pathLength > 5);
-    metrics(i).pathLengthLargeAgglos = sum(metrics(i).pathLength(metrics(i).pathLength > 5));
-    metrics(i).yLarge = connectEM.evaluateAggloMetaMeta(graph, axonsNew(metrics(i).pathLength > 5), [], [runs(i).name '_' metrics.nrRuns '_large'], segmentMeta);
-    Util.progressBar(i, length(results));
-end
+functionH = @connectEM.moreMetrics;
+inputArguments = arrayfun(@(x,y){x,y{1}}, runs, results', 'uni', 0);
+cluster = Cluster.getCluster( ...
+    '-pe openmp 1', ...
+    '-p -500', ...
+    '-l h_vmem=40G', ... 
+    '-l s_rt=99:50:00', ...
+    '-l h_rt=100:00:00');
+job = Cluster.startJob( functionH, inputArguments, ...
+    'name', 'moreMetrics', ...
+    'sharedInputs', {workingFolder segmentMeta}, ...
+    'sharedInputsLocation', [1 4], ...
+    'numOutputs', 1, ...
+    'cluster', cluster);
+
+Cluster.waitForJob(job);
+metrics = fetchOutputs(job);
 

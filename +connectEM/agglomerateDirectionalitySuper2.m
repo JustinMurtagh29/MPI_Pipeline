@@ -7,18 +7,19 @@ function agglomerateDirectionalitySuper2(options, outputFolder, graph, segmentMe
 
     % Parameters
     recursionSteps = 10;
-    minSize = 10;
+    minSize = 100;
     bboxDist = 1000;
     voxelSize = [11.24 11.24 28];
 
-    % Load needed meta data if not passed (NOTE: this will take some time)
     if ~exist('options', 'var') | isempty(options)
-        options.latentScore = 0.7; % 0.7-0.9
-        options.segDirScore = 0.9; % 0.8-0.9
-        options.neuriCScore = 0.7; % 0.6-0.9
-        options.borderSize = 30; % 20:40
-        options.axonScore = 0.3; % 0.3:0.5
+        options.latentScore = 0.7;
+        options.segDirScore = 0.9;
+        options.neuriCScore = 0.7;
+        options.borderSize = 30;
+        options.axonScore = 0.3;
     end
+    
+    % Load needed meta data if not passed
     if ~exist('graph', 'var') 
         graph = load('/gaba/u/mberning/results/pipeline/20170217_ROI/graphNew.mat', 'edges', 'prob', 'borderIdx');
         [graph.neighbours, neighboursIdx] = Graph.edges2Neighbors(graph.edges);
@@ -76,9 +77,19 @@ function agglomerateDirectionalitySuper2(options, outputFolder, graph, segmentMe
         toc;
         display('Saving (intermediate) results:');
         tic;
-        Util.save([outputFolder num2str(i, '%.2i') '.mat'], result, axons, axonsNew);
+        Util.save([outputFolder num2str(i, '%.2i') '.mat'], axonsNew);
         toc;
     end
+    display('Calculating set of extended metrics:');
+    tic;
+    name = strsplit(outputFolder, '/');
+    name = name{end-1};
+    metrics = connectEM.moreMetrics(axonsNew, name, segmentMeta); 
+    toc;
+    display('Saving metrics:');
+    tic;
+    Util.save([outputFolder 'metricsFinal.mat'], axonsNew, metrics);
+    toc;
 
 end
 
