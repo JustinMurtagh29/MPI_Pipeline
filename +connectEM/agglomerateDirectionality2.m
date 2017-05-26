@@ -1,18 +1,18 @@
-function y = agglomerateDirectionality2(axonsFinalAll, graph, segmentMeta, borderMeta, globalSegmentPCA, bboxDist, voxelSize)
+function y = agglomerateDirectionality2(agglos, graph, segmentMeta, borderMeta, globalSegmentPCA, bboxDist, voxelSize)
 
     % Preallocation
-    y.latent = cell(numel(axonsFinalAll),1); 
-    y.pca = cell(numel(axonsFinalAll),1);
-    y.neighbours = cell(numel(axonsFinalAll),1);
-    y.prob = cell(numel(axonsFinalAll),1);
-    y.borderIdx = cell(numel(axonsFinalAll),1);
-    y.scores = cell(numel(axonsFinalAll),1);
+    y.latent = cell(numel(agglos),1); 
+    y.pca = cell(numel(agglos),1);
+    y.neighbours = cell(numel(agglos),1);
+    y.prob = cell(numel(agglos),1);
+    y.borderIdx = cell(numel(agglos),1);
+    y.scores = cell(numel(agglos),1);
 
     % Loop over all agglomerates
-    for idx1 = 1:length(axonsFinalAll)
+    for idx1 = 1:length(agglos)
 
         % Remove segments from currentAgglo if covMatsIn contains NaN or Inf (small segments) 
-        currentAgglo = sort(axonsFinalAll{idx1});
+        currentAgglo = sort(agglos{idx1});
         covMatsIn = globalSegmentPCA.covMat(currentAgglo, :);
         idx = any(isnan(covMatsIn) | isinf(covMatsIn),2);
         currentAgglo(idx) = [];
@@ -39,9 +39,6 @@ function y = agglomerateDirectionality2(axonsFinalAll, graph, segmentMeta, borde
                 neighbourhood = unique(neighbourhood, 'rows');
                 surround = cellfun(@(x)currentAgglo(x), mat2cell(neighbourhood, ones(size(neighbourhood,1),1), size(neighbourhood,2)), 'uni', 0);
                 clear directNeighbours neighbourhood;
-                %fH = @(x)unique([currentAgglo(x); intersect(graph.neighbours{currentAgglo(x)}, currentAgglo); currentAgglo(overlap(:,x))]);
-                %surround = arrayfun(fH, 1:numel(currentAgglo), 'uni', 0);
-                %clear fH;
             end
             clear allbboxes overlap;
         else
