@@ -1,5 +1,4 @@
-%load('skel')
-%addpath('/gaba/u/kboerg/code/skel2graph3d-matlab/')
+function node2 = querySkeleton(skel)
 w = size(skel,1);
 l = size(skel,2);
 h = size(skel,3);

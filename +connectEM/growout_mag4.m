@@ -9,7 +9,6 @@ y = false((max(cube_coord) - min(cube_coord) + 1) * 128);
 cube_coord_unique = unique(cube_coord, 'rows');
 agglo_double =  repmat(agglo, 8, 1);
 for idx = 1 : size(cube_coord_unique, 1)
-    idx
     thiscube = readKnossosCube('/gaba/wKcubes/Connectomics department/2012-09-28_ex145_07x2_ROI2017/segmentation/4/', ...
     '2012-09-28_ex145_07x2_ROI2016_corrected_mag4', cube_coord_unique(idx, :), 'uint32');
 
