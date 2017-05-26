@@ -12,7 +12,7 @@ function y = agglomerateDirectionality2(axonsFinalAll, graph, segmentMeta, borde
     for idx1 = 1:length(axonsFinalAll)
 
         % Remove segments from currentAgglo if covMatsIn contains NaN or Inf (small segments) 
-        currentAgglo = axonsFinalAll{idx1};
+        currentAgglo = sort(axonsFinalAll{idx1});
         covMatsIn = globalSegmentPCA.covMat(currentAgglo, :);
         idx = any(isnan(covMatsIn) | isinf(covMatsIn),2);
         currentAgglo(idx) = [];
@@ -33,9 +33,15 @@ function y = agglomerateDirectionality2(axonsFinalAll, graph, segmentMeta, borde
             if all(overlap(:))
                 surround = {currentAgglo};
             else
-                fH = @(x)unique([currentAgglo(x); intersect(graph.neighbours{currentAgglo(x)}, currentAgglo); currentAgglo(overlap(:,x))]);
-                surround = arrayfun(fH, 1:numel(currentAgglo), 'uni', 0);
-                clear fH;
+                directNeighbours = cellfun(@(x)ismember(currentAgglo, x), graph.neighbours(currentAgglo), 'uni', 0);
+                directNeighbours = cat(2, directNeighbours{:});
+                neighbourhood = (directNeighbours | overlap)';
+                neighbourhood = unique(neighbourhood, 'rows');
+                surround = cellfun(@(x)currentAgglo(x), mat2cell(neighbourhood, ones(size(neighbourhood,1),1), size(neighbourhood,2)), 'uni', 0);
+                clear directNeighbours neighbourhood;
+                %fH = @(x)unique([currentAgglo(x); intersect(graph.neighbours{currentAgglo(x)}, currentAgglo); currentAgglo(overlap(:,x))]);
+                %surround = arrayfun(fH, 1:numel(currentAgglo), 'uni', 0);
+                %clear fH;
             end
             clear allbboxes overlap;
         else
@@ -69,7 +75,7 @@ function y = agglomerateDirectionality2(axonsFinalAll, graph, segmentMeta, borde
             % Find all outgoing edges of current surround
             % without correspondences as these have no borderIdx and thereby CoM currently
             borderIdxs = cat(1, graph.neighBorderIdx{surround{idx2}});
-            borderSegId = cat(2, graph.neighbours{surround{idx2}})';
+            borderSegId = cat(1, graph.neighbours{surround{idx2}});
             borderProb = cat(1, graph.neighProb{surround{idx2}});
             % Indices to border* that are not correspondences
             outgoing = ~isnan(borderIdxs) & ~ismember(borderSegId, surround{idx2});
