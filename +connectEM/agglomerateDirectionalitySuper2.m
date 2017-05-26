@@ -82,21 +82,25 @@ function agglomerateDirectionalitySuper2(options, outputFolder, graph, segmentMe
             tic;
             [axonsNew, changedIdx, unchangedResult] = connectEM.agglomerateMerge(graph, segmentMeta, borderMeta, axons, result, options);
             toc;
+        
+            display('Saving (intermediate) results:');
+            tic;
+            Util.save([outputFolder num2str(i, '%.2i') '.mat'], axonsNew);
+            toc;
+        else
+            save([outputFolder num2str(i, '%.2i') '.mat'], 'axons', 'result');
         end
-        display('Saving (intermediate) results:');
+    end
+    if options.doMerge
+        display('Calculating set of extended metrics:');
         tic;
-        Util.save([outputFolder num2str(i, '%.2i') '.mat'], axonsNew);
+        name = strsplit(outputFolder, '/');
+        name = name{end-1};
+        metrics = connectEM.moreMetrics(axonsNew, name, segmentMeta);
+        toc;
+        display('Saving metrics:');
+        tic;
+        Util.save([outputFolder 'metricsFinal.mat'], axonsNew, metrics);
         toc;
     end
-    display('Calculating set of extended metrics:');
-    tic;
-    name = strsplit(outputFolder, '/');
-    name = name{end-1};
-    metrics = connectEM.moreMetrics(axonsNew, name, segmentMeta);
-    toc;
-    display('Saving metrics:');
-    tic;
-    Util.save([outputFolder 'metricsFinal.mat'], axonsNew, metrics);
-    toc;
-
 end
