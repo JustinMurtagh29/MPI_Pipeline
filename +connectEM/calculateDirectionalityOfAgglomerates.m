@@ -1,4 +1,9 @@
-function y = agglomerateDirectionality2(agglos, graph, segmentMeta, borderMeta, globalSegmentPCA, bboxDist, voxelSize)
+function y = calculateDirectionalityOfAgglomerates(agglos, graph, segmentMeta, borderMeta, globalSegmentPCA, bboxDist, voxelSize)
+% Calculate directionality of agglomerates
+% Basic idea is to always look at a local surround of each segment in the agglomerate 
+% and calculate its principal component and a score that shows for each border
+% pointing out of this agglomerate whether it is close to an ending
+
 
     % Preallocation
     y.latent = cell(numel(agglos),1); 
@@ -150,3 +155,4 @@ function [pca, latent] = pcaFromCovMat(covMat)
     pca = pca(:,idx);
 
 end
+
