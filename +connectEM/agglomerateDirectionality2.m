@@ -1,7 +1,7 @@
 function y = agglomerateDirectionality2(axonsFinalAll, graph, segmentMeta, borderMeta, globalSegmentPCA, bboxDist, voxelSize)
 
     % Preallocation
-    y.latent = cell(numel(axonsFinalAll),1);  
+    y.latent = cell(numel(axonsFinalAll),1); 
     y.pca = cell(numel(axonsFinalAll),1);
     y.neighbours = cell(numel(axonsFinalAll),1);
     y.prob = cell(numel(axonsFinalAll),1);
@@ -60,7 +60,7 @@ function y = agglomerateDirectionality2(axonsFinalAll, graph, segmentMeta, borde
             covMatsIn = reshape(globalSegmentPCA.covMat(currentAgglo, :), [length(currentAgglo), 3, 3]);
             agglos = cellfun(@(x)find(ismember(currentAgglo,x)), surround, 'uni', 0);
             [~, comVecsOut, covMatsOut] = Agglo.mergeStatisticalMoments(massesIn, comVecsIn, covMatsIn, agglos);
-            clear massesIn comVecsIn covMatsIn agglos; 
+            clear massesIn comVecsIn covMatsIn agglos;
         else
             comVecsOut = bsxfun(@times, segmentMeta.centroid(:, currentAgglo)', voxelSize);
             covMatsOut = reshape(globalSegmentPCA.covMat(currentAgglo, :), [1, 3, 3]);
@@ -96,7 +96,7 @@ function y = agglomerateDirectionality2(axonsFinalAll, graph, segmentMeta, borde
             score = scorePre(currentOutgoing(outgoing));
 
             % Collect output
-            latent = [latent; repmat(thisLatent', size(score,1), 1)]; 
+            latent = [latent; repmat(thisLatent', size(score,1), 1)];
             pca = cat(3, pca, repmat(thisPca, 1, 1, size(score,1)));
             neighbours = [neighbours; borderSegId(currentOutgoing)];
             prob = [prob; borderProb(currentOutgoing)];
@@ -104,7 +104,7 @@ function y = agglomerateDirectionality2(axonsFinalAll, graph, segmentMeta, borde
             scores = [scores; score];
 
         end
-        
+
         % Use (possible) redundancy in surround calculations to find "global" endings
         if numel(surround) > 1
             % We like to extract the minimal absolute score and in case of quality: highest latent score
@@ -153,4 +153,3 @@ function [pca, latent] = pcaFromCovMat(covMat)
     pca = pca(:,idx);
 
 end
-
