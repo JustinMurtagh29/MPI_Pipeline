@@ -17,7 +17,9 @@ function agglomerateDirectionalitySuper2(options, outputFolder, graph, segmentMe
         options.neuriCScore = 0.7;
         options.borderSize = 30;
         options.axonScore = 0.3;
+        options.dendriteScore = 0;
         options.recursionSteps = 10;
+        options.doMerge = true;
     else
         if isfield(options, 'startAggloPath')
             startAgglo = load(options.startAggloPath, 'axonsFinal');
@@ -50,7 +52,7 @@ function agglomerateDirectionalitySuper2(options, outputFolder, graph, segmentMe
     excludedSegmentIdx = ismember(segmentMeta.cubeIdx, excludedCubeIdx) | ismember(1:segmentMeta.maxSegId, cat(1, er{:}))';
     % Add single segments if not excluded due to catastrohic merger
     axons = cat(1, startAgglo.axonsFinal, ...
-        num2cell(setdiff(find(segmentMeta.axonProb > options.axonScore & ~excludedSegmentIdx), cell2mat(startAgglo.axonsFinal))));
+        num2cell(setdiff(find(segmentMeta.axonProb > options.axonScore & segmentMeta.dendriteProb > options.dendriteScore & ~excludedSegmentIdx), cell2mat(startAgglo.axonsFinal))));
     clear startAgglo excluded* cm;
 
     % Keep only agglomerates (including single segment agglomerados) over minSize voxel
@@ -75,10 +77,12 @@ function agglomerateDirectionalitySuper2(options, outputFolder, graph, segmentMe
         end
         clear resultTemp fieldNames j changedIdx unchangedResult;
         toc;
-        display('Merging agglomerates:');
-        tic;
-        [axonsNew, changedIdx, unchangedResult] = connectEM.agglomerateMerge(graph, segmentMeta, borderMeta, axons, result, options);
-        toc;
+        if options.doMerge
+            display('Merging agglomerates:');
+            tic;
+            [axonsNew, changedIdx, unchangedResult] = connectEM.agglomerateMerge(graph, segmentMeta, borderMeta, axons, result, options);
+            toc;
+        end
         display('Saving (intermediate) results:');
         tic;
         Util.save([outputFolder num2str(i, '%.2i') '.mat'], axonsNew);

@@ -75,8 +75,7 @@ function y = agglomerateDirectionality2(axonsFinalAll, graph, segmentMeta, borde
             % Find all outgoing edges of current surround
             % without correspondences as these have no borderIdx and thereby CoM currently
             borderIdxs = cat(1, graph.neighBorderIdx{surround{idx2}});
-            spill = @(x)x{:};
-            borderSegId = cat(1, spill(cellfun(@(x){x(:)}, graph.neighbours(surround{idx2}))));
+            borderSegId = cell2mat(cellfun(@(x){x(:)}, graph.neighbours(surround{idx2})));
             borderProb = cat(1, graph.neighProb{surround{idx2}});
             % Indices to border* that are not correspondences
             outgoing = ~isnan(borderIdxs) & ~ismember(borderSegId, surround{idx2});
