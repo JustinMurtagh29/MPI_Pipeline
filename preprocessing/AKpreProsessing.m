@@ -1,13 +1,13 @@
 % Settings
 addpath(genpath('/gaba/u/alik/code/pipeline'))
-dataset.root = '/gaba/u/alik/wKcubes/2017-04-03_ppcAK99_76x79/color/1/';
-dataset.prefix = '2017-04-03_ppcAK99_76x79_mag1';
-dataset.bbox = [1153,6961;1409,8912;129,4710];
-dataset.bbox = dataset.bbox + [-25 25; -25 25; -10 10];
+dataset.root = '/gaba/u/alik/wKcubes/2017-04-03_ppcAK99_76x79_ROI/color/1/';
+dataset.prefix = '2017-04-03_ppcAK99_76x79_ROI_mag1';
+dataset.bbox = [104,5983;104,7688;119,4822];
+%dataset.bbox = dataset.bbox + [-25 25; -25 25; -10 10];
 vesselsMasked.root = '/gaba/u/alik/wKcubes/2017-04-03_ppcAK99_76x79_preprocessing/color/1/';
 vesselsMasked.prefix = '2017-04-03_ppcAK99_76x79_preprocessing_mag1';
-%gradientCorrected.root = '/gaba/u/mberning/wkCubes/2012-09-28_ex145_07x2_ROI2016_corrected/color/1/';
-%gradientCorrected.prefix = '2012-09-28_ex145_07x2_ROI2016_corrected_mag1';
+gradientCorrected.root = '/gaba/u/alik/wKcubes/2017-04-03_ppcAK99_76x79_corrected/color/1/';
+gradientCorrected.prefix = '2017-04-03_ppcAK99_76x79_corrected_mag1';
 
 % Define slice to be loaded in memory in paralell (one KNOSSOS cube z-plane)
 zCoords = dataset.bbox(3,1):dataset.bbox(3,2);
@@ -37,9 +37,10 @@ tic;
     
     
     
-    %load('/gaba/u/alik/scratch/cubing/2017-04-03_ppcAK99_76x79/results/vesselsFinal.mat');
+    load('/gaba/u/alik/scratch/cubing/2017-04-03_ppcAK99_76x79/results/vesselsFinal.mat');
 for i=1:length(zCoords) 
-    thisSliceBbox(3,:) = [zCoords{i}(1) zCoords{i}(end)];
+    disp(num2str(i))
+     thisSliceBbox(3,:) = [zCoords{i}(1) zCoords{i}(end)]
     
     z = ceil(0.25:0.25:((thisSliceBbox(3,2)-thisSliceBbox(3,1)+1)/4));
     % empirical correction
@@ -47,26 +48,27 @@ for i=1:length(zCoords)
     
     raw = readKnossosRoi(dataset.root, dataset.prefix, thisSliceBbox);
     vesselsLocal= false(size(raw));
-    thisBBoxMag4 = ceil(thisSliceBbox ./ 4);
+    thisBBoxMag4 = ceil(thisSliceBbox ./ 4)+ceil([1076-104, 1331-104,-119;1076-104, 1331-104,-119]./4)'
     theseVessels = vessels(thisBBoxMag4(1,1):thisBBoxMag4(1,2), ...
         thisBBoxMag4(2,1):thisBBoxMag4(2,2), ...
         thisBBoxMag4(3,1):thisBBoxMag4(3,2));
+tic;
     if any(theseVessels(:))
         % Upsample labels to mag1
         vesselsLocal = theseVessels(x,y,z);
-        se = strel('disk',10);
+        se = strel('disk',5);
         vesselsLocal=imclose(vesselsLocal,se);
         
     end
     
+    toc;
     % Regionprops CC of pixel (small compared to blood vessel)
-    
-    
     maskedRaw = raw;
     maskedRaw(vesselsLocal) = uint8(128);
-    writeKnossosRoi(vesselsMasked.root, vesselsMasked.prefix, [1, 1, thisSliceBbox(3,1)'], maskedRaw, 'uint8', '', 'noRead');
-    writeKnossosRoi(strrep(vesselsMasked.root, '/color/', '/segmentation/'), vesselsMasked.prefix, thisSliceBbox(:,1)', uint32(vessels), 'uint32', '', 'noRead');
+    writeKnossosRoi(vesselsMasked.root, vesselsMasked.prefix,thisSliceBbox(:,1)', maskedRaw, 'uint8', '', 'noRead');
+    writeKnossosRoi(strrep(vesselsMasked.root, '/color/', '/segmentation/'), vesselsMasked.prefix, thisSliceBbox(:,1)', uint32(vesselsLocal), 'uint32', '', 'noRead');
     %Util.progressBar(i, length(zCoords));
+    
     clear vesselsLocal theseVessels z;
 end
 clear i j  maskedRaw raw  ;
@@ -85,7 +87,7 @@ toc;
 % Approximate gradients by first (in this function) mean downsampling
 filterSize = [64; 64; 29];
 [rawMean, x, y, z] = approximateGradients(vesselsMasked, dataset.bbox, filterSize);
-Util.save('/gaba/scratch/mberning/rawMean.mat');
+Util.save('/gaba/scratch/alik/rawMean.mat');
 
 % Gradient calculation
 display('Smoothing gradient estimation');
@@ -139,7 +141,7 @@ for i=1:length(zCoords)
     raw = readKnossosRoi(vesselsMasked.root, vesselsMasked.prefix, thisSliceBbox); 
     vessels =  readKnossosRoi(strrep(vesselsMasked.root, '/color/', '/segmentation/'), vesselsMasked.prefix, thisSliceBbox, 'uint32');
     raw = uint8(correctionForSlice .* double(raw));
-	raw(vessels > 0) = 121;
+	raw(vessels > 0) = 128;
     % Save to new datset to be used in pipeline
     writeKnossosRoi(gradientCorrected.root, gradientCorrected.prefix, thisSliceBbox(:,1)', raw);
     clear raw vessels;
