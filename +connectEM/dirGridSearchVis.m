@@ -1,4 +1,5 @@
-% Load Graph
+%{
+% Load needed information
 graph = load('/gaba/u/mberning/results/pipeline/20170217_ROI/graphNew.mat', 'edges', 'prob', 'borderIdx');
 [graph.neighbours, neighboursIdx] = Graph.edges2Neighbors(graph.edges);
 graph.neighProb = cellfun(@(x)graph.prob(x), neighboursIdx, 'uni', 0);
@@ -8,36 +9,33 @@ segmentMeta = load('/gaba/u/mberning/results/pipeline/20170217_ROI/segmentMeta.m
 segmentMeta.point = segmentMeta.point';
 segmentMeta = connectEM.addSegmentClassInformation(p, segmentMeta);
 
-%%
+% Where to look, what is there
 workingFolder = '/gaba/scratch/mberning/aggloGridSearch2/';
+load([workingFolder 'parameters.mat']);
 runs = dir([workingFolder 'search01_*']);
 for i=1:length(runs)
     results{i} = dir([workingFolder runs(i).name filesep '*.mat']);
 end
+%}
 
-%%
-load([workingFolder 'parameters.mat']);
-load([workingFolder 'state.mat']);
+% Now everything including old and some new metrics, see:
+% https://mhlablog.net/2017/05/16/focusem-path-length-leverage/
 
-endingsJoined = cellfun(@(x)regexp(x, '# endings \(all above\): (\d*)\n', 'tokens'), state, 'uni', 0);
-endingsJoined = cellfun(@(x)cellfun(@str2double, x), endingsJoined, 'uni', 0);
+functionH = @connectEM.moreMetrics;
+inputArguments = arrayfun(@(x,y){x,y{1}}, runs, results', 'uni', 0);
+cluster = Cluster.getCluster( ...
+    '-pe openmp 1', ...
+    '-p -500', ...
+    '-l h_vmem=40G', ... 
+    '-l s_rt=99:50:00', ...
+    '-l h_rt=100:00:00');
+job = Cluster.startJob( functionH, inputArguments, ...
+    'name', 'moreMetrics', ...
+    'sharedInputs', {workingFolder segmentMeta}, ...
+    'sharedInputsLocation', [1 4], ...
+    'numOutputs', 1, ...
+    'cluster', cluster);
 
-figure; hold on;
-for i=1:length(endingsJoined)
-    plot(endingsJoined{i});
-    label{i} = num2str(inputArgumentsAxons(i,:));
-end
-legend(label);
+Cluster.waitForJob(job);
+metrics = fetchOutputs(job);
 
-
-%% Result 76
-% Closest to Kevin's parameters, 20 instead of 30 border threshold
-find(all(bsxfun(@eq, inputArgumentsAxons, [0.7 0.9 0.8 20 0.5]),2))
-load([workingFolder runs(76).name filesep results{76}(end-1).name], 'axonsNew');
-y = connectEM.evaluateAggloMetaMeta(graph, axonsNew, [], 'dir_search01_run76', segmentMeta);
-
-%% Result 41
-% Closest to Kevin's parameters, 20 instead of 30 border threshold
-find(all(bsxfun(@eq, inputArgumentsAxons, [0.8 0.95 0.7 40 0.3]),2))
-load([workingFolder runs(44).name filesep results{44}(end-1).name], 'axonsNew');
-y = connectEM.evaluateAggloMetaMeta(graph, axonsNew, [], 'dir_search01_run44', segmentMeta);

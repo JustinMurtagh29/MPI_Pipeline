@@ -1,7 +1,9 @@
 function y = evaluateAggloMeta(skelpath, graph, segmentMeta, agglos, p, nameOfRun, mainFolder, limitaggloNum, limitaggloSize, agglos_reverse, maxTube)
 
 doc_folder = [mainFolder, nameOfRun, '/'];
-mkdir(doc_folder);
+if ~exist(doc_folder, 'dir')
+    mkdir(doc_folder);
+end
 for file_idx = 1 : length(skelpath)
     % Load skeleton and shift to right coordinate system if traced in
     % another dataset
@@ -37,11 +39,11 @@ for file_idx = 1 : length(skelpath)
     y.connM{file_idx} = connM;
     y.ids{file_idx} = ids;
     % Write output results
-    lonelyids = setdiff(ids(ids~=0), cell2mat(agglos(foundAgglomerates)));
-    lonelyids(segmentMeta.axonProb(lonelyids)<0.5) = [];
-    connectEM.skeletonFromAgglo(graph.edges, segmentMeta, num2cell(lonelyids), [num2str(file_idx) 'single_'], doc_folder)
-    connectEM.skeletonFromAgglo(graph.edges, segmentMeta, agglos(foundAgglomerates), [num2str(file_idx) '_'], doc_folder)
-    skel.write([doc_folder, 'skel_' num2str(file_idx)  '.nml']);
+    %lonelyids = setdiff(ids(ids~=0), cell2mat(agglos(foundAgglomerates)));
+    %lonelyids(segmentMeta.axonProb(lonelyids)<0.5) = [];
+    %connectEM.skeletonFromAgglo(graph.edges, segmentMeta, num2cell(lonelyids), [num2str(file_idx) 'single_'], doc_folder)
+    %connectEM.skeletonFromAgglo(graph.edges, segmentMeta, agglos(foundAgglomerates), [num2str(file_idx) '_'], doc_folder)
+    %skel.write([doc_folder, 'skel_' num2str(file_idx)  '.nml']);
 end
 
 end

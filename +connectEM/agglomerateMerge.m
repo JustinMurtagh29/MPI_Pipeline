@@ -19,7 +19,7 @@ function [axonsNew, changedIdx, unchangedResult] = agglomerateMerge(graph, segme
     sources(idx) = [];
     targets(idx) = [];
 
-    % Display some statistics
+    % Display some statistics of inital detections
     displayStats(idxDirectional, idxEnding, idxContinuity, idxLarge, idxAll, idx);
 
     % Do the merging

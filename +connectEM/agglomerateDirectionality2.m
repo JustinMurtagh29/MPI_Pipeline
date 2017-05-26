@@ -1,7 +1,7 @@
-function y = agglomerateDirectionality2(axonsFinalAll, graph, segmentMeta, borderMeta, globalSegmentPCA, bboxDist, voxelSize)
-
+function y = agglomerateDirectionality2(axonsFinalAll, graph, segmentMeta, borderMeta, globalSegmentPCA, bboxDist, voxelSize, options)
+    options.dummy = [];
     % Preallocation
-    y.latent = cell(numel(axonsFinalAll),1);  
+    y.latent = cell(numel(axonsFinalAll),1);
     y.pca = cell(numel(axonsFinalAll),1);
     y.neighbours = cell(numel(axonsFinalAll),1);
     y.prob = cell(numel(axonsFinalAll),1);
@@ -9,9 +9,15 @@ function y = agglomerateDirectionality2(axonsFinalAll, graph, segmentMeta, borde
     y.scores = cell(numel(axonsFinalAll),1);
 
     % Loop over all agglomerates
-    for idx1 = 1:length(axonsFinalAll)
+    if isfield(options, 'randomSubset')
+        idxs = randperm(length(axonsFinalAll), options.randomSubset);
+    else
+        idxs = 1 : length(axonsFinalAll);
+    end
+    for idx1 = idxs
+        idx1
 
-        % Remove segments from currentAgglo if covMatsIn contains NaN or Inf (small segments) 
+        % Remove segments from currentAgglo if covMatsIn contains NaN or Inf (small segments)
         currentAgglo = axonsFinalAll{idx1};
         covMatsIn = globalSegmentPCA.covMat(currentAgglo, :);
         idx = any(isnan(covMatsIn) | isinf(covMatsIn),2);
@@ -20,7 +26,7 @@ function y = agglomerateDirectionality2(axonsFinalAll, graph, segmentMeta, borde
 
         % Preallocate as empty as we do not know number of outgoing edges
         latent = [];
-        pca = []; 
+        pca = [];
         neighbours = [];
         prob = [];
         borderIdx = [];
@@ -54,7 +60,7 @@ function y = agglomerateDirectionality2(axonsFinalAll, graph, segmentMeta, borde
             covMatsIn = reshape(globalSegmentPCA.covMat(currentAgglo, :), [length(currentAgglo), 3, 3]);
             agglos = cellfun(@(x)find(ismember(currentAgglo,x)), surround, 'uni', 0);
             [~, comVecsOut, covMatsOut] = Agglo.mergeStatisticalMoments(massesIn, comVecsIn, covMatsIn, agglos);
-            clear massesIn comVecsIn covMatsIn agglos; 
+            clear massesIn comVecsIn covMatsIn agglos;
         else
             comVecsOut = bsxfun(@times, segmentMeta.centroid(:, currentAgglo)', voxelSize);
             covMatsOut = reshape(globalSegmentPCA.covMat(currentAgglo, :), [1, 3, 3]);
@@ -69,7 +75,8 @@ function y = agglomerateDirectionality2(axonsFinalAll, graph, segmentMeta, borde
             % Find all outgoing edges of current surround
             % without correspondences as these have no borderIdx and thereby CoM currently
             borderIdxs = cat(1, graph.neighBorderIdx{surround{idx2}});
-            borderSegId = cat(1, graph.neighbours{surround{idx2}});
+            spill = @(x)x{:};
+            borderSegId = cat(1, spill(cellfun(@(x){x(:)}, graph.neighbours(surround{idx2}))));
             borderProb = cat(1, graph.neighProb{surround{idx2}});
             % Indices to border* that are not correspondences
             outgoing = ~isnan(borderIdxs) & ~ismember(borderSegId, surround{idx2});
@@ -90,7 +97,7 @@ function y = agglomerateDirectionality2(axonsFinalAll, graph, segmentMeta, borde
             score = scorePre(currentOutgoing(outgoing));
 
             % Collect output
-            latent = [latent; repmat(thisLatent', size(score,1), 1)]; 
+            latent = [latent; repmat(thisLatent', size(score,1), 1)];
             pca = cat(3, pca, repmat(thisPca, 1, 1, size(score,1)));
             neighbours = [neighbours; borderSegId(currentOutgoing)];
             prob = [prob; borderProb(currentOutgoing)];
@@ -98,7 +105,7 @@ function y = agglomerateDirectionality2(axonsFinalAll, graph, segmentMeta, borde
             scores = [scores; score];
 
         end
-        
+
         % Use (possible) redundancy in surround calculations to find "global" endings
         if numel(surround) > 1
             % We like to extract the minimal absolute score and in case of quality: highest latent score
@@ -147,4 +154,3 @@ function [pca, latent] = pcaFromCovMat(covMat)
     pca = pca(:,idx);
 
 end
-

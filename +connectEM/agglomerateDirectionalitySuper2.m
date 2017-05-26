@@ -1,4 +1,4 @@
-function [axons, result] = agglomerateDirectionalitySuper2(options, outputFolder, graph, segmentMeta, borderMeta, globalSegmentPCA)
+function agglomerateDirectionalitySuper2(options, outputFolder, graph, segmentMeta, borderMeta, globalSegmentPCA)
 
     % Create output folder if it does not exist
     if ~exist(outputFolder, 'dir')
@@ -6,20 +6,27 @@ function [axons, result] = agglomerateDirectionalitySuper2(options, outputFolder
     end
 
     % Parameters
-    recursionSteps = 10;
-    minSize = 10;
+
+    minSize = 100;
     bboxDist = 1000;
     voxelSize = [11.24 11.24 28];
 
-    % Load needed meta data if not passed (NOTE: this will take some time)
     if ~exist('options', 'var') | isempty(options)
-        options.latentScore = 0.7; % 0.7-0.9
-        options.segDirScore = 0.9; % 0.8-0.9
-        options.neuriCScore = 0.7; % 0.6-0.9
-        options.borderSize = 30; % 20:40
-        options.axonScore = 0.3; % 0.3:0.5
-    end
-    if ~exist('graph', 'var') 
+        options.latentScore = 0.7;
+        options.segDirScore = 0.9;
+        options.neuriCScore = 0.7;
+        options.borderSize = 30;
+        options.axonScore = 0.3;
+        options.recursionSteps = 10;
+    else
+        if isfield(options, 'startAggloPath')
+            startAgglo = load(options.startAggloPath, 'axonsFinal');
+        else
+            startAgglo = load('/gaba/scratch/mberning/aggloGridSearch/search05_00564.mat', 'axonsFinal');
+        end
+
+    % Load needed meta data if not passed
+    if ~exist('graph', 'var')
         graph = load('/gaba/u/mberning/results/pipeline/20170217_ROI/graphNew.mat', 'edges', 'prob', 'borderIdx');
         [graph.neighbours, neighboursIdx] = Graph.edges2Neighbors(graph.edges);
         graph.neighProb = cellfun(@(x)graph.prob(x), neighboursIdx, 'uni', 0);
@@ -32,37 +39,35 @@ function [axons, result] = agglomerateDirectionalitySuper2(options, outputFolder
     end
     if ~exist('borderMeta', 'var')
         borderMeta = load('/gaba/u/mberning/results/pipeline/20170217_ROI/globalBorder.mat', 'borderSize', 'borderCoM');
-    end 
+    end
     if ~exist('globalSegmentPCA', 'var')
         globalSegmentPCA = load('/gaba/u/mberning/results/pipeline/20170217_ROI/globalSegmentPCA.mat', 'covMat');
     end
 
-    % Agglomerates to start with
-    gridAgglo_05{564} = load('/gaba/scratch/mberning/aggloGridSearch/search05_00564.mat', 'axonsFinal');
     % Exclude all segments in cubes with catastrophic merger
     [er, cm] = connectEM.getERcomponents();
     excludedCubeIdx = unique(cellfun(@(x)mode(segmentMeta.cubeIdx(x)), cm));
     excludedSegmentIdx = ismember(segmentMeta.cubeIdx, excludedCubeIdx) | ismember(1:segmentMeta.maxSegId, cat(1, er{:}))';
     % Add single segments if not excluded due to catastrohic merger
-    axons = cat(1, gridAgglo_05{564}.axonsFinal, ...
-        num2cell(setdiff(find(segmentMeta.axonProb > options.axonScore & ~excludedSegmentIdx), cell2mat(gridAgglo_05{564}.axonsFinal))));
-    clear gridAgglo_05 excluded* cm;
+    axons = cat(1, startAgglo.axonsFinal, ...
+        num2cell(setdiff(find(segmentMeta.axonProb > options.axonScore & ~excludedSegmentIdx), cell2mat(startAgglo.axonsFinal))));
+    clear startAgglo excluded* cm;
 
-    % Keep only agglomerates (including single segment agglomerados) over minSize voxel 
+    % Keep only agglomerates (including single segment agglomerados) over minSize voxel
     axonsSize = cellfun(@(x)sum(segmentMeta.voxelCount(x)), axons);
     axons(axonsSize < minSize) = [];
 
-    % Initialize variables that keep track of changed agglomerates over recursion for first round 
+    % Initialize variables that keep track of changed agglomerates over recursion for first round
     changedIdx = 1:length(axons);
     unchangedResult = struct('latent', [], 'pca', [], 'neighbours', [], 'prob', [], 'borderIdx', [], 'scores', []);
     axonsNew = axons;
 
-    for i=1:recursionSteps
+    for i=1:options.recursionSteps
         axons = axonsNew;
         clear axonsNew result;
         display('Calculating directionality measures:');
         tic;
-        resultTemp = connectEM.agglomerateDirectionality2(axons(changedIdx), graph, segmentMeta, borderMeta, globalSegmentPCA, bboxDist, voxelSize);
+        resultTemp = connectEM.agglomerateDirectionality2(axons(changedIdx), graph, segmentMeta, borderMeta, globalSegmentPCA, bboxDist, voxelSize, options);
         fieldNames = fieldnames(resultTemp);
         for j=1:length(fieldNames)
             fName = fieldNames{j};
@@ -76,9 +81,18 @@ function [axons, result] = agglomerateDirectionalitySuper2(options, outputFolder
         toc;
         display('Saving (intermediate) results:');
         tic;
-        Util.save([outputFolder num2str(i, '%.2i') '.mat'], result, axons, axonsNew);
+        Util.save([outputFolder num2str(i, '%.2i') '.mat'], axonsNew);
         toc;
     end
+    display('Calculating set of extended metrics:');
+    tic;
+    name = strsplit(outputFolder, '/');
+    name = name{end-1};
+    metrics = connectEM.moreMetrics(axonsNew, name, segmentMeta);
+    toc;
+    display('Saving metrics:');
+    tic;
+    Util.save([outputFolder 'metricsFinal.mat'], axonsNew, metrics);
+    toc;
 
 end
-
