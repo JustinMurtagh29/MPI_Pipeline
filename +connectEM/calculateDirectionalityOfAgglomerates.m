@@ -3,8 +3,8 @@ function y = calculateDirectionalityOfAgglomerates(agglos, graph, segmentMeta, b
 % Basic idea is to always look at a local surround of each segment in the agglomerate 
 % and calculate its principal component and a score that shows for each border
 % pointing out of this agglomerate whether it is close to an ending
-
-
+    % sometimes graph.neighbours are row vectors
+    neighboursGoofy = issorted(size(graph.neighbours{1}));
     % Preallocation
     y.latent = cell(numel(agglos),1); 
     y.pca = cell(numel(agglos),1);
@@ -77,7 +77,11 @@ function y = calculateDirectionalityOfAgglomerates(agglos, graph, segmentMeta, b
             % Find all outgoing edges of current surround
             % without correspondences as these have no borderIdx and thereby CoM currently
             borderIdxs = cat(1, graph.neighBorderIdx{surround{idx2}});
-            borderSegId = cell2mat(cellfun(@(x){x(:)}, graph.neighbours(surround{idx2})));
+            if neighboursGoofy
+                borderSegId = cat(2, graph.neighbours{surround{idx2}})';
+            else
+                borderSegId = cat(1, graph.neighbours{surround{idx2}});
+            end        
             borderProb = cat(1, graph.neighProb{surround{idx2}});
             % Indices to border* that are not correspondences
             outgoing = ~isnan(borderIdxs) & ~ismember(borderSegId, surround{idx2});
