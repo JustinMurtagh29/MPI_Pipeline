@@ -47,10 +47,10 @@ function y = calculateDirectionalityOfAgglomerates(agglos, graph, segmentMeta, b
         end
 
         % Combine PCAs for all surrounds in current agglo
+        surroundLocal = cellfun(@(x)find(x), neighbourhood, 'uni', 0);
         if numel(currentAgglo) > 1
             massesIn = segmentMeta.voxelCount(currentAgglo);
             comVecsIn = bsxfun(@times, segmentMeta.centroid(:, currentAgglo)', options.voxelSize);
-            surroundLocal = cellfun(@(x)find(x), neighbourhood, 'uni', 0);
             [~, comVecsOut, covMatsOut] = Agglo.mergeStatisticalMoments(massesIn, comVecsIn, covMatsIn, surroundLocal);
             clear massesIn comVecsIn;
         else
