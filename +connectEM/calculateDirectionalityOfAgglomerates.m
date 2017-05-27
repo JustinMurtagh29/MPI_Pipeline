@@ -17,6 +17,18 @@ function y = calculateDirectionalityOfAgglomerates(agglos, graph, segmentMeta, b
 
         % Remove segments from currentAgglo if covMatsIn contains NaN or Inf (small segments) 
         currentAgglo = sort(agglos{idx1});
+    y.neighbours = cell(numel(agglos),1);
+    y.prob = cell(numel(agglos),1);
+    y.borderIdx = cell(numel(agglos),1);
+    y.latent = cell(numel(agglos),1); 
+    y.pca = cell(numel(agglos),1);
+    y.scores = cell(numel(agglos),1);
+
+    % Loop over all agglomerates
+    for idx1 = 1:length(agglos)
+
+        % Remove segments from currentAgglo if covMatsIn contains NaN or Inf (small segments) 
+        currentAgglo = sort(agglos{idx1});
         covMatsIn = globalSegmentPCA.covMat(currentAgglo, :);
         idx = any(isnan(covMatsIn) | isinf(covMatsIn),2);
         currentAgglo(idx) = [];
