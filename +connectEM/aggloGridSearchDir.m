@@ -7,7 +7,7 @@ function job = aggloGridSearchDir()
     borderVar = [20 40]; % Threshold on border size (in voxel)
     axonPrVar = [0.3 0.4 0.5]; % Threshold on axon probability for single segments
 
-    functionH = @connectEM.agglomerateDirectionalitySuper2;
+    functionH = @connectEM.axonDirectionalityBasedGrowing;
     % Create parameter sets for axons and dendrites
     inputArgumentsAxons = inputArgumentsFromParameterSets( ...
         latentVar, segDirVar, neuriCVar, borderVar, axonPrVar);
