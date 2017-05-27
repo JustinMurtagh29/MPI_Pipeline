@@ -17,18 +17,6 @@ function y = calculateDirectionalityOfAgglomerates(agglos, graph, segmentMeta, b
 
         % Remove segments from currentAgglo if covMatsIn contains NaN or Inf (small segments) 
         currentAgglo = sort(agglos{idx1});
-    y.neighbours = cell(numel(agglos),1);
-    y.prob = cell(numel(agglos),1);
-    y.borderIdx = cell(numel(agglos),1);
-    y.latent = cell(numel(agglos),1); 
-    y.pca = cell(numel(agglos),1);
-    y.scores = cell(numel(agglos),1);
-
-    % Loop over all agglomerates
-    for idx1 = 1:length(agglos)
-
-        % Remove segments from currentAgglo if covMatsIn contains NaN or Inf (small segments) 
-        currentAgglo = sort(agglos{idx1});
         covMatsIn = globalSegmentPCA.covMat(currentAgglo, :);
         idx = any(isnan(covMatsIn) | isinf(covMatsIn),2);
         currentAgglo(idx) = [];
@@ -84,7 +72,7 @@ function y = calculateDirectionalityOfAgglomerates(agglos, graph, segmentMeta, b
         nrBorder = numel(borderIdxs);
         clear outgoing;
 
-        % Preallocate arrays for this 
+        % Preallocate arrays for this agglomerate
         latent = zeros(nrBorder,3);
         pca = zeros(3,3,nrBorder); 
         scores = zeros(nrBorder,1);
@@ -104,11 +92,11 @@ function y = calculateDirectionalityOfAgglomerates(agglos, graph, segmentMeta, b
             score = (result(:,1) - min(result(:,1))) / (max(result(:,1)) - min(result(:,1))) * 2 - 1;
 
             % Collect output
-            idx = abs(scores(suroundLocal{idx2})) < abs(score);
+            idx = abs(scores(surroundLocal{idx2})) < abs(score);
             nrReplace = sum(idx);
-            latent(idx,:) = repmat(thisLatent', nrReplace, 1);
-            pca(:,:,idx) = repmat(thisPca, 1, 1, nrReplace);
-            scores(idx) = score(idx);
+            latent(surroundLocal{idx2}(idx),:) = repmat(thisLatent', nrReplace, 1);
+            pca(:,:,surroundLocal{idx2}(idx)) = repmat(thisPca, 1, 1, nrReplace);
+            scores(surroundLocal{idx2}(idx)) = score(idx);
 
         end
 
