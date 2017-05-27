@@ -1,16 +1,15 @@
-function y = calculateDirectionalityOfAgglomerates(agglos, graph, segmentMeta, borderMeta, globalSegmentPCA, bboxDist, voxelSize)
+function y = calculateDirectionalityOfAgglomerates(agglos, graph, segmentMeta, borderMeta, globalSegmentPCA, options)
 % Calculate directionality of agglomerates
 % Basic idea is to always look at a local surround of each segment in the agglomerate 
 % and calculate its principal component and a score that shows for each border
 % pointing out of this agglomerate whether it is close to an ending
 
-
-    % Preallocation
-    y.latent = cell(numel(agglos),1); 
-    y.pca = cell(numel(agglos),1);
+    % Preallocation for storing results for each agglomerate
     y.neighbours = cell(numel(agglos),1);
     y.prob = cell(numel(agglos),1);
     y.borderIdx = cell(numel(agglos),1);
+    y.latent = cell(numel(agglos),1); 
+    y.pca = cell(numel(agglos),1);
     y.scores = cell(numel(agglos),1);
 
     % Loop over all agglomerates
@@ -21,52 +20,62 @@ function y = calculateDirectionalityOfAgglomerates(agglos, graph, segmentMeta, b
         covMatsIn = globalSegmentPCA.covMat(currentAgglo, :);
         idx = any(isnan(covMatsIn) | isinf(covMatsIn),2);
         currentAgglo(idx) = [];
-        clear covMatsIn idx;
-
-        % Preallocate as empty as we do not know number of outgoing edges
-        latent = [];
-        pca = []; 
-        neighbours = [];
-        prob = [];
-        borderIdx = [];
-        scores = [];
+        covMatsIn(idx,:) = [];
+        covMatsIn = reshape(covMatsIn, [length(currentAgglo), 3, 3]);
+        clear idx;
 
         % If more than 2 segments in agglo -> find the surround, otherwise whole agglo is surround
         if numel(currentAgglo) > 2
             allbboxes = segmentMeta.box(:, : , currentAgglo);
-            overlap = bboxOverlap(allbboxes, bboxDist, voxelSize');
+            overlap = bboxOverlap(allbboxes, options.bboxDist, options.voxelSize');
             if all(overlap(:))
                 surround = {currentAgglo};
+                neighbourhood = {true(1,numel(currentAgglo))};
             else
                 directNeighbours = cellfun(@(x)ismember(currentAgglo, x), graph.neighbours(currentAgglo), 'uni', 0);
                 directNeighbours = cat(2, directNeighbours{:});
                 neighbourhood = (directNeighbours | overlap)';
                 neighbourhood = unique(neighbourhood, 'rows');
-                surround = cellfun(@(x)currentAgglo(x), mat2cell(neighbourhood, ones(size(neighbourhood,1),1), size(neighbourhood,2)), 'uni', 0);
-                clear directNeighbours neighbourhood;
+                neighbourhood = mat2cell(neighbourhood, ones(size(neighbourhood,1),1), size(neighbourhood,2));
+                surround = cellfun(@(x)currentAgglo(x), neighbourhood, 'uni', 0);
+                clear directNeighbours;
             end
             clear allbboxes overlap;
         else
             surround = {currentAgglo};
+            neighbourhood = {true(1,numel(currentAgglo))};
         end
-
-        % Keep only nonempty surrounds
-        idx = cellfun(@isempty, surround);
-        surround(idx) = [];
-        clear idx;
 
         % Combine PCAs for all surrounds in current agglo
         if numel(currentAgglo) > 1
             massesIn = segmentMeta.voxelCount(currentAgglo);
-            comVecsIn = bsxfun(@times, segmentMeta.centroid(:, currentAgglo)', voxelSize);
-            covMatsIn = reshape(globalSegmentPCA.covMat(currentAgglo, :), [length(currentAgglo), 3, 3]);
-            agglos = cellfun(@(x)find(ismember(currentAgglo,x)), surround, 'uni', 0);
-            [~, comVecsOut, covMatsOut] = Agglo.mergeStatisticalMoments(massesIn, comVecsIn, covMatsIn, agglos);
-            clear massesIn comVecsIn covMatsIn agglos;
+            comVecsIn = bsxfun(@times, segmentMeta.centroid(:, currentAgglo)', options.voxelSize);
+            surroundLocal = cellfun(@(x)find(x), neighbourhood, 'uni', 0);
+            [~, comVecsOut, covMatsOut] = Agglo.mergeStatisticalMoments(massesIn, comVecsIn, covMatsIn, surroundLocal);
+            clear massesIn comVecsIn;
         else
-            comVecsOut = bsxfun(@times, segmentMeta.centroid(:, currentAgglo)', voxelSize);
+            comVecsOut = bsxfun(@times, segmentMeta.centroid(:, currentAgglo)', options.voxelSize);
             covMatsOut = reshape(globalSegmentPCA.covMat(currentAgglo, :), [1, 3, 3]);
         end
+        clear covMatsIn;
+        
+        % Get representation of all borders out of current agglomerate
+        borderSegId = cat(1, graph.neighbours{currentAgglo});
+        borderProb = cat(1, graph.neighProb{currentAgglo}); 
+        borderIdxs = cat(1, graph.neighBorderIdx{currentAgglo});
+        % Limit to borders that are not correspondences and point outside current agglomerate
+        outgoing = ~isnan(borderIdxs) & ~ismember(borderSegId, currentAgglo);
+        borderSegId = borderSegId(outgoing);
+        borderProb = borderProb(outgoing); 
+        borderIdxs = borderIdxs(outgoing);
+        % Number of outgoing non correspondence borders
+        nrBorder = numel(borderIdxs);
+        clear outgoing;
+
+        % Preallocate arrays for this 
+        latent = zeros(nrBorder,3);
+        pca = zeros(3,3,nrBorder); 
+        scores = zeros(nrBorder,1);
 
         % Calculate measures for each surround of current agglo
         for idx2=1:length(surround)
@@ -74,59 +83,29 @@ function y = calculateDirectionalityOfAgglomerates(agglos, graph, segmentMeta, b
             % Calculate PCA from covariance matrix
             [thisPca, thisLatent] = pcaFromCovMat(squeeze(covMatsOut(idx2,:,:)));
 
-            % Find all outgoing edges of current surround
-            % without correspondences as these have no borderIdx and thereby CoM currently
-            borderIdxs = cat(1, graph.neighBorderIdx{surround{idx2}});
-            borderSegId = cat(1, graph.neighbours{surround{idx2}});
-            borderProb = cat(1, graph.neighProb{surround{idx2}});
-            % Indices to border* that are not correspondences
-            outgoing = ~isnan(borderIdxs) & ~ismember(borderSegId, surround{idx2});
-            % Indices to border* that originate for current segment
-            currentOutgoing = outgoing & ~ismember(borderSegId, currentAgglo);
-
-            if ~any(currentOutgoing)
-                continue;
-            end
-
             % Get center of mass of all border of surround
-            borderCoMs = bsxfun(@times, single(borderMeta.borderCoM(borderIdxs(outgoing), :)), voxelSize);
-            % Center on CoM of current agglo
+            borderCoMs = bsxfun(@times, single(borderMeta.borderCoM(borderIdxs(surroundLocal{idx2}), :)), options.voxelSize);
+            % Center on CoM of current surround
             borderCoMsLocalized = bsxfun(@minus, borderCoMs, comVecsOut(idx2,:));
-            % Project into PCA space of current agglo
+            % Project into PCA space of current surround
             result = borderCoMsLocalized * thisPca;
-            scorePre = (result(:,1) - min(result(:,1))) / (max(result(:,1)) - min(result(:,1))) * 2 - 1;
-            score = scorePre(currentOutgoing(outgoing));
+            score = (result(:,1) - min(result(:,1))) / (max(result(:,1)) - min(result(:,1))) * 2 - 1;
 
             % Collect output
-            latent = [latent; repmat(thisLatent', size(score,1), 1)];
-            pca = cat(3, pca, repmat(thisPca, 1, 1, size(score,1)));
-            neighbours = [neighbours; borderSegId(currentOutgoing)];
-            prob = [prob; borderProb(currentOutgoing)];
-            borderIdx = [borderIdx; borderIdxs(currentOutgoing)];
-            scores = [scores; score];
+            idx = abs(scores(suroundLocal{idx2})) < abs(score);
+            nrReplace = sum(idx);
+            latent(idx,:) = repmat(thisLatent', nrReplace, 1);
+            pca(:,:,idx) = repmat(thisPca, 1, 1, nrReplace);
+            scores(idx) = score(idx);
 
-        end
-
-        % Use (possible) redundancy in surround calculations to find "global" endings
-        if numel(surround) > 1
-            % We like to extract the minimal absolute score and in case of quality: highest latent score
-            [~, sortIdx] = sortrows([abs(scores) latent(:,1)], [1 -2]);
-            [~, idx] = unique(borderIdx(sortIdx));
-            latent = latent(sortIdx(idx), :);
-            pca = pca(:,:,sortIdx(idx));
-            neighbours = neighbours(sortIdx(idx));
-            prob = prob(sortIdx(idx));
-            borderIdx = borderIdx(sortIdx(idx));
-            scores = scores(sortIdx(idx));
-            clear sortIdx idx;
         end
 
         % More collecting
+        y.neighbours{idx1} = borderSegId;
+        y.prob{idx1} = borderProb;
+        y.borderIdx{idx1} = borderIdxs;
         y.latent{idx1} = latent;
         y.pca{idx1} = pca;
-        y.neighbours{idx1} = neighbours;
-        y.prob{idx1} = prob;
-        y.borderIdx{idx1} = borderIdx;
         y.scores{idx1} = scores;
 
     end

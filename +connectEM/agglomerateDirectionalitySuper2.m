@@ -5,27 +5,17 @@ function agglomerateDirectionalitySuper2(options, outputFolder, graph, segmentMe
         mkdir(outputFolder)
     end
 
-    % Parameters
-
-    minSize = 100;
-    bboxDist = 1000;
-    voxelSize = [11.24 11.24 28];
-
     if ~exist('options', 'var') | isempty(options)
         options.latentScore = 0.7;
         options.segDirScore = 0.9;
         options.neuriCScore = 0.7;
         options.borderSize = 30;
         options.axonScore = 0.3;
-        options.dendriteScore = 0;
         options.recursionSteps = 10;
-        options.doMerge = true;
-    else
-        if isfield(options, 'startAggloPath')
-            startAgglo = load(options.startAggloPath, 'axonsFinal');
-        else
-            startAgglo = load('/gaba/scratch/mberning/aggloGridSearch/search05_00564.mat', 'axonsFinal');
-        end
+        options.minSize = 100;
+        options.bboxDist = 1000;
+        options.voxelSize = [11.24 11.24 28];
+    end
 
     % Load needed meta data if not passed
     if ~exist('graph', 'var')
@@ -50,14 +40,15 @@ function agglomerateDirectionalitySuper2(options, outputFolder, graph, segmentMe
     [er, cm] = connectEM.getERcomponents();
     excludedCubeIdx = unique(cellfun(@(x)mode(segmentMeta.cubeIdx(x)), cm));
     excludedSegmentIdx = ismember(segmentMeta.cubeIdx, excludedCubeIdx) | ismember(1:segmentMeta.maxSegId, cat(1, er{:}))';
-    % Add single segments if not excluded due to catastrohic merger
+    % Add single segments if not excluded due to catastrophic merger or ER 
+    startAgglo = load('/gaba/scratch/mberning/aggloGridSearch/search05_00564.mat', 'axonsFinal');
     axons = cat(1, startAgglo.axonsFinal, ...
-        num2cell(setdiff(find(segmentMeta.axonProb > options.axonScore & segmentMeta.dendriteProb > options.dendriteScore & ~excludedSegmentIdx), cell2mat(startAgglo.axonsFinal))));
-    clear startAgglo excluded* cm;
+        num2cell(setdiff(find(segmentMeta.axonProb > options.axonScore & ~excludedSegmentIdx), cell2mat(startAgglo.axonsFinal))));
+    clear startAgglo excluded* cm er;
 
     % Keep only agglomerates (including single segment agglomerados) over minSize voxel
     axonsSize = cellfun(@(x)sum(segmentMeta.voxelCount(x)), axons);
-    axons(axonsSize < minSize) = [];
+    axons(axonsSize < options.minSize) = [];
 
     % Initialize variables that keep track of changed agglomerates over recursion for first round
     changedIdx = 1:length(axons);
@@ -65,11 +56,13 @@ function agglomerateDirectionalitySuper2(options, outputFolder, graph, segmentMe
     axonsNew = axons;
 
     for i=1:options.recursionSteps
+        
         axons = axonsNew;
         clear axonsNew result;
+        
         display('Calculating directionality measures:');
         tic;
-        resultTemp = connectEM.agglomerateDirectionality2(axons(changedIdx), graph, segmentMeta, borderMeta, globalSegmentPCA, bboxDist, voxelSize, options);
+        resultTemp = connectEM.calculateDirectionalityOfAgglomerates(axons(changedIdx), graph, segmentMeta, borderMeta, globalSegmentPCA, options);
         fieldNames = fieldnames(resultTemp);
         for j=1:length(fieldNames)
             fName = fieldNames{j};
@@ -77,30 +70,30 @@ function agglomerateDirectionalitySuper2(options, outputFolder, graph, segmentMe
         end
         clear resultTemp fieldNames j changedIdx unchangedResult;
         toc;
-        if options.doMerge
-            display('Merging agglomerates:');
-            tic;
-            [axonsNew, changedIdx, unchangedResult] = connectEM.agglomerateMerge(graph, segmentMeta, borderMeta, axons, result, options);
-            toc;
+            
+        display('Merging agglomerates:');
+        tic;
+        [axonsNew, changedIdx, unchangedResult] = connectEM.agglomerateMerge(graph, segmentMeta, borderMeta, axons, result, options);
+        toc;
         
-            display('Saving (intermediate) results:');
-            tic;
-            Util.save([outputFolder num2str(i, '%.2i') '.mat'], axonsNew);
-            toc;
-        else
-            save([outputFolder num2str(i, '%.2i') '.mat'], 'axons', 'result');
-        end
-    end
-    if options.doMerge
-        display('Calculating set of extended metrics:');
+        display('Saving (intermediate) results:');
         tic;
-        name = strsplit(outputFolder, '/');
-        name = name{end-1};
-        metrics = connectEM.moreMetrics(axonsNew, name, segmentMeta);
+        Util.save([outputFolder num2str(i, '%.2i') '.mat'], axonsNew);
         toc;
-        display('Saving metrics:');
-        tic;
-        Util.save([outputFolder 'metricsFinal.mat'], axonsNew, metrics);
-        toc;
+
     end
+    
+    display('Calculating set of extended metrics:');
+    tic;
+    name = strsplit(outputFolder, '/');
+    name = name{end-1};
+    metrics = connectEM.moreMetrics(axonsNew, name, segmentMeta);
+    toc;
+
+    display('Saving metrics:');
+    tic;
+    Util.save([outputFolder 'metricsFinal.mat'], axonsNew, metrics);
+    toc;
+
 end
+
