@@ -1,4 +1,4 @@
-function agglomerateDirectionalitySuper2(options, outputFolder, graph, segmentMeta, borderMeta, globalSegmentPCA)
+function axonDirectionalityBasedGrowing(options, outputFolder, graph, segmentMeta, borderMeta, globalSegmentPCA)
 
     % Create output folder if it does not exist
     if ~exist(outputFolder, 'dir')
