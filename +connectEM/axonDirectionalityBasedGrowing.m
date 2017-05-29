@@ -5,7 +5,7 @@ function axonDirectionalityBasedGrowing(options, outputFolder, graph, segmentMet
         mkdir(outputFolder)
     end
 
-    if ~exist('options', 'var') | isempty(options)
+    if ~exist('options', 'var') || isempty(options)
         options.latentScore = 0.7;
         options.segDirScore = 0.9;
         options.neuriCScore = 0.7;

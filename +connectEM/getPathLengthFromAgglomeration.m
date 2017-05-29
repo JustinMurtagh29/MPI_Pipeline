@@ -11,8 +11,8 @@ function edges = minimalSpanningTree(com)
     else
         % Minimal spanning tree, probably inefficent
         adj = squareform(pdist(com));
-        adj(adj < 5000) = 0;
-        tree = graphminspantree(sparse(adj));
+        adj(adj < 2000) = 0;
+        tree = graphminspantree(sparse(adj), 'Method', 'Kruskal');
         [edges(:,1), edges(:,2)] = find(tree);
     end
 end
