@@ -1,4 +1,8 @@
-function debugQueryAttachment(segmentPositions, agglos, ff, outputFolder)
+function debugQueryAttachment(segmentPositions, agglos, ff, outputFolder, prefix)
+
+    if nargin < 5
+        prefix = 'query_';
+    end
 
     % Visualize each as one nml (set of trees)
     for i=1:length(ff.segIds)
@@ -30,7 +34,7 @@ function debugQueryAttachment(segmentPositions, agglos, ff, outputFolder)
         end       
         % Compose & write skeletons for visualization
         nodes = cellfun(@(x)bsxfun(@minus, x, [1 1 1]), nodes, 'uni', 0);
-        connectEM.generateSkeletonFromNodes([outputFolder 'query_' num2str(i, '%.3i') '.nml'], nodes, treeNames, comments);
+        connectEM.generateSkeletonFromNodes([outputFolder prefix num2str(i, '%.3i') '.nml'], nodes, treeNames, comments);
     end
 
 end
