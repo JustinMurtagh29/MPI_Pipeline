@@ -60,11 +60,14 @@ function y = calculateDirectionalityOfAgglomerates(agglos, graph, segmentMeta, b
         clear covMatsIn;
         
         % Get representation of all borders out of current agglomerate
+        nrNeighbours = cellfun(@numel, graph.neighbours(currentAgglo));
+        borderSourceIdx = repelem(1:numel(currentAgglo), nrNeighbours);
         borderSegId = cat(1, graph.neighbours{currentAgglo});
-        borderProb = cat(1, graph.neighProb{currentAgglo}); 
+        borderProb = cat(1, graph.neighProb{currentAgglo});
         borderIdxs = cat(1, graph.neighBorderIdx{currentAgglo});
         % Limit to borders that are not correspondences and point outside current agglomerate
         outgoing = ~isnan(borderIdxs) & ~ismember(borderSegId, currentAgglo);
+        borderSourceIdx = borderSourceIdx(outgoing);
         borderSegId = borderSegId(outgoing);
         borderProb = borderProb(outgoing); 
         borderIdxs = borderIdxs(outgoing);
@@ -75,7 +78,7 @@ function y = calculateDirectionalityOfAgglomerates(agglos, graph, segmentMeta, b
         % Preallocate arrays for this agglomerate
         latent = zeros(nrBorder,3);
         pca = zeros(3,3,nrBorder); 
-        scores = zeros(nrBorder,1);
+        scores = Inf(nrBorder,1);
 
         % Calculate measures for each surround of current agglo
         for idx2=1:length(surround)
@@ -83,8 +86,10 @@ function y = calculateDirectionalityOfAgglomerates(agglos, graph, segmentMeta, b
             % Calculate PCA from covariance matrix
             [thisPca, thisLatent] = pcaFromCovMat(squeeze(covMatsOut(idx2,:,:)));
 
+            % Calculate all indices in borderSegId etc. that originate from current surround
+            thisIdx = find(ismember(borderSourceIdx, surroundLocal{idx2}));
             % Get center of mass of all border of surround
-            borderCoMs = bsxfun(@times, single(borderMeta.borderCoM(borderIdxs(surroundLocal{idx2}), :)), options.voxelSize);
+            borderCoMs = bsxfun(@times, single(borderMeta.borderCoM(borderIdxs(thisIdx), :)), options.voxelSize);
             % Center on CoM of current surround
             borderCoMsLocalized = bsxfun(@minus, borderCoMs, comVecsOut(idx2,:));
             % Project into PCA space of current surround
@@ -92,11 +97,11 @@ function y = calculateDirectionalityOfAgglomerates(agglos, graph, segmentMeta, b
             score = (result(:,1) - min(result(:,1))) / (max(result(:,1)) - min(result(:,1))) * 2 - 1;
 
             % Collect output
-            idx = abs(scores(surroundLocal{idx2})) < abs(score);
+            idx = abs(scores(thisIdx)) > abs(score);
             nrReplace = sum(idx);
-            latent(surroundLocal{idx2}(idx),:) = repmat(thisLatent', nrReplace, 1);
-            pca(:,:,surroundLocal{idx2}(idx)) = repmat(thisPca, 1, 1, nrReplace);
-            scores(surroundLocal{idx2}(idx)) = score(idx);
+            latent(thisIdx(idx),:) = repmat(thisLatent', nrReplace, 1);
+            pca(:,:,thisIdx(idx)) = repmat(thisPca, 1, 1, nrReplace);
+            scores(thisIdx(idx)) = score(idx);
 
         end
 
