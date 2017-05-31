@@ -29,9 +29,7 @@ clear startAgglo excluded* cm er;
 axonsSize = cellfun(@(x)sum(segmentMeta.voxelCount(x)), axons);
 axons(axonsSize < options.minSize) = [];
 
-idx = 1:10000:length(axons);
-axons = axons(idx);
-result = connectEM.calculateDirectionalityOfAgglomerates(axons, graph, segmentMeta, borderMeta, globalSegmentPCA, options);
+profile off; profile on; result = connectEM.calculateDirectionalityOfAgglomerates(axons, graph, segmentMeta, borderMeta, globalSegmentPCA, options);
 
 % Write some skeletons for quick check
 for i=1:length(result.neighbours)
