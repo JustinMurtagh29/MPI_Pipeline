@@ -4,7 +4,6 @@ function [segIds, neighbours, filenames, nodes, startNode, comments] = lookupNml
         removeNmlWithMoreThanOneTree = true;
     end
 
-
     tic;
     for f=1:length(folders)
         files = dir([folders{f} '*.nml']);
@@ -23,7 +22,7 @@ function [segIds, neighbours, filenames, nodes, startNode, comments] = lookupNml
             warning('parseNml generated an error');
             display(ME.message);
         end
-       if length(skel) >= 2
+        if length(skel) >= 2
             if removeNmlWithMoreThanOneTree
                 display(filenames{i});
                 warning('Skeleton has too many trees');

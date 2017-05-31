@@ -1,5 +1,6 @@
 function metrics = moreMetrics(axonsNew, name, segmentMeta)
-    
+
+    segmentMeta.point = segmentMeta.point';    
     voxelCount = cellfun(@(x)sum(segmentMeta.voxelCount(x)), axonsNew);
     [metrics.voxelCount, idx] = sort(voxelCount, 'descend');
     axonsNew = axonsNew(idx);
