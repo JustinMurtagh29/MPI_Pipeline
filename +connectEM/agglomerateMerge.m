@@ -17,7 +17,7 @@ function [axonsNew, changedIdx, unchangedResult] = agglomerateMerge(graph, segme
     targets = cell2mat(cellfun(@(x,y)axonsLookup(x(y)), result.neighbours, idxAll, 'uni', 0));
     % Exclude small sources & 0 targets (not current in axon agglomerates)
     sourceSize = cellfun(@(x)sum(segmentMeta.voxelCount(x)), axons);
-    idx = sourceSize < options.sourceSize & targets == 0;
+    idx = sourceSize' < options.sourceSize & targets == 0;
     sources(idx) = [];
     targets(idx) = [];
 
