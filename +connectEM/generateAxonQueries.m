@@ -28,7 +28,7 @@ function generateAxonQueries(p, graph, segmentMeta, borderMeta, collection)
             direction_col(end + 1, :) = direction;
             memory_col(end+1, :) = [aggloidx, idx];
             toc
-            %one query per skeletonization ending is enough
+            %one query per agglomeration is enough
             break
         end
     end
