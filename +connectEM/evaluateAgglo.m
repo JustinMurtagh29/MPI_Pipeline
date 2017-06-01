@@ -12,8 +12,8 @@ function [recall, splits, mergers, validnodes, foundAgglomerates, connM] = evalu
     aggloSize = cellfun(@(x)sum(segmentMeta.voxelCount(x)), agglomerates(foundAgglomerates));
     foundAgglomerates(aggloSize < limitaggloSize) = [];
     % Metrics
-    recall = [length(intersect(cell2mat(agglomerates(foundAgglomerates)), skelAsIds(skelAsIds ~= 0))), length(unique(skelAsIds(skelAsIds ~= 0)))];
-    validnodes = find(ismember(skelAsIds, cell2mat(agglomerates(foundAgglomerates))));
+    recall = [length(intersect(cat(1,agglomerates{foundAgglomerates}), skelAsIds(skelAsIds ~= 0))), length(unique(skelAsIds(skelAsIds ~= 0)))];
+    validnodes = find(ismember(skelAsIds, cat(1,agglomerates{foundAgglomerates})));
     % Merger calculation
     mergers = 0;
     scalize = @(x)bsxfun(@times,x,[11.24, 11.24, 28]);
@@ -39,7 +39,7 @@ function [recall, splits, mergers, validnodes, foundAgglomerates, connM] = evalu
     %}
     % Split calculation: Not currently in use
     if graphconncomp(sparse(connM), 'Directed', false) ~= 1
-        disp('skeleton does not stick together')  % todo interpolate nodes
+        %disp('skeleton does not stick together')  % todo interpolate nodes
         splits = -1;
         return;
     end
