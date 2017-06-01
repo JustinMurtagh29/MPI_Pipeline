@@ -1,4 +1,8 @@
 function generateAxonQueries(p, graph, segmentMeta, borderMeta, collection)
+    direction_col = [];
+    startpoint_col = [];
+    memory_col = [];
+    
     for aggloidx = 1 : size(collection.axons);
         aggloidx
         %there are many small axons fragments
