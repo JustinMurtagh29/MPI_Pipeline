@@ -4,6 +4,3 @@
 [submodule "CNN"]
 	path = CNN
 	url = git@gitlab.mpcdf.mpg.de:connectomics/CNN.git
-[submodule "+connectEM/+RESCOPaaS"]
-	path = +connectEM/+RESCOPaaS
-	url = git@gitlab.mpcdf.mpg.de:connectomics/RESCOPaaS.git
