@@ -1,10 +1,10 @@
-[graph, segmentMeta, borderMeta, globalSegmentPCA] = loadAllSegmentationData(p);
-    
+function [graph, segmentMeta, borderMeta, globalSegmentPCA] = loadAllSegmentationData(p);
+
     graph = load([p.saveFolder 'graphNew.mat'], 'edges', 'prob', 'borderIdx');
     [graph.neighbours, neighboursIdx] = Graph.edges2Neighbors(graph.edges);
     graph.neighProb = cellfun(@(x)graph.prob(x), neighboursIdx, 'uni', 0);
     graph.neighBorderIdx = cellfun(@(x)graph.borderIdx(x), neighboursIdx, 'uni', 0);
-    
+
     if nargout > 1
         segmentMeta = load([p.saveFolder 'segmentMeta.mat']);
         segmentMeta = connectEM.addSegmentClassInformation(p, segmentMeta);

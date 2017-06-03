@@ -6,34 +6,48 @@
 
     % Load data
     load('/gaba/u/mberning/results/pipeline/20170217_ROI/allParameterWithSynapses.mat');
-    [graph, segmentMeta, borderMeta, globalSegmentPCA] = loadAllSegmentationData(p);
+    [graph, segmentMeta, borderMeta, globalSegmentPCA] = connectEM.loadAllSegmentationData(p);
 
-    % TODO: Decide based on which agglo to use once grid search is finished
     % Load state of axon agglomeration
-    load('/gaba/scratch/mberning/aggloGridSearch6/6_01_00025/metricsFinal.mat', 'axonsNew');
+    load('/gaba/scratch/mberning/aggloGridSearch6/6_01_00046/metricsFinal.mat', 'axonsNew');
 
     % Calculate axon directionality
     options.voxelSize = p.raw.voxelSize;
-    options.bboxDist = bboxDist; 
+    options.bboxDist = bboxDist;
     directionality = connectEM.calculateDirectionalityOfAgglomerates(axonsNew, graph, segmentMeta, borderMeta, globalSegmentPCA, options);
-    save([outputFolder 'directionality.mat'], 'directionality');
+    save([outputFolder 'directionality.mat'], 'directionality', '-v7.3');
 
     % Calculate size as maximal distance between all agglomerates in an agglomeration
     calculateLength = @(x)max(pdist(bsxfun(@times, double(borderMeta.borderCoM(x, :)), p.raw.voxelSize)));
-    axonLength = calculateLength(directionality.borderIdx);
-    
+    axonLength = cellfun(calculateLength, directionality.borderIdx, 'uni', 0);
+    save([outputFolder 'axonLength.mat'], 'axonLength');
+
+    % Write out skeletons for current agglo
+    segmentMeta.point = segmentMeta.point';
+    y = connectEM.evaluateAggloMetaMeta(graph, axonsNew, [], 'agglosForAxonQueryGeneration', segmentMeta);
+    segmentMeta.point = segmentMeta.point';
+
     % Keep only those axons and directionality metrics that are longer that specified minimal length
-    idx = axonLength > minAxonLength;
-    axonsNew = axonsNew(idx);
-    directionality = cellfun(@(x)x(idx), directionality, 'uni', 0);
-    clear idx;
+    idxEmpty = cellfun('isempty', axonLength);
+    idxKeep = ~idxEmpty;
+    idxKeepLarge = cellfun(@(x)x > minAxonLength, axonLength(idxKeep));
+    idxKeep(idxKeep) = idxKeepLarge;
+    axonsNew = axonsNew(idxKeep);
+    directionality = structfun(@(x)x(idxKeep), directionality, 'uni', 0);
+    axonLength = cell2mat(axonLength(idxKeep));
+    clear idx*;
 
     % Write new segmentation based on axon queries
     mapping = connectEM.createLookup(segmentMeta, axonsNew);
     Seg.Global.applyMappingToSegmentation(p, mapping, [outputFolder '1/']);
+    clear mapping;
 
-    % Generate axon queries 
-    connectEM.generateAxonQueries(p, graph, segmentMeta, borderMeta, directionality, axonsNew);
+    % Save state for bookkeeping
+    save([outputFolder 'beforeQueryGeneration.mat'], 'directionality', 'axonsNew', 'axonLength', '-v7.3');
+
+    % Generate axon queries
+    q = connectEM.generateAxonQueries(p, graph, segmentMeta, borderMeta, directionality, axonsNew);
+    save([outputFolder 'afterQueryGeneration.mat'], 'q');
 
     % Visualize axon queries as skeletons for debugging process
     idx = randperm(numel(axonsNew), 100);
