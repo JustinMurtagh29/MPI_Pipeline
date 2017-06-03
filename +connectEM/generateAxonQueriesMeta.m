@@ -46,11 +46,10 @@
     save([outputFolder 'beforeQueryGeneration.mat'], 'directionality', 'axonsNew', 'axonLength', '-v7.3');
 
     % Generate axon queries
-    q = connectEM.generateAxonQueries(p, graph, segmentMeta, borderMeta, directionality, axonsNew);
-    save([outputFolder 'afterQueryGeneration.mat'], 'q');
+    querySaveFolder = [outputFolder 'queriesMat/'];
+    if ~exist(querySaveFolder, 'dir')
+        mkdir(querySaveFolder)
+    end
+    connectEM.generateAxonQueries(p, graph, segmentMeta, borderMeta, directionality, axonsNew, querySaveFolder);
 
-    % Visualize axon queries as skeletons for debugging process
-    idx = randperm(numel(axonsNew), 100);
-    connectEM.debugNewQueries(segmentMeta, axonsNew(idx), q(idx), [outputFolder 'queryVisualization/']);
-    clear idx;
 

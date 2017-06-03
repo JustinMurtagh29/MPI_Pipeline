@@ -1,4 +1,4 @@
-function q = generateAxonQueries(p, graph, segmentMeta, borderMeta, directionality, axons, options)
+function generateAxonQueries(p, graph, segmentMeta, borderMeta, directionality, axons, outputFolder, options)
 
     if ~exist('options', 'var')
         options.latentScore = 0.7;
@@ -39,17 +39,28 @@ function q = generateAxonQueries(p, graph, segmentMeta, borderMeta, directionali
     directions = bsxfun(@times, bsxfun(@times, sign(thisScores(~outsideBbox)), thisPca(~outsideBbox,:)), 1 ./ p.raw.voxelSize);
     directions = mat2cell(directions, ones(size(directions,1),1), 3);
     axons = axons(~outsideBbox);
-    tic
-    positions = cellfun(@(x,y,z)connectEM.correctQueryLocationToEndOfSegment(p, x, y, z, 200), axons, borderPositions, directions, 'uni', 0);
-    toc
 
-    % Calculate euler angles & put into old format
-    q.pos = positions;
-    q.dir = directions;
-    tic
-    [phi, theta, psi] = cellfun(@(x)calculateEulerAngles(x, p.raw.voxelSize), q.dir);
-    toc
-    q.angles = mat2cell(cat(2, phi, theta, psi), ones(numel(phi),1), 3);
+    % This takes long now, for now write 1000 bundles of 50 queries,
+    % that can then each be transferred to project using wk REST API
+    batchBoundaries = round(linspace(1, numel(axons)+1, 1001));
+    for i=1:length(batchBoundaries)-1
+        tic;
+        theseIdx = batchBoundaries(i):batchBoundaries(i+1)-1;
+        theseAxons = axons(theseIdx);
+        theseBorderPositions = borderPositions(theseIdx);
+        theseDirections = directions(theseIdx);
+        thesePositions = cellfun(@(x,y,z)connectEM.correctQueryLocationToEndOfSegment(p, x, y, z, 200), ...
+            theseAxons, theseBorderPositions, theseDirections, 'uni', 0);
+        % Calculate euler angles & put into old format
+        q.pos = thesePositions;
+        q.dir = theseDirections;
+        [phi, theta, psi] = cellfun(@(x)connectEM.calculateEulerAngles(x, p.raw.voxelSize), q.dir);
+        q.angles = mat2cell(cat(2, phi, theta, psi), ones(numel(phi),1), 3);
+        save([outputFolder 'batch ' num2str(i, '%.4i') '.mat'], 'q');
+        display(['Batch ' num2str(i, '%.4i') ' done']);
+        clear these* q phi theta psi;
+        toc;
+    end
 
 end
 
