@@ -40,9 +40,9 @@ function generateAxonQueries(p, graph, segmentMeta, borderMeta, directionality, 
     directions = mat2cell(directions, ones(size(directions,1),1), 3);
     axons = axons(~outsideBbox);
 
-    % This takes long now, for now write 1000 bundles of 50 queries,
+    % This takes long now, for now write 100 bundles of (in our current case) ~500 queries,
     % that can then each be transferred to project using wk REST API
-    batchBoundaries = round(linspace(1, numel(axons)+1, 1001));
+    batchBoundaries = round(linspace(1, numel(axons)+1, 101));
     for i=1:length(batchBoundaries)-1
         tic;
         theseIdx = batchBoundaries(i):batchBoundaries(i+1)-1;
@@ -56,7 +56,7 @@ function generateAxonQueries(p, graph, segmentMeta, borderMeta, directionality, 
         q.dir = theseDirections;
         [phi, theta, psi] = cellfun(@(x)connectEM.calculateEulerAngles(x, p.raw.voxelSize), q.dir);
         q.angles = mat2cell(cat(2, phi, theta, psi), ones(numel(phi),1), 3);
-        save([outputFolder 'batch ' num2str(i, '%.4i') '.mat'], 'q');
+        save([outputFolder 'batch' num2str(i, '%.4i') '.mat'], 'q', 'theseAxons');
         display(['Batch ' num2str(i, '%.4i') ' done']);
         clear these* q phi theta psi;
         toc;
