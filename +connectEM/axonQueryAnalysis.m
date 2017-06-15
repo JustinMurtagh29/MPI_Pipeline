@@ -93,14 +93,32 @@ for idx = 1 : length(y_pre.axon1.foundAgglomerates_col)
         copyfile(filenames{idx2}, [folder, last(strsplit(filenames{idx2}, filesep))]);
     end
 end
-liste = dir([skeletonFolders{1} '*.nml']);
-taskStrings = unique(arrayfun(@(x){x.name(1:54)}, liste));
+liste = ff.filenames;
+taskStrings = unique(cellfun(@(x){x(1:54)}, liste));
 taskStrings{1,2} = [];
+getUname = @(x)cellfun(@(y){y(55:end-70)}, x);
+unames = unique(getUname(liste));
+unames{1, 2} = [];
 for idx = 1 : length(liste)
     if mod(idx, 100) == 0
         idx
     end
-    rowidx = strcmp(taskStrings(:, 1), liste(idx).name(1:54));
+    rowidx = strcmp(taskStrings(:, 1), liste{idx}(1:54));
     taskStrings{rowidx, 2} = [taskStrings{rowidx, 2}, idx];
 end 
-find(cellfun('length', taskStrings(:, 2)) == 3)
+testTasks = find(cellfun('length', taskStrings(:, 2)) == 3);
+allEqual = all(@(x)cellfun(@(y)isequal(x{1}, y), x(2:end)));
+for idx = cell2mat(taskStrings(testTasks, 2))'
+    if allEqual(startAgglo(idx)) && allEqual(endAgglo(idx))
+        uidxs = ismember(unames(:, 1), getUname(ff.filenames(idx)));
+        unames(uidxs, 2) = cellfun(@(x){[x, 1]}, unames(uidxs, 2));
+    else
+        for badidx = 1 : 3
+            goodidx = setdiff(idx, badidx);
+            if allEqual(startAgglo(goodidx)) && allEqual(endAgglo(goodidx))
+               uidxs = ismember(unames(:, 1), getUname(ff.filenames(badidx)));
+               unames(uidx2, 2) = cellfun(@(x){[x, -1]}, unames(uidx, 2));
+            end
+        end
+    end
+end
