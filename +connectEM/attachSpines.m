@@ -1,19 +1,21 @@
-function [dendritesNew, spinePaths, comment] = attachSpines(graph, segmentMeta, dendrites, axons, maxSteps )
+function [dendritesNew, spinePaths, comment] = attachSpines(graph, segmentMeta, dendrites, axons, ...
+        spineProbThreshold, dendriteProbSpines, probThresholdSpines, maxStepsSpines )
     % Attach spines to a set of dendritic equivalence classes based on shortest path
 
     % Starting points are spines (not yet collected or excluded) and stop if non dendritic segment reached
-    excluded = ~segmentMeta.isDendrite;
+    excluded = ~(segmentMeta.dendriteProb > dendriteProbSpines);
     excluded(cat(1, axons{:})) = true;
     targetLabel = zeros(segmentMeta.maxSegId,1);
     for i=1:length(dendrites)
         targetLabel(dendrites{i}) = i;
     end
-    spineIds = find(segmentMeta.isSpine & ~excluded);
+    isSpine = segmentMeta.spineProb > spineProbThreshold;
+    spineIds = find(isSpine & ~excluded);
 
     % Display some stats
-    nrSpineSegments = sum(segmentMeta.isSpine);
+    nrSpineSegments = sum(isSpine);
     display(['Total #segments classified as spines: ' num2str(nrSpineSegments)]);
-    nrSpineSegmentsExcluded = sum(segmentMeta.isSpine & excluded);
+    nrSpineSegmentsExcluded = sum(isSpine & excluded);
     display(['Total #segments not in dendrite class: ' num2str(nrSpineSegmentsExcluded)]);
 
     % Perform maximum probaility search for each spine head
@@ -36,17 +38,20 @@ function [dendritesNew, spinePaths, comment] = attachSpines(graph, segmentMeta, 
             neighbours = neighbours(idx);
             
             % Add maximum probability segment to path if none of the terminal conditions are met
+            [maxProb, idx] = max(neighProb);
             if targetLabel(takenPath(end)) ~= 0
                 comment{i} = 'attachted';
                 break; 
             elseif isempty(neighbours)
                 comment{i} = 'no more dendritic neighbours';
                 break;
-            elseif nrSteps >= maxSteps
+            elseif nrSteps >= maxStepsSpines
                 comment{i} = 'maximum steps reached';
                 break;
+            elseif maxProb < probThresholdSpines
+                comment{i} = 'low probability';
+                break;
             else
-                [maxProb, idx] = max(neighProb);
                 takenPath(end+1) = neighbours(idx);
             end
             nrSteps = nrSteps + 1;

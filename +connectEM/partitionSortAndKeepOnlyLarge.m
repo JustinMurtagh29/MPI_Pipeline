@@ -6,7 +6,7 @@ function [partition, partitionSize, partitionEdges] = partitionSortAndKeepOnlyLa
     partitionSize = cellfun(@(x)sum(segmentMeta.voxelCount(x)), partition);
     [partitionSize, idx] = sort(partitionSize, 'descend');
     partition = partition(idx);
-    % Keep only agglomerates that have at least 1 million voxels
+    % Keep only agglomerates that have at least sizeThreshold million voxels
     idx = partitionSize > sizeThreshold;
     partition = partition(idx);
     partitionSize = partitionSize(idx);

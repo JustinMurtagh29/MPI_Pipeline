@@ -16,7 +16,8 @@ function job = globalizeSegmentation(p)
     end
     toc();
 
-    % Save numElTotal so that it only has to be added to localID of respective cube to get global one
+    % Save numElTotal so that it only has to be added to localID of
+    % respective cube to get global one
     Util.save([p.saveFolder 'numEl.mat'], numElTotal, numElTotalUpper); 
 
     % collect parameters
@@ -25,10 +26,17 @@ function job = globalizeSegmentation(p)
     for curIdx = 1:numel(p.local)
         [curI, curJ, curK] = ind2sub( ...
             size(p.local), curIdx);
-        inputCell{curIdx} = {p, curI, curJ, curK};
+        inputCell{curIdx} = {p.saveFolder, curI, curJ, curK};
     end
 
     % Globalize segmentation and save as KNOSSOS hierachy for Oxalis
-    job = startCPU(@globalSegId, inputCell, 'globalSegmentID', 12, 10);
+    job = startCPU(@globalizeSegmentationJobWrapper, inputCell, ...
+        'globalSegmentID', 12, 10);
+end
+
+function globalizeSegmentationJobWrapper(segFolder, i, j ,k)
+m = load(fullfile(segFolder, 'allParameter.mat'));
+p = m.p;
+globalSegId(p, i, j, k);
 end
 

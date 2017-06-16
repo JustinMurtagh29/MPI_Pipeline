@@ -1,0 +1,1022 @@
+<things>
+  <parameters>
+    <experiment name="2012-09-28_ex145_07x2_new2"/>
+    <scale x="11.24" y="11.24" z="28.0"/>
+    <offset x="0" y="0" z="0"/>
+    <time ms="1481818514003"/>
+    <activeNode id="1380"/>
+    <editPosition x="5973" y="3192" z="916"/>
+    <connection roundTripTime="73.47137128287241" bandwidth="1996482.0854329052" totalBuckets="2167"/>
+    <zoomLevel zoom="-0.4400000000000011"/>
+  </parameters>
+  <thing 
+  id="7" color.r="1.0" color.g="0.0" color.b="0.3333333432674408" color.a="1.0" name="Tree001 ok">
+    <nodes>
+      <node 
+      id="1279" radius="120.0" x="5319" y="4175" z="832" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="1" inMag="1" bitDepth="0" interpolation="false" time="1473937883627" withSpeed="-1.0">
+</node>
+      <node 
+      id="1280" radius="120.0" x="5319" y="4186" z="831" rotX="356.5107009493597" rotY="359.9997206025474" rotZ="0.0096317341641452" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067299015" withSpeed="-1.0">
+</node>
+      <node 
+      id="1281" radius="120.0" x="5319" y="4186" z="831" rotX="356.5107009493597" rotY="359.9997206025474" rotZ="0.0096317341641452" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067299021" withSpeed="-1.0">
+</node>
+      <node 
+      id="1282" radius="120.0" x="5319" y="4186" z="831" rotX="356.5107009493597" rotY="359.9997206025474" rotZ="0.0096317341641452" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067299022" withSpeed="-1.0">
+</node>
+      <node 
+      id="1283" radius="120.0" x="5319" y="4187" z="842" rotX="356.5107009493597" rotY="359.9997206025474" rotZ="0.0096317341641452" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067299333" withSpeed="-1.0">
+</node>
+      <node 
+      id="1284" radius="120.0" x="5333" y="4155" z="845" rotX="6.8155965154334694" rotY="4.4840011740868135" rotZ="0.005181039081207928" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067299925" withSpeed="-1.0">
+</node>
+      <node 
+      id="1285" radius="120.0" x="5334" y="4148" z="852" rotX="8.143267371305058" rotY="4.3191345255705755" rotZ="0.02591510090826432" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067300161" withSpeed="-1.0">
+</node>
+      <node 
+      id="1286" radius="120.0" x="5332" y="4116" z="850" rotX="18.278144081473044" rotY="3.9774090742376416" rotZ="0.029978882897523818" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067300534" withSpeed="-1.0">
+</node>
+      <node 
+      id="1287" radius="120.0" x="5340" y="4112" z="855" rotX="18.332100985359716" rotY="5.870425243140858" rotZ="359.4014510852221" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067300709" withSpeed="-1.0">
+</node>
+      <node 
+      id="1288" radius="120.0" x="5348" y="4112" z="862" rotX="16.736283914905357" rotY="7.610997607174795" rotZ="358.84007396167567" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067300917" withSpeed="-1.0">
+</node>
+      <node 
+      id="1289" radius="120.0" x="5355" y="4105" z="865" rotX="18.32061842543021" rotY="9.515715264510334" rotZ="358.24399377342917" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067301033" withSpeed="-1.0">
+</node>
+      <node 
+      id="1290" radius="120.0" x="5362" y="4097" z="869" rotX="19.393832409474044" rotY="10.774866845670203" rotZ="357.81125773076377" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067301199" withSpeed="-1.0">
+</node>
+      <node 
+      id="1291" radius="120.0" x="5367" y="4090" z="875" rotX="19.936141149002708" rotY="11.400733216806316" rotZ="357.58334365762727" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067301408" withSpeed="-1.0">
+</node>
+      <node 
+      id="1292" radius="120.0" x="5380" y="4091" z="879" rotX="18.850609597867674" rotY="14.372169490551926" rotZ="356.4894891704025" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067301551" withSpeed="-1.0">
+</node>
+      <node 
+      id="1293" radius="120.0" x="5389" y="4088" z="880" rotX="19.590621225512905" rotY="16.886790900129654" rotZ="355.5935273890504" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067301985" withSpeed="-1.0">
+</node>
+      <node 
+      id="1294" radius="120.0" x="5395" y="4080" z="886" rotX="20.438412950806025" rotY="17.043321347311803" rotZ="355.53525613516825" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067302187" withSpeed="-1.0">
+</node>
+      <node 
+      id="1295" radius="120.0" x="5400" y="4073" z="891" rotX="21.139412890593803" rotY="17.35417201750289" rotZ="355.41225978074186" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067302369" withSpeed="-1.0">
+</node>
+      <node 
+      id="1296" radius="120.0" x="5427" y="4049" z="885" rotX="31.009247033851295" rotY="25.420972402322604" rotZ="351.63054140245026" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067303143" withSpeed="-1.0">
+</node>
+      <node 
+      id="1297" radius="120.0" x="5433" y="4042" z="890" rotX="31.009247033851295" rotY="25.420972402322604" rotZ="351.63054140245026" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067303328" withSpeed="-1.0">
+</node>
+      <node 
+      id="1298" radius="120.0" x="5443" y="4036" z="892" rotX="32.10068091577966" rotY="26.836639213876822" rotZ="350.6616088944049" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067303779" withSpeed="-1.0">
+</node>
+      <node 
+      id="1299" radius="120.0" x="5450" y="4028" z="896" rotX="32.47783433017179" rotY="26.97736091838823" rotZ="350.56252970991636" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067303952" withSpeed="-1.0">
+</node>
+      <node 
+      id="1300" radius="120.0" x="5456" y="4020" z="898" rotX="33.73368059138613" rotY="27.25599245285457" rotZ="350.3590624246935" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067304087" withSpeed="-1.0">
+</node>
+      <node 
+      id="1301" radius="120.0" x="5478" y="4020" z="897" rotX="35.87981236814352" rotY="32.56019522192969" rotZ="346.06123564750413" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067304669" withSpeed="-1.0">
+</node>
+      <node 
+      id="1302" radius="120.0" x="5485" y="4013" z="900" rotX="35.87981236814352" rotY="32.56019522192969" rotZ="346.06123564750413" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067304834" withSpeed="-1.0">
+</node>
+      <node 
+      id="1303" radius="120.0" x="5493" y="4007" z="904" rotX="35.87981236814352" rotY="32.56019522192969" rotZ="346.06123564750413" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067304999" withSpeed="-1.0">
+</node>
+      <node 
+      id="1304" radius="120.0" x="5503" y="4009" z="902" rotX="37.112562761237314" rotY="35.36503694565681" rotZ="343.55805180944026" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067305467" withSpeed="-1.0">
+</node>
+      <node 
+      id="1305" radius="120.0" x="5512" y="4005" z="904" rotX="37.474219669121396" rotY="36.02597439201554" rotZ="342.93823579806684" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067305606" withSpeed="-1.0">
+</node>
+      <node 
+      id="1306" radius="120.0" x="5521" y="3999" z="908" rotX="37.474219669121396" rotY="36.02597439201554" rotZ="342.93823579806684" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067305773" withSpeed="-1.0">
+</node>
+      <node 
+      id="1307" radius="120.0" x="5528" y="3993" z="911" rotX="37.474219669121396" rotY="36.02597439201554" rotZ="342.93823579806684" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067305927" withSpeed="-1.0">
+</node>
+      <node 
+      id="1308" radius="120.0" x="5533" y="3969" z="903" rotX="48.28029191279734" rotY="38.02964496773461" rotZ="340.4486729790559" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067306551" withSpeed="-1.0">
+</node>
+      <node 
+      id="1309" radius="120.0" x="5542" y="3963" z="903" rotX="50.65308309749105" rotY="39.33106798543713" rotZ="338.5135031403192" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067306653" withSpeed="-1.0">
+</node>
+      <node 
+      id="1310" radius="120.0" x="5550" y="3956" z="905" rotX="50.65308309749105" rotY="39.33106798543713" rotZ="338.5135031403192" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067306807" withSpeed="-1.0">
+</node>
+      <node 
+      id="1311" radius="120.0" x="5552" y="3944" z="908" rotX="50.55196986792009" rotY="37.84809943895851" rotZ="340.8065975418899" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067307481" withSpeed="-1.0">
+</node>
+      <node 
+      id="1312" radius="120.0" x="5559" y="3937" z="911" rotX="50.55196986792009" rotY="37.84809943895851" rotZ="340.8065975418899" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067307631" withSpeed="-1.0">
+</node>
+      <node 
+      id="1313" radius="120.0" x="5560" y="3921" z="909" rotX="53.37665052766664" rotY="37.848100637005814" rotZ="340.80659735272013" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067310279" withSpeed="-1.0">
+</node>
+      <node 
+      id="1314" radius="120.0" x="5564" y="3912" z="911" rotX="53.46292232424446" rotY="37.4527865540573" rotZ="341.48140956541494" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067310417" withSpeed="-1.0">
+</node>
+      <node 
+      id="1315" radius="120.0" x="5555" y="3888" z="910" rotX="56.05531005838884" rotY="36.06669400951995" rotZ="343.8131793152302" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067310823" withSpeed="-1.0">
+</node>
+      <node 
+      id="1316" radius="120.0" x="5560" y="3879" z="912" rotX="56.38762625335545" rotY="36.06669490486104" rotZ="343.81317805007143" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067310954" withSpeed="-1.0">
+</node>
+      <node 
+      id="1317" radius="120.0" x="5574" y="3887" z="911" rotX="56.496132736907725" rotY="37.61518244968937" rotZ="340.86112070030134" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067311379" withSpeed="-1.0">
+</node>
+      <node 
+      id="1318" radius="120.0" x="5581" y="3880" z="913" rotX="56.60313096870101" rotY="37.70677168614168" rotZ="340.6859965911213" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067311514" withSpeed="-1.0">
+</node>
+      <node 
+      id="1319" radius="120.0" x="5589" y="3871" z="915" rotX="56.60313096870101" rotY="37.70677168614168" rotZ="340.6859965911213" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067311669" withSpeed="-1.0">
+</node>
+      <node 
+      id="1320" radius="120.0" x="5596" y="3863" z="917" rotX="56.60313096870101" rotY="37.70677168614168" rotZ="340.6859965911213" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067311816" withSpeed="-1.0">
+</node>
+      <node 
+      id="1321" radius="120.0" x="5595" y="3844" z="908" rotX="63.13549417220304" rotY="38.37430769644817" rotZ="338.9814750340644" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067312192" withSpeed="-1.0">
+</node>
+      <node 
+      id="1322" radius="120.0" x="5601" y="3834" z="908" rotX="64.20258232027766" rotY="38.522136694712" rotZ="338.60145985287454" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067312326" withSpeed="-1.0">
+</node>
+      <node 
+      id="1323" radius="120.0" x="5607" y="3826" z="909" rotX="64.20258232027766" rotY="38.522136694712" rotZ="338.60145985287454" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067312458" withSpeed="-1.0">
+</node>
+      <node 
+      id="1324" radius="120.0" x="5614" y="3817" z="911" rotX="64.20258232027766" rotY="38.522136694712" rotZ="338.60145985287454" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067312605" withSpeed="-1.0">
+</node>
+      <node 
+      id="1325" radius="120.0" x="5633" y="3824" z="905" rotX="67.84052932238194" rotY="40.46335268737079" rotZ="332.88473586364523" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067313026" withSpeed="-1.0">
+</node>
+      <node 
+      id="1326" radius="120.0" x="5642" y="3820" z="904" rotX="68.76941981709905" rotY="40.89333979045733" rotZ="331.45969376711" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067313141" withSpeed="-1.0">
+</node>
+      <node 
+      id="1327" radius="120.0" x="5651" y="3812" z="905" rotX="69.33979647138699" rotY="41.07220935947436" rotZ="330.8433568909891" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067313276" withSpeed="-1.0">
+</node>
+      <node 
+      id="1328" radius="120.0" x="5659" y="3804" z="906" rotX="69.33979647138699" rotY="41.07220935947436" rotZ="330.8433568909891" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067313417" withSpeed="-1.0">
+</node>
+      <node 
+      id="1329" radius="120.0" x="5654" y="3792" z="909" rotX="68.30402027748346" rotY="40.24196419664037" rotZ="333.70795023818226" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067313873" withSpeed="-1.0">
+</node>
+      <node 
+      id="1330" radius="120.0" x="5661" y="3784" z="910" rotX="68.30402027748346" rotY="40.24196419664037" rotZ="333.70795023818226" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067314014" withSpeed="-1.0">
+</node>
+      <node 
+      id="1331" radius="120.0" x="5668" y="3776" z="912" rotX="67.8412469776419" rotY="40.18036344461518" rotZ="333.91002101417286" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067314157" withSpeed="-1.0">
+</node>
+      <node 
+      id="1332" radius="120.0" x="5676" y="3767" z="913" rotX="67.8412469776419" rotY="40.18036344461518" rotZ="333.91002101417286" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067314304" withSpeed="-1.0">
+</node>
+      <node 
+      id="1333" radius="120.0" x="5683" y="3759" z="915" rotX="67.8412469776419" rotY="40.18036344461518" rotZ="333.91002101417286" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067314435" withSpeed="-1.0">
+</node>
+      <node 
+      id="1334" radius="120.0" x="5689" y="3751" z="916" rotX="68.00740529132048" rotY="40.18036418210397" rotZ="333.91002182860467" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067314566" withSpeed="-1.0">
+</node>
+      <node 
+      id="1335" radius="120.0" x="5695" y="3738" z="915" rotX="69.17050783312493" rotY="40.18036292918646" rotZ="333.9100228459282" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067314724" withSpeed="-1.0">
+</node>
+      <node 
+      id="1336" radius="120.0" x="5696" y="3727" z="913" rotX="70.99824382360953" rotY="40.180362588576315" rotZ="333.91002151491205" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067314819" withSpeed="-1.0">
+</node>
+      <node 
+      id="1337" radius="120.0" x="5701" y="3718" z="911" rotX="72.99731363362355" rotY="40.43895139369795" rotZ="332.8747031219781" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067314920" withSpeed="-1.0">
+</node>
+      <node 
+      id="1338" radius="120.0" x="5710" y="3707" z="909" rotX="74.98068829903741" rotY="40.71579149826891" rotZ="331.61374591465534" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067315069" withSpeed="-1.0">
+</node>
+      <node 
+      id="1339" radius="120.0" x="5711" y="3695" z="904" rotX="78.50339939421372" rotY="40.90747680195807" rotZ="330.5458298197293" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067315175" withSpeed="-1.0">
+</node>
+      <node 
+      id="1340" radius="120.0" x="5712" y="3683" z="899" rotX="82.34866177956559" rotY="41.07233545828683" rotZ="329.2433326460692" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067315269" withSpeed="-1.0">
+</node>
+      <node 
+      id="1341" radius="120.0" x="5702" y="3672" z="888" rotX="89.63186848526664" rotY="41.19367406798756" rotZ="327.26539658352067" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067315633" withSpeed="-1.0">
+</node>
+      <node 
+      id="1342" radius="120.0" x="5707" y="3664" z="888" rotX="89.63186848526664" rotY="41.19367406798756" rotZ="327.26539658352067" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067315760" withSpeed="-1.0">
+</node>
+      <node 
+      id="1343" radius="120.0" x="5713" y="3655" z="888" rotX="89.63186848526664" rotY="41.19367406798756" rotZ="327.26539658352067" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067315893" withSpeed="-1.0">
+</node>
+      <node 
+      id="1344" radius="120.0" x="5719" y="3646" z="888" rotX="89.63186848526664" rotY="41.19367406798756" rotZ="327.26539658352067" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067316019" withSpeed="-1.0">
+</node>
+      <node 
+      id="1345" radius="120.0" x="5723" y="3637" z="887" rotX="89.96418403295905" rotY="41.19367185205522" rotZ="327.265396305998" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067316141" withSpeed="-1.0">
+</node>
+      <node 
+      id="1346" radius="120.0" x="5730" y="3627" z="887" rotX="89.96418403295905" rotY="41.19367185205522" rotZ="327.265396305998" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067316286" withSpeed="-1.0">
+</node>
+      <node 
+      id="1347" radius="120.0" x="5734" y="3616" z="888" rotX="89.69406300948458" rotY="41.192909625370476" rotZ="327.9278270113592" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067316423" withSpeed="-1.0">
+</node>
+      <node 
+      id="1348" radius="120.0" x="5737" y="3605" z="889" rotX="88.96710102242139" rotY="41.18320422607155" rotZ="329.0317209590236" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067316554" withSpeed="-1.0">
+</node>
+      <node 
+      id="1349" radius="120.0" x="5739" y="3595" z="891" rotX="87.30710005208334" rotY="41.139025161810196" rotZ="330.79638514909124" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067316672" withSpeed="-1.0">
+</node>
+      <node 
+      id="1350" radius="120.0" x="5742" y="3584" z="893" rotX="86.58293933869231" rotY="41.0947482526679" rotZ="331.8975871771489" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067316805" withSpeed="-1.0">
+</node>
+      <node 
+      id="1351" radius="120.0" x="5748" y="3575" z="895" rotX="85.48474648428498" rotY="41.061710845040636" rotZ="332.55740085445456" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067318136" withSpeed="-1.0">
+</node>
+      <node 
+      id="1352" radius="120.0" x="5754" y="3566" z="895" rotX="85.15243125833462" rotY="41.06170971159361" rotZ="332.55740274521344" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067318272" withSpeed="-1.0">
+</node>
+      <node 
+      id="1353" radius="120.0" x="5761" y="3557" z="896" rotX="84.82011466598016" rotY="41.06171024568232" rotZ="332.5574027501732" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067318403" withSpeed="-1.0">
+</node>
+      <node 
+      id="1354" radius="120.0" x="5766" y="3548" z="896" rotX="84.82011466598016" rotY="41.06171024568232" rotZ="332.5574027501732" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067318533" withSpeed="-1.0">
+</node>
+      <node 
+      id="1355" radius="120.0" x="5761" y="3540" z="888" rotX="90.1322819671426" rotY="41.11349639383485" rotZ="330.7954014901339" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067319740" withSpeed="-1.0">
+</node>
+      <node 
+      id="1356" radius="120.0" x="5760" y="3529" z="885" rotX="92.41615604020905" rotY="41.10899885616681" rotZ="330.3543885865322" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067319855" withSpeed="-1.0">
+</node>
+      <node 
+      id="1357" radius="120.0" x="5765" y="3520" z="885" rotX="92.41615604020905" rotY="41.10899885616681" rotZ="330.3543885865322" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067319988" withSpeed="-1.0">
+</node>
+      <node 
+      id="1358" radius="120.0" x="5771" y="3509" z="884" rotX="92.41615604020905" rotY="41.10899885616681" rotZ="330.3543885865322" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067320128" withSpeed="-1.0">
+</node>
+      <node 
+      id="1359" radius="120.0" x="5775" y="3499" z="883" rotX="92.91462854258128" rotY="41.10899973566194" rotZ="330.35438889826315" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067320266" withSpeed="-1.0">
+</node>
+      <node 
+      id="1360" radius="120.0" x="5778" y="3488" z="881" rotX="94.20098462802827" rotY="41.08982087203185" rotZ="329.9141364572531" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067320404" withSpeed="-1.0">
+</node>
+      <node 
+      id="1361" radius="120.0" x="5783" y="3477" z="881" rotX="94.36714367378858" rotY="41.08982285219656" rotZ="329.9141340767911" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067320547" withSpeed="-1.0">
+</node>
+      <node 
+      id="1362" radius="120.0" x="5788" y="3467" z="880" rotX="94.36714367378858" rotY="41.08982285219656" rotZ="329.9141340767911" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067320682" withSpeed="-1.0">
+</node>
+      <node 
+      id="1363" radius="120.0" x="5795" y="3460" z="882" rotX="93.37019440695678" rotY="41.08982121953875" rotZ="329.91413682823884" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067320799" withSpeed="-1.0">
+</node>
+      <node 
+      id="1364" radius="120.0" x="5801" y="3452" z="883" rotX="92.72701875212834" rotY="41.09889647318005" rotZ="330.13428296679143" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067320919" withSpeed="-1.0">
+</node>
+      <node 
+      id="1365" radius="120.0" x="5806" y="3443" z="886" rotX="90.52801422808102" rotY="41.1310671035543" rotZ="331.4568575555181" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067321037" withSpeed="-1.0">
+</node>
+      <node 
+      id="1366" radius="120.0" x="5814" y="3437" z="888" rotX="89.36491073006374" rotY="41.131068845922755" rotZ="331.45685528603434" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067321149" withSpeed="-1.0">
+</node>
+      <node 
+      id="1367" radius="120.0" x="5827" y="3432" z="888" rotX="89.21772138786565" rotY="41.140876683209456" rotZ="329.9125812603554" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067321274" withSpeed="-1.0">
+</node>
+      <node 
+      id="1368" radius="120.0" x="5838" y="3431" z="889" rotX="88.42719279568462" rotY="41.155100987429876" rotZ="328.58879147634997" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067321355" withSpeed="-1.0">
+</node>
+      <node 
+      id="1369" radius="120.0" x="5850" y="3431" z="894" rotX="85.60251075196987" rotY="41.1551027561315" rotZ="328.5887917884043" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067321444" withSpeed="-1.0">
+</node>
+      <node 
+      id="1370" radius="120.0" x="5861" y="3429" z="900" rotX="81.72399740020364" rotY="41.07324292543149" rotZ="329.68594278236867" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067321556" withSpeed="-1.0">
+</node>
+      <node 
+      id="1371" radius="120.0" x="5869" y="3423" z="903" rotX="80.10873517382811" rotY="41.022682422947355" rotZ="330.12145574462744" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067321682" withSpeed="-1.0">
+</node>
+      <node 
+      id="1372" radius="120.0" x="5877" y="3416" z="906" rotX="78.66177432223418" rotY="40.9614678367339" rotZ="330.55419161064134" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067321820" withSpeed="-1.0">
+</node>
+      <node 
+      id="1373" radius="120.0" x="5884" y="3409" z="909" rotX="76.9358404246845" rotY="40.82241256450118" rotZ="331.4139239793231" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067321954" withSpeed="-1.0">
+</node>
+      <node 
+      id="1374" radius="120.0" x="5894" y="3405" z="913" rotX="75.13476750901276" rotY="40.78372124236739" rotZ="331.62739540752887" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067322083" withSpeed="-1.0">
+</node>
+      <node 
+      id="1375" radius="120.0" x="5903" y="3399" z="916" rotX="73.83348616475348" rotY="40.73996848652234" rotZ="331.83902693548947" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067322219" withSpeed="-1.0">
+</node>
+      <node 
+      id="1376" radius="120.0" x="5910" y="3392" z="917" rotX="73.33501228767386" rotY="40.73997024142744" rotZ="331.8390248712638" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067322347" withSpeed="-1.0">
+</node>
+      <node 
+      id="1377" radius="120.0" x="5919" y="3385" z="917" rotX="74.05244362110886" rotY="40.92658074044874" rotZ="330.9959329825155" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067322473" withSpeed="-1.0">
+</node>
+      <node 
+      id="1378" radius="120.0" x="5927" y="3379" z="917" rotX="74.60905821622282" rotY="41.106092965219204" rotZ="330.14780163410904" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067322589" withSpeed="-1.0">
+</node>
+      <node 
+      id="1379" radius="120.0" x="5936" y="3371" z="918" rotX="74.88923876317699" rotY="41.19350810823357" rotZ="329.7220149217106" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067322734" withSpeed="-1.0">
+</node>
+      <node 
+      id="1380" radius="120.0" x="5942" y="3362" z="916" rotX="76.450320146227" rotY="41.36314235676883" rotZ="328.8669144653397" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067322848" withSpeed="-1.0">
+</node>
+      <node 
+      id="1381" radius="120.0" x="5946" y="3352" z="914" rotX="78.06459219802048" rotY="41.440200105409815" rotZ="328.4359535479111" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067322971" withSpeed="-1.0">
+</node>
+      <node 
+      id="1382" radius="120.0" x="5950" y="3341" z="913" rotX="79.0615361441553" rotY="41.44019930471342" rotZ="328.4359549719515" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067323092" withSpeed="-1.0">
+</node>
+      <node 
+      id="1383" radius="120.0" x="5946" y="3333" z="914" rotX="78.77037407023516" rotY="41.14747619658863" rotZ="330.38782515220686" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067323145" withSpeed="-1.0">
+</node>
+      <node 
+      id="1384" radius="120.0" x="5938" y="3321" z="915" rotX="78.2648145892586" rotY="40.712665699761715" rotZ="333.1884194807956" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067323204" withSpeed="-1.0">
+</node>
+      <node 
+      id="1385" radius="120.0" x="5938" y="3310" z="916" rotX="77.95471991358227" rotY="40.470180017427595" rotZ="334.68645053144917" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067323321" withSpeed="-1.0">
+</node>
+      <node 
+      id="1386" radius="120.0" x="5939" y="3298" z="917" rotX="78.23263456953327" rotY="40.329757274094106" rotZ="335.53949364958646" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067323453" withSpeed="-1.0">
+</node>
+      <node 
+      id="1387" radius="120.0" x="5940" y="3287" z="916" rotX="79.25776190252822" rotY="40.29567565345121" rotZ="335.75276557687164" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067323561" withSpeed="-1.0">
+</node>
+      <node 
+      id="1388" radius="120.0" x="5939" y="3275" z="913" rotX="81.41781202491308" rotY="40.29567598662618" rotZ="335.7527655281287" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067323668" withSpeed="-1.0">
+</node>
+      <node 
+      id="1389" radius="120.0" x="5944" y="3265" z="913" rotX="81.75012726295432" rotY="40.29567498970448" rotZ="335.75276412810547" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067323807" withSpeed="-1.0">
+</node>
+      <node 
+      id="1390" radius="120.0" x="5949" y="3255" z="913" rotX="81.75012726295432" rotY="40.29567498970448" rotZ="335.75276412810547" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067323941" withSpeed="-1.0">
+</node>
+      <node 
+      id="1391" radius="120.0" x="5954" y="3246" z="914" rotX="81.75012726295432" rotY="40.29567498970448" rotZ="335.75276412810547" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067324072" withSpeed="-1.0">
+</node>
+      <node 
+      id="1392" radius="120.0" x="5959" y="3236" z="914" rotX="82.08244107246026" rotY="40.2956749249592" rotZ="335.7527657814577" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067324202" withSpeed="-1.0">
+</node>
+      <node 
+      id="1393" radius="120.0" x="5964" y="3226" z="914" rotX="82.08244107246026" rotY="40.2956749249592" rotZ="335.7527657814577" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067324337" withSpeed="-1.0">
+</node>
+      <node 
+      id="1394" radius="120.0" x="5969" y="3217" z="915" rotX="82.08244107246026" rotY="40.2956749249592" rotZ="335.7527657814577" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067324467" withSpeed="-1.0">
+</node>
+      <node 
+      id="1395" radius="120.0" x="5976" y="3208" z="917" rotX="80.9732489827116" rotY="40.24623985082752" rotZ="336.1834604489329" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067324601" withSpeed="-1.0">
+</node>
+      <node 
+      id="1396" radius="120.0" x="5982" y="3199" z="918" rotX="80.80709136595578" rotY="40.24623941055722" rotZ="336.1834612107649" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067324741" withSpeed="-1.0">
+</node>
+      <node 
+      id="1397" radius="120.0" x="5990" y="3191" z="921" rotX="78.72984386250971" rotY="40.164817559702726" rotZ="336.8273762876548" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067324883" withSpeed="-1.0">
+</node>
+      <node 
+      id="1398" radius="120.0" x="5996" y="3182" z="922" rotX="78.72984386250971" rotY="40.164817559702726" rotZ="336.8273762876548" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067325015" withSpeed="-1.0">
+</node>
+      <node 
+      id="1399" radius="120.0" x="6009" y="3180" z="925" rotX="77.11918129948481" rotY="40.30668632989955" rotZ="335.97682946951795" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067325136" withSpeed="-1.0">
+</node>
+      <node 
+      id="1400" radius="120.0" x="6020" y="3175" z="927" rotX="76.64456822513739" rotY="40.49594894433642" rotZ="334.9145650945212" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067325266" withSpeed="-1.0">
+</node>
+      <node 
+      id="1401" radius="120.0" x="6031" y="3170" z="926" rotX="77.1181795466295" rotY="40.75878005475329" rotZ="333.42169261036423" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067325382" withSpeed="-1.0">
+</node>
+      <node 
+      id="1402" radius="120.0" x="6039" y="3164" z="927" rotX="77.51234641634221" rotY="40.90472724792943" rotZ="332.56472284132286" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067325500" withSpeed="-1.0">
+</node>
+      <node 
+      id="1403" radius="120.0" x="6048" y="3159" z="926" rotX="77.88573836428566" rotY="41.08031757857452" rotZ="331.48889973794803" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067325608" withSpeed="-1.0">
+</node>
+      <node 
+      id="1404" radius="120.0" x="6055" y="3149" z="927" rotX="77.88573836428566" rotY="41.08031757857452" rotZ="331.48889973794803" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067325756" withSpeed="-1.0">
+</node>
+      <node 
+      id="1405" radius="120.0" x="6064" y="3142" z="930" rotX="76.7476637080859" rotY="41.04336606042261" rotZ="331.70374727660237" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067325903" withSpeed="-1.0">
+</node>
+      <node 
+      id="1406" radius="120.0" x="6073" y="3140" z="935" rotX="73.862001983004" rotY="40.880841460510396" rotZ="332.5570939357424" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067326021" withSpeed="-1.0">
+</node>
+      <node 
+      id="1407" radius="120.0" x="6081" y="3143" z="943" rotX="69.09003769739229" rotY="40.51753389364711" rotZ="334.0142310077636" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067326102" withSpeed="-1.0">
+</node>
+      <node 
+      id="1408" radius="120.0" x="6074" y="3148" z="955" rotX="61.581734007773264" rotY="38.600241226311255" rotZ="339.2753817989716" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067326467" withSpeed="-1.0">
+</node>
+      <node 
+      id="1409" radius="120.0" x="6080" y="3141" z="957" rotX="61.581734007773264" rotY="38.600241226311255" rotZ="339.2753817989716" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067326599" withSpeed="-1.0">
+</node>
+      <node 
+      id="1410" radius="120.0" x="6087" y="3132" z="958" rotX="61.581734007773264" rotY="38.600241226311255" rotZ="339.2753817989716" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067326735" withSpeed="-1.0">
+</node>
+      <node 
+      id="1411" radius="120.0" x="6094" y="3124" z="960" rotX="61.581734007773264" rotY="38.600241226311255" rotZ="339.2753817989716" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067326875" withSpeed="-1.0">
+</node>
+      <node 
+      id="1412" radius="120.0" x="6103" y="3118" z="963" rotX="61.03307659939662" rotY="38.68128240289508" rotZ="339.08966201314837" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067327024" withSpeed="-1.0">
+</node>
+      <node 
+      id="1413" radius="120.0" x="6102" y="3101" z="953" rotX="67.67922261279051" rotY="39.49646959628535" rotZ="336.98246160391193" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067327445" withSpeed="-1.0">
+</node>
+      <node 
+      id="1414" radius="120.0" x="6109" y="3092" z="953" rotX="68.26586450225619" rotY="39.62154868756704" rotZ="336.5831266128052" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067327587" withSpeed="-1.0">
+</node>
+      <node 
+      id="1415" radius="120.0" x="6116" y="3083" z="955" rotX="68.26586450225619" rotY="39.62154868756704" rotZ="336.5831266128052" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067327724" withSpeed="-1.0">
+</node>
+      <node 
+      id="1416" radius="120.0" x="6122" y="3074" z="956" rotX="68.26586450225619" rotY="39.62154868756704" rotZ="336.5831266128052" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067327867" withSpeed="-1.0">
+</node>
+      <node 
+      id="1417" radius="120.0" x="6123" y="3064" z="957" rotX="68.29529816498672" rotY="39.31320539929942" rotZ="337.58243045568634" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067328853" withSpeed="-1.0">
+</node>
+      <node 
+      id="1418" radius="120.0" x="6129" y="3056" z="958" rotX="68.29529816498672" rotY="39.31320539929942" rotZ="337.58243045568634" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067328981" withSpeed="-1.0">
+</node>
+      <node 
+      id="1419" radius="120.0" x="6133" y="3044" z="959" rotX="68.87358728586946" rotY="39.19096964113862" rotZ="337.9814903708571" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067329134" withSpeed="-1.0">
+</node>
+      <node 
+      id="1420" radius="120.0" x="6137" y="3033" z="959" rotX="69.87053355983261" rotY="39.19097055018341" rotZ="337.98148980224414" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067329249" withSpeed="-1.0">
+</node>
+      <node 
+      id="1421" radius="120.0" x="6140" y="3023" z="958" rotX="70.70132423755786" rotY="39.19096973048437" rotZ="337.981489778331" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067329372" withSpeed="-1.0">
+</node>
+      <node 
+      id="1422" radius="120.0" x="6145" y="3013" z="958" rotX="71.49436923952487" rotY="39.24434156850748" rotZ="337.77838687017123" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067329494" withSpeed="-1.0">
+</node>
+      <node 
+      id="1423" radius="120.0" x="6155" y="3009" z="956" rotX="72.96534511578386" rotY="39.74968151027241" rotZ="335.72706712705224" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067329587" withSpeed="-1.0">
+</node>
+      <node 
+      id="1424" radius="120.0" x="6166" y="3005" z="957" rotX="73.39899960716599" rotY="40.08368622504014" rotZ="334.27444506541667" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067329702" withSpeed="-1.0">
+</node>
+      <node 
+      id="1425" radius="120.0" x="6175" y="2999" z="959" rotX="72.23589321078015" rotY="40.083685094863085" rotZ="334.27444703234215" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067329840" withSpeed="-1.0">
+</node>
+      <node 
+      id="1426" radius="120.0" x="6180" y="2991" z="961" rotX="71.67214156495845" rotY="39.92857838464914" rotZ="334.8929119034976" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067329970" withSpeed="-1.0">
+</node>
+      <node 
+      id="1427" radius="120.0" x="6178" y="2980" z="964" rotX="70.8666079651295" rotY="39.39266831027635" rotZ="336.93596391676914" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067330071" withSpeed="-1.0">
+</node>
+      <node 
+      id="1428" radius="120.0" x="6180" y="2968" z="965" rotX="71.0178840653964" rotY="39.173828212435296" rotZ="337.7467506786275" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067330217" withSpeed="-1.0">
+</node>
+      <node 
+      id="1429" radius="120.0" x="6179" y="2958" z="964" rotX="71.67062521247828" rotY="38.95848769760755" rotZ="338.55658341189024" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067330307" withSpeed="-1.0">
+</node>
+      <node 
+      id="1430" radius="120.0" x="6178" y="2947" z="964" rotX="72.49079760246781" rotY="38.75262222272613" rotZ="339.36807467234985" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067330406" withSpeed="-1.0">
+</node>
+      <node 
+      id="1431" radius="120.0" x="6177" y="2936" z="964" rotX="72.980471181609" rotY="38.55398895219537" rotZ="340.1802352744179" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067330506" withSpeed="-1.0">
+</node>
+      <node 
+      id="1432" radius="120.0" x="6177" y="2924" z="965" rotX="73.18106768529748" rotY="38.31013262827736" rotZ="341.19408089448604" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067330633" withSpeed="-1.0">
+</node>
+      <node 
+      id="1433" radius="120.0" x="6182" y="2914" z="966" rotX="72.93035756100545" rotY="38.213280549539036" rotZ="341.5989386031646" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067330773" withSpeed="-1.0">
+</node>
+      <node 
+      id="1434" radius="120.0" x="6188" y="2906" z="968" rotX="72.43188440498346" rotY="38.21328043221081" rotZ="341.5989383376238" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067330903" withSpeed="-1.0">
+</node>
+      <node 
+      id="1435" radius="120.0" x="6194" y="2898" z="971" rotX="71.64269552360543" rotY="38.162956333711236" rotZ="341.8004094500865" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067331042" withSpeed="-1.0">
+</node>
+      <node 
+      id="1436" radius="120.0" x="6199" y="2890" z="975" rotX="69.28947375935115" rotY="37.781992539946714" rotZ="343.19447169597" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067331184" withSpeed="-1.0">
+</node>
+      <node 
+      id="1437" radius="120.0" x="6201" y="2890" z="986" rotX="63.210914852710346" rotY="36.61453999864949" rotZ="346.6519857438884" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067331804" withSpeed="-1.0">
+</node>
+      <node 
+      id="1438" radius="120.0" x="6208" y="2883" z="988" rotX="63.21059502516147" rotY="36.83920777215229" rotZ="346.09680859802063" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067331936" withSpeed="-1.0">
+</node>
+      <node 
+      id="1439" radius="120.0" x="6215" y="2874" z="990" rotX="63.15576233331967" rotY="36.91395357325308" rotZ="345.9112965395081" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067332080" withSpeed="-1.0">
+</node>
+      <node 
+      id="1440" radius="120.0" x="6232" y="2870" z="990" rotX="63.45506522533367" rotY="37.92068062228793" rotZ="343.5049796854387" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067333158" withSpeed="-1.0">
+</node>
+      <node 
+      id="1441" radius="120.0" x="6237" y="2862" z="992" rotX="63.45506522533367" rotY="37.92068062228793" rotZ="343.5049796854387" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067333288" withSpeed="-1.0">
+</node>
+      <node 
+      id="1442" radius="120.0" x="6243" y="2854" z="993" rotX="63.45506522533367" rotY="37.92068062228793" rotZ="343.5049796854387" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067333418" withSpeed="-1.0">
+</node>
+      <node 
+      id="1443" radius="120.0" x="6249" y="2845" z="995" rotX="63.45506522533367" rotY="37.92068062228793" rotZ="343.5049796854387" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067333551" withSpeed="-1.0">
+</node>
+      <node 
+      id="1444" radius="120.0" x="6255" y="2835" z="997" rotX="63.45506522533367" rotY="37.92068062228793" rotZ="343.5049796854387" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067333702" withSpeed="-1.0">
+</node>
+      <node 
+      id="1445" radius="120.0" x="6277" y="2836" z="984" rotX="71.51936617038984" rotY="40.68807256432251" rotZ="334.9872771353479" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067334100" withSpeed="-1.0">
+</node>
+      <node 
+      id="1446" radius="120.0" x="6283" y="2827" z="982" rotX="73.06262534843893" rotY="40.890244191209376" rotZ="334.1510416803413" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067334222" withSpeed="-1.0">
+</node>
+      <node 
+      id="1447" radius="120.0" x="6290" y="2819" z="983" rotX="73.3385730096989" rotY="40.98629267404425" rotZ="333.72990400747665" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067334350" withSpeed="-1.0">
+</node>
+      <node 
+      id="1448" radius="120.0" x="6295" y="2811" z="982" rotX="73.97575769431921" rotY="41.03281378354268" rotZ="333.5185172477837" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067334467" withSpeed="-1.0">
+</node>
+      <node 
+      id="1449" radius="120.0" x="6299" y="2801" z="979" rotX="76.33806083376959" rotY="41.24936499177977" rotZ="332.4534999721588" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067334569" withSpeed="-1.0">
+</node>
+      <node 
+      id="1450" radius="120.0" x="6305" y="2792" z="978" rotX="77.9044241844731" rotY="41.39891525196697" rotZ="331.59119158400654" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067334690" withSpeed="-1.0">
+</node>
+      <node 
+      id="1451" radius="120.0" x="6312" y="2783" z="977" rotX="78.97829977625406" rotY="41.532090175824976" rotZ="330.72224340221015" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067334820" withSpeed="-1.0">
+</node>
+      <node 
+      id="1452" radius="120.0" x="6326" y="2782" z="977" rotX="78.95711175947713" rotY="41.80834422186064" rotZ="328.7547579833902" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067334937" withSpeed="-1.0">
+</node>
+      <node 
+      id="1453" radius="120.0" x="6336" y="2783" z="980" rotX="77.25457150910853" rotY="41.875893819705084" rotZ="328.31800189912803" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067335024" withSpeed="-1.0">
+</node>
+      <node 
+      id="1454" radius="120.0" x="6347" y="2782" z="982" rotX="76.19574784215968" rotY="41.98636322235541" rotZ="327.66463987303393" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067335123" withSpeed="-1.0">
+</node>
+      <node 
+      id="1455" radius="120.0" x="6357" y="2779" z="985" rotX="74.67932706463233" rotY="42.02673955566286" rotZ="327.44773254994914" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067335242" withSpeed="-1.0">
+</node>
+      <node 
+      id="1456" radius="120.0" x="6364" y="2772" z="990" rotX="72.51812578426961" rotY="41.69206408459752" rotZ="328.9433747321672" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067335394" withSpeed="-1.0">
+</node>
+      <node 
+      id="1457" radius="120.0" x="6369" y="2763" z="993" rotX="71.04145239435161" rotY="41.329517850033426" rotZ="330.4192350696086" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067335531" withSpeed="-1.0">
+</node>
+      <node 
+      id="1458" radius="120.0" x="6368" y="2751" z="996" rotX="69.74264409145155" rotY="40.65573683882724" rotZ="332.90560780998044" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067335653" withSpeed="-1.0">
+</node>
+      <node 
+      id="1459" radius="120.0" x="6370" y="2741" z="998" rotX="69.11245576403383" rotY="40.30450093145612" rotZ="334.13226720219313" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067335774" withSpeed="-1.0">
+</node>
+      <node 
+      id="1460" radius="120.0" x="6381" y="2739" z="1003" rotX="66.82229635193892" rotY="40.24105430628293" rotZ="334.3335422479651" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067335919" withSpeed="-1.0">
+</node>
+      <node 
+      id="1461" radius="120.0" x="6390" y="2734" z="1007" rotX="65.3639772147402" rotY="40.17548806869979" rotZ="334.5334524073004" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067336057" withSpeed="-1.0">
+</node>
+      <node 
+      id="1462" radius="120.0" x="6400" y="2740" z="1011" rotX="62.794212534936946" rotY="40.31596595909116" rotZ="334.1388885497324" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067336135" withSpeed="-1.0">
+</node>
+      <node 
+      id="1463" radius="120.0" x="6410" y="2737" z="1015" rotX="61.46495033142543" rotY="40.31596632505813" rotZ="334.13888893300293" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067336271" withSpeed="-1.0">
+</node>
+      <node 
+      id="1464" radius="120.0" x="6419" y="2731" z="1017" rotX="60.80031874593192" rotY="40.31596697311113" rotZ="334.1388874443093" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067336422" withSpeed="-1.0">
+</node>
+      <node 
+      id="1465" radius="120.0" x="6423" y="2719" z="1021" rotX="59.88277192480939" rotY="39.56652254239367" rotZ="335.8267865388638" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067336584" withSpeed="-1.0">
+</node>
+      <node 
+      id="1466" radius="120.0" x="6422" y="2709" z="1021" rotX="60.73855671310787" rotY="39.2356632181486" rotZ="336.572733170191" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067336667" withSpeed="-1.0">
+</node>
+      <node 
+      id="1467" radius="120.0" x="6428" y="2699" z="1023" rotX="61.00066900227779" rotY="39.07389451908227" rotZ="336.9470730145272" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067336804" withSpeed="-1.0">
+</node>
+      <node 
+      id="1468" radius="120.0" x="6429" y="2688" z="1022" rotX="62.37833103627099" rotY="38.99318827233219" rotZ="337.1340551194178" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067336902" withSpeed="-1.0">
+</node>
+      <node 
+      id="1469" radius="120.0" x="6434" y="2678" z="1021" rotX="63.66191396773752" rotY="39.06749681465442" rotZ="336.94273896130585" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067337016" withSpeed="-1.0">
+</node>
+      <node 
+      id="1470" radius="120.0" x="6440" y="2670" z="1022" rotX="64.28148424232114" rotY="39.141059360182226" rotZ="336.7507440785285" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067337136" withSpeed="-1.0">
+</node>
+      <node 
+      id="1471" radius="120.0" x="6446" y="2661" z="1023" rotX="64.28148424232114" rotY="39.141059360182226" rotZ="336.7507440785285" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067337274" withSpeed="-1.0">
+</node>
+      <node 
+      id="1472" radius="120.0" x="6457" y="2659" z="1026" rotX="63.19676501062867" rotY="39.28462745012246" rotZ="336.36393414860726" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067337402" withSpeed="-1.0">
+</node>
+      <node 
+      id="1473" radius="120.0" x="6466" y="2656" z="1032" rotX="60.56043595156757" rotY="38.97009696094574" rotZ="337.11863541472695" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067337557" withSpeed="-1.0">
+</node>
+      <node 
+      id="1474" radius="120.0" x="6474" y="2651" z="1037" rotX="58.60395266887389" rotY="38.634016546633234" rotZ="337.8543742974656" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067337719" withSpeed="-1.0">
+</node>
+      <node 
+      id="1475" radius="120.0" x="6476" y="2640" z="1040" rotX="58.04474728329461" rotY="37.93309797660174" rotZ="339.2932804587976" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067337868" withSpeed="-1.0">
+</node>
+      <node 
+      id="1476" radius="120.0" x="6476" y="2628" z="1040" rotX="59.26963836704715" rotY="37.58122963406959" rotZ="340.0064546285034" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067337967" withSpeed="-1.0">
+</node>
+      <node 
+      id="1477" radius="120.0" x="6478" y="2618" z="1040" rotX="60.323055630115334" rotY="37.496185226524574" rotZ="340.1864752471427" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067338065" withSpeed="-1.0">
+</node>
+      <node 
+      id="1478" radius="120.0" x="6484" y="2609" z="1041" rotX="60.65537517176432" rotY="37.49618678619788" rotZ="340.1864731269692" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067338200" withSpeed="-1.0">
+</node>
+      <node 
+      id="1479" radius="120.0" x="6491" y="2600" z="1043" rotX="60.65537517176432" rotY="37.49618678619788" rotZ="340.1864731269692" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067338342" withSpeed="-1.0">
+</node>
+      <node 
+      id="1480" radius="120.0" x="6499" y="2594" z="1046" rotX="59.82458419970675" rotY="37.496185613983926" rotZ="340.18647505448104" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067338487" withSpeed="-1.0">
+</node>
+      <node 
+      id="1481" radius="120.0" x="6510" y="2590" z="1045" rotX="61.11514384183687" rotY="38.318579945450495" rotZ="338.35652402162793" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067338590" withSpeed="-1.0">
+</node>
+      <node 
+      id="1482" radius="120.0" x="6519" y="2585" z="1043" rotX="63.12303565764381" rotY="39.09566582441039" rotZ="336.4744258929146" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067338674" withSpeed="-1.0">
+</node>
+      <node 
+      id="1483" radius="120.0" x="6527" y="2578" z="1044" rotX="63.65268088129335" rotY="39.31917497704154" rotZ="335.89941109272087" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067338806" withSpeed="-1.0">
+</node>
+      <node 
+      id="1484" radius="120.0" x="6535" y="2570" z="1045" rotX="63.897487535581945" rotY="39.4660264485899" rotZ="335.5136651537119" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067338940" withSpeed="-1.0">
+</node>
+      <node 
+      id="1485" radius="120.0" x="6544" y="2565" z="1045" rotX="64.51734692619635" rotY="39.827525127223225" rotZ="334.54219728073684" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067339057" withSpeed="-1.0">
+</node>
+      <node 
+      id="1486" radius="120.0" x="6555" y="2564" z="1041" rotX="67.10977947445116" rotY="40.85860547007576" rotZ="331.56483864323684" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067339106" withSpeed="-1.0">
+</node>
+      <node 
+      id="1487" radius="120.0" x="6565" y="2562" z="1037" rotX="70.28508627214558" rotY="41.82967272581021" rotZ="328.2681263239617" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067339174" withSpeed="-1.0">
+</node>
+      <node 
+      id="1488" radius="120.0" x="6573" y="2554" z="1038" rotX="70.45124503951547" rotY="41.829670919264345" rotZ="328.2681272072929" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067339318" withSpeed="-1.0">
+</node>
+      <node 
+      id="1489" radius="120.0" x="6581" y="2546" z="1039" rotX="70.45124503951547" rotY="41.829670919264345" rotZ="328.2681272072929" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067339457" withSpeed="-1.0">
+</node>
+      <node 
+      id="1490" radius="120.0" x="6589" y="2538" z="1040" rotX="70.14513891739136" rotY="41.773881967493196" rotZ="328.47808238218136" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067339594" withSpeed="-1.0">
+</node>
+      <node 
+      id="1491" radius="120.0" x="6596" y="2532" z="1042" rotX="69.97898040305847" rotY="41.773882854451074" rotZ="328.4780827572588" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067339723" withSpeed="-1.0">
+</node>
+      <node 
+      id="1492" radius="120.0" x="6607" y="2528" z="1039" rotX="72.34698004876356" rotY="42.42417646663631" rotZ="325.93765251385594" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067339822" withSpeed="-1.0">
+</node>
+      <node 
+      id="1493" radius="120.0" x="6615" y="2522" z="1037" rotX="74.36767172322459" rotY="42.76008246103925" rotZ="324.425062126888" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067339923" withSpeed="-1.0">
+</node>
+      <node 
+      id="1494" radius="120.0" x="6623" y="2517" z="1034" rotX="76.71186277773222" rotY="43.13680813923622" rotZ="322.44789764827914" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067340020" withSpeed="-1.0">
+</node>
+      <node 
+      id="1495" radius="120.0" x="6631" y="2511" z="1033" rotX="77.33390463853448" rotY="43.249454433349285" rotZ="321.78185043595255" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067340141" withSpeed="-1.0">
+</node>
+      <node 
+      id="1496" radius="120.0" x="6640" y="2506" z="1032" rotX="78.26616061328264" rotY="43.42573108798911" rotZ="320.6655947911914" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067340256" withSpeed="-1.0">
+</node>
+      <node 
+      id="1497" radius="120.0" x="6648" y="2497" z="1031" rotX="79.88207010651689" rotY="43.55217997552836" rotZ="319.7662447328163" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067340385" withSpeed="-1.0">
+</node>
+      <node 
+      id="1498" radius="120.0" x="6654" y="2489" z="1029" rotX="81.19109358743452" rotY="43.605867406846926" rotZ="319.3135432070246" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067340500" withSpeed="-1.0">
+</node>
+      <node 
+      id="1499" radius="120.0" x="6658" y="2479" z="1027" rotX="83.00034163895282" rotY="43.65108764300453" rotZ="318.8587122497951" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067340610" withSpeed="-1.0">
+</node>
+      <node 
+      id="1500" radius="120.0" x="6667" y="2471" z="1027" rotX="83.15775480889442" rotY="43.67111080230933" rotZ="318.63070626327243" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067340749" withSpeed="-1.0">
+</node>
+      <node 
+      id="1501" radius="120.0" x="6679" y="2473" z="1028" rotX="82.76809746074491" rotY="43.80284670728241" rotZ="317.03128581129357" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067340839" withSpeed="-1.0">
+</node>
+      <node 
+      id="1502" radius="120.0" x="6693" y="2478" z="1031" rotX="81.05907738478271" rotY="43.937353190502336" rotZ="315.6611440093841" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067340940" withSpeed="-1.0">
+</node>
+      <node 
+      id="1503" radius="120.0" x="6704" y="2479" z="1032" rotX="80.03779675370879" rotY="44.0213448597097" rotZ="314.97833745035683" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067341049" withSpeed="-1.0">
+</node>
+      <node 
+      id="1504" radius="120.0" x="6715" y="2476" z="1034" rotX="79.1988815652171" rotY="44.05128829966412" rotZ="314.75099335801355" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067341175" withSpeed="-1.0">
+</node>
+      <node 
+      id="1505" radius="120.0" x="6724" y="2470" z="1035" rotX="79.03272255729433" rotY="44.0512886334061" rotZ="314.75099281011967" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067341313" withSpeed="-1.0">
+</node>
+      <node 
+      id="1506" radius="120.0" x="6735" y="2471" z="1036" rotX="78.49432520473255" rotY="44.211288018595894" rotZ="313.61518025225485" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067341416" withSpeed="-1.0">
+</node>
+      <node 
+      id="1507" radius="120.0" x="6745" y="2468" z="1037" rotX="78.14702459950979" rotY="44.27667016551351" rotZ="313.16036573053003" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067341540" withSpeed="-1.0">
+</node>
+      <node 
+      id="1508" radius="120.0" x="6757" y="2465" z="1039" rotX="77.79959931463918" rotY="44.34638575075172" rotZ="312.70628030251396" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067341687" withSpeed="-1.0">
+</node>
+      <node 
+      id="1509" radius="120.0" x="6769" y="2466" z="1040" rotX="77.26628115824263" rotY="44.522915058900935" rotZ="311.56936752915794" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067341806" withSpeed="-1.0">
+</node>
+      <node 
+      id="1510" radius="120.0" x="6780" y="2470" z="1040" rotX="77.38590573807261" rotY="44.810823983080695" rotZ="309.7446919876855" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067341886" withSpeed="-1.0">
+</node>
+      <node 
+      id="1511" radius="120.0" x="6790" y="2469" z="1041" rotX="77.20557581391023" rotY="44.91903448982799" rotZ="309.0581725094367" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067341998" withSpeed="-1.0">
+</node>
+      <node 
+      id="1512" radius="120.0" x="6799" y="2464" z="1042" rotX="77.20557581391023" rotY="44.91903448982799" rotZ="309.0581725094367" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067342132" withSpeed="-1.0">
+</node>
+      <node 
+      id="1513" radius="120.0" x="6810" y="2462" z="1045" rotX="75.5548084478695" rotY="44.840315536986566" rotZ="309.51380308762225" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067342276" withSpeed="-1.0">
+</node>
+      <node 
+      id="1514" radius="120.0" x="6820" y="2460" z="1049" rotX="73.09912778798287" rotY="44.62191502975827" rotZ="310.64209297174267" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067342410" withSpeed="-1.0">
+</node>
+      <node 
+      id="1515" radius="120.0" x="6831" y="2459" z="1052" rotX="71.93602309783819" rotY="44.62191371506151" rotZ="310.6420947024879" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067342541" withSpeed="-1.0">
+</node>
+      <node 
+      id="1516" radius="120.0" x="6841" y="2458" z="1054" rotX="71.09518338365046" rotY="44.67321921485916" rotZ="310.4199559881298" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067342671" withSpeed="-1.0">
+</node>
+      <node 
+      id="1517" radius="120.0" x="6851" y="2455" z="1060" rotX="67.579667959061" rotY="44.08685184702614" rotZ="312.5951575281058" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067342837" withSpeed="-1.0">
+</node>
+      <node 
+      id="1518" radius="120.0" x="6856" y="2444" z="1064" rotX="66.30484661139172" rotY="43.366896040702954" rotZ="314.9200343551635" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067342986" withSpeed="-1.0">
+</node>
+      <node 
+      id="1519" radius="120.0" x="6862" y="2434" z="1065" rotX="66.72978091986397" rotY="43.09940740970251" rotZ="315.75512640876616" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067343107" withSpeed="-1.0">
+</node>
+      <node 
+      id="1520" radius="120.0" x="6871" y="2427" z="1067" rotX="66.3034420980876" rotY="42.900771930632516" rotZ="316.3802538007854" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067343252" withSpeed="-1.0">
+</node>
+      <node 
+      id="1521" radius="120.0" x="6878" y="2418" z="1069" rotX="65.93432098491485" rotY="42.56354337540597" rotZ="317.41393663303995" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067343391" withSpeed="-1.0">
+</node>
+      <node 
+      id="1522" radius="120.0" x="6887" y="2412" z="1070" rotX="65.93432098491485" rotY="42.56354337540597" rotZ="317.41393663303995" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067343534" withSpeed="-1.0">
+</node>
+      <node 
+      id="1523" radius="120.0" x="5319" y="4175" z="831" rotX="180.0" rotY="0.0" rotZ="180.0" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067347715" withSpeed="-1.0">
+</node>
+      <node 
+      id="1524" radius="120.0" x="5319" y="4175" z="820" rotX="180.0" rotY="0.0" rotZ="180.0" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067348037" withSpeed="-1.0">
+</node>
+      <node 
+      id="1525" radius="120.0" x="5317" y="4181" z="812" rotX="178.83688729286973" rotY="359.6676956557128" rotZ="179.9980725834707" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067348287" withSpeed="-1.0">
+</node>
+      <node 
+      id="1526" radius="120.0" x="5306" y="4185" z="809" rotX="178.00460893465015" rotY="357.50840474188954" rotZ="179.9416601679078" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067348384" withSpeed="-1.0">
+</node>
+      <node 
+      id="1527" radius="120.0" x="5296" y="4188" z="805" rotX="177.50220404267634" rotY="355.6818538222955" rotZ="179.8759182232498" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067348500" withSpeed="-1.0">
+</node>
+      <node 
+      id="1528" radius="120.0" x="5293" y="4189" z="795" rotX="177.50164676134227" rotY="355.51585402081116" rotZ="179.86865469488524" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1474067348807" withSpeed="-1.0">
+</node>
+    </nodes>
+    <edges>
+      <edge source="1427" target="1428"/>
+      <edge source="1372" target="1373"/>
+      <edge source="1512" target="1513"/>
+      <edge source="1411" target="1412"/>
+      <edge source="1371" target="1372"/>
+      <edge source="1342" target="1343"/>
+      <edge source="1281" target="1282"/>
+      <edge source="1286" target="1287"/>
+      <edge source="1448" target="1449"/>
+      <edge source="1322" target="1323"/>
+      <edge source="1380" target="1381"/>
+      <edge source="1353" target="1354"/>
+      <edge source="1415" target="1416"/>
+      <edge source="1443" target="1444"/>
+      <edge source="1358" target="1359"/>
+      <edge source="1428" target="1429"/>
+      <edge source="1290" target="1291"/>
+      <edge source="1459" target="1460"/>
+      <edge source="1348" target="1349"/>
+      <edge source="1438" target="1439"/>
+      <edge source="1334" target="1335"/>
+      <edge source="1495" target="1496"/>
+      <edge source="1352" target="1353"/>
+      <edge source="1417" target="1418"/>
+      <edge source="1416" target="1417"/>
+      <edge source="1373" target="1374"/>
+      <edge source="1394" target="1395"/>
+      <edge source="1426" target="1427"/>
+      <edge source="1497" target="1498"/>
+      <edge source="1398" target="1399"/>
+      <edge source="1514" target="1515"/>
+      <edge source="1476" target="1477"/>
+      <edge source="1324" target="1325"/>
+      <edge source="1279" target="1523"/>
+      <edge source="1314" target="1315"/>
+      <edge source="1379" target="1380"/>
+      <edge source="1395" target="1396"/>
+      <edge source="1280" target="1281"/>
+      <edge source="1405" target="1406"/>
+      <edge source="1338" target="1339"/>
+      <edge source="1422" target="1423"/>
+      <edge source="1465" target="1466"/>
+      <edge source="1464" target="1465"/>
+      <edge source="1375" target="1376"/>
+      <edge source="1367" target="1368"/>
+      <edge source="1355" target="1356"/>
+      <edge source="1305" target="1306"/>
+      <edge source="1311" target="1312"/>
+      <edge source="1479" target="1480"/>
+      <edge source="1351" target="1352"/>
+      <edge source="1478" target="1479"/>
+      <edge source="1359" target="1360"/>
+      <edge source="1335" target="1336"/>
+      <edge source="1404" target="1405"/>
+      <edge source="1310" target="1311"/>
+      <edge source="1425" target="1426"/>
+      <edge source="1368" target="1369"/>
+      <edge source="1308" target="1309"/>
+      <edge source="1315" target="1316"/>
+      <edge source="1343" target="1344"/>
+      <edge source="1442" target="1443"/>
+      <edge source="1418" target="1419"/>
+      <edge source="1515" target="1516"/>
+      <edge source="1433" target="1434"/>
+      <edge source="1481" target="1482"/>
+      <edge source="1450" target="1451"/>
+      <edge source="1316" target="1317"/>
+      <edge source="1483" target="1484"/>
+      <edge source="1491" target="1492"/>
+      <edge source="1505" target="1506"/>
+      <edge source="1488" target="1489"/>
+      <edge source="1378" target="1379"/>
+      <edge source="1400" target="1401"/>
+      <edge source="1492" target="1493"/>
+      <edge source="1294" target="1295"/>
+      <edge source="1496" target="1497"/>
+      <edge source="1349" target="1350"/>
+      <edge source="1401" target="1402"/>
+      <edge source="1284" target="1285"/>
+      <edge source="1344" target="1345"/>
+      <edge source="1475" target="1476"/>
+      <edge source="1490" target="1491"/>
+      <edge source="1389" target="1390"/>
+      <edge source="1298" target="1299"/>
+      <edge source="1319" target="1320"/>
+      <edge source="1516" target="1517"/>
+      <edge source="1354" target="1355"/>
+      <edge source="1430" target="1431"/>
+      <edge source="1463" target="1464"/>
+      <edge source="1510" target="1511"/>
+      <edge source="1300" target="1301"/>
+      <edge source="1460" target="1461"/>
+      <edge source="1470" target="1471"/>
+      <edge source="1410" target="1411"/>
+      <edge source="1454" target="1455"/>
+      <edge source="1440" target="1441"/>
+      <edge source="1467" target="1468"/>
+      <edge source="1431" target="1432"/>
+      <edge source="1489" target="1490"/>
+      <edge source="1381" target="1382"/>
+      <edge source="1363" target="1364"/>
+      <edge source="1521" target="1522"/>
+      <edge source="1346" target="1347"/>
+      <edge source="1477" target="1478"/>
+      <edge source="1513" target="1514"/>
+      <edge source="1384" target="1385"/>
+      <edge source="1307" target="1308"/>
+      <edge source="1517" target="1518"/>
+      <edge source="1301" target="1302"/>
+      <edge source="1288" target="1289"/>
+      <edge source="1340" target="1341"/>
+      <edge source="1382" target="1383"/>
+      <edge source="1509" target="1510"/>
+      <edge source="1333" target="1334"/>
+      <edge source="1409" target="1410"/>
+      <edge source="1366" target="1367"/>
+      <edge source="1526" target="1527"/>
+      <edge source="1326" target="1327"/>
+      <edge source="1320" target="1321"/>
+      <edge source="1339" target="1340"/>
+      <edge source="1480" target="1481"/>
+      <edge source="1304" target="1305"/>
+      <edge source="1472" target="1473"/>
+      <edge source="1376" target="1377"/>
+      <edge source="1303" target="1304"/>
+      <edge source="1347" target="1348"/>
+      <edge source="1289" target="1290"/>
+      <edge source="1436" target="1437"/>
+      <edge source="1312" target="1313"/>
+      <edge source="1424" target="1425"/>
+      <edge source="1321" target="1322"/>
+      <edge source="1360" target="1361"/>
+      <edge source="1494" target="1495"/>
+      <edge source="1369" target="1370"/>
+      <edge source="1498" target="1499"/>
+      <edge source="1397" target="1398"/>
+      <edge source="1313" target="1314"/>
+      <edge source="1462" target="1463"/>
+      <edge source="1385" target="1386"/>
+      <edge source="1458" target="1459"/>
+      <edge source="1309" target="1310"/>
+      <edge source="1407" target="1408"/>
+      <edge source="1361" target="1362"/>
+      <edge source="1508" target="1509"/>
+      <edge source="1434" target="1435"/>
+      <edge source="1387" target="1388"/>
+      <edge source="1299" target="1300"/>
+      <edge source="1445" target="1446"/>
+      <edge source="1444" target="1445"/>
+      <edge source="1500" target="1501"/>
+      <edge source="1402" target="1403"/>
+      <edge source="1291" target="1292"/>
+      <edge source="1451" target="1452"/>
+      <edge source="1432" target="1433"/>
+      <edge source="1295" target="1296"/>
+      <edge source="1386" target="1387"/>
+      <edge source="1377" target="1378"/>
+      <edge source="1525" target="1526"/>
+      <edge source="1283" target="1284"/>
+      <edge source="1357" target="1358"/>
+      <edge source="1519" target="1520"/>
+      <edge source="1391" target="1392"/>
+      <edge source="1285" target="1286"/>
+      <edge source="1502" target="1503"/>
+      <edge source="1499" target="1500"/>
+      <edge source="1356" target="1357"/>
+      <edge source="1328" target="1329"/>
+      <edge source="1317" target="1318"/>
+      <edge source="1345" target="1346"/>
+      <edge source="1329" target="1330"/>
+      <edge source="1461" target="1462"/>
+      <edge source="1341" target="1342"/>
+      <edge source="1511" target="1512"/>
+      <edge source="1518" target="1519"/>
+      <edge source="1423" target="1424"/>
+      <edge source="1449" target="1450"/>
+      <edge source="1390" target="1391"/>
+      <edge source="1337" target="1338"/>
+      <edge source="1446" target="1447"/>
+      <edge source="1466" target="1467"/>
+      <edge source="1318" target="1319"/>
+      <edge source="1487" target="1488"/>
+      <edge source="1469" target="1470"/>
+      <edge source="1365" target="1366"/>
+      <edge source="1456" target="1457"/>
+      <edge source="1473" target="1474"/>
+      <edge source="1527" target="1528"/>
+      <edge source="1332" target="1333"/>
+      <edge source="1468" target="1469"/>
+      <edge source="1362" target="1363"/>
+      <edge source="1293" target="1294"/>
+      <edge source="1524" target="1525"/>
+      <edge source="1306" target="1307"/>
+      <edge source="1471" target="1472"/>
+      <edge source="1504" target="1505"/>
+      <edge source="1412" target="1413"/>
+      <edge source="1327" target="1328"/>
+      <edge source="1350" target="1351"/>
+      <edge source="1419" target="1420"/>
+      <edge source="1325" target="1326"/>
+      <edge source="1396" target="1397"/>
+      <edge source="1453" target="1454"/>
+      <edge source="1420" target="1421"/>
+      <edge source="1482" target="1483"/>
+      <edge source="1374" target="1375"/>
+      <edge source="1520" target="1521"/>
+      <edge source="1282" target="1283"/>
+      <edge source="1323" target="1324"/>
+      <edge source="1474" target="1475"/>
+      <edge source="1484" target="1485"/>
+      <edge source="1383" target="1384"/>
+      <edge source="1455" target="1456"/>
+      <edge source="1370" target="1371"/>
+      <edge source="1292" target="1293"/>
+      <edge source="1302" target="1303"/>
+      <edge source="1392" target="1393"/>
+      <edge source="1388" target="1389"/>
+      <edge source="1485" target="1486"/>
+      <edge source="1403" target="1404"/>
+      <edge source="1523" target="1524"/>
+      <edge source="1330" target="1331"/>
+      <edge source="1296" target="1297"/>
+      <edge source="1452" target="1453"/>
+      <edge source="1297" target="1298"/>
+      <edge source="1437" target="1438"/>
+      <edge source="1406" target="1407"/>
+      <edge source="1441" target="1442"/>
+      <edge source="1331" target="1332"/>
+      <edge source="1435" target="1436"/>
+      <edge source="1364" target="1365"/>
+      <edge source="1439" target="1440"/>
+      <edge source="1408" target="1409"/>
+      <edge source="1507" target="1508"/>
+      <edge source="1393" target="1394"/>
+      <edge source="1414" target="1415"/>
+      <edge source="1501" target="1502"/>
+      <edge source="1493" target="1494"/>
+      <edge source="1336" target="1337"/>
+      <edge source="1486" target="1487"/>
+      <edge source="1413" target="1414"/>
+      <edge source="1503" target="1504"/>
+      <edge source="1457" target="1458"/>
+      <edge source="1429" target="1430"/>
+      <edge source="1447" target="1448"/>
+      <edge source="1399" target="1400"/>
+      <edge source="1287" target="1288"/>
+      <edge source="1506" target="1507"/>
+      <edge source="1279" target="1280"/>
+      <edge source="1421" target="1422"/>
+    </edges>
+</thing>
+  <branchpoints> </branchpoints>
+  <comments>
+    <comment node="1279" content="reversed"/>
+  </comments>
+</things>

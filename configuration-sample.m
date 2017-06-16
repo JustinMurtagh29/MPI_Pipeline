@@ -7,6 +7,11 @@ end
 if ~strcmp(version('-release'), '2015b')
     error('Please run the pipeline code with Matlab R2015b, see README.md');
 end
+if exist('p', 'var')
+    error(['Variable ''p'' already exists and might cause a corrupted ' ...
+        'segmentation parameter file. Please delete the ''p'' variable' ...
+        ' before running this script.']);
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%% EDIT BELOW THIS LINE %%%%%%%%%%%%%%%%%%%%%%%%%%%
 
