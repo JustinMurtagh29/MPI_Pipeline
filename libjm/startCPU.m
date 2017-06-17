@@ -1,7 +1,7 @@
 function job = startCPU(fH, iC, jN, requiredMemory, group, priority, rt);
     % Wrapper function for startJob.m used for backward compability
     if nargin < 7 || isempty(rt)
-	rt = 23;
+	rt = 29;
     end
     % Set default values for additional input arguments
     if nargin < 4 || isempty(requiredMemory)
