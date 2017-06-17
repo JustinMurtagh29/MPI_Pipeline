@@ -30,6 +30,6 @@ function job = graphConstruction(parameter)
     end
     inputCell(toDelete) = [];
     functionH = @findEdgesAndBordersWrapper;
-    job = startCPU(functionH, inputCell, 'graphConstruction', 4); % 30 min should suffice
+    job = startCPU(functionH, inputCell, 'graphConstruction', 12); % 30 min should suffice
 end
 

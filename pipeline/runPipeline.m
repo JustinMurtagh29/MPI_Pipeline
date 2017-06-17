@@ -32,7 +32,7 @@ function runPipeline(p, startStep, endStep)
     % If you set p.myelin.isUsed = true in configuration.m, the result of a myelin detection is
     % used to ensure a voxel detected as myelin will not be in one segment with voxel not detected
     % as myelin
-    if p.myelin.isUsed && startStep <= PipelineStep.MyelinFix && ...
+    if isfield(p,'myelin') && p.myelin.isUsed && startStep <= PipelineStep.MyelinFix && ...
         endStep >= PipelineStep.MyelinFix
     
         %define new classification prefix (NOTE: This will not be saved, but temporary files anyway)
