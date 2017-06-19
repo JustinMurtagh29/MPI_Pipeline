@@ -1,5 +1,6 @@
 function [axonsNew, changedIdx, unchangedResult] = agglomerateMerge(graph, segmentMeta, borderMeta, axons, result, options);
 
+    assert(numel(axons) == numel(result.neighbours));
     % Create lookup of agglo index for all segments
     axonsLookup = createLookup(segmentMeta, axons);
 
@@ -11,11 +12,12 @@ function [axonsNew, changedIdx, unchangedResult] = agglomerateMerge(graph, segme
     idxAll = cellfun(@(w,x,y,z)w&x&y&z, idxDirectional, idxEnding, idxContinuity, idxLarge, 'uni', 0);
     nrEndings = cellfun(@sum, idxAll);
     
-    % Posititon and direction of ending based on local surround and source & target agglomerate
+    % Source & target agglomerate
     sources = repelem(1:length(nrEndings), nrEndings)';
     targets = cell2mat(cellfun(@(x,y)axonsLookup(x(y)), result.neighbours, idxAll, 'uni', 0));
-    % Exclude 0 targets (not current in axon agglomerates)
-    idx = targets == 0;
+    % Exclude small sources & 0 targets (not current in axon agglomerates)
+    sourceSize = cellfun(@(x)sum(segmentMeta.voxelCount(x)), axons);
+    idx = ismember(sources, find(sourceSize < options.sourceSize)) | targets == 0;
     sources(idx) = [];
     targets(idx) = [];
 
@@ -25,7 +27,6 @@ function [axonsNew, changedIdx, unchangedResult] = agglomerateMerge(graph, segme
     % Do the merging
     edgesBetweenAgglos = cat(2, sources, targets);
     cc = Graph.findConnectedComponents(edgesBetweenAgglos);
-    % Add merged components
     axonsNew = cellfun(@(x)cat(1,axons{x}), cc, 'uni', 0);
     unchangedIdx = setdiff(1:length(axons), cat(1, cc{:}));
     axonsNew(numel(cc)+1:numel(cc)+numel(unchangedIdx)) = axons(unchangedIdx);

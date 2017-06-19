@@ -11,6 +11,7 @@ function axonDirectionalityBasedGrowing(options, outputFolder, graph, segmentMet
         options.neuriCScore = 0.7;
         options.borderSize = 30;
         options.axonScore = 0.3;
+        options.sourceSize = 2000;
         options.recursionSteps = 10;
         options.minSize = 100;
         options.bboxDist = 1000;

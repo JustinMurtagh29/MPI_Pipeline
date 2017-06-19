@@ -11,7 +11,7 @@ function job = aggloGridSearchDir()
     % Create parameter sets for axons and dendrites
     inputArgumentsAxons = inputArgumentsFromParameterSets( ...
         latentVar, segDirVar, neuriCVar, borderVar, axonPrVar);
-    inputArgumentFolder = arrayfun(@(x)['/gaba/scratch/mberning/aggloGridSearch5/5_01_' num2str(x, '%.5i') '/'], ...
+    inputArgumentFolder = arrayfun(@(x)['/gaba/scratch/mberning/aggloGridSearch6/6_01_' num2str(x, '%.5i') '/'], ...
         1:size(inputArgumentsAxons,1), 'uni', 0)';
     for i=1:size(inputArgumentsAxons,1)
         options.latentScore = inputArgumentsAxons(i,1);
@@ -19,6 +19,7 @@ function job = aggloGridSearchDir()
         options.neuriCScore = inputArgumentsAxons(i,3);
         options.borderSize = inputArgumentsAxons(i,4);
         options.axonScore = inputArgumentsAxons(i,5);
+        options.sourceSize = 2000;
         options.recursionSteps = 10;
         options.minSize = 100;
         options.bboxDist = 1000;
