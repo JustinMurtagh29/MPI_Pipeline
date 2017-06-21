@@ -76,7 +76,7 @@ numComb = cellfun(@(x)size(x,2),pairs)';
 
 %save edge for each voxel and voxel linear indices (ind)
 edges = cat(2,reshape(nSegId(lSegId(:,toKeep)),2,[]),cell2mat(pairs))';  %reshape nSegIds with only two neighbors and add pair list
-indExtend = repelem(ind(toExtend), numComb,1);
+indExtend = repelem(ind(toExtend), numComb, 1);
 ind = cat(1,ind(toKeep), indExtend);
 [uid,~,c] = unique(indExtend);
 %these indices belong to several edges

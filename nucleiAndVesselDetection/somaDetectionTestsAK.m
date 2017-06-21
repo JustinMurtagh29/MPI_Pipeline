@@ -1,14 +1,14 @@
 addpath(genpath('/gaba/u/alik/code/pipeline'));
 
-root = '/mnt/disk-two/V2/raw/4/';
-prefix = '2017-05-12_ppcAK102_92x94_mag4';
+root = '/mnt/disk-two/V1/bvn/4/';
+prefix = 'V1_D_JK_18052017_mag4';
 myDataset=KnossosDataset(root)
 bbox=myDataset.getBbox();
-%raw = readKnossosRoi(root, prefix, bbox);
-%save('raw','raw','-v7.3');
-output = '/mnt/disk-two/V2/BVN/';
+raw = readKnossosRoi(root, prefix, bbox);
+save('raw','raw','-v7.3');
+output = '/mnt/disk-two/V1/bvn/';
 %% Detect vessels with visualization flag set to false
-vessels = AKdetectVessels(raw, false,590,output); % 7000s on 07x2 (mostly postprocessing)
+vessels = AKdetectVessels(raw, true,output); % 7000s on 07x2 (mostly postprocessing)
 save(fullfile(output,'vesselsFinal'),'vessels','-v7.3');
 makeSegMovie(vessels, raw, fullfile(output,'BVmovieFinal.avi'), 1);
 %% Give each detected vessel CC its own unique ID
