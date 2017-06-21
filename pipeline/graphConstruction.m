@@ -19,6 +19,9 @@ function job = graphConstruction(parameter)
                 curCube.segmentFile};
         elseif ~any(mask(:))
             toDelete(curIdx) = 1;
+            Util.save(curCube.edgeFile, zeros(0,2,'uint32'));
+            Util.save(curCube.borderFile, struct('PixelIdxList',{},'Area',{},'Centroid',{}));
+            Util.save(curCube.segmentFile, struct('PixelIdxList',{},'Id',{}));
         else
             inputCell{curIdx} = { ...
                 curSegFile, ...
