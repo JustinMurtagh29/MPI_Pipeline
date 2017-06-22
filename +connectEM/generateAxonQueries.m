@@ -6,10 +6,15 @@ function generateAxonQueries(p, graph, segmentMeta, borderMeta, directionality, 
         options.border = [3000; -3000];
         options.writeTasksToFile = true;
         options.boundingBoxForTasks = false;
+        options.reverse = false;
     end
 
     % Find all endings (given criteria on latent, directionality, orientation along z-axis)
-    correctlyFlippedScores = cellfun(@(x,y)x.*squeeze(sign(y(3,1,:))), directionality.scores, directionality.pca, 'uni', 0);
+    if options.reverse
+        correctlyFlippedScores = cellfun(@(x,y)-x.*squeeze(sign(y(3,1,:))), directionality.scores, directionality.pca, 'uni', 0);
+    else
+        correctlyFlippedScores = cellfun(@(x,y)x.*squeeze(sign(y(3,1,:))), directionality.scores, directionality.pca, 'uni', 0);
+    end
     idxDirectional = cellfun(@(x)x(:,1) > options.latentScore, directionality.latent, 'uni', 0);
     idxEnding = cellfun(@(x)abs(x) > options.segDirScore, directionality.scores, 'uni', 0);
     idxCorrectOrientation = cellfun(@(x)x > 0, correctlyFlippedScores, 'uni', 0);
