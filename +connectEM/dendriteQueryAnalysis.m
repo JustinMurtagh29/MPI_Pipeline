@@ -17,7 +17,7 @@ scratchFolder = '/gaba/scratch/mberning/queryResults2017/';
 % These are the downloaded queries (see wK projects: L4_focus_flight-1 & 2, L4_focus_flight-reseed-1 & 2 (2 contains 2nd and 3rd round of reseeding now))
 % And new queries from after switching to new (agglomerate based) query analysis: L4_focus_flight-new-1
 skeletonFolders = {'MBKMB_L4_dendrite_queries_2017_a'};
-skeletonFolders = cellfun(@(x)[scratchFolder x filesep], skeletonFolders, 'uni', 0); 
+skeletonFolders = cellfun(@(x)[scratchFolder x filesep], skeletonFolders, 'uni', 0);
 % Lookup segment ids of nodes+neighbours of nmls in all folders defined above
 [ff.segIds, ff.neighbours, ff.filenames, ff.nodes, ff.startNode, ff.comments] = connectEM.lookupNmlMulti(p, skeletonFolders, false);
 display([num2str(sum(~cellfun(@isempty,ff.comments))) '/' num2str(numel(ff.comments)) ' queries contain comment and will not be used']);
@@ -25,7 +25,7 @@ tabulate(cellfun(@(x)x{1}{1}, cellfun(@(x)regexp(x, 'content="(.*)"', 'tokens'),
     cat(1, ff.comments{~cellfun(@isempty, ff.comments)}), 'uni', 0), 'uni', 0))
 % Where to find skeletons that were returned from the queries
 scratchFolder = '/gaba/scratch/mberning/queryResults2017/';
-ff = structfun(@(x)x(cellfun(@isempty,ff.comments)), ff, 'uni', 0); 
+ff = structfun(@(x)x(cellfun(@isempty,ff.comments)), ff, 'uni', 0);
 
 % Calculate overlap of all queries with segments
 [uniqueSegments, neighboursStartNode, nodesExcludedIdx, startNodeIdx] = cellfun(@connectEM.queryAnalysis, ...
@@ -35,7 +35,7 @@ ff = structfun(@(x)x(cellfun(@isempty,ff.comments)), ff, 'uni', 0);
 % Make decision(s), here evidence/occurence threshold is applied
 % Always one (or none if evidence below 14, 1/2 node) start eqClass
 startAgglo = arrayfun(@(x)x.eqClasses(x.occurences > 13), queryOverlap.start, 'uni', 0);
-% Exclude all queries that do not have a clear starting point 
+% Exclude all queries that do not have a clear starting point
 idxNoClearStart = cellfun('isempty', startAgglo);
 % Multiple ends (all above 53vx evidence, corresponds to 2 full nodes)
 endAgglo = arrayfun(@(x)x.eqClasses(x.occurences > 53), queryOverlap.ends, 'uni', 0);
@@ -59,11 +59,11 @@ eqClassCC = Graph.findConnectedComponents(edges, true, true);
 % Visualization of queries and connections made
 idx = find(idxGood);
 idx = idx(randperm(numel(idx), 50));
-temp = structfun(@(x)x(idx), ff, 'uni', 0); 
+temp = structfun(@(x)x(idx), ff, 'uni', 0);
 connectEM.debugQueryAttachment(segmentMeta.point', dendrites, temp, outputFolder, 'queryAttachted');
 idx = find(~idxGood);
 idx = idx(randperm(numel(idx), 50));
-temp = structfun(@(x)x(idx), ff, 'uni', 0); 
+temp = structfun(@(x)x(idx), ff, 'uni', 0);
 connectEM.debugQueryAttachment(segmentMeta.point', dendrites, temp, outputFolder, 'queryOpenEnd');
 clear idx temp;
 
