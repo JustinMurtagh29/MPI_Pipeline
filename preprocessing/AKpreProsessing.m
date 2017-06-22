@@ -2,7 +2,7 @@
 addpath(genpath('/gaba/u/alik/code/pipeline'))
 dataset.root = '/gaba/u/alik/wKcubes/2017-04-03_ppcAK99_76x79_ROI/color/1/';
 dataset.prefix = '2017-04-03_ppcAK99_76x79_ROI_mag1';
-dataset.bbox = [104,5983;104,7688;119,4822];
+dataset.bbox = [104,5983;104,7688;119,4822];%%full bbox ROI datasets=[1,6016; 1,7808;1,4864] WK=[0,0,0,6016,7808,4864]
 %dataset.bbox = dataset.bbox + [-25 25; -25 25; -10 10];
 vesselsMasked.root = '/gaba/u/alik/wKcubes/2017-04-03_ppcAK99_76x79_preprocessing/color/1/';
 vesselsMasked.prefix = '2017-04-03_ppcAK99_76x79_preprocessing_mag1';
@@ -128,7 +128,7 @@ zCoords(numberValidInCube == 0) = [];
 display('Gradient correction');
 thisSliceBbox = dataset.bbox;
 [X,Y,Z] = meshgrid(y,x,z);
-for i=1:length(zCoords)
+for i=2:9
     % Determine bounding box and interpolation for this z-slice
     thisSliceBbox(3,:) = [zCoords{i}(1) zCoords{i}(end)];	
 	xq = thisSliceBbox(1,1):thisSliceBbox(1,2);
