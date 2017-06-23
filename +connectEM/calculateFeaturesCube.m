@@ -9,7 +9,7 @@ if ~all(seg(:)==0)
    load(p.local(cubeNo).borderFile, 'borders');
    % start empty
 	features = [];
-   if ~isempty(edges) && ~isempty(borders)
+   if ~isempty(edges) && ~isempty(borders)) && any([borders(:).Area] > fm.areaT)
 	   %calculate interfaces
 	   interfaces = SynEM.Svg.calculateInterfaces(seg, edges, borders, ...
 		   fm.areaT, p.raw.voxelSize, fm.subvolsSize);
