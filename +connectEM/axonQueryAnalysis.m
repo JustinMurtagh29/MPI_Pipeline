@@ -63,62 +63,63 @@ edges(edges(:,1) == edges(:,2),:) = [];
 eqClassCC = Graph.findConnectedComponents(edges, true, true);
 
 % Visualization of queries and connections made
-idx = find(idxGood);
-idx = idx(randperm(numel(idx), 50));
-temp = structfun(@(x)x(idx), ff, 'uni', 0); 
-connectEM.debugQueryAttachment(segmentMeta.point', dendrites, temp, outputFolder, 'queryAttachted');
-idx = find(~idxGood);
-idx = idx(randperm(numel(idx), 50));
-temp = structfun(@(x)x(idx), ff, 'uni', 0); 
-connectEM.debugQueryAttachment(segmentMeta.point', dendrites, temp, outputFolder, 'queryOpenEnd');
-clear idx temp;
+% idx = find(idxGood);
+% idx = idx(randperm(numel(idx), 50));
+% temp = structfun(@(x)x(idx), ff, 'uni', 0); 
+% connectEM.debugQueryAttachment(segmentMeta.point', dendrites, temp, outputFolder, 'queryAttachted');
+% idx = find(~idxGood);
+% idx = idx(randperm(numel(idx), 50));
+% temp = structfun(@(x)x(idx), ff, 'uni', 0); 
+% connectEM.debugQueryAttachment(segmentMeta.point', dendrites, temp, outputFolder, 'queryOpenEnd');
+% clear idx temp;
+% 
+% % Make complete list
+% 
+% eqClassCCfull = [eqClassCC; num2cell(setdiff(1 : length(axons), cell2mat(eqClassCC)))'];
+% axonsPostQuery = cellfun(@(x){cell2mat(axons(x))}, eqClassCCfull);
+% y_pre = connectEM.evaluateAggloMetaMeta(graph, axons, [],  'postQueryPreAxons', segmentMeta);
+% y_post = connectEM.evaluateAggloMetaMeta(graph, axonsPostQuery,[],  'postQueryPostAxons', segmentMeta);
+% 
+% cell2mat(ff.startNode(find(cellfun(@(x)max([0,ismember(x,y_pre.axon1.foundAgglomerates_col{2})]), startAgglo)))')
+% ff.filenames(find(cellfun(@(x)max([0,ismember(x,y_pre.axon1.foundAgglomerates_col{1})]), endAgglo)))'
+% last=@(x)x{end};
 
-% Make complete list
-
-eqClassCCfull = [eqClassCC; num2cell(setdiff(1 : length(axons), cell2mat(eqClassCC)))'];
-axonsPostQuery = cellfun(@(x){cell2mat(axons(x))}, eqClassCCfull);
-y_pre = connectEM.evaluateAggloMetaMeta(graph, axons, [],  'postQueryPreAxons', segmentMeta);
-y_post = connectEM.evaluateAggloMetaMeta(graph, axonsPostQuery,[],  'postQueryPostAxons', segmentMeta);
-
-cell2mat(ff.startNode(find(cellfun(@(x)max([0,ismember(x,y_pre.axon1.foundAgglomerates_col{2})]), startAgglo)))')
-ff.filenames(find(cellfun(@(x)max([0,ismember(x,y_pre.axon1.foundAgglomerates_col{1})]), endAgglo)))'
-last=@(x)x{end};
-
-for idx = 1 : length(y_pre.axon1.foundAgglomerates_col)
-    folder = ['/gaba/scratch/kboerg/eval_agglo/postQueryPostAxons/axons1/query_' num2str(idx) '_'];
-    usedAgglos = cell2mat(eqClassCC(cellfun(@(x)any(ismember(x, y_pre.axon1.foundAgglomerates_col{idx})),eqClassCC)));
-    filenames = ff.filenames(cellfun(@(x,y)any(ismember([x,y],usedAgglos)), startAgglo, endAgglo));
-    
-    for idx2 = 1 : length(filenames)
-        copyfile(filenames{idx2}, [folder, last(strsplit(filenames{idx2}, filesep))]);
-    end
-end
+% for idx = 1 : length(y_pre.axon1.foundAgglomerates_col)
+%     folder = ['/gaba/scratch/kboerg/eval_agglo/postQueryPostAxons/axons1/query_' num2str(idx) '_'];
+%     usedAgglos = cell2mat(eqClassCC(cellfun(@(x)any(ismember(x, y_pre.axon1.foundAgglomerates_col{idx})),eqClassCC)));
+%     filenames = ff.filenames(cellfun(@(x,y)any(ismember([x,y],usedAgglos)), startAgglo, endAgglo));
+%     
+%     for idx2 = 1 : length(filenames)
+%         copyfile(filenames{idx2}, [folder, last(strsplit(filenames{idx2}, filesep))]);
+%     end
+% end
 liste = ff.filenames;
-taskStrings = unique(cellfun(@(x){x(1:54)}, liste));
+taskStrings = unique(cellfun(@(x){x(1:110)}, liste))';
 taskStrings{1,2} = [];
-getUname = @(x)cellfun(@(y){y(55:end-70)}, x);
-unames = unique(getUname(liste));
+getUname = @(x)cellfun(@(y){y(111:end-10)}, x);
+unames = unique(getUname(liste))';
 unames{1, 2} = [];
 for idx = 1 : length(liste)
     if mod(idx, 100) == 0
         idx
     end
-    rowidx = strcmp(taskStrings(:, 1), liste{idx}(1:54));
+    rowidx = strcmp(taskStrings(:, 1), liste{idx}(1:110));
     taskStrings{rowidx, 2} = [taskStrings{rowidx, 2}, idx];
 end 
 testTasks = find(cellfun('length', taskStrings(:, 2)) == 3);
-allEqual = all(@(x)cellfun(@(y)isequal(x{1}, y), x(2:end)));
+allEqual = @(x)all(cellfun(@(y)isequal(x{1}, y), x(2:end)));
 for idx = cell2mat(taskStrings(testTasks, 2))'
     if allEqual(startAgglo(idx)) && allEqual(endAgglo(idx))
         uidxs = ismember(unames(:, 1), getUname(ff.filenames(idx)));
         unames(uidxs, 2) = cellfun(@(x){[x, 1]}, unames(uidxs, 2));
     else
-        for badidx = 1 : 3
+        for badidx = idx'
             goodidx = setdiff(idx, badidx);
             if allEqual(startAgglo(goodidx)) && allEqual(endAgglo(goodidx))
                uidxs = ismember(unames(:, 1), getUname(ff.filenames(badidx)));
-               unames(uidx2, 2) = cellfun(@(x){[x, -1]}, unames(uidx, 2));
+               unames(uidxs, 2) = cellfun(@(x){[x, -1]}, unames(uidxs, 2));
             end
         end
     end
 end
+unames(:, 2)= cellfun(@mat2str, unames(:, 2), 'uni', 0);
