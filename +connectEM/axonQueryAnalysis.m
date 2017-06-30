@@ -1,5 +1,5 @@
 
-outputFolder = '/gaba/scratch/kboerg/axonQueryResults20170612/';
+outputFolder = '/gaba/scratch/kboerg/axonQueryResultsForHeiko/';
 
 % Load data
 load('/gaba/u/mberning/results/pipeline/20170217_ROI/allParameterWithSynapses.mat');
@@ -16,7 +16,7 @@ clear temp
 scratchFolder = '/gaba/scratch/kboerg/';
 % These are the downloaded queries (see wK projects: L4_focus_flight-1 & 2, L4_focus_flight-reseed-1 & 2 (2 contains 2nd and 3rd round of reseeding now))
 % And new queries from after switching to new (agglomerate based) query analysis: L4_focus_flight-new-1
-skeletonFolders = {'MBKMB_L4_axons_queries_2017_a_nmls'};
+skeletonFolders = {'annotationZips6791002912583435199HW_L4_GroundTruthForFlightTraining_nmls'};
 skeletonFolders = cellfun(@(x)[scratchFolder x filesep], skeletonFolders, 'uni', 0); 
 % Lookup segment ids of nodes+neighbours of nmls in all folders defined above
 [ff.segIds, ff.neighbours, ff.filenames, ff.nodes, ff.startNode, ff.comments] = connectEM.lookupNmlMulti(p, skeletonFolders, false);
@@ -94,32 +94,53 @@ eqClassCC = Graph.findConnectedComponents(edges, true, true);
 %     end
 % end
 liste = ff.filenames;
-taskStrings = unique(cellfun(@(x){x(1:110)}, liste))';
+startidx = 148
+taskStrings = unique(cellfun(@(x){x(1:startidx)}, liste))';
 taskStrings{1,2} = [];
-getUname = @(x)cellfun(@(y){y(111:end-10)}, x);
+getUname = @(x)cellfun(@(y){y(startidx+1:end-10)}, x);
 unames = unique(getUname(liste))';
 unames{1, 2} = [];
 for idx = 1 : length(liste)
     if mod(idx, 100) == 0
         idx
     end
-    rowidx = strcmp(taskStrings(:, 1), liste{idx}(1:110));
+    rowidx = strcmp(taskStrings(:, 1), liste{idx}(1:startidx));
     taskStrings{rowidx, 2} = [taskStrings{rowidx, 2}, idx];
 end 
-testTasks = find(cellfun('length', taskStrings(:, 2)) == 3);
+testTasks = find(cellfun('length', taskStrings(:, 2)) >= 3);
 allEqual = @(x)all(cellfun(@(y)isequal(x{1}, y), x(2:end)));
-for idx = cell2mat(taskStrings(testTasks, 2))'
+memorizeTask=[];
+for idx2 = 1:length(testTasks)
+    idx = taskStrings{idx2, 2};
     if allEqual(startAgglo(idx)) && allEqual(endAgglo(idx))
         uidxs = ismember(unames(:, 1), getUname(ff.filenames(idx)));
         unames(uidxs, 2) = cellfun(@(x){[x, 1]}, unames(uidxs, 2));
+        if length(idx) > 8
+            memorizeTask(end+1)=idx2;
+            
+        end
     else
         for badidx = idx'
             goodidx = setdiff(idx, badidx);
             if allEqual(startAgglo(goodidx)) && allEqual(endAgglo(goodidx))
                uidxs = ismember(unames(:, 1), getUname(ff.filenames(badidx)));
                unames(uidxs, 2) = cellfun(@(x){[x, -1]}, unames(uidxs, 2));
+               if length(idx) > 9
+                   memorizeTask(end+1)=idx2;
+               end
+               break;
             end
         end
     end
 end
 unames(:, 2)= cellfun(@mat2str, unames(:, 2), 'uni', 0);
+batch = load(['/gaba/scratch/mberning/axonQueryGenerationReverse/queriesMat/batch0050.mat']);
+assert(length(unique(cell2mat(batch.q.pos),'rows' ))==507)
+idx_batch=[];
+for idx =1  : length(memorizeTask)
+    idx_batch(end+1) = find(ismember(cell2mat(batch.q.pos)+1,ff.startNode{taskStrings{memorizeTask(idx),2}(1)},'rows'));
+end
+batch.q.pos=batch.q.pos(idx_batch);
+batch.q.dir=batch.q.dir(idx_batch);
+batch.q.angles=batch.q.angles(idx_batch);
+save('/gaba/scratch/kboerg/HiwiBatch.mat','batch')
