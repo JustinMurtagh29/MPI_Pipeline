@@ -156,7 +156,7 @@ function runPipeline(p, startStep, endStep)
     %Save the global SVG data
     if startStep <= PipelineStep.SaveGlobalSvgData && ...
        endStep >= PipelineStep.SaveGlobalSvgData
-        job = collectSvgDataOnCluster(p);
+        job = collectSvgDataOnCluster(p,1);
         Cluster.waitForJob(job);
     end
     
