@@ -1,4 +1,5 @@
 
+thisDir = fileparts(mfilename('fullpath'));
 outputFolder = '/gaba/scratch/kboerg/dendriteQueryResults20170604/';
 
 % Load data
@@ -79,6 +80,8 @@ clear idx temp;
 
 eqClassCCfull = [eqClassCC; num2cell(setdiff(1 : length(dendritesAll), cell2mat(eqClassCC)))'];
 dendritesPostQuery = cellfun(@(x){cell2mat(dendritesAll(x))}, eqClassCCfull);
+% save(fullfile(thisDir, 'dendritesPostQuery.mat'), 'dendritesPostQuery');
+
 y_pre = connectEM.evaluateAggloMetaMeta(graph, [], dendritesAll, 'postQueryPre', segmentMeta);
 y_post = connectEM.evaluateAggloMetaMeta(graph, [], dendritesPostQuery, 'postQueryPost', segmentMeta);
 
