@@ -1,4 +1,5 @@
 
+thisDir = fileparts(mfilename('fullpath'));
 outputFolder = '/gaba/scratch/kboerg/axonQueryResultsForHeiko/';
 
 % Load data
@@ -74,9 +75,10 @@ eqClassCC = Graph.findConnectedComponents(edges, true, true);
 % clear idx temp;
 % 
 % % Make complete list
-% 
-% eqClassCCfull = [eqClassCC; num2cell(setdiff(1 : length(axons), cell2mat(eqClassCC)))'];
-% axonsPostQuery = cellfun(@(x){cell2mat(axons(x))}, eqClassCCfull);
+eqClassCCfull = [eqClassCC; num2cell(setdiff(1 : length(axons), cell2mat(eqClassCC)))'];
+axonsPostQuery = cellfun(@(x){cell2mat(axons(x))}, eqClassCCfull);
+% save(fullfile(thisDir, 'axonsPostQuery.mat'), 'axonsPostQuery');
+
 % y_pre = connectEM.evaluateAggloMetaMeta(graph, axons, [],  'postQueryPreAxons', segmentMeta);
 % y_post = connectEM.evaluateAggloMetaMeta(graph, axonsPostQuery,[],  'postQueryPostAxons', segmentMeta);
 % 
@@ -135,7 +137,7 @@ for idx2 = 1:length(testTasks)
 end
 unames(:, 2)= cellfun(@mat2str, unames(:, 2), 'uni', 0);
 batch = load(['/gaba/scratch/mberning/axonQueryGenerationReverse/queriesMat/batch0050.mat']);
-assert(length(unique(cell2mat(batch.q.pos),'rows' ))==507)
+assert(length(unique(cell2mat(batch.q.pos),'rows'))==507)
 idx_batch=[];
 for idx =1  : length(memorizeTask)
     idx_batch(end+1) = find(ismember(cell2mat(batch.q.pos)+1,ff.startNode{taskStrings{memorizeTask(idx),2}(1)},'rows'));
