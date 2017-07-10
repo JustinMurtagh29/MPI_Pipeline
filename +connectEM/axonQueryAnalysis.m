@@ -55,6 +55,16 @@ edges = sort(edges, 2);
 eqClassCC = Graph.findConnectedComponents(edges, true, true);
 sizeEqClassCC = sort(cellfun(@numel, eqClassCC), 'descend');
 display(sizeEqClassCC(1:10));
+
+% Generate new merged classes
+eqClassCCfull = [eqClassCC; num2cell(setdiff(1 : length(axons), cell2mat(eqClassCC)))'];
+axonsNew = cellfun(@(x){cell2mat(axons(x))}, eqClassCCfull);
+% Load sorted out (and not used here) small agglomerates and add for Alessandro
+load('/gaba/scratch/mberning/axonQueryGeneration/axonsSmall.mat', 'axonsSmall');
+axonsPostQuery = cat(1, axonsNew, axonsSmall);
+save([outputFolder 'postQueryAgglomerates.mat'], 'axonsPostQuery');
+
+%{
 % Count unique rows
 [unique_rows,~,ind] = unique(edges,'rows');
 unique_ind = unique(ind);
@@ -79,9 +89,7 @@ if ~exist([outputFolder 'percolator'], 'dir')
     mkdir([outputFolder 'percolator']);
 end
 skeletonFromAgglo(graph.edges, segmentMeta, axons(eqClassCC{maxCCidx}), 'mergedAgglos', [outputFolder 'percolator' filesep]);
-
-% Generate new merged classes
-axonsNew = cellfun(@(x)cat(1,axons{x}), eqClassCC, 'uni', 0);
+%}
 
 %{
 % Look at redundant control tasks
