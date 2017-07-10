@@ -1,20 +1,20 @@
 
-outputFolder = '/gaba/scratch/mberning/axonQueryResults/';
+outputFolder = '/tmpscratch/mberning/axonQueryResults/';
 
-% Load data
+% Load segment meta data & graph
 load('/gaba/u/mberning/results/pipeline/20170217_ROI/allParameterWithSynapses.mat');
-segmentMeta = load([p.saveFolder 'segmentMeta.mat']);
-segmentMeta = connectEM.addSegmentClassInformation(p, segmentMeta);
+[graph, segmentMeta] = connectEM.loadAllSegmentationData(p);
+% Load state of axons > 5 micron
 temp = load('/gaba/scratch/mberning/axonQueryGeneration/beforeQueryGeneration.mat', 'axonsNew');
 axons = temp.axonsNew;
 clear temp;
-segmentsLeftover = setdiff(find(segmentMeta.axonProb > 0.5), cell2mat(axons));
-% Not needed so far
-%graph = load([p.saveFolder 'graphNew.mat'], 'edges', 'prob', 'borderIdx');
+% Only use 5 micron pieces in this initial analysis
+%segmentsLeftover = setdiff(find(segmentMeta.axonProb > 0.5), cell2mat(axons));
+segmentsLeftover = [];
 
 % Where to find skeletons that were returned from the queries
-scratchFolder = '/gaba/scratch/mberning/';
-skeletonFolders = {'axonQueries'};
+scratchFolder = outputFolder;
+skeletonFolders = {'MBKMB_L4_axons_queries_2017_a' 'MBKMB_L4_axons_queries_2017_b'};
 skeletonFolders = cellfun(@(x)[scratchFolder x filesep], skeletonFolders, 'uni', 0);
 % Lookup segment ids of nodes+neighbours of nmls in all folders defined above
 [ff.segIds, ff.neighbours, ff.filenames, ff.nodes, ff.startNode, ff.comments] = connectEM.lookupNmlMulti(p, skeletonFolders, false);
@@ -22,6 +22,8 @@ display([num2str(sum(~cellfun(@isempty,ff.comments))) '/' num2str(numel(ff.comme
 tabulate(cellfun(@(x)x{1}{1}, cellfun(@(x)regexp(x, 'content="(.*)"', 'tokens'), ...
     cat(1, ff.comments{~cellfun(@isempty, ff.comments)}), 'uni', 0), 'uni', 0))
 ff = structfun(@(x)x(cellfun(@isempty,ff.comments)), ff, 'uni', 0);
+% ~600 queries do not have a start node, not sure why (maybe the ones with more than one tree), maybe check later
+ff = structfun(@(x)x(~cellfun(@isempty, ff.startNode)), ff, 'uni', 0);
 
 % Calculate overlap of all queries with segments
 [uniqueSegments, neighboursStartNode, nodesExcludedIdx, startNodeIdx] = cellfun(@connectEM.queryAnalysis, ...
@@ -49,8 +51,20 @@ display([num2str(numel(cat(2, endAgglo{idxGood}))) ' attachments made by ' num2s
 % Find CC of eqClasses to be joined
 edges = cellfun(@(x,y)combnk([x y], 2), startAgglo(idxGood), endAgglo(idxGood), 'uni', 0);
 edges = cat(1,edges{:});
-edges(edges(:,1) == edges(:,2),:) = [];
+edges = sort(edges, 2);
 eqClassCC = Graph.findConnectedComponents(edges, true, true);
+sizeEqClassCC = sort(cellfun(@numel, eqClassCC), 'descend');
+display(sizeEqClassCC(1:10));
+% Count unique rows
+[unique_rows,~,ind] = unique(edges,'rows');
+unique_ind = unique(ind);
+counts = histc(ind,unique_ind);
+tabulate(counts)
+% Keep only edges that were voted for at least twice
+edgesAbove1 = edges(unique_rows(unique_ind(counts > 1)),:);
+eqClassCCabove1 = Graph.findConnectedComponents(edgesAbove1, true, true);
+sizeEqClassCCAbove1 = sort(cellfun(@numel, eqClassCCabove1), 'descend');
+display(sizeEqClassCCAbove1(1:10));
 
 % Visualization of queries and connections made
 idx = randperm(numel(ff.segIds), 100);
@@ -58,3 +72,48 @@ temp = structfun(@(x)x(idx), ff, 'uni', 0);
 connectEM.debugQueryAttachment(segmentMeta.point', axons, temp, outputFolder, 'query');
 clear idx temp;
 
+% Generate skeletons for largest component for debuging
+sizeEqClassCC = cellfun(@numel, eqClassCC);
+[maxCC, maxCCidx] = max(sizeEqClassCC);
+if ~exist([outputFolder 'percolator'], 'dir')
+    mkdir([outputFolder 'percolator']);
+end
+skeletonFromAgglo(graph.edges, segmentMeta, axons(eqClassCC{maxCCidx}), 'mergedAgglos', [outputFolder 'percolator' filesep]);
+
+% Generate new merged classes
+axonsNew = cellfun(@(x)cat(1,axons{x}), eqClassCC, 'uni', 0);
+
+%{
+% Look at redundant control tasks
+liste = ff.filenames;
+taskstridx=122;
+taskStrings = unique(cellfun(@(x){x(1:taskstridx)}, liste))';
+taskStrings{1,2} = [];
+getUname = @(x)cellfun(@(y){y(taskstridx+1:end-12)}, x);
+for idx = 1 : length(liste)
+    if mod(idx, 100) == 0
+        idx
+    end
+    rowidx = strcmp(taskStrings(:, 1), liste{idx}(1:taskstridx));
+    taskStrings{rowidx, 2} = [taskStrings{rowidx, 2}, idx];
+end
+unames = unique(getUname(liste))';
+unames{1, 2} = [];
+testTasks = find(cellfun('length', taskStrings(:, 2)) == 3);
+isequal2 = @(x,y)isequal(x,y)||(isempty(x)&&isempty(y));
+allEqual = @(x)all(cellfun(@(y)isequal2(x{1}, y), x(2:end)));
+for idx = cell2mat(taskStrings(testTasks, 2))'
+    if allEqual(startAgglo(idx)) && allEqual(endAgglo(idx))
+        uidxs = ismember(unames(:, 1), getUname(ff.filenames(idx)));
+        unames(uidxs, 2) = cellfun(@(x){[x, 1]}, unames(uidxs, 2));
+    else
+        for badidx = idx'
+            goodidx = setdiff(idx, badidx);
+            if allEqual(startAgglo(goodidx)) && allEqual(endAgglo(goodidx))
+                uidxs = ismember(unames(:, 1), getUname(ff.filenames(badidx)));
+                unames(uidxs, 2) = cellfun(@(x){[x, -1]}, unames(uidxs, 2));
+            end
+        end
+    end
+end
+%}
