@@ -25,35 +25,39 @@ edges(any(edges==-1,2),:)=[];
 eqClassCC = Graph.findConnectedComponents(edges, true, true);
 
 eqClassCCfull = [eqClassCC; num2cell(setdiff(1 : length(axons), cell2mat(eqClassCC)))'];
-biggestEC =eqClassCC{1000};
-biggestECids = cell2mat(axons(biggestEC));
-nodes = [];
-edges = [];
-lookup1 = [];
-lookup2 = [];
-for idx = 1 : length(biggestEC)
-    idx
-    lookup=sparse(ones(1,length(axons{biggestEC(idx)})), axons{biggestEC(idx)}, 1:length(axons{biggestEC(idx)}));
-    
-    edges=[edges;full(lookup(edgesGTall(all(ismember(edgesGTall,axons{biggestEC(idx)}),2),:)))+size(nodes,1)];
-    nodes=[nodes;segmentMeta.point(:,axons{biggestEC(idx)})'];
-    lookup1 = [lookup1; repmat(biggestEC(idx), length(axons{biggestEC(idx)}), 1)];
-    lookup2 = [lookup2; axons{biggestEC(idx)}];
-end
-edges2=edges;
-nodes2=nodes;
-for idx = 1 : length(result1.startAgglo)
-    idx
-    if ~isempty(result1.startAgglo{idx}) && result1.startAgglo{idx}<=length(axons) && ismember(result1.startAgglo{idx},biggestEC)
-        tempids =[result1.ff.segIds{idx},result1.ff.neighbours{idx}];
-        hits=find(any(ismember(tempids, cell2mat(axons(biggestEC))),2));
-        for idx2= 1:length(hits)
-            nodes2=[nodes2;result1.ff.nodes{idx}(hits(idx2),:)];
-            if idx2>1
-                edges2=[edges2;size(nodes2,1),size(nodes2,1)-1];
+for idx_agglo = 1000:1100
+    currentEC =eqClassCC{idx_agglo};
+    nodes = [];
+    edges = [];
+    lookup1 = [];
+    lookup2 = [];
+    for idx = 1 : length(currentEC)
+        idx
+        lookup=sparse(ones(1,length(axons{currentEC(idx)})), axons{currentEC(idx)}, 1:length(axons{currentEC(idx)}));
+        
+        edges=[edges;full(lookup(edgesGTall(all(ismember(edgesGTall,axons{currentEC(idx)}),2),:)))+size(nodes,1)];
+        nodes=[nodes;segmentMeta.point(:,axons{currentEC(idx)})'];
+        lookup1 = [lookup1; repmat(currentEC(idx), length(axons{currentEC(idx)}), 1)];
+        lookup2 = [lookup2; axons{currentEC(idx)}];
+    end
+    edges2=edges;
+    nodes2=nodes;
+    resultCol = {result1, result2};
+    for runidx = 1 : 2
+        for idx = 1 : length(resultCol{runidx}.startAgglo)
+            if ~isempty(resultCol{runidx}.startAgglo{idx}) && resultCol{runidx}.startAgglo{idx}<=length(axons) && ismember(resultCol{runidx}.startAgglo{idx},currentEC)
+                tempids =[resultCol{runidx}.ff.segIds{idx},resultCol{runidx}.ff.neighbours{idx}];
+                hits=find(any(ismember(tempids, cell2mat(axons(currentEC))),2));
+                for idx2= 1:length(hits)
+                    nodes2=[nodes2;resultCol{runidx}.ff.nodes{idx}(hits(idx2),:)];
+                    if idx2>1
+                        edges2=[edges2;size(nodes2,1),size(nodes2,1)-1];
+                    end
+                    edges2=[edges2;size(nodes2,1),find(ismember(lookup2,tempids(hits(idx2),:)),1)];
+                    
+                end
             end
-            edges2=[edges2;size(nodes2,1),find(ismember(lookup2,tempids(hits(idx2),:)),1)];
-            
         end
     end
+    detectChiasmataKMB2([],nodes2,edges2,true,['/tmpscratch/kboerg/visX' num2str(idx_agglo) '/'])
 end
