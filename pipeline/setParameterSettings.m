@@ -152,7 +152,7 @@ function bbox = fixBoundingBox(p)
     if any(lowerLimitMod)
         warning('Lower edge of bounding box not aligned to KNOSSOS cubes, fixing, please check p.bbox');
         idx = lowerLimitMod ~= 0;
-        bbox(idx,1) = bbox(idx,1) + 128 - lowerLimitMod;
+        bbox(idx,1) = bbox(idx,1) + 128 - lowerLimitMod(idx);
     end
 
     if any(upperLimitMod < 64 & upperLimitMod ~= 0)
