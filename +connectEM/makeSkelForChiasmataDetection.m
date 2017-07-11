@@ -35,7 +35,7 @@ for idx = 1 : length(biggestEC)
     idx
     lookup=sparse(ones(1,length(axons{biggestEC(idx)})), axons{biggestEC(idx)}, 1:length(axons{biggestEC(idx)}));
     
-    edges=[edges;full(lookup(edgesGTall(all(ismember(edgesGTall,axons{biggestEC(idx)}),2),:)))];
+    edges=[edges;full(lookup(edgesGTall(all(ismember(edgesGTall,axons{biggestEC(idx)}),2),:)))+size(nodes,1)];
     nodes=[nodes;segmentMeta.point(:,axons{biggestEC(idx)})'];
     lookup1 = [lookup1; repmat(biggestEC(idx), length(axons{biggestEC(idx)}), 1)];
     lookup2 = [lookup2; axons{biggestEC(idx)}];
