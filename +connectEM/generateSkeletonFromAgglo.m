@@ -1,7 +1,8 @@
 function generateSkeletonFromAgglo(edges, com, cc, treeNames, outputFolder, maxSegId)
 
     % Set colors to be used
-    colors = distinguishable_colors(length(cc), [0 0 0; 1 1 1]);
+    colors = distinguishable_colors(min(length(cc),100), [0 0 0; 1 1 1]);
+    colors = repmat(colors, ceil(length(cc)/100), 1);
     colors(:,4) = 0;
     for tr=1:length(cc)
         if ~isempty(cc{tr})
@@ -18,7 +19,7 @@ function generateSkeletonFromAgglo(edges, com, cc, treeNames, outputFolder, maxS
             clear idx theseEdgesSegId;
            % Write to structure for writeNml
             skel{1}.nodesNumDataAll = zeros(size(theseCoM,1),14);
-            skel{1}.nodesNumDataAll(:,1) = 1:size(theseCoM,1); 
+            skel{1}.nodesNumDataAll(:,1) = 1:size(theseCoM,1);
             skel{1}.nodesNumDataAll(:,2) = 10*ones(size(theseCoM,1),1);
             skel{1}.nodesNumDataAll(:,3:5) = theseCoM;
             skel{1}.edges = theseEdgesNodes;
