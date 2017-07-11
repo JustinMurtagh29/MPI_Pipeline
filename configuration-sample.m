@@ -33,6 +33,9 @@ p.experimentName = '2012-09-28_ex145_07x2_segNew';
 p.raw.root = '/gaba/u/mberning/data/cortex/2012-09-28_ex145_07x2_corrected/color/1/';
 p.raw.prefix = '2012-09-28_ex145_07x2_corrected_mag1';
 
+% Uncomment, if you wanna live the risky life
+% p.raw.backend = 'wkwrap';
+
 % Voxel size in nano metres
 p.raw.voxelSize = [11.24 11.24 28];
 
