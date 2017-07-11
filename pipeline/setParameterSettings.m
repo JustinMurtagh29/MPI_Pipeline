@@ -11,11 +11,11 @@ function [p, pT] = setParameterSettings(p)
         p.raw.root = [p.raw.root, filesep];
         warning('Added trailing slash to p.raw.root');
     end
-
+    
     if ~isfield(p.raw,'dtype')
         p.raw.dtype = 'uint8';
     end
-
+    
     % Size of local segmentation and local graph construction
     p.tileSize =  [512; 512; 256];
 
@@ -41,21 +41,22 @@ function [p, pT] = setParameterSettings(p)
     p.cnn.first = ['/gaba/u/mberning/results/parameterSearch/' p.cnn.dateStrings ...
         '/iter' num2str(p.cnn.iter, '%.2i') '/gpu' num2str(p.cnn.gpu, '%.2i') '/saveNet0000000001.mat'];
     p.cnn.GPU = false;
-
-    % Function to use for classification
-    p.class.func = @bigFwdPass;
-
+    
     % Location to store CNN classification
-    p.class.root = [p.tempFolder 'class/'];
-    p.class.prefix = p.raw.prefix;
-    p.class.dtype = 'single';
-
+    p.class = Util.modifyStruct( ...
+        p.raw, ...
+        'dtype', 'single', ...
+        'func', @bigFwdPass, ...
+        'root', strcat(p.tempFolder, 'class', filesep));
+    
     % Function to use for segmentation
-    p.seg.func = @(x)watershedSeg_v1_cortex(x,{p.seg.threshold 10});
-    p.seg.root = [p.saveFolder 'globalSeg/'];
-    p.seg.prefix = p.raw.prefix;
-    p.seg.dtype = 'uint32';
-
+    p.seg = Util.modifyStruct( ...
+        p.raw, ...
+        'dtype', 'uint32', ...
+        'func', @(x) watershedSeg_v1_cortex(x, {p.seg.threshold, 10}), ...
+        'root', strcat(p.saveFolder, 'globalSeg', filesep), ...
+        'threshold', p.seg.threshold);
+    
     % Specify arguments for filterbank applied to raw and aff data each
     p.filter = {
         {'sortedeigenvalueshessian' [3 5] []}...
@@ -126,63 +127,14 @@ function [p, pT] = setParameterSettings(p)
             end
         end
     end
-
-
-    % GLOBAL SETTINGS FOR training data generation
-    pT = p;
-    % Remove all fields that do not make sense in training data setting
-    pT = rmfield(pT, {'local' 'bbox' 'tileSize' 'tiles' 'correspondence'});
-    pT.cnn.GPU = false; % minicubeFwdPass on CPU to allow arbitrary region size
-
-    % Densly skeletonized regions in dataset
-    % Region from Heiko
-    pT.local(1).bboxSmall = [4097 4736; 4481 5248; 2250 2450];
-    pT.local(1).trainFileRaw = '/gaba/u/mberning/data/cortex/denseSkel/region1.nml';
-    pT.local(1).trainFileGlia = '/gaba/u/mberning/data/cortex/denseSkel/region1glia.nml';
-    pT.local(1).trainFileLocal = '/gaba/u/mberning/data/cortex/denseSkel/region1local.nml';
-    pT.local(1).trainFileLocalWithoutGlia = '/gaba/u/mberning/data/cortex/denseSkel/region1localWithoutGlia.nml';
-    % Region from Alex
-    pT.local(2).bboxSmall = [1417 1717; 4739 5039; 890 1190];
-    pT.local(2).trainFileRaw = '/gaba/u/mberning/data/cortex/denseSkel/region2.nml';
-    pT.local(2).trainFileGlia = '/gaba/u/mberning/data/cortex/denseSkel/region2glia.nml';
-    pT.local(2).trainFileLocal = '/gaba/u/mberning/data/cortex/denseSkel/region2local.nml';
-    pT.local(2).trainFileLocalWithoutGlia = '/gaba/u/mberning/data/cortex/denseSkel/region2localWithoutGlia.nml';
-    % Region from Max & Anna
-    pT.local(3).bboxSmall = [6800 7100; 2140 2440; 1236 1536];
-    pT.local(3).trainFileRaw = '/gaba/u/mberning/data/cortex/denseSkel/region3.nml';
-    pT.local(3).trainFileGlia = '/gaba/u/mberning/data/cortex/denseSkel/region3glia.nml';
-    pT.local(3).trainFileLocal = '/gaba/u/mberning/data/cortex/denseSkel/region3local.nml';
-    pT.local(3).trainFileLocalWithoutGlia = '/gaba/u/mberning/data/cortex/denseSkel/region3localWithoutGlia.nml';
-
-    % LOCAL SETTINGS FOR training tiles
-    for i=1:3
-        % Save path for data relating to this tile
-        pT.local(i).saveFolder = [pT.saveFolder 'train' num2str(i, '%.4i') '/'];
-        % Bounding box without and with border for this tile
-        pT.local(i).bboxBig = pT.local(i).bboxSmall + pT.tileBorder;
-        % Where to save
-        pT.local(i).class.root = [pT.local(i).saveFolder 'class/'];
-        pT.local(i).class.prefix = pT.class.prefix;
-        pT.local(i).seg.pSearchFolder = [pT.local(i).saveFolder 'pSearch/'];
-        pT.local(i).segFile = [pT.local(i).saveFolder 'seg.mat'];
-        pT.local(i).edgeFile = [pT.local(i).saveFolder 'edges.mat'];
-        pT.local(i).borderFile =  [pT.local(i).saveFolder 'borders.mat'];
-        pT.local(i).weightFile = [pT.local(i).saveFolder 'weights.mat'];
-
-        pT.local(i).gtFile = [pT.local(i).saveFolder 'region' num2str(i) '.mat'];
-        % Benjamin's glia prediction
-        pT.local(i).segmentFile = [pT.local(i).saveFolder 'segments.mat'];
-        pT.local(i).segmentWeightFile = [pT.local(i).saveFolder 'segmentWeights.mat'];
-        pT.local(i).gliaProbFile = [pT.local(i).saveFolder 'gliaProb.mat'];
-    end
-
+    
     % Create state folder for this p settings GP
     if ~exist(p.gp.stateFolder, 'dir')
         mkdir(p.gp.stateFolder);
     end
 
     % Save everything
-    Util.save([p.saveFolder 'allParameter.mat'], p, pT);
+    Util.save([p.saveFolder 'allParameter.mat'], p);
 
 end
 

@@ -50,7 +50,7 @@ display('Detecting blood vessels');
 tic;
 for i=1:length(zCoords) 
     thisSliceBbox(3,:) = [zCoords{i}(1) zCoords{i}(end)];
-    raw = readKnossosRoi(dataset.root, dataset.prefix, thisSliceBbox);
+    raw = loadRawData(dataset, thisSliceBbox);
     vessels = false(size(raw));
     for j=1:size(raw,3)
         vessels(:,:,j) = detectVesselsSingleImage(raw(:,:,j));
@@ -67,8 +67,10 @@ for i=1:length(zCoords)
     vessels = imclose(vessels, ones(1, 1, 7));  
     maskedRaw = raw;
     maskedRaw(vessels) = uint8(121);
-    writeKnossosRoi(vesselsMasked.root, vesselsMasked.prefix, thisSliceBbox(:,1)', maskedRaw, 'uint8', '', 'noRead');
-    writeKnossosRoi(strrep(vesselsMasked.root, '/color/', '/segmentation/'), vesselsMasked.prefix, thisSliceBbox(:,1)', uint32(vessels), 'uint32', '', 'noRead');
+    saveRawData(vesselsMasked, thisSliceBbox(:,1)', maskedRaw);
+    saveSegDataGlobal(struct( ...
+        'root', strrep(vesselsMasked.root, '/color/', '/segmentation/'), ...
+        'prefix', vesselsMasked.prefix), thisSliceBbox(:, 1)', uint32(vessels));
     %Util.progressBar(i, length(zCoords));
     clear vessels;
 end
@@ -139,12 +141,14 @@ for i=1:length(zCoords)
     % Read original data and detected vessel
     % Interpolate correction voxel for each voxel and multiply
     correctionForSlice =  interp3(X,Y,Z,correctionVolume,Xq,Yq,Zq, 'linear', 121);
-    raw = readKnossosRoi(vesselsMasked.root, vesselsMasked.prefix, thisSliceBbox); 
-    vessels =  readKnossosRoi(strrep(vesselsMasked.root, '/color/', '/segmentation/'), vesselsMasked.prefix, thisSliceBbox, 'uint32');
+    raw = loadRawData(vesselsMasked, thisSliceBbox); 
+    vessels =  loadSegDataGlobal(struct( ...
+        'root', strrep(vesselsMasked.root, '/color/', '/segmentation/'), ...
+        'prefix', vesselsMasked.prefix), thisSliceBbox);
     raw = uint8(correctionForSlice .* double(raw));
 	raw(vessels > 0) = 121;
     % Save to new datset to be used in pipeline
-    writeKnossosRoi(gradientCorrected.root, gradientCorrected.prefix, thisSliceBbox(:,1)', raw);
+    saveRawData(gradientCorrected, thisSliceBbox(:, 1)', raw);
     clear raw vessels;
     Util.progressBar(i, length(zCoords));
 end

@@ -28,6 +28,11 @@ function job = globalizeSegmentation(p)
             size(p.local), curIdx);
         inputCell{curIdx} = {p.saveFolder, curI, curJ, curK};
     end
+    
+    % init wkw dataset, if needed
+    if isfield(p.seg, 'backend') && p.seg.backend == 'wkwrap'
+        wkwInit('new', p.seg.root, 32, 32, 'uint32', 1);
+    end
 
     % Globalize segmentation and save as KNOSSOS hierachy for Oxalis
     job = startCPU(@globalizeSegmentationJobWrapper, inputCell, ...

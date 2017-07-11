@@ -10,14 +10,9 @@ for idx = 1:taskCount
         mkdir(p.local(idx).saveFolder);
     end
     
-    if isfield(p.local(idx), 'class')
-        % This is for pT train, probably needs update at some point?
-        inputCell{idx} = { ...
-            p.local(idx).class.root, p.local(idx).class.prefix, ...
-            p.local(idx).bboxBig, p.seg.func, p.local(idx).segFile};
-    else
-        inputCell{idx} = {p.saveFolder, idx};
-    end
+    inputCell{idx} = { ...
+        p.class, p.local(idx).bboxBig, ...
+        p.seg.func, p.local(idx).tempSegFile};
 end
 
 functionH = @miniSegmentationJobWrapper;
