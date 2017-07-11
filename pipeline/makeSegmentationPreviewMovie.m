@@ -71,7 +71,7 @@ end
 
 function segmentationStep(p, tempClass, tempSegFile, bbox)
     functionH = @segmentForPipeline;
-    inputCell{1} = {tempClass.root, tempClass.prefix, bbox, p.seg.func, tempSegFile};
+    inputCell{1} = {tempClass, bbox, p.seg.func, tempSegFile};
     jobName = 'segForMovie';
 
     job = startCPU(functionH, inputCell, jobName);
