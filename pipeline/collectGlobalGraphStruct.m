@@ -32,11 +32,14 @@ function collectGlobalGraphStruct(p)
         Graph.edges2Neighbors(edges);
     neighProb = cellfun(@(x) ...
         prob(x), neighboursIdx, 'UniformOutput', false);
+    neighBorderIdx = cellfun(@(x) ...
+        borderIdx(x), neighboursIdx, 'UniformOutput', false);
 
     % build output
     graph = struct;
     graph.neighbours = neighbours;
     graph.neighProb = neighProb;
+    graph.neighBorderIdx = neighBorderIdx;
     graph.edges = edges;
     graph.prob = prob;
     graph.borderIdx = borderIdx;

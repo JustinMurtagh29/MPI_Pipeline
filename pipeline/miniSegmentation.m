@@ -15,8 +15,21 @@ for idx = 1:taskCount
         p.seg.func, p.local(idx).tempSegFile};
 end
 
-functionH = @segmentForPipeline;
+functionH = @miniSegmentationJobWrapper;
 job = startCPU(functionH, inputCell, 'segmentation', 36);
 
+end
+
+function miniSegmentationJobWrapper(saveFolder, idx)
+% INPUT saveFolder: string
+%           Path to segmentation main folder containing the
+%           'allParameter.mat' file.
+%       idx: int
+%           Linear index of the current local cube.
+
+m = load(fullfile(saveFolder, 'allParameter.mat'));
+p = m.p;
+segmentForPipeline(p.class.root, p.class.prefix, p.local(idx).bboxBig, ...
+    p.seg.func, p.local(idx).tempSegFile);
 end
 

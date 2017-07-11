@@ -10,6 +10,7 @@ skelpath = {[evalfolder '2012-09-28_ex145_07x2_new2__explorational__mhelmstaedte
     [evalfolder '2012-09-28_ex145_07x2_new2__explorational__mhelmstaedter__b8e053_dend1.nml'], ...
     [evalfolder '2012-09-28_ex145_07x2_new2__explorational__mhelmstaedter__b8e053_dend2.nml'], ...
     [evalfolder '2012-09-28_ex145_07x2_new2__explorational__mhelmstaedter__1bad47-2_dend.nml']};
+
 % Additional GT in subfolders
 meta_liste = {'dendrite_gt', 'new_axon_gt', 'old_axon_gt'};
 for meta_idx = 1 : 3
@@ -18,26 +19,43 @@ for meta_idx = 1 : 3
         skelpath{end + 1} = [evalfolder meta_liste{meta_idx} filesep liste(file_idx).name];
     end
 end
+skelpath = [skelpath, {[evalfolder '2012-09-28_ex145_07x2_new2__explorational__kboergens__bd3e11.nml'], ...
+    [evalfolder '2012-09-28_ex145_07x2_new2__explorational__kboergens__bde7d2.nml'], ...
+    [evalfolder '2012-09-28_ex145_07x2_new2__explorational__kboergens__be0e2a.nml'], ...
+    [evalfolder '2012-09-28_ex145_07x2_new2__explorational__kboergens__be5275.nml'], ...
+    [evalfolder '2012-09-28_ex145_07x2_ROI2017__explorational__amotta__fe80a9.nml'], ...
+    [evalfolder '2012-09-28_ex145_07x2_ROI2017__explorational__amotta__f70ad6_axon1.nml'], ...
+    [evalfolder '2012-09-28_ex145_07x2_ROI2017__explorational__amotta__f70ad6_axon2.nml'], ...
+    [evalfolder '2012-09-28_ex145_07x2_new2__explorational__mhelmstaedter__b8e053_axon.nml']}];
+
+
+
 % Where to store results
 mainFolder = ['/gaba/scratch/kboerg/eval_agglo/' nameOfAgglo '/'];
-mkdir(mainFolder);
+if ~exist(mainFolder, 'dir')
+    mkdir(mainFolder);
+end
 % Choose which GT in skelpath to use for evaluation
-dendrite_selector = 2:5;
-axon_selector = 1;%[1 16:35];
+dendrite_selector = [2:5, 36:39];
+axon_selector = 16:25;%[1, 26, 27, 34, 35, 40:43];
 % Dendrite
-%agglos_dendrite_reverse = createLookup(segmentMeta, agglos_dendrite);
-%y.dendrite1 = connectEM.evaluateAggloMeta(skelpath(dendrite_selector), graph, segmentMeta, agglos_dendrite, p, 'dendrites1', mainFolder, 0, 1E4, agglos_dendrite_reverse);
-%y.dendrite4 = connectEM.evaluateAggloMeta(skelpath(dendrite_selector), graph, segmentMeta, agglos_dendrite, p, 'dendrites4', mainFolder, 3, 1E4, agglos_dendrite_reverse);
-%y.dendritePercolators = cellfun(@(x)sum(segmentMeta.voxelCount(x)), agglos_dendrite(1:10));
+maxTubeDendrite = 5000;
+% agglos_dendrite_reverse = createLookup(segmentMeta, agglos_dendrite);
+% y.dendrite1 = connectEM.evaluateAggloMeta(skelpath(dendrite_selector), graph, segmentMeta, agglos_dendrite, p, 'dendrites1', mainFolder, 0, 2.5E4, agglos_dendrite_reverse, maxTubeDendrite);
+% y.dendrite4 = connectEM.evaluateAggloMeta(skelpath(dendrite_selector), graph, segmentMeta, agglos_dendrite, p, 'dendrites4', mainFolder, 3, 2.5E4, agglos_dendrite_reverse, maxTubeDendrite);
+% y.dendritePercolators = cellfun(@(x)sum(segmentMeta.voxelCount(x)), agglos_dendrite(1:min(10,numel(agglos_dendrite))));
 % Axon evaluation
+maxTubeAxon = 3000;
 agglos_axon_reverse = createLookup(segmentMeta, agglos_axon);
-y.axon = connectEM.evaluateAggloMeta(skelpath(axon_selector), graph, segmentMeta, agglos_axon, p, 'axons', mainFolder, 0, 0, agglos_axon_reverse);
+y.axon1 = connectEM.evaluateAggloMeta(skelpath(axon_selector), graph, segmentMeta, agglos_axon, p, 'axons1', mainFolder, 0, 0, agglos_axon_reverse,maxTubeAxon);
+%y.axon2 = connectEM.evaluateAggloMeta(skelpath(axon_selector), graph, segmentMeta, agglos_axon, p, 'axons2', mainFolder, 1, 6250, agglos_axon_reverse,maxTubeAxon);
+y.axonPercolators = cellfun(@(x)sum(segmentMeta.voxelCount(x)), agglos_axon(1:min(10,numel(agglos_axon))));
 
 end
 
 function agglos_reverse = createLookup(segmentMeta, agglos)
 
-agglos_reverse = zeros(size(segmentMeta.point, 2), 1);
+agglos_reverse = zeros(size(segmentMeta.point, 1), 1);
 for idx = 1 : length(agglos)
     agglos_reverse(agglos{idx}) = idx;
 end

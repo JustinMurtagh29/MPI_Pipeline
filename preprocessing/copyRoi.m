@@ -12,10 +12,13 @@ function raw = copyRoi()
     destination.root = '/gaba/u/mberning/wkCubes/2012-09-28_ex145_07x2_ROI2016/color/1/';
     destination.prefix = '2012-09-28_ex145_07x2_ROI2016_mag1';
     destination.firstCoord = 129 - [25 25 10];
+    
+    % Uncomment for reading / writing .WKW files
+    % chosenOne.backend = 'wkwrap';
+    % destination.backend = 'wkwrap';
 
     % Read from one, write to wKcubes
     raw = loadRawData(chosenOne, chosenOne.bbox);
     saveRawData(destination, destination.firstCoord, raw);
-
 end
 

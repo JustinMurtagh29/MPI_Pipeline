@@ -165,8 +165,8 @@ toc;
 explainedVariance = cellfun(@(x)cumsum(x)./sum(x), latent, 'uni', 0);
 explainedVariance1 = cellfun(@(x)x(1), explainedVariance, 'uni', 0);
 axonsGood = axonsNew(explainedVariance1 > 0.95);
-connectEM.skeletonFromAgglo(axonEdges, segmentMeta, ...                       
-        axonsGood, 'axonsGood', outputFolder); 
+connectEM.skeletonFromAgglo(axonEdges, segmentMeta, ...
+        axonsGood, 'axonsGood', outputFolder);
 jobAxons = connectEM.buildIsosurfaceOfAggloStart(p, outputFolder, axonsGood', 'axonsGood');
 
 % Write spines in 5 micron^3
@@ -176,4 +176,3 @@ bbox_wk = [2800, 4267, 1712, 445, 445, 179];
 bbox = Util.convertWebknossosToMatlabBbox(bbox_wk);
 idx = all(bsxfun(@minus, spinePosition, bbox(:,1)') > 0,2) & all(bsxfun(@minus, spinePosition, bbox(:,2)') < 0,2);
 connectEM.generateSkeletonFromNodes([outputFolder 'spinesBbox.nml'], spinePosition(idx), strseq('spines', 1:sum(idx), {}, true);
-

@@ -1,7 +1,4 @@
-function [recall, splits, mergers, validnodes, foundAgglomerates, connM] = evaluateAgglo(agglomerates, segmentMeta, skel, skelAsIds, neighbours, limitaggloNum, limitaggloSize, agglos_reverse)
-    
-    % Merger cutoff
-    maxTube = 10000;
+function [recall, splits, mergers, validnodes, foundAgglomerates, connM] = evaluateAgglo(agglomerates, segmentMeta, skel, skelAsIds, neighbours, limitaggloNum, limitaggloSize, agglos_reverse, maxTube)
     % Occurences of each agglomerate
     foundAgglomeratesPre = agglos_reverse(skelAsIds(skelAsIds ~= 0));
     foundAgglomeratesPre(foundAgglomeratesPre == 0) = [];
@@ -15,13 +12,17 @@ function [recall, splits, mergers, validnodes, foundAgglomerates, connM] = evalu
     aggloSize = cellfun(@(x)sum(segmentMeta.voxelCount(x)), agglomerates(foundAgglomerates));
     foundAgglomerates(aggloSize < limitaggloSize) = [];
     % Metrics
-    recall = [length(intersect(cell2mat(agglomerates(foundAgglomerates)), skelAsIds(skelAsIds ~= 0))), length(unique(skelAsIds(skelAsIds ~= 0)))];
-    validnodes = find(ismember(skelAsIds, cell2mat(agglomerates(foundAgglomerates))));
+    recall = [length(intersect(cat(1,agglomerates{foundAgglomerates}), skelAsIds(skelAsIds ~= 0))), length(unique(skelAsIds(skelAsIds ~= 0)))];
+    validnodes = find(ismember(skelAsIds, cat(1,agglomerates{foundAgglomerates})));
     % Merger calculation
     mergers = 0;
     scalize = @(x)bsxfun(@times,x,[11.24, 11.24, 28]);
     for idx = 1 : length(foundAgglomerates)
-        if max(min(pdist2(scalize(segmentMeta.point(agglomerates{foundAgglomerates(idx)}, :)), scalize(segmentMeta.point(skelAsIds(skelAsIds > 0), :))), [], 2)) > maxTube
+        points = segmentMeta.point(agglomerates{foundAgglomerates(idx)}, :);
+        if size(points, 1) > 1000
+            points = points(randperm(size(points, 1), 1000), :);
+        end
+        if max(min(pdist2(scalize(points), scalize(segmentMeta.point(skelAsIds(skelAsIds > 0), :))), [], 2)) > maxTube
             mergers = mergers + 1;
         end
     end
@@ -38,7 +39,7 @@ function [recall, splits, mergers, validnodes, foundAgglomerates, connM] = evalu
     %}
     % Split calculation: Not currently in use
     if graphconncomp(sparse(connM), 'Directed', false) ~= 1
-        disp('skeleton does not stick together')  % todo interpolate nodes
+        %disp('skeleton does not stick together')  % todo interpolate nodes
         splits = -1;
         return;
     end

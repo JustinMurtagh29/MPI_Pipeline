@@ -1,4 +1,5 @@
-function subsegmentsList = calculateSubsegments( interfaceSurfaceList, neighborIDs, seg, voxelSize, rinclude  )
+function subsegmentsList = calculateSubsegments( ...
+    interfaceSurfaceList, neighborIDs, seg, voxelSize, rinclude  )
 %CALCULATESUBSEGMENTS Calculate parts of segments adjacent to borders.
 % INPUT interfaceSurfaceList: [Nx1] cell of [Mx1] int
 %           Each cell contains all linear indices of all voxel from a
@@ -20,13 +21,9 @@ function subsegmentsList = calculateSubsegments( interfaceSurfaceList, neighborI
 %           indices of the two subsegments.
 % Author: Benedikt Staffler <benedikt.staffler@brain.mpg.de>
 
-if ~isrow(rinclude)
-    rinclude = rinclude';
-end
 rinclude = sort(rinclude);
-if ~isrow(voxelSize)
-    voxelSize = voxelSize';
-end
+rinclude = rinclude(:)';
+voxelSize = voxelSize(:)';
 
 fprintf(['[%s] SynEM.Svg.calculateSubsegments - Starting subsegment ', ...
     'calculation.\n'], datestr(now));
@@ -34,9 +31,8 @@ fprintf(['[%s] SynEM.Svg.calculateSubsegments - Starting subsegment ', ...
 maxDist = ceil(max(rinclude)./voxelSize);
 segSize = size(seg);
 
-%prepare dilation mask (applied sequentially over rinclude)
-h = arrayfun(@(x)sphereAverage(x, voxelSize), ...
-    [rinclude(1), diff(rinclude)], 'uni', 0);
+%prepare dilation mask
+h = arrayfun(@(x)sphereAverage(x, voxelSize), rinclude, 'uni', 0);
 
 %prepare output
 subsegmentsList = arrayfun(@(x)cell(length(interfaceSurfaceList), 2), ...
@@ -69,11 +65,11 @@ for i = 1:length(interfaceSurfaceList)
     %calculate subsegments on local cube and translate indices to large
     %cube
     for k = 1:length(rinclude)
-        localSurfaceMask = imdilate(localSurfaceMask,h{k});
+        dilatedContact = imdilate(localSurfaceMask,h{k});
         for j = 1:2
-            subsegRelativeIndices = find(localSurfaceMask & ...
+            subsegRelativeIndices = find(dilatedContact & ...
                 (localSeg == neighborIDs(i,j)));
-            [x,y,z] = ind2sub(size(localSurfaceMask),subsegRelativeIndices);
+            [x,y,z] = ind2sub(size(dilatedContact),subsegRelativeIndices);
             subsegRelativeCoords = [x,y,z];
             subsegCoords = bsxfun(@plus, subsegRelativeCoords, ...
                 roughframe(1,:) - 1);
@@ -81,7 +77,7 @@ for i = 1:length(interfaceSurfaceList)
                 subsegCoords(:,1),subsegCoords(:,2),subsegCoords(:,3)));
         end
     end
-    
+
     %print progress
     if floor(i/length(interfaceSurfaceList)*100) < 10
         fprintf('\b\b%d%%',floor(i/length(interfaceSurfaceList)*100));

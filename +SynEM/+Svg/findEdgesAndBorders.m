@@ -76,7 +76,7 @@ numComb = cellfun(@(x)size(x,2),pairs)';
 
 %save edge for each voxel and voxel linear indices (ind)
 edges = cat(2,reshape(nSegId(lSegId(:,toKeep)),2,[]),cell2mat(pairs))';  %reshape nSegIds with only two neighbors and add pair list
-indExtend = repelem(ind(toExtend), numComb);
+indExtend = repelem(ind(toExtend), numComb, 1);
 ind = cat(1,ind(toKeep), indExtend);
 [uid,~,c] = unique(indExtend);
 %these indices belong to several edges
@@ -177,10 +177,10 @@ borders = table2struct(borders); %compatibility (would prefer table....)
 %calculate segments if required
 if nargout > 2
     seg = seg(2:end-1,2:end-1,2:end-1); %remove the padding
-    segments = regionprops(seg, seg, 'PixelIdxList', 'MinIntensity');
-    segments(arrayfun(@(x)isempty(x.PixelIdxList),segments)) = [];
-    [segments.Id] = segments.MinIntensity;
-    segments = rmfield(segments,'MinIntensity');
+    [seg, segIds] = Seg.Local.fromGlobal(seg);
+    segments = regionprops(seg, 'PixelIdxList');
+    segIds = num2cell(segIds);
+    [segments.Id] = deal(segIds{:});
 end
 end
 
