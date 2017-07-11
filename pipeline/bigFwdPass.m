@@ -31,6 +31,11 @@ function job = bigFwdPass( p, bbox )
             end
         end
     end
+    
+    % init wkw dataset, if needed
+    if isfield(p.class, 'backend') && p.class.backend == 'wkwrap'
+        wkwInit('new', p.class.root, 32, 32, 'single', 1);
+    end
 
     % Same function for all input arguments
     functionH = @onlyFwdPass3DonKnossosFolder;
