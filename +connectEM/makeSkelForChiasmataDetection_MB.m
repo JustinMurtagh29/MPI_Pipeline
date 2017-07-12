@@ -18,7 +18,7 @@ clear b options inputArguments;
 
 % Make sure the directionality based result is the same as before
 a = load('/gaba/scratch/mberning/aggloGridSearch6/6_01_00046/10.mat');
-b = load('/tmpscratch/mberning/axonQueryResults/dirGridSearchRedo/10.mat');
+b = load('/tmpscratch/mberning/axonQueryResults/dirGridSearchRedo2/10.mat');
 assert(all(cellfun(@(x,y)all(x==y), a.axonsNew, b.axonsNew)));
 clear a b;
 
