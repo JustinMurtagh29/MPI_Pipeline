@@ -64,6 +64,9 @@ load('/gaba/scratch/mberning/axonQueryGeneration/axonsSmall.mat', 'axonsSmall');
 axonsPostQuery = cat(1, axonsNew, axonsSmall);
 save([outputFolder 'postQueryAgglomerates.mat'], 'axonsPostQuery');
 
+%Save workspace
+save([outputFolder 'postQueryState.mat']);
+
 %{
 % Count unique rows
 [unique_rows,~,ind] = unique(edges,'rows');

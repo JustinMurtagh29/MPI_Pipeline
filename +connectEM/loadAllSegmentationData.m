@@ -6,7 +6,7 @@ function [graph, segmentMeta, borderMeta, globalSegmentPCA] = loadAllSegmentatio
     graph.neighBorderIdx = cellfun(@(x)graph.borderIdx(x), neighboursIdx, 'uni', 0);
 
     if nargout > 1
-        segmentMeta = load([p.saveFolder 'segmentMeta.mat']);
+        segmentMeta = load([p.saveFolder 'segmentMeta.mat.20170523'], '-mat');
         segmentMeta = connectEM.addSegmentClassInformation(p, segmentMeta);
     end
 
