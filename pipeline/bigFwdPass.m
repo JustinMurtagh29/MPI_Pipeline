@@ -33,7 +33,7 @@ function job = bigFwdPass( p, bbox )
     end
     
     % init wkw dataset, if needed
-    if isfield(p.class, 'backend') && p.class.backend == 'wkwrap'
+    if isfield(p.class, 'backend') && strcmp(p.class.backend,'wkwrap')
         wkwInit('new', p.class.root, 32, 32, 'single', 1);
     end
 
