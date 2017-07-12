@@ -1,4 +1,4 @@
-function output = detectChiasmata(nodesV, edges, visualize, outputFolder )
+function output = detectChiasmataKMB2(p, nodesV, edges, visualize, outputFolder )
 % Detect chiasmata in skeletons based on marching sphere algorithm
 % Nodes should be in voxel, scaled here
 
@@ -21,18 +21,17 @@ nodes=bsxfun(@times,nodesV,p.voxelSize);
 isIntersection = false(size(nodes,1),1);
 nrExits = zeros(size(nodes,1),1);
 for i=1:size(nodes,1)
-    i
+    if mod(i, 100) == 0
+        i
+    end
     [thisNodes, thisEdges, thisProb] = pruneToSphere(nodes, edges, ones(size(edges,1),1), p, i);
-    conM = zeros(size(thisNodes, 1));
-    conM(sub2ind(size(conM), thisEdges(:, 1), thisEdges(:, 2)))= 1;
-    conM = conM+conM';
-    [S,C] = graphconncomp(sparse(conM));
-    if sum(arrayfun(@(idx)max(pdist2(thisNodes(C == idx, :), nodes(i,:))) > 4000, 1:S))>3
+    C = Graph.findConnectedComponents(edges)
+    if length(C) > 3 && sum(cellfun(@(idx)max(pdist2(thisNodes(idx, :), nodes(i,:))) > 4000, 1:SC))>3
         isIntersection(i) = true;
         nrExits(i) = 4;
         % end
     end
-
+    
     if false && isIntersection(i)
         figure('Position', [3841 1 1920 999]);
         % First subplot visualizing pruning to sphere (Step 1)
@@ -161,14 +160,24 @@ function [thisNodes, thisEdges, thisProb] = pruneToSphere(nodes, edges, prob, p,
 thisDistance = pdist2(nodes(i,:), nodes);
 
 thisNodeIdx = thisDistance < p.sphereRadiusOuter & thisDistance > p.sphereRadiusInner;
+% rescue inner points that are not connected to center node within inner sphere
+innerNodes = thisDistance > p.sphereRadiusInner;
+innerEdges = any(ismember(edges, find(innerNodes)),2);
+innerConnected = Graph.findConnectedComponents(innerEdges);
+idx = find(cellfun(@(x)ismember(i,x),innerConnected));
+for idx2 = setdiff(1: length(innerConnected), idx)
+    thisNodeIdx(innerConnected{idx2}) = true;
+end
 %fix for not fully connected skeletons
 hereConnected = Graph.findConnectedComponents(edges);
 idx = cellfun(@(x)ismember(i,x),hereConnected);
 if any(idx)
-    thisNodeIdx = thisNodeIdx & ismember(1:length(thisDistance),hereConnected{idx})
+    thisNodeIdx = thisNodeIdx & ismember(1:length(thisDistance),hereConnected{idx});
 else
     thisNodeIdx = false(size(thisNodeIdx));
 end
+
+
 % Keep all edges that have at least one node within outerSphere
 thisEdgeIdx = any(ismember(edges, find(thisNodeIdx)),2);
 thisIdxOuter = setdiff(unique(edges(thisEdgeIdx,:)), find(thisNodeIdx));
