@@ -25,12 +25,17 @@ edges(any(edges==-1,2),:)=[];
 eqClassCC = Graph.findConnectedComponents(edges, true, true);
 
 eqClassCCfull = [eqClassCC; num2cell(setdiff(1 : length(axons), cell2mat(eqClassCC)))'];
-for idx_agglo = randperm(length(eqClassCCfull),300)
+last = @(x)x{end};
+fifth = @(x)x{5}
+getTask = @(x)fifth(strsplit(last(strsplit(x,'/')),'_'));
+% iterate over super agglos
+for idx_agglo = randperm(length(eqClassCCfull),1)
     currentEC =eqClassCCfull{idx_agglo};
     nodes = [];
     edges = [];
     lookup1 = [];
     lookup2 = [];
+    % create nodes and edges within agglos
     for idx = 1 : length(currentEC)
         idx
         lookup=sparse(ones(1,length(axons{currentEC(idx)})), axons{currentEC(idx)}, 1:length(axons{currentEC(idx)}));
@@ -43,27 +48,32 @@ for idx_agglo = randperm(length(eqClassCCfull),300)
     edges2=edges;
     nodes2=nodes;
     resultCol = {result1, result2};
-    verboten = [];
+    usedTasks = {};
+    % create nodes and edges for queries
     for runidx = 1 : 2
         for idx = 1 : length(resultCol{runidx}.startAgglo)
             if ~isempty(resultCol{runidx}.startAgglo{idx}) && resultCol{runidx}.startAgglo{idx}<=length(axons) && ismember(resultCol{runidx}.startAgglo{idx},currentEC)
-                if size(resultCol{runidx}.ff.nodes{idx},1)<2 ||any(ismember(resultCol{runidx}.startAgglo{idx},verboten))
+                if size(resultCol{runidx}.ff.nodes{idx},1)<2 ||any(ismember(getTask(resultCol{runidx}.ff.filenames{idx}),usedTasks))
                     continue;
                 end
-                verboten=[verboten; resultCol{runidx}.startAgglo{idx}(:)];
+                % make sure each task is only used once (discarding quality control redundancy
+                usedTasks{end+1}=getTask(resultCol{runidx}.ff.filenames{idx});
+                % find nodes that connect to agglos
                 tempids =[resultCol{runidx}.ff.segIds{idx},resultCol{runidx}.ff.neighbours{idx}];
                 hits=find(any(ismember(tempids, cell2mat(axons(currentEC))),2));
+                %somehow we lost the node order for the query, here reconstructed with MSP
                 Tree = graphminspantree(sparse(squareform(pdist(resultCol{runidx}.ff.nodes{idx}))));
                 [X,Y]=find(Tree);
                 edges2=[edges2;[X,Y]+size(nodes2,1)];
                 for idx2= 1:size(resultCol{runidx}.ff.nodes{idx},1)
                     nodes2=[nodes2;resultCol{runidx}.ff.nodes{idx}(idx2,:)];
                     if ismember(idx2,hits)
+                        % it is important to note that only one edge is connected per node, so if a  node has evidence for two segments, it connects only to one
                         edges2=[edges2;size(nodes2,1),find(ismember(lookup2,tempids(idx2,:)),1)];
                     end
                 end
             end
         end
     end
-    detectChiasmataKMB2([],nodes2,edges2,true,['/tmpscratch/kboerg/visX6_' num2str(idx_agglo) '/'])
+    detectChiasmataKMB2([],nodes2,edges2,true,['/tmpscratch/kboerg/visX7_' num2str(idx_agglo) '/'])
 end
