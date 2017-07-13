@@ -1,11 +1,11 @@
-function aggloSimple(borderSize, probThreshold, sizeThreshold, outputFolder, optional);
+function aggloSimple(borderSizeThreshold, probThreshold, sizeThreshold, outputFolder, optional);
 
-    borderSize = 100;
-    probThreshold = .99;
-    sizeThreshold = 500;
+    borderSizeThreshold = 100;
+    probThreshold = .995;
+    sizeThreshold = 1000;
 
     % Start by loading parameter file
-    load('/gaba/u/mberning/results/pipeline/20170217_ROI/allParameterWithSynapses.mat');
+    load('/gaba/scratch/mbeining/testseg_KSMBtmp/PC4/allParameter.mat');
     % To keep workspace clean here remove parameter for training (pT)
     clear pT;
     if ~exist('optional', 'var')
@@ -36,7 +36,7 @@ function aggloSimple(borderSize, probThreshold, sizeThreshold, outputFolder, opt
     end
     toc;
 
-    display('Loading data:');
+    display('Cutting graph:');
     tic;
     % Keep only edges above borderSizeThreshold (and correspondences)
     corrIdx = isnan(graph.borderIdx);
@@ -55,8 +55,9 @@ function aggloSimple(borderSize, probThreshold, sizeThreshold, outputFolder, opt
 
     display('Writing skeletons for debugging the process:');
     tic;
+    % Use only agglos 2:end here as first is large percolator, you should try to find out what/why that is
     connectEM.skeletonFromAgglo(graphCut.edges, segmentMeta, ...
-        agglos, 'agglos', outputFolder);
+        agglos(2:end), 'agglos', outputFolder);
     toc;
 
 end
