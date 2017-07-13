@@ -22,17 +22,26 @@ b = load('/tmpscratch/mberning/axonQueryResults/dirGridSearchRedo2/10.mat');
 assert(all(cellfun(@(x,y)all(x==y), a.axonsNew, b.axonsNew)));
 clear a b;
 
+% Load graph
+load('/gaba/u/mberning/results/pipeline/20170217_ROI/allParameterWithSynapses.mat');
+[graph, segmentMeta, borderMeta, globalSegmentPCA] = connectEM.loadAllSegmentationData(p);
+
 % Get edges switched on during directionality based growing
 bordersIdx = [];
 for idx = 1:10
     temp = load(['/tmpscratch/mberning/axonQueryResults/dirGridSearchRedo/' sprintf('%0.2u',idx)]);
-    bordersIdx = [bordersGT; cell2mat(temp.edgesToStore)];
+    bordersIdx = [bordersIdx; cell2mat(temp.edgesToStore)];
 end
 edgesIdx = find(ismember(graph.borderIdx, bordersIdx));
 % Add edges from inital CC based agglomeration also used as staring point for directionality based agglomeration
 startAgglo = load('/gaba/scratch/mberning/aggloGridSearch/search05_00564.mat');
 edgesGTall = [graph.edges(edgesIdx,:); startAgglo.axonEdges];
-clear bordersIdx idx temp edgesIdx startAgglo;
+% Also add edges added during garbage collection
+[axonsNew, ~, garbageEdges] = connectEM.garbageCollection(graph, segmentMeta, startAgglo.axons, startAgglo.dendrites, startAgglo.heuristics.mapping)
+assert(all(cellfun(@(x,y)all(x==y), axonsNew, startAgglo.axonsFinal)));
+edgesGTall = [graph.edges(edgesIdx,:); startAgglo.axonEdges; garbageEdges];
+clear bordersIdx idx temp edgesIdx startAgglo axonsNew garbageEdges;
+save('/tmpscratch/mberning/edgesGTall.mat', 'edgesGTall');
 
 % Load eqClass based on _a and _b axon wK query projects
 load('/tmpscratch/mberning/axonQueryResults/postQueryState.mat', ...
