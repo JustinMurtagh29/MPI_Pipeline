@@ -30,7 +30,7 @@ function job = globalizeSegmentation(p)
     end
     
     % init wkw dataset, if needed
-    if isfield(p.seg, 'backend') && p.seg.backend == 'wkwrap'
+    if isfield(p.seg, 'backend') && strcmp(p.seg.backend,'wkwrap')
         wkwInit('new', p.seg.root, 32, 32, 'uint32', 1);
     end
 
