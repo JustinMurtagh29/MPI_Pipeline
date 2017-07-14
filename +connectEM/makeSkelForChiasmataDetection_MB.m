@@ -1,5 +1,6 @@
 % Did not have access to /tmpscratch/kboerg/aggloGridSearch6/6_01_00046/, so I redid with some more code moved here for completeness
 
+%{
 % Find arguments used in directionality based agglomeration, see aggloGridSearchDir
 b = load('/gaba/scratch/mberning/aggloGridSearch6/parameters.mat');
 options.latentScore = b.inputArgumentsAxons(46,1);
@@ -21,6 +22,7 @@ a = load('/gaba/scratch/mberning/aggloGridSearch6/6_01_00046/10.mat');
 b = load('/tmpscratch/mberning/axonQueryResults/dirGridSearchRedo2/10.mat');
 assert(all(cellfun(@(x,y)all(x==y), a.axonsNew, b.axonsNew)));
 clear a b;
+%}
 
 % Load graph
 load('/gaba/u/mberning/results/pipeline/20170217_ROI/allParameterWithSynapses.mat');
@@ -29,7 +31,7 @@ load('/gaba/u/mberning/results/pipeline/20170217_ROI/allParameterWithSynapses.ma
 % Get edges switched on during directionality based growing
 bordersIdx = [];
 for idx = 1:10
-    temp = load(['/tmpscratch/mberning/axonQueryResults/dirGridSearchRedo/' sprintf('%0.2u',idx)]);
+    temp = load(['/tmpscratch/mberning/axonQueryResults/dirGridSearchRedo2/' sprintf('%0.2u',idx)]);
     bordersIdx = [bordersIdx; cell2mat(temp.edgesToStore)];
 end
 edgesIdx = find(ismember(graph.borderIdx, bordersIdx));
@@ -49,35 +51,41 @@ load('/tmpscratch/mberning/axonQueryResults/postQueryState.mat', ...
 
 % Generate a representation of links all queries make
 edgesBetweenAgglos = cellfun(@(x,y)combnk([x y], 2), startAgglo(idxGood), endAgglo(idxGood), 'uni', 0);
-queryLinks = cat(2, repelem(1:numel(edgesBetweenAgglos), cellfun(@(x)size(x,1), edgesBetweenAgglos)), cat(1, edgesBetweenAgglos{:}));
-
+queryLinks = cat(2, repelem(1:numel(edgesBetweenAgglos), cellfun(@(x)size(x,1), edgesBetweenAgglos))', sort(cat(1, edgesBetweenAgglos{:}),2));
+% Only keep unique querry links
+[~,idxA] = unique(queryLinks(:,2:3));
+queryLinks = queryLinks(idxA,:);
+clear idxA;
 
 for idx_eqClass = 1000:1100
     tic;
     currentEC = eqClassCCfull{idx_eqClass};
-    currentAgglos = axons{currentEC};
+    currentAgglo = axons(currentEC);
+    assert(all(ismember(cat(1,currentAgglo{:}), edgesGTall)));
     % Get all segment positions in this eqClass and all edges between them
-    aggloNodes = cellfun(@(x)segmentMeta.point(:, x), currentAgglos, 'uni', 0);
-    [locA, locB] = cellfun(@(x)ismember(edgesGTall, x), currentAgglos, 'uni', 0);
-    aggloEdges = cellfun(@(x,y)y(all(x, 2), :), loxA, locB, 'uni', 0);
+    aggloNodes = cellfun(@(x)segmentMeta.point(:, x)', currentAgglo, 'uni', 0);
+    [locA, locB] = cellfun(@(x)ismember(edgesGTall, x), currentAgglo, 'uni', 0);
+    aggloEdges = cellfun(@(x,y)y(all(x, 2), :), locA, locB, 'uni', 0);
     % Get all query node position and respective edges
-    queriesIdx = cellfun(@(x,y)any(ismember(x,currentEC))&any(ismember(y,currentEC)), startAgglo, endAgglo);
-
-    queriesNodes = ff.nodes(idx);
-    queriesEdges = cell(numel(queriesNodes),1);
-    for idxQuery = 1:length(queriesNodes)
-        queriesEdges{i} = cat(2, nrNodes+1:nrNodes+size(queriesNodes{i},1)-1, nrNodes+2:nrNodes+size(queriesNodes{i},1));
-
-        nrNodes = nrNodes + size(queriesNodes{i},1);
+    queryLinkIdx = queryLinks(all(ismember(queryLinks(:,2:3), currentEC),2),1);
+    queriesNodes = [];
+    queriesEdges = [];
+    for idxQuery=1:length(queryLinkIdx)
+        skel = skeleton(ff.filenames{queryLinkIdx(idxQuery)});
+        queriesNodes{idxQuery,1} = skel.nodes{1}(:,1:3);
+        queriesEdges{idxQuery,1} = skel.edges{1};
     end
-    % Join query and agglo based representation
-    nrNodesOffsetA = cellfun(@(x)size(x,1)-size(aggloNodes{1},1), aggloNodes);
-    nrNodesOffsetQ = cellfun(@(x)size(x,1)-size(queriesNodes{1},1), queriesNodes);
-    aggloEdges = cellfun(@(x,y)x-y, aggloEdges, nrNodesOffsetA);
-    queriesEdges = cellfun(@(x,y)x-y, queriesEdges, nrNodesOffsetQ);
+    % Globalize representation of nodes and edges
+    aggloNrNodes = cellfun(@(x)size(x,1), aggloNodes);
+    queriesNrNodes = cellfun(@(x)size(x,1), queriesNodes);
+    nodeOffset = cumsum(cat(1, 0, aggloNrNodes, queriesNrNodes(1:end-1)));
     nodes = cat(1, aggloNodes{:}, queriesNodes{:});
-    edges = cat(1, aggloEdges{:}, queriesEdges{:});
+    edges = cellfun(@plus, cat(1, aggloEdges, queriesEdges), num2cell(nodeOffset), 'uni', 0);
+    edges = cat(1, edges{:});
+    % Join query and agglo based representation by single edge at end of query to closest node in connecting agglo
+    for idxQuery=1:length(queryLinkIdx)
 
+    end
     % Detect chiasmata
     outputFolder = ['/tmpscratch/mberning/axonQueryResults/chiasmataSkeletons/' num2str(idx_agglo, '%.4i') '/'];
     detectChiasmata(nodes, edges, true, outputFolder);
