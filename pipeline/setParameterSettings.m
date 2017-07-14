@@ -1,4 +1,4 @@
-function [p, pT] = setParameterSettings(p)
+function p = setParameterSettings(p)
     % Pass structure with basic settings to add all dependent and constant p for pipeline
 
     % Sanitize paths by adding trailing slashes
