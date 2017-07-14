@@ -1,14 +1,13 @@
 function output = detectChiasmataKMB2(p, nodesV, edges, visualize, outputFolder )
 % Detect chiasmata in skeletons based on marching sphere algorithm
 % Nodes should be in voxel, scaled here
-
+%save('/gaba/u/kboerg/biggestpre1.mat','-v7.3');
 % Create output folder if it does not exist
 if ~exist(outputFolder, 'dir')
     mkdir(outputFolder);
 end
 
 % Scale to nm
-%nodes = bsxfun(@times, nodesV, [11.24 11.24 28]);
 % Make sure edges are unique
 [edges, ~, idxE] = unique(edges, 'rows');
 
@@ -21,48 +20,48 @@ nodes=bsxfun(@times,nodesV,p.voxelSize);
 isIntersection = false(size(nodes,1),1);
 nrExits = zeros(size(nodes,1),1);
 for i=1:size(nodes,1)
-    if mod(i, 100) == 0
-        i
-    end
+    % if mod(i, 100) ==0
+    %     disp(i);
+    % end
     [thisNodes, thisEdges, thisProb] = pruneToSphere(nodes, edges, ones(size(edges,1),1), p, i);
-    C = Graph.findConnectedComponents(edges)
-    if length(C) > 3 && sum(cellfun(@(idx)max(pdist2(thisNodes(idx, :), nodes(i,:))) > 4000, 1:SC))>3
+    C = Graph.findConnectedComponents(thisEdges);
+    if length(C) > 3 && sum(cellfun(@(idx)max(pdist2(thisNodes(idx, :), nodes(i,:))) > 4000, C))>3
         isIntersection(i) = true;
         nrExits(i) = 4;
         % end
     end
     
-    if false && isIntersection(i)
-        figure('Position', [3841 1 1920 999]);
-        % First subplot visualizing pruning to sphere (Step 1)
-        subplot(2,2,1);
-        visualizeSingleSphere(thisNodes, thisEdges, thisProb, thisIdx, thisIdxOuter, p);
-        colorbar;
-        title('Pruned to CC of edges within outer sphere');
-        % Second subplot visualizing result of inital clustering
-        subplot(2,2,2);
-        visualizeClustering(thisNodes, thisEdges, thisProb, thisIdx, thisIdxOuter, p, thisNodes3, bestClustering.idxAll);
-        colorbar;
-        title('Clusters in sphere hull as detected by cluster visualization');
-        % Third subplot
-        subplot(2,2,3);
-        imagesc(distances);
-        axis equal; axis off;
-        colorbar;
-        title('Cosine distances between nodes in outer sphere');
-        subplot(2,2,4);
-        imagesc(distances > .1);
-        axis equal; axis off;
-        colorbar;
-        title(['Final result: Detected intersection with ' num2str(nrExits(i)) ' exits']);
-        % Save both as fig and png
-        saveas(gcf, [outputFolder num2str(i) '.fig']);
-        %img = getframe(gcf);
-        %imwrite(img.cdata, [outputFolder num2str(i) '.png']);
-        close all;
-    end
+    % if false && isIntersection(i)
+    %     figure('Position', [3841 1 1920 999]);
+    %     % First subplot visualizing pruning to sphere (Step 1)
+    %     subplot(2,2,1);
+    %     visualizeSingleSphere(thisNodes, thisEdges, thisProb, thisIdx, thisIdxOuter, p);
+    %     colorbar;
+    %     title('Pruned to CC of edges within outer sphere');
+    %     % Second subplot visualizing result of inital clustering
+    %     subplot(2,2,2);
+    %     visualizeClustering(thisNodes, thisEdges, thisProb, thisIdx, thisIdxOuter, p, thisNodes3, bestClustering.idxAll);
+    %     colorbar;
+    %     title('Clusters in sphere hull as detected by cluster visualization');
+    %     % Third subplot
+    %     subplot(2,2,3);
+    %     imagesc(distances);
+    %     axis equal; axis off;
+    %     colorbar;
+    %     title('Cosine distances between nodes in outer sphere');
+    %     subplot(2,2,4);
+    %     imagesc(distances > .1);
+    %     axis equal; axis off;
+    %     colorbar;
+    %     title(['Final result: Detected intersection with ' num2str(nrExits(i)) ' exits']);
+    %     % Save both as fig and png
+    %     saveas(gcf, [outputFolder num2str(i) '.fig']);
+    %     %img = getframe(gcf);
+    %     %imwrite(img.cdata, [outputFolder num2str(i) '.png']);
+    %     close all;
+    % end
 end
-
+%save('/gaba/u/kboerg/biggest1.mat', 'isIntersection');
 % Find CC of detected intersections according to graph
 temp.edges = edges;
 cc = findCCaccordingToGraph(temp, find(isIntersection));
@@ -75,6 +74,7 @@ dir = cell(length(cc),1);
 dist = cell(length(cc),1);
 toDel = false(length(cc),1);
 for i=1:length(cc)
+    
     % Find all nodes outside CC of detected intersections that are neighbours to CC
     edgesIdx = any(ismember(edges, cc{i}),2);
     queryIdx{i} = setdiff(edges(edgesIdx,:), cc{i});
@@ -163,7 +163,7 @@ thisNodeIdx = thisDistance < p.sphereRadiusOuter & thisDistance > p.sphereRadius
 % rescue inner points that are not connected to center node within inner sphere
 innerNodes = thisDistance > p.sphereRadiusInner;
 innerEdges = any(ismember(edges, find(innerNodes)),2);
-innerConnected = Graph.findConnectedComponents(innerEdges);
+innerConnected = Graph.findConnectedComponents(edges(innerEdges,:));
 idx = find(cellfun(@(x)ismember(i,x),innerConnected));
 for idx2 = setdiff(1: length(innerConnected), idx)
     thisNodeIdx(innerConnected{idx2}) = true;
