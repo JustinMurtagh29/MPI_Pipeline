@@ -2,8 +2,8 @@
 %   Alessandro Motta <alessandro.motta@brain.mpg.de>
 
 wkParam = struct;
-wkParam.root = '/gaba/u/mberning/wkCubes/2012-09-28_ex145_07x2_ROI2016_corrected/color/1/';
-wkParam.prefix = '2012-09-28_ex145_07x2_ROI2016_corrected_mag1';
+wkParam.root = '/gaba/wKcubes/Connectomics department/2012-09-28_ex145_07x2_ROI2017/color/1/';
+wkParam.prefix = '2012-09-28_ex145_07x2_ROI2016_mag1';
 
 roiSize = 1.5 .* [512; 512; 256] + 1;
 padSize = [25; 25; 10];
@@ -12,8 +12,8 @@ wkOffset = [129; 129; 129];
 wkwOffset = [513; 513; 513];
 
 %% build base configuration
-rootDir = Util.getTempDir();
-rootDir = fullfile(rootDir, 'data', 'wkwrap-test');
+rootDir = fullfile('/tmpscratch', getenv('USER'));
+rootDir = fullfile(rootDir, 'wkwrap', datestr(now, 30));
 assert(not(exist(rootDir, 'dir')));
 mkdir(rootDir);
 
@@ -57,6 +57,7 @@ copyOffWkw = wkwOffset - padSize;
 
 fprintf('Copying raw data... ');
 raw = readKnossosRoi(wkParam.root, wkParam.prefix, copyBoxWk);
+wkwInit('new', p.raw.root, 32, 32, 'uint8', 1);
 saveRawData(p.raw, copyOffWkw, raw);
 disp('Done!');
 
