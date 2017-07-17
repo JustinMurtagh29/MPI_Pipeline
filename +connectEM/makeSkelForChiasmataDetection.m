@@ -11,7 +11,17 @@ result1ends(result1ends>length(axons)) = [];
 a = cellfun(@(x)max([-1,find(ismember(result1ends,x))]),result2.startAgglo);
 result2ends = cell2mat(result2.endAgglo(cellfun('length',result2.endAgglo)>0)');
 result2ends(result2ends>length(axons)) = [];
-
+% ok, there is a subtle bug here
+% this code shouldn't be used again except to reproduce the chiasmata creation
+% result1 and result2 had run wrongly with segmentsLeftover enabled
+% therefore here I threw out all hits of startAgglo and endAgglo that came from segmentsLeftover
+% except that this didn't work under the following conditions
+% IF Manuels version had an empty startAgglo 
+% AND my version had a startAgglo coming from segmentLeftover
+% AND my version had 2 or more entries in endAgglo that were not from segmentLeftover
+% THEN the following lines would make a connection between those two or more segments in endAgglo
+% in the eqClassCC{1} this happened exactly once, query{66419} (Manuel's notation)
+% connects axons{18544} and axons{20053}
 edges1 = cellfun(@(x,y)combnk([-1, x(x<=length(axons)) y(y<=length(axons))], 2), result1.startAgglo(result1.idxGood), result1.endAgglo(result1.idxGood), 'uni', 0);
 edges2 = cellfun(@(x,y)combnk([-1, x(x<=length(axons)) y(y<=length(axons))], 2), result2.startAgglo(result2.idxGood), result2.endAgglo(result2.idxGood), 'uni', 0);
 edges=[edges1; edges2];
