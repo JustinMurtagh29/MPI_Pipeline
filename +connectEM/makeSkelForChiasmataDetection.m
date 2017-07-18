@@ -1,4 +1,7 @@
 function makeSkelForChiasmataDetection(startingidx)
+temp = load('/gaba/scratch/mberning/axonQueryGeneration/beforeQueryGeneration.mat', 'axonsNew');
+axons = temp.axonsNew;
+clear temp
 segmentMeta = load('/gaba/u/mberning/results/pipeline/20170217_ROI/segmentMeta.mat', 'point');
 load('/gaba/scratch/mberning/edgesGTall.mat');
 result1 = load('/tmpscratch/kboerg/axonQueryAnalysisResult1.mat');
