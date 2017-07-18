@@ -1,7 +1,4 @@
 function makeSkelForChiasmataDetection(startingidx)
-temp = load('/gaba/scratch/mberning/axonQueryGeneration/beforeQueryGeneration.mat', 'axonsNew');
-axons = temp.axonsNew;
-clear temp
 segmentMeta = load('/gaba/u/mberning/results/pipeline/20170217_ROI/segmentMeta.mat', 'point');
 load('/gaba/scratch/mberning/edgesGTall.mat');
 result1 = load('/tmpscratch/kboerg/axonQueryAnalysisResult1.mat');
@@ -81,5 +78,5 @@ for idx_agglo = startingidx : 500 : length(eqClassCCfull)
         end
     end
     mkdir(['/tmpscratch/kboerg/visX11_' num2str(floor(idx_agglo/100)) '/']);
-    detectChiasmataKMB2([],nodes2,edges2,true,['/tmpscratch/kboerg/visX11_' num2str(floor(idx_agglo/100)) '/visX11_' num2str(idx_agglo) '/'])
+    connectEM.detectChiasmata([],nodes2,edges2,true,['/tmpscratch/kboerg/visX11_' num2str(floor(idx_agglo/100)) '/visX11_' num2str(idx_agglo) '/'])
 end
