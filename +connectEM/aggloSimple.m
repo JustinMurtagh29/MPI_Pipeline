@@ -1,11 +1,17 @@
-function aggloSimple(borderSizeThreshold, probThreshold, sizeThreshold, outputFolder, optional);
-
-    borderSizeThreshold = 100;
-    probThreshold = .995;
-    sizeThreshold = 1000;
-
-    % Start by loading parameter file
-    load('/gaba/scratch/mbeining/testseg_KSMBtmp/PC4/allParameter.mat');
+function aggloSimple(p,borderSizeThreshold, probThreshold, sizeThreshold, outputFolder, optional);
+    if nargin < 2 || isempty(borderSizeThreshold)
+       borderSizeThreshold = 100;
+    end
+    if nargin < 3 || isempty(probThreshold)
+       probThreshold = .995;
+    end
+    if nargin < 4 || isempty(sizeThreshold)
+       sizeThreshold = 1000;
+    end
+    if nargin < 1 || isempty(p)
+       % Start by loading parameter file
+       load('/gaba/scratch/mbeining/testseg_KSMBtmp/PC4/allParameter.mat');
+    end
     % To keep workspace clean here remove parameter for training (pT)
     clear pT;
     if ~exist('optional', 'var')

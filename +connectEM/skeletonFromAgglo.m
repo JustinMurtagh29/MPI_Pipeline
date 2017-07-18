@@ -1,5 +1,7 @@
 function skeletonFromAgglo(edges, segmentMeta, classes, name, outputFolder)
-
+    if ~exist(outputFolder,'dir')
+	mkdir(outputFolder);
+    end
     % What did you do Alessandro :D
     if size(segmentMeta.point,2) ~= 3
         point = segmentMeta.point';
