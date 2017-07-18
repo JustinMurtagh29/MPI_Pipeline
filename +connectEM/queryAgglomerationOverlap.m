@@ -17,6 +17,13 @@ function [partition, queryOverlap] = queryAgglomerationOverlap(agglos, segmentsL
 end
 
 function result = determineGroupedAgglomerationOverlap(partition, segmentStruct)
+    persistent index
+    if isempty(index)
+        index = 0;
+    else
+        index =  index+1;
+    end
+    disp(index);
     eqClass = [];
     occurences = [];
     % Determine agglomeration that each segment belongs to and evidence (occurence) for each

@@ -81,5 +81,5 @@ for idx_agglo = startingidx : 500 : length(eqClassCCfull)
         end
     end
     mkdir(['/tmpscratch/kboerg/visX11_' num2str(floor(idx_agglo/100)) '/']);
-    detectChiasmataKMB2([],nodes2,edges2,true,['/tmpscratch/kboerg/visX11_' num2str(floor(idx_agglo/100)) '/visX11_' num2str(idx_agglo) '/'])
+    connectEM.detectChiasmata([],nodes2,edges2,true,['/tmpscratch/kboerg/visX11_' num2str(floor(idx_agglo/100)) '/visX11_' num2str(idx_agglo) '/'])
 end

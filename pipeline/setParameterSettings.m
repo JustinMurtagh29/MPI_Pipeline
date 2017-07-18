@@ -1,20 +1,19 @@
 function p = setParameterSettings(p)
     % Pass structure with basic settings to add all dependent and constant p for pipeline
 
-    % Sanitize paths by adding trailing slashes
-    if p.saveFolder(end) ~= filesep
-        p.saveFolder = [p.saveFolder, filesep];
-        warning('Added trailing slash to p.saveFolder');
-    end
-
-    if p.raw.root(end) ~= filesep
-        p.raw.root = [p.raw.root, filesep];
-        warning('Added trailing slash to p.raw.root');
-    end
-    
-    if ~isfield(p.raw,'dtype')
+    if ~isfield(p.raw, 'dtype')
         p.raw.dtype = 'uint8';
     end
+    
+    if ~isfield(p.seg, 'root')
+        % default path for segmentation
+        p.seg.root = fullfile(p.saveFolder, 'globalSeg', '1');
+    end
+    
+    % Sanitize paths by adding trailing slashes
+    p.saveFolder = fixPath(p.saveFolder);
+    p.raw.root = fixPath(p.raw.root);
+    p.seg.root = fixPath(p.seg.root);
     
     % Size of local segmentation and local graph construction
     p.tileSize =  [512; 512; 256];
@@ -47,16 +46,9 @@ function p = setParameterSettings(p)
         p.raw, ...
         'dtype', 'single', ...
         'func', @bigFwdPass, ...
-        'root', strcat(fullfile(p.tempFolder, 'class'), filesep));
+        'root', fixPath(fullfile(p.tempFolder, 'class')));
     
     % Check if user provided a segmentation root
-    if isfield(p.seg, 'root')
-        assert(p.seg.root(end) == filesep);
-    else
-        p.seg.root = fullfile(p.saveFolder, 'globalSeg', '1');
-        p.seg.root(end + 1) = filesep;
-    end
-    
     p.seg = Util.modifyStruct( ...
         p.raw, ...
         'dtype', 'uint32', ...
@@ -144,6 +136,12 @@ function p = setParameterSettings(p)
     % Save everything
     Util.save([p.saveFolder 'allParameter.mat'], p);
 
+end
+
+function p = fixPath(p)
+    if p(end) ~= filesep
+        p(end + 1) = filesep;
+    end
 end
 
 function bbox = fixBoundingBox(p)

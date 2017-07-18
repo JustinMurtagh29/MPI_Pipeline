@@ -58,11 +58,11 @@ function runPipeline(p, startStep, endStep)
         Cluster.waitForJob(job);
     end
     
-    % Find correspondences between tiles processed (segmented) in paralell
+    % Find correspondences between tiles processed (segmented) in parallel
     % Uses correspondences subfolder in code repository
     if startStep <= PipelineStep.Correspondence && ...
        endStep >= PipelineStep.Correspondence
-        job = correspondenceFinder(p);
+        job = correspondenceFinderGlobal(p);
         Cluster.waitForJob(job);
     end
     

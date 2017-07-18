@@ -3,7 +3,7 @@ function job = correspondenceFinderGlobal(p)
 % segmentation cubes using adjacent planes across cube border
 
 % Save to new folder for now, should be integrated into pipeline at some point
-saveFolder = [p.saveFolder 'correspondencesNew' filesep];
+saveFolder = p.correspondence.saveFolder;%[p.saveFolder 'correspondencesNew' filesep];
 if ~exist(saveFolder, 'dir')
     mkdir(saveFolder);
 end
