@@ -18,6 +18,18 @@ function aggloSimple(p,borderSizeThreshold, probThreshold, sizeThreshold, output
         optional = [];
     end
 
+
+    parameters.scale.x = p.raw.voxelSize(1);
+    parameters.scale.y = p.raw.voxelSize(2);
+    parameters.scale.z = p.raw.voxelSize(3);
+    parameters.offset.x = '0';
+    parameters.offset.y = '0';
+    parameters.offset.z = '0';
+    parameters.experiment.name = p.experimentName;
+
+
+
+
     display('Loading data:');
     tic;
     % Load new graph representation including (resorted) borderIdx [p.saveFolder 'graphNew.mat']
@@ -63,7 +75,7 @@ function aggloSimple(p,borderSizeThreshold, probThreshold, sizeThreshold, output
     tic;
     % Use only agglos 2:end here as first is large percolator, you should try to find out what/why that is
     connectEM.skeletonFromAgglo(graphCut.edges, segmentMeta, ...
-        agglos(2:end), 'agglos', outputFolder);
+        agglos(2:end), 'agglos', outputFolder,parameters);
     toc;
 
 end
