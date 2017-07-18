@@ -28,38 +28,37 @@ for i=1:size(nodes,1)
     if length(C) > 3 && sum(cellfun(@(idx)max(pdist2(thisNodes(idx, :), nodes(i,:))) > 4000, C))>3
         isIntersection(i) = true;
         nrExits(i) = 4;
-        % end
     end
     
-    % if false && isIntersection(i)
-    %     figure('Position', [3841 1 1920 999]);
-    %     % First subplot visualizing pruning to sphere (Step 1)
-    %     subplot(2,2,1);
-    %     visualizeSingleSphere(thisNodes, thisEdges, thisProb, thisIdx, thisIdxOuter, p);
-    %     colorbar;
-    %     title('Pruned to CC of edges within outer sphere');
-    %     % Second subplot visualizing result of inital clustering
-    %     subplot(2,2,2);
-    %     visualizeClustering(thisNodes, thisEdges, thisProb, thisIdx, thisIdxOuter, p, thisNodes3, bestClustering.idxAll);
-    %     colorbar;
-    %     title('Clusters in sphere hull as detected by cluster visualization');
-    %     % Third subplot
-    %     subplot(2,2,3);
-    %     imagesc(distances);
-    %     axis equal; axis off;
-    %     colorbar;
-    %     title('Cosine distances between nodes in outer sphere');
-    %     subplot(2,2,4);
-    %     imagesc(distances > .1);
-    %     axis equal; axis off;
-    %     colorbar;
-    %     title(['Final result: Detected intersection with ' num2str(nrExits(i)) ' exits']);
-    %     % Save both as fig and png
-    %     saveas(gcf, [outputFolder num2str(i) '.fig']);
-    %     %img = getframe(gcf);
-    %     %imwrite(img.cdata, [outputFolder num2str(i) '.png']);
-    %     close all;
-    % end
+    if visualize && isIntersection(i)
+        figure('Position', [3841 1 1920 999]);
+        % First subplot visualizing pruning to sphere (Step 1)
+        subplot(2,2,1);
+        visualizeSingleSphere(thisNodes, thisEdges, thisProb, thisIdx, thisIdxOuter, p);
+        colorbar;
+        title('Pruned to CC of edges within outer sphere');
+        % Second subplot visualizing result of inital clustering
+        subplot(2,2,2);
+        visualizeClustering(thisNodes, thisEdges, thisProb, thisIdx, thisIdxOuter, p, thisNodes3, bestClustering.idxAll);
+        colorbar;
+        title('Clusters in sphere hull as detected by cluster visualization');
+        % Third subplot
+        subplot(2,2,3);
+        imagesc(distances);
+        axis equal; axis off;
+        colorbar;
+        title('Cosine distances between nodes in outer sphere');
+        subplot(2,2,4);
+        imagesc(distances > .1);
+        axis equal; axis off;
+        colorbar;
+        title(['Final result: Detected intersection with ' num2str(nrExits(i)) ' exits']);
+        % Save both as fig and png
+        saveas(gcf, [outputFolder num2str(i) '.fig']);
+        %img = getframe(gcf);
+        %imwrite(img.cdata, [outputFolder num2str(i) '.png']);
+        close all;
+    end
 end
 %save('/gaba/u/kboerg/biggest1.mat', 'isIntersection');
 % Find CC of detected intersections according to graph
