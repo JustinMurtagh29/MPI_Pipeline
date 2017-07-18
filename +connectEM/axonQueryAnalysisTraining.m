@@ -87,9 +87,9 @@ for idx2 = 1 : length(ff2.startNode)
     else
         idxsrow = find(cellfun(@(x)ismember(idxs(1),x),taskStrings(:,2)));
         assert(isequal(taskStrings{idxsrow,2},idxs'));
-        tab2=tabulate(cell2mat(startAgglo(idxs)));
-        tab2end=tabulate(cellfun(@mat2str,endAgglo(idxs),'uni',0));
-        if strcmp(tab2end(end,1),mat2str(endAgglo2{idx2})) && ((isempty(tab2) && isempty(startAgglo2)) || isequal(tab2(end,1), startAgglo2{idx2}))
+        tab2start=sortrows(tabulate(cellfun(@mat2str,startAgglo(idxs),'uni',0)),2);
+        tab2end=sortrows(tabulate(cellfun(@mat2str,endAgglo(idxs),'uni',0)),2);
+        if strcmp(tab2end(end,1),mat2str(endAgglo2{idx2})) && strcmp(tab2start(end,1),mat2str(startAgglo2{idx2}))
             unames{strcmp(unames(:,1),getUser(ff2.filenames{idx2})),2}(end+1) = 1;
         else
             unames{strcmp(unames(:,1),getUser(ff2.filenames{idx2})),2}(end+1) = -1;
