@@ -9,7 +9,7 @@ function outputFile = makeSegmentationPreviewMovie(p, bbox, doClass)
 %   bbox
 %     Bounding box around the region of interest. This can
 %     be either a webKNOSSOS-style box (i.e., x_min, y_min,
-%     z_min, x_max, y_max, z_mat) or MATLAB-style box (i.e., 
+%     z_min, x_max, y_max, z_mat) or MATLAB-style box (i.e.,
 %     x_min, x_max; y_min, y_max; z_min, z_max).
 %
 %   doClass
@@ -27,7 +27,8 @@ end
 % also accept webKNOSSOS-style bouding boxes,
 % i.e. (x_min, y_min, z_min, x_max, y_max, z_max)
 if size(bbox, 1) == 1 || size(bbox, 2) == 1
-    bbox = reshape(bbox, [3, 2]);
+    % if webKnossos style bounding box, transfer from width, height, depth to format used in pipeline
+    bbox = Util.convertWebknossosToMatlabBbox(bbox);
 end
 
 % check size of bounding box
@@ -58,21 +59,21 @@ function classificationStep(p, tempClass, bbox)
     functionH = @onlyFwdPass3DonKnossosFolder;
     inputCell{1} = {p.cnn.first, p.cnn.GPU, p.raw, tempClass, bbox, p.norm.func};
     jobName = 'classForMovie';
-    
+
     if p.cnn.GPU
         job = startGPU(functionH, inputCell, jobName);
     else
         job = startCPU(functionH, inputCell, jobName);
     end
-    
+
     Cluster.waitForJob(job);
 end
 
 function segmentationStep(p, tempClass, tempSegFile, bbox)
     functionH = @segmentForPipeline;
-    inputCell{1} = {tempClass.root, tempClass.prefix, bbox, p.seg.func, tempSegFile};
+    inputCell{1} = {tempClass, bbox, p.seg.func, tempSegFile};
     jobName = 'segForMovie';
-    
+
     job = startCPU(functionH, inputCell, jobName);
     Cluster.waitForJob(job);
 end
@@ -81,7 +82,7 @@ function outputFile = movieStep(p, tempSegFile, bbox)
     % Now low raw data
     raw = loadRawData(p.raw, bbox);
     raw = single(raw);
-    
+
     % Normalize to [0 1] range as this is
     % what matlab expects of single images
     raw = raw ./ max(raw(:));

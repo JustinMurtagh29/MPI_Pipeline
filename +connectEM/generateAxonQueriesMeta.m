@@ -32,10 +32,15 @@
     idxKeep = ~idxEmpty;
     idxKeepLarge = cellfun(@(x)x > minAxonLength, axonLength(idxKeep));
     idxKeep(idxKeep) = idxKeepLarge;
+    % Save small agglomerates seperatly for possible use later
+    axonsSmall = axonsNew(~idxKeep);
+    save([outputFolder 'axonsSmall.mat'], 'axonsSmall');
     axonsNew = axonsNew(idxKeep);
     directionality = structfun(@(x)x(idxKeep), directionality, 'uni', 0);
     axonLength = cell2mat(axonLength(idxKeep));
     clear idx*;
+
+
 
     % Write new segmentation based on axon queries
     mapping = connectEM.createLookup(segmentMeta, axonsNew);

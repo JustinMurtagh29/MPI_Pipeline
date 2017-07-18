@@ -74,12 +74,12 @@ function axonDirectionalityBasedGrowing(options, outputFolder, graph, segmentMet
             
         display('Merging agglomerates:');
         tic;
-        [axonsNew, changedIdx, unchangedResult] = connectEM.agglomerateMerge(graph, segmentMeta, borderMeta, axons, result, options);
+        [axonsNew, changedIdx, unchangedResult, edgesToStore] = connectEM.agglomerateMerge(graph, segmentMeta, borderMeta, axons, result, options);
         toc;
         
         display('Saving (intermediate) results:');
         tic;
-        Util.save([outputFolder num2str(i, '%.2i') '.mat'], axonsNew);
+        Util.save([outputFolder num2str(i, '%.2i') '.mat'], axonsNew, edgesToStore);
         toc;
 
     end

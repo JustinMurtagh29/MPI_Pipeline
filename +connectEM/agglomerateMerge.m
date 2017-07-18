@@ -1,4 +1,4 @@
-function [axonsNew, changedIdx, unchangedResult] = agglomerateMerge(graph, segmentMeta, borderMeta, axons, result, options);
+function [axonsNew, changedIdx, unchangedResult,edgesToStore] = agglomerateMerge(graph, segmentMeta, borderMeta, axons, result, options);
 
     assert(numel(axons) == numel(result.neighbours));
     % Create lookup of agglo index for all segments
@@ -11,7 +11,7 @@ function [axonsNew, changedIdx, unchangedResult] = agglomerateMerge(graph, segme
     idxLarge = cellfun(@(x)borderMeta.borderSize(x) > options.borderSize, result.borderIdx, 'uni', 0);
     idxAll = cellfun(@(w,x,y,z)w&x&y&z, idxDirectional, idxEnding, idxContinuity, idxLarge, 'uni', 0);
     nrEndings = cellfun(@sum, idxAll);
-    
+    edgesToStore = cellfun(@(x,y){x(y)},result.borderIdx,idxAll);
     % Source & target agglomerate
     sources = repelem(1:length(nrEndings), nrEndings)';
     targets = cell2mat(cellfun(@(x,y)axonsLookup(x(y)), result.neighbours, idxAll, 'uni', 0));

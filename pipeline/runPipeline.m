@@ -102,14 +102,10 @@ function runPipeline(p, startStep, endStep)
     if startStep <= PipelineStep.SegmentationPyramid && ...
        endStep >= PipelineStep.SegmentationPyramid
         % Create resolution pyramid for the segmentation
-        display('Downsampling segmentation:');
-        tic;
-        thisBBox = [1 1 1; (ceil(p.bbox(:,2)./1024).*1024)']';
-        % This weird command line stuff is necessary to deference symbolic links
-        [~, thisRoot] = system(['readlink -f ' p.seg.root ' < /dev/null']);
-        thisRoot = [strrep(thisRoot, sprintf('\n'), '') filesep];
-        createResolutionPyramid(thisRoot, p.seg.prefix, thisBBox, strrep(thisRoot, '/1/', ''), true);
-        toc;
+        tic; fprintf('Downsampling segmentation... ');
+        thisBBox = [1, 1, 1; (ceil(p.bbox(:, 2) ./ 1024) .* 1024)']';
+        createResolutionPyramid(p.seg, thisBBox, [], true);
+        fprintf('done!\n'); toc;
     end
         
     % Construct graph on globalized version of segmentation

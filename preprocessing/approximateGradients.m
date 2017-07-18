@@ -17,7 +17,7 @@ zCoords = mat2cell(zCoords, 1, repmat(filterSize(3), (bbox(3,2)-bbox(3,1)+1)/fil
 thisSliceBbox = bbox;
 for i=1:length(zCoords)
     thisSliceBbox(3,:) = [zCoords{i}(1) zCoords{i}(end)];
-    raw = readKnossosRoi(vesselsMasked.root, vesselsMasked.prefix, thisSliceBbox);
+    raw = loadRawData(vesselsMasked, thisSliceBbox);
     raw_mean(:,:,i) = nlfilter3(raw, @mean, filterSize);
     Util.progressBar(i, length(zCoords));
 end

@@ -2,7 +2,7 @@ function segIds = determineSegIdsFromMag4(p, mag4)
     % Extract segIds from globalized segmentation hit by label in KNOSSOS hierachy mag4
 
     % Load labels from Knossos hierachy and initalize
-    labels = readKnossosRoi(mag4.root, mag4.prefix, mag4.bbox);
+    labels = loadSegDataGlobal(mag4, mag4.bbox);
     segIds = cell(max(labels(:)), 1);
     cubesProcessed = 0;
     % Indices used for upsampling of labels to mag1 (start of if)

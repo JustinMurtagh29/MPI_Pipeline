@@ -1,4 +1,4 @@
-function [p, pT] = setParameterSettings(p)
+function p = setParameterSettings(p)
     % Pass structure with basic settings to add all dependent and constant p for pipeline
 
     % Sanitize paths by adding trailing slashes
@@ -15,46 +15,54 @@ function [p, pT] = setParameterSettings(p)
     if ~isfield(p.raw,'dtype')
         p.raw.dtype = 'uint8';
     end
-
+    
     % Size of local segmentation and local graph construction
     p.tileSize =  [512; 512; 256];
-    
+
     % Check whether bounding box meets requirements and fix if not
     p.bbox = fixBoundingBox(p);
-    
+
     % Add a temp folder for storing intermediate results
     p.tempFolder = [p.saveFolder 'temp/'];
-    
+
     % Overlap between tiles in segmentation for gloablization
     p.tileBorder = [-256 256; -256 256; -128 128];
     p.tiles = ceil((p.bbox(:,2) - p.bbox(:,1) + 1) ./ p.tileSize);
-    
+
     % Which function to use to normalize data to zero mean and one std
     [meanVal, stdVal] = ...
         Knossos.estGlobalMeanAndStd(p);
     p.norm.func = @(x)normalizeStack(x,meanVal,stdVal);
-    
+
     % Which classifier to use
     p.cnn.dateStrings = '20130516T204040';
-    p.cnn.iter = 8; 
+    p.cnn.iter = 8;
     p.cnn.gpu = 3;
     p.cnn.first = ['/gaba/u/mberning/results/parameterSearch/' p.cnn.dateStrings ...
         '/iter' num2str(p.cnn.iter, '%.2i') '/gpu' num2str(p.cnn.gpu, '%.2i') '/saveNet0000000001.mat'];
     p.cnn.GPU = false;
     
-    % Function to use for classification
-    p.class.func = @bigFwdPass;
-    
     % Location to store CNN classification
-    p.class.root = [p.tempFolder 'class/'];
-    p.class.prefix = p.raw.prefix;
-    p.class.dtype = 'single';
+    p.class = Util.modifyStruct( ...
+        p.raw, ...
+        'dtype', 'single', ...
+        'func', @bigFwdPass, ...
+        'root', strcat(fullfile(p.tempFolder, 'class'), filesep));
     
-    % Function to use for segmentation
-    p.seg.func = @(x)watershedSeg_v1_cortex(x,{p.seg.threshold 10});
-    p.seg.root = [p.saveFolder 'globalSeg/'];
-    p.seg.prefix = p.raw.prefix;
-    p.seg.dtype = 'uint32';
+    % Check if user provided a segmentation root
+    if isfield(p.seg, 'root')
+        assert(p.seg.root(end) == filesep);
+    else
+        p.seg.root = fullfile(p.saveFolder, 'globalSeg', '1');
+        p.seg.root(end + 1) = filesep;
+    end
+    
+    p.seg = Util.modifyStruct( ...
+        p.raw, ...
+        'dtype', 'uint32', ...
+        'root', p.seg.root, ...
+        'func', @(x) watershedSeg_v1_cortex(x, {p.seg.threshold, 10}), ...
+        'threshold', p.seg.threshold);
     
     % Specify arguments for filterbank applied to raw and aff data each
     p.filter = {
@@ -64,13 +72,13 @@ function [p, pT] = setParameterSettings(p)
         {'sortedeigenvaluesstructure' [3 5] [5 7]}...
         {'laplaceofgaussian' [3 5] []}...
         {'differenceofgaussians' [3 5] []}};
-    
+
     % Feature p
     p.feature.root = [p.saveFolder 'features/'];
-    
+
     % Function to use for feature calculation
     p.feature.func = @calcFeatures;
-    
+
     % Choose to filter 'raw' and 'class' data
     p.feature.input = {'raw', 'aff'};
 
@@ -84,8 +92,8 @@ function [p, pT] = setParameterSettings(p)
     p.gp.normValues = [p.gp.stateFolder 'normValues.mat'];
     p.gp.hyperParameter = [p.gp.stateFolder 'hyperParameter.mat'];
     p.gp.initialGroundTruth = [p.gp.stateFolder 'initialGroundTruth.mat'];
-    
-    % Define cutoff(s) for writing to knowledge DB 
+
+    % Define cutoff(s) for writing to knowledge DB
     %p.gp.upperCut = .95;
     %p.gp.lowerCut = .15;
 
@@ -96,20 +104,20 @@ function [p, pT] = setParameterSettings(p)
                 % Save path for data relating to this tile
                 p.local(i,j,k).saveFolder = [p.saveFolder 'local/' ...
                     'x' num2str(i, '%.4i') 'y' num2str(j, '%.4i') 'z' num2str(k, '%.4i') '/'];
-                
+
                 % Bounding box without border for this tile
                 p.local(i,j,k).bboxSmall = [ ...
                     p.bbox(:,1) + [i-1; j-1; k-1] .* p.tileSize, ...
                     p.bbox(:,1) + [i;   j;   k  ] .* p.tileSize - [1; 1; 1]];
                 p.local(i,j,k).bboxSmall(:, 2) = ...
                     min(p.local(i,j,k).bboxSmall(:, 2), p.bbox(:, 2));
-                                        
+
                 % Restrict bounding box big in order to avoid overlaps at border cubes of segmentation
                 bboxBig =  p.local(i,j,k).bboxSmall + p.tileBorder;
                 bboxBig(:,1) = max(bboxBig(:,1),p.bbox(:,1));
                 bboxBig(:,2) = min(bboxBig(:,2),p.bbox(:,2));
                 p.local(i,j,k).bboxBig = bboxBig;
-                
+
                 % Where to save
                 p.local(i,j,k).segFile = [p.local(i,j,k).saveFolder 'seg.mat'];
                 p.local(i,j,k).tempSegFile = strrep(p.local(i,j,k).segFile, '/local/', '/temp/');
@@ -121,69 +129,20 @@ function [p, pT] = setParameterSettings(p)
                 p.local(i,j,k).synapseFile = [p.local(i,j,k).saveFolder 'synapses.mat'];
 
                 % Same files for glia prediction
-                p.local(i,j,k).segmentFile = [p.local(i,j,k).saveFolder 'segments.mat'];    
+                p.local(i,j,k).segmentFile = [p.local(i,j,k).saveFolder 'segments.mat'];
                 p.local(i,j,k).segmentWeightFile = [p.local(i,j,k).saveFolder 'segmentWeights.mat'];
                 p.local(i,j,k).gliaProbFile = [p.local(i,j,k).saveFolder 'gliaProb.mat'];
             end
         end
     end
-
-
-    % GLOBAL SETTINGS FOR training data generation
-    pT = p;
-    % Remove all fields that do not make sense in training data setting
-    pT = rmfield(pT, {'local' 'bbox' 'tileSize' 'tiles' 'correspondence'});
-    pT.cnn.GPU = false; % minicubeFwdPass on CPU to allow arbitrary region size
-
-    % Densly skeletonized regions in dataset
-    % Region from Heiko
-    pT.local(1).bboxSmall = [4097 4736; 4481 5248; 2250 2450];
-    pT.local(1).trainFileRaw = '/gaba/u/mberning/data/cortex/denseSkel/region1.nml';
-    pT.local(1).trainFileGlia = '/gaba/u/mberning/data/cortex/denseSkel/region1glia.nml';
-    pT.local(1).trainFileLocal = '/gaba/u/mberning/data/cortex/denseSkel/region1local.nml'; 
-    pT.local(1).trainFileLocalWithoutGlia = '/gaba/u/mberning/data/cortex/denseSkel/region1localWithoutGlia.nml';
-    % Region from Alex
-    pT.local(2).bboxSmall = [1417 1717; 4739 5039; 890 1190];
-    pT.local(2).trainFileRaw = '/gaba/u/mberning/data/cortex/denseSkel/region2.nml';
-    pT.local(2).trainFileGlia = '/gaba/u/mberning/data/cortex/denseSkel/region2glia.nml';
-    pT.local(2).trainFileLocal = '/gaba/u/mberning/data/cortex/denseSkel/region2local.nml'; 
-    pT.local(2).trainFileLocalWithoutGlia = '/gaba/u/mberning/data/cortex/denseSkel/region2localWithoutGlia.nml';
-    % Region from Max & Anna
-    pT.local(3).bboxSmall = [6800 7100; 2140 2440; 1236 1536];
-    pT.local(3).trainFileRaw = '/gaba/u/mberning/data/cortex/denseSkel/region3.nml';
-    pT.local(3).trainFileGlia = '/gaba/u/mberning/data/cortex/denseSkel/region3glia.nml';
-    pT.local(3).trainFileLocal = '/gaba/u/mberning/data/cortex/denseSkel/region3local.nml';
-    pT.local(3).trainFileLocalWithoutGlia = '/gaba/u/mberning/data/cortex/denseSkel/region3localWithoutGlia.nml';
-
-    % LOCAL SETTINGS FOR training tiles
-    for i=1:3
-        % Save path for data relating to this tile
-        pT.local(i).saveFolder = [pT.saveFolder 'train' num2str(i, '%.4i') '/'];
-        % Bounding box without and with border for this tile
-        pT.local(i).bboxBig = pT.local(i).bboxSmall + pT.tileBorder;
-        % Where to save
-        pT.local(i).class.root = [pT.local(i).saveFolder 'class/'];
-        pT.local(i).class.prefix = pT.class.prefix;
-        pT.local(i).seg.pSearchFolder = [pT.local(i).saveFolder 'pSearch/'];
-        pT.local(i).segFile = [pT.local(i).saveFolder 'seg.mat'];
-        pT.local(i).edgeFile = [pT.local(i).saveFolder 'edges.mat'];
-        pT.local(i).borderFile =  [pT.local(i).saveFolder 'borders.mat'];
-        pT.local(i).weightFile = [pT.local(i).saveFolder 'weights.mat'];
-
-        pT.local(i).gtFile = [pT.local(i).saveFolder 'region' num2str(i) '.mat'];
-        % Benjamin's glia prediction
-        pT.local(i).segmentFile = [pT.local(i).saveFolder 'segments.mat'];    
-        pT.local(i).segmentWeightFile = [pT.local(i).saveFolder 'segmentWeights.mat'];
-        pT.local(i).gliaProbFile = [pT.local(i).saveFolder 'gliaProb.mat'];
-    end
-
+    
     % Create state folder for this p settings GP
     if ~exist(p.gp.stateFolder, 'dir')
         mkdir(p.gp.stateFolder);
     end
 
     % Save everything
-    Util.save([p.saveFolder 'allParameter.mat'], p, pT);
+    Util.save([p.saveFolder 'allParameter.mat'], p);
 
 end
 
@@ -192,23 +151,18 @@ function bbox = fixBoundingBox(p)
 
     % Transform from webKNOSSOS style bounding box to
     % bounding box format used in pipeline
-    bbox = reshape(p.bbox_wK, 3, 2);
-    % webKnossos now uses width height depth 
-    bbox(:,1) = bbox(:,1) + 1;
-    bbox(:,2) = bbox(:,1) + bbox(:,2) - 1;
+    bbox = Util.convertWebknossosToMatlabBbox(p.bbox_wK);
 
     % First check whether bounding box is aligned with KNOSSOS cubes
     lowerLimitMod = mod(bbox(:,1) - 1, 128);
     upperLimitMod = mod(diff(bbox, 1, 2) + 1, p.tileSize);
 
-
-    
     if any(lowerLimitMod)
         warning('Lower edge of bounding box not aligned to KNOSSOS cubes, fixing, please check p.bbox');
         idx = lowerLimitMod ~= 0;
         bbox(idx,1) = bbox(idx,1) + 128 - lowerLimitMod(idx);
     end
-    
+
     if any(upperLimitMod < 64 & upperLimitMod ~= 0)
         error('Upper edge of bounding box produces small last cube.');
     end
