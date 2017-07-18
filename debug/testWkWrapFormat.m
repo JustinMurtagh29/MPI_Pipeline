@@ -44,6 +44,7 @@ p.raw.voxelSize = [11.24 11.24 28];
 % This segmentation parameter controls over- vs. undersegmentation,
 % decrease for more smaller segments and vice versa
 p.seg.threshold = .25;
+p.seg.root = fullfile(rootDir, 'wkw', 'segmentation', '1');
 
 % If p.myelin.isUsed is set to true a previously run myelin detection 
 % (see preprocessing/additionalHeuristics.m) will be used to ensure that segments
