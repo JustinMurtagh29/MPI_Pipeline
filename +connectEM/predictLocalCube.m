@@ -15,12 +15,14 @@ function predictLocalCube(saveFolder, classifierFile, outputFilenameInLocalFolde
        classF = load([saveFolder 'InterfaceClassFeatures.mat']);
        features = cat(2, rawF.features, classF.features);
        clear rawF classF;
-       if isempty(features)
-	   return
-       end
        % set all edges that are not classified to 0 probability
        classifiedBorderIdx = cat(1,borders(:).Area) > 10;
        prob = zeros(length(classifiedBorderIdx), 1);
+	if isempty(features)
+	   save([saveFolder outputFilenameInLocalFolder],'prob');
+	   display('new prob saved')
+	   return
+	end
        [~,scores] = classifier.predict(features);
        sigmoid = @(x)1./(1+exp(-1.*x));
        prob(classifiedBorderIdx) = sigmoid(scores(:,1));

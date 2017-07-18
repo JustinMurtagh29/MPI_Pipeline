@@ -157,21 +157,24 @@ function runPipeline(p, startStep, endStep)
     if startStep <= PipelineStep.SaveGlobalSvgData && ...
        endStep >= PipelineStep.SaveGlobalSvgData
         job = collectSvgDataOnCluster(p,1);
-        Cluster.waitForJob(job);
+	if ~isempty(job)
+	   Cluster.waitForJob(job);
+	end
     end
     
     %Create graph struct 
     if startStep <= PipelineStep.GlobalGraphStruct && ...
        endStep >= PipelineStep.GlobalGraphStruct
-        job = collectGraphStructOnCluster(p);
-        Cluster.waitForJob(job);
+	collectGlobalGraphStruct(p);
+       % job = collectGraphStructOnCluster(p);
+       % Cluster.waitForJob(job);
     end
 end
 
 % Some comments that one might want to run in addition:
 % if pipelineStep <= PipelineStep.HeuristicLookup
-%   connectEM.getHeuristicResult(p)         % -> lookups result from heuritic (nuclei, vessel, myelin) detections
+%  connectEM.getHeuristicsResult(p)         % -> lookups result from heuritic (nuclei, vessel, myelin) detections
 % end
 % if pipelineStep <= PipelineStep.Agglomeration
-%   connectEM.agglomerate                   % -> Generate CC of graph at a threshold chosen in script
+%  connectEM.agglomerate                   % -> Generate CC of graph at a threshold chosen in script
 % end

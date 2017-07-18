@@ -6,6 +6,7 @@ end
 
 if runlocal
 	Seg.Global.saveGlobalSvgData(p,[],[],1);
+	job = [];
 else
 functionH = @Seg.Global.saveGlobalSvgData;
 inputCell{1} = {p};

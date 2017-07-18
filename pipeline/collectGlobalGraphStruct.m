@@ -8,11 +8,11 @@ function collectGlobalGraphStruct(p)
     % cubes are called 'correspondences' and must be added
     % separately here.
     % Now using the "new" correspondences, commented out old approach
-    % corrEdges = Seg.Global.getGlobalCorrespondences(p);
+     corrEdges = Seg.Global.getGlobalCorrespondences(p);
     % See pipeline/correspondenceTests.m for details on calculation or:
     % https://gitlab.mpcdf.mpg.de/connectomics/pipeline/commit/4b20a81f7daa29dc6fa555913afb265f538fafe9
     % Loads "corrEdges"
-    load([p.saveFolder 'correspondencesNew.mat']);
+
     corrProb  = ones(size(corrEdges, 1), 1);
     corrBorderIdx = NaN(size(corrEdges, 1), 1);
 

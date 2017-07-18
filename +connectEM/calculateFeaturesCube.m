@@ -8,7 +8,7 @@ if ~all(seg(:)==0)
    load(p.local(cubeNo).edgeFile, 'edges');
    load(p.local(cubeNo).borderFile, 'borders');
    % start empty
-	features = [];
+   features = [];
    if ~isempty(edges) && ~isempty(borders) && any([borders(:).Area] > fm.areaT)
 	   %calculate interfaces
 	   interfaces = SynEM.Svg.calculateInterfaces(seg, edges, borders, ...
@@ -25,7 +25,7 @@ if ~all(seg(:)==0)
 			vMap = loadSvmData(p, bboxFM);
 		otherwise
 			error('Unknown voxel map');
-		end
+	   end
 	   
 
 	   % NOTE(amotta): It's possible for the voxel map to be four-dimensional.
@@ -42,7 +42,7 @@ if ~all(seg(:)==0)
 			end
 			features = cat(2, features, curFeatures);
 		end
-	end
+   end
    outputFile = [p.local(cubeNo).saveFolder 'Interface' voxelMap 'Features.mat'];
    Util.save(outputFile, features);
 end
