@@ -50,18 +50,17 @@ function p = setParameterSettings(p)
         'root', strcat(fullfile(p.tempFolder, 'class'), filesep));
     
     % Check if user provided a segmentation root
-    if isfield(p.seg, 'root') && ~isempty(p.seg.root)
+    if isfield(p.seg, 'root')
         assert(p.seg.root(end) == filesep);
-        segRoot = p.seg.root;
     else
-        segRoot = fullfile(p.saveFolder, 'globalSeg', '1');
-        segRoot(end + 1) = filesep;
+        p.seg.root = fullfile(p.saveFolder, 'globalSeg', '1');
+        p.seg.root(end + 1) = filesep;
     end
     
     p.seg = Util.modifyStruct( ...
         p.raw, ...
         'dtype', 'uint32', ...
-        'root', segRoot, ...
+        'root', p.seg.root, ...
         'func', @(x) watershedSeg_v1_cortex(x, {p.seg.threshold, 10}), ...
         'threshold', p.seg.threshold);
     
