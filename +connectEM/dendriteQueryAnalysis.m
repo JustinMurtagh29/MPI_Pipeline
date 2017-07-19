@@ -18,7 +18,7 @@ dendritesAll(cellfun(@(x)sum(segmentMeta.voxelCount(x)),dendritesAll)<200000) = 
 scratchFolder = '/tmpscratch/kboerg/';
 % These are the downloaded queries (see wK projects: L4_focus_flight-1 & 2, L4_focus_flight-reseed-1 & 2 (2 contains 2nd and 3rd round of reseeding now))
 % And new queries from after switching to new (agglomerate based) query analysis: L4_focus_flight-new-1
-skeletonFolders = {'MBKMB_L4_dendrite_queries_2017_b_nmls','MBKMB_L4_dendrite_queries_2017_c_nmls'};
+skeletonFolders = {'MBKMB_L4_dendrite_queries_2017_c_nmls','MBKMB_L4_dendrite_queries_2017_c_inverse_nmls'};
 skeletonFolders = cellfun(@(x)[scratchFolder x filesep], skeletonFolders, 'uni', 0);
 % Lookup segment ids of nodes+neighbours of nmls in all folders defined above
 [ff.segIds, ff.neighbours, ff.filenames, ff.nodes, ff.startNode, ff.comments] = connectEM.lookupNmlMulti(p, skeletonFolders, false);
