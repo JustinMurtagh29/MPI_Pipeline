@@ -61,7 +61,7 @@ if size(edges,1) ~= 0 % skip if all zero segmentCube (mirrorPad)
         X = fm.calculate(interfaces, raw);
         
         %classify
-        if ischar(classifier);
+        if ischar(classifier)
             m = load(classifier);
             classifier = m.classifier;
         end
