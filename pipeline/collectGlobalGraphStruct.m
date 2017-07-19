@@ -1,6 +1,6 @@
 function collectGlobalGraphStruct(p)
     load([p.saveFolder 'globalEdges.mat']);
-    load([p.saveFolder 'globalGPProbList.mat']);
+    load([p.saveFolder 'globalNeuriteContinuityProb.mat']);
     borderIdx = (1:numel(prob))';
 
     % The edge list only contains edges between segments in
