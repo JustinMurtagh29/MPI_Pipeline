@@ -1,4 +1,4 @@
-function aggloSimple(p,borderSizeThreshold, probThreshold, sizeThreshold, outputFolder, optional);
+function aggloSimple(p,borderSizeThreshold, probThreshold, sizeThreshold, outputFolder, optional)
     if nargin < 2 || isempty(borderSizeThreshold)
        borderSizeThreshold = 100;
     end

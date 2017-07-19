@@ -14,6 +14,13 @@ function p = setParameterSettings(p)
     p.saveFolder = fixPath(p.saveFolder);
     p.raw.root = fixPath(p.raw.root);
     p.seg.root = fixPath(p.seg.root);
+    if isfield(p,'mask')
+        p.mask.root = fixPath(p.mask.root);
+        if ~isfield(p.mask, 'dtype')
+            p.mask.dtype = 'uint8';
+        end
+        p.mask.voxelSize = p.raw.voxelSize;
+    end
     
     % Size of local segmentation and local graph construction
     p.tileSize =  [512; 512; 256];

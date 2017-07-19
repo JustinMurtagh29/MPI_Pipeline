@@ -8,27 +8,13 @@ function job = bigFwdPass( p, bbox )
 % running on GPU with 12GB, should be multiples of 128, this is same
 % as tileSize right now, no reason it has to be.
 cubeSize = [512 512 256];
-cpu_time = 4; % needed time in hours
-reqMem = 12;
 assert(all(mod(cubeSize, 128) == 0));
 
+assert(all(mod(bbox(:, 1), 128) == 1));
 
-% if ~isfield(p,'mirrorPad') || p.mirrorPad == 0
-    % sanity check
-    assert(all(mod(bbox(:, 1), 128) == 1));
-    
-    X = [bbox(1, 1):cubeSize(1):bbox(1, 2), bbox(1, 2) + 1];
-    Y = [bbox(2, 1):cubeSize(2):bbox(2, 2), bbox(2, 2) + 1];
-    Z = [bbox(3, 1):cubeSize(3):bbox(3, 2), bbox(3, 2) + 1];
-% else
-%     bbox(:,2) = bbox(:,1) + ceil((diff(bbox,1,2)+1)./cubeSize').*cubeSize' -1;
-%     X = [bbox(1, 1):cubeSize(1):bbox(1, 2), bbox(1, 2) + 1];
-%     Y = [bbox(2, 1):cubeSize(2):bbox(2, 2), bbox(2, 2) + 1];
-%     Z = [bbox(3, 1):cubeSize(3):bbox(3, 2), bbox(3, 2) + 1];
-% end
-
-
-
+X = [bbox(1, 1):cubeSize(1):bbox(1, 2), bbox(1, 2) + 1];
+Y = [bbox(2, 1):cubeSize(2):bbox(2, 2), bbox(2, 2) + 1];
+Z = [bbox(3, 1):cubeSize(3):bbox(3, 2), bbox(3, 2) + 1];
 
 dimCount = cellfun(@numel, {X, Y, Z}) - 1;
 inputCell = cell(prod(dimCount), 1);
@@ -38,9 +24,7 @@ for i=1:dimCount(1)
         for k=1:dimCount(3)
             idx = sub2ind( ...
                 [length(X)-1 length(Y)-1 length(Z)-1], i, j, k);
-            inputCell{idx} = { ...
-                p.cnn.first, p.cnn.GPU, p.raw, p.class, ...
-                [X(i) X(i+1)-1; Y(j) Y(j+1)-1; Z(k) Z(k+1)-1], p.norm.func};
+            inputCell{idx} = {[X(i) X(i+1)-1; Y(j) Y(j+1)-1; Z(k) Z(k+1)-1]};
         end
     end
 end
@@ -51,12 +35,34 @@ end
     end
 
 % Same function for all input arguments
-functionH = @onlyFwdPass3DonKnossosFolder;
+functionH = @jobWrapper;
 
 if p.cnn.GPU
-    job = startGPU(functionH, inputCell, 'classification');
+        cluster = Cluster.getCluster( ...
+        '-pe openmp 1', ...
+        '-p 0', ...
+        '-l h_vmem=36G', ...
+        '-l s_rt=23:50:00', ...
+        '-l h_rt=24:00:00', ...
+        '-l num_k40=1');
 else
-    job = startCPU(functionH, inputCell, 'classification',reqMem,1,-500,cpu_time);
+        cluster = Cluster.getCluster( ...
+        '-pe openmp 1', ...
+        '-p -500', ...
+        '-l h_vmem=12G', ...
+        '-l s_rt=4:00:00', ...
+        '-l h_rt=4:00:30');
+end
+job = Cluster.startJob(functionH, inputCell,'sharedInputs',{p}, 'cluster', cluster, 'name', 'classification', 'taskGroupSize', 1);
+end
+
+function jobWrapper(p, bbox)
+if isfield(p,'mask')
+    onlyFwdPass3DonKnossosFolder(p.cnn.first, p.cnn.GPU, p.raw, p.class, ...
+        bbox, p.norm.func,p.mask);
+else
+    onlyFwdPass3DonKnossosFolder(p.cnn.first, p.cnn.GPU, p.raw, p.class, ...
+        bbox, p.norm.func);
 end
 end
 
