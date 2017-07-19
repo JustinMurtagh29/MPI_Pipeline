@@ -1,4 +1,4 @@
-function runPipeline(p, startStep, endStep)
+function runPipeline(p, startStep, endStep,runlocal)
 %RUNPIPELINE
 % INPUT p: struct
 %           Segmentation parameter struct.
@@ -9,6 +9,9 @@ function runPipeline(p, startStep, endStep)
 %       endStep: (Optional) PipelineStep object
 %           The step where the pipeline is stopped.
 %           (Default: PipelineStep.GraphConstruction)
+%       runlocal: (Optional) boolean to switch if 
+%           some main functions of the pipeline should
+%           be run on the interactive node or on a worker (default)
 
     %check whether pipelineStep is specified else start with classification
     if ~exist('startStep','var') || isempty(startStep)
@@ -17,7 +20,9 @@ function runPipeline(p, startStep, endStep)
     if ~exist('endStep','var') || isempty(endStep)
         endStep = PipelineStep.GlobalGraphStruct;
     end
-    
+    if ~exist('runlocal','var') || isempty(runlocal)
+        runlocal = 0;
+    end
 
     % Runs CNN based forward pass for region defined in p.bbox,p.raw and saves as p.class	
     % Because CNN is translation invariant, saved as KNOSSOS hierachy again 
@@ -57,7 +62,24 @@ function runPipeline(p, startStep, endStep)
         job = miniSegmentation(p);
         Cluster.waitForJob(job);
     end
+       
+    % Transfer segmentation from p.local(X).tempSegFile to p.local(X).segFile and drop overlaps 
+    % Also in correspondences subfolder
+    % Added routine to renumber CC of segments after cutting to non-overlapping region
+    if startStep <= PipelineStep.OverlapRemoval && ...
+       endStep >= PipelineStep.OverlapRemoval
+        removeOverlaps(p);
+    end
     
+    % Make segmentation IDs unique over dataset (were only unique in each
+    % tile before), this will be called global IDs from time to time
+    % will work on segmentation see globalization subfolder 
+    if startStep <= PipelineStep.GlobalSegmentID && ...
+       endStep >= PipelineStep.GlobalSegmentID
+        job = globalizeSegmentation(p);
+        Cluster.waitForJob(job);
+    end 
+
     % Find correspondences between tiles processed (segmented) in parallel
     % Uses correspondences subfolder in code repository
     if startStep <= PipelineStep.Correspondence && ...
@@ -66,26 +88,6 @@ function runPipeline(p, startStep, endStep)
         Cluster.waitForJob(job);
     end
     
-    % Transfer segmentation from p.local(X).tempSegFile to p.local(X).segFile and drop overlaps 
-    % Also in correspondences subfolder
-    % Added routine to renumber CC of segments after cutting to non-overlapping region
-    % This also involves renumbering all correspondences if a segment is renumbered in this step
-    if startStep <= PipelineStep.OverlapRemoval && ...
-       endStep >= PipelineStep.OverlapRemoval
-        removeOverlaps(p);
-    end
-    
-    % Make segmentation IDs unique over dataset (were only unique in each
-    % tile before), this will be called global IDs from time to time
-    % will work on correspondences and segmentation
-    % see globalization subfolder 
-    % globalization is run in two parts: globalizeSegmentation and globalizeCorrespondences
-    if startStep <= PipelineStep.GlobalSegmentID && ...
-       endStep >= PipelineStep.GlobalSegmentID
-        job = globalizeSegmentation(p);
-        Cluster.waitForJob(job);
-    end 
-
     % Build segment meta data
     if startStep <= PipelineStep.BuildSegmentMetaData && ...
        endStep >= PipelineStep.BuildSegmentMetaData
@@ -93,11 +95,11 @@ function runPipeline(p, startStep, endStep)
         Cluster.waitForJob(job);
     end
     
-    if startStep <= PipelineStep.GlobalCorrespondences && ...
-       endStep >= PipelineStep.GlobalCorrespondences
-        job = globalizeCorrespondences(p);
-        Cluster.waitForJob(job);
-    end
+%     if startStep <= PipelineStep.GlobalCorrespondences && ...
+%        endStep >= PipelineStep.GlobalCorrespondences
+%         job = globalizeCorrespondences(p);
+%         Cluster.waitForJob(job);
+%     end
         
     if startStep <= PipelineStep.SegmentationPyramid && ...
        endStep >= PipelineStep.SegmentationPyramid
@@ -151,19 +153,24 @@ function runPipeline(p, startStep, endStep)
         
     %Save the global SVG data
     if startStep <= PipelineStep.SaveGlobalSvgData && ...
-       endStep >= PipelineStep.SaveGlobalSvgData
-        job = collectSvgDataOnCluster(p,1);
-	if ~isempty(job)
-	   Cluster.waitForJob(job);
-	end
+            endStep >= PipelineStep.SaveGlobalSvgData
+        if runlocal
+            Seg.Global.saveGlobalSvgData(p,[],[],1);
+        else
+            job = collectSvgDataOnCluster(p,1);
+            Cluster.waitForJob(job);
+        end
     end
     
     %Create graph struct 
     if startStep <= PipelineStep.GlobalGraphStruct && ...
-       endStep >= PipelineStep.GlobalGraphStruct
-	collectGlobalGraphStruct(p);
-       % job = collectGraphStructOnCluster(p);
-       % Cluster.waitForJob(job);
+            endStep >= PipelineStep.GlobalGraphStruct
+        if runlocal
+            collectGlobalGraphStruct(p);
+        else
+            job = collectGraphStructOnCluster(p);
+            Cluster.waitForJob(job);
+        end
     end
 end
 

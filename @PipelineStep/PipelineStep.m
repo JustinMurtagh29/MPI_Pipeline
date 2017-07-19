@@ -10,22 +10,22 @@ classdef PipelineStep < uint8
       Classification          (1)  % bigFwdPass
       MyelinFix               (2)  % Myelin.runFix
       Segmentation            (3)  % miniSegmentation
-      Correspondence          (4)  % correspondenceFinder
-      OverlapRemoval          (5)  % removeOverlaps
-      GlobalSegmentID         (6)  % globalizeSegmentation
+      OverlapRemoval          (4)  % removeOverlaps
+      GlobalSegmentID         (5)  % globalizeSegmentation
+      Correspondence          (6)  % correspondenceFinderGlobal
       BuildSegmentMetaData    (7)  % buildSegmentMetaData
-      GlobalCorrespondences   (8)  % globalizeCorrespondences
-      SegmentationPyramid     (9)  % createResolutionPyramid
-      GraphConstruction       (10) % graphConstruction
-      SynapseDetection        (11) % SynEM.Seg.pipelineRun
-      RawFeatures             (12) % connectEM.calculateRawFeatures
-      ClassFeatures           (13) % connectEM.calculateClassFeatures
-  NeuriteContinuityPrediction (14) % connectEM.predictDataset
-      SaveGlobalSvgData       (15) % collectSvgDataOnCluster
-      GlobalGraphStruct       (16) % collectGraphStructOnCluster
+%       GlobalCorrespondences   (8)  % globalizeCorrespondences
+      SegmentationPyramid     (8)  % createResolutionPyramid
+      GraphConstruction       (9) % graphConstruction
+      SynapseDetection        (10) % SynEM.Seg.pipelineRun
+      RawFeatures             (11) % connectEM.calculateRawFeatures
+      ClassFeatures           (12) % connectEM.calculateClassFeatures
+  NeuriteContinuityPrediction (13) % connectEM.predictDataset
+      SaveGlobalSvgData       (14) % collectSvgDataOnCluster
+      GlobalGraphStruct       (15) % collectGraphStructOnCluster
       
       % additional steps from comment at bottom of pipeline
-      HeuristicLookup         (17) % connectEM.getHeuristicResult
-      Agglomeration           (18) % connectEM.agglomerate
+      HeuristicLookup         (16) % connectEM.getHeuristicResult
+      Agglomeration           (17) % connectEM.agglomerate
    end
 end

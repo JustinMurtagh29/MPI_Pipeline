@@ -4,7 +4,7 @@ function globalCorrSeg(p, fname)
     cubeCoords1 = [str2num(fname(1:2)),str2num(fname(3:4)), str2num(fname(5:6))];
     cubeCoords2 = [str2num(fname(7:8)),str2num(fname(9:10)), str2num(fname(11:12))];
     % Load correspondences
-    load([p.correspondence.saveFolder fname]);
+    load([p.correspondence.saveFolder fname],'uniqueCorrespondences');
     % Globalize
     load([p.local(cubeCoords1(1),cubeCoords1(2),cubeCoords1(3)).saveFolder 'localToGlobalSegId.mat']);
     corrLocal1 = uint32(uniqueCorrespondences(:,1));
