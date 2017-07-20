@@ -1,4 +1,4 @@
-function aggloSimple(p,borderSizeThreshold, probThreshold, sizeThreshold, outputFolder, optional)
+function [agglos, aggloSize, aggloEdges] = aggloSimple(p,borderSizeThreshold, probThreshold, sizeThreshold, outputFolder, optional)
     if nargin < 2 || isempty(borderSizeThreshold)
        borderSizeThreshold = 100;
     end
@@ -70,12 +70,18 @@ function aggloSimple(p,borderSizeThreshold, probThreshold, sizeThreshold, output
     tic;
     [agglos, aggloSize, aggloEdges] = connectEM.partitionSortAndKeepOnlyLarge(graphCut, segmentMeta, probThreshold, sizeThreshold);
     toc;
-
+%     % do at least the first 1000 mapping txts as the skeleton generation
+%     % has always to be aborted...
+%     script = WK.makeMappingScript(segmentMeta.maxSegId, agglos(1:1000), false);
+%     fileHandle = fopen(mappingFile, 'w');
+%     fwrite(fileHandle, script);
+%     fclose(fileHandle);
+    
     display('Writing skeletons for debugging the process:');
     tic;
-    % Use only agglos 2:end here as first is large percolator, you should try to find out what/why that is
+    % Use only agglos 2:15000 here as first is large percolator, you should try to find out what/why that is
     connectEM.skeletonFromAgglo(graphCut.edges, segmentMeta, ...
-        agglos(2:end), 'agglos', outputFolder,parameters);
+        agglos(2:15000), 'agglos', outputFolder,parameters);
     toc;
 
 end
