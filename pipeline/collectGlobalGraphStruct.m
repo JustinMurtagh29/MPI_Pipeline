@@ -48,5 +48,6 @@ function collectGlobalGraphStruct(p)
     % save output
     graphFile = [p.saveFolder, 'graphNew.mat'];
     Util.saveStruct(graphFile, graph);
+    disp('Graph construction done and saved')
 end
 
