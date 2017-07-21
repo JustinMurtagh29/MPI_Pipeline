@@ -24,6 +24,5 @@ function calculateGlobalCorrespondences(pSeg, cubeCoords1, cubeCoords2, bboxSmal
 
     Util.save([saveFolder num2str(cubeCoords1, '%.2i') num2str(cubeCoords2, '%.2i') 'global.mat'], ...
         uniqueCorrespondences, countsC, countsCnorm, uniqueSegments, countsS);
-
 end
 

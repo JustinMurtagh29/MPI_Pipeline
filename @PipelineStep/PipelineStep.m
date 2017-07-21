@@ -14,9 +14,8 @@ classdef PipelineStep < uint8
       GlobalSegmentID         (5)  % globalizeSegmentation
       Correspondence          (6)  % correspondenceFinderGlobal
       BuildSegmentMetaData    (7)  % buildSegmentMetaData
-%       GlobalCorrespondences   (8)  % globalizeCorrespondences
       SegmentationPyramid     (8)  % createResolutionPyramid
-      GraphConstruction       (9) % graphConstruction
+      GraphConstruction       (9)  % graphConstruction
       SynapseDetection        (10) % SynEM.Seg.pipelineRun
       RawFeatures             (11) % connectEM.calculateRawFeatures
       ClassFeatures           (12) % connectEM.calculateClassFeatures
