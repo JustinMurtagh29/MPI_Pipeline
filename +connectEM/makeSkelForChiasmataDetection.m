@@ -11,6 +11,8 @@ result1ends(result1ends>length(axons)) = [];
 a = cellfun(@(x)max([-1,find(ismember(result1ends,x))]),result2.startAgglo);
 result2ends = cell2mat(result2.endAgglo(cellfun('length',result2.endAgglo)>0)');
 result2ends(result2ends>length(axons)) = [];
+resultCol = {result1, result2};
+
 % ok, there is a subtle bug here
 % this code shouldn't be used again except to reproduce the chiasmata creation
 % result1 and result2 had run wrongly with segmentsLeftover enabled
@@ -31,55 +33,9 @@ edges(any(edges==-1,2),:)=[];
 eqClassCC = Graph.findConnectedComponents(edges, true, true);
 
 eqClassCCfull = [eqClassCC; num2cell(setdiff(1 : length(axons), cell2mat(eqClassCC)))'];
-last = @(x)x{end};
-fifth = @(x)x{5}
-getTask = @(x)fifth(strsplit(last(strsplit(x,'/')),'_'));
 % iterate over super agglos
 for idx_agglo = startingidx : 500 : length(eqClassCCfull)
     currentEC =eqClassCCfull{idx_agglo};
-    nodes = [];
-    edges = [];
-    lookup1 = [];
-    lookup2 = [];
-    % create nodes and edges within agglos
-    for idx = 1 : length(currentEC)
-        idx
-        lookup=sparse(ones(1,length(axons{currentEC(idx)})), axons{currentEC(idx)}, 1:length(axons{currentEC(idx)}));
-        
-        edges=[edges;full(lookup(edgesGTall(all(ismember(edgesGTall,axons{currentEC(idx)}),2),:)))+size(nodes,1)];
-        nodes=[nodes;segmentMeta.point(:,axons{currentEC(idx)})'];
-        lookup1 = [lookup1; repmat(currentEC(idx), length(axons{currentEC(idx)}), 1)];
-        lookup2 = [lookup2; axons{currentEC(idx)}];
-    end
-    edges2=edges;
-    nodes2=nodes;
-    resultCol = {result1, result2};
-    usedTasks = {};
-    % create nodes and edges for queries
-    for runidx = 1 : 2
-        for idx = 1 : length(resultCol{runidx}.startAgglo)
-            if mod(idx,100)==0
-                disp(idx);
-            end
-            if ~isempty(resultCol{runidx}.startAgglo{idx}) && resultCol{runidx}.startAgglo{idx}<=length(axons) && ismember(resultCol{runidx}.startAgglo{idx},currentEC)
-                if size(resultCol{runidx}.ff.nodes{idx},1)<2 ||any(ismember(getTask(resultCol{runidx}.ff.filenames{idx}),usedTasks))
-                    continue;
-                end
-                % make sure each task is only used once (discarding quality control redundancy
-                usedTasks{end+1}=getTask(resultCol{runidx}.ff.filenames{idx});
-                % find nodes that connect to agglos
-                tempids =[resultCol{runidx}.ff.segIds{idx},resultCol{runidx}.ff.neighbours{idx}];
-                %somehow we lost the node order for the query, here reconstructed with MSP
-                Tree = graphminspantree(sparse(squareform(pdist(resultCol{runidx}.ff.nodes{idx}))));
-                [X,Y]=find(Tree);
-                [~, Locb] = ismember(tempids(:),lookup2);
-                [I, ~] = ind2sub(size(tempids),find(Locb));
-                edges2=[edges2;[X,Y]+size(nodes2,1); I+size(nodes2,1), Locb(Locb>0)];
-                nodes2=[nodes2;resultCol{runidx}.ff.nodes{idx}];
-                assert(size(nodes2,1)>=max(edges2(:)));
-            end
-        end
-    end
-    mkdir(['/tmpscratch/kboerg/visX11_' num2str(floor(idx_agglo/100)) '/']);
-    connectEM.detectChiasmata([],nodes2,edges2,true,['/tmpscratch/kboerg/visX11_' num2str(floor(idx_agglo/100)) '/visX11_' num2str(idx_agglo) '/'])
+    mkdir(['/tmpscratch/kboerg/visX12_' num2str(floor(idx_agglo/100)) '/']);
+    connectEM.detectChiasmata([],nodes2,edges2,true,['/tmpscratch/kboerg/visX12_' num2str(floor(idx_agglo/100)) '/visX12_' num2str(idx_agglo) '/'])
 end

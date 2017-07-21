@@ -1,4 +1,4 @@
-function output = detectChiasmataPostSingleNodeLabel(edges, isIntersaction, nodes, p)
+function output = detectChiasmataPostSingleNodeLabel(edges, isIntersection, nrExits, nodes, p)
 temp.edges = edges;
 cc = findCCaccordingToGraph(temp, find(isIntersection));
 [~, centerOfCC] = cellfun(@(x)min(pdist2(bsxfun(@minus, nodes(x,:), mean(nodes(x,:),1)), [0 0 0])), cc);

@@ -1,4 +1,4 @@
-function output = detectChiasmataKMB2(p, nodesV, edges, visualize, outputFolder )
+function output = detectChiasmata(p, nodesV, edges, visualize, outputFolder )
 % Detect chiasmata in skeletons based on marching sphere algorithm
 % Nodes should be in voxel, scaled here
 %save('/gaba/u/kboerg/biggestpre1.mat','-v7.3');
@@ -23,11 +23,11 @@ for i=1:size(nodes,1)
     % if mod(i, 100) ==0
     %     disp(i);
     % end
-    [thisNodes, thisEdges, thisProb] = pruneToSphere(nodes, edges, ones(size(edges,1),1), p, i);
+    [thisNodes, thisEdges, thisProb] = connectEM.detectChiasmataPruneToSphere(nodes, edges, ones(size(edges,1),1), p, i);
     C = Graph.findConnectedComponents(thisEdges);
     if length(C) > 3 && sum(cellfun(@(idx)max(pdist2(thisNodes(idx, :), nodes(i,:))) > 4000, C))>3
         isIntersection(i) = true;
-        nrExits(i) = 4;
+        nrExits(i) = length(C);
     end
     
     if visualize && isIntersection(i)
@@ -62,7 +62,7 @@ for i=1:size(nodes,1)
 end
 %save('/gaba/u/kboerg/biggest1.mat', 'isIntersection');
 % Find CC of detected intersections according to graph
-output = detectChiasmataPostSingleNodeLabel(edges, isIntersaction, nodes, p);
+output = detectChiasmataPostSingleNodeLabel(edges, isIntersaction, nrExits, nodes, p);
 
 if visualize
     % Write result to skletons for control (detection of intersections)
@@ -94,51 +94,7 @@ save([outputFolder 'result.mat'], 'output');
 
 end
 
-function [thisNodes, thisEdges, thisProb] = pruneToSphere(nodes, edges, prob, p, i)
-% Prune nodes, edges and prob to sphere around node in row i with param p
 
-% Distance from all nodes to "current" node
-thisDistance = pdist2(nodes(i,:), nodes);
-
-thisNodeIdx = thisDistance < p.sphereRadiusOuter & thisDistance > p.sphereRadiusInner;
-% rescue inner points that are not connected to center node within inner sphere
-innerNodes = thisDistance > p.sphereRadiusInner;
-innerEdges = any(ismember(edges, find(innerNodes)),2);
-innerConnected = Graph.findConnectedComponents(edges(innerEdges,:));
-idx = find(cellfun(@(x)ismember(i,x),innerConnected));
-for idx2 = setdiff(1: length(innerConnected), idx)
-    thisNodeIdx(innerConnected{idx2}) = true;
-end
-%fix for not fully connected skeletons
-hereConnected = Graph.findConnectedComponents(edges);
-idx = cellfun(@(x)ismember(i,x),hereConnected);
-if any(idx)
-    thisNodeIdx = thisNodeIdx & ismember(1:length(thisDistance),hereConnected{idx});
-else
-    thisNodeIdx = false(size(thisNodeIdx));
-end
-
-
-% Keep all edges that have at least one node within outerSphere
-thisEdgeIdx = any(ismember(edges, find(thisNodeIdx)),2);
-thisIdxOuter = setdiff(unique(edges(thisEdgeIdx,:)), find(thisNodeIdx));
-thisNodeIdx = unique(edges(thisEdgeIdx,:));
-thisNodeIdx = thisNodeIdx(:);
-thisOffset = cumsum(accumarray(thisNodeIdx, 1));
-% Keep only the nodes, edges and prob within sphere
-thisNodes = nodes(thisNodeIdx,:);
-thisEdges = edges(thisEdgeIdx,:);
-thisProb = prob(thisEdgeIdx);
-% Rescale indices (thisEdges and "current" node (=i)) to be indices into
-% thisNodes
-thisEdges = thisOffset(thisEdges);
-thisEdges = reshape(thisEdges,[],2); % Renumber according to new node indices
-%thisIdx = thisOffset(i);
-%thisIdxOuter = thisOffset(thisIdxOuter);
-
-%[thisNodes, thisEdges, thisProb, thisIdx, thisIdxOuter] = restrictGraphToCC(thisNodes, thisEdges, thisProb, thisIdx, thisIdxOuter);
-
-end
 
 function [thisNodes, thisEdges, thisProb, thisIdx, thisIdxOuter] = restrictGraphToCC(thisNodes, thisEdges, thisProb, thisIdx, thisIdxOuter)
 
