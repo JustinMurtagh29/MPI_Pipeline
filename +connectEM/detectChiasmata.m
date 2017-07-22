@@ -62,7 +62,7 @@ for i=1:size(nodes,1)
 end
 %save('/gaba/u/kboerg/biggest1.mat', 'isIntersection');
 % Find CC of detected intersections according to graph
-output = detectChiasmataPostSingleNodeLabel(edges, isIntersaction, nrExits, nodes, p);
+output = detectChiasmataPostSingleNodeLabel(edges, isIntersaction, nrExits, nodes, p, nodesV);
 
 if visualize
     % Write result to skletons for control (detection of intersections)

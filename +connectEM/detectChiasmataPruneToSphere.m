@@ -2,6 +2,7 @@ function [thisNodes, thisEdges, thisProb] = detectChiasmataPruneToSphere(nodes, 
 % Prune nodes, edges and prob to sphere around node in row i with param p
 
 % Distance from all nodes to "current" node
+assert(numel(i)==1);
 thisDistance = pdist2(nodes(i,:), nodes);
 
 thisNodeIdx = thisDistance < p.sphereRadiusOuter & thisDistance > p.sphereRadiusInner;
