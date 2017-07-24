@@ -1,4 +1,4 @@
-function runPipeline(p, startStep, endStep,runlocal)
+function p = runPipeline(p, startStep, endStep,runlocal)
 %RUNPIPELINE
 % INPUT p: struct
 %           Segmentation parameter struct.
@@ -126,6 +126,7 @@ function runPipeline(p, startStep, endStep,runlocal)
         [p, job] = SynEM.Seg.pipelineRun(p);
         % Save parameter file to new 
         Util.save([p.saveFolder 'allParameterWithSynapses.mat'], p);
+        disp('SynEM modified farameter file. Load allParameterWithSynapses.mat for the next steps.')
         % Wait for completion of job
         Cluster.waitForJob(job);
     end
@@ -144,7 +145,7 @@ function runPipeline(p, startStep, endStep,runlocal)
         Cluster.waitForJob(job);
     end
     
-    % Calculate neurite continuity predeictions
+    % Calculate neurite continuity predictions
     if startStep <= PipelineStep.NeuriteContinuityPrediction && ...
        endStep >= PipelineStep.NeuriteContinuityPrediction
         job = connectEM.predictDataset(p);

@@ -47,6 +47,7 @@ function [p, job] = predictDataset( p, fm, classifier, outputFile, ...
 
 if ~exist('outputFile','var') || isempty(outputFile)
     outputFile = 'synapseScores';
+    warning('Output filename not given! synapseScores.mat will be the filename of the synapse scores.')
 end
 if ~exist('cubeIdx','var') || isempty(cubeIdx)
     cubeIdx = 1:numel(p.local);

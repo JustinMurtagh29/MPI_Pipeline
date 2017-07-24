@@ -1,9 +1,10 @@
-function [segmentOverlap, uniqueSegId] = getSegmentHeuritsicsScore(seg, binaryMap, bbox)
+function [segmentOverlap, uniqueSegId] = getSegmentHeuristicsScore(seg, binaryMap, bbox)
     % Takes segmentation struct (root, prefix, bbox) and looks up the fraction 
     % of each segment overlapping with binaryMap (specified by root, prefix and segId to lookup)
 
     seg = loadSegDataGlobal(seg, bbox);
     uniqueSegId = unique(seg(seg ~= 0));
+    segmentOverlap = cell(length(binaryMap),1);
     for i=1:length(binaryMap)
         class = loadSegDataGlobal(binaryMap(i), bbox);
         class = class == binaryMap(i).segId;
