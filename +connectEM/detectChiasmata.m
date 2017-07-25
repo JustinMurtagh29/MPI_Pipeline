@@ -1,4 +1,4 @@
-function output = detectChiasmataKMB2(p, nodesV, edges, visualize, outputFolder )
+function output = detectChiasmata(p, nodesV, edges, visualize, outputFolder )
 % Detect chiasmata in skeletons based on marching sphere algorithm
 % Nodes should be in voxel, scaled here
 
@@ -31,7 +31,7 @@ for i=1:size(nodes,1)
         nrExits(i) = 4;
         % end
     end
-    
+
     if false && isIntersection(i)
         figure('Position', [3841 1 1920 999]);
         % First subplot visualizing pruning to sphere (Step 1)
