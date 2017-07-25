@@ -1,16 +1,34 @@
-function aggloSimple(borderSizeThreshold, probThreshold, sizeThreshold, outputFolder, optional);
-
-    borderSizeThreshold = 100;
-    probThreshold = .995;
-    sizeThreshold = 1000;
-
-    % Start by loading parameter file
-    load('/gaba/scratch/mbeining/testseg_KSMBtmp/PC4/allParameter.mat');
+function [agglos, aggloSize, aggloEdges] = aggloSimple(p,borderSizeThreshold, probThreshold, sizeThreshold, outputFolder, optional)
+    if nargin < 2 || isempty(borderSizeThreshold)
+       borderSizeThreshold = 100;
+    end
+    if nargin < 3 || isempty(probThreshold)
+       probThreshold = .995;
+    end
+    if nargin < 4 || isempty(sizeThreshold)
+       sizeThreshold = 1000;
+    end
+    if nargin < 1 || isempty(p)
+       % Start by loading parameter file
+       load('/gaba/scratch/mbeining/testseg_KSMBtmp/PC4/allParameter.mat');
+    end
     % To keep workspace clean here remove parameter for training (pT)
     clear pT;
     if ~exist('optional', 'var')
         optional = [];
     end
+
+
+    parameters.scale.x = p.raw.voxelSize(1);
+    parameters.scale.y = p.raw.voxelSize(2);
+    parameters.scale.z = p.raw.voxelSize(3);
+    parameters.offset.x = '0';
+    parameters.offset.y = '0';
+    parameters.offset.z = '0';
+    parameters.experiment.name = p.experimentName;
+
+
+
 
     display('Loading data:');
     tic;
@@ -52,12 +70,18 @@ function aggloSimple(borderSizeThreshold, probThreshold, sizeThreshold, outputFo
     tic;
     [agglos, aggloSize, aggloEdges] = connectEM.partitionSortAndKeepOnlyLarge(graphCut, segmentMeta, probThreshold, sizeThreshold);
     toc;
-
+%     % do at least the first 1000 mapping txts as the skeleton generation
+%     % has always to be aborted...
+%     script = WK.makeMappingScript(segmentMeta.maxSegId, agglos(1:1000), false);
+%     fileHandle = fopen(mappingFile, 'w');
+%     fwrite(fileHandle, script);
+%     fclose(fileHandle);
+    
     display('Writing skeletons for debugging the process:');
     tic;
-    % Use only agglos 2:end here as first is large percolator, you should try to find out what/why that is
+    % Use only agglos 2:15000 here as first is large percolator, you should try to find out what/why that is
     connectEM.skeletonFromAgglo(graphCut.edges, segmentMeta, ...
-        agglos(2:end), 'agglos', outputFolder);
+        agglos(2:15000), 'agglos', outputFolder,parameters);
     toc;
 
 end

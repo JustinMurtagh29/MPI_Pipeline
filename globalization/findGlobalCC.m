@@ -9,9 +9,9 @@ for i=1:length(files)
 end
 
 % Find connected components
-uniqueIds = unique(correspondences);
-components = findConnectedComponents(correspondences, uniqueIds);
-Util.save([p.saveFolder 'globalCorrespondences.mat'], components);
+% uniqueIds = unique(correspondences);
+[equivalenceClasses, objectClassLabels] = Graph.findConnectedComponents(correspondences);
+Util.save([p.saveFolder 'globalCorrespondences.mat'], equivalenceClasses, objectClassLabels);
 
 end
 

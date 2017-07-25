@@ -33,6 +33,12 @@ p.experimentName = '2012-09-28_ex145_07x2_segNew';
 p.raw.root = '/gaba/u/mberning/data/cortex/2012-09-28_ex145_07x2_corrected/color/1/';
 p.raw.prefix = '2012-09-28_ex145_07x2_corrected_mag1';
 
+% Uncomment and change this, if your dataset comprises a mask knossos hierarchy (e.g. created
+% by the KSMB cubing), which marks the outside (e.g. padded) region of the
+% dataset
+% p.mask.root = '/gaba/u/mberning/data/cortex/2012-09-28_ex145_07x2_corrected/mask/1/'
+% p.mask.prefix = '2012-09-28_ex145_07x2_corrected_mag1_mask';
+
 % Uncomment, if you wanna live the risky life
 % p.raw.backend = 'wkwrap';
 

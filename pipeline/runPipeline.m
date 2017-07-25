@@ -1,4 +1,4 @@
-function runPipeline(p, startStep, endStep)
+function p = runPipeline(p, startStep, endStep,runlocal)
 %RUNPIPELINE
 % INPUT p: struct
 %           Segmentation parameter struct.
@@ -9,6 +9,9 @@ function runPipeline(p, startStep, endStep)
 %       endStep: (Optional) PipelineStep object
 %           The step where the pipeline is stopped.
 %           (Default: PipelineStep.GraphConstruction)
+%       runlocal: (Optional) boolean to switch if 
+%           some main functions of the pipeline should
+%           be run on the interactive node or on a worker (default)
 
     %check whether pipelineStep is specified else start with classification
     if ~exist('startStep','var') || isempty(startStep)
@@ -17,7 +20,9 @@ function runPipeline(p, startStep, endStep)
     if ~exist('endStep','var') || isempty(endStep)
         endStep = PipelineStep.GlobalGraphStruct;
     end
-    
+    if ~exist('runlocal','var') || isempty(runlocal)
+        runlocal = 0;
+    end
 
     % Runs CNN based forward pass for region defined in p.bbox,p.raw and saves as p.class	
     % Because CNN is translation invariant, saved as KNOSSOS hierachy again 
@@ -32,7 +37,7 @@ function runPipeline(p, startStep, endStep)
     % If you set p.myelin.isUsed = true in configuration.m, the result of a myelin detection is
     % used to ensure a voxel detected as myelin will not be in one segment with voxel not detected
     % as myelin
-    if p.myelin.isUsed && startStep <= PipelineStep.MyelinFix && ...
+    if isfield(p,'myelin') && p.myelin.isUsed && startStep <= PipelineStep.MyelinFix && ...
         endStep >= PipelineStep.MyelinFix
     
         %define new classification prefix (NOTE: This will not be saved, but temporary files anyway)
@@ -51,24 +56,16 @@ function runPipeline(p, startStep, endStep)
     % Because watershed segmentation has FOV effects (no translation invariance), processed with large
     % overlap and later joined together (see correspondences)
     % Uses segmentation subfolder in code repository
+
     if startStep <= PipelineStep.Segmentation && ...
        endStep >= PipelineStep.Segmentation
         job = miniSegmentation(p);
         Cluster.waitForJob(job);
     end
-    
-    % Find correspondences between tiles processed (segmented) in paralell
-    % Uses correspondences subfolder in code repository
-    if startStep <= PipelineStep.Correspondence && ...
-       endStep >= PipelineStep.Correspondence
-        job = correspondenceFinder(p);
-        Cluster.waitForJob(job);
-    end
-    
+       
     % Transfer segmentation from p.local(X).tempSegFile to p.local(X).segFile and drop overlaps 
     % Also in correspondences subfolder
     % Added routine to renumber CC of segments after cutting to non-overlapping region
-    % This also involves renumbering all correspondences if a segment is renumbered in this step
     if startStep <= PipelineStep.OverlapRemoval && ...
        endStep >= PipelineStep.OverlapRemoval
         removeOverlaps(p);
@@ -76,14 +73,20 @@ function runPipeline(p, startStep, endStep)
     
     % Make segmentation IDs unique over dataset (were only unique in each
     % tile before), this will be called global IDs from time to time
-    % will work on correspondences and segmentation
-    % see globalization subfolder 
-    % globalization is run in two parts: globalizeSegmentation and globalizeCorrespondences
+    % will work on segmentation see globalization subfolder 
     if startStep <= PipelineStep.GlobalSegmentID && ...
        endStep >= PipelineStep.GlobalSegmentID
         job = globalizeSegmentation(p);
         Cluster.waitForJob(job);
     end 
+
+    % Find correspondences between tiles processed (segmented) in parallel
+    % Uses correspondences subfolder in code repository
+    if startStep <= PipelineStep.Correspondence && ...
+       endStep >= PipelineStep.Correspondence
+        job = correspondenceFinderGlobal(p);
+        Cluster.waitForJob(job);
+    end
     
     % Build segment meta data
     if startStep <= PipelineStep.BuildSegmentMetaData && ...
@@ -92,23 +95,19 @@ function runPipeline(p, startStep, endStep)
         Cluster.waitForJob(job);
     end
     
-    if startStep <= PipelineStep.GlobalCorrespondences && ...
-       endStep >= PipelineStep.GlobalCorrespondences
-        job = globalizeCorrespondences(p);
-        Cluster.waitForJob(job);
-    end
+%     if startStep <= PipelineStep.GlobalCorrespondences && ...
+%        endStep >= PipelineStep.GlobalCorrespondences
+%         job = globalizeCorrespondences(p);
+%         Cluster.waitForJob(job);
+%     end
         
     if startStep <= PipelineStep.SegmentationPyramid && ...
        endStep >= PipelineStep.SegmentationPyramid
         % Create resolution pyramid for the segmentation
-        display('Downsampling segmentation:');
-        tic;
-        thisBBox = [1 1 1; (ceil(p.bbox(:,2)./1024).*1024)']';
-        % This weird command line stuff is necessary to deference symbolic links
-        [~, thisRoot] = system(['readlink -f ' p.seg.root ' < /dev/null']);
-        thisRoot = [strrep(thisRoot, sprintf('\n'), '') filesep];
-        createResolutionPyramid(thisRoot, p.seg.prefix, thisBBox, strrep(thisRoot, '/1/', ''), true);
-        toc;
+        tic; fprintf('Downsampling segmentation... ');
+        thisBBox = [1, 1, 1; (ceil(p.bbox(:, 2) ./ 1024) .* 1024)']';
+        createResolutionPyramid(p.seg, thisBBox, [], true);
+        fprintf('done!\n'); toc;
     end
         
     % Construct graph on globalized version of segmentation
@@ -127,10 +126,11 @@ function runPipeline(p, startStep, endStep)
         [p, job] = SynEM.Seg.pipelineRun(p);
         % Save parameter file to new 
         Util.save([p.saveFolder 'allParameterWithSynapses.mat'], p);
+        disp('SynEM modified farameter file. Load allParameterWithSynapses.mat for the next steps.')
         % Wait for completion of job
         Cluster.waitForJob(job);
     end
-        
+
     % Calculate raw features on smaller (wrt SynEM) borders (down to 10 voxel)
     if startStep <= PipelineStep.RawFeatures && ...
        endStep >= PipelineStep.RawFeatures
@@ -145,7 +145,7 @@ function runPipeline(p, startStep, endStep)
         Cluster.waitForJob(job);
     end
     
-    % Calculate neurite continuity predeictions
+    % Calculate neurite continuity predictions
     if startStep <= PipelineStep.NeuriteContinuityPrediction && ...
        endStep >= PipelineStep.NeuriteContinuityPrediction
         job = connectEM.predictDataset(p);
@@ -154,23 +154,31 @@ function runPipeline(p, startStep, endStep)
         
     %Save the global SVG data
     if startStep <= PipelineStep.SaveGlobalSvgData && ...
-       endStep >= PipelineStep.SaveGlobalSvgData
-        job = collectSvgDataOnCluster(p);
-        Cluster.waitForJob(job);
+            endStep >= PipelineStep.SaveGlobalSvgData
+        if runlocal
+            Seg.Global.saveGlobalSvgData(p,[],[],1);
+        else
+            job = collectSvgDataOnCluster(p,1);
+            Cluster.waitForJob(job);
+        end
     end
     
     %Create graph struct 
     if startStep <= PipelineStep.GlobalGraphStruct && ...
-       endStep >= PipelineStep.GlobalGraphStruct
-        job = collectGraphStructOnCluster(p);
-        Cluster.waitForJob(job);
+            endStep >= PipelineStep.GlobalGraphStruct
+        if runlocal
+            collectGlobalGraphStruct(p);
+        else
+            job = collectGraphStructOnCluster(p);
+            Cluster.waitForJob(job);
+        end
     end
 end
 
 % Some comments that one might want to run in addition:
 % if pipelineStep <= PipelineStep.HeuristicLookup
-%   connectEM.getHeuristicResult(p)         % -> lookups result from heuritic (nuclei, vessel, myelin) detections
+%  connectEM.getHeuristicsResult(p)         % -> lookups result from heuritic (nuclei, vessel, myelin) detections
 % end
 % if pipelineStep <= PipelineStep.Agglomeration
-%   connectEM.agglomerate                   % -> Generate CC of graph at a threshold chosen in script
+%  connectEM.agglomerate                   % -> Generate CC of graph at a threshold chosen in script
 % end

@@ -1,14 +1,13 @@
 function output = detectChiasmata(p, nodesV, edges, visualize, outputFolder )
 % Detect chiasmata in skeletons based on marching sphere algorithm
 % Nodes should be in voxel, scaled here
-
+%save('/gaba/u/kboerg/biggestpre1.mat','-v7.3');
 % Create output folder if it does not exist
 if ~exist(outputFolder, 'dir')
     mkdir(outputFolder);
 end
 
 % Scale to nm
-%nodes = bsxfun(@times, nodesV, [11.24 11.24 28]);
 % Make sure edges are unique
 [edges, ~, idxE] = unique(edges, 'rows');
 
@@ -21,18 +20,17 @@ nodes=bsxfun(@times,nodesV,p.voxelSize);
 isIntersection = false(size(nodes,1),1);
 nrExits = zeros(size(nodes,1),1);
 for i=1:size(nodes,1)
-    if mod(i, 100) == 0
-        i
-    end
-    [thisNodes, thisEdges, thisProb] = pruneToSphere(nodes, edges, ones(size(edges,1),1), p, i);
-    C = Graph.findConnectedComponents(edges)
-    if length(C) > 3 && sum(cellfun(@(idx)max(pdist2(thisNodes(idx, :), nodes(i,:))) > 4000, 1:SC))>3
+    % if mod(i, 100) ==0
+    %     disp(i);
+    % end
+    [thisNodes, thisEdges, thisProb] = connectEM.detectChiasmataPruneToSphere(nodes, edges, ones(size(edges,1),1), p, i);
+    C = Graph.findConnectedComponents(thisEdges);
+    if length(C) > 3 && sum(cellfun(@(idx)max(pdist2(thisNodes(idx, :), nodes(i,:))) > 4000, C))>3
         isIntersection(i) = true;
-        nrExits(i) = 4;
-        % end
+        nrExits(i) = length(C);
     end
 
-    if false && isIntersection(i)
+    if visualize && isIntersection(i)
         figure('Position', [3841 1 1920 999]);
         % First subplot visualizing pruning to sphere (Step 1)
         subplot(2,2,1);
@@ -62,66 +60,9 @@ for i=1:size(nodes,1)
         close all;
     end
 end
-
+%save('/gaba/u/kboerg/biggest1.mat', 'isIntersection');
 % Find CC of detected intersections according to graph
-temp.edges = edges;
-cc = findCCaccordingToGraph(temp, find(isIntersection));
-[~, centerOfCC] = cellfun(@(x)min(pdist2(bsxfun(@minus, nodes(x,:), mean(nodes(x,:),1)), [0 0 0])), cc);
-
-% Find out where to query for each CC
-queryIdx = cell(length(cc),1);
-pos = cell(length(cc),1);
-dir = cell(length(cc),1);
-dist = cell(length(cc),1);
-toDel = false(length(cc),1);
-for i=1:length(cc)
-    % Find all nodes outside CC of detected intersections that are neighbours to CC
-    edgesIdx = any(ismember(edges, cc{i}),2);
-    queryIdx{i} = setdiff(edges(edgesIdx,:), cc{i});
-    % Keep edges not connected to CC
-    edgesPruned = edges(~edgesIdx, :);
-    nodeDegree = histc(edgesPruned(:), 1:size(nodes,1));
-    % Find CC of graph with 5 or more elements after removing CC of intersections
-    ccAfterPruning = Graph.findConnectedComponents(edgesPruned, false, true);
-    ccAfterPruning = ccAfterPruning(cellfun('length', ccAfterPruning) > 4);
-    % Keep only one one queryIdx for each of those CC (the one with maximum node degree)
-    queryLocation = cellfun(@(x)intersect(x, queryIdx{i}), ccAfterPruning, 'uni', 0);
-    queryLocation = queryLocation(~cellfun('isempty', queryLocation));
-    [maxVal, maxIdx] = cellfun(@(x)max(nodeDegree(x)), queryLocation, 'uni', 0);
-    if any(cellfun(@(x)x < 1, maxVal))
-        % As Graph.findCC is used above with 3rd argument set to true
-        error('This should not happen');
-    end
-    queryIdx{i} = cellfun(@(x,y)x(y), queryLocation, maxIdx);
-    % Only generate queries for this CC if at least 2 queries
-    if length(queryIdx{i}) > 1
-        % Save position direction and length of query
-        pos{i} = nodesV(queryIdx{i},:);
-        dir{i} = bsxfun(@minus, pos{i}, nodesV(cc{i}(centerOfCC(i)),:));
-        dist{i} = pdist2(bsxfun(@times, pos{i}, p.voxelSize), bsxfun(@times, nodesV(cc{i}(centerOfCC(i)),:), p.voxelSize), 'chebychev');
-    else
-        toDel(i) = true;
-    end
-end
-queryIdx(toDel) = [];
-pos(toDel) = [];
-dir(toDel) = [];
-dist(toDel) = [];
-cc(toDel) = [];
-centerOfCC(toDel) = [];
-
-% Create an output structure
-output.nodes = nodesV;
-output.edges = edges;
-output.prob = [];
-output.isIntersection = isIntersection;
-output.nrExits = nrExits;
-output.ccNodeIdx = cc;
-output.ccCenterIdx = cellfun(@(x,y)x(y), cc, mat2cell(centerOfCC, ones(size(centerOfCC,1),1), ones(size(centerOfCC,2),1)));
-output.queryIdx = queryIdx;
-output.position = pos;
-output.direction = dir;
-output.distance = dist;
+output = detectChiasmataPostSingleNodeLabel(edges, isIntersaction, nrExits, nodes, p, nodesV);
 
 if visualize
     % Write result to skletons for control (detection of intersections)
@@ -153,51 +94,7 @@ save([outputFolder 'result.mat'], 'output');
 
 end
 
-function [thisNodes, thisEdges, thisProb] = pruneToSphere(nodes, edges, prob, p, i)
-% Prune nodes, edges and prob to sphere around node in row i with param p
 
-% Distance from all nodes to "current" node
-thisDistance = pdist2(nodes(i,:), nodes);
-
-thisNodeIdx = thisDistance < p.sphereRadiusOuter & thisDistance > p.sphereRadiusInner;
-% rescue inner points that are not connected to center node within inner sphere
-innerNodes = thisDistance > p.sphereRadiusInner;
-innerEdges = any(ismember(edges, find(innerNodes)),2);
-innerConnected = Graph.findConnectedComponents(innerEdges);
-idx = find(cellfun(@(x)ismember(i,x),innerConnected));
-for idx2 = setdiff(1: length(innerConnected), idx)
-    thisNodeIdx(innerConnected{idx2}) = true;
-end
-%fix for not fully connected skeletons
-hereConnected = Graph.findConnectedComponents(edges);
-idx = cellfun(@(x)ismember(i,x),hereConnected);
-if any(idx)
-    thisNodeIdx = thisNodeIdx & ismember(1:length(thisDistance),hereConnected{idx});
-else
-    thisNodeIdx = false(size(thisNodeIdx));
-end
-
-
-% Keep all edges that have at least one node within outerSphere
-thisEdgeIdx = any(ismember(edges, find(thisNodeIdx)),2);
-thisIdxOuter = setdiff(unique(edges(thisEdgeIdx,:)), find(thisNodeIdx));
-thisNodeIdx = unique(edges(thisEdgeIdx,:));
-thisNodeIdx = thisNodeIdx(:);
-thisOffset = cumsum(accumarray(thisNodeIdx, 1));
-% Keep only the nodes, edges and prob within sphere
-thisNodes = nodes(thisNodeIdx,:);
-thisEdges = edges(thisEdgeIdx,:);
-thisProb = prob(thisEdgeIdx);
-% Rescale indices (thisEdges and "current" node (=i)) to be indices into
-% thisNodes
-thisEdges = thisOffset(thisEdges);
-thisEdges = reshape(thisEdges,[],2); % Renumber according to new node indices
-%thisIdx = thisOffset(i);
-%thisIdxOuter = thisOffset(thisIdxOuter);
-
-%[thisNodes, thisEdges, thisProb, thisIdx, thisIdxOuter] = restrictGraphToCC(thisNodes, thisEdges, thisProb, thisIdx, thisIdxOuter);
-
-end
 
 function [thisNodes, thisEdges, thisProb, thisIdx, thisIdxOuter] = restrictGraphToCC(thisNodes, thisEdges, thisProb, thisIdx, thisIdxOuter)
 

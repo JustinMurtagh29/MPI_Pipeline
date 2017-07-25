@@ -1,4 +1,4 @@
-function job = predictDataset(p);
+function job = predictDataset(p)
 
 functionHandle = @connectEM.predictLocalCube;
 saveFolders = {p.local(:).saveFolder};

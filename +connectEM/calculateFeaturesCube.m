@@ -3,51 +3,49 @@ function calculateFeaturesCube(p, cubeNo, fm, voxelMap)
 
 % load segmentation
 seg = loadSegDataGlobal(p.seg, p.local(cubeNo).bboxSmall);
+if ~all(seg(:)==0)
+   %load svg
+   load(p.local(cubeNo).edgeFile, 'edges');
+   load(p.local(cubeNo).borderFile, 'borders');
+   % start empty
+   features = [];
+   if ~isempty(edges) && ~isempty(borders) && any([borders(:).Area] > fm.areaT)
+	   %calculate interfaces
+	   interfaces = SynEM.Svg.calculateInterfaces(seg, edges, borders, ...
+		   fm.areaT, p.raw.voxelSize, fm.subvolsSize);
+	   
+	   %load voxel map
+	   bboxFM = bsxfun(@plus, p.local(cubeNo).bboxSmall,[-fm.border', fm.border']./2);
+	   switch lower(voxelMap)
+		case 'class'
+			vMap = loadClassData(p.class, bboxFM);
+		case 'raw'
+			vMap = loadRawData(p.raw, bboxFM);
+		case 'svm'
+			vMap = loadSvmData(p, bboxFM);
+		otherwise
+			error('Unknown voxel map');
+	   end
+	   
 
-%load svg
-load(p.local(cubeNo).edgeFile, 'edges');
-load(p.local(cubeNo).borderFile, 'borders');
+	   % NOTE(amotta): It's possible for the voxel map to be four-dimensional.
+		% This is, for example, the case for the output of Benedikt's SVM net.
+		% We apply the same features map to all channels individually.
 
-%calculate interfaces
-interfaces = SynEM.Svg.calculateInterfaces(seg, edges, borders, ...
-    fm.areaT, p.raw.voxelSize, fm.subvolsSize);
+		for curIdx = 1:size(vMap, 4)
+			%calculate features
+			curFeatures = fm.calculate(interfaces, vMap(:, :, :, curIdx));
 
-%load voxel map
-bboxFM = bsxfun(@plus, p.local(cubeNo).bboxSmall,[-fm.border', fm.border']./2);
-
-switch lower(voxelMap)
-    case 'class'
-        vMap = loadClassData(p.class, bboxFM);
-    case 'raw'
-        vMap = loadRawData(p.raw, bboxFM);
-    case 'svm'
-        vMap = loadSvmData(p, bboxFM);
-    otherwise
-        error('Unknown voxel map');
+			% Save features
+			if strcmp(fm.mode, 'direction')
+				curFeatures = curFeatures(1:end/2,:); %only save first direction
+			end
+			features = cat(2, features, curFeatures);
+		end
+   end
+   outputFile = [p.local(cubeNo).saveFolder 'Interface' voxelMap 'Features.mat'];
+   Util.save(outputFile, features);
 end
-
-% start empty
-features = [];
-
-% NOTE(amotta): It's possible for the voxel map to be four-dimensional.
-% This is, for example, the case for the output of Benedikt's SVM net.
-% We apply the same features map to all channels individually.
-
-for curIdx = 1:size(vMap, 4)
-    %calculate features
-    curFeatures = fm.calculate(interfaces, vMap(:, :, :, curIdx));
-
-    % Save features
-    if strcmp(fm.mode, 'direction')
-        curFeatures = curFeatures(1:end/2,:); %only save first direction
-    end
-    
-    features = cat(2, features, curFeatures);
-end
-
-outputFile = [p.local(cubeNo).saveFolder 'Interface' voxelMap 'Features.mat'];
-Util.save(outputFile, features);
-
 end
 
 function data = loadSvmData(param, box)

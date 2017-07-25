@@ -1,19 +1,25 @@
-function [p, pT] = setParameterSettings(p)
+function p = setParameterSettings(p)
     % Pass structure with basic settings to add all dependent and constant p for pipeline
 
-    % Sanitize paths by adding trailing slashes
-    if p.saveFolder(end) ~= filesep
-        p.saveFolder = [p.saveFolder, filesep];
-        warning('Added trailing slash to p.saveFolder');
-    end
-
-    if p.raw.root(end) ~= filesep
-        p.raw.root = [p.raw.root, filesep];
-        warning('Added trailing slash to p.raw.root');
+    if ~isfield(p.raw, 'dtype')
+        p.raw.dtype = 'uint8';
     end
     
-    if ~isfield(p.raw,'dtype')
-        p.raw.dtype = 'uint8';
+    if ~isfield(p.seg, 'root')
+        % default path for segmentation
+        p.seg.root = fullfile(p.saveFolder, 'globalSeg', '1');
+    end
+    
+    % Sanitize paths by adding trailing slashes
+    p.saveFolder = fixPath(p.saveFolder);
+    p.raw.root = fixPath(p.raw.root);
+    p.seg.root = fixPath(p.seg.root);
+    if isfield(p,'mask')
+        p.mask.root = fixPath(p.mask.root);
+        if ~isfield(p.mask, 'dtype')
+            p.mask.dtype = 'uint8';
+        end
+        p.mask.voxelSize = p.raw.voxelSize;
     end
     
     % Size of local segmentation and local graph construction
@@ -47,14 +53,14 @@ function [p, pT] = setParameterSettings(p)
         p.raw, ...
         'dtype', 'single', ...
         'func', @bigFwdPass, ...
-        'root', strcat(p.tempFolder, 'class', filesep));
+        'root', fixPath(fullfile(p.tempFolder, 'class')));
     
-    % Function to use for segmentation
+    % Check if user provided a segmentation root
     p.seg = Util.modifyStruct( ...
         p.raw, ...
         'dtype', 'uint32', ...
+        'root', p.seg.root, ...
         'func', @(x) watershedSeg_v1_cortex(x, {p.seg.threshold, 10}), ...
-        'root', strcat(p.saveFolder, 'globalSeg', filesep), ...
         'threshold', p.seg.threshold);
     
     % Specify arguments for filterbank applied to raw and aff data each
@@ -114,6 +120,7 @@ function [p, pT] = setParameterSettings(p)
                 % Where to save
                 p.local(i,j,k).segFile = [p.local(i,j,k).saveFolder 'seg.mat'];
                 p.local(i,j,k).tempSegFile = strrep(p.local(i,j,k).segFile, '/local/', '/temp/');
+                %p.local(i,j,k).tempSegMaskFile = strrep(p.local(i,j,k).tempSegFile, 'seg.mat', 'segmask.mat');
                 p.local(i,j,k).edgeFile = [p.local(i,j,k).saveFolder 'edges.mat'];
                 p.local(i,j,k).borderFile =  [p.local(i,j,k).saveFolder 'borders.mat'];
                 p.local(i,j,k).weightFile = [p.local(i,j,k).saveFolder 'weights.mat'];
@@ -136,6 +143,12 @@ function [p, pT] = setParameterSettings(p)
     % Save everything
     Util.save([p.saveFolder 'allParameter.mat'], p);
 
+end
+
+function p = fixPath(p)
+    if p(end) ~= filesep
+        p(end + 1) = filesep;
+    end
 end
 
 function bbox = fixBoundingBox(p)

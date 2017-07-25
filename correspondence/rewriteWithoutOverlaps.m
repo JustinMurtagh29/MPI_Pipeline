@@ -1,11 +1,14 @@
 function rewriteWithoutOverlaps( inFile, outFile, bbS, bbB)
 
-    segOld = extractBboxSmall(inFile, bbS, bbB);
-    % Recalculate connected components of segments in bounding box small
-    seg = uint32(bwlabeln(segOld > 0, 26));
-    [oldSegments, newSegments] = determineChanges(segOld, seg);
-    numEl = calcNumberSegments(seg);
-    Util.save(outFile, seg, numEl, oldSegments, newSegments);
+segOld = extractBboxSmall(inFile, bbS, bbB);
+% Recalculate connected components of segments in bounding box small
+seg = uint32(bwlabeln(segOld > 0, 26));
+[oldSegments, newSegments] = determineChanges(segOld, seg);
+numEl = calcNumberSegments(seg);
+if ~exist(fileparts(outFile),'dir')
+    mkdir(fileparts(outFile));
+end
+Util.save(outFile, seg, numEl, oldSegments, newSegments);
 
 end
 

@@ -1,5 +1,4 @@
-
-outputFolder = '/tmpscratch/mberning/axonQueryResults2/';
+outputFolder = '/tmpscratch/mberning/axonQueryResults/';
 
 % Load segment meta data & graph
 load('/gaba/u/mberning/results/pipeline/20170217_ROI/allParameterWithSynapses.mat');
