@@ -84,7 +84,12 @@ for idx_eqClass = 1000:1100
     edges = cat(1, edges{:});
     % Join query and agglo based representation by single edge at end of query to closest node in connecting agglo
     for idxQuery=1:length(queryLinkIdx)
-
+        idxDegreeBelow2 = find(histc(queriesEdges{idxQuery}(:), unique(queriesEdges{idxQuery})) < 2);
+        assert(numel(idxDegreeBelow2) == 2);
+        for i=1:numel(idxDegreeBelow2)
+            % Left TODO: Find good way of making connections
+            queryLinks(queryLinks(:,1) == queryLinkIdx)
+        end
     end
     % Detect chiasmata
     outputFolder = ['/tmpscratch/mberning/axonQueryResults/chiasmataSkeletons/' num2str(idx_agglo, '%.4i') '/'];
