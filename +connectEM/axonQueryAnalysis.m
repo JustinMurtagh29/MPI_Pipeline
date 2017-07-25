@@ -12,17 +12,18 @@ clear temp;
 segmentsLeftover = [];
 
 % Where to find skeletons that were returned from the queries
-scratchFolder = outputFolder;
+scratchFolder = '/tmpscratch/mberning/axonQueryResults/';
 skeletonFolders = {'MBKMB_L4_axons_queries_2017_a' 'MBKMB_L4_axons_queries_2017_b'};
 skeletonFolders = cellfun(@(x)[scratchFolder x filesep], skeletonFolders, 'uni', 0);
 % Lookup segment ids of nodes+neighbours of nmls in all folders defined above
-[ff.segIds, ff.neighbours, ff.filenames, ff.nodes, ff.startNode, ff.comments] = connectEM.lookupNmlMulti(p, skeletonFolders, false);
-display([num2str(sum(~cellfun(@isempty,ff.comments))) '/' num2str(numel(ff.comments)) ' queries contain comment and will not be used']);
-tabulate(cellfun(@(x)x{1}{1}, cellfun(@(x)regexp(x, 'content="(.*)"', 'tokens'), ...
-    cat(1, ff.comments{~cellfun(@isempty, ff.comments)}), 'uni', 0), 'uni', 0))
-ff = structfun(@(x)x(cellfun(@isempty,ff.comments)), ff, 'uni', 0);
+[ffAll.segIds, ffAll.neighbours, ffAll.filenames, ffAll.nodes, ffAll.startNode, ffAll.comments] = connectEM.lookupNmlMulti(p, skeletonFolders, false);
+%display([num2str(sum(~cellfun(@isempty,ff.comments))) '/' num2str(numel(ff.comments)) ' queries contain comment and will not be used']);
+%tabulate(cellfun(@(x)x{1}{1}, cellfun(@(x)regexp(x, 'content="(.*)"', 'tokens'), ...
+%    cat(1, ffAll.comments{~cellfun(@isempty, ffAll.comments)}), 'uni', 0), 'uni', 0))
 % ~600 queries do not have a start node, not sure why (maybe the ones with more than one tree), maybe check later
-ff = structfun(@(x)x(~cellfun(@isempty, ff.startNode)), ff, 'uni', 0);
+ff = structfun(@(x)x(~cellfun(@isempty, ffAll.startNode)), ffAll, 'uni', 0);
+% Do not exclude skeletons with comments in 2nd run to see all locations queried
+%ff = structfun(@(x)x(cellfun(@isempty,ff.comments)), ff, 'uni', 0);
 
 % Calculate overlap of all queries with segments
 [uniqueSegments, neighboursStartNode, nodesExcludedIdx, startNodeIdx] = cellfun(@connectEM.queryAnalysis, ...
