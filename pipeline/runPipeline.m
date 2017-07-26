@@ -126,7 +126,7 @@ function p = runPipeline(p, startStep, endStep,runlocal)
         [p, job] = SynEM.Seg.pipelineRun(p);
         % Save parameter file to new 
         Util.save([p.saveFolder 'allParameterWithSynapses.mat'], p);
-        disp('SynEM modified farameter file. Load allParameterWithSynapses.mat for the next steps.')
+        disp('SynEM modified parameter file. Load allParameterWithSynapses.mat for the next steps.')
         % Wait for completion of job
         Cluster.waitForJob(job);
     end
