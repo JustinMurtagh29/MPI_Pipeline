@@ -1,12 +1,15 @@
-function generateSkeletonFromAgglo(edges, com, cc, treeNames, outputFolder, maxSegId)
-
+function generateSkeletonFromAgglo(edges, com, cc, treeNames, outputFolder, maxSegId,parameters)
+    if nargin < 7
+	parameters = [];
+    end
     % Set colors to be used
-    colors = distinguishable_colors(length(cc), [0 0 0; 1 1 1]);
+    colors = distinguishable_colors(min(length(cc),100), [0 0 0; 1 1 1]);
+    colors = repmat(colors, ceil(length(cc)/100), 1);
     colors(:,4) = 0;
     for tr=1:length(cc)
         if ~isempty(cc{tr})
             % Generate parameters for skeleton
-            skel = initializeSkeleton();
+            skel = initializeSkeleton(parameters);
             skel{1}.thingID = 1;
             skel{1}.name = [treeNames{tr} '_' num2str(size(com,1))];
             skel{1}.color = colors(tr,:);
@@ -18,7 +21,7 @@ function generateSkeletonFromAgglo(edges, com, cc, treeNames, outputFolder, maxS
             clear idx theseEdgesSegId;
            % Write to structure for writeNml
             skel{1}.nodesNumDataAll = zeros(size(theseCoM,1),14);
-            skel{1}.nodesNumDataAll(:,1) = 1:size(theseCoM,1); 
+            skel{1}.nodesNumDataAll(:,1) = 1:size(theseCoM,1);
             skel{1}.nodesNumDataAll(:,2) = 10*ones(size(theseCoM,1),1);
             skel{1}.nodesNumDataAll(:,3:5) = theseCoM;
             skel{1}.edges = theseEdgesNodes;
@@ -35,7 +38,10 @@ function generateSkeletonFromAgglo(edges, com, cc, treeNames, outputFolder, maxS
 
 end
 
-function skel = initializeSkeleton()
+function skel = initializeSkeleton(parameters)
+    if nargin > 0 && ~isempty(parameters)
+	skel{1}.parameters = parameters;
+    else
     % Set parameters
     skel{1}.parameters.experiment.name='2012-09-28_ex145_07x2_ROI2017';
     skel{1}.parameters.scale.x = '11.24';
@@ -44,6 +50,7 @@ function skel = initializeSkeleton()
     skel{1}.parameters.offset.x = '0';
     skel{1}.parameters.offset.y = '0';
     skel{1}.parameters.offset.z = '0';
+    end
     skel{1}.commentsString = {'<comments></comments>'};
     skel{1}.branchpointsString = {};
     skel{1}.branchpoints = [];

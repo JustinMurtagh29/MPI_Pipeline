@@ -58,7 +58,7 @@ subsegmentsList = calculateSubsegments(interfaceSurfaceList,neighborIDs,segments
 
 %load raw and make output
 bboxBig = cubeInfo.bboxSmall + [-featureMap.border,featureMap.border];
-raw = readKnossosRoi(p.raw.root,p.raw.prefix,bboxBig,'uint8');
+raw = loadRawData(p.raw,bboxBig);
 if all(~raw)
     error('The raw file read from %s is empty.',knossos_conf.parfolder);
 end

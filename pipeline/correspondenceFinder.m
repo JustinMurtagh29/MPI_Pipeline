@@ -4,6 +4,7 @@ function job = correspondenceFinder(p)
 
 % list of tuples of adjacent cubes
 adjCubes = getOverlaps(p.tiles);
+inputCell = cell(size(adjCubes, 1), 1);
 
 % For every tuple of adjacent cubes: calculate correspondences of segmentation IDs between cubes using overlap
 for i = 1:size(adjCubes,1)
@@ -16,6 +17,7 @@ for i = 1:size(adjCubes,1)
         p.local(adjCubes(i,4),adjCubes(i,5),adjCubes(i,6)).bboxBig, ... 
         p.correspondence.overlap, p.correspondence.saveFolder};
 end
+
 functionH = @calculateLocalCorrespondences;
 job = startCPU(functionH, inputCell, 'correspondence', 12, 100);
 

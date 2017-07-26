@@ -39,11 +39,11 @@ for file_idx = 1 : length(skelpath)
     y.connM{file_idx} = connM;
     y.ids{file_idx} = ids;
     % Write output results
-    %lonelyids = setdiff(ids(ids~=0), cell2mat(agglos(foundAgglomerates)));
-    %lonelyids(segmentMeta.axonProb(lonelyids)<0.5) = [];
-    %connectEM.skeletonFromAgglo(graph.edges, segmentMeta, num2cell(lonelyids), [num2str(file_idx) 'single_'], doc_folder)
-    %connectEM.skeletonFromAgglo(graph.edges, segmentMeta, agglos(foundAgglomerates), [num2str(file_idx) '_'], doc_folder)
-    %skel.write([doc_folder, 'skel_' num2str(file_idx)  '.nml']);
+    lonelyids = setdiff(ids(ids~=0), cell2mat(agglos(foundAgglomerates)));
+    lonelyids(segmentMeta.axonProb(lonelyids)<0.5) = [];
+    connectEM.skeletonFromAgglo(graph.edges, segmentMeta, num2cell(lonelyids), [num2str(file_idx) 'single_'], doc_folder)
+    connectEM.skeletonFromAgglo(graph.edges, segmentMeta, agglos(foundAgglomerates), [num2str(file_idx) '_'], doc_folder)
+    skel.write([doc_folder, 'skel_' num2str(file_idx)  '.nml']);
 end
 
 end

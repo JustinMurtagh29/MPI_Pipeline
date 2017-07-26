@@ -31,7 +31,7 @@ function globalSegId(p, i, j, k)
     % Save to segGlobal.mat for Alessandro
     Util.save([p.local(i,j,k).saveFolder 'segGlobal.mat'], seg);
     % Write modified seg with globalIDs (not complete wrt IDs, e.g. localIDs in outer bounidng box of inner cube will not be present, any better idea?)
-    writeKnossosRoi(p.seg.root, p.seg.prefix , p.local(i,j,k).bboxSmall(:,1)', seg, 'uint32'); 
+    saveSegDataGlobal(p.seg, p.local(i,j,k).bboxSmall(:,1)', seg); 
     % Save mapping from local to global IDs
     Util.save([p.local(i,j,k).saveFolder 'localToGlobalSegId.mat'], localIds, globalIds);
 

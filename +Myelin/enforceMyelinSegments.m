@@ -33,7 +33,8 @@ function enforceMyelinSegments(p, newPrefix, bbox)
     class(border) = borderHeight;
     
     % write result
-    saveClassData( ...
-        Util.modifyStruct(p.class, 'prefix', newPrefix), bbox, class);
+    saveParam = Util.modifyStruct(p.class, 'prefix', newPrefix);
+    saveOffset = reshape(bbox(:, 1), 1, []);
+    saveClassData(saveParam, saveOffset, class);
 end
 

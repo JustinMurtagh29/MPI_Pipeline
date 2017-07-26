@@ -1,4 +1,4 @@
-function vessels = AKdetectVesselsPre(raw, visualize, tunnelCoord)
+function vessels = AKdetectVesselsPre(raw, visualize)
 sizeRaw = size(raw);
 vessels = false(size(raw));
 
@@ -9,22 +9,23 @@ if visualize
 end
 
 tic;
-           D=2;
+         
+           threshold=160;
 for z=1:sizeRaw(3)
     
-    if z<150
-        threshold=190;
-    else
-        if z<575
-        threshold=170;
-        else
-            if  z<630
-        threshold=160;
-            else
-        threshold=170;
-            end
-        end
-    end
+%     if z<150
+%         threshold=190;
+%     else
+%         if z<575
+%         threshold=170;
+%         else
+%             if  z<630
+%         threshold=160;
+%             else
+%         threshold=170;
+%             end
+%         end
+%     end
 
     display(['Processing slice: ' num2str(z)]);
     thisImage = raw(:,:,z);
@@ -36,14 +37,14 @@ for z=1:sizeRaw(3)
     thisImage(~mask & thisImage < threshold) = threshold;
     % These are only 129detection parameter that may need tuning on new dataset or
     % different magnification level (in addition to parameter in line above)
-    regions = detectMSERFeatures(thisImage, 'ThresholdDelta', D, 'MaxAreaVariation', 0.5, 'RegionAreaRange', [1000 100000]);
+    regions = detectMSERFeatures(thisImage, 'ThresholdDelta', 1.5, 'MaxAreaVariation', 0.65, 'RegionAreaRange', [1000 300000]);
     % Set regions to true that were detected by MSER
     for i=1:regions.Count
         idx = sub2ind(size(thisImage), regions.PixelList{i}(:,2), regions.PixelList{i}(:,1));
         theseVessels(idx) = 1;
     end
     % Fill holes in detection
-    theseVessels = fillVesselHoles(theseVessels, mask, tunnelCoord);
+    theseVessels = fillVesselHoles(theseVessels, mask);
     % Save for output
     vessels(:,:,z) = theseVessels;
     if visualize
@@ -58,15 +59,15 @@ toc;
 
 end
 
-function vessel = fillVesselHoles(vessel, mask, tunnelCoord)
+function vessel = fillVesselHoles(vessel, mask)
 % Dataset specific changes needed here, this function takes mask and
 % drill holes into 'outer hull' to be able to use imfill, change drill
 % location according to dataset :)
 vesselMasked = or(vessel,mask);
-if all(vesselMasked(1 : 400, tunnelCoord))
+if all(vesselMasked(1 : 400, 560))
     warning('Tunnel doesn''t cut through');
 end
-vesselMasked(end-1400 : end, tunnelCoord) = 0;
-vesselMasked(1 : 80, tunnelCoord) = 0;
+vesselMasked(end-1400 : end, 560) = 0;
+vesselMasked(1 : 80, 560) = 0;
 vessel = imfill(vesselMasked, 'holes') & ~mask;
 end

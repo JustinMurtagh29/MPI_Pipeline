@@ -1,7 +1,8 @@
-function segmentForPipeline( root, prefix, bbox, segFunction, saveFile )
+function segmentForPipeline(affParam, bbox, segFunction, saveFile)
 
 % Load classification
-aff = loadClassData(struct('root', root, 'prefix', prefix), bbox);
+aff = loadClassData(affParam, bbox);
+mask = aff ~= -2;  % get mask for nonpadded areas
 aff = imcomplement(aff);
 
 % Perform segmentation
@@ -15,6 +16,7 @@ affImposed = imimposemin(aff, segMask);
 clear segMask;
 seg = uint16(watershed(affImposed, 26));
 clear affImposed;
+seg(~mask) = 0;  %delete segments in the padded area
 
 % If folder does not exist, create it
 saveFolder = fileparts(saveFile);

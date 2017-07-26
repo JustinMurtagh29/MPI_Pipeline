@@ -47,6 +47,7 @@ function [p, job] = predictDataset( p, fm, classifier, outputFile, ...
 
 if ~exist('outputFile','var') || isempty(outputFile)
     outputFile = 'synapseScores';
+    warning('Output filename not given! synapseScores.mat will be the filename of the synapse scores.')
 end
 if ~exist('cubeIdx','var') || isempty(cubeIdx)
     cubeIdx = 1:numel(p.local);
@@ -107,32 +108,33 @@ classifier = m.classifier;
 
 %actual prediction
 [scores, X, interfaces] = SynEM.Seg.predictCube(p, i, fm, classifier);
-scores = scores(:,1); %for default matlab classifiers
-if strcmp(fm.mode, 'direction')
-    %both direction of one interface in a row
-    scores = reshape(scores, [], 2);
-end
-
-%save results
-outputFile = [p.local(i).saveFolder outputFile];
-fprintf('[%s] SynEM.Seg.predictCube - Saving scores to %s.\n', ...
-    datestr(now), outputFile);
-Util.save(outputFile, scores);
-
-if saveFeatures
+if ~isempty(scores)
+    scores = scores(:,1); %for default matlab classifiers
     if strcmp(fm.mode, 'direction')
-        X = X(1:end/2,:); %only save first direction
+        %both direction of one interface in a row
+        scores = reshape(scores, [], 2);
     end
-    outputFile = [p.local(i).saveFolder 'InterfaceFeatures.mat'];
-    fprintf('[%s] SynEM.Seg.predictCube - Saving features to %s.\n', ...
+    
+    %save results
+    outputFile = [p.local(i).saveFolder outputFile];
+    fprintf('[%s] SynEM.Seg.predictCube - Saving scores to %s.\n', ...
         datestr(now), outputFile);
-    Util.save(outputFile, X);
+    Util.save(outputFile, scores);
+    
+    if saveFeatures
+        if strcmp(fm.mode, 'direction')
+            X = X(1:end/2,:); %only save first direction
+        end
+        outputFile = [p.local(i).saveFolder 'InterfaceFeatures.mat'];
+        fprintf('[%s] SynEM.Seg.predictCube - Saving features to %s.\n', ...
+            datestr(now), outputFile);
+        Util.save(outputFile, X);
+    end
+    if saveInterfaces
+        outputFile = [p.local(i).saveFolder 'Interfaces.mat'];
+        fprintf('[%s] SynEM.Seg.predictCube - Saving interfaces to %s.\n', ...
+            datestr(now), outputFile);
+        Util.save(outputFile, interfaces);
+    end
 end
-if saveInterfaces
-    outputFile = [p.local(i).saveFolder 'Interfaces.mat'];
-    fprintf('[%s] SynEM.Seg.predictCube - Saving interfaces to %s.\n', ...
-        datestr(now), outputFile);
-    Util.save(outputFile, interfaces);
-end
-
 end

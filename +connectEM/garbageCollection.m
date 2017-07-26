@@ -1,4 +1,4 @@
-function [axonsNew, dendritesNew] = garbageCollection(graph, segmentMeta, axons, dendrites, heuristics)
+function [axonsNew, dendritesNew, garbageEdges] = garbageCollection(graph, segmentMeta, axons, dendrites, heuristics)
 
     % Give axons and dendrites same treatment here
     nrAxonComponents = numel(axons);
@@ -8,7 +8,7 @@ function [axonsNew, dendritesNew] = garbageCollection(graph, segmentMeta, axons,
     idx = graph.prob > 0.99 & ~any(ismember(graph.edges, cat(1, heuristics{:})), 2);
     edges = graph.edges(idx,:);
     prob = graph.prob(idx);
-    % Keep only the ones with exactly one collectedSegment and have collected segment in first row 
+    % Keep only the ones with exactly one collectedSegment and have collected segment in first row
     collectedSegments = cat(1, theseComponents{:});
     edgeIdx = ismember(edges, collectedSegments);
     edgeIdx(all(edgeIdx, 2),:) = false;
@@ -27,10 +27,12 @@ function [axonsNew, dendritesNew] = garbageCollection(graph, segmentMeta, axons,
 
     initialSize = size(edges,1);
     alreadyCollected = [];
+    garbageEdges = zeros(0,2);
     for i=1:initialSize
         if ~ismember(edges(i,2), alreadyCollected)
             theseComponents{targetLabel(edges(i,1))}(end+1) = edges(i,2);
             alreadyCollected(end+1) = edges(i,2);
+            garbageEdges(end+1,:) = edges(i,:);
         end
     end
 

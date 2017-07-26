@@ -9,13 +9,14 @@ function [uniqueSegments, neighboursStartNode, nodesExcludedIdx, startNodeIdx] =
         options.bboxSize = 2000;
     end
     % Restrict to bbox (exclude node set in blacked out region in wK)
-    extend = round(options.bboxSize ./ [11.24 11.24 28]);
-    minPos = startNode - extend;
-    maxPos = startNode + extend;
+    %extend = round(options.bboxSize ./ [11.24 11.24 28]);
+    %minPos = startNode - extend;
+    %maxPos = startNode + extend;
     % Some statistics on all ids of segment ID at node position and all neighboring voxel
-    idx1 = all(bsxfun(@ge, nodes, minPos) & bsxfun(@le, nodes, maxPos),2);
+    %idx1 = all(bsxfun(@ge, nodes, minPos) & bsxfun(@le, nodes, maxPos),2);
     idx2 = all(bsxfun(@eq, nodes, startNode),2);
-    allIds = cat(2,segIds(idx1|~idx2),neighbours(idx1|~idx2,:));
+    idx1 = true(size(idx2));
+    allIds = cat(2,segIds(idx1&~idx2),neighbours(idx1&~idx2,:));
     startIds = cat(2, segIds(idx2), neighbours(idx2,:));
     % Check whether some general assumptions hold true
     assert(length(segIds) == size(neighbours,1));

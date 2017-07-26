@@ -1,5 +1,5 @@
 function [segIds, neighbours, filenames, nodes, startNode, comments] = lookupNmlMulti(p, folders, removeNmlWithMoreThanOneTree)
-
+% loads all nmls within the locations descriped in "folders"
     if nargin < 3
         removeNmlWithMoreThanOneTree = true;
     end

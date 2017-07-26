@@ -1,9 +1,8 @@
-function generateSkeletonFromNodes(filename, nodes, treeNames, comments, linearNodes)
+function generateSkeletonFromNodes(filename, nodes, treeNames, comments, linearNodes, edges)
 
     if nargin < 5
         linearNodes = false;
     end
-
 
     c = 1; % counter for trees in skeleton
     nodeId = 1; % counter for nodes in current skeleton
@@ -27,17 +26,19 @@ function generateSkeletonFromNodes(filename, nodes, treeNames, comments, linearN
             skel{c}.nodes(nodeId-nodeOffsetThisSkel,:) = [nodes{tr}(no,:) 10];
             nodeId = nodeId + 1;
         end
-        if linearNodes
+        if exist('edges', 'var')
+            skel{c}.edges = edges{tr};
+        elseif linearNodes
             skel{c}.edges = cat(1, 1:size(skel{c}.nodes, 1)-1, 2:size(skel{c}.nodes))';
         else
-            skel{c}.edges = minimalSpanningTree(nodes{tr}); 
+            skel{c}.edges = minimalSpanningTree(nodes{tr});
         end
         c = c + 1;
         nodeOffsetThisSkel = nodeId - 1;
     end
-    
+
     writeNml(filename, skel, 1);
-    
+
 end
 
 function skel = initializeSkeleton()
@@ -68,7 +69,7 @@ function nodeAsStruct = generateNodeAsStruct(id,pos,radius,comment)
     else
         nodeAsStruct{1}.comment = '';
     end
-    % Initalize user behaviour logging to default values 
+    % Initalize user behaviour logging to default values
     nodeAsStruct{1}.inVp = num2str(0);
     nodeAsStruct{1}.inMag = num2str(0);
     nodeAsStruct{1}.time = num2str(0);
