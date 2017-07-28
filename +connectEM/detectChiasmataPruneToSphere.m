@@ -7,7 +7,7 @@ thisDistance = pdist2(nodes(i,:), nodes);
 
 thisNodeIdx = thisDistance < p.sphereRadiusOuter & thisDistance > p.sphereRadiusInner;
 % rescue inner points that are not connected to center node within inner sphere
-innerNodes = thisDistance > p.sphereRadiusInner;
+innerNodes = thisDistance < p.sphereRadiusInner;
 innerEdges = any(ismember(edges, find(innerNodes)),2);
 innerConnected = Graph.findConnectedComponents(edges(innerEdges,:));
 idx = find(cellfun(@(x)ismember(i,x),innerConnected));

@@ -38,4 +38,27 @@ job = Cluster.startJob( functionH, inputArguments, ...
 
 Cluster.waitForJob(job);
 metrics = fetchOutputs(job);
+percolationIdx = cellfun(@(x)x.percolation, metrics);
+metrics = metrics(~percolationIdx);
+inputArgumentsAxons = inputArgumentsAxons(~percolationIdx,:);
 
+nrRuns = cellfun(@(x)x.nrRuns, metrics);
+largestPercolator = cellfun(@(x)x.y.axonPercolators(1), metrics);
+recallLargeAgglos = cellfun(@(x)mean(cellfun(@(y)y(1)/y(2), x.yLarge.axon1.recall_col)), metrics);
+pathLengthLargeAgglos = cellfun(@(x)x.pathLengthLargeAgglos, metrics);
+
+figure;
+subplot(4,1,1)
+plot(nrRuns);
+title('Runs finished');
+subplot(4,1,2)
+plot(largestPercolator);
+title('Largest percolator');
+set(gca, 'YScale', 'log');
+subplot(4,1,3)
+plot(recallLargeAgglos);
+title('Node recall fraction for agglomerates > 5 micron');
+subplot(4,1,4)
+plot(pathLengthLargeAgglos);
+title('Path length for agglomerates > 5 micron');
+set(gca, 'YScale', 'log');

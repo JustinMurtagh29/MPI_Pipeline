@@ -37,13 +37,16 @@ classdef AverageFilter < SynEM.Feature.TextureFeature
                         sc = ones(3,1);
                     end
                     fSize = ceil(r./sc);
-                    obj.border = 2*fSize + 1;
+                    obj.border = 2*fSize;
                 otherwise
                     error('Unknown type %s.', type);
             end
             obj.numChannels = 1;
             if iscolumn(obj.border)
                 obj.border = obj.border';
+            end
+            if any(round(obj.border./2) ~= obj.border./2)
+                warning('AverageFilter: Boundary is not symmetric.');
             end
         end
         

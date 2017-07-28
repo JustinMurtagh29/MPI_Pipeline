@@ -1,23 +1,40 @@
 classdef EVsHessian < SynEM.Feature.TextureFeature
     %EVSHESSIAN Eigenvalues for hessian sorted by increasing absolute
     % absolute value.
+    % n_mean: The mean used for raw data normalization.
+    % n_std: The standard deviation used for raw data normlaization.
+    %
+    % NOTE n_mean and n_std are used to ensure a consistent normalization
+    %      w.r.t. to uint8 raw data.
+    %
     % Author: Benedikt Staffler <benedikt.staffler@brain.mpg.de>
 
     properties
         sigma
         filterSiz
+        n_mean = 0
+        n_std = 1
     end
 
     methods
-        function obj = EVsHessian(sigma, filterSiz)
+        function obj = EVsHessian(sigma, filterSiz, n_mean, n_std)
             obj.name = 'EVsHessian';
             obj.sigma = sigma;
             obj.numChannels = 3;
             obj.filterSiz = filterSiz;
             obj.border = 2.*filterSiz;
+            if exist('n_mean', 'var') && ~isempty(n_mean)
+                obj.n_mean = n_mean;
+            end
+            if exist('n_std', 'var') && ~isempty(n_std)
+                obj.n_std = n_std;
+            end
         end
 
         function fm = calc(obj, raw)
+            
+            %normalize
+            raw = raw + obj.n_mean/obj.n_std;
             
             %calculate hessian
             sigma = obj.sigma; %#ok<*PROPLC>

@@ -43,8 +43,8 @@ fprintf('Subsegment calculation:  0%%');
 for i = 1:length(interfaceSurfaceList)
 
     %get contact wall subscript indices
-    [x,y,z] = ind2sub(segSize,interfaceSurfaceList{i});
-    wallSubIndices = [x,y,z];
+    [x, y, z] = ind2sub(segSize,interfaceSurfaceList{i}(:));
+    wallSubIndices = [x, y, z];
 
     %discard voxels too far away from interface surface
     roughframe = [max(min(wallSubIndices,[],1) - maxDist,[1 1 1]); ...

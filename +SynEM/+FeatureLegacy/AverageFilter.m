@@ -13,11 +13,22 @@ classdef AverageFilter < SynEM.Feature.TextureFeature
     %          - voxelSize: (Optional) [Nx1] array of float specifying the
     %               voxel size in each dimension.
     %               (Default: 1)
+    %
+    % n_mean: double
+    %       The mean used for raw data normalization.
+    % n_std: double
+    %       The standard deviation used for raw data normlaization.
+    %
+    % NOTE n_mean and n_std are used to ensure a consistent normalization
+    %      w.r.t. to uint8 raw data.
+    %
     % Author: Benedikt Staffler <benedikt.staffler@brain.mpg.de>
     
     properties
         type
         parameters
+        n_mean = 0
+        n_std = 1
     end
     
     methods
@@ -37,7 +48,7 @@ classdef AverageFilter < SynEM.Feature.TextureFeature
                         sc = ones(3,1);
                     end
                     fSize = ceil(r./sc);
-                    obj.border = 2*fSize + 1;
+                    obj.border = 2*fSize;
                 otherwise
                     error('Unknown type %s.', type);
             end
@@ -45,15 +56,23 @@ classdef AverageFilter < SynEM.Feature.TextureFeature
             if iscolumn(obj.border)
                 obj.border = obj.border';
             end
+            if any(round(obj.border./2) ~= obj.border./2)
+                warning('AverageFilter: Boundary is not symmetric.');
+            end
         end
         
         function feat = calc(obj, raw)
-            feat = obj.calculate(raw, obj.type, obj.parameters{:});
+            feat = obj.calculate(raw, obj.type, obj.n_mean, obj.n_std, ...
+                obj.parameters{:});
         end
     end
     
     methods (Static)
-        function feat = calculate(raw, type, varargin)
+        function feat = calculate(raw, type, n_mean, n_std, varargin)
+            
+            %normalize
+            raw = raw + n_mean/n_std;
+            
             switch type
                 case 'cube'
                     nD = ndims(raw);

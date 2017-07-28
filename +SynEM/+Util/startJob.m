@@ -8,6 +8,7 @@ function job = startJob( cluster, fh, inputCell, fhArgsOut, jobName )
 %       fhArgsOut: (Optional) Number of output arguments from fh.
 %                  (Default: 0)
 %       jobName: (Optional) Name for the job.
+%           Can contain '%d' which is replaced by the job id.
 %                (Default: Name set by MATLAB).
 % OUTPUT job: A job object.
 %
@@ -16,7 +17,7 @@ function job = startJob( cluster, fh, inputCell, fhArgsOut, jobName )
 %create job object
 job = SynEM.Util.createJobPwd(cluster);
 if exist('jobName','var') && ~isempty(jobName)
-    job.Name = jobName;
+    job.Name = sprintf(jobName, job.Id);
 end
 
 if ~exist('fhArgsOut','var') || isempty(fhArgsOut)

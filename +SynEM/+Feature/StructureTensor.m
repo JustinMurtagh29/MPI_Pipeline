@@ -28,7 +28,7 @@ classdef StructureTensor < SynEM.Feature.TextureFeature
     end
     
     methods
-        function obj = SructureTensor(sigmaD, sigmaW, truncateD, ...
+        function obj = StructureTensor(sigmaD, sigmaW, truncateD, ...
                 truncateW, convMode)
             obj.name = 'StructureTensor';
             obj.sigmaD = sigmaD;
@@ -42,9 +42,9 @@ classdef StructureTensor < SynEM.Feature.TextureFeature
             if exist('convMode','var') && ~isempty(convMode)
                 obj.convMode = convMode;
             end
-            obj.numChannels = length(sigma)*(length(sigma) - 1)/2;
-            obj.border = 2.*(ceil(sigmaW*truncateW) + ...
-                ceil(sigmaD*truncateD));
+            obj.numChannels = length(sigmaD)*(length(sigmaD) - 1)/2;
+            obj.border = 2.*(ceil(sigmaW*obj.truncateW) + ...
+                ceil(sigmaD*obj.truncateD));
         end
         
         function S = calc(obj, raw)
