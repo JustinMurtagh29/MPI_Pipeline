@@ -42,7 +42,7 @@ function outFiles = searchSegmentationThreshold(p, bbox, tRange, doClass)
         p.seg.threshold = curT;
         p.seg.func = @(x) watershedSeg_v1_cortex(x, {curT, 10});
         
-        fprintf('Making movie %d of %d\n', curIdx, tCount));
+        fprintf('Making movie %d of %d\n', curIdx, tCount);
         outFiles{curIdx} = makeSegmentationPreviewMovie(p, bbox, doClass);
 
         % prevent classification in subsequent runs
