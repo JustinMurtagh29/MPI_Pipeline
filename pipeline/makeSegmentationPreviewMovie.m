@@ -91,6 +91,7 @@ function outputFile = movieStep(p, tempSegFile, bbox)
     load(tempSegFile, 'seg');
 
     % Make movie
-    outputFile = [p.tempFolder datestr(clock, 30) '.avi'];
-    makeSegMovie(seg, raw, outputFile);
+    outputFile = [p.tempFolder datestr(clock, 30) '.avi']; % seg imposed on raw
+    outputFile2 = [p.tempFolder datestr(clock,30) '_RawAndSeg.avi']; % raw and seg side-by-side
+    makeSegMovie(seg, raw, outputFile,outputFile2);
 end

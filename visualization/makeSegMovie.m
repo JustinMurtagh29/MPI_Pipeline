@@ -1,7 +1,7 @@
-function makeSegMovie( segmentation, raw, outputFileAdress, nrElementsInSegmentation)
+function makeSegMovie( segmentation, raw, outputFileAdress,outputFileAdress2,nrElementsInSegmentation)
 % Make movie of a segmented part of the dataset
 
-if nargin < 4
+if nargin < 5
     % -1 to not count zero as an element
     nrElementsInSegmentation = length(unique(segmentation(:))) - 1;
 end
@@ -20,12 +20,19 @@ colors = repmat(colors, ceil(nrElementsInSegmentation/nrColors), 1);
 writerObj = VideoWriter(outputFileAdress);
 writerObj.FrameRate = 10;
 open(writerObj);
+writerObj2 = VideoWriter(outputFileAdress2);
+writerObj2.FrameRate = 10;
+open(writerObj2);
+
 for f=1:size(raw,3)
-    thisRaw = repmat(raw(:,:,f),1,1,3);
-    thisSeg = label2rgb(segmentation(:,:,f), colors, [0 0 0]);
-    frame = imfuse(thisRaw, thisSeg, 'blend');
+    thisRaw = repmat(raw(:,:,f),1,1,3); % single
+    thisSeg = label2rgb(segmentation(:,:,f), colors, [0 0 0]); % uint8
+    frame = imfuse(thisRaw, thisSeg, 'blend'); % uint8
+    frame2 = horzcat(im2uint8(thisRaw),frame); % uint8
     writeVideo(writerObj,frame);
+    writeVideo(writerObj2,frame2);
 end
 close(writerObj);
+close(writerObj2);
 
 end
