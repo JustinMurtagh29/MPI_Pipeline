@@ -1,10 +1,12 @@
-function plotFeatureImportance( obj, imp, plotNo )
+function plotDat = plotFeatureImportance( obj, imp, plotNo )
 %PLOTFEATUREIMPORTANCE Plot feature importance.
 % INPUT imp: [Nx1] double where N = obj.numFeatures and contains a positive
 %           number measuring the importance of each feature (e.g. from the
 %           return from predictorImportance).
 %       plotNo: (Optional) [Nx1] int array which plots to produce (see
 %           code below).
+% OUTPUT plotDat: struct
+%           Structure containing the data that was plotted.
 % Author: Benedikt Staffler <benedikt.staffler@brain.mpg.de>
 
 if ~exist('plotNo','var') || isempty(plotNo)
@@ -79,6 +81,8 @@ if makePlot(2)
     h.YTick = 1:length(totalImp);
     h.YTickLabel = groupNames(sortInd);
     title('Feature class importance')
+    plotDat.imp = totalImp(sortInd);
+    plotDat.label = groupNames(sortInd);
 end
 
 %subvolume importance

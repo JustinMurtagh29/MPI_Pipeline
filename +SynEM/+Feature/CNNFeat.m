@@ -6,23 +6,29 @@ classdef CNNFeat < SynEM.Feature.TextureFeature
     %  options: struct
     %       see Codat.CNN.Misc.predictCube
     % Author: Benedikt Staffler <benedikt.staffler@brain.mpg.de>
-    
+
     properties
         cnn
         options = struct();
         fRawNorm = [];
+        doPad = true;
     end
-    
+
     methods
         function obj = CNNFeat(cnn, options, fRawNorm)
             obj.name = 'CNN';
             obj.cnn = cnn;
-            obj.numChannels = cnn.featureMaps(end);
             obj.border = cnn.border;
-            
+
             if exist('options', 'var') && ~isempty(options)
                 obj.options = options;
             end
+            
+            if ~isfield(obj.options, 'fmL')
+                %use output layer as default
+                obj.options.fmL = cnn.layer;
+            end
+            obj.numChannels = sum(cnn.featureMaps(obj.options.fmL));
             
             if exist('fRawNorm', 'var') && ~isempty(fRawNorm)
                 if ~ischar(fRawNorm)
@@ -31,18 +37,20 @@ classdef CNNFeat < SynEM.Feature.TextureFeature
                 obj.fRawNorm = fRawNorm;
             end
         end
-        
+
         function fm = calc(obj, raw)
             if ~isempty(obj.fRawNorm)
                 f = str2func(obj.fRawNorm);
                 raw = f(raw);
             end
+            if obj.doPad %mainly fix for training data
+                raw = padarray(raw, obj.border./2, 'symmetric', 'both');
+            end
             fm = Codat.CNN.Misc.predictCube(obj.cnn, raw, obj.options);
             if obj.numChannels > 1
-                fm = squeeze(num2cell(fm, 4));
+                fm = squeeze(num2cell(fm, 1:3));
             end
         end
     end
-    
-end
 
+end

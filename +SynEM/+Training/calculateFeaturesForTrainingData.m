@@ -1,5 +1,5 @@
 function job = calculateFeaturesForTrainingData( dataFolder, ...
-    saveFolder, featureMap, ignoreBorder, cluster )
+    saveFolder, featureMap, ignoreBorder, cluster, discardUndecided )
 %CALCULATEFEATURESFORTRAININGDATA Calculate the specified feature map for
 %all training cube in dataFolder.
 % INPUT dataFolder: string
@@ -14,12 +14,19 @@ function job = calculateFeaturesForTrainingData( dataFolder, ...
 %       cluster: (Optional) parallel.cluster object
 %           Cluster object used for calculation.
 %           (Default: getCluster('cpu') if this function exists)
+%       discardUndecided: (Optional) logical
+%           Flag indicating that interfaces annotated with undecided are to
+%           be discarded.
+%           (Default: false)
 % OUTPUT job: job object
 %           Job object for feature calculation on workers.
 % Author: Benedikt Staffler <benedikt.staffler@brain.mpg.de>
 
 if ~exist('ignoreBorder','var') || isempty(ignoreBorder)
     ignoreBorder = false;
+end
+if ~exist('discardUndecided','var') || isempty(discardUndecided)
+    discardUndecided = false;
 end
 subvols = find(ismember([40, 80, 160], featureMap.subvolsSize));
 
@@ -28,7 +35,7 @@ inputCell = cell(length(s.mat),1);
 for i = 1:length(s.mat)
     inputCell{i} = {[SynEM.Util.addFilesep(dataFolder), s.mat{i}], ...
         SynEM.Util.addFilesep(saveFolder), featureMap, ignoreBorder, ...
-        subvols};
+        subvols, discardUndecided};
 end
 
 
@@ -41,28 +48,48 @@ catch
     warning(['No cluster object found. ' ...
         ' Calculation is done sequentially.']);
     cellfun(@(x)jobWrapper(x{:}), inputCell);
+    job = [];
 end
 
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function jobWrapper(file, saveFolder, featureMap, useZeroBorder, subvols)
+function jobWrapper(file, saveFolder, featureMap, useZeroBorder, ...
+    subvols, discardUndecided)
 
-fprintf('[%s] Processing file %s.\n', datestr(now), file);
+Util.log('Processing file %s', file);
+
+% featureMap.featTexture{2}.options.gpuDev = true;
 
 %load data
 m = load(file);
 data = m.data;
 raw = single(data.raw);
 interfaceLabels = m.interfaceLabels;
-% undecidedList = m.undecidedList;
-% 
-% %sort out undecided
-% data.interfaceSurfaceList(undecidedList) = [];
-% data.subsegmentsList = cellfun(@(x)x(~undecidedList,:), ...
-%     data.subsegmentsList, 'UniformOutput', false);
-% interfaceLabels(undecidedList) = [];
+undecidedList = m.undecidedList;
+
+% discard undecided interfaces
+if discardUndecided
+    Util.log('Discarding undecided interfaces.');
+    data.interfaceSurfaceList(undecidedList) = [];
+    data.subsegmentsList = cellfun(@(x)x(~undecidedList,:), ...
+        data.subsegmentsList, 'UniformOutput', false);
+    interfaceLabels(undecidedList) = [];
+end
+
+% discard interfaces at border
+if isfield(m ,'borderInt')
+    Util.log('Discarding interfaces at border.');
+    isAtBorder = m.borderInt.isAtBorder;
+    if discardUndecided
+        isAtBorder(undecidedList) = [];
+    end
+    data.interfaceSurfaceList(isAtBorder) = [];
+    data.subsegmentsList = cellfun(@(x)x(~isAtBorder,:), ...
+        data.subsegmentsList, 'UniformOutput', false);
+    interfaceLabels(isAtBorder) = [];
+end
 
 %apply area threshold and select subvols (required for labels)
 areaT = cellfun(@length, data.interfaceSurfaceList) > featureMap.areaT;
@@ -81,8 +108,7 @@ if ~exist(saveFolder,'dir')
     mkdir(saveFolder)
 end
 [~,name] = fileparts(file);
-fprintf('[%s] Saving result to %s.\n', datestr(now), ...
-    [saveFolder, 'Features_', name, '.mat']);
+Util.log('Saving result to %s.', [saveFolder, 'Features_', name, '.mat']);
 m = matfile([saveFolder, 'Features_', name, '.mat'],'Writable',true);
 m.X = X;
 m.classLabels = y;

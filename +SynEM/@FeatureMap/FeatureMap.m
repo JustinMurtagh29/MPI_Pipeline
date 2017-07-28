@@ -30,9 +30,9 @@ classdef FeatureMap < handle
     % subvolsSize: [Nx1] int
     %       The size of the different subvolumes in nm. This is not used
     %       directly by the feature map but solely used for documentation.
-    % quantiles: [Nx1] float 
+    % quantiles: [Nx1] float
     %       Quantiles for pooling. The N quantiles correspond to the first
-    %       N pooling statistics. The last reamining pooling statistics 
+    %       N pooling statistics. The last reamining pooling statistics
     %       are specified in moments (see below).
     % moments: [4x1] bool
     %       Tthe (centralized) moments to calculate. The flags correspond
@@ -69,6 +69,9 @@ classdef FeatureMap < handle
     %       This function handle is called on the raw data before feature
     %       calculation. (see FeatureMap.calculate)
     %       (Default: @(x)single(x)).
+    % useMatlabMoments: logical
+    %       Flag to use the default matlab moment calculation.
+    %       (Default: false)
     % verbose: logical
     %       Verbose mode for feature calculation.
     %
@@ -78,7 +81,7 @@ classdef FeatureMap < handle
     %   To calculate the feature map use the calculate function.
     %
     % Author: Benedikt Staffler <benedikt.staffler@brain.mpg.de>
-    
+
     properties
         numFeatures = 0;
         numFeaturesSelected = 0;
@@ -97,9 +100,12 @@ classdef FeatureMap < handle
         mode = 'direction'
         voxelSize = [1, 1, 1];
         fRawNorm = '@(x)single(x)';
+        useMatlabMoments = false;
+        useMatlabQuantiles = true;
         verbose = true;
+        poolingPrecision = 'single';
     end
-    
+
     methods
         function obj = FeatureMap(subvolsSize, areaT, quantiles, ...
                 moments, mode, voxelSize, fRawNorm)
@@ -133,21 +139,21 @@ classdef FeatureMap < handle
                 end
             end
         end
-        
+
         function coords = ind2sub(obj, siz, IND)
             %Auxiliary function doing basically doing ind2sub and scaling
             %by voxel size.
-            [x,y,z] = ind2sub(siz,IND);
-            coords = [x,y,z];
-            coords = bsxfun(@times,coords,obj.voxelSize);
+            [x,y,z] = ind2sub(siz, IND(:));
+            coords = [x, y, z];
+            coords = bsxfun(@times, coords, obj.voxelSize);
         end
-        
+
         function obj = saveobj(obj)
             %delete names for saving
             obj.names = {};
         end
     end
-    
+
     methods (Access = private)
         function y = calcSumStatsInternal(obj, x, selFeat)
             %Calculate the selected summary statistics
@@ -156,25 +162,38 @@ classdef FeatureMap < handle
             %   that should be calculated. N = length(obj.quantiles) + 4
             %   (4 moment based summary statistics).
             
-            y = zeros(1,sum(selFeat),'like',x);
+            switch obj.poolingPrecision
+                case 'single'
+                    x = single(x);
+                case 'double'
+                    x = double(x);
+            end
+            
+            y = zeros(1, sum(selFeat), 'like', x);
             nQ = length(obj.quantiles);
             sQ = sum(selFeat(1:nQ));
-            
+
             %calculate selected quantiles (currently linked to matlabs
             %quantiles function)
             if any(selFeat(1:nQ))
-                y(1:sQ) = quantile(x, obj.quantiles(selFeat(1:nQ)));
+                if obj.useMatlabQuantiles
+                    y(1:sQ) = quantile(x, obj.quantiles(selFeat(1:nQ)));
+                else
+                    x = sort(x, 'ascend');
+                    y(1:sQ) = SynEM.FeatureMap.quantile(...
+                        x, obj.quantiles(selFeat(1:nQ)));
+                end
             end
-            
+
             %calculate selected moments
             selMoments = obj.moments;
             selMoments(selMoments) = selFeat(nQ + 1:end);
             y(sQ + 1:end) = ...
                 SynEM.FeatureMap.moment(...
-                x, selMoments);
+                x, selMoments, obj.useMatlabMoments);
         end
     end
-    
+
     methods (Static)
         function y = quantile(x, p)
             %Fast quantile function without checks or interpolation.
@@ -186,42 +205,45 @@ classdef FeatureMap < handle
                 y = x(ind);
             end
         end
-        
-        function y = moment(x, ind)
+
+        function y = moment(x, ind, useMatlabMoments)
             %Function to calculate mean, variance, skewness and kurtosis
             %trying to reuse calculations.
             if ~any(ind)
                 y = [];
             else
-                
-%                 %old implementation
-%                 s(1) = mean(x);
-%                 s(2) = var(x);
-%                 s(3) = skewness(x);
-%                 s(4) = kurtosis(x);
-%                 y = s(ind);
-                
-                %fast implementation
+
+            if useMatlabMoments
+                %old/legacy implementation
+                s(1) = mean(x);
+                s(2) = var(x);
+                s(3) = skewness(x);
+                s(4) = kurtosis(x);
+                y = s(ind);
+            else %optimized implementation
                 s = zeros(1,4);
                 lx = length(x);
                 s(1) = sum(x)/lx; %mean
                 if any(ind(2:4)) && (lx > 1) %variance (0 for delta distr)
-                    x0 = bsxfun(@minus,x,s(1));
-                    x0sq = x0 .* x0;
+                    x0 = bsxfun(@minus, x, s(1));
+                    x0sq = x0.*x0;
                     s(2) = sum(x0sq);
+%                     s(2) = sum(x0.^2); % old - for reference
                     s2 = s(2) / lx;
                     s(2) = s(2)/(lx - 1);
                     if ind(3) && s2 > 0 %skewness (0 for delta distribution)
-                        m3 = sum(x0 .* x0sq)/lx;
+                        m3 = sum(x0.*x0sq)/lx;
+%                         m3 = sum(x0.^3)/lx; % old - for reference
                         s(3) = m3/s2^(1.5);
                     end
                     if ind(4) && s2 > 0 %kurtosis (0 for delta distribution)
-                        m4 = sum(x0sq .* x0sq)/lx;
+                        m4 = sum(x0sq.*x0sq)/lx;
+%                         m4 = sum(x0.^4)/lx; % old - for reference
                         s(4) = m4/s2^2;
                     end
                 end
-                
                 y = s(ind);
+            end
             end
         end
     end
