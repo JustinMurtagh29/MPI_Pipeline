@@ -9,9 +9,10 @@ function [ interfaces, intIdx, edges, borders ] = calculateInterfaces( ...
 %           segments.
 %           (Default: will be calculated from seg using
 %                     SynEm.Svg.findEdgesAndBorders)
-%       borders: (Optional) [Nx3] table
-%           Table with border information containing information about the
-%           corresponding row in edges.
+%       borders: (Optional) [Nx1] struct or [Nx1] cell
+%           Struct with border data about the corresponding row in edges or
+%           cell array of border pixel idx for the corresponding row in
+%           edges.
 %           (Default: will be calculated from seg using
 %                     SynEm.Svg.findEdgesAndBorders)
 %       areaT: int
@@ -47,22 +48,32 @@ if isempty(edges) || isempty(borders)
 end
 
 %get borders above area threshold
-area = [borders(:).Area];
-intIdx = area > areaT;
-
-interfaces.surface = {borders(intIdx).PixelIdxList}';
-neighborIDs =  edges(intIdx,:);
+if isstruct(borders)
+    area = [borders(:).Area];
+    intIdx = area > areaT;
+    interfaces.surface = {borders(intIdx).PixelIdxList}';
+else
+    area = cellfun(@length, borders);
+    intIdx = area > areaT;
+    interfaces.surface = borders(intIdx);
+end
 if any(intIdx)
     if isrow(interfaces.surface{1}) %always use column vectors
         interfaces.surface = cellfun(@(x)x',interfaces.surface, ...
             'UniformOutput',false);
     end
+    neighborIDs =  edges(intIdx,:);
     %calculate subsegments
-    interfaces.subseg = SynEM.Svg.calculateSubsegments( ...
-        interfaces.surface, neighborIDs, seg, voxelSize, rinclude );
+    if ~isempty(rinclude)
+        interfaces.subseg = SynEM.Svg.calculateSubsegments( ...
+            interfaces.surface, neighborIDs, seg, voxelSize, rinclude );
+    else
+        interfaces.subseg = [];
+    end
 else
     interfaces.subseg = cell(1,numel(rinclude));
 end
+
 interfaces.rinclude = rinclude;
 fprintf(['[%s] SynEM.Svg.calculateInterfaces - Finished interface ', ...
     'calculation.\n'], datestr(now));

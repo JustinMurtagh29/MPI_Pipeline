@@ -1,5 +1,5 @@
 function [ rp ] = segmentationToInterfacePR( predMap, borders, ...
-    groundTruth, thresholds )
+    groundTruth, thresholds, sizeT )
 %SEGMENTATIONTOINTERFACEPR Calculate the PR curve of voxel-based prediction
 %by determining synaptic interfaces using the voxel prediction map.
 % INPUT predMap: 3d float
@@ -11,6 +11,9 @@ function [ rp ] = segmentationToInterfacePR( predMap, borders, ...
 %       thresholds: (Optional) [Nx1] float
 %           Thresholds for which the rp points are calculated.
 %           (Default: min(predMap(:)):0.01:max(predMap(:)))
+%       sizeT: (Optional) double
+%           Minimal connected component size of predicted components.
+%           (Default: 50)
 % OUTPUT rp: [Nx2] float
 %           Recall-precision values.
 % Author: Benedikt Staffler <benedikt.staffler@brain.mpg.de>
@@ -18,14 +21,19 @@ function [ rp ] = segmentationToInterfacePR( predMap, borders, ...
 if ~exist('thresholds','var') || isempty(thresholds)
     thresholds = min(predMap(:)):0.01:max(predMap(:));
 end
+if ~exist('sizeT','var') || isempty(sizeT)
+    sizeT = 50;
+end
 
 rp = zeros(length(thresholds),1);
 warning('off','getSynapticBorders:w1');
+tic
 for i = 1:length(thresholds)
-    tmp = SynEM.Eval.postProcessing(predMap, thresholds(i), 50);
-    y = SynEM.Eval.getSynapticBorders(borders, tmp, 0.05);
+    tmp = SynEM.Eval.postProcessing(predMap, thresholds(i), sizeT);
+    % y = SynEM.Eval.getSynapticBorders(borders, tmp, 0.05);
+    y = SynEM.Eval.getSynapticBordersMaxOverlap(borders, tmp);
     [~,rp(i,2), rp(i,1)] = SynEM.Util.confusionMatrix(groundTruth, y);
+    Util.progressBar(i, length(thresholds));
 end
 
 end
-

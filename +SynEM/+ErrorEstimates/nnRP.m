@@ -2,11 +2,10 @@ function [ nnRP ] = nnRP( rp, c_r, n_syn, synT, empDist )
 %NNRP Calculate neuron-to-neuron RP from synapse RP.
 % INPUT rp: [Nx2] double
 %           Recall-precision value pairs for synapse detection.
-%       synT: int
-%           Threshold on the number of synapse per neuron pair to be
-%       	considered as connected.
 %       c_r: double
 %           Neuron-to-neuron connectivity ratio.
+%       n_syn: double
+%           Average number of synapses between two connected neurons.
 %       synT: (Optional) int
 %           Number of synapses that is required in order to accept a
 %           neuron-to-neuron connection as detected.

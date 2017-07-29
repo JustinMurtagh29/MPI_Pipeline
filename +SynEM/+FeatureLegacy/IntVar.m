@@ -6,6 +6,11 @@ classdef IntVar < SynEM.Feature.TextureFeature
     % sigma: (Optional) [Nx1] array of float specifying the standard
     %   deviation in each dimension for prior smoothing
     %   (Default: no prior smoothing)
+    % n_mean: The mean used for raw data normalization.
+    % n_std: The standard deviation used for raw data normlaization.
+    %
+    % NOTE n_mean and n_std are used to ensure a consistent normalization
+    %      w.r.t. to uint8 raw data.
     %
     % Author: Benedikt Staffler <benedikt.staffler@brain.mpg.de>
     

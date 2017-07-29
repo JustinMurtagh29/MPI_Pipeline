@@ -90,10 +90,10 @@ end
 %transform to 3d coordinates once for all voxel features
 if ~isempty(obj.featShape) %only do it if necessary
     if obj.numSubvolumes > 0
-        coordVols = cellfun(@(x)obj.ind2sub(cubeSize,x), ...
+        coordVols = cellfun(@(x)single(obj.ind2sub(cubeSize,x)), ...
             vols(:,[1 end-1 end]),'UniformOutput',false);
     else
-        coordVols = cellfun(@(x)obj.ind2sub(cubeSize,x), ...
+        coordVols = cellfun(@(x)single(obj.ind2sub(cubeSize,x)), ...
             vols(:,1),'UniformOutput',false);
     end
 end
@@ -121,5 +121,9 @@ end
 
 if any(isnan(X(:)))
     warning('Feature matrix contains NaNs.')
+end
+if obj.verbose
+    fprintf(['[%s] SynEM.FeatureMap.calculate - ' ...
+        'Finished feature calculation.\n'], datestr(now));
 end
 end

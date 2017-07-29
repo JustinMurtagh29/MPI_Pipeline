@@ -1,4 +1,5 @@
-function [scores, X, interfaces] = predictCube( p, cubeNo, fm, classifier )
+function [scores, X, interfaces] = predictCube( p, cubeNo, fm, ...
+    classifier, normalizeRaw )
 %PREDICTCUBE Prediction for one segmentation cube.
 % INPUT p: struct
 %           SegEM segmentation parameter struct.
@@ -9,6 +10,11 @@ function [scores, X, interfaces] = predictCube( p, cubeNo, fm, classifier )
 %       classifier: object or string
 %           Classifier object (e.g. SynEM.Classifier) or path to classifier
 %           object mat-file containing a 'classifier' variable.
+%       normalizeRaw: (Optional) logical
+%           Flag to indicate that the raw data is normalized to 122 mean
+%           and 22 standard deviation by using p.norm.func to normalize to
+%           mean 0 and 1 std first.
+%           (Default: no raw data normalization).
 % OUTPUT scores: [Nx1] double
 %           Prediction score for each interface in the local segmentation
 %           cube.
@@ -35,44 +41,56 @@ function [scores, X, interfaces] = predictCube( p, cubeNo, fm, classifier )
 %      same row).
 % Author: Benedikt Staffler <benedikt.staffler@brain.mpg.de>
 
+if ~exist('normalizeRaw','var') || isempty(normalizeRaw)
+    normalizeRaw = false;
+end
+
 pCube = p.local(cubeNo);
-fprintf(['[%s] SynEM.Seg.predictCube - Predicting segmentation ' ...
-    'cube %s.\n'], datestr(now), pCube.saveFolder);
+Util.log('Predicting segmentation cube %s.', pCube.saveFolder);
 
 %load segmentation
-seg = loadSegDataGlobal(p.seg, pCube.bboxSmall);
+seg = SynEM.Aux.readKnossosRoi(p.seg.root, p.seg.prefix, ...
+    pCube.bboxSmall, 'uint32', '', 'raw');
 
-%load svg
+% load svg
 m = load(pCube.edgeFile);
 edges = m.edges;
 m = load(pCube.borderFile);
 borders = m.borders;
 
-if size(edges,1) ~= 0 % skip if all zero segmentCube (mirrorPad)
-    %calculate interfaces
-    interfaces = SynEM.Svg.calculateInterfaces(seg, edges, borders, ...
-        fm.areaT, p.raw.voxelSize, fm.subvolsSize);
-    if ~isempty(interfaces.surface)
-        %load raw
-        bboxFM = bsxfun(@plus, pCube.bboxSmall,[-fm.border', fm.border']./2);
-        raw = loadRawData(p.raw, bboxFM);
-		
-        %calculate features
-        X = fm.calculate(interfaces, raw);
-        
-        %classify
-        if ischar(classifier)
-            m = load(classifier);
-            classifier = m.classifier;
-        end
-        [~,scores] = classifier.predict(X);
-    else
-        interfaces =  [];
-        scores = [];
-        X = [];
-    end
-else
-    interfaces =  [];
-    scores = [];
+% stop here if there are no borders above the area threshold
+if ~any([borders.Area] > fm.areaT)
+    scores = zeros(0, 1);
     X = [];
+    interfaces.surface = [];
+    interfaces.subseg = [];
+    return
+end
+
+% calculate interfaces
+interfaces = SynEM.Svg.calculateInterfaces(seg, edges, borders, ...
+    fm.areaT, p.raw.voxelSize, fm.subvolsSize);
+
+% load raw
+bboxFM = bsxfun(@plus, pCube.bboxSmall, [-fm.border', fm.border']./2);
+raw = SynEM.Aux.readKnossosRoi(p.raw.root, p.raw.prefix, bboxFM);
+
+% raw data normalization
+if normalizeRaw
+    Util.log('Normalizing raw data to ex145 statistics.');
+    raw = double(raw);
+    raw = p.norm.func(raw);
+    raw = single(raw.*22 + 122);
+end
+
+% calculate features
+X = fm.calculate(interfaces, raw);
+
+% classify
+if ischar(classifier);
+    m = load(classifier);
+    classifier = m.classifier;
+end
+[~,scores] = classifier.predict(X);
+
 end

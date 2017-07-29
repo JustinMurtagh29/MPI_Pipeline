@@ -32,7 +32,8 @@ fprintf(['[%s] SynEM.Seg.predictCube - Predicting segmentation ' ...
     'cube %s.\n'], datestr(now), pCube.saveFolder);
 
 %load segmentation
-seg = loadSegDataGlobal(p.seg, pCube.bboxSmall);
+seg = SynEM.Aux.readKnossosRoi(p.seg.root, p.seg.prefix, ...
+    pCube.bboxSmall, 'uint32', '', 'raw');
 
 %load svg
 m = load(pCube.edgeFile);
@@ -46,7 +47,7 @@ interfaces = SynEM.Svg.calculateInterfaces(seg, edges, borders, ...
 
 %load raw
 bboxFM = bsxfun(@plus, pCube.bboxSmall,[-fm.border', fm.border']./2);
-raw = loadRawData(p.raw, bboxFM);
+raw = SynEM.Aux.readKnossosRoi(p.raw.root, p.raw.prefix, bboxFM);
 
 %calculate features
 X = fm.calculate(interfaces, raw);
