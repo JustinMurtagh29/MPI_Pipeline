@@ -18,7 +18,7 @@ classdef EntropyFilter < SynEM.Feature.TextureFeature
     properties
         nhood
         sigma = [];
-        normalize = false;
+        normalize = true;
     end
     
     methods

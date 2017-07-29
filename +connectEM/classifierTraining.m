@@ -1,4 +1,5 @@
 %% Settings
+rng default;
 % Load parameter of pipeline run
 load /gaba/u/mberning/results/pipeline/20170217_ROI/allParameterWithSynapses.mat;
 
@@ -41,14 +42,13 @@ for i=1:length(gt)
         test(i).(fieldNames{j}) = gt(i).(fieldNames{j})(idxTest,:);
     end
 end
-
 train = Util.concatStructs(1, train(1), train(2), train(3));
 test = Util.concatStructs(1, test(1), test(2), test(3));
 
 %% Augment training & test set (by adding features for "inverted" edges)
 
-load([p.saveFolder 'SynapseClassifier.mat'], 'fm');
-fm.areaT = 10; 
+load([p.saveFolder 'SynapseClassifier.bkp'], 'fm', '-mat');
+fm.areaT = 10;
 train.classFeaturesInv =  fm.invertDirection(train.classFeatures);
 train.rawFeaturesInv =  fm.invertDirection(train.rawFeatures);
 test.classFeaturesInv =  fm.invertDirection(test.classFeatures);
@@ -60,8 +60,9 @@ classifierNewFeatures = connectEM.trainClassifier( ...
     cat(1, train.labels, train.labels));
 
 %% Determine whether compacted classifier works here
+dateString = datestr(clock,30);
 classifier = compact(classifierNewFeatures);
-save(['/gaba/u/mberning/results/edgeClassifier/' datestr(clock,30) '.mat'], 'classifier');
+save(['/gaba/u/mberning/results/edgeClassifier/' dateString '.mat'], 'classifier');
 
 a = classifier.predict(cat(2, test.rawFeatures, ...
     test.classFeatures));
@@ -71,4 +72,5 @@ b = classifierNewFeatures.predict(cat(2, test.rawFeatures, ...
 all(a(:) == b(:))
 
 %% Save everything for later checks
-save(['/gaba/u/mberning/results/edgeClassifier/' datestr(clock,30) '_workspace.mat'], '-v7.3');
+save(['/gaba/u/mberning/results/edgeClassifier/' dateString '_workspace.mat'], '-v7.3');
+

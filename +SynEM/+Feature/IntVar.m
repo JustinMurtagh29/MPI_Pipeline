@@ -6,12 +6,16 @@ classdef IntVar < SynEM.Feature.TextureFeature
     % sigma: (Optional) [Nx1] array of float specifying the standard
     %   deviation in each dimension for prior smoothing
     %   (Default: no prior smoothing)
+    % n_mean: The mean used for raw data normalization.
+    % n_std: The standard deviation used for raw data normlaization.
     %
     % Author: Benedikt Staffler <benedikt.staffler@brain.mpg.de>
     
     properties
         nhood
         sigma = [];
+        n_mean = 0
+        n_std = 1
     end
     
     methods
@@ -39,9 +43,9 @@ classdef IntVar < SynEM.Feature.TextureFeature
                 raw = SynEM.Feature.GaussFilter.calculate(raw, sigma, ...
                     3, 0, 'same');
             end
-            h = ones(nhood)./prod(nhood);
-%             raw = raw./255; %legacy, could be removed at some point
-            feat = imfilter(raw.*raw,h) - imfilter(raw,h).^2;
+            h = ones(nhood, 'like', raw);
+            raw = (raw.*n_std + n_mean)./255;
+            feat = convn(raw.*raw, h, 'same') - convn(raw, h, 'same').^2;
         end
     end
     

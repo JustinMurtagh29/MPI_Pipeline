@@ -1,5 +1,6 @@
 function [p, job] = predictDataset( p, fm, classifier, outputFile, ...
-    cluster, cubeIdx, saveFeatures, saveInterfaces )
+    cluster, cubeIdx, featureFile, interfaceFile, normalizeRaw, ...
+    saveClassAndFM )
 %PREDICTDATASET SynEM prediction for a dataset.
 % INPUT p: struct
 %           SegEM segmentation parameter struct.
@@ -25,14 +26,27 @@ function [p, job] = predictDataset( p, fm, classifier, outputFile, ...
 %           Linear or logical indices of the cubes in p.local for which the
 %           prediction is done.
 %           (Default: 1:numel(p.local))
-%       saveFeatures: (Optional) logical
+%       featureFile: (Optional) logical or string
 %           Flag indicating whether to save features for each local
-%           segmentation cube.
+%           segmentation cube. If a string is specified this string will be
+%           used as the name of the feature file in the local cubes. The
+%           default name is 'InterfaceFeatures.mat'.
 %           (Default: false)
-%       saveInterfaces: (Optional) logical
+%       interfaceFile: (Optional) logical or string
 %           Flag indicating whether to save interfaces for each local
-%           segmentation cube.
+%           segmentation cube. If a string is specified this string will be
+%           used as the name of the interface file in the local cubes. The
+%           default name is 'Interfaces.mat'.
 %           (Default: false)
+%       normalizeRaw: (Optional) logical
+%           Flag to indicate that the raw data is normalized to 122 mean
+%           and 22 standard deviation by using p.norm.func to normalize to
+%           mean 0 and 1 std first.
+%           (Default: no raw data normalization).
+%       saveClassAndFM: (Optional) string
+%           Name of the file with classifier and feature map in the
+%           segmentation main folder.
+%           (default: 'SynapseClassifier.mat')
 % OUTPUT p: struct
 %           Modified segmentaton parameter struct. Classifier and feature
 %           maps are stored at 'p.synEM' and each local cube now contains a
@@ -45,44 +59,64 @@ function [p, job] = predictDataset( p, fm, classifier, outputFile, ...
 %      [p.saveFolder 'synapseClassifier.mat'].
 % Author: Benedikt Staffler <benedikt.staffler@brain.mpg.de>
 
+info = Util.runInfo(true);
+
 if ~exist('outputFile','var') || isempty(outputFile)
     outputFile = 'synapseScores';
-    warning('Output filename not given! synapseScores.mat will be the filename of the synapse scores.')
 end
+[~,  outputFile] = fileparts(outputFile);
+outputFile = [outputFile, '.mat'];
+
+% parse cube idx input
 if ~exist('cubeIdx','var') || isempty(cubeIdx)
     cubeIdx = 1:numel(p.local);
 elseif islogical(cubeIdx)
     cubeIdx = find(cubeIdx);
 end
-if ~exist('saveFeatures','var') || isempty(saveFeatures)
-    saveFeatures = false;
-end
-if ~exist('saveInterfaces','var') || isempty(saveInterfaces)
-    saveInterfaces = false;
-end
-if iscolumn(cubeIdx); cubeIdx = cubeIdx'; end
+Util.log('Running synapse detection for %d local cubes.', length(cubeIdx));
 
-%save classification data
-p.synEM = [p.saveFolder 'SynapseClassifier.mat'];
-Util.save([p.synEM], classifier, fm);
-[~,  outputFile] = fileparts(outputFile);
-outputFile = [outputFile, '.mat'];
-for i = cubeIdx
-    p.local(i).synapseFile = [p.local(i).saveFolder, outputFile];
-    if saveFeatures
-        p.local(i).interfaceFeatureFile = ...
-            [p.local(i).saveFolder, 'InterfaceFeatures.mat'];
-    end
-    if saveInterfaces
-        p.local(i).interfaceFile = ...
-            [p.local(i).saveFolder, 'Interfaces.mat'];
-    end
+% parse input for feature file
+if ~exist('featureFile','var') || isempty(featureFile)
+    featureFile = [];
+elseif ischar(featureFile)
+    [~, name] = fileparts(featureFile);
+    featureFile = [name '.mat'];
+elseif featureFile
+    featureFile = 'InterfaceFeatures.mat';
+else
+    featureFile = [];
+end
+if ischar(featureFile)
+    Util.log('Storing features at %s.', featureFile);
+else
+    Util.log('Features are not being stored.');
 end
 
-inputCell = arrayfun(@(i){[p.saveFolder 'allParameter.mat'], i, ...
-    outputFile, saveFeatures, saveInterfaces}, cubeIdx, ...
-    'UniformOutput', false);
+% parse input for interface file
+if ~exist('interfaceFile','var') || isempty(interfaceFile)
+    interfaceFile = [];
+elseif ischar(interfaceFile)
+    [~, name] = fileparts(interfaceFile);
+    interfaceFile = [name '.mat'];
+elseif interfaceFile
+    interfaceFile = 'Interfaces.mat';
+else
+    interfaceFile = [];
+end
+if ischar(featureFile)
+    Util.log('Storing interfaces at %s.', featureFile);
+else
+    Util.log('Interfaces are not being stored.');
+end
 
+if ~exist('normalizeRaw','var') || isempty(normalizeRaw)
+    normalizeRaw = false;
+end
+Util.log('Raw data normalization is set to %d.', normalizeRaw);
+
+cubeIdx = cubeIdx(:)';
+
+% get cluster object
 if ~exist('cluster','var') || isempty(cluster)
     try
         cluster = getCluster('cpu');
@@ -90,51 +124,94 @@ if ~exist('cluster','var') || isempty(cluster)
         cluster = parcluster();
     end
 end
-job = SynEM.Util.startJob(cluster, @jobWrapper, inputCell, 0, ...
-    'SynapseDetection');
+try
+    info.param.cluster = cluster.IndependentSubmitFcn(2:end);
+catch
+    info.param.cluster = [];
 end
 
-function jobWrapper(allParamFile, i, outputFile, ...
-    saveFeatures, saveInterfaces)
+% save classification data
+if ~exist('saveClassAndFM', 'var') || isempty(saveClassAndFM)
+    saveClassAndFM = 'SynapseClassifier.mat';
+else
+    [~, name] = fileparts(saveClassAndFM);
+    saveClassAndFM = [name '.mat'];
+end
+p.synEM = [p.saveFolder saveClassAndFM];
+Util.log('Saving classifier and feature map to %s.', p.synEM);
+Util.save([p.synEM], classifier, fm, info);
+    
+% submit to cluster
+Util.log('Submitting jobs to cluster.');
+for i = cubeIdx
+    p.local(i).synapseFile = [p.local(i).saveFolder, outputFile];
+    if ~isempty(featureFile)
+        p.local(i).interfaceFeatureFile = ...
+            [p.local(i).saveFolder, featureFile];
+    end
+    if ~isempty(interfaceFile)
+        p.local(i).interfaceFile = ...
+            [p.local(i).saveFolder, interfaceFile];
+    end
+end
 
+inputCell = arrayfun(@(i){[p.saveFolder 'allParameter.mat'], i, ...
+    saveClassAndFM, outputFile, featureFile, interfaceFile, ...
+    normalizeRaw}, cubeIdx, ...
+    'UniformOutput', false);
+
+job = SynEM.Util.startJob(cluster, @jobWrapper, inputCell, 0, ...
+    'SynapseDetection_Job%d');
+Util.log('Interface classification submitted as job %d.', job.Id);
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+function jobWrapper(allParamFile, i, classFile, outputFile, ...
+    featureFile, interfaceFile, normalizeRaw)
+
+tic
 %load parameter file
 m = load(allParamFile, 'p');
 p = m.p;
 
+%check for output
+outputFile = [p.local(i).saveFolder outputFile];
+if exist(outputFile, 'file')
+    % error('Output file %s already exists.', outputFile )
+end
+
 %load fm and classifier
-m = load([p.saveFolder 'SynapseClassifier.mat'], 'fm', 'classifier');
+m = load([p.saveFolder classFile], 'fm', 'classifier');
 fm = m.fm;
 classifier = m.classifier;
 
 %actual prediction
-[scores, X, interfaces] = SynEM.Seg.predictCube(p, i, fm, classifier);
-if ~isempty(scores)
-    scores = scores(:,1); %for default matlab classifiers
-    if strcmp(fm.mode, 'direction')
-        %both direction of one interface in a row
-        scores = reshape(scores, [], 2);
-    end
-    
-    %save results
-    outputFile = [p.local(i).saveFolder outputFile];
-    fprintf('[%s] SynEM.Seg.predictCube - Saving scores to %s.\n', ...
-        datestr(now), outputFile);
-    Util.save(outputFile, scores);
-    
-    if saveFeatures
-        if strcmp(fm.mode, 'direction')
-            X = X(1:end/2,:); %only save first direction
-        end
-        outputFile = [p.local(i).saveFolder 'InterfaceFeatures.mat'];
-        fprintf('[%s] SynEM.Seg.predictCube - Saving features to %s.\n', ...
-            datestr(now), outputFile);
-        Util.save(outputFile, X);
-    end
-    if saveInterfaces
-        outputFile = [p.local(i).saveFolder 'Interfaces.mat'];
-        fprintf('[%s] SynEM.Seg.predictCube - Saving interfaces to %s.\n', ...
-            datestr(now), outputFile);
-        Util.save(outputFile, interfaces);
-    end
+[scores, X, interfaces] = SynEM.Seg.predictCube(p, i, fm, classifier, ...
+    normalizeRaw);
+scores = scores(:,1); %for default matlab classifiers
+if strcmp(fm.mode, 'direction')
+    %both direction of one interface in a row
+    scores = reshape(scores, [], 2);
 end
+
+%save results
+Util.log('Saving scores to %s.', outputFile);
+runTime = toc;
+Util.save(outputFile, scores, runTime);
+
+if ~isempty(featureFile)
+    if strcmp(fm.mode, 'direction')
+        X = X(1:end/2,:); %only save first direction
+    end
+    outputFile = [p.local(i).saveFolder featureFile];
+    Util.log('Saving features to %s.', outputFile);
+    Util.save(outputFile, X);
+end
+if ~isempty(interfaceFile)
+    outputFile = [p.local(i).saveFolder interfaceFile];
+    Util.log('Saving interfaces to %s.', outputFile);
+    Util.save(outputFile, interfaces);
+end
+
 end

@@ -39,7 +39,22 @@ classdef StdFilter < SynEM.Feature.TextureFeature
                 raw = SynEM.Feature.GaussFilter.calculate(raw, sigma, ...
                     3, 0, 'same');
             end
-            feat = stdfilt(raw,ones(nhood));
+            
+            % matlab stdandard filter (internally converts to double and
+            % thus has higher ram usage)
+%             feat = stdfilt(raw,ones(nhood));
+            
+            % do standard filtering by hand
+            n = prod(nhood);
+            conv1 = convn(raw.*raw, ones(nhood(1), 1, 1, 'like', raw), 'same');
+            conv1 = conv1./(n - 1);
+            conv1 = convn(conv1, ones(1, nhood(2), 1, 'like', raw), 'same');
+            conv1 = convn(conv1, ones(1, 1, nhood(3), 'like', raw), 'same');
+            conv2 = convn(raw, ones(nhood(1), 1, 1, 'like', raw), 'same');
+            conv2 = conv2./sqrt(n*(n - 1));
+            conv2 = convn(conv2, ones(1, nhood(2), 1, 'like', raw), 'same');
+            conv2 = convn(conv2, ones(1, 1, nhood(3), 'like', raw), 'same');
+            feat = sqrt(max((conv1 - conv2.*conv2),0));
         end
     end
 end

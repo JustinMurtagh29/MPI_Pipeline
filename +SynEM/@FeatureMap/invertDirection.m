@@ -9,6 +9,9 @@ if isempty(obj.selectedFeat)
     %assume all features by default
     obj.setSelectedFeat();
 end
+if obj.numSubvolumes == 0
+    return;
+end
 
 numFeatText = length(obj.featTexture);
 invIdx = cell(numFeatText + length(obj.featShape),1);

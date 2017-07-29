@@ -35,13 +35,13 @@ fm = classifier.options.fm;
 %get classifier
 if ~exist('cluster', 'var') || isempty(cluster)
     cluster = Cluster.getCluster('-pe openmp 1', ...
-                   '-l h_vmem=20G,h_rt=100:00:00', ...
+                   '-l h_vmem=24G,h_rt=100:00:00', ...
                    '-p -500');
 end
 
 %run prediction
 [p, job] = SynEM.Seg.predictDataset(p, fm, classifier, [], cluster, ...
-    [], true, false);
+    [], true, false, true);
 
 end
 
