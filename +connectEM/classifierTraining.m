@@ -47,7 +47,7 @@ test = Util.concatStructs(1, test(1), test(2), test(3));
 
 %% Augment training & test set (by adding features for "inverted" edges)
 
-load([p.saveFolder 'SynapseClassifier.mat'], 'fm');
+load([p.saveFolder 'SynapseClassifier.bkp'], 'fm', '-mat');
 fm.areaT = 10;
 train.classFeaturesInv =  fm.invertDirection(train.classFeatures);
 train.rawFeaturesInv =  fm.invertDirection(train.rawFeatures);
