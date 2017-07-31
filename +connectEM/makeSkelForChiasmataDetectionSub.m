@@ -1,4 +1,4 @@
-function [nodes2, edges2] = makeSkelForChiasmataDetectionSub(currentEC, axons, edgesGTall, resultCol)
+function [nodes2, edges2] = makeSkelForChiasmataDetectionSub(currentEC, axons, edgesGTall, resultCol,segmentMeta, removeRedundantAnnotations)
 last = @(x)x{end};
 fifth = @(x)x{5}
 getTask = @(x)fifth(strsplit(last(strsplit(x,'/')),'_'));
@@ -31,7 +31,9 @@ for runidx = 1 : 2
                 continue;
             end
             % make sure each task is only used once (discarding quality control redundancy
-            usedTasks{end+1}=getTask(resultCol{runidx}.ff.filenames{idx});
+            if removeRedundantAnnotations
+                usedTasks{end+1}=getTask(resultCol{runidx}.ff.filenames{idx});
+            end
             % find nodes that connect to agglos
             tempids =[resultCol{runidx}.ff.segIds{idx},resultCol{runidx}.ff.neighbours{idx}];
             %somehow we lost the node order for the query, here reconstructed with MSP

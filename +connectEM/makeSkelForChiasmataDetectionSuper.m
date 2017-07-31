@@ -1,3 +1,4 @@
+addpath('/gaba/u/kboerg/code/manuelCode/games') %for a clean version of findCCaccordingToGraph
 functionH = @connectEM.makeSkelForChiasmataDetection;
 inputCell = cellfun(@(x){x}, num2cell(2:501), 'uni', 0);
 cluster = Cluster.getCluster( ...
