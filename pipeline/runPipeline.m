@@ -158,7 +158,7 @@ function p = runPipeline(p, startStep, endStep,runlocal)
         if runlocal
             Seg.Global.saveGlobalSvgData(p,[],[],1);
         else
-            job = collectSvgDataOnCluster(p,1);
+            job = collectSvgDataOnCluster(p);
             Cluster.waitForJob(job);
         end
     end
