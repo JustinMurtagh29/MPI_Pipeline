@@ -28,7 +28,8 @@ for f=1:size(raw,3)
     thisRaw = repmat(raw(:,:,f),1,1,3); % single
     thisSeg = label2rgb(segmentation(:,:,f), colors, [0 0 0]); % uint8
     frame = imfuse(thisRaw, thisSeg, 'blend'); % uint8
-    frame2 = horzcat(im2uint8(thisRaw),frame); % uint8
+    % rotate and flip to match wK view 
+    frame2 = horzcat( flipdim(imrotate(im2uint8(thisRaw),90),1), flipdim(imrotate(frame,90),1)); % uint8
     writeVideo(writerObj,frame);
     writeVideo(writerObj2,frame2);
 end
