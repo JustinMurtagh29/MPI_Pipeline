@@ -19,21 +19,19 @@ nodes=bsxfun(@times,nodesV,p.voxelSize);
 % for each node ("marching sphere" approach to merger detection)
 isIntersection = false(size(nodes,1),1);
 nrExits = zeros(size(nodes,1),1);
-for i=1:size(nodes,1)
-    if mod(i, 100) ==0
-        disp(i);
+if size(nodes, 1) < 1E6
+    for i=1:size(nodes,1)
+        [isIntersection(i),nrExits(i)] = detectChiasmataSub(i,nodes,edges,p);
     end
-    [thisNodes, thisEdges, thisProb] = connectEM.detectChiasmataPruneToSphere(nodes, edges, ones(size(edges,1),1), p, i);
-    C = Graph.findConnectedComponents(thisEdges);
-    if length(C) > 3 && sum(cellfun(@(idx)max(pdist2(thisNodes(idx, :), nodes(i,:))) > 4000, C))>3
-        isIntersection(i) = true;
-        nrExits(i) = length(C);
+else
+    parfor i=1:size(nodes,1)
+        [isIntersection(i),nrExits(i)] = detectChiasmataSub(i,nodes,edges,p);
     end
 end
 %save(['/gaba/u/kboerg/biggest/2biggest' num2str(startidx) '.mat'], 'isIntersection');
 
 % Find CC of detected intersections according to graph
-[output, queryIdx] = connectEM.detectChiasmataPostSingleNodeLabel(edges, isIntersection, nrExits, nodes, p, nodesV);
+[output, queryIdx] = connectEM.detectChiasmataPostSingleNodeLabel(edges, isIntersection, nrExits, nodes, p, nodesV, ones(size(edges,1),1));
 
 if visualize
     % Write result to skletons for control (detection of intersections)
@@ -64,4 +62,17 @@ end
 save([outputFolder 'result.mat'], 'output');
 
 end
-
+function [isIntersection,nrExits] = detectChiasmataSub(i,nodes,edges,p)
+    if mod(i, 100) ==0
+        disp(i);
+    end
+    [thisNodes, thisEdges, thisProb] = connectEM.detectChiasmataPruneToSphere(nodes, edges, ones(size(edges,1),1), p, i);
+    C = Graph.findConnectedComponents(thisEdges);
+    if length(C) > 3 && sum(cellfun(@(idx)max(pdist2(thisNodes(idx, :), nodes(i,:))) > 4000, C))>3
+        isIntersection = true;
+        nrExits = length(C);
+    else
+        isIntersection = false;
+        nrExits = 0;
+    end
+end
