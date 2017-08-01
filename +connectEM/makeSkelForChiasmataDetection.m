@@ -16,12 +16,7 @@ if filterDoubles
     result2.idxGood(a) = [];
 end
 
-result2ends = cell2mat(result2.endAgglo(cellfun('length',result2.endAgglo)>0)');
-result2ends(result2ends>length(axons)) = [];
 resultCol = {result1, result2};
-result2.startAgglo=result2.startAgglo(a==-1);
-result2.endAgglo=result2.endAgglo(a==-1);
-result2.idxGood=result2.idxGood(a==-1);
 
 edges1 = cellfun(@(x,y)combnk([-1, x(x<=length(axons)) y(y<=length(axons))], length(x(x<=length(axons)))*2), result1.startAgglo(result1.idxGood), result1.endAgglo(result1.idxGood), 'uni', 0);
 edges2 = cellfun(@(x,y)combnk([-1, x(x<=length(axons)) y(y<=length(axons))], length(x(x<=length(axons)))*2), result2.startAgglo(result2.idxGood), result2.endAgglo(result2.idxGood), 'uni', 0);
@@ -34,10 +29,14 @@ eqClassCC = Graph.findConnectedComponents(edges, true, true);
 
 eqClassCCfull = [eqClassCC; num2cell(setdiff(1 : length(axons), cell2mat(eqClassCC)))'];
 % iterate over super agglos
-for idx_agglo = randperm(length(eqClassCCfull),200)
+numstr = '17';
+for idx_agglo = startingidx : 500 : length(eqClassCCfull);
     currentEC =eqClassCCfull{idx_agglo};
-    mkdir(['/tmpscratch/kboerg/visX15_' num2str(floor(idx_agglo/100)) '/']);
+    mkdir(['/tmpscratch/kboerg/visX', numstr, '_' num2str(floor(idx_agglo/100)) '/']);
     [nodes2, edges2] = connectEM.makeSkelForChiasmataDetectionSub(currentEC, axons, edgesGTall, resultCol, segmentMeta, false);
-    assert(length(Graph.findConnectedComponents(edges2))==1);
-    connectEM.detectChiasmata([],nodes2,edges2,true,['/tmpscratch/kboerg/visX15_' num2str(floor(idx_agglo/100)) '/visX15_' num2str(idx_agglo) '/'])
+    if idx_agglo == 1
+        save('backup','nodes2','edges2');
+    end
+    assert(length(Graph.findConnectedComponents(edges2))<=1);
+    connectEM.temp2([],nodes2,edges2,true,['/tmpscratch/kboerg/visX',numstr ,'_' num2str(floor(idx_agglo/100)) '/visX', numstr, '_' num2str(idx_agglo) '/'])
 end
