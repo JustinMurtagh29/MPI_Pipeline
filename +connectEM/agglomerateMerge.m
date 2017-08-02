@@ -1,8 +1,8 @@
-function [axonsNew, changedIdx, unchangedResult,edgesToStore] = agglomerateMerge(graph, segmentMeta, borderMeta, axons, result, options);
+function [agglosNew, changedIdx, unchangedResult,edgesToStore] = agglomerateMerge(~, segmentMeta, borderMeta, agglos, result, options)
 
-    assert(numel(axons) == numel(result.neighbours));
+    assert(numel(agglos) == numel(result.neighbours));
     % Create lookup of agglo index for all segments
-    axonsLookup = createLookup(segmentMeta, axons);
+    aggloLookup = createLookup(segmentMeta, agglos);
 
     % Find all endings (given criteria on latent, directionality, continuity and size of border)
     idxDirectional = cellfun(@(x)x(:,1) > options.latentScore, result.latent, 'uni', 0);
@@ -14,9 +14,9 @@ function [axonsNew, changedIdx, unchangedResult,edgesToStore] = agglomerateMerge
     edgesToStore = cellfun(@(x,y){x(y)},result.borderIdx,idxAll);
     % Source & target agglomerate
     sources = repelem(1:length(nrEndings), nrEndings)';
-    targets = cell2mat(cellfun(@(x,y)axonsLookup(x(y)), result.neighbours, idxAll, 'uni', 0));
-    % Exclude small sources & 0 targets (not current in axon agglomerates)
-    sourceSize = cellfun(@(x)sum(segmentMeta.voxelCount(x)), axons);
+    targets = cell2mat(cellfun(@(x,y)aggloLookup(x(y)), result.neighbours, idxAll, 'uni', 0));
+    % Exclude small sources & 0 targets (not current in agglomerates)
+    sourceSize = cellfun(@(x)sum(segmentMeta.voxelCount(x)), agglos);
     idx = ismember(sources, find(sourceSize < options.sourceSize)) | targets == 0;
     sources(idx) = [];
     targets(idx) = [];
@@ -27,11 +27,11 @@ function [axonsNew, changedIdx, unchangedResult,edgesToStore] = agglomerateMerge
     % Do the merging
     edgesBetweenAgglos = cat(2, sources, targets);
     cc = Graph.findConnectedComponents(edgesBetweenAgglos);
-    axonsNew = cellfun(@(x)cat(1,axons{x}), cc, 'uni', 0);
-    unchangedIdx = setdiff(1:length(axons), cat(1, cc{:}));
-    axonsNew(numel(cc)+1:numel(cc)+numel(unchangedIdx)) = axons(unchangedIdx);
+    agglosNew = cellfun(@(x)cat(1,agglos{x}), cc, 'uni', 0);
+    unchangedIdx = setdiff(1:length(agglos), cat(1, cc{:}));
+    agglosNew(numel(cc)+1:numel(cc)+numel(unchangedIdx)) = agglos(unchangedIdx);
     unchangedResult = structfun(@(x)x(unchangedIdx), result, 'uni', 0);
-    changedIdx = 1:numel(cc)';
+    changedIdx = 1:numel(cc);
 
 end
 
