@@ -58,7 +58,6 @@ function y = calculateDirectionalityOfAgglomerates(agglos, graph, segmentMeta, b
             covMatsOut = reshape(globalSegmentPCA.covMat(currentAgglo, :), [1, 3, 3]);
         end
         clear covMatsIn;
-        
         % Get representation of all borders out of current agglomerate
         nrNeighbours = cellfun(@numel, graph.neighbours(currentAgglo));
         borderSourceIdx = repelem(1:numel(currentAgglo), nrNeighbours);
@@ -112,7 +111,6 @@ function y = calculateDirectionalityOfAgglomerates(agglos, graph, segmentMeta, b
         y.latent{idx1} = latent;
         y.pca{idx1} = pca;
         y.scores{idx1} = scores;
-
     end
 end
 

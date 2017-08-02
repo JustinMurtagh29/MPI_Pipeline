@@ -1,4 +1,4 @@
-function directionalityBasedGrowing(options, outputFolder, agglos, graph, segmentMeta, borderMeta, globalSegmentPCA)
+function directionalityBasedGrowing(options, outputFolder, agglos, graph, segmentMeta, borderMeta, globalSegmentPCA, heuristics)
 
     % Create output folder if it does not exist
     if ~exist(outputFolder, 'dir')
@@ -36,7 +36,9 @@ function directionalityBasedGrowing(options, outputFolder, agglos, graph, segmen
     if ~exist('globalSegmentPCA', 'var')
         globalSegmentPCA = load('/gaba/u/mberning/results/pipeline/20170217_ROI/globalSegmentPCA.mat', 'covMat');
     end
-
+    if ~exist('heuristics', 'var')
+        heuristics = load('/gaba/u/mberning/results/pipeline/20170217_ROI/heuristicResult.mat');
+    end
 %     % Exclude all segments in cubes with catastrophic merger
 %     [er, cm] = connectEM.getERcomponents();
 %     excludedCubeIdx = unique(cellfun(@(x)mode(segmentMeta.cubeIdx(x)), cm));
@@ -72,10 +74,12 @@ function directionalityBasedGrowing(options, outputFolder, agglos, graph, segmen
         end
         clear resultTemp fieldNames j changedIdx unchangedResult;
         toc;
-            
+        
+        myelinScore = cellfun(@(x) heuristics.myelinScore(x) < 0.5,agglos);  % take only segments with a low myelinScore
+
         display('Merging agglomerates:');
         tic;
-        [agglosNew, changedIdx, unchangedResult, edgesToStore] = connectEM.agglomerateMerge(graph, segmentMeta, borderMeta, agglos, result, options);
+        [agglosNew, changedIdx, unchangedResult, edgesToStore] = connectEM.agglomerateMerge(graph, segmentMeta, borderMeta, agglos, result, options, myelinScore);
         toc;
         if options.recursionSteps > 1
             display('Saving (intermediate) results:');

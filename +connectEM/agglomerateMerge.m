@@ -1,5 +1,6 @@
-function [agglosNew, changedIdx, unchangedResult,edgesToStore] = agglomerateMerge(~, segmentMeta, borderMeta, agglos, result, options)
+function [agglosNew, changedIdx, unchangedResult,edgesToStore] = agglomerateMerge(~, segmentMeta, borderMeta, agglos, result, options, myelinScore)
 
+    
     assert(numel(agglos) == numel(result.neighbours));
     % Create lookup of agglo index for all segments
     aggloLookup = createLookup(segmentMeta, agglos);
@@ -9,7 +10,11 @@ function [agglosNew, changedIdx, unchangedResult,edgesToStore] = agglomerateMerg
     idxEnding = cellfun(@(x)abs(x) > options.segDirScore, result.scores, 'uni', 0);
     idxContinuity = cellfun(@(x)x > options.neuriCScore, result.prob, 'uni', 0);
     idxLarge = cellfun(@(x)borderMeta.borderSize(x) > options.borderSize, result.borderIdx, 'uni', 0);
-    idxAll = cellfun(@(w,x,y,z)w&x&y&z, idxDirectional, idxEnding, idxContinuity, idxLarge, 'uni', 0);
+    if exist('myelinScore','var')
+        idxAll = cellfun(@(v,w,x,y,z)v&w&x&y&z, idxDirectional, idxEnding, idxContinuity, idxLarge, myelinScore, 'uni', 0);
+    else
+        idxAll = cellfun(@(w,x,y,z)w&x&y&z, idxDirectional, idxEnding, idxContinuity, idxLarge, 'uni', 0);
+    end
     nrEndings = cellfun(@sum, idxAll);
     edgesToStore = cellfun(@(x,y){x(y)},result.borderIdx,idxAll);
     % Source & target agglomerate
