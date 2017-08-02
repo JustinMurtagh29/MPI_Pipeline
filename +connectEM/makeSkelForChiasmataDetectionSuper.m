@@ -12,4 +12,4 @@ job = Cluster.startJob( functionH, inputCell, ...
     'cluster', cluster);
     
 % the giant super agglo should run locally
-@connectEM.makeSkelForChiasmataDetection(1);
+connectEM.makeSkelForChiasmataDetection(1);

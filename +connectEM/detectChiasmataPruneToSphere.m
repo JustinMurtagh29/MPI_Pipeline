@@ -11,7 +11,9 @@ edges(~all(ismember(edges,thisNodeIdx),2),:) = [];
 lookup(thisNodeIdx) = 1 : length(thisNodeIdx);
 edges = lookup(edges);
 nodes = nodes(thisNodeIdx, :);
+i = lookup(i);
 
+thisDistance = pdist2(nodes(i,:), nodes);
 thisNodeIdx = thisDistance > p.sphereRadiusInner;
 % rescue inner points that are not connected to center node within inner sphere
 innerEdges = any(ismember(edges, find(~thisNodeIdx)),2);
@@ -22,16 +24,16 @@ for idx2 = setdiff(1: length(innerConnected), idx)
 end
 %remove not connected skeletons
 hereConnected = Graph.findConnectedComponents(edges);
-idx = cellfun(@(x)ismember(i,x),hereConnected);
-if any(idx)
-    thisNodeIdx(~hereConnected{idx}) = false;
-else
-    thisNodeIdx = false(size(thisNodeIdx));
+idx = find(~cellfun(@(x)ismember(i,x),hereConnected));
+idx = idx(:);
+assert(length(idx)<length(hereConnected));
+for idx2 = idx'
+    thisNodeIdx(hereConnected{idx2}) = false;
 end
 
 
 % Keep all edges that have at least one node within outerSphere
-thisEdgeIdx = any(ismember(edges, find(thisNodeIdx)),2);
+thisEdgeIdx = all(ismember(edges, find(thisNodeIdx)),2);
 thisNodeIdx = unique(edges(thisEdgeIdx,:));
 thisNodeIdx = thisNodeIdx(:);
 thisOffset = cumsum(accumarray(thisNodeIdx, 1));

@@ -1,7 +1,6 @@
 function output = detectChiasmata(p, nodesV, edges, visualize, outputFolder )
 % Detect chiasmata in skeletons based on marching sphere algorithm
 % Nodes should be in voxel, scaled here
-%load('/gaba/u/kboerg/biggest/biggestpre1.mat');
 % Create output folder if it does not exist
 if ~exist(outputFolder, 'dir')
     mkdir(outputFolder);
@@ -21,11 +20,32 @@ isIntersection = false(size(nodes,1),1);
 nrExits = zeros(size(nodes,1),1);
 if size(nodes, 1) < 1E6
     for i=1:size(nodes,1)
-        [isIntersection(i),nrExits(i)] = detectChiasmataSub(i,nodes,edges,p);
+        [thisNodes, thisEdges, thisProb] = connectEM.detectChiasmataPruneToSphere(nodes, edges, ones(size(edges,1),1), p, i);
+        C = Graph.findConnectedComponents(thisEdges);
+        if length(C) > 3 && sum(cellfun(@(idx)max(pdist2(thisNodes(idx, :), nodes(i,:))) > 4000, C))>3
+            isIntersection(i) = true;
+            nrExits(i) = length(C);
+        end
     end
 else
-    parfor i=1:size(nodes,1)
-        [isIntersection(i),nrExits(i)] = detectChiasmataSub(i,nodes,edges,p);
+    save([outputFolder 'prep']);
+
+    functionH = @connectEM.detectChiasmataSub;
+    inputCell = cellfun(@(x){x}, num2cell(1 : 5000), 'uni', 0);
+    cluster = Cluster.getCluster( ...
+        '-pe openmp 1', ...
+        '-p 0', ...
+        '-l h_vmem=24G', ...
+        '-l s_rt=23:50:00', ...
+        '-l h_rt=24:00:00');
+    job = Cluster.startJob( functionH, inputCell, ...
+        'name', 'chiasmata1', ...
+        'cluster', cluster);
+    Cluster.waitForJob(job);
+    for idx = 1 : 5000
+        temp = load([outputFolder 'temp_' num2str(startidx)],'nrExits', 'isIntersection');
+        nrExits = temp.nrExits + nrExits;
+        isIntersection = temp.isIntersection & isIntersection;
     end
 end
 %save(['/gaba/u/kboerg/biggest/2biggest' num2str(startidx) '.mat'], 'isIntersection');
@@ -62,17 +82,5 @@ end
 save([outputFolder 'result.mat'], 'output');
 
 end
-function [isIntersection,nrExits] = detectChiasmataSub(i,nodes,edges,p)
-    if mod(i, 100) ==0
-        disp(i);
-    end
-    [thisNodes, thisEdges, thisProb] = connectEM.detectChiasmataPruneToSphere(nodes, edges, ones(size(edges,1),1), p, i);
-    C = Graph.findConnectedComponents(thisEdges);
-    if length(C) > 3 && sum(cellfun(@(idx)max(pdist2(thisNodes(idx, :), nodes(i,:))) > 4000, C))>3
-        isIntersection = true;
-        nrExits = length(C);
-    else
-        isIntersection = false;
-        nrExits = 0;
-    end
+function dummy()
 end

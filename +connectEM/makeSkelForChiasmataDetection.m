@@ -29,14 +29,16 @@ eqClassCC = Graph.findConnectedComponents(edges, true, true);
 
 eqClassCCfull = [eqClassCC; num2cell(setdiff(1 : length(axons), cell2mat(eqClassCC)))'];
 % iterate over super agglos
-numstr = '17';
+numstr = '19';
 for idx_agglo = startingidx : 500 : length(eqClassCCfull);
     currentEC =eqClassCCfull{idx_agglo};
     mkdir(['/tmpscratch/kboerg/visX', numstr, '_' num2str(floor(idx_agglo/100)) '/']);
-    [nodes2, edges2] = connectEM.makeSkelForChiasmataDetectionSub(currentEC, axons, edgesGTall, resultCol, segmentMeta, false);
+    
     if idx_agglo == 1
-        save('backup','nodes2','edges2');
+        load('backup','nodes2','edges2');
+    else
+        [nodes2, edges2] = connectEM.makeSkelForChiasmataDetectionSub(currentEC, axons, edgesGTall, resultCol, segmentMeta, false);
     end
     assert(length(Graph.findConnectedComponents(edges2))<=1);
-    connectEM.temp2([],nodes2,edges2,true,['/tmpscratch/kboerg/visX',numstr ,'_' num2str(floor(idx_agglo/100)) '/visX', numstr, '_' num2str(idx_agglo) '/'])
+    connectEM.detectChiasmata([],nodes2,edges2,true,['/tmpscratch/kboerg/visX',numstr ,'_' num2str(floor(idx_agglo/100)) '/visX', numstr, '_' num2str(idx_agglo) '/'])
 end
