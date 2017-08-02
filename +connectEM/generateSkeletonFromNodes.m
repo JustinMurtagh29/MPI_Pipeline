@@ -31,7 +31,7 @@ function generateSkeletonFromNodes(filename, nodes, treeNames, comments, linearN
         elseif linearNodes
             skel{c}.edges = cat(1, 1:size(skel{c}.nodes, 1)-1, 2:size(skel{c}.nodes))';
         else
-            skel{c}.edges = minimalSpanningTree(nodes{tr});
+            skel{c}.edges = getMST(bsxfun(@times, nodes{tr}, [11.24 11.24 28]),5000);  % 5 um edge threshold
         end
         c = c + 1;
         nodeOffsetThisSkel = nodeId - 1;
@@ -75,14 +75,4 @@ function nodeAsStruct = generateNodeAsStruct(id,pos,radius,comment)
     nodeAsStruct{1}.time = num2str(0);
 end
 
-function edges = minimalSpanningTree(com)
-    if size(com,1) < 2
-        edges = [];
-    else
-        % Minimal spanning tree
-        adj = squareform(pdist(bsxfun(@times, com, [11.24 11.24 28])));
-        tree = graphminspantree(sparse(adj), 'Method', 'Kruskal');
-        [edges(:,1), edges(:,2)] = find(tree);
-    end
-end
 
