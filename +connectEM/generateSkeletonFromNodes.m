@@ -31,7 +31,7 @@ function generateSkeletonFromNodes(filename, nodes, treeNames, comments, linearN
         elseif linearNodes
             skel{c}.edges = cat(1, 1:size(skel{c}.nodes, 1)-1, 2:size(skel{c}.nodes))';
         else
-            skel{c}.edges = getMST(bsxfun(@times, nodes{tr}, [11.24 11.24 28]),5000);  % 5 um edge threshold
+            skel{c}.edges = Graph.getMST(bsxfun(@times, nodes{tr}, [11.24 11.24 28]),5000);  % 5 um edge threshold
         end
         c = c + 1;
         nodeOffsetThisSkel = nodeId - 1;
