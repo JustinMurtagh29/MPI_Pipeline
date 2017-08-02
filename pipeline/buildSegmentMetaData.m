@@ -1,4 +1,7 @@
 function job = buildSegmentMetaData(param)
+    % Written by
+    %   Alessandro Motta <alessandro.motta@brain.mpg.de>
+    
     cubes = param.local;
     rootDir = param.saveFolder;
     
@@ -17,7 +20,7 @@ function job = buildSegmentMetaData(param)
     loadMeta = @(p) load(fullfile(p.saveFolder, 'segmentMeta.mat'));
     meta = arrayfun(loadMeta, cubes, 'UniformOutput', false);
     meta = Util.concatStructs('last', meta{:});
-%     meta = Util.concatStructs(struct('segIds',1,'voxelCount',1,'box',3,'centroid',2,'point',2,'maxSegId',1,'atborder',1,'cubeIdx',1) ,meta{:});
+    
     % find maximum segment ID
     meta.maxSegId = max(meta.maxSegId);
     
