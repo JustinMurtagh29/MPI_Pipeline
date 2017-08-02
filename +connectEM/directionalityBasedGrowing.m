@@ -19,24 +19,24 @@ function directionalityBasedGrowing(options, outputFolder, agglos, graph, segmen
     end
 
     % Load needed meta data if not passed
-    if ~exist('graph', 'var')
+    if ~exist('graph', 'var') || isempty(graph)
         graph = load('/gaba/u/mberning/results/pipeline/20170217_ROI/graphNew.mat', 'edges', 'prob', 'borderIdx');
         [graph.neighbours, neighboursIdx] = Graph.edges2Neighbors(graph.edges);
         graph.neighProb = cellfun(@(x)graph.prob(x), neighboursIdx, 'uni', 0);
         graph.neighBorderIdx = cellfun(@(x)graph.borderIdx(x), neighboursIdx, 'uni', 0);
     end
-    if ~exist('segmentMeta', 'var')
+    if ~exist('segmentMeta', 'var') || isempty(segmentMeta)
         load('/gaba/u/mberning/results/pipeline/20170217_ROI/allParameterWithSynapses.mat');
         segmentMeta = load('/gaba/u/mberning/results/pipeline/20170217_ROI/segmentMeta.mat');
         segmentMeta = connectEM.addSegmentClassInformation(p, segmentMeta);
     end
-    if ~exist('borderMeta', 'var')
+    if ~exist('borderMeta', 'var') || isempty(borderMeta)
         borderMeta = load('/gaba/u/mberning/results/pipeline/20170217_ROI/globalBorder.mat', 'borderSize', 'borderCoM');
     end
-    if ~exist('globalSegmentPCA', 'var')
+    if ~exist('globalSegmentPCA', 'var') || isempty(globalSegmentPCA)
         globalSegmentPCA = load('/gaba/u/mberning/results/pipeline/20170217_ROI/globalSegmentPCA.mat', 'covMat');
     end
-    if ~exist('heuristics', 'var')
+    if ~exist('heuristics', 'var') || isempty(heuristics)
         heuristics = load('/gaba/u/mberning/results/pipeline/20170217_ROI/heuristicResult.mat');
     end
 %     % Exclude all segments in cubes with catastrophic merger
