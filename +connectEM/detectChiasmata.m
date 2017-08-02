@@ -30,25 +30,28 @@ if size(nodes, 1) < 1E6
 else
     save([outputFolder 'prep']);
 
-    functionH = @connectEM.detectChiasmataSub;
-    inputCell = cellfun(@(x){x}, num2cell(1 : 5000), 'uni', 0);
-    cluster = Cluster.getCluster( ...
-        '-pe openmp 1', ...
-        '-p 0', ...
-        '-l h_vmem=24G', ...
-        '-l s_rt=23:50:00', ...
-        '-l h_rt=24:00:00');
-    job = Cluster.startJob( functionH, inputCell, ...
-        'name', 'chiasmata1', ...
-        'cluster', cluster);
-    Cluster.waitForJob(job);
+    % functionH = @connectEM.detectChiasmataSub;
+    % inputCell = cellfun(@(x){x}, num2cell(1 : 5000), 'uni', 0);
+    % cluster = Cluster.getCluster( ...
+    %     '-pe openmp 1', ...
+    %     '-p 0', ...
+    %     '-l h_vmem=24G', ...
+    %     '-l s_rt=23:50:00', ...
+    %     '-l h_rt=24:00:00');
+    % job = Cluster.startJob( functionH, inputCell, ...
+    %     'name', 'chiasmata1', ...
+    %     'cluster', cluster);
+    % Cluster.waitForJob(job);
     for idx = 1 : 5000
-        temp = load([outputFolder 'temp_' num2str(startidx)],'nrExits', 'isIntersection');
-        nrExits = temp.nrExits + nrExits;
-        isIntersection = temp.isIntersection & isIntersection;
+        if exist([outputFolder 'temp_' num2str(idx) '.mat'], 'file')
+            temp = load([outputFolder 'temp_' num2str(idx)],'nrExits', 'isIntersection');
+            nrExits = temp.nrExits + nrExits;
+            isIntersection = temp.isIntersection | isIntersection;
+        else
+            warning(['skipped ' num2str(idx)]);
+        end
     end
 end
-%save(['/gaba/u/kboerg/biggest/2biggest' num2str(startidx) '.mat'], 'isIntersection');
 
 % Find CC of detected intersections according to graph
 [output, queryIdx] = connectEM.detectChiasmataPostSingleNodeLabel(edges, isIntersection, nrExits, nodes, p, nodesV, ones(size(edges,1),1));
@@ -69,6 +72,10 @@ if visualize
     t{1} = 'original tree without detected intersections';
     col{1} = [0 0 1 1];
     for idx=1:length(queryIdx)
+        if any(queryIdx{idx}==-1)
+            save([outputFolder 'ohoh'], idx);
+            continue;
+        end
         n{idx+1} = cat(1, nodesV(output.ccCenterIdx(idx),:), nodesV(output.queryIdx{idx},:));
         e{idx+1} = cat(2, ones(size(n{idx+1},1)-1,1), (2:size(n{idx+1},1))');
         comments{idx+1} = cell(size(n{idx+1},1), 1);

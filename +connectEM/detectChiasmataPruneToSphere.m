@@ -26,14 +26,14 @@ end
 hereConnected = Graph.findConnectedComponents(edges);
 idx = find(~cellfun(@(x)ismember(i,x),hereConnected));
 idx = idx(:);
-assert(length(idx)<length(hereConnected));
+% assert(length(idx)<length(hereConnected));
 for idx2 = idx'
     thisNodeIdx(hereConnected{idx2}) = false;
 end
 
 
-% Keep all edges that have at least one node within outerSphere
 thisEdgeIdx = all(ismember(edges, find(thisNodeIdx)),2);
+%this means that only nodes are kept that also have an edge outside of the sphere, should probably be changed
 thisNodeIdx = unique(edges(thisEdgeIdx,:));
 thisNodeIdx = thisNodeIdx(:);
 thisOffset = cumsum(accumarray(thisNodeIdx, 1));

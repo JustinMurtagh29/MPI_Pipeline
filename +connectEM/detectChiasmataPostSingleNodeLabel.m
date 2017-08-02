@@ -7,27 +7,34 @@ cc = findCCaccordingToGraph(temp, find(isIntersection)); %must be from manuelCod
 queryIdx = cell(length(cc),1);
 pos = cell(length(cc),1);
 dir = cell(length(cc),1);
-for i=1:length(cc)
-    i
-    
-    [thisNodes, thisEdges, thisProb] = connectEM.detectChiasmataPruneToSphere(nodes, edges, prob, p, cc{i}(centerOfCC(i)));
-    C = Graph.findConnectedComponents(thisEdges);
-    goodcomps = find(cellfun(@(idx)max(pdist2(thisNodes(idx, :), nodes(i,:))) > 4000, C));
-    assert(size(goodcomps,2) == 1); % make sure that the next line works
-    for idx = goodcomps'
-        thisNodesCC = inf(size(thisNodes));
-        thisNodesCC(C{idx},:) = thisNodes(C{idx}, :);
-        [~, closestNode] = min(pdist2(thisNodesCC, nodes(cc{i}(centerOfCC(i)),:)));
-        bestEdge = find(any(thisEdges == closestNode, 2), 1);
-        descale = @(x)bsxfun(@times, x, 1./p.voxelSize);
-        pos{i}(end + 1, :) = descale(thisNodes(closestNode,:));
-        dir{i}(end + 1, :) = bsxfun(@minus, pos{i}(end, :), descale(thisNodes(setdiff(thisEdges(bestEdge,:), closestNode),:)));
-        queryIdx{i}(end + 1) =find(ismember(nodes, thisNodes(closestNode, :),'rows'));
-        
+if sum(isIntersection) > 100000
+    functionH = @connectEM.detectChiasmataPostSingleNodeLabelSub;
+    inputCell = cellfun(@(x){x}, num2cell(1 : 5000), 'uni', 0);
+    cluster = Cluster.getCluster( ...
+        '-pe openmp 1', ...
+        '-p 0', ...
+        '-l h_vmem=24G', ...
+        '-l s_rt=23:50:00', ...
+        '-l h_rt=24:00:00');
+    job = Cluster.startJob( functionH, inputCell, ...
+        'name', 'chiasmata2', ...
+        'cluster', cluster);
+    Cluster.waitForJob(job);
+    for idx = 1 : 5000
+        if exist([outputFolder 'temp_singlenodelabel_' num2str(idx) '.mat'], 'file')
+            temp = load([outputFolder 'temp_singlenodelabel_' num2str(idx)]);
+            pos(idx:5000:length(cc)) = temp.pos(idx:5000:length(cc));
+            dir(idx:5000:length(cc)) = temp.dir(idx:5000:length(cc));
+            queryIdx(idx:5000:length(cc)) = temp.queryIdx(idx:5000:length(cc));
+        else
+            warning(['skipped ' num2str(idx)]);
+        end
     end
-    
+else
+    for i=1:length(cc)
+        [pos, dir, queryIdx, centerOfCC, cc] = connectEM.detectChiasmataPostSingleNodeLabelSubSub(node,edges,prob,p,cc,centerOfCC,pos,dir,queryIdx,i)
+    end
 end
-
 % Create an output structure
 output.nodes = nodesV;
 output.edges = edges;
