@@ -75,7 +75,7 @@ function directionalityBasedGrowing(options, outputFolder, agglos, graph, segmen
         clear resultTemp fieldNames j changedIdx unchangedResult;
         toc;
         
-        myelinScore = cellfun(@(x) heuristics.myelinScore(x) < 0.5,agglos);  % take only segments with a low myelinScore
+        myelinScore = cellfun(@(x) heuristics.myelinScore(x) < 0.5,agglos,'uni',0);  % take only segments with a low myelinScore
 
         display('Merging agglomerates:');
         tic;
