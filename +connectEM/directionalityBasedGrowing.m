@@ -79,7 +79,7 @@ function directionalityBasedGrowing(options, outputFolder, agglos, graph, segmen
         
         display('Merging agglomerates:');
         tic;
-        [agglosNew, changedIdx, unchangedResult, edgesToStore] = connectEM.agglomerateMerge(graph, segmentMeta, borderMeta, agglos, result, options, noMyelin);
+        [agglosNew, changedIdx, unchangedResult, edgesToStore] = connectEM.agglomerateMerge(graph, segmentMeta, borderMeta, agglos, result, options);
         toc;
         if options.recursionSteps > 1
             display('Saving (intermediate) results:');
