@@ -39,6 +39,7 @@ function directionalityBasedGrowing(options, outputFolder, agglos, graph, segmen
     if ~exist('heuristics', 'var') || isempty(heuristics)
         heuristics = load('/gaba/u/mberning/results/pipeline/20170217_ROI/heuristicResult.mat');
     end
+    segmentMeta.myelinScore = heuristics.myelinScore;
 %     % Exclude all segments in cubes with catastrophic merger
 %     [er, cm] = connectEM.getERcomponents();
 %     excludedCubeIdx = unique(cellfun(@(x)mode(segmentMeta.cubeIdx(x)), cm));
@@ -75,11 +76,9 @@ function directionalityBasedGrowing(options, outputFolder, agglos, graph, segmen
         clear resultTemp fieldNames j changedIdx unchangedResult;
         toc;
         
-        myelinScore = cellfun(@(x) heuristics.myelinScore(x) < 0.5,agglos,'uni',0);  % take only segments with a low myelinScore
-
         display('Merging agglomerates:');
         tic;
-        [agglosNew, changedIdx, unchangedResult, edgesToStore] = connectEM.agglomerateMerge(graph, segmentMeta, borderMeta, agglos, result, options, myelinScore);
+        [agglosNew, changedIdx, unchangedResult, edgesToStore] = connectEM.agglomerateMerge(graph, segmentMeta, borderMeta, agglos, result, options, noMyelin);
         toc;
         if options.recursionSteps > 1
             display('Saving (intermediate) results:');

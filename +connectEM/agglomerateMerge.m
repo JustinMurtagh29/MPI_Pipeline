@@ -1,4 +1,4 @@
-function [agglosNew, changedIdx, unchangedResult,edgesToStore] = agglomerateMerge(~, segmentMeta, borderMeta, agglos, result, options, myelinScore)
+function [agglosNew, changedIdx, unchangedResult,edgesToStore] = agglomerateMerge(~, segmentMeta, borderMeta, agglos, result, options)
 
     
     assert(numel(agglos) == numel(result.neighbours));
@@ -6,12 +6,13 @@ function [agglosNew, changedIdx, unchangedResult,edgesToStore] = agglomerateMerg
     aggloLookup = createLookup(segmentMeta, agglos);
 
     % Find all endings (given criteria on latent, directionality, continuity and size of border)
-    idxDirectional = cellfun(@(x)x(:,1) > options.latentScore, result.latent, 'uni', 0);
-    idxEnding = cellfun(@(x)abs(x) > options.segDirScore, result.scores, 'uni', 0);
-    idxContinuity = cellfun(@(x)x > options.neuriCScore, result.prob, 'uni', 0);
+    idxDirectional = cellfun(@(x) x(:,1) > options.latentScore, result.latent, 'uni', 0);
+    idxEnding = cellfun(@(x) abs(x) > options.segDirScore, result.scores, 'uni', 0);
+    idxContinuity = cellfun(@(x) x > options.neuriCScore, result.prob, 'uni', 0);
     idxLarge = cellfun(@(x)borderMeta.borderSize(x) > options.borderSize, result.borderIdx, 'uni', 0);
-    if exist('myelinScore','var')
-        idxAll = cellfun(@(v,w,x,y,z)v&w&x&y&z, idxDirectional, idxEnding, idxContinuity, idxLarge, myelinScore, 'uni', 0);
+    if isfield(result,'borderSegMyScore')
+        idxNoMy = cellfun(@(x) x < options.myelinScore, result.borderSegMyScore, 'uni', 0);
+        idxAll = cellfun(@(v,w,x,y,z)v&w&x&y&z, idxDirectional, idxEnding, idxContinuity, idxLarge, idxNoMy, 'uni', 0);
     else
         idxAll = cellfun(@(w,x,y,z)w&x&y&z, idxDirectional, idxEnding, idxContinuity, idxLarge, 'uni', 0);
     end
