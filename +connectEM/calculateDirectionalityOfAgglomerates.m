@@ -73,7 +73,7 @@ function y = calculateDirectionalityOfAgglomerates(agglos, graph, segmentMeta, b
         borderProb = borderProb(outgoing); 
         borderIdxs = borderIdxs(outgoing);
         if isfield(segmentMeta,'myelinScore')
-            borderSegMyScore = cellfun(@(x) segmentMeta.myelinScore(borderSegId),agglos,'uni',0);  
+            borderSegMyScore = segmentMeta.myelinScore(borderSegId);  
         end
 
         % Number of outgoing non correspondence borders
