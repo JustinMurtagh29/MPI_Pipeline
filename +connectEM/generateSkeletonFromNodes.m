@@ -1,7 +1,10 @@
-function generateSkeletonFromNodes(filename, nodes, treeNames, comments, linearNodes, edges)
+function generateSkeletonFromNodes(filename, nodes, treeNames, comments, linearNodes, edges,thr)
 
     if nargin < 5
         linearNodes = false;
+    end
+    if ~exist('thr','var')
+        thr = 5000; % 5 um edge threshold
     end
 
     c = 1; % counter for trees in skeleton
@@ -31,7 +34,7 @@ function generateSkeletonFromNodes(filename, nodes, treeNames, comments, linearN
         elseif linearNodes
             skel{c}.edges = cat(1, 1:size(skel{c}.nodes, 1)-1, 2:size(skel{c}.nodes))';
         else
-            skel{c}.edges = Graph.getMST(bsxfun(@times, nodes{tr}, [11.24 11.24 28]),5000);  % 5 um edge threshold
+            skel{c}.edges = Graph.getMST(bsxfun(@times, nodes{tr}, [11.24 11.24 28]),thr); 
         end
         c = c + 1;
         nodeOffsetThisSkel = nodeId - 1;

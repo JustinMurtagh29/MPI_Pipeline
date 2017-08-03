@@ -93,12 +93,12 @@ function directionalityBasedGrowing(options, outputFolder, agglos, graph, segmen
     tic;
     name = strsplit(outputFolder, '/');
     name = name{end-1};
-    metrics = connectEM.moreMetrics(agglosNew, name, segmentMeta);
+%     metrics = connectEM.moreMetrics(agglosNew, name, segmentMeta);
     toc;
 
     display('Saving metrics:');
     tic;
-    Util.save([outputFolder 'metricsFinal.mat'], agglosNew, metrics);
+    Util.save([outputFolder 'metricsFinal.mat'], agglosNew);%, metrics);
     toc;
 
 end
