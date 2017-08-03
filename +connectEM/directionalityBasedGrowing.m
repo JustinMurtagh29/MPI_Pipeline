@@ -16,6 +16,7 @@ function directionalityBasedGrowing(options, outputFolder, agglos, graph, segmen
         options.minSize = 100;
         options.bboxDist = 1000;
         options.voxelSize = [11.24 11.24 28];
+        options.myelinScore = 0.5;
     end
 
     % Load needed meta data if not passed
@@ -57,7 +58,7 @@ function directionalityBasedGrowing(options, outputFolder, agglos, graph, segmen
 
     % Initialize variables that keep track of changed agglomerates over recursion for first round
     changedIdx = 1:length(agglos);
-    unchangedResult = struct('latent', [], 'pca', [], 'neighbours', [], 'prob', [], 'borderIdx', [], 'scores', []);
+    unchangedResult = struct('latent', [], 'pca', [], 'neighbours', [], 'prob', [], 'borderIdx', [], 'scores', [], 'borderSegMyScore', []);
     agglosNew = agglos;
 
     for i=1:options.recursionSteps
