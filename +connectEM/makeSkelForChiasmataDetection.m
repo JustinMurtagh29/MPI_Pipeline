@@ -40,5 +40,5 @@ for idx_agglo = startingidx : 500 : length(eqClassCCfull);
         [nodes2, edges2] = connectEM.makeSkelForChiasmataDetectionSub(currentEC, axons, edgesGTall, resultCol, segmentMeta, false);
     end
     assert(length(Graph.findConnectedComponents(edges2))<=1);
-    connectEM.detectChiasmata([],nodes2,edges2,true,['/tmpscratch/kboerg/visX',numstr ,'_' num2str(floor(idx_agglo/100)) '/visX', numstr, '_' num2str(idx_agglo) '/'])
+    connectEM.detectChiasmata([],nodes2,edges2,idx_agglo ~= 1,['/tmpscratch/kboerg/visX',numstr ,'_' num2str(floor(idx_agglo/100)) '/visX', numstr, '_' num2str(idx_agglo) '/'])
 end

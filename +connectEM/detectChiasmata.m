@@ -28,7 +28,7 @@ if size(nodes, 1) < 1E6
         end
     end
 else
-    save([outputFolder 'prep']);
+    %save([outputFolder 'prep']);
 
     % functionH = @connectEM.detectChiasmataSub;
     % inputCell = cellfun(@(x){x}, num2cell(1 : 5000), 'uni', 0);
