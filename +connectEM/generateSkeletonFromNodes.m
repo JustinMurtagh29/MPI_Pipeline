@@ -1,6 +1,6 @@
 function generateSkeletonFromNodes(filename, nodes, treeNames, comments, linearNodes, edges,thr)
 
-    if nargin < 5
+    if nargin < 5 || isempty(linearNodes)
         linearNodes = false;
     end
     if ~exist('thr','var')
@@ -29,7 +29,7 @@ function generateSkeletonFromNodes(filename, nodes, treeNames, comments, linearN
             skel{c}.nodes(nodeId-nodeOffsetThisSkel,:) = [nodes{tr}(no,:) 10];
             nodeId = nodeId + 1;
         end
-        if exist('edges', 'var')
+        if exist('edges', 'var') && ~isempty(edges)
             skel{c}.edges = edges{tr};
         elseif linearNodes
             skel{c}.edges = cat(1, 1:size(skel{c}.nodes, 1)-1, 2:size(skel{c}.nodes))';
