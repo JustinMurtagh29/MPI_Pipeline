@@ -89,16 +89,16 @@ function directionalityBasedGrowing(options, outputFolder, agglos, graph, segmen
         end
     end
     
-    display('Calculating set of extended metrics:');
-    tic;
-    name = strsplit(outputFolder, '/');
-    name = name{end-1};
+%     display('Calculating set of extended metrics:');
+%     tic;
+%     name = strsplit(outputFolder, '/');
+%     name = name{end-1};
 %     metrics = connectEM.moreMetrics(agglosNew, name, segmentMeta);
-    toc;
+%     toc;
 
     display('Saving metrics:');
     tic;
-    Util.save([outputFolder 'metricsFinal.mat'], agglosNew);%, metrics);
+    Util.save([outputFolder sprintf('metricsFinal_after%drecursions.mat',options.recursionSteps)], agglosNew);%, metrics);
     toc;
 
 end
