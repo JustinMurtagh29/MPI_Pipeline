@@ -45,7 +45,7 @@ thisProb = prob(thisEdgeIdx);
 % thisNodes
 thisEdges = thisOffset(thisEdges);
 thisEdges = reshape(thisEdges,[],2); % Renumber according to new node indices
-visualizeSingleSphere(thisNodes, thisEdges, thisProb, thisIdx, thisIdx, p);
+visualizeSingleSphere(nodes, edges, prob, ~thisNodeIdx, thisNodeIdx, p);
 end
 function visualizeSingleSphere(nodes, edges, prob, currentNodeIdx, outerNodesIdx, p)
 
