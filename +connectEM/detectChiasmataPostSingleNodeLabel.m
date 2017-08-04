@@ -1,6 +1,8 @@
 function [output, queryIdx] = detectChiasmataPostSingleNodeLabel(edges, isIntersection, nrExits, nodes, p, nodesV, prob)
-temp.edges = edges;
-cc = findCCaccordingToGraph(temp, find(isIntersection)); %must be from manuelCode repo
+temp = nchoosek(sum(isIntersection),2);
+cc = Graph.findConnectedComponents(temp(pdist(nodes(isIntersection,:))>2000), false);
+lookup = find(isIntersection);
+cc = cellfun(@(x){lookup(x)},cc);
 [~, centerOfCC] = cellfun(@(x)min(pdist2(bsxfun(@minus, nodes(x,:), mean(nodes(x,:),1)), [0 0 0])), cc);
 
 % Find out where to query for each CC

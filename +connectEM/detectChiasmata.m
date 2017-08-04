@@ -22,7 +22,7 @@ if size(nodes, 1) < 1E6
     for i=1:size(nodes,1)
         [thisNodes, thisEdges, thisProb] = connectEM.detectChiasmataPruneToSphere(nodes, edges, ones(size(edges,1),1), p, i);
         C = Graph.findConnectedComponents(thisEdges);
-        if length(C) > 3 && sum(cellfun(@(idx)max(pdist2(thisNodes(idx, :), nodes(i,:))) > 4000, C))>3
+        if length(C) > 3 && sum(cellfun(@(idx)max(pdist2(thisNodes(idx, :), nodes(i,:))) > 3000, C))>3
             isIntersection(i) = true;
             nrExits(i) = length(C);
         end
