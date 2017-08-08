@@ -86,3 +86,7 @@ p.class.dtype = 'single';
 
 % Save new parameter structure
 save(fullfile(p.saveFolder, 'allParameter.mat'), 'p');
+
+%%%%%%%%%%%%%%%%% START PIPELINE (WITHOUT CLASSIFICATION) %%%%%%%%%%%%%%%%%
+
+runPipeline(p, PipelineStep.MyelinFix);
