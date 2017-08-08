@@ -63,3 +63,25 @@ p.myelin.segId = 3;
 % usually need no modification
 p = setParameterSettings(p);
 
+%%%%%%%%%%%%%%%%%%%%% OVERWRITE SOME DEFAULT SETTINGS %%%%%%%%%%%%%%%%%%%%%
+
+% We will need a WKW segmentation for webKNOSSOS import
+p.seg = rmfield(p.seg, 'prefix');
+p.seg.backend = 'wkwrap';
+
+% Use same normalization values as in 20170217_ROI run
+p.norm = struct;
+p.norm.meanVal = 122.452159881592;
+p.norm.stdVal = 20.5667953491211;
+p.norm.func = @(x) normalizeStack(x, p.norm.meanVal, p.norm.stdVal);
+
+% CNN was applied by Benedikt
+p = rmfield(p, 'cnn');
+
+% Use output from Benedikt's CNN
+p.class = struct;
+p.class.root = '/tmpscratch/bstaffle/data/2012-09-28_ex145_07x2_ROI2017/mem_cnn2l_st_10/';
+p.class.prefix = '2012-09-28_ex145_07x2_ROI2016_corrected_mag1';
+p.class.dtype = 'single';
+
+%
