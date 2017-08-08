@@ -1,6 +1,6 @@
 function [corrEdges, corrCom] = collectGlobalCorrespondences(p)
 
-    saveFolder = [p.saveFolder 'correspondencesNew' filesep];
+    saveFolder = p.correspondence.saveFolder;
     files = dir([saveFolder '*.mat']);
     
     corrEdges = zeros(0,2,'uint32');
