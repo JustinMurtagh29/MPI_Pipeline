@@ -84,4 +84,5 @@ p.class.root = '/tmpscratch/bstaffle/data/2012-09-28_ex145_07x2_ROI2017/mem_cnn2
 p.class.prefix = '2012-09-28_ex145_07x2_ROI2016_corrected_mag1';
 p.class.dtype = 'single';
 
-%
+% Save new parameter structure
+save(fullfile(p.saveFolder, 'allParameter.mat'), 'p');
