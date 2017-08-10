@@ -91,7 +91,7 @@ function agglomeration( ...
     if (~isfield(optional, 'doGarbageCollection')) || optional.doGarbageCollection
         display('Garbage collection');
         tic;
-        [axonsFinal, dendritesFinal] = connectEM.garbageCollection(graph, segmentMeta, axons, dendrites, heuristics.mapping);
+        [axonsFinal, dendritesFinal, garbageEdges] = connectEM.garbageCollection(graph, segmentMeta, axons, dendrites, heuristics.mapping);
         toc;
     else
         axonsFinal = axons;
