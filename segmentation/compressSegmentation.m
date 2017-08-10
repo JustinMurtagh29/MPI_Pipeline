@@ -1,17 +1,27 @@
-function compressSegmentation(inParam, outRoot)
-    % compressSegmentation(inParam, outRoot)
+function compressSegmentation(p)
+    % compressSegmentation(p)
     %   Compresses a segmentation, if possible.
     %
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     
-    % only WKW datasets can be compressed
-    if ~isfield(inParam, 'backend'); return; end;
-    if inParam.backend ~= 'wkwrap'; return; end;
-    
-    inRoot = buildInRoot(inParam);
+    % configuration
     resolutions = 2 .^ (0:9);
     taskCount = 50;
+    
+    % only WKW datasets can be compressed
+    if ~isfield(p.seg, 'backend'); return; end;
+    if p.seg.backend ~= 'wkwrap'; return; end;
+    
+    % find input root
+    inRoot = buildInRoot(p.seg);
+    oldRoot = strcat(inRoot, '-uncompressed');
+    outRoot = strcat(inRoot, '-wip');
+    
+    % create output directory, if needed
+    assert(not(exist(oldRoot, 'dir')));
+    assert(not(exist(outRoot, 'dir')));
+    mkdir(outRoot);
     
     for curRes = resolutions
         curInRoot = fullfile(inRoot, num2str(curRes));
@@ -29,6 +39,11 @@ function compressSegmentation(inParam, outRoot)
         wkwCompressDir(curInRoot, curOutRoot, taskCount);
         fprintf('✔\n');
     end
+    
+    % replace segmentation
+    assert(not(exist(oldRoot, 'dir
+    movefile(inRoot, oldRoot);
+    movefile(outRoot, inRoot);
 end
 
 function inRoot = buildInRoot(inParam)
