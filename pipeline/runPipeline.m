@@ -109,6 +109,12 @@ function p = runPipeline(p, startStep, endStep,runlocal)
         createResolutionPyramid(p.seg, thisBBox, [], true);
         fprintf('done!\n'); toc;
     end
+    
+    if startStep <= PipelineStep.CompressSegmentation && ...
+       endStep >= PipelineStep.CompressSegmentation
+        % Compress segmentation (at all resolutions)
+        compressSegmentation(p);
+    end
         
     % Construct graph on globalized version of segmentation
     % This will create p.local(:).edgeFile & borderFile
