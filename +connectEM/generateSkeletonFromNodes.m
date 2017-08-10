@@ -1,5 +1,8 @@
 function generateSkeletonFromNodes(filename, nodes, treeNames, comments, linearNodes, edges,thr)
-
+    folder = fileparts(filename);
+    if ~exist(folder,'dir')
+        mkdir(folder);
+    end
     if nargin < 5 || isempty(linearNodes)
         linearNodes = false;
     end
