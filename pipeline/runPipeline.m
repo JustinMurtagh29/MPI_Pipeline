@@ -94,12 +94,6 @@ function p = runPipeline(p, startStep, endStep,runlocal)
         job = buildSegmentMetaData(p);
         Cluster.waitForJob(job);
     end
-    
-%     if startStep <= PipelineStep.GlobalCorrespondences && ...
-%        endStep >= PipelineStep.GlobalCorrespondences
-%         job = globalizeCorrespondences(p);
-%         Cluster.waitForJob(job);
-%     end
         
     if startStep <= PipelineStep.SegmentationPyramid && ...
        endStep >= PipelineStep.SegmentationPyramid
