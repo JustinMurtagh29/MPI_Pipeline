@@ -35,14 +35,14 @@ function compressSegmentation(p)
         % prepare compressed WKW dataset
         wkwInit('compress', curInRoot, curOutRoot);
         
-        fprintf('Compressing resolution %d... ', curRes);
+        fprintf('Compressing resolution %d ... ', curRes);
         wkwCompressDir(curInRoot, curOutRoot, taskCount);
         fprintf('✔\n');
     end
     
     % replace segmentation
-    movefile(inRoot, bakRoot);
-    movefile(outRoot, inRoot);
+    assert(movefile(inRoot, bakRoot));
+    assert(movefile(outRoot, inRoot));
 end
 
 function inRoot = buildInRoot(inParam)
