@@ -15,11 +15,11 @@ function compressSegmentation(p)
     
     % find input root
     inRoot = buildInRoot(p.seg);
-    oldRoot = strcat(inRoot, '-uncompressed');
+    bakRoot = strcat(inRoot, '-uncompressed');
     outRoot = strcat(inRoot, '-wip');
     
     % create output directory, if needed
-    assert(not(exist(oldRoot, 'dir')));
+    assert(not(exist(bakRoot, 'dir')));
     assert(not(exist(outRoot, 'dir')));
     mkdir(outRoot);
     
@@ -41,8 +41,7 @@ function compressSegmentation(p)
     end
     
     % replace segmentation
-    assert(not(exist(oldRoot, 'dir
-    movefile(inRoot, oldRoot);
+    movefile(inRoot, bakRoot);
     movefile(outRoot, inRoot);
 end
 
