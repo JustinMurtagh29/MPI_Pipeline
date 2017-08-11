@@ -24,16 +24,20 @@ function result = determineGroupedAgglomerationOverlap(partition, segmentStruct)
         index =  index+1;
     end
     disp(index);
-    eqClass = [];
-    occurences = [];
     % Determine agglomeration that each segment belongs to and evidence (occurence) for each
-    for i=1:length(segmentStruct.segIds)
-        idx = partition.segIds == segmentStruct.segIds(i);
-        if any(idx)
-            eqClass(end+1) = partition.eqClass(idx);
-            occurences(end+1) = segmentStruct.occurences(i);
-        end
-    end
+    [Lia, Locb] = ismember(partition.segIds, segmentStruct.segIds);
+    eqClass = partition.eqClass(Lia)';
+    occurences = segmentStruct.occurences(Locb(Lia))';
+    % eqClass2 = [];
+    % occurences2 = [];
+    % for i=1:length(segmentStruct.segIds)
+    %     idx = partition.segIds == segmentStruct.segIds(i);
+    %     if any(idx)
+    %         eqClass2(end+1) = partition.eqClass(idx);
+    %         occurences2(end+1) = segmentStruct.occurences(i);
+    %     end
+    % end
+    % assert(isequal(sortrows([eqClass' occurences']),sortrows([eqClass2' occurences2'])));
     result.eqClasses = unique(eqClass);
     if ~isempty(result.eqClasses)
         for i=1:length(result.eqClasses)
