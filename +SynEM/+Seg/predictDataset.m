@@ -103,8 +103,8 @@ elseif interfaceFile
 else
     interfaceFile = [];
 end
-if ischar(featureFile)
-    Util.log('Storing interfaces at %s.', featureFile);
+if ischar(interfaceFile)
+    Util.log('Storing interfaces at %s.', interfaceFile);
 else
     Util.log('Interfaces are not being stored.');
 end

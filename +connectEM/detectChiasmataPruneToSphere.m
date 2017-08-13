@@ -17,13 +17,13 @@ thisDistance = pdist2(nodes(i,:), nodes);
 thisNodeIdx = thisDistance > p.sphereRadiusInner;
 % rescue inner points that are not connected to center node within inner sphere
 innerEdges = any(ismember(edges, find(~thisNodeIdx)),2);
-innerConnected = Graph.findConnectedComponents(edges(innerEdges,:), false);
+innerConnected = Graph.findConnectedComponents(edges(innerEdges,:));
 idx = find(cellfun(@(x)ismember(i,x),innerConnected));
 for idx2 = setdiff(1: length(innerConnected), idx)
     thisNodeIdx(innerConnected{idx2}) = true;
 end
 %remove not connected skeletons
-hereConnected = Graph.findConnectedComponents(edges, false);
+hereConnected = Graph.findConnectedComponents(edges);
 idx = find(~cellfun(@(x)ismember(i,x),hereConnected));
 idx = idx(:);
 % assert(length(idx)<length(hereConnected));
@@ -45,7 +45,7 @@ thisProb = prob(thisEdgeIdx);
 % thisNodes
 thisEdges = thisOffset(thisEdges);
 thisEdges = reshape(thisEdges,[],2); % Renumber according to new node indices
-visualizeSingleSphere(nodes, edges, prob, ~thisNodeIdx, thisNodeIdx, p);
+%visualizeSingleSphere(nodes, edges, prob, ~thisNodeIdx, thisNodeIdx, p);
 end
 function visualizeSingleSphere(nodes, edges, prob, currentNodeIdx, outerNodesIdx, p)
 
