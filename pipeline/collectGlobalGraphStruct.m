@@ -46,8 +46,7 @@ function collectGlobalGraphStruct(p)
     graph.borderIdx = borderIdx;
 
     % save output
-    graphFile = [p.saveFolder, 'graphNew.mat'];
-    Util.saveStruct(graphFile, graph);
+    Util.saveStruct(fullfile(p.saveFolder, 'graph.mat'), graph);
     disp('Graph construction done and saved')
 end
 
