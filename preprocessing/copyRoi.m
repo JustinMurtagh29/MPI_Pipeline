@@ -16,6 +16,12 @@ function raw = copyRoi()
     % Uncomment for reading / writing .WKW files
     % chosenOne.backend = 'wkwrap';
     % destination.backend = 'wkwrap';
+    
+    if isfield(destination, 'backend') ...
+            && strcmp(destination.backend, 'wkwrap')
+        % initialize WKW dataset, if needed
+        wkwInit('new', destination.root, 32, 32, 'uint8', 1);
+    end
 
     % Read from one, write to wKcubes
     raw = loadRawData(chosenOne, chosenOne.bbox);
