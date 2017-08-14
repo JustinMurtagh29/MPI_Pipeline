@@ -94,12 +94,6 @@ function p = runPipeline(p, startStep, endStep,runlocal)
         job = buildSegmentMetaData(p);
         Cluster.waitForJob(job);
     end
-    
-%     if startStep <= PipelineStep.GlobalCorrespondences && ...
-%        endStep >= PipelineStep.GlobalCorrespondences
-%         job = globalizeCorrespondences(p);
-%         Cluster.waitForJob(job);
-%     end
         
     if startStep <= PipelineStep.SegmentationPyramid && ...
        endStep >= PipelineStep.SegmentationPyramid
@@ -108,6 +102,12 @@ function p = runPipeline(p, startStep, endStep,runlocal)
         thisBBox = [1, 1, 1; (ceil(p.bbox(:, 2) ./ 1024) .* 1024)']';
         createResolutionPyramid(p.seg, thisBBox, [], true);
         fprintf('done!\n'); toc;
+    end
+    
+    if startStep <= PipelineStep.CompressSegmentation && ...
+       endStep >= PipelineStep.CompressSegmentation
+        % Compress segmentation (at all resolutions)
+        compressSegmentation(p);
     end
         
     % Construct graph on globalized version of segmentation
