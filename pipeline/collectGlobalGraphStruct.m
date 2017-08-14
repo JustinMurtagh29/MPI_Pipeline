@@ -1,52 +1,37 @@
 function collectGlobalGraphStruct(p)
-    load([p.saveFolder 'globalEdges.mat']);
-    load([p.saveFolder 'globalNeuriteContinuityProb.mat']);
-    borderIdx = (1:numel(prob))';
+    edgeFile = fullfile(p.saveFolder, 'globalEdges.mat');
+    probFile = fullfile(p.saveFolder, 'globalNeuriteContinuityProb.mat');
+    corrFile = fullfile(p.saveFolder, 'mapping.mat');
 
-    % The edge list only contains edges between segments in
-    % the same segmentation cube. Edges between different
-    % cubes are called 'correspondences' and must be added
-    % separately here.
-    % Pipeline now uses the "new" correspondences as standard
-    % See pipeline/correspondenceTests.m for details on calculation or:
-    % https://gitlab.mpcdf.mpg.de/connectomics/pipeline/commit/4b20a81f7daa29dc6fa555913afb265f538fafe9
-    % Loads "corrEdges"
-    corrEdges = load(fullfile(p.saveFolder,'mapping.mat'),'correspondences');
-    corrEdges = corrEdges.correspondences;
+    % The edge list only contains edges between segments in the same
+    % segmentation cube. Edges between different cubes are called
+    % 'correspondences' and must be added separately here.
+    edges = load(edgeFile, 'edges');
+    prob = load(probFile, 'prob');
     
-    corrProb  = ones(size(corrEdges, 1), 1);
-    corrBorderIdx = NaN(size(corrEdges, 1), 1);
-
-    % build total edges and prob fields
-    edges = [edges; corrEdges];
-    prob  = [prob ; corrProb ];
-    borderIdx = [borderIdx; corrBorderIdx];
+    corr = load(corrFile, 'correspondences');
+    corr = corr.correspondences;
+    
+    borderIdx = [
+        reshape(1:size(edges, 1), [], 1); % for border-based edges
+        nan(size(corr, 1), 1)];           % for correspondences
+    
+    edges = [edges; corr];
+    prob = [prob; ones(size(corr, 1), 1)];
 
     % sort edges and probabilities
-    [edges, edgeRows] = sortrows(edges);
-    prob = prob(edgeRows);
-    borderIdx = borderIdx(edgeRows);
-
-    % build look up tables for neighbouring
-    % segment IDs and their connection probabilities
-    [neighbours, neighboursIdx] = ...
-        Graph.edges2Neighbors(edges);
-    neighProb = cellfun(@(x) ...
-        prob(x), neighboursIdx, 'UniformOutput', false);
-    neighBorderIdx = cellfun(@(x) ...
-        borderIdx(x), neighboursIdx, 'UniformOutput', false);
+   [edges, rows] = sortrows(edges);
+    prob = prob(rows);
+    borderIdx = borderIdx(rows);
 
     % build output
     graph = struct;
-    graph.neighbours = neighbours;
-    graph.neighProb = neighProb;
-    graph.neighBorderIdx = neighBorderIdx;
     graph.edges = edges;
     graph.prob = prob;
     graph.borderIdx = borderIdx;
 
     % save output
-    Util.saveStruct(fullfile(p.saveFolder, 'graph.mat'), graph);
-    disp('Graph construction done and saved')
+    graphFile = fullfile(p.saveFolder, 'graph.mat');
+    Util.saveStruct(graphFile, graph);
 end
 
