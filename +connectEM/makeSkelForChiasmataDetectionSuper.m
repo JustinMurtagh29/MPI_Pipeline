@@ -1,6 +1,6 @@
 addpath('/gaba/u/kboerg/code/manuelCode/games') %for a clean version of findCCaccordingToGraph
 functionH = @connectEM.makeSkelForChiasmataDetection;
-inputCell = cellfun(@(x){x}, num2cell(2 : 501), 'uni', 0);
+inputCell = cellfun(@(x){x}, num2cell(1 : 500), 'uni', 0);
 cluster = Cluster.getCluster( ...
     '-pe openmp 1', ...
     '-p 0', ...
@@ -12,4 +12,4 @@ job = Cluster.startJob( functionH, inputCell, ...
     'cluster', cluster);
     
 % the giant super agglo should run locally
-connectEM.makeSkelForChiasmataDetection(1);
+%connectEM.makeSkelForChiasmataDetection(1);

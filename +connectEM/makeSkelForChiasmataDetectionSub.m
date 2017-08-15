@@ -21,7 +21,7 @@ edges2=edges;
 nodes2=nodes;
 usedTasks = {};
 % create nodes and edges for queries
-for runidx = 1 : 2
+for runidx = 1 : length(resultCol)
     for idx = 1 : length(resultCol{runidx}.startAgglo)
         if mod(idx,100)==0
             disp(idx);
