@@ -59,6 +59,10 @@ function [p, job] = predictDataset( p, fm, classifier, outputFile, ...
 %      [p.saveFolder 'synapseClassifier.mat'].
 % Author: Benedikt Staffler <benedikt.staffler@brain.mpg.de>
 
+% sanity check
+assert(fm.numFeaturesSelected == length(classifier.ens.PredictorNames), ...
+    'Classifier and feature map do not match.');
+
 info = Util.runInfo(true);
 
 if ~exist('outputFile','var') || isempty(outputFile)
