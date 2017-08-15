@@ -1,14 +1,16 @@
-for idx_top = 1 : 5
+for idx_top = 1 : 20
+    idx_top
     m = load(['/tmpscratch/kboerg/chiasmarun/resultchiasma_' num2str(ind(idx_top))]);
-    mask= pdist2(m.thisNodes,nodesScaled(temp{which_col}.output.ccCenterIdx(m.i_here),:)) < 4000;
-    mask2 = zeros(size(mask));
-    mask2(mask) = 1 : sum(mask);
+    p.sphereRadiusInner=4000;
+    p.sphereRadiusOuter=Inf;
+    [thisNodes, thisEdges, thisProb] = ...
+        connectEM.detectChiasmataPruneToSphere( ...
+        nodesScaled, temp{which_col}.output.edges, ...
+        ones(size(temp{which_col}.output.edges,1),1), p, temp{which_col}.output.ccCenterIdx(m.i_here));
+    mask= ~ismember(m.thisNodes,thisNodes,'rows'); 
     for idx =1 : length(m.C)
-        m.C{idx} = setdiff(mask2(m.C{idx}),0);
+        m.C2{idx} =intersect(m.C{idx},find(mask));
     end
-    m.thisEdges=mask2(m.thisEdges);
-    m.thisEdges(any(m.thisEdges==0,2),:) = [];
-    m.thisNodes=m.thisNodes(mask,:);
-     connectEM.generateSkeletonFromAgglo(m.thisEdges, round(bsxfun(@times,m.thisNodes,1./[11.24,11.24,28])), m.C, arrayfun(@(x) sprintf('skel_%d_%d',ind(idx_top),x),1:numel(m.C),'uni',0), './', max(skelsegids{1}));
+    connectEM.generateSkeletonFromAgglo(m.thisEdges, round(bsxfun(@times,m.thisNodes,1./[11.24,11.24,28])), m.C2, arrayfun(@(x) sprintf('skel_%d_%d',ind(idx_top),x),1:numel(m.C),'uni',0), './', max(skelsegids{1}));
     copyfile(ff.filenames{fflookup(idxtemp{which_col}(ind(idx_top)))}, '.')
 end
