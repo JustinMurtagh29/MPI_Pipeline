@@ -1,5 +1,6 @@
 outputFolder = '/tmpscratch/mberning/axonQueryResults/';
 
+load('/gaba/scratch/mberning/edgesGTall.mat');
 % Load segment meta data & graph
 load('/gaba/u/mberning/results/pipeline/20170217_ROI/allParameterWithSynapses.mat');
 [graph, segmentMeta] = connectEM.loadAllSegmentationData(p);
@@ -7,10 +8,56 @@ load('/gaba/u/mberning/results/pipeline/20170217_ROI/allParameterWithSynapses.ma
 temp = load('/gaba/scratch/mberning/axonQueryGeneration/beforeQueryGeneration.mat', 'axonsNew');
 axons = temp.axonsNew;
 clear temp;
+functionH = @connectEM.axonQueryAnalysisSub;
+inputCell = cellfun(@(x){x}, num2cell(1 : 500), 'uni', 0);
+cluster = Cluster.getCluster( ...
+    '-pe openmp 1', ...
+    '-p 0', ...
+    '-l h_vmem=24G', ...
+    '-l s_rt=23:50:00', ...
+    '-l h_rt=24:00:00');
+job = Cluster.startJob( functionH, inputCell, ...
+    'name', 'query', ...
+    'cluster', cluster);
+for startidx = 1  : 500
+    startidx
+    temp = load(['/tmpscratch/kboerg/20170810axonQueryAnalysis/output' num2str(startidx)],'usededges');
+    usededges(startidx:500:size(axons,1)) = temp.usededges(startidx:500:size(axons,1));
+end
+for idx = 1 : length(axons)
+    idx
+    assert(isequal(Graph.findConnectedComponents(edgesGTall(usededges{idx},:)),{sort(axons{idx})}));
+end
+usededges2=cell2mat(usededges(~cellfun(@isempty,usededges))');
+usededges3 =ismember(graph.edges,edgesGTall(usededges2,:),'rows');
 % Only use 5 micron pieces in this initial analysis
 %segmentsLeftover = setdiff(find(segmentMeta.axonProb > 0.5), cell2mat(axons));
 segmentsLeftover = [];
 
+options.border = [2000; -2000];
+borderNm = repmat(options.border, 1, 3);
+borderVoxel = round(bsxfun(@times, 1./p.raw.voxelSize, borderNm));
+bboxSmall = p.bbox + borderVoxel';
+borderMeta = load([p.saveFolder 'globalBorder.mat'], 'borderCoM');
+borderMeta.borderCoM(end+1,:)=nan(1,3);
+borderidxs = graph.borderIdx(usededges3);
+borderidxs(isnan(borderidxs))=length(borderMeta.borderCoM);
+
+borderPositions = double(borderMeta.borderCoM(borderidxs,:));
+
+outsideBbox = ~(all(bsxfun(@gt, borderPositions, bboxSmall(:, 1)'), 2) & ...
+    all(bsxfun(@lt, borderPositions, bboxSmall(:, 2)'), 2));
+usededges4=usededges3;    
+usededges4(graph.prob(usededges3)<0.98&outsideBbox)  = false;
+axonsNew = Graph.findConnectedComponents(graph.edges(usededges4,:));
+axonsNew = [axonsNew; num2cell(setdiff(cell2mat(axons), cell2mat(axonsNew)))];
+calculateLength = @(x)max(pdist(bsxfun(@times, double(borderMeta.borderCoM(x, :)), p.raw.voxelSize)));
+filternan = @(x)x(~isnan(x));
+for idx = 1 : length(axonsNew)
+    idx
+    axonLength(idx) = max([-1, calculateLength(filternan(cell2mat(graph.neighBorderIdx(axonsNew{idx}))))]);
+end
+axons=axonsNew(axonLength>5000);
 % Where to find skeletons that were returned from the queries
 scratchFolder = outputFolder;
 skeletonFolders = {'MBKMB_L4_axons_queries_2017_a' 'MBKMB_L4_axons_queries_2017_b'};
