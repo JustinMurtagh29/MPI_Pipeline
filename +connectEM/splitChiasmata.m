@@ -48,7 +48,7 @@ job = Cluster.startJob( functionH, inputCell, ...
 
 thisEdgesNewMeta = [];
 thisEdgesColMeta = temp{which_col}.output.edges;
-listmats = dir('/tmpscratch/kboerg/chiasmarun2/resultchiasma2_');
+listmats = dir('/tmpscratch/kboerg/chiasmarun2/resultchiasma2_*');
 for idx = 1:length(listmats)
     idx
     load(['/tmpscratch/kboerg/chiasmarun2/' listmats(idx).name]);
