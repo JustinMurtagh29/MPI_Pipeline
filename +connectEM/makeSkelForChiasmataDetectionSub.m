@@ -1,24 +1,27 @@
-function [nodes2, edges2] = makeSkelForChiasmataDetectionSub(currentEC, axons, edgesGTall, resultCol,segmentMeta, removeRedundantAnnotations)
+function [nodes2, edges2, segIds2] = makeSkelForChiasmataDetectionSub(currentEC, axons, edgesGTall, resultCol,segmentMeta, removeRedundantAnnotations)
 last = @(x)x{end};
 fifth = @(x)x{5}
 getTask = @(x)fifth(strsplit(last(strsplit(x,'/')),'_'));
 
 nodes = [];
 edges = [];
+segIds = [];
 lookup1 = [];
 lookup2 = [];
 % create nodes and edges within agglos
 for idx = 1 : length(currentEC)
     idx
     lookup=sparse(ones(1,length(axons{currentEC(idx)})), axons{currentEC(idx)}, 1:length(axons{currentEC(idx)}));
-    
     edges=[edges;full(lookup(edgesGTall(all(ismember(edgesGTall,axons{currentEC(idx)}),2),:)))+size(nodes,1)];
     nodes=[nodes;segmentMeta.point(:,axons{currentEC(idx)})'];
+    segIds=[segIds;axons{currentEC(idx)}];
     lookup1 = [lookup1; repmat(currentEC(idx), length(axons{currentEC(idx)}), 1)];
     lookup2 = [lookup2; axons{currentEC(idx)}];
 end
+% Not sure why (or whether) this duplication is necessary
 edges2=edges;
 nodes2=nodes;
+segIds2=segIds;
 usedTasks = {};
 % create nodes and edges for queries
 for runidx = 1 : length(resultCol)
@@ -43,6 +46,7 @@ for runidx = 1 : length(resultCol)
             [I, ~] = ind2sub(size(tempids),find(Locb));
             edges2=[edges2;[X,Y]+size(nodes2,1); I+size(nodes2,1), Locb(Locb>0)];
             nodes2=[nodes2;resultCol{runidx}.ff.nodes{idx}];
+            segIds2=[segIds2;NaN(size(resultCol{runidx}.ff.nodes{idx},1);
             assert(size(nodes2,1)>=max(edges2(:)));
         end
     end
