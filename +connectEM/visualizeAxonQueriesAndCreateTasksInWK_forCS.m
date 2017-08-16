@@ -9,7 +9,7 @@
         tic;
         for j=1:numel(batch.q.pos)
             for k=1:numel(batch.q.pos{j})
-                command = sprintf('python ../wk-paper/RESCOPaaS/createTaskWithScript.py %u %u %u %.2f %.2f %.2f 1 CSMB_AxonLeftQueriesTest', ...
+                command = sprintf('python ../wk-paper/RESCOPaaS/createTaskWithScript.py %u %u %u %.2f %.2f %.2f 1 CS_MB_L4_AxonLeftQueries', ...
                     batch.q.pos{j}{k}(:), batch.q.angles{j}{k}(:));
                 [~,response] = system(command);
                 responses{i,j,k} = response;
