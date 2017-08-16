@@ -46,7 +46,7 @@ for runidx = 1 : length(resultCol)
             [I, ~] = ind2sub(size(tempids),find(Locb));
             edges2=[edges2;[X,Y]+size(nodes2,1); I+size(nodes2,1), Locb(Locb>0)];
             nodes2=[nodes2;resultCol{runidx}.ff.nodes{idx}];
-            segIds2=[segIds2;NaN(size(resultCol{runidx}.ff.nodes{idx},1))];
+            segIds2=[segIds2;NaN(size(resultCol{runidx}.ff.nodes{idx},1),1)];
             assert(size(nodes2,1)>=max(edges2(:)));
         end
     end

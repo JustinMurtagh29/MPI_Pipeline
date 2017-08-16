@@ -26,6 +26,7 @@ function makeSkelForChiasmataDetection(startingidx)
         assert(length(Graph.findConnectedComponents(edges2))<=1);
         % Save state as used for connectEM.detectChiasmata of nodes, edges and segIds as arrays (table and graph representation will be generated during collection)
         saveFile = ['/tmpscratch/kboerg/visX',numstr ,'_' num2str(floor(idx_agglo/100)) '/visX', numstr, '_' num2str(idx_agglo) '/superagglo.mat'];
+        mkdir(fileparts(saveFile));
         save(saveFile, 'nodes2', 'edges2', 'segIds2');
         % Detect chiasmata
         connectEM.detectChiasmata([],nodes2,edges2,idx_agglo ~= 1,...
