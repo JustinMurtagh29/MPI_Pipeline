@@ -161,7 +161,9 @@ for startingidx = 1:500
     end
 end
 
-connectEM.collectSuperagglos(outputFolder,prefix,outputFolder)
+connectEM.collectSuperagglos(outputFolder,['visX',numstr ,'_'],outputFolder)
+% load(fullfile(outputFolder,'superagglos.mat'), 'superagglos');
+
 
 % % Generate new merged classes
 % eqClassCCfull = [eqClassCC; num2cell(setdiff(1 : length(agglos), cell2mat(eqClassCC)))'];
