@@ -61,9 +61,9 @@ function classificationStep(p, tempClass, bbox)
     jobName = 'classForMovie';
 
     if p.cnn.GPU
-        job = startGPU(functionH, inputCell, jobName);
+        job = startGPU(functionH, inputCell, jobName, 24);
     else
-        job = startCPU(functionH, inputCell, jobName);
+        job = startCPU(functionH, inputCell, jobName, 24);
     end
 
     Cluster.waitForJob(job);
