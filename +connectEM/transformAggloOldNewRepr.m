@@ -1,4 +1,4 @@
-function aggloNew = transformAggloOldNewRepr(aggloOld,edgesSegId)
+function aggloNew = transformAggloOldNewRepr(aggloOld,edgesSegId,segmentMeta)
 
 searchVec = cat(1,aggloOld{:});
 [~,idx] = ismember(edgesSegId,searchVec);

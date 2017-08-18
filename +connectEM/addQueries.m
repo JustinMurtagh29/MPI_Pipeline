@@ -35,9 +35,10 @@ function addQueries(agglos,outputFolder,skeletonFolders,segmentsLeftover,filterB
 
 % Load segment meta data & graph
 load('/gaba/u/mberning/results/pipeline/20170217_ROI/allParameterWithSynapses.mat');
-graph = connectEM.loadAllSegmentationData(p);
 
 if filterBorderEdges
+    [graph, segmentMeta] = connectEM.loadAllSegmentationData(p);
+
     edgesGTall = load('/gaba/scratch/mberning/edgesGTall.mat');
     edgesGTall = edgesGTall.edgesGTall;
     functionH = @connectEM.queryAnalysisSub;
@@ -79,7 +80,7 @@ if filterBorderEdges
 %     usededges4 = cat(1,usededges4,repmat((1:numel(agglos))',1,2)); % add self edges not tested yet
     
     aggloFilteredOld = Graph.findConnectedComponents(graph.edges(usededges4,:));
-    aggloFiltered = connectEM.transformAggloOldNewRepr(aggloFilteredOld,graph.edges(usededges4,:));
+    aggloFiltered = connectEM.transformAggloOldNewRepr(aggloFilteredOld,graph.edges(usededges4,:),segmentMeta);
 
     % transform aggloFiltered here
     singleRemainingSegs = setdiff(cell2mat(cellfun(@(x) x(:,4),{agglos.nodes},'uni',0)), cell2mat(aggloFilteredOld));
@@ -97,6 +98,8 @@ if filterBorderEdges
 %     end
 %     agglos=aggloFiltered(axonLength>5000);
     agglos = aggloFiltered(isAboveFive);
+else
+    graph = connectEM.loadAllSegmentationData(p);
 end
 
 
