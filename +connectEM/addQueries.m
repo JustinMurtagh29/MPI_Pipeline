@@ -90,33 +90,22 @@ if isaxon
     
 end
 
-%%
-%------------------------------------------------------------------------------------------
-% load('/tmpscratch/mberning/superagglos.mat')
-% for i=1:length(superagglos)
-%     agglos{i,1} = superagglos(i).nodes(:,4);
-% end
-% agglos = cellfun(@(x)x(~isnan(x)),agglos,'uni',0);
 
-% flightPaths_old = structfun(@(x)x.nodes(isnan(x.nodes(:,4)), 1:3),superagglos,'uni',0);
-% for i=1:length(superagglos)
-%     flightPaths_old{i,1} = superagglos(i).nodes(isnan(superagglos(i).nodes(:,4)), 1:3);
-% end
-
-
-
-% Lookup segment ids of nodes+neighbours of nmls in all folders defined above
-[ff.segIds, ff.neighbours, ff.filenames, ff.nodes, ff.startNode, ff.comments] = connectEM.lookupNmlMulti(p, skeletonFolders, false);
-display([num2str(sum(~cellfun(@isempty,ff.comments))) '/' num2str(numel(ff.comments)) ' queries contain comment and will not be used']);
-tabulate(cellfun(@(x)x{1}{1}, cellfun(@(x)regexp(x, 'content="(.*)"', 'tokens'), ...
-    cat(1, ff.comments{~cellfun(@isempty, ff.comments)}), 'uni', 0), 'uni', 0))
-ff = structfun(@(x)x(cellfun(@isempty,ff.comments)), ff, 'uni', 0);
-% ~600 queries do not have a start node, not sure why (maybe the ones with more than one tree), maybe check later
-ff = structfun(@(x)x(~cellfun(@isempty, ff.startNode)), ff, 'uni', 0);
-
-save(fullfile(outputFolder,'ff_structAggloQueries.mat'), 'ff');
-% load('/tmpscratch/scchr/AxonEndings/axonQueryResults/ff_struct_CS_MB_L4_AxonLeftQueries.mat', 'ff');
-
+if ~ exist(fullfile(outputFolder,'ff_structAggloQueries.mat'),'file')
+    % Lookup segment ids of nodes+neighbours of nmls in all folders defined above
+    [ff.segIds, ff.neighbours, ff.filenames, ff.nodes, ff.startNode, ff.comments] = connectEM.lookupNmlMulti(p, skeletonFolders, false);
+    display([num2str(sum(~cellfun(@isempty,ff.comments))) '/' num2str(numel(ff.comments)) ' queries contain comment and will not be used']);
+    tabulate(cellfun(@(x)x{1}{1}, cellfun(@(x)regexp(x, 'content="(.*)"', 'tokens'), ...
+        cat(1, ff.comments{~cellfun(@isempty, ff.comments)}), 'uni', 0), 'uni', 0))
+    ff = structfun(@(x)x(cellfun(@isempty,ff.comments)), ff, 'uni', 0);
+    % ~600 queries do not have a start node, not sure why (maybe the ones with more than one tree), maybe check later
+    ff = structfun(@(x)x(~cellfun(@isempty, ff.startNode)), ff, 'uni', 0);
+    
+    save(fullfile(outputFolder,'ff_structAggloQueries.mat'), 'ff');
+    % load('/tmpscratch/scchr/AxonEndings/axonQueryResults/ff_struct_CS_MB_L4_AxonLeftQueries.mat', 'ff');
+else
+    load(fullfile(outputFolder,'ff_structAggloQueries.mat'), 'ff');
+end
 
 % Calculate overlap of all queries with segments
 [uniqueSegments, neighboursStartNode, ~, ~] = cellfun(@connectEM.queryAnalysis, ...
