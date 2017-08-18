@@ -1,6 +1,13 @@
-baseFolder = '/tmpscratch/kboerg/';
-prefix = 'visX24_';
-
+function collectSuperagglos(baseFolder,prefix,outputFolder)
+if ~exist('baseFolder','var')
+    baseFolder = '/tmpscratch/kboerg/';
+end
+if ~exist('prefix','var')
+    prefix = 'visX24_';
+end
+if ~exist('outputFolder','var')
+    outputFolder = '/tmpscratch/mberning/';
+end
 superagglos = [];
 folders1 = dir(fullfile(baseFolder, strcat(prefix, '*')));
 for i=1:length(folders1)
@@ -13,14 +20,14 @@ for i=1:length(folders1)
     end
 end
 
-save('/tmpscratch/mberning/superagglos.mat', 'superagglos');
+save(fullfile(outputFolder,'superagglos.mat'), 'superagglos');
 
 % Also save as table
 fH = @(x)array2table(x, 'VariableNames', {'x' 'y' 'z' 'segmentID'});
 for i=1:length(superagglos)
     superagglos(i).nodes = fH(superagglos(i).nodes);
 end
-save('/tmpscratch/mberning/superagglosTable.mat', 'superagglos');
+save(fullfile(outputFolder,'superagglosTable.mat'), 'superagglos');
 
 clear temp;
 % And as graph
@@ -29,5 +36,5 @@ for i=1:length(superagglos)
 end
 superagglos = temp;
 clear temp;
-save('/tmpscratch/mberning/superagglosGraph.mat', 'superagglos');
+save(fullfile(outputFolder,'superagglosGraph.mat'), 'superagglos');
 

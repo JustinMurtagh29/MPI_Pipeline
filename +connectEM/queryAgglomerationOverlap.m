@@ -1,4 +1,11 @@
 function [partition, queryOverlap] = queryAgglomerationOverlap(agglos, segmentsLeftover, uniqueSegments, neighboursStartNode)
+    if isfield(agglos,'nodes') % new representation
+        agglos = cellfun(@(x) x(:,4),{agglos.nodes},'uni',0);
+    end
+    if isfield(segmentsLeftover,'nodes') % new representation
+        segmentsLeftover = cellfun(@(x) x(:,4),{segmentsLeftover.nodes},'uni',0);
+    end
+    
     % Find start agglomeration and overlap of each query 
 
     % First generate different data structure for speedup of loop below (4.6s per iteration with method as in debugQueryA...)
