@@ -1,17 +1,22 @@
 function aggloNew = transformAggloOldNewRepr(aggloOld,edgesSegId,segmentMeta)
 
 searchVec = cat(1,aggloOld{:});
-[~,idx] = ismember(edgesSegId,searchVec);
-
-numSegs = cellfun(@numel,aggloOld);
-
-countVec = cat(1,NaN,repelem((1:numel(numSegs))',numSegs));  % create a indices vector to reference the idx to the agglo id in class1
-aggloIdx = countVec(idx+1);  % make the agglomeration indices matrix corresponding to the corresponding edges
-
-% check if there are no overlaps between agglos
-if ~ all(aggloIdx(:,1)==aggloIdx(:,2))
-    warning('Edge list also contained edges between agglos. These are thrown out now')
-    aggloIdx = aggloIdx(aggloIdx(:,1)==aggloIdx(:,2),:);
+while 1
+    [~,idx] = ismember(edgesSegId,searchVec);
+    
+    numSegs = cellfun(@numel,aggloOld);
+    
+    countVec = cat(1,NaN,repelem((1:numel(numSegs))',numSegs));  % create a indices vector to reference the idx to the agglo id in class1
+    aggloIdx = countVec(idx+1);  % make the agglomeration indices matrix corresponding to the corresponding edges
+    
+    % check if there are no overlaps between agglos
+    if ~ all(aggloIdx(:,1)==aggloIdx(:,2))
+        warning('Edge list also contained edges between agglos. These are thrown out now')
+%         aggloIdx = aggloIdx(aggloIdx(:,1)==aggloIdx(:,2),:);
+        edgesSegId(aggloIdx(:,1)~=aggloIdx(:,2),:) = [];
+    else
+        break
+    end
 end
 % sort hot edges according to the agglos they will be put in
 [saggloIdx,sIdx] = sort(aggloIdx(:,1));
