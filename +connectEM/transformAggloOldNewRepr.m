@@ -9,8 +9,10 @@ countVec = cat(1,NaN,repelem((1:numel(numSegs))',numSegs));  % create a indices 
 aggloIdx = countVec(idx+1);  % make the agglomeration indices matrix corresponding to the corresponding edges
 
 % check if there are no overlaps between agglos
-assert(all(aggloIdx(:,1)==aggloIdx(:,2)))
-
+if ~ all(aggloIdx(:,1)==aggloIdx(:,2))
+    warning('Edge list also contained edges between agglos. These are thrown out now')
+    aggloIdx = aggloIdx(aggloIdx(:,1)==aggloIdx(:,2),:);
+end
 % sort hot edges according to the agglos they will be put in
 [saggloIdx,sIdx] = sort(aggloIdx(:,1));
 edgesSegId = edgesSegId(sIdx,:);
