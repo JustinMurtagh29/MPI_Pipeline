@@ -78,19 +78,25 @@ if filterBorderEdges
     usededges4(graph.prob(usededges3)<0.98&outsideBbox)  = false;          % remove edges at border of dataset and which have a probability of less than 0.98
 %     usededges4 = cat(1,usededges4,repmat((1:numel(agglos))',1,2)); % add self edges not tested yet
     
-    aggloFiltered = Graph.findConnectedComponents(graph.edges(usededges4,:));
-    aggloFiltered = connectEM.transformAggloOldNewRepr(aggloFiltered,graph.edges(usededges4,:));
+    aggloFilteredOld = Graph.findConnectedComponents(graph.edges(usededges4,:));
+    aggloFiltered = connectEM.transformAggloOldNewRepr(aggloFilteredOld,graph.edges(usededges4,:));
 
     % transform aggloFiltered here
-    aggloFiltered = [aggloFiltered; num2cell(setdiff(cell2mat(agglos), cell2mat(aggloFiltered)))];  % add single
-    calculateLength = @(x)max(pdist(bsxfun(@times, double(borderMeta.borderCoM(x, :)), p.raw.voxelSize)));
-    filternan = @(x)x(~isnan(x));
-    axonLength = NaN(length(aggloFiltered),1);
-    for idx = 1 : length(aggloFiltered)
-        axonLength(idx) = max([-1, calculateLength(filternan(cell2mat(graph.neighBorderIdx(cell2mat(cellfun(@(x) x.nodes(:,4),aggloFiltered(idx),'uni',0))))))]);
-    end
-    agglos=aggloFiltered(axonLength>5000);
-    
+    singleRemainingSegs = setdiff(cell2mat(cellfun(@(x) x(:,4),{agglos.nodes},'uni',0)), cell2mat(aggloFilteredOld));
+    nodes = cellfun(@(x) [segmentMeta.point(x,:)' x],singleRemainingSegs);
+    singleRemainingSegsAgglo = cell2struct([cell(1,numel(nodes));nodes'],{'edges','nodes'},1);
+
+    aggloFiltered = [aggloFiltered;singleRemainingSegsAgglo];
+%     aggloFiltered = [aggloFiltered; num2cell(setdiff(cell2mat(agglos), cell2mat(aggloFiltered)))];  % add single
+    isAboveFive = connectEM.isMaxBorderToBorderDistAbove(p,5000,aggloFiltered);
+%     calculateLength = @(x)max(pdist(bsxfun(@times, double(borderMeta.borderCoM(x, :)), p.raw.voxelSize)));
+%     filternan = @(x)x(~isnan(x));
+%     axonLength = NaN(length(aggloFiltered),1);
+%     for idx = 1 : length(aggloFiltered)
+%         axonLength(idx) = max([-1, calculateLength(filternan(cell2mat(graph.neighBorderIdx(cell2mat(cellfun(@(x) x.nodes(:,4),aggloFiltered(idx),'uni',0))))))]);
+%     end
+%     agglos=aggloFiltered(axonLength>5000);
+    agglos = aggloFiltered(isAboveFive);
 end
 
 
