@@ -1,6 +1,6 @@
 function [partition, queryOverlap] = queryAgglomerationOverlap(agglos, segmentsLeftover, uniqueSegments, neighboursStartNode)
     if isfield(agglos,'nodes') % new representation
-        agglos = cellfun(@(x) x(:,4),{agglos.nodes},'uni',0);
+        agglos = cellfun(@(x) x(:,4),{agglos.nodes}','uni',0);
     end
     if isfield(segmentsLeftover,'nodes') % new representation
         segmentsLeftover = cellfun(@(x) x(:,4),{segmentsLeftover.nodes},'uni',0);

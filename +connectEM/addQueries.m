@@ -1,4 +1,4 @@
-function queryAnalysis(agglos,outputFolder,skeletonFolders,segmentsLeftover,isaxon)
+function addQueries(agglos,outputFolder,skeletonFolders,segmentsLeftover,isaxon)
 % this function applies the queries on the agglos/superagglos (new
 % representation!)
 %
@@ -51,7 +51,7 @@ if isaxon
     job = Cluster.startJob( functionH, inputCell, ...
         'name', 'query', ...
         'cluster', cluster,'sharedInputs',{agglos,edgesGTall,outputFolder});
-    
+    Cluster.waitForJob(job);
     for startidx = 1  : 500
         temp = load(fullfile(outputFolder,['output' num2str(startidx)]),'usededges');
         usededges(startidx:500:size(agglos,1)) = temp.usededges(startidx:500:size(agglos,1));
@@ -114,7 +114,7 @@ ff = structfun(@(x)x(cellfun(@isempty,ff.comments)), ff, 'uni', 0);
 % ~600 queries do not have a start node, not sure why (maybe the ones with more than one tree), maybe check later
 ff = structfun(@(x)x(~cellfun(@isempty, ff.startNode)), ff, 'uni', 0);
 
-save('/tmpscratch/scchr/AxonEndings/axonQueryResults/ff_struct_CS_MB_L4_AxonLeftQueries.mat', 'ff');
+save(fullfile(outputFolder,'ff_structAggloQueries.mat'), 'ff');
 % load('/tmpscratch/scchr/AxonEndings/axonQueryResults/ff_struct_CS_MB_L4_AxonLeftQueries.mat', 'ff');
 
 
