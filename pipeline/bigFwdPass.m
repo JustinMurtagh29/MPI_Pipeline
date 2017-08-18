@@ -57,12 +57,8 @@ job = Cluster.startJob(functionH, inputCell,'sharedInputs',{p}, 'cluster', clust
 end
 
 function jobWrapper(p, bbox)
-if isfield(p,'mask')
-    onlyFwdPass3DonKnossosFolder(p.cnn.first, p.cnn.GPU, p.raw, p.class, ...
-        bbox, p.norm.func,p.mask);
-else
-    onlyFwdPass3DonKnossosFolder(p.cnn.first, p.cnn.GPU, p.raw, p.class, ...
-        bbox, p.norm.func);
-end
+    onlyFwdPass3DonKnossosFolder( ...
+        p.cnn.first, p.cnn.GPU, p.raw, ...
+        p.class, bbox, p.norm.func);
 end
 
