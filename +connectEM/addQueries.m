@@ -1,4 +1,4 @@
-function addQueries(agglos,outputFolder,skeletonFolders,segmentsLeftover,isaxon)
+function addQueries(agglos,outputFolder,skeletonFolders,segmentsLeftover,filterBorderEdges)
 % this function applies the queries on the agglos/superagglos (new
 % representation!)
 %
@@ -9,8 +9,8 @@ function addQueries(agglos,outputFolder,skeletonFolders,segmentsLeftover,isaxon)
 %                   containing the queries in nml format
 % segmentLeftover   if agglo does only contain a subpart of all agglos
 %                   (e.g. above 5 micron length), the other can be added here
-% isaxon            boolean if the agglos are from the axon class
-%                   (additional steps done there)
+% filterBorderEdges  filters out edges at the borders (from Kevin) but is
+%                   not yet adjusted to new representation!!!!
 
 
 
@@ -37,7 +37,7 @@ function addQueries(agglos,outputFolder,skeletonFolders,segmentsLeftover,isaxon)
 load('/gaba/u/mberning/results/pipeline/20170217_ROI/allParameterWithSynapses.mat');
 graph = connectEM.loadAllSegmentationData(p);
 
-if isaxon
+if filterBorderEdges
     edgesGTall = load('/gaba/scratch/mberning/edgesGTall.mat');
     edgesGTall = edgesGTall.edgesGTall;
     functionH = @connectEM.queryAnalysisSub;
@@ -54,37 +54,40 @@ if isaxon
     Cluster.waitForJob(job);
     for startidx = 1  : 500
         temp = load(fullfile(outputFolder,['output' num2str(startidx)]),'usededges');
-        usededges(startidx:500:size(agglos,1)) = temp.usededges(startidx:500:size(agglos,1));
+        usededges(startidx:500:size(agglos,1)) = temp.usededges(startidx:500:size(agglos,1));  % index to all edges in the GT which were used in agglos
     end
     for idx = 1 : length(agglos)
-        assert(isequal(Graph.findConnectedComponents(edgesGTall(usededges{idx},:)),{sort(agglos(idx).nodes(:,4))}));
+        assert(isequal(Graph.findConnectedComponents(edgesGTall(usededges{idx},:)),{sort(agglos(idx).nodes(:,4))}));  % check if agglos are made of GT (=hot edges) ?
     end
-    usededges2=cell2mat(usededges(~cellfun(@isempty,usededges))');
-    usededges3 =ismember(graph.edges,edgesGTall(usededges2,:),'rows');
+    usededges2=cell2mat(usededges(~cellfun(@isempty,usededges))');  % put all used edges in one vector, remove empty ones
+    usededges3 =ismember(graph.edges,edgesGTall(usededges2,:),'rows');  % find the graph edges which are in the ground truth..
     
     borderNm = repmat([2000; -2000], 1, 3);
     borderVoxel = round(bsxfun(@times, 1./p.raw.voxelSize, borderNm));
     bboxSmall = p.bbox + borderVoxel';
     borderMeta = load([p.saveFolder 'globalBorder.mat'], 'borderCoM');
     borderMeta.borderCoM(end+1,:)=nan(1,3);
-    borderidxs = graph.borderIdx(usededges3);
-    borderidxs(isnan(borderidxs))=length(borderMeta.borderCoM);
+    borderidxs = graph.borderIdx(usededges3);             % get borders from the GT edges
+    borderidxs(isnan(borderidxs))=length(borderMeta.borderCoM);   % ??????? with this it could be possible that a corrEdge is deleted?
     
-    borderPositions = double(borderMeta.borderCoM(borderidxs,:));
+    borderPositions = double(borderMeta.borderCoM(borderidxs,:));   % get border coms
     
     outsideBbox = ~(all(bsxfun(@gt, borderPositions, bboxSmall(:, 1)'), 2) & ...
-        all(bsxfun(@lt, borderPositions, bboxSmall(:, 2)'), 2));
+        all(bsxfun(@lt, borderPositions, bboxSmall(:, 2)'), 2));            % check if they are at the border of dataset
     usededges4=usededges3;
-    usededges4(graph.prob(usededges3)<0.98&outsideBbox)  = false;
-%     usededges4 = cat(1,usededges4,repmat((1:numel(agglos))',1,2)); % add
-%     self edges not tested yet
+    usededges4(graph.prob(usededges3)<0.98&outsideBbox)  = false;          % remove edges at border of dataset and which have a probability of less than 0.98
+%     usededges4 = cat(1,usededges4,repmat((1:numel(agglos))',1,2)); % add self edges not tested yet
+    
     aggloFiltered = Graph.findConnectedComponents(graph.edges(usededges4,:));
-    aggloFiltered = [aggloFiltered; num2cell(setdiff(cell2mat(agglos), cell2mat(aggloFiltered)))];
+    aggloFiltered = connectEM.transformAggloOldNewRepr(aggloFiltered,graph.edges(usededges4,:));
+
+    % transform aggloFiltered here
+    aggloFiltered = [aggloFiltered; num2cell(setdiff(cell2mat(agglos), cell2mat(aggloFiltered)))];  % add single
     calculateLength = @(x)max(pdist(bsxfun(@times, double(borderMeta.borderCoM(x, :)), p.raw.voxelSize)));
     filternan = @(x)x(~isnan(x));
     axonLength = NaN(length(aggloFiltered),1);
     for idx = 1 : length(aggloFiltered)
-        axonLength(idx) = max([-1, calculateLength(filternan(cell2mat(graph.neighBorderIdx(aggloFiltered{idx}))))]);
+        axonLength(idx) = max([-1, calculateLength(filternan(cell2mat(graph.neighBorderIdx(cell2mat(cellfun(@(x) x.nodes(:,4),aggloFiltered(idx),'uni',0))))))]);
     end
     agglos=aggloFiltered(axonLength>5000);
     
