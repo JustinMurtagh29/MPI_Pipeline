@@ -1,12 +1,10 @@
 function aggloNew = transformAggloOldNewRepr(aggloOld,edgesSegId,segmentMeta)
 
 searchVec = cat(1,aggloOld{:});
+numSegs = cellfun(@numel,aggloOld);
+countVec = cat(1,NaN,repelem((1:numel(numSegs))',numSegs));  % create a indices vector to reference the idx to the agglo id in class1
 while 1
     [~,idx] = ismember(edgesSegId,searchVec);
-    
-    numSegs = cellfun(@numel,aggloOld);
-    
-    countVec = cat(1,NaN,repelem((1:numel(numSegs))',numSegs));  % create a indices vector to reference the idx to the agglo id in class1
     aggloIdx = countVec(idx+1);  % make the agglomeration indices matrix corresponding to the corresponding edges
     
     % check if there are no overlaps between agglos
