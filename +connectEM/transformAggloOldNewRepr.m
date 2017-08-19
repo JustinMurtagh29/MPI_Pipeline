@@ -1,6 +1,8 @@
 function aggloNew = transformAggloOldNewRepr(aggloOld,edgesSegId,segmentMeta)
 
 searchVec = cat(1,aggloOld{:});
+assert(all(ismember(searchVec,edgesSegId(:))))
+
 numSegs = cellfun(@numel,aggloOld);
 countVec = cat(1,NaN,repelem((1:numel(numSegs))',numSegs));  % create a indices vector to reference the idx to the agglo id in class1
 while 1
@@ -25,7 +27,7 @@ saggloIdx(isnan(saggloIdx)) = [];
 
 % transform the edges into cell and create node cell array including segID
 % information
-edges = mat2cell(edgesSegId,histc(saggloIdx,unique(saggloIdx)));
+edges(numSegs>1) = mat2cell(edgesSegId,histc(saggloIdx,unique(saggloIdx)));
 nodes = cellfun(@(x) [segmentMeta.point(:,x)' x],aggloOld,'uni',0);
 % tranform the segIds in the edge vector to index to the node
 [~, edges] = cellfun(@(x,y) ismember(x,y(:,4)),edges,nodes,'uni',0);
