@@ -27,6 +27,7 @@ saggloIdx(isnan(saggloIdx)) = [];
 
 % transform the edges into cell and create node cell array including segID
 % information
+edges = cell(numel(numSegs),1);
 edges(numSegs>1) = mat2cell(edgesSegId,histc(saggloIdx,unique(saggloIdx)));
 nodes = cellfun(@(x) [segmentMeta.point(:,x)' x],aggloOld,'uni',0);
 % tranform the segIds in the edge vector to index to the node
