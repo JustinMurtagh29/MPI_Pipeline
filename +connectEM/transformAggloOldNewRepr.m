@@ -29,6 +29,7 @@ saggloIdx(isnan(saggloIdx)) = [];
 % information
 edges = cell(numel(numSegs),1);
 edges(numSegs>1) = mat2cell(edgesSegId,histc(saggloIdx,unique(saggloIdx)));
+edges(numSegs==1) = zeros(0,2); % give empty edges correct dimension
 nodes = cellfun(@(x) [segmentMeta.point(:,x)' x],aggloOld,'uni',0);
 % tranform the segIds in the edge vector to index to the node
 [~, edges] = cellfun(@(x,y) ismember(x,y(:,4)),edges,nodes,'uni',0);
