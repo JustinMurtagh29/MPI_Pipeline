@@ -3,7 +3,7 @@ function aggloOld = transformAggloNewOldRepr(aggloNew)
 %
 % author marcel.beining@brain.mpg.de
 
-if isfield(agglos,'nodes')  % new representation
+if isfield(aggloNew,'nodes')  % new representation
     aggloOld = cellfun(@(x) x(~isnan(x(:,4),4)),{aggloNew.nodes},'uni',0);
     aggloOld = aggloOld(:);
 else
