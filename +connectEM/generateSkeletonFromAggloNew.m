@@ -13,12 +13,13 @@ function generateSkeletonFromAggloNew(agglo, treeNames, outputFolder, maxSegId,p
     for tr=1:length(agglo)
         if ~isempty(agglo(tr).nodes)
             % Generate parameters for skeleton
+            theseCoM = agglo(tr).nodes(:,1:3);
             skel = initializeSkeleton(parameters);
             skel{1}.thingID = 1;
-            skel{1}.name = [treeNames{tr} '_' num2str(size(com,1))];
+            skel{1}.name = [treeNames{tr} '_' num2str(size(theseCoM,1))];
             skel{1}.color = colors(tr,:);
             % Get information to write to skeleton
-            theseCoM = agglo(tr).nodes(:,1:3);
+            
             theseEdgesNodes = agglo(tr).edges;
            % Write to structure for writeNml
             skel{1}.nodesNumDataAll = zeros(size(theseCoM,1),14);
