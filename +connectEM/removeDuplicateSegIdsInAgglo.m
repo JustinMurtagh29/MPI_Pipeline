@@ -1,11 +1,11 @@
-function [ newAgglos ] = removeDuplicateSegIdsInAgglo( agglos )
+function [ agglos ] = removeDuplicateSegIdsInAgglo( agglos )
 % this function removes duplicate segment ids in agglos (new or old
 % representation)
 %
 % author: marcel.beining@brain.mpg.de
 
 if ~isfield(agglos,'nodes') % old representation
-    newAgglos = cellfun(@(x) unique(x),agglos,'uni',0);
+    agglos = cellfun(@(x) unique(x),agglos,'uni',0);
 else
     for n = 1:numel(agglos)
         [~, idx] = unique(agglos(n).nodes(:,4),'first');  % this also works for NaNs (which are no duplicates
