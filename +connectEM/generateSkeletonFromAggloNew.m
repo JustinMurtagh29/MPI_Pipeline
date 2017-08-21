@@ -32,7 +32,7 @@ function generateSkeletonFromAggloNew(agglo, treeNames, outputFolder, maxSegId,p
         end
     end
     mappingFile = [outputFolder treeNames{1} '.txt'];
-    script = WK.makeMappingScript(maxSegId, agglo, false);
+    script = WK.makeMappingScript(maxSegId, connectEM.transformAggloNewOldRepr(agglo), false);
     fileHandle = fopen(mappingFile, 'w');
     fwrite(fileHandle, script);
     fclose(fileHandle);
