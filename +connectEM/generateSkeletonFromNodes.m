@@ -25,11 +25,11 @@ function generateSkeletonFromNodes(filename, nodes, treeNames, comments, linearN
         for no=1:size(nodes{tr},1)
             % Generate comment for skeleton based on agglomeration
             if exist('comments', 'var') && length(comments) >= tr && length(comments{tr}) >= no && ~isempty(comments{tr}{no})
-                skel{c}.nodesAsStruct(nodeId-nodeOffsetThisSkel) = generateNodeAsStruct(nodeId, nodes{tr}(no,:), 10, comments{tr}{no});
+                skel{c}.nodesAsStruct(nodeId-nodeOffsetThisSkel) = generateNodeAsStruct(nodeId, nodes{tr}(no,1:3), 10, comments{tr}{no});
             else
-                skel{c}.nodesAsStruct(nodeId-nodeOffsetThisSkel) = generateNodeAsStruct(nodeId, nodes{tr}(no,:), 10);
+                skel{c}.nodesAsStruct(nodeId-nodeOffsetThisSkel) = generateNodeAsStruct(nodeId, nodes{tr}(no,1:3), 10);
             end
-            skel{c}.nodes(nodeId-nodeOffsetThisSkel,:) = [nodes{tr}(no,:) 10];
+            skel{c}.nodes(nodeId-nodeOffsetThisSkel,:) = [nodes{tr}(no,1:3) 10];
             nodeId = nodeId + 1;
         end
         if exist('edges', 'var') && ~isempty(edges)
