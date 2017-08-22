@@ -1,80 +1,134 @@
-% Written by
-%   Alessandro Motta <alessandro.motta@brain.mpg.de>
-
-%% load dataset parameters and super-agglomerates
-load('/gaba/u/mberning/results/pipeline/20170217_ROI/allParameterWithSynapses.mat', 'p');
-load('/tmpscratch/kboerg/chiasmarunAugust/superagglos_postsplit.mat', 'superagglos');
-
-%% build agglomerates
-agglos = arrayfun(@(sa) sa.nodes(:, 4), superagglos, 'Uni', false);
-agglos = cellfun(@(ids) unique(ids(~isnan(ids))), agglos, 'Uni', false);
-
-%% load flight paths and their evaluation
-load('/tmpscratch/scchr/AxonEndings/axonQueryResults/ff_struct_CS_MB_L4_AxonLeftQueries.mat', 'ff');
-data = load('/tmpscratch/scchr/AxonEndings/axonQueryResults/results_round2.mat');
-
-%% group flight paths per agglomerate
-endAgglos = data.results.endAgglo;
-endAgglos = cellfun( ...
-    @(a) reshape(a, [], 1), endAgglos, 'Uni', false);
-flightIds = repelem( ...
-    reshape(1:numel(endAgglos), [], 1), cellfun(@numel, endAgglos));
-
-aggloFlightIds = accumarray( ...
-    cell2mat(endAgglos), flightIds, [], @(ids) {ids(:)}, {});
-aggloWithFlighIds = find(~cellfun(@isempty, aggloFlightIds));
-
-%% load endings
-% these are the original axon agglomerates
-load('/gaba/scratch/mberning/axonQueryGeneration/beforeQueryGeneration.mat', 'axonsNew');
-
-% build look-up table
-maxSegId = Seg.Global.getMaxSegId(p);
-axonsNewLUT = zeros(maxSegId, 1);
-axonsNewLUT(cell2mat(axonsNew)) = repelem( ...
-    1:numel(axonsNew), cellfun(@numel, axonsNew));
-
-% load border CoMs
-load(fullfile(p.saveFolder, 'globalBorder.mat'), 'borderCoM');
-
-% load endings
-data = load('/tmpscratch/scchr/AxonEndings/queriesBasedOnClusters/clusterData.mat');
-axonNewBorderIds = cell(numel(axonsNew), 1);
-axonNewBorderIds(data.mapping) = data.thisBorderIdx;
-
-%% generate
-rng(13);
-curAggloId = randperm(numel(aggloWithFlighIds), 1);
-curAggloId = aggloWithFlighIds(curAggloId);
-
-curSuperAgglo = superagglos(curAggloId);
-curSegIds = curSuperAgglo.nodes(:, 4);
-curSegIds(isnan(curSegIds)) = [];
-curSegIds = setdiff(curSegIds, 0);
-
-curOrigAgglos = setdiff(axonsNewLUT(curSegIds), 0);
-curEndingBorderIds = axonNewBorderIds(curOrigAgglos(:));
-curEndingBorderIds = cell2mat(curEndingBorderIds);
-
-curSkel = skeleton();
-curSkel = curSkel.addTree( ...
-    'Super-Agglomerate', curSuperAgglo.nodes(:, 1:3), curSuperAgglo.edges);
-
-% add flights
-for curFlightId = reshape(aggloFlightIds{curAggloId}, 1, [])
-    curName = sprintf('Flight #%d', curFlightId);
-    curSkel = curSkel.addTree(curName, ff.nodes{curFlightId});
+function flightEndings = flightEndingOverlap( ...
+        param, origAgglos, endings, flights, flightResults, superAgglos)
+    % flightEndingOverlap
+    % 
+    % Inputs
+    %   param
+    %     Parameter structure of pipeline run
+    %
+    %   origAgglos
+    %     Original agglomerates on which the ending detection ran
+    %
+    %   endings
+    %     Endings detected on the original agglomerates. For all but the
+    %     first round of flight queries you might want to pass in the
+    %     subset of remaining open endings.
+    %
+    %   flights
+    %     Focused flights. Also known as the "ff" structure.
+    %
+    %   flightResults
+    %     Results of the focused flight analysis. It is expected that all
+    %     flights passed into this function have a valid end agglomerate.
+    %
+    %   superAgglos
+    %     Super-agglomerates to which the flight queries attach
+    %
+    % Written by
+    %   Alessandro Motta <alessandro.motta@brain.mpg.de>
+    
+    maxSegId = Seg.Global.getMaxSegId(param);
+    voxelSize = param.raw.voxelSize;
+    maxDist = 300; % in nm
+    
+    % build look-up table
+    % maps segment ID → original agglomerate ID
+    origAggloLUT = buildLUT(maxSegId, origAgglos);
+    
+    % convert super-agglomerates to regular agglomerates
+    agglos = arrayfun(@(sa) {sa.nodes(:, 4)}, superAgglos);
+    agglos = cellfun(@(ids) {unique(ids(~isnan(ids)))}, agglos);
+    
+    % group endings
+    aggloOrigIds = cellfun( ...
+        @(ids) {setdiff(origAggloLUT(ids), 0)}, agglos);
+    aggloEndings = buildAggloEndings(voxelSize, endings, aggloOrigIds);
+    
+    %% do the magic
+    flightCount = numel(flights.nodes);
+    flightEndings = zeros(flightCount, 1);
+    
+    for curFlightIdx = 1:flightCount
+        fprintf('Processing flight #%d ...\n', curFlightIdx);
+        curEndAggloId = flightResults.endAgglo{curFlightIdx};
+        
+        % NOTE(amotta): This should not be needed because the fight paths
+        % are expected to be filtered before calling this function.
+        if isempty(curEndAggloId); continue; end;
+        
+        if numel(curEndAggloId) > 1
+            % HACK(amotta): This should be handled in the query analysis
+            warning('Discarding endings for flight #%d', curFlightIdx)
+            curEndAggloId = max(curEndAggloId);
+        end
+        
+        curEndings = aggloEndings(curEndAggloId, :);
+        curEndingCount = numel(curEndings{1});
+        if ~curEndingCount; continue; end;
+        
+        % convert flight path to nm space
+        curFlightNodes = flights.nodes{curFlightIdx};
+        curFlightNodes = bsxfun(@times, curFlightNodes, voxelSize);
+        
+        curEndingDists = nan(curEndingCount, 1);
+        for curEndingIdx = 1:curEndingCount
+            curBorderPos = curEndings{2}{curEndingIdx};
+            
+            curDists = pdist2( ...
+                curFlightNodes, curBorderPos, 'squaredeuclidean');
+            curEndingDists(curEndingIdx) = sqrt(min(curDists(:)));
+        end
+        
+       [curMinDist, curMinDistIdx] = min(curEndingDists);
+        if curMinDist > maxDist; continue; end;
+        
+        curEndingId = curEndings{1}(curMinDistIdx);
+        flightEndings(curFlightIdx) = curEndingId;
+    end
 end
 
-% add endings
-for curBorderIdx = reshape(curEndingBorderIds, 1, [])
-    curName = sprintf('Ending (Border #%d)', curBorderIdx);
-    curPos = borderCoM(curBorderIdx, :);
-    curSkel = curSkel.addTree(curName, curPos);
+function aggloEndings = buildAggloEndings(voxelSize, endings, aggloOrigIds)
+    %% group endings within original agglomerates
+    origAggloCount = numel(endings.idxCanidateFound);
+    origAggloEndings = cell(origAggloCount, 2);
+    
+    curEndingOff = 0;
+    for curIdx = 1:numel(endings.mapping)
+        curAggloId = endings.mapping(curIdx);
+        curClusterIds = endings.T{curIdx};
+        
+        % convert borders to nm space
+        curBorderPos = double(endings.borderPositions{curIdx});
+        curBorderPos = bsxfun(@times, curBorderPos, voxelSize);
+        
+        curEndingCount = max(curClusterIds);
+        curEndingIds = curEndingOff + (1:curEndingCount);
+        curEndingOff = curEndingOff + curEndingCount;
+        
+        % group borders
+        curClusters = accumarray( ...
+            curClusterIds, 1:numel(curClusterIds), ...
+            [], @(rows) {curBorderPos(rows, :)});
+        
+        % save result
+        origAggloEndings{curAggloId, 1} = curEndingIds(:);
+        origAggloEndings{curAggloId, 2} = curClusters;
+    end
+    
+    %% group for super agglomerates
+    aggloCount = numel(aggloOrigIds);
+    aggloEndings = cell(aggloCount, 2);
+    
+    for curIdx = 1:aggloCount
+        curEndings = origAggloEndings(aggloOrigIds{curIdx}, :);
+        
+        aggloEndings{curIdx, 1} = cell2mat(curEndings(:, 1));
+        aggloEndings{curIdx, 2} = cat(1, curEndings{:, 2});
+    end
 end
 
-curFileName = sprintf('%d_superagglo-with-inbound.nml', curAggloId);
-curFileName = fullfile('/home/amotta/Desktop', curFileName);
-
-curSkel = Skeleton.setParams4Pipeline(curSkel, p);
-curSkel.write(curFileName);
+function lut = buildLUT(maxSegId, agglos)
+    lut = zeros(maxSegId, 1);
+    lut(cell2mat(agglos)) = repelem( ...
+        1:numel(agglos), cellfun(@numel, agglos));
+end
