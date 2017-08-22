@@ -19,6 +19,14 @@ function splitChiasmaSub2(graph,idx_start)
                 connectEM.detectChiasmataPruneToSphere( ...
                 nodesScaled, superagglo_definition.output.edges, ...
                 ones(size(superagglo_definition.output.edges,1),1), p, superagglo_definition.output.ccCenterIdx(selected(idx2)));
+            p.sphereRadiusOuter = Inf; % in nm
+            [thisNodes2, thisEdges2, thisProb2] = ...
+                connectEM.detectChiasmataPruneToSphere( ...
+                nodesScaled, superagglo_definition.output.edges, ...
+                ones(size(superagglo_definition.output.edges,1),1), p, superagglo_definition.output.ccCenterIdx(selected(idx2)));
+            [~,lookupnodes]=ismember(thisNodes,nodesScaled,'rows');
+            [~,lookupnodes2]=ismember(thisNodes2,nodesScaled,'rows');
+                
             C = Graph.findConnectedComponents(thisEdges);
             assert(length(C) > 3 && sum(cellfun(@(idx)max(pdist2(thisNodes(idx, :), nodesScaled(superagglo_definition.output.ccCenterIdx(selected(idx2)),:))) > 3000, C))>3);
             nrExits = length(C);
@@ -39,67 +47,62 @@ function splitChiasmaSub2(graph,idx_start)
             thisEdgesNew = [thisEdgesNew; [X,Y]+size(nodesToAdd,1)+size(superagglo_definition.output.nodes,1)];
             
             for nodeidx = 1 : length(ff.nodes{ff_idx})
-                matches = find(ismember(skelsegids{1},ff.segIds{ff_idx}(nodeidx)));
-                thisEdgesNew = [thisEdgesNew; matches, repmat(nodeidx+size(nodesToAdd,1)+size(superagglo_definition.output.nodes,1),size(matches))];
+                if ff.segIds{ff_idx}(nodeidx)
+                    matches = intersect(find(ismember(skelsegids{1},ff.segIds{ff_idx}(nodeidx))),lookupnodes2);
+                    thisEdgesNew = [thisEdgesNew; matches, repmat(nodeidx+size(nodesToAdd,1)+size(superagglo_definition.output.nodes,1),size(matches))];
+                end
             end
             nodesToAdd = [nodesToAdd; ff.nodes{ff_idx}];
-            p.sphereRadiusOuter = Inf; % in nm
-            p.sphereRadiusInner = 1000; % in nm
-            p.voxelSize = [11.24 11.24 28];
-            [thisNodes2, thisEdges2, thisProb2] = ...
-                connectEM.detectChiasmataPruneToSphere( ...
-                nodesScaled, superagglo_definition.output.edges, ...
-                ones(size(superagglo_definition.output.edges,1),1), p, superagglo_definition.output.ccCenterIdx(selected(idx2)));
-            [~,lookupnodes]=ismember(thisNodes,nodesScaled,'rows');
-            [~,lookupnodes2]=ismember(thisNodes2,nodesScaled,'rows');
             edgesNotOuter = sort(setdiff(superagglo_definition.output.edges,setdiff(lookupnodes2(thisEdges2),lookupnodes(thisEdges),'rows'),'rows'),2);
             connM = sparse(edgesNotOuter(:,1),edgesNotOuter(:,2),ones(size(edgesNotOuter,1),1),max(edgesNotOuter(:)),max(edgesNotOuter(:)));
             connM = connM+connM';
-            findConnector=@(x)C{x}(find(ismember(getIdsFromCC(C{x}),nonull(ff.segIds{ff_idx})),1));
-            [~, path] = graphshortestpath(connM, findConnector(whichones(1)), findConnector(whichones(2)));
+            theotherones = setdiff(1:4,whichones);
+            [~, path] = graphshortestpath(connM, lookupnodes(C{theotherones(1)}(1)), lookupnodes(C{theotherones(2)}(1)));
             connM(path,:)=0;
             connM(:,path)=0;
-            theotherones = setdiff(1:4,whichones);
-            [~, path2] = graphshortestpath(connM, C{theotherones(1)}(1), C{theotherones(2)}(1));
+            
+            [~, path2] = graphshortestpath(connM,lookupnodes(C{whichones(1)}(1)), lookupnodes(C{whichones(2)}(1)));
             rescued1 = [];
             rescued2 = [];
-            filterNan0=@(x)x~=0&~isnan(x);
             if isempty(path2)
-                rescued1 = find(filterNan0(graphshortestpath(connM, C{theotherones(1)}(1))));
-                rescued2 = find(filterNan0(graphshortestpath(connM, C{theotherones(2)}(1))));
+                rescued1 = find(~isinf(graphshortestpath(connM, lookupnodes(C{whichones(1)}(1)))));
+                rescued2 = find(~isinf(graphshortestpath(connM, lookupnodes(C{whichones(2)}(1)))));
             end
             edgesToRescue = find(ismember(edgesNotOuter,sort([path(1:end-1)',path(2:end)';path2(1:end-1)',path2(2:end)'],2),'rows'));
-                find(~ismember(sort([path(1:end-1)',path(2:end)';path2(1:end-1)',path2(2:end)'],2),edgesNotOuter,'rows'))
+            
             assert(length(edgesToRescue)==size([path(1:end-1)',path(2:end)';path2(1:end-1)',path2(2:end)'],1));
-            edgesToRescue = [edgesToRescue; find(all(ismember(edgesNotOuter,[rescued1,rescued2]),1))'];
+            edgesToRescue = [edgesToRescue; find(all(ismember(edgesNotOuter,[rescued1,rescued2]),2))];
             stillInLimbo = setdiff(setdiff(edgesNotOuter,lookupnodes(thisEdges),'rows'),edgesNotOuter(edgesToRescue,:),'rows');
             [~, probabilities] = ismember(stillInLimbo,graph.edges,'rows');
             probabilities(find(probabilities))=graph.prob(probabilities(find(probabilities)));
             [~, probidxs] = sort(probabilities,'descend'); %is that how it works
-            counter = 1
+            counter = 1;
             while true
                 if counter > length(probidxs)
                     break;
                 end
                 
                 flatten = @(x)x(:);
-                if ~any(ismember(flatten([lookupnodes(thisEdges);edgesNotOuter(edgesToRescue,:)]), stillInLimbo(probidxs(counter),:)))
-                    counter = counter + 1;
+                if ~any(ismember(flatten([lookupnodes(thisEdges);edgesNotOuter(edgesToRescue,:)]), stillInLimbo(probidxs(counter),:))) %edge not yet connected to stuff in pool
+                    counter = counter + 1; %ignore edge for now
                     continue;
                 end
-                edgesTemp = [lookupnodes(thisEdges); edgesToRescue; stillInLimbo(probidxs(counter),:)];
-                if length(Graph.findConnectedComponents(edgesTemp)) > 1
-                    edgesToRescue=[edgesToRescue; stillInLimbo(probidxs(counter),:)];
-                    
+                edgesTemp = [lookupnodes(thisEdges); edgesNotOuter(edgesToRescue,:); stillInLimbo(probidxs(counter),:);thisEdgesNew];
+                if length(Graph.findConnectedComponents(edgesTemp)) > 1 %edge wouldn't create a merger
+                    edgesToRescue=[edgesToRescue; find(ismember(edgesNotOuter,stillInLimbo(probidxs(counter),:),'rows'))];
+                    probidxs(counter)=[]; %done with edge
+                    counter = 1; % we added an edge so let's check all the other edges again whether they connect now to pool
                 else
                     edgesToDelete(end+1) = find(ismember(sort(thisEdgesCol,2),sort(stillInLimbo(probidxs(counter),:)),'rows'));
+                    probidxs(counter)=[]; %done with edge
                 end
-                probidxs(counter)=[];   
+                   
             end
+%            thisEdgesCol=setdiff(thisEdgesCol,stillInLimbo,'rows');
         end
-        thisEdgesCol(edgesToDelete) = [];
+        thisEdgesCol(edgesToDelete,:) = [];
         comments = cell(size([superagglo_definition.output.nodes;nodesToAdd],1), 1);
-        writeNml([outputFolder 'skelSplit' num2str(idx) '.nml'], writeSkeletonFromNodesAndEdges({[superagglo_definition.output.nodes;nodesToAdd]}, {[thisEdgesCol;thisEdgesNew]}, {comments}, {'axon'}, {[0 0 1 1]}));
+        writeNml([outputFolder 'skelSplitNew' num2str(idx) '.nml'], writeSkeletonFromNodesAndEdges({[superagglo_definition.output.nodes;nodesToAdd]}, {[thisEdgesCol;thisEdgesNew]}, {comments}, {'axon'}, {[0 0 1 1]}));
     end
 end    
             
