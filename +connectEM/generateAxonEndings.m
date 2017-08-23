@@ -62,6 +62,3 @@ function generateAxonEndings(param)
     
     Util.saveStruct(fullfile(param.saveFolder, 'axonEndings.mat'), out);
 end
-      
-    
-    
