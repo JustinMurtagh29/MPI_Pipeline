@@ -44,7 +44,10 @@ function generateAxonEndingInputData(param)
     out.directionality = structfun( ...
         @(x) x(idxKeep), directionality, 'UniformOutput', false);
     out.axonLength = cell2mat(axonLength(idxKeep));
+    out.gitInfo = Util.gitInfo();
     
     outFile = fullfile(param.saveFolder, 'axonEndingInputData.mat');
     Util.saveStruct(outFile, out);
 end
+
+function clusterIds = clusterBorders(

@@ -56,6 +56,7 @@ function generateAxonEndings(param)
     out.borderIds = borderIds;
     out.borderPositions = borderPositions;
     out.borderClusters = borderClusters;
+    out.gitInfo = Util.gitInfo();
     
     Util.saveStruct(fullfile(param.saveFolder, 'axonEndings.mat'), out);
 end
