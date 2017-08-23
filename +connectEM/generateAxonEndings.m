@@ -1,4 +1,4 @@
-function endingDetection(p, graph, segmentMeta, borderMeta, directionality, axons, outputFolder, options)
+function generateAxonEndings(p, graph, segmentMeta, borderMeta, directionality, axons, outputFolder, options)
 addpath(genpath('/u/scchr/Repositories/auxiliaryMethods/'));
 addpath(genpath('/u/scchr/Repositories/pipeline/'));
 addpath(genpath('/u/scchr/Repositories/nuclear_pores/'));
