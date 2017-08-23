@@ -2,6 +2,16 @@ function [ newSuperagglos, equivalenceClass ] = executeEdges(superagglos, edgesT
 % executes the given edges between superagglos, and also adds
 % single segments of these edges
 
+% get all seg ids that are part of superagglos including single segment
+% superagglos
+segIds = cell2mat(arrayfun(@(x)x.nodes(:,4), superagglos, 'uni', 0));
+    
+% check for duplicates in the segIds vector. This means there were overlaps
+% between superagglos (or at least intra-agglo duplicates)
+if numel(segIds) ~= numel(unique(segIds))
+    warning('Detected overlapping segments in agglos. These will be merged, too, when re-executing all edges now!')
+end
+
 % Extract all segment ID based edges from superagglos
 aggloEdges = cell2mat(arrayfun(@(x) reshape(x.nodes(x.edges,4),[],2),...
     superagglos,'uni',0));
@@ -10,9 +20,7 @@ if all(ismember(edgesToExecute,aggloEdges,'rows'))
     newSuperagglos = superagglos;
     equivalenceClass = num2cell(1:numel(superagglos));
 else
-    % get all seg ids that are part of superagglos including single segment
-    % superagglos
-    segIds = cell2mat(arrayfun(@(x)x.nodes(:,4), superagglos, 'uni', 0));
+    
     
     % Concatenate all agglo edges and edges to be executed
     allEdges = cat(1,aggloEdges, edgesToExecute);
@@ -48,9 +56,6 @@ else
 
     newSuperagglos = cell2struct([newedges';newnodes'],{'edges','nodes'},1);
 end
-
-% Check whether classes were mutually exclusive
-assert(numel(segIds) == numel(unique(segIds)));
 
 end
 

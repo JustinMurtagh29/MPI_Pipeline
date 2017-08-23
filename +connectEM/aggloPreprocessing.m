@@ -83,33 +83,10 @@ myelin_Dend = myelin_Dend > 0.08;  % use the empiric myelin threshold for dendri
 axons = cat(1,axons,dendrites(myelin_Dend));
 dendrites = dendrites(~myelin_Dend);
 fprintf('Added %d agglos of the dendritic class (now %d remaining) to the axon class (now %d agglos)',sum(myelin_Dend),numel(dendrites),numel(axons));
+
+% execute corresponding edges again on the merged axon class. This at the
+% same time merges all superagglos that have overlapping segments!
 [ axons ] = connectEM.executeEdges(axons,corrEdges,segmentMeta);
-[axons,n] = connectEM.removeDuplicateSegIdsInAgglo(axons);
-
-%%
-
-disp('Solve overlaps between added myelinated axons and axon class')
-% in each agglo there is no overlap but between agglos
-[ovAgglos, segId] = aggloOverlaps(axons);
-[ovAgglosGrouped]  = Graph.findConnectedComponents(cell2mat(ovAgglos),1,1);
-
-% maybe do not merge those with only one or two segment overlap..maybe also
-% make a size threshold.. if doing that, remember to delete the not used 
-% segments from the myelinatd axons or both
-
-% transform the segId cell also into a grouped cell array
-[~,idx] = ismember(cell2mat(ovAgglos),cat(1,ovAgglosGrouped{:}));
-numAgglos = cellfun(@numel,ovAgglosGrouped);
-countVec = repelem((1:numel(numAgglos))',numAgglos);  % create a indices vector to reference the idx to the ovAgglosGrouped
-groupIdx = countVec(idx);  % make the idx correspond to the ovAgglosGrouped idx
-assert(all(groupIdx(:,1)==groupIdx(:,2)))
-segIdGrouped = arrayfun(@(x) cat(1,segId{groupIdx(:,1)==x}),1:numel(ovAgglosGrouped),'uni',0)';
-
-ovAggloIds = unique(cat(1,ovAgglosGrouped{:}));
-nonOvAggloIds = setdiff(1:numel(axons),ovAggloIds)';
-equivalencesClass1 = cat(1,ovAgglosGrouped,num2cell(nonOvAggloIds));
-axons = connectEM.applyEquivalences(equivalencesClass1,axons);
-[axons,n] = connectEM.removeDuplicateSegIdsInAgglo(axons);
 
 %% get myelin surface scores, size scores and save results
 
