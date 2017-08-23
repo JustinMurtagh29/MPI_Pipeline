@@ -8,7 +8,7 @@ param = m.p;
 m = load('/gaba/scratch/mberning/axonQueryGeneration/beforeQueryGeneration.mat', 'axonsNew');
 origAgglos = m.axonsNew;
 
-endings = load(fullfile(p.saveFolder, 'axonEndings.mat'));
+endings = load(fullfile(param.saveFolder, 'axonEndings.mat'));
 
 m = load('/tmpscratch/scchr/AxonEndings/axonQueryResults/ff_struct_CS_MB_L4_AxonLeftQueries.mat', 'ff');
 flights = m.ff;
