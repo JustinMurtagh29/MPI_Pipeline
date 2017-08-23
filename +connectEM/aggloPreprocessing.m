@@ -36,6 +36,7 @@ disp('heuristics loaded');
 
 %% load dendrite equivalence classes after grid search & create dendrite superagglo
 if ~exist(fullfile(outputFolder,'dendrites_01.mat'),'file')
+    % load all dendrite agglomerate results from after grid search
     thisGrid = load('/gaba/scratch/mberning/aggloGridSearch/search03_00514.mat','axons','dendrites','heuristics','dendritesFinal','dendriteEdges');
     
     disp('Apply garbage collection')
@@ -93,8 +94,8 @@ fprintf('Added %d agglos of the dendritic class (now %d remaining) to the axon c
 
 %% get myelin surface scores, size scores and save final axon/dendrite class state
 
-indBigDends = isMaxBorderToBorderDistAbove(p, 5000, connectEM.transformAggloNewOldRepr(dendrites));
-indBigAxons = isMaxBorderToBorderDistAbove(p, 5000, connectEM.transformAggloNewOldRepr(axons));
+indBigDends = Agglo.isMaxBorderToBorderDistAbove(p, 5000, connectEM.transformAggloNewOldRepr(dendrites));
+indBigAxons = Agglo.isMaxBorderToBorderDistAbove(p, 5000, connectEM.transformAggloNewOldRepr(axons));
 [ myelin_Axon ] = connectEM.calculateSurfaceMyelinScore( axons, graph, borderMeta, heuristics );  % calculate myelin score for the axon class
 [ myelin_Dend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
 
