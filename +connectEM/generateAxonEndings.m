@@ -6,9 +6,6 @@ function generateAxonEndings(param)
     options = struct;
     options.latentScore = 0.5;
     options.segDirScore = 0.8;
-    options.border = [3000; -3000];
-    options.writeTasksToFile = true;
-    options.boundingBoxForTasks = false;
     options.distanceCutoff = 600; % in nm
     
     % load directionality information
