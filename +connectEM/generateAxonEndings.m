@@ -1,43 +1,65 @@
-function generateAxonEndings(p, graph, segmentMeta, borderMeta, directionality, axons, outputFolder, options)
-addpath(genpath('/u/scchr/Repositories/auxiliaryMethods/'));
-addpath(genpath('/u/scchr/Repositories/pipeline/'));
-addpath(genpath('/u/scchr/Repositories/nuclear_pores/'));
-
+function generateAxonEndings(param)
+    % Written by
+    %   Manuel Berning <manuel.berning@brain.mpg.de>
+    %   Christian Schramm <christian.schramm@brain.mpg.de>
+    
+    options = struct;
     options.latentScore = 0.5;
     options.segDirScore = 0.8;
     options.border = [3000; -3000];
     options.writeTasksToFile = true;
     options.boundingBoxForTasks = false;
-
-    load('/gaba/scratch/mberning/axonQueryGeneration/beforeQueryGeneration.mat' , 'directionality')%, 'axonsNew')
-    load('destinationOfModifiedAxonRepresentation')
+    options.distanceCutoff = 600; % in nm
     
+    % load directionality information
+    directionality = fullfile(param.saveFolder, 'endingInputData.mat');
+    directionality = load(directionality, 'directionality');
+    directionality = directionality.directionality;
     
-%     axons = axonsNew;
-    load('/tmpscratch/scchr/AxonEndings/Meta.mat','borderMeta')
-    load('/gaba/u/mberning/results/pipeline/20170217_ROI/allParameterWithSynapses.mat');
+    % load border CoMs
+    borderCoM = fullfile(param.saveFolder, 'borderCoM.mat');
+    borderCoM = load(borderCoM, 'borderCoM');
+    borderCoM = borderCoM.borderCom;
     
-
-
-    % Find all endings (given criteria on latent, directionality, orientation along z-axis)
-    idxDirectional = cellfun(@(x)x(:,1) > options.latentScore, directionality.latent, 'uni', 0);
-    idxEnding = cellfun(@(x)abs(x) > options.segDirScore, directionality.scores, 'uni', 0);
-    idxAll = cellfun(@(x,y)find(x&y), idxDirectional, idxEnding, 'uni', 0);
+    % Find all borders for valid endings
+    idxDirectional = cellfun( ...
+        @(x) x(:, 1) > options.latentScore, ...
+        directionality.latent, 'UniformOutput', false);
+    idxEnding = cellfun( ...
+        @(x) abs(x) > options.segDirScore, ...
+        directionality.scores, 'UniformOutput', false);
+    idxAll = cellfun( ...
+        @(x, y) find(x & y), ...
+        idxDirectional, idxEnding, 'UniformOutput', false);
+    
     % Keep only largest score in each agglomerate for now
     nrCanidates = cellfun(@numel, idxAll);
-    idxCanidateFound = nrCanidates > 0;
-    AggloIDs=[1:length(idxAll)]';
-    mapping=AggloIDs(idxCanidateFound);
+    axonMask = nrCanidates > 0;
+    axonIds = find(axonMask);
     
     % clustering on left candidates
-    thisBorderIdx = cellfun(@(x,y)x(y), directionality.borderIdx(idxCanidateFound), idxAll(idxCanidateFound),'uni',0);
-    borderPositions = cellfun(@(x) borderMeta.borderCoM(x,:), thisBorderIdx,'uni',0);
-    borderPositions_0 = cellfun(@(x) borderMeta.borderCoM(x,:), directionality.borderIdx(idxCanidateFound),'uni',0);
-
-    clear borderMeta
+    borderIds = cellfun( ...
+        @(x, y) x(y), ...
+        directionality.borderIdx(axonMask), ...
+        idxAll(axonMask), 'UniformOutput', false);
+    borderPositions = cellfun( ...
+        @(x) borderCoM(x, :), borderIds, 'UniformOutput', false);
     
-    distance_cutoff = 600;
-    T = cellfun(@(x) AxonEndings.clusterSynapticInterfaces(x,distance_cutoff,[11.24 11.24 28]), borderPositions, 'uni', 0);
+    borderClusterFunc = @(x) AxonEndings.clusterSynapticInterfaces( ...
+        x, options.distanceCutoff, param.raw.voxelSize);
+    borderClusters = cellfun( ...
+        borderClusterFunc, borderPositions, 'UniformOutput', false);
+    
+    % save result
+    out = struct;
+    out.axonMask = axonMask;
+    out.axonIds = axonIds;
+    out.borderIds = borderIds;
+    out.borderPositions = borderPositions;
+    out.borderClusters = borderClusters;
+    
+    Util.saveStruct(fullfile(param.saveFolder, 'axonEndings.mat'), out);
+end
       
     
     
