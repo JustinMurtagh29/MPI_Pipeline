@@ -18,6 +18,10 @@ function generateAxonEndings(param)
     borderCoM = load(borderCoM, 'borderCoM');
     borderCoM = borderCoM.borderCoM;
     
+    % convert border CoMs to nm space
+    borderCoM = double(borderCoM);
+    borderCoM = bsxfun(@times, borderCoM, param.raw.voxelSize);
+    
     % Find all borders for valid endings
     idxDirectional = cellfun( ...
         @(x) x(:, 1) > options.latentScore, ...
@@ -41,9 +45,10 @@ function generateAxonEndings(param)
         idxAll(axonMask), 'UniformOutput', false);
     borderPositions = cellfun( ...
         @(x) borderCoM(x, :), borderIds, 'UniformOutput', false);
-    
-    borderClusterFunc = @(x) AxonEndings.clusterSynapticInterfaces( ...
-        x, options.distanceCutoff, param.raw.voxelSize);
+
+    borderClusterFunc = @(pts) clusterdata( ...
+        pts, 'linkage', 'single', 'criterion', ...
+        'distance', 'cutoff', options.distanceCutoff);
     borderClusters = cellfun( ...
         borderClusterFunc, borderPositions, 'UniformOutput', false);
     
