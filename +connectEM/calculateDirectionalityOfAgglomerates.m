@@ -11,7 +11,6 @@ function y = calculateDirectionalityOfAgglomerates(agglos, graph, segmentMeta, b
     y.latent = cell(numel(agglos),1); 
     y.pca = cell(numel(agglos),1);
     y.scores = cell(numel(agglos),1);
-    y.borderSegMyScore = cell(numel(agglos),1);
     
     % Loop over all agglomerates
     for idx1 = 1:length(agglos)
@@ -72,9 +71,6 @@ function y = calculateDirectionalityOfAgglomerates(agglos, graph, segmentMeta, b
         borderSegId = borderSegId(outgoing);
         borderProb = borderProb(outgoing); 
         borderIdxs = borderIdxs(outgoing);
-        if isfield(segmentMeta,'myelinScore')
-            borderSegMyScore = segmentMeta.myelinScore(borderSegId);  
-        end
 
         % Number of outgoing non correspondence borders
         nrBorder = numel(borderIdxs);
@@ -117,7 +113,6 @@ function y = calculateDirectionalityOfAgglomerates(agglos, graph, segmentMeta, b
         y.latent{idx1} = latent;
         y.pca{idx1} = pca;
         y.scores{idx1} = scores;
-        y.borderSegMyScore{idx1} = borderSegMyScore;
     end
 end
 
