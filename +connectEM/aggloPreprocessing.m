@@ -36,6 +36,7 @@ disp('heuristics loaded');
 
 %% load dendrite equivalence classes after grid search & create dendrite superagglo
 if ~exist(fullfile(outputFolder,'dendrites_01.mat'),'file')
+    % load all dendrite agglomerate results from after grid search
     thisGrid = load('/gaba/scratch/mberning/aggloGridSearch/search03_00514.mat','axons','dendrites','heuristics','dendritesFinal','dendriteEdges');
     
     disp('Apply garbage collection')
@@ -69,12 +70,18 @@ else
 end
 
 %% execute corresponding edges
-axons = connectEM.executeEdges(axons,corrEdges,segmentMeta);
-dendrites = connectEM.executeEdges(dendrites,corrEdges,segmentMeta);
-
-save(fullfile(outputFolder,'axons_02.mat'),'axons')
-save(fullfile(outputFolder,'dendrites_02.mat'),'dendrites')
-
+if ~exist(fullfile(outputFolder,'axons_02.mat'),'file')
+    axons = connectEM.executeEdges(axons,corrEdges,segmentMeta);
+    save(fullfile(outputFolder,'axons_02.mat'),'axons')
+else
+    load(fullfile(outputFolder,'axons_02.mat'),'axons')
+end
+if ~exist(fullfile(outputFolder,'dendrites_02.mat'),'file')
+    dendrites = connectEM.executeEdges(dendrites,corrEdges,segmentMeta);
+    save(fullfile(outputFolder,'dendrites_02.mat'),'dendrites')
+else
+    load(fullfile(outputFolder,'dendrites_02.mat'),'dendrites')
+end
 %% add myelinated processes to axon class
 
 disp('Add myelinated processes of dendrite class to axon class and execute correspondences again')
@@ -93,8 +100,8 @@ fprintf('Added %d agglos of the dendritic class (now %d remaining) to the axon c
 
 %% get myelin surface scores, size scores and save final axon/dendrite class state
 
-indBigDends = isMaxBorderToBorderDistAbove(p, 5000, connectEM.transformAggloNewOldRepr(dendrites));
-indBigAxons = isMaxBorderToBorderDistAbove(p, 5000, connectEM.transformAggloNewOldRepr(axons));
+indBigDends = Agglo.isMaxBorderToBorderDistAbove(p, 5000, connectEM.transformAggloNewOldRepr(dendrites));
+indBigAxons = Agglo.isMaxBorderToBorderDistAbove(p, 5000, connectEM.transformAggloNewOldRepr(axons));
 [ myelin_Axon ] = connectEM.calculateSurfaceMyelinScore( axons, graph, borderMeta, heuristics );  % calculate myelin score for the axon class
 [ myelin_Dend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
 

@@ -20,8 +20,6 @@ if all(ismember(edgesToExecute,aggloEdges,'rows'))
     newSuperagglos = superagglos;
     equivalenceClass = num2cell(1:numel(superagglos));
 else
-    
-    
     % Concatenate all agglo edges and edges to be executed
     allEdges = cat(1,aggloEdges, edgesToExecute);
     
@@ -36,10 +34,15 @@ else
     % of the superagglo. These are kept later.
     eqClassesToKeep = unique(aggloLUT(segIds));
     
-    % sort hot edges according to the agglos they will be put in
-    [saggloLUT,sIdx] = sort(aggloLUT);
-    allEdges = allEdges(sIdx,:);
+    % create lookup table which edge of allEdges belongs to which
+    % equivalence class
+    edgesLUT = aggloLUT(allEdges(:,1));
     
+    % sort this LUT according to the agglos they will be put in and sort
+    % edges accordingly
+    [saggloLUT,sIdx] = sort(edgesLUT);
+    allEdges = allEdges(sIdx,:);
+
     % transform the edges into cell
     newedges = cell(numel(aggloOld),1);
     % Treat agglomerates containing single segment separately
@@ -52,9 +55,9 @@ else
     equivalenceClass = equivalenceClass(eqClassesToKeep);
     
     %  create node cell array including segID information
-    newnodes = cellfun(@(x) [segmentMeta.point(:,x)',x],equivalenceClass);
+    newnodes = cellfun(@(x) [segmentMeta.point(:,x)',x],equivalenceClass,'uni',0)';
 
-    newSuperagglos = cell2struct([newedges';newnodes'],{'edges','nodes'},1);
+    newSuperagglos = cell2struct([newedges;newnodes],{'edges','nodes'},1);
 end
 
 end
