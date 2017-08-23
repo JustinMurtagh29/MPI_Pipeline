@@ -45,12 +45,9 @@ function generateAxonEndings(param)
         idxAll(axonMask), 'UniformOutput', false);
     borderPositions = cellfun( ...
         @(x) borderCoM(x, :), borderIds, 'UniformOutput', false);
-
-    borderClusterFunc = @(pts) clusterdata( ...
-        pts, 'linkage', 'single', 'criterion', ...
-        'distance', 'cutoff', options.distanceCutoff);
     borderClusters = cellfun( ...
-        borderClusterFunc, borderPositions, 'UniformOutput', false);
+        @(x) clusterBorders(options, x), ...
+        borderPositions, 'UniformOutput', false);
     
     % save result
     out = struct;
@@ -61,4 +58,16 @@ function generateAxonEndings(param)
     out.borderClusters = borderClusters;
     
     Util.saveStruct(fullfile(param.saveFolder, 'axonEndings.mat'), out);
+end
+
+function clusterIds = clusterBorders(options, borderCoM)
+    if size(borderCoM, 1) > 1
+        clusterIds = clusterdata( ...
+            borderCoM, ...
+            'linkage', 'single', ...
+            'criterion', 'distance', ...
+            'cutoff', options.distanceCutoff);
+    else
+        clusterIds = ones(size(borderCoM, 1), 1);
+    end
 end
