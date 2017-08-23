@@ -16,7 +16,7 @@ function generateAxonEndings(param)
     % load border CoMs
     borderCoM = fullfile(param.saveFolder, 'globalBorder.mat');
     borderCoM = load(borderCoM, 'borderCoM');
-    borderCoM = borderCoM.borderCom;
+    borderCoM = borderCoM.borderCoM;
     
     % Find all borders for valid endings
     idxDirectional = cellfun( ...
