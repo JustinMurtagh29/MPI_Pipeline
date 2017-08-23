@@ -70,12 +70,18 @@ else
 end
 
 %% execute corresponding edges
-axons = connectEM.executeEdges(axons,corrEdges,segmentMeta);
-dendrites = connectEM.executeEdges(dendrites,corrEdges,segmentMeta);
-
-save(fullfile(outputFolder,'axons_02.mat'),'axons')
-save(fullfile(outputFolder,'dendrites_02.mat'),'dendrites')
-
+if ~exist(fullfile(outputFolder,'axons_02.mat'),'file')
+    axons = connectEM.executeEdges(axons,corrEdges,segmentMeta);
+    save(fullfile(outputFolder,'axons_02.mat'),'axons')
+else
+    load(fullfile(outputFolder,'axons_02.mat'),'axons')
+end
+if ~exist(fullfile(outputFolder,'dendrites_02.mat'),'file')
+    dendrites = connectEM.executeEdges(dendrites,corrEdges,segmentMeta);
+    save(fullfile(outputFolder,'dendrites_02.mat'),'dendrites')
+else
+    load(fullfile(outputFolder,'dendrites_02.mat'),'dendrites')
+end
 %% add myelinated processes to axon class
 
 disp('Add myelinated processes of dendrite class to axon class and execute correspondences again')
