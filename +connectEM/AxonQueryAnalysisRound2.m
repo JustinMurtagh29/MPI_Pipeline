@@ -84,16 +84,18 @@ axons = cellfun(@(x)x(~isnan(x)),axons,'uni',0);
 
 % Lookup segment ids of nodes+neighbours of nmls in all folders defined above
 [ff.segIds, ff.neighbours, ff.filenames, ff.nodes, ff.startNode, ff.comments] = connectEM.lookupNmlMulti(p, skeletonFolders, false);
-save /destinationForAllConnectEMStuff/ff_structure.mat ff
+save([p.saveFolder 'AxonFlightPaths.mat'], 'ff')
 display([num2str(sum(~cellfun(@isempty,ff.comments))) '/' num2str(numel(ff.comments)) ' queries contain comment and will not be used']);
 tabulate(cellfun(@(x)x{1}{1}, cellfun(@(x)regexp(x, 'content="(.*)"', 'tokens'), ...
     cat(1, ff.comments{~cellfun(@isempty, ff.comments)}), 'uni', 0), 'uni', 0))
 
 ff_commented = structfun(@(x)x(~cellfun(@isempty,ff.comments)), ff, 'uni', 0);
+idx_comment = ~cellfun(@isempty,ff.comments);
 save /destinationForAllConnectEMStuff/ff_structureWithComments.mat ff_commented
 
-ff = structfun(@(x)x(cellfun(@isempty,ff.comments)), ff, 'uni', 0);
+% ff = structfun(@(x)x(cellfun(@isempty,ff.comments)), ff, 'uni', 0);
 % ~600 queries do not have a start node, not sure why (maybe the ones with more than one tree), maybe check later
+idx_startEmpty = cellfun(@isempty, ff.startNode);
 ff = structfun(@(x)x(~cellfun(@isempty, ff.startNode)), ff, 'uni', 0);
 
 save('/tmpscratch/scchr/AxonEndings/axonQueryResults/ff_struct_CS_MB_L4_AxonLeftQueries.mat', 'ff');
@@ -140,6 +142,7 @@ results.endAgglo = endAgglo;
 results.ff = ff;
 results.idxGood = idxGood;
 
+save([p.savefolder ]
 save /tmpscratch/scchr/AxonEndings/axonQueryResults/results_round2.mat results queryOverlap edgesCC eqClassCC eqClassCCfull -v7.3
 %%
 load('/tmpscratch/scchr/AxonEndings/axonQueryResults/results_round2.mat')
