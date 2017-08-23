@@ -6,11 +6,12 @@ disp('Parameters loaded');
 outputFolder = fullfile(p.saveFolder, 'aggloState');
 
 if ~exist('graph','var') || ~all(isfield(graph,{'edges','prob','borderIdx'}))
-    graph = load(fullfile(p.saveFolder, 'graphNew.mat'),'edges','prob','borderIdx');
+    graph = load(fullfile(p.saveFolder, 'graphNew.mat'),'edges','prob','borderIdx','neighbours','neighBorderIdx');
 end
 if  ~all(isfield(graph,{'neighbours','neighBorderIdx'}))
     [graph.neighbours, neighboursIdx] = Graph.edges2Neighbors(graph.edges);
     graph.neighBorderIdx = cellfun(@(x)graph.borderIdx(x), neighboursIdx, 'uni', 0);
+    clear neighboursIdx
 end
 disp('graph loaded');
 
@@ -85,7 +86,7 @@ end
 %% add myelinated processes to axon class
 
 disp('Add myelinated processes of dendrite class to axon class and execute correspondences again')
-[ myelin_Dend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
+[ myelin_Dend ] = Agglo.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
 myelin_Dend = myelin_Dend > 0.08;  % use the empiric myelin threshold for dendrite agglos
 
 % add the myelinated "dendrites" to the axon class and execute
@@ -102,8 +103,8 @@ fprintf('Added %d agglos of the dendritic class (now %d remaining) to the axon c
 
 indBigDends = Agglo.isMaxBorderToBorderDistAbove(p, 5000, connectEM.transformAggloNewOldRepr(dendrites));
 indBigAxons = Agglo.isMaxBorderToBorderDistAbove(p, 5000, connectEM.transformAggloNewOldRepr(axons));
-[ myelin_Axon ] = connectEM.calculateSurfaceMyelinScore( axons, graph, borderMeta, heuristics );  % calculate myelin score for the axon class
-[ myelin_Dend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
+[ myelin_Axon ] = Agglo.calculateSurfaceMyelinScore( axons, graph, borderMeta, heuristics );  % calculate myelin score for the axon class
+[ myelin_Dend ] = Agglo.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
 
 save(fullfile(outputFolder,'axons_03.mat'),'axons','myelin_Axon','indBigAxons')
 save(fullfile(outputFolder,'dendrites_03.mat'),'dendrites','myelin_Dend','indBigDends')
