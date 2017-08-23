@@ -22,42 +22,10 @@ superAgglos = m.superagglos;
 clear m;
 
 %% run main function
+flightNodes = flights.nodes;
+flightAgglos = cellfun( ...
+    @union, flightResults.startAgglo, ...
+    flightResults.endAgglo, 'UniformOutput', false);
+
 flightEndingOverlap = connectEM.flightEndingOverlap( ...
-        param, origAgglos, endings, flights, flightResults, superAgglos);
-    
-%% debugging
-%{
-rng(0);
-curRandId = find(flightEndingOverlap > 0);
-curRandId = curRandId(randperm(numel(curRandId), 1));
-
-curSuperAggloId = max(flightResults.endAgglo{curRandId});
-curSuperAgglo = superAgglos(curSuperAggloId);
-
-curEndingId = flightEndingOverlap(curRandId);
-curEndingAggloIds = cat(1, 0, cumsum(cellfun(@max, endings.T)));
-curEndingAggloIdx = find(curEndingAggloIds < curEndingId, 1, 'last');
-curEndingIdx = curEndingId - curEndingAggloIds(curEndingAggloIdx);
-
-curEndings = endings.borderPositions{curEndingAggloIdx};
-curEndings = curEndings(endings.T{curEndingAggloIdx} == curEndingIdx, :);
-
-curFlightNodes = flights.nodes{curRandId};
-
-% build skeleton
-curSkel = skeleton();
-curSkel = curSkel.addTree( ...
-    'Super-Agglomerate', curSuperAgglo.nodes(:, 1:3), curSuperAgglo.edges);
-curSkel = curSkel.addTree( ...
-    sprintf('Flight #%d', curRandId), curFlightNodes);
-
-% add endings
-curSkel = curSkel.addNodesAsTrees(curEndings);
-curSkel.names((end - size(curEndings, 1) + 1):end) = {'Ending'};
-
-curFileName = sprintf('%d_flight.nml', curRandId);
-curFileName = fullfile('/home/amotta/Desktop', curFileName);
-
-curSkel = Skeleton.setParams4Pipeline(curSkel, param);
-curSkel.write(curFileName);
-%}
+        param, origAgglos, endings, flightNodes, flightAgglos, superAgglos);

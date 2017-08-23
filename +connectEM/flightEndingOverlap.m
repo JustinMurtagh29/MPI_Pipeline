@@ -1,5 +1,5 @@
 function flightEndings = flightEndingOverlap( ...
-        param, origAgglos, endings, flights, flightResults, superAgglos)
+        param, origAgglos, endings, flightNodes, flightAgglos, superAgglos)
     % flightEndingOverlap
     % 
     % Inputs
@@ -14,12 +14,13 @@ function flightEndings = flightEndingOverlap( ...
     %     first round of flight queries you might want to pass in the
     %     subset of remaining open endings.
     %
-    %   flights
-    %     Focused flights. Also known as the "ff" structure.
+    %   flightNodes
+    %     Cell array with the nodes of each flight path.
     %
-    %   flightResults
-    %     Results of the focused flight analysis. It is expected that all
-    %     flights passed into this function have a valid end agglomerate.
+    %   flightAgglos
+    %     Cell array with the IDs of super-agglomerates reached for each
+    %     flight path. For each of the reached super-agglomerates up to one
+    %     ending will be detected.
     %
     %   superAgglos
     %     Super-agglomerates to which the flight queries attach
@@ -45,45 +46,51 @@ function flightEndings = flightEndingOverlap( ...
     aggloEndings = buildAggloEndings(voxelSize, endings, aggloOrigIds);
     
     %% do the magic
-    flightCount = numel(flights.nodes);
-    flightEndings = zeros(flightCount, 1);
+    assert(numel(flightNodes) == numel(flightAgglos));
+    flightEndings = cell(numel(flightNodes), 1);
     
-    for curFlightIdx = 1:flightCount
+    for curFlightIdx = 1:numel(flightEndings)
         fprintf('Processing flight #%d ...\n', curFlightIdx);
-        curEndAggloId = flightResults.endAgglo{curFlightIdx};
         
-        % NOTE(amotta): This should not be needed because the fight paths
-        % are expected to be filtered before calling this function.
-        if isempty(curEndAggloId); continue; end;
+        % super-agglomerates reached by flight path
+        curFlightAgglos = flightAgglos{curFlightIdx};
+        curFlightAggloCount = numel(curFlightAgglos);
         
-        if numel(curEndAggloId) > 1
-            % HACK(amotta): This should be handled in the query analysis
-            warning('Discarding endings for flight #%d', curFlightIdx)
-            curEndAggloId = max(curEndAggloId);
-        end
+        % initialize output with zeros
+        flightEndings{curFlightIdx} = zeros(curFlightAggloCount, 1);
+        if ~curFlightAggloCount; continue; end;
         
-        curEndings = aggloEndings(curEndAggloId, :);
-        curEndingCount = numel(curEndings{1});
-        if ~curEndingCount; continue; end;
-        
-        % convert flight path to nm space
-        curFlightNodes = flights.nodes{curFlightIdx};
+        % convert flight path to nm
+        curFlightNodes = double(flightNodes{curFlightIdx});
         curFlightNodes = bsxfun(@times, curFlightNodes, voxelSize);
         
-        curEndingDists = nan(curEndingCount, 1);
-        for curEndingIdx = 1:curEndingCount
-            curBorderPos = curEndings{2}{curEndingIdx};
+        % for each super-agglomerate search ending
+        for curFlightAggloIdx = 1:numel(curFlightAgglos)
+            curFlightAgglo = curFlightAgglos(curFlightAggloIdx);
             
-            curDists = pdist2( ...
-                curFlightNodes, curBorderPos, 'squaredeuclidean');
-            curEndingDists(curEndingIdx) = sqrt(min(curDists(:)));
+            % get endings in agglomerate of interest
+            curEndings = aggloEndings(curFlightAgglo, :);
+            curEndingCount = numel(curEndings{1});
+            if ~curEndingCount; continue; end;
+            
+            % calculate minimum distance to endings
+            curEndingDists = nan(curEndingCount, 1);
+            for curEndingIdx = 1:curEndingCount
+                curBorderPos = curEndings{2}{curEndingIdx};
+
+                curDists = pdist2( ...
+                    curFlightNodes, curBorderPos, 'squaredeuclidean');
+                curEndingDists(curEndingIdx) = sqrt(min(curDists(:)));
+            end
+            
+            % no ending reached if above distance threshold
+           [curMinDist, curMinDistIdx] = min(curEndingDists);
+            if curMinDist > maxDist; continue; end;
+            
+            % find ending with minimum distance
+            curEndingId = curEndings{1}(curMinDistIdx);
+            flightEndings{curFlightIdx}(curFlightAggloIdx) = curEndingId;
         end
-        
-       [curMinDist, curMinDistIdx] = min(curEndingDists);
-        if curMinDist > maxDist; continue; end;
-        
-        curEndingId = curEndings{1}(curMinDistIdx);
-        flightEndings(curFlightIdx) = curEndingId;
     end
 end
 
