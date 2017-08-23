@@ -9,7 +9,7 @@ function generateAxonEndings(param)
     options.distanceCutoff = 600; % in nm
     
     % load directionality information
-    directionality = fullfile(param.saveFolder, 'endingInputData.mat');
+    directionality = fullfile(param.saveFolder, 'axonEndingInputData.mat');
     directionality = load(directionality, 'directionality');
     directionality = directionality.directionality;
     
