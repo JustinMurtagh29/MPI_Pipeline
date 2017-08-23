@@ -45,5 +45,6 @@ function generateAxonEndingInputData(param)
         @(x) x(idxKeep), directionality, 'UniformOutput', false);
     out.axonLength = cell2mat(axonLength(idxKeep));
     
-    Util.saveStruct(fullfile(outputFolder, 'endingInputData.mat'), out);
+    outFile = fullfile(param.saveFolder, 'axonEndingInputData.mat');
+    Util.saveStruct(outFile, out);
 end
