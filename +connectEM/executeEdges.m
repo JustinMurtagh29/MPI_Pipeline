@@ -2,7 +2,7 @@ function [ newclass1, equivalencesClass1 ] = executeEdges(class1,edges,segmentMe
 % executes the edges between agglos of class1, and also adds
 % single segments of edges
 
-allEdges = cell2mat(arrayfun(@(x) class1(x).nodes(class1(x).edges,4),1:numel(class1),'uni',0));
+allEdges = cell2mat(arrayfun(@(x) class1(x).nodes(class1(x).edges,4),1:numel(class1),'uni',0)');
 if all(all(ismember(edges,allEdges),2))
     newclass1 = class1;
     return
