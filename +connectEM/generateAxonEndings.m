@@ -14,7 +14,7 @@ function generateAxonEndings(param)
     directionality = directionality.directionality;
     
     % load border CoMs
-    borderCoM = fullfile(param.saveFolder, 'borderCoM.mat');
+    borderCoM = fullfile(param.saveFolder, 'globalBorder.mat');
     borderCoM = load(borderCoM, 'borderCoM');
     borderCoM = borderCoM.borderCom;
     
