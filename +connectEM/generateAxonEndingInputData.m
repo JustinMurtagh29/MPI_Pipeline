@@ -46,8 +46,8 @@ function generateAxonEndingInputData(param)
     
     % Save results
     out = struct;
-    out.indBigAxons = indBigAxons;
-    out.bigAxons = axons(indBigAxons);
+    out.axons = axons(indBigAxons);
+    out.axonIds = find(indBigAxons);
     out.directionality = structfun( ...
         @(x) x(indBigAxons), directionality, 'UniformOutput', false);
     out.axonLengths = cell2mat(axonLengths(indBigAxons));
