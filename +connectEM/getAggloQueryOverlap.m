@@ -25,8 +25,8 @@ idx_comment = ~cellfun(@isempty,ff.comments);
 % ~600 queries do not have a start node, not sure why (maybe the ones with more than one tree), maybe check later
 idx_startEmpty = cellfun(@isempty, ff.startNode);
 
-save([p.saveFolder 'AxonFlightPaths.mat'], 'ff', 'idx_comment', 'idx_startEmpty')
-% load([p.saveFolder 'AxonFlightPaths.mat'])
+save(fullfile(param.saveFolder, 'aggloState/', 'AxonFlightPaths.mat'), 'ff', 'idx_comment', 'idx_startEmpty')
+% load(fullfile(param.saveFolder, 'aggloState/', 'AxonFlightPaths.mat'))
 
 ff = structfun(@(x)x(cellfun(@isempty, ff.comments)), ff, 'uni', 0);
 ff = structfun(@(x)x(~cellfun(@isempty, ff.startNode)), ff, 'uni', 0);

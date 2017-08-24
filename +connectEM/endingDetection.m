@@ -1,4 +1,4 @@
-function endingDetection(p, borderMeta, directionality, axonsNew)
+function endingDetection(p, borderMeta, directionality, superagglos)
 
     options.latentScore = 0.5;
     options.segDirScore = 0.8;
@@ -6,8 +6,8 @@ function endingDetection(p, borderMeta, directionality, axonsNew)
     options.writeTasksToFile = true;
     options.boundingBoxForTasks = false;
 
-    for i=1:length(axonsNew)
-        axons{i,1} = axonsNew(i).nodes(:,4);
+    for i=1:length(superagglos)
+        axons{i,1} = superagglos(i).nodes(:,4);
     end
     axons = cellfun(@(x)x(~isnan(x)),axons,'uni',0);
     
