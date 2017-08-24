@@ -49,12 +49,13 @@ function generateAxonEndings(param)
     out = struct;
     out.axonMask = axonMask;
     out.axonIds = axonIds;
+    out.idxAll = idxAll;
     out.borderIds = borderIds;
     out.borderPositions = borderPositions;
     out.borderClusters = borderClusters;
     out.gitInfo = Util.gitInfo();
     
-    Util.saveStruct(fullfile(param.saveFolder, 'axonEndings.mat'), out);
+    Util.saveStruct(fullfile(param.saveFolder, 'aggloState/', 'axonEndings.mat'), out);
 end
 
 function clusterIds = clusterBorders(param, options, borderCoM)

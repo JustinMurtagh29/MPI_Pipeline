@@ -12,7 +12,7 @@ function generateAxonQueries(param)
     Clusters = endingData.out.borderClusters ;
     
     % Load directionality information
-    directionality = fullfile(param.saveFolder, 'axonEndingInputData.mat');
+    directionality = fullfile(param.saveFolder, 'aggloState/', 'axonEndingInputData.mat');
     directionality = load(directionality, 'directionality');
     directionality = directionality.directionality;
     

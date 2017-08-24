@@ -16,10 +16,12 @@ function generateAxonEndingInputData(param)
        connectEM.loadAllSegmentationData(param);
 
     % Load state of axon agglomeration
-    axonsNew = '/gaba/scratch/mberning/aggloGridSearch6/6_01_00046/metricsFinal.mat';
-    axonsNew = load(axonsNew, 'axonsNew');
-    axonsNew = axonsNew.axonsNew;
-
+%     axonsNew = '/gaba/scratch/mberning/aggloGridSearch6/6_01_00046/metricsFinal.mat';
+%     axonsNew = load(axonsNew, 'axonsNew');
+%     axonsNew = axonsNew.axonsNew;
+    m = load(fullfile(param.saveFolder, 'aggloState/', 'axons_04.mat'));
+    axonsNew = m.axons;
+    
     % Calculate axon directionality
     options = struct;
     options.voxelSize = param.raw.voxelSize;
@@ -46,6 +48,6 @@ function generateAxonEndingInputData(param)
     out.axonLength = cell2mat(axonLength(idxKeep));
     out.gitInfo = Util.gitInfo();
     
-    outFile = fullfile(param.saveFolder, 'axonEndingInputData.mat');
+    outFile = fullfile(param.saveFolder, 'aggloState/', 'axonEndingInputData.mat');
     Util.saveStruct(outFile, out);
 end

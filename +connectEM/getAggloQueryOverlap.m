@@ -1,4 +1,5 @@
-function getAggloQueryOverlap(superagglos)
+% Calculate the overlap between given agglomerate state and all queries
+% done so far
 
 load('/gaba/u/mberning/results/pipeline/20170217_ROI/allParameterWithSynapses.mat');
 
@@ -6,6 +7,10 @@ scratchFolder = '/tmpscratch/mberning/axonQueryResults/';
 skeletonFolders = {'MBKMB_L4_axons_queries_2017_a' 'MBKMB_L4_axons_queries_2017_b'};
 skeletonFolders = cellfun(@(x)[scratchFolder x filesep], skeletonFolders, 'uni', 0);
 skeletonFolders = [skeletonFolders {'/tmpscratch/scchr/AxonEndings/axonQueryResults/CS_MB_L4_AxonLeftQueries_nmls/'}];
+
+% Current state of agglomerates
+m = load(fullfile(param.saveFolder, 'aggloState/', 'axons_04.mat'));
+superagglos = m.axons;
 
 for i=1:length(superagglos)
     axons{i,1} = superagglos(i).nodes(:,4);
@@ -71,5 +76,5 @@ results.endAgglo = endAgglo;
 results.ff = ff;
 results.idxGood = idxGood;
 
-save([p.savefolder 'AxonQueryOverlaps.mat'], 'results', 'queryOverlap', 'idxNoClearStart', 'idxNoClearEnd')
-save([p.savefolder 'AxonPostQueryAnalysisState.mat'])
+save(fullfile(param.saveFolder, 'aggloState/', 'AxonQueryOverlaps.mat'), 'results', 'queryOverlap', 'idxNoClearStart', 'idxNoClearEnd')
+save(fullfile(param.saveFolder, 'aggloState/', 'AxonPostQueryAnalysisState.mat'))
