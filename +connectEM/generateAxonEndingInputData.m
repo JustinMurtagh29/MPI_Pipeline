@@ -13,6 +13,7 @@ function generateAxonEndingInputData(param)
     
     % Directory with input / output data
     dataDir = fullfile(param.saveFolder, 'aggloState');
+    outFile = fullfile(dataDir, 'axonEndingInputData.mat');
 
     % Load data
    [graph, segmentMeta, borderMeta, globalSegmentPCA] = ...
@@ -33,6 +34,7 @@ function generateAxonEndingInputData(param)
     
     directionality = connectEM.calculateDirectionalityOfAgglomerates( ...
         axonAgglos, graph, segmentMeta, borderMeta, globalSegmentPCA, options);
+    save(outFile, 'directionality', '-v7.3');
     
     % Convert borders to nm
     borderMeta.borderCoM = bsxfun( ...
@@ -53,6 +55,5 @@ function generateAxonEndingInputData(param)
         @(x) x(axonIds), directionality, 'UniformOutput', false);
     out.gitInfo = Util.gitInfo();
     
-    outFile = fullfile(dataDir, 'axonEndingInputData.mat');
     Util.saveStruct(outFile, out);
 end
