@@ -87,7 +87,7 @@ disp('State 02 superagglos loaded/generated')
 %% add myelinated processes to axon class
 if ~exist(fullfile(outputFolder,'axons_03.mat'),'file') || ~exist(fullfile(outputFolder,'dendrites_03.mat'),'file')
     disp('Add myelinated processes of dendrite class to axon class and execute correspondences again')
-    [ myelin_Dend ] = Agglo.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
+    [ myelin_Dend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
     myelin_Dend = myelin_Dend > 0.08;  % use the empiric myelin threshold for dendrite agglos
     
     % add the myelinated "dendrites" to the axon class and execute
@@ -104,8 +104,8 @@ if ~exist(fullfile(outputFolder,'axons_03.mat'),'file') || ~exist(fullfile(outpu
     
     indBigDends = Agglo.isMaxBorderToBorderDistAbove(p, 5000, connectEM.transformAggloNewOldRepr(dendrites));
     indBigAxons = Agglo.isMaxBorderToBorderDistAbove(p, 5000, connectEM.transformAggloNewOldRepr(axons));
-    [ myelin_Axon ] = Agglo.calculateSurfaceMyelinScore( axons, graph, borderMeta, heuristics );  % calculate myelin score for the axon class
-    [ myelin_Dend ] = Agglo.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
+    [ myelin_Axon ] = connectEM.calculateSurfaceMyelinScore( axons, graph, borderMeta, heuristics );  % calculate myelin score for the axon class
+    [ myelin_Dend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
     
     save(fullfile(outputFolder,'axons_03.mat'),'axons','myelin_Axon','indBigAxons');
     save(fullfile(outputFolder,'dendrites_03.mat'),'dendrites','myelin_Dend','indBigDends');
