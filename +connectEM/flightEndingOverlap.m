@@ -96,7 +96,7 @@ end
 
 function aggloEndings = buildAggloEndings(voxelSize, endings, aggloOrigIds)
     %% group endings within original agglomerates
-    origAggloCount = numel(endings.axonMask);
+    origAggloCount = numel(aggloOrigIds);
     origAggloEndings = cell(origAggloCount, 2);
     
     curEndingOff = 0;
