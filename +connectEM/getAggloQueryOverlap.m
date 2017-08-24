@@ -1,7 +1,7 @@
 % Calculate the overlap between given agglomerate state and all queries
 % done so far
 
-load('/gaba/u/mberning/results/pipeline/20170217_ROI/allParameterWithSynapses.mat');
+load('/gaba/u/mberning/results/pipeline/20170217_ROI/allParameterWithSynapses.mat', 'p');
 
 scratchFolder = '/tmpscratch/mberning/axonQueryResults/';
 skeletonFolders = {'MBKMB_L4_axons_queries_2017_a' 'MBKMB_L4_axons_queries_2017_b'};
@@ -9,13 +9,11 @@ skeletonFolders = cellfun(@(x)[scratchFolder x filesep], skeletonFolders, 'uni',
 skeletonFolders = [skeletonFolders {'/tmpscratch/scchr/AxonEndings/axonQueryResults/CS_MB_L4_AxonLeftQueries_nmls/'}];
 
 % Current state of agglomerates
-m = load(fullfile(param.saveFolder, 'aggloState/', 'axons_04.mat'));
-superagglos = m.axons;
+m = load(fullfile(p.saveFolder, 'aggloState', 'axons_04.mat'));
 
-for i=1:length(superagglos)
-    axons{i,1} = superagglos(i).nodes(:,4);
-end
-axons = cellfun(@(x)x(~isnan(x)),axons,'uni',0);
+% Large axons only
+axons = m.axons(m.indBigAxons);
+axons = arrayfun(@Agglo.fromSuperAgglo, axons, 'UniformOutput', false);
 
 % Lookup segment ids of nodes+neighbours of nmls in all folders defined above
 [ff.segIds, ff.neighbours, ff.filenames, ff.nodes, ff.startNode, ff.comments] = connectEM.lookupNmlMulti(p, skeletonFolders, false);
