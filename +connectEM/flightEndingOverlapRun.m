@@ -7,20 +7,24 @@ function flightEndingOverlapRun(param)
 
     % load axon super-agglomerates
     m = load(fullfile(dataDir, 'axons_04.mat'));
-    superAgglos = m.axons;
-
-    % NOTE(amotta): In this particular case, the "original agglomerates"
-    % used for the ending detection are identical to the agglomerates on
-    % which flight paths might attach.
+    
+    % IMPORTANT(amotta): These must be exactly the agglomerates to which
+    % `startAgglo` and `endAgglo` of `flightResults` refers to!
+    superAgglos = m.axons(m.indBigAxons);
+    
+    % IMPORTANT(amotta): These must be exactly the agglomerates to which
+    % `endings.aggloIds` refers to!
     origAgglos = arrayfun( ...
-        @Agglo.fromSuperAgglo, superAgglos, 'UniformOutput', false);
+        @Agglo.fromSuperAgglo, m.axons, 'UniformOutput', false);
 
     % load endings
     endings = load(fullfile(dataDir, 'axonEndings.mat'));
-
+    
+    % load flight paths
     m = load(fullfile(dataDir, 'AxonFlightPaths.mat'), 'ff');
     flightNodes = m.ff.nodes;
-
+    
+    % load results from flight path evaluation
     m = load(fullfile(dataDir, 'AxonQueryOverlaps.mat'), 'results');
     flightResults = m.results;
     clear m;
