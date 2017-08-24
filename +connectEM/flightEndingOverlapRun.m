@@ -1,38 +1,39 @@
-function flightEndingOverlap = flightEndingOverlapRun()
+function flightEndingOverlapRun(param)
+    % Written by
+    %   Alessandro Motta <alessandro.motta@brain.mpg.de>
 
-% Written by
-%   Alessandro Motta <alessandro.motta@brain.mpg.de>
+    %% load all the input data
+    dataDir = fullfile(param.saveFolder, 'aggloState');
 
-%% load all the input data
-m = load('/gaba/u/mberning/results/pipeline/20170217_ROI/allParameterWithSynapses.mat');
-param = m.p;
+    % load axon super-agglomerates
+    m = load(fullfile(dataDir, 'axons_04.mat'));
+    superAgglos = m.axons;
 
-% m = load('/gaba/scratch/mberning/axonQueryGeneration/beforeQueryGeneration.mat', 'axonsNew');
-% origAgglos = m.axonsNew;
-m = load(fullfile(param.saveFolder, 'aggloState/', 'axons_04.mat'));
-origAgglos = m.axons;
+    % NOTE(amotta): In this particular case, the "original agglomerates"
+    % used for the ending detection are identical to the agglomerates on
+    % which flight paths might attach.
+    origAgglos = arrayfun( ...
+        @Agglo.fromSuperAgglo, superAgglos, 'UniformOutput', false);
 
-endings = load(fullfile(param.saveFolder, 'aggloState/', 'axonEndings.mat'));
+    % load endings
+    endings = load(fullfile(dataDir, 'axonEndings.mat'));
 
-% m = load('/tmpscratch/scchr/AxonEndings/axonQueryResults/ff_struct_CS_MB_L4_AxonLeftQueries.mat', 'ff');
-m = load(fullfile(param.saveFolder, 'aggloState/', 'AxonFlightPaths.mat'), 'ff');
-flights = m.ff;
+    m = load(fullfile(dataDir, 'AxonFlightPaths.mat'), 'ff');
+    flightNodes = m.ff.nodes;
 
-% m = load('/tmpscratch/scchr/AxonEndings/axonQueryResults/results_round2.mat');
-m = load(fullfile(param.saveFolder, 'aggloState/', 'AxonQueryOverlaps.mat'), 'results')
-flightResults = m.results;
+    m = load(fullfile(dataDir, 'AxonQueryOverlaps.mat'), 'results');
+    flightResults = m.results;
+    clear m;
 
-% m = load('/tmpscratch/kboerg/chiasmarunAugust/superagglos_postsplit.mat', 'superagglos');
-m = load(fullfile(param.saveFolder, 'aggloState/', 'axons_04.mat'));
-superAgglos = m.axons;
-
-clear m;
-
-%% run main function
-flightNodes = flights.nodes;
-flightAgglos = cellfun( ...
-    @union, flightResults.startAgglo, ...
-    flightResults.endAgglo, 'UniformOutput', false);
-
-flightEndingOverlap = connectEM.flightEndingOverlap( ...
-        param, origAgglos, endings, flightNodes, flightAgglos, superAgglos);
+    %% run main function
+    doIt = @(ids) connectEM.flightEndingOverlap( ...
+            param, origAgglos, endings, flightNodes, ids, superAgglos);
+        
+    out = struct;
+    out.startEndingOverlaps = doIt(flightResults.startAgglo);
+    out.endEndingOverlaps = doIt(flightResults.endAgglos);
+    
+    %% save result
+    outFile = fullfile(dataDir, 'AxonEndingOverlaps.mat');
+    Util.saveStruct(outFile, out);
+end
