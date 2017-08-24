@@ -20,8 +20,11 @@ if all(ismember(edgesToExecute,aggloEdges,'rows'))
     newSuperagglos = superagglos;
     equivalenceClass = num2cell(1:numel(superagglos));
 else
-    % Concatenate all agglo edges and edges to be executed
-    allEdges = cat(1,aggloEdges, edgesToExecute);
+    % generate selfEdges of all superagglo segments
+    selfEdges = repmat(segIds,1,2);
+    
+    % Concatenate all agglo edges, self Edges, and edges to be executed
+    allEdges = cat(1,aggloEdges, edgesToExecute,selfEdges);
     
     % Connected components on all edges
     [equivalenceClass, aggloLUT] = Graph.findConnectedComponents(allEdges,0,0);
@@ -44,7 +47,7 @@ else
     allEdges = allEdges(sIdx,:);
 
     % transform the edges into cell
-    newedges = cell(numel(aggloOld),1);
+    newedges = cell(numel(superagglos),1);
     % Treat agglomerates containing single segment separately
     newedges(~singleSegAgglos) = mat2cell(allEdges,histc(saggloLUT,unique(saggloLUT)));
     newedges(singleSegAgglos) = {zeros(0,2)}; % give empty edges correct dimension
