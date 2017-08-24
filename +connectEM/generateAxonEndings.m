@@ -8,8 +8,11 @@ function generateAxonEndings(param)
     options.segDirScore = 0.8;
     options.distanceCutoff = 600; % in nm
     
+    % Directory with input / output data
+    dataDir = fullfile(param.saveFolder, 'aggloState');
+    
     % load directionality information
-    directionality = fullfile(param.saveFolder, 'axonEndingInputData.mat');
+    directionality = fullfile(dataDir, 'axonEndingInputData.mat');
     directionality = load(directionality, 'directionality');
     directionality = directionality.directionality;
     
@@ -55,7 +58,7 @@ function generateAxonEndings(param)
     out.borderClusters = borderClusters;
     out.gitInfo = Util.gitInfo();
     
-    Util.saveStruct(fullfile(param.saveFolder, 'aggloState/', 'axonEndings.mat'), out);
+    Util.saveStruct(fullfile(dataDir, 'axonEndings.mat'), out);
 end
 
 function clusterIds = clusterBorders(param, options, borderCoM)
