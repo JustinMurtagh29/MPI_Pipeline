@@ -33,24 +33,24 @@ function generateAxonEndingInputData(param)
     
     directionality = connectEM.calculateDirectionalityOfAgglomerates( ...
         axonAgglos, graph, segmentMeta, borderMeta, globalSegmentPCA, options);
+    
+    % Convert borders to nm
+    borderMeta.borderCoM = bsxfun( ...
+        @times, double(borderMeta.borderCoM), param.raw.voxelSize);
 
     % Calculate maximum border-to-border size within agglomerates
-    calculateLength = @(borderIds) max(pdist(bsxfun( ...
-        @times, double(borderMeta.borderCoM(borderIds, :)), param.raw.voxelSize)));
-    axonLengths = cellfun(calculateLength, directionality.borderIdx, 'uni', 0);
-
-    % Keep only long enough axons
-    indBigAxons = ~cellfun(@isempty, axonLengths);
-    indBigAxons(indBigAxons) = cellfun( ...
-        @(x) x > minAxonLength, axonLengths(indBigAxons));
+    calculateLength = @(borderIds) max([ ...
+        0, pdist(borderMeta.borderCoM(borderIds, :))]);
+    axonLengths = cellfun(calculateLength, directionality.borderIdx);
+    axonIds = find(axonLengths > minAxonLength);
     
     % Save results
     out = struct;
-    out.axons = axons(indBigAxons);
-    out.axonIds = find(indBigAxons);
+    out.axons = axons(axonIds);
+    out.axonIds = axonIds;
+    out.axonLengths = axonLengths(axonIds);
     out.directionality = structfun( ...
-        @(x) x(indBigAxons), directionality, 'UniformOutput', false);
-    out.axonLengths = cell2mat(axonLengths(indBigAxons));
+        @(x) x(axonIds), directionality, 'UniformOutput', false);
     out.gitInfo = Util.gitInfo();
     
     outFile = fullfile(dataDir, 'axonEndingInputData.mat');
