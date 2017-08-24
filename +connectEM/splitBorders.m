@@ -16,7 +16,7 @@ borderMeta.borderCoM(end+1,:)=round(mean(bboxSmall,2)');
 
 edgesCol = [];
 
-for idx = 1 : length(superagglos)
+for idx = 7862 : length(superagglos)
     if mod(idx,100) == 0
         idx
     end
@@ -30,7 +30,8 @@ for idx = 1 : length(superagglos)
     outsideBbox = ~(all(bsxfun(@gt, borderPositions, bboxSmall(:, 1)'), 2) & ...
         all(bsxfun(@lt, borderPositions, bboxSmall(:, 2)'), 2));
     % remove all insulting edges
-    actualEdges = [repelem(segIdsHere, cellfun('length',graph.neighbours(segIdsHere))), cell2mat(graph.neighbours(segIdsHere))];
+    flatten = @(x)x(:);
+    actualEdges = [flatten(repelem(segIdsHere, cellfun('length',graph.neighbours(segIdsHere)))), cell2mat(graph.neighbours(segIdsHere))];
     actualEdges(probs<0.98&outsideBbox,:) = [];
     edgesHere = actualEdges ...
         + sum(arrayfun(@(x)size(x.nodes,1),superagglos(1:idx-1))); % offset so that all nodes and edges go into one struct
