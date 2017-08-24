@@ -10,17 +10,17 @@ function generateAxonEndingInputData(param)
     % Parameters
     minAxonLength = 5000; % in nm
     bboxDist = 1000; % in nm
+    
+    % Directory with input / output data
+    dataDir = fullfile(param.saveFolder, 'aggloState');
 
     % Load data
    [graph, segmentMeta, borderMeta, globalSegmentPCA] = ...
        connectEM.loadAllSegmentationData(param);
 
     % Load state of axon agglomeration
-%     axonsNew = '/gaba/scratch/mberning/aggloGridSearch6/6_01_00046/metricsFinal.mat';
-%     axonsNew = load(axonsNew, 'axonsNew');
-%     axonsNew = axonsNew.axonsNew;
-    m = load(fullfile(param.saveFolder, 'aggloState/', 'axons_04.mat'));
-    axonsNew = m.axons;
+    axonsNew = load(fullfile(dataDir, 'axons_04.mat'));
+    axonsNew = axonsNew.axons;
     
     % Calculate axon directionality
     options = struct;
@@ -48,6 +48,6 @@ function generateAxonEndingInputData(param)
     out.axonLength = cell2mat(axonLength(idxKeep));
     out.gitInfo = Util.gitInfo();
     
-    outFile = fullfile(param.saveFolder, 'aggloState/', 'axonEndingInputData.mat');
+    outFile = fullfile(dataDir, 'axonEndingInputData.mat');
     Util.saveStruct(outFile, out);
 end
