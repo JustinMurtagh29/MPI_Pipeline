@@ -6,7 +6,7 @@ disp('Parameters loaded');
 outputFolder = fullfile(p.saveFolder, 'aggloState');
 
 if ~exist('graph','var') || ~all(isfield(graph,{'edges','prob','borderIdx'}))
-    graph = load(fullfile(p.saveFolder, 'graphNew.mat'),'edges','prob','borderIdx','neighbours','neighBorderIdx');
+    graph = load(fullfile(p.saveFolder, 'graphNew.mat'),'edges','prob','borderIdx');
 end
 if  ~all(isfield(graph,{'neighbours','neighBorderIdx'}))
     [graph.neighbours, neighboursIdx] = Graph.edges2Neighbors(graph.edges);
