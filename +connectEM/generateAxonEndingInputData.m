@@ -19,8 +19,12 @@ function generateAxonEndingInputData(param)
        connectEM.loadAllSegmentationData(param);
 
     % Load state of axon agglomeration
-    axonsNew = load(fullfile(dataDir, 'axons_04.mat'));
-    axonsNew = axonsNew.axons;
+    axons = load(fullfile(dataDir, 'axons_04.mat'));
+    axons = axons.axons;
+    
+    % Convert to old-school agglomerates
+    axonAgglos = arrayfun( ...
+        @Agglo.fromSuperAgglo, axons, 'UniformOutput', false);
     
     % Calculate axon directionality
     options = struct;
@@ -28,24 +32,25 @@ function generateAxonEndingInputData(param)
     options.bboxDist = bboxDist;
     
     directionality = connectEM.calculateDirectionalityOfAgglomerates( ...
-        axonsNew, graph, segmentMeta, borderMeta, globalSegmentPCA, options);
+        axonAgglos, graph, segmentMeta, borderMeta, globalSegmentPCA, options);
 
     % Calculate maximum border-to-border size within agglomerates
     calculateLength = @(borderIds) max(pdist(bsxfun( ...
         @times, double(borderMeta.borderCoM(borderIds, :)), param.raw.voxelSize)));
-    axonLength = cellfun(calculateLength, directionality.borderIdx, 'uni', 0);
+    axonLengths = cellfun(calculateLength, directionality.borderIdx, 'uni', 0);
 
     % Keep only long enough axons
-    idxKeep = ~cellfun(@isempty, axonLength);
-    idxKeep(idxKeep) = cellfun(@(x) x > minAxonLength, axonLength(idxKeep));
+    indBigAxons = ~cellfun(@isempty, axonLengths);
+    indBigAxons(indBigAxons) = cellfun( ...
+        @(x) x > minAxonLength, axonLengths(indBigAxons));
     
     % Save results
     out = struct;
-    out.idxKeep = idxKeep;
-    out.axonsNew = axonsNew(idxKeep);
+    out.indBigAxons = indBigAxons;
+    out.bigAxons = axons(indBigAxons);
     out.directionality = structfun( ...
-        @(x) x(idxKeep), directionality, 'UniformOutput', false);
-    out.axonLength = cell2mat(axonLength(idxKeep));
+        @(x) x(indBigAxons), directionality, 'UniformOutput', false);
+    out.axonLengths = cell2mat(axonLengths(indBigAxons));
     out.gitInfo = Util.gitInfo();
     
     outFile = fullfile(dataDir, 'axonEndingInputData.mat');
