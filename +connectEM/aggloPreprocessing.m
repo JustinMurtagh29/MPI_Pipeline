@@ -99,7 +99,7 @@ if ~exist(fullfile(outputFolder,'axons_03.mat'),'file') || ~exist(fullfile(outpu
     % execute corresponding edges again on the merged axon class. This at the
     % same time merges all superagglos that have overlapping segments!
     [ axons ] = connectEM.executeEdges(axons,corrEdges,segmentMeta);
-    
+    disp('Overlaps solved, now finding 5 micron agglos and surface myelin scores');
     %% get myelin surface scores, size scores and save final axon/dendrite class state
     
     indBigDends = Agglo.isMaxBorderToBorderDistAbove(p, 5000, connectEM.transformAggloNewOldRepr(dendrites),graph);
