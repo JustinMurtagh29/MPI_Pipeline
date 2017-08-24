@@ -12,9 +12,10 @@ function generateAxonEndings(param)
     dataDir = fullfile(param.saveFolder, 'aggloState');
     
     % load directionality information
-    directionality = fullfile(dataDir, 'axonEndingInputData.mat');
-    directionality = load(directionality, 'directionality');
-    directionality = directionality.directionality;
+    endingInput = fullfile(dataDir, 'axonEndingInputData.mat');
+    endingInput = load(endingInput, 'axonIds', 'directionality');
+    directionality = endingInput.directionality;
+    axonIds = endingInput.axonIds;
     
     % load border CoMs
     borderCoM = fullfile(param.saveFolder, 'globalBorder.mat');
@@ -35,7 +36,7 @@ function generateAxonEndings(param)
     % Keep only largest score in each agglomerate for now
     nrCanidates = cellfun(@numel, idxAll);
     axonMask = nrCanidates > 0;
-    axonIds = find(axonMask);
+    axonIds = axonIds(axonMask);
     
     % clustering on left candidates
     borderIds = cellfun( ...
@@ -50,9 +51,8 @@ function generateAxonEndings(param)
     
     % save result
     out = struct;
-    out.axonMask = axonMask;
     out.axonIds = axonIds;
-    out.idxAll = idxAll;
+    out.axonMask = axonMask;
     out.borderIds = borderIds;
     out.borderPositions = borderPositions;
     out.borderClusters = borderClusters;
