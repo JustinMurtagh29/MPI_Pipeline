@@ -2,9 +2,11 @@ function generateAxonQueries(param)
     % Written by 
     %   Manuel Berning <manuel.berning@brain.mpg.de>
     %   Christian Schramm <christian.schramm@brain.mpg.de>
+    
+    dataDir = fullfile(param.saveFolder, 'aggloState');
 
     % Load data from ending generation
-    endingData = fullfile(param.saveFolder, 'aggloState/', 'axonEndings.mat');
+    endingData = fullfile(dataDir, 'axonEndings.mat');
     endingData = load(endingData, 'out');
     idxAll = endingData.out.idxAll;
     idxCanidateFound = endingData.out.axonMask;
@@ -12,18 +14,21 @@ function generateAxonQueries(param)
     Clusters = endingData.out.borderClusters ;
     
     % Load directionality information
-    directionality = fullfile(param.saveFolder, 'aggloState/', 'axonEndingInputData.mat');
+    directionality = fullfile(dataDir, 'axonEndingInputData.mat');
     directionality = load(directionality, 'directionality');
     directionality = directionality.directionality;
     
     % Load border CoMs
-    borderCoM = fullfile(param.saveFolder, 'globalBorder.mat');
+    borderCoM = fullfile(dataDir, 'globalBorder.mat');
     borderCoM = load(borderCoM, 'borderCoM');
     borderCoM = borderCoM.borderCoM;
     borderPositions = cellfun(@(x) borderMeta.borderCoM(x,:), directionality.borderIdx(idxCanidateFound),'uni',0);
 
     % Determine endings which are not redundant(already attached by flight path)
-    newEndings = connectEM.flightEndingOverlapRun();
+    out = load(fullfile(dataDir, 'AxonEndingOverlaps.mat'));
+    startEndings = unique(cell2mat(out.startEndingOverlaps));
+    endEndings = unique(cell2mat(out.endEndingOverlaps));
+    attachedEndings = union(startEndings,endEndings);
        
     % Find indices of ending candidates in directionality lists (scores,
     % pca...) and exclude redundant endings
@@ -33,7 +38,7 @@ function generateAxonQueries(param)
     for j=1:length(Clusters)
         idxCluster{j,1} = [];
         for k=1:max(Clusters{j})
-            if ~ismember(counter,newEndings)
+            if ~ismember(counter,attachedEndings)
                 idxCluster{j,1}{k,1} = [];
             else
                 idxCluster{j,1}{k,1} = idxUse{j,1}(find(Clusters{j}==k));
