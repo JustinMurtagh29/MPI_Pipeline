@@ -54,7 +54,7 @@ else
     
     % filter edge and equivalence class list to keep only those which have
     % parts of the original superagglo
-    newedges = newedges(eqClassesToKeep);
+    newedges = newedges(eqClassesToKeep)';
     equivalenceClass = equivalenceClass(eqClassesToKeep);
     
     %  create node cell array including segID information
