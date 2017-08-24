@@ -1,38 +1,49 @@
-function flightEndingOverlap = flightEndingOverlapRun()
-
+function flightEndingOverlapRun(param)
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
 
     %% load all the input data
-    m = load('/gaba/u/mberning/results/pipeline/20170217_ROI/allParameterWithSynapses.mat');
-    param = m.p;
 
-    m = load(fullfile(param.saveFolder, 'aggloState/', 'axons_04.mat'));
-    origAgglos = m.axons;
+    dataDir = fullfile(param.saveFolder, 'aggloState');
 
-    endings = load(fullfile(param.saveFolder, 'aggloState/', 'axonEndings.mat'));
+    % load axon super-agglomerates
+    m = load(fullfile(dataDir, 'axons_04.mat'));
+    
+    % IMPORTANT(amotta): These must be exactly the agglomerates to which
+    % `startAgglo` and `endAgglo` of `flightResults` refers to!
+    superAgglos = m.axons(m.indBigAxons);
+    
+    % IMPORTANT(amotta): These must be exactly the agglomerates to which
+    % `endings.aggloIds` refers to!
+    origAgglos = arrayfun( ...
+        @Agglo.fromSuperAgglo, m.axons, 'UniformOutput', false);
 
-    m = load(fullfile(param.saveFolder, 'aggloState/', 'AxonFlightPaths.mat'), 'ff');
-    flights = m.ff;
-
-    m = load(fullfile(param.saveFolder, 'aggloState/', 'AxonQueryOverlaps.mat'), 'results')
+    % load endings
+    endings = load(fullfile(dataDir, 'axonEndings.mat'));
+    
+    % load flight paths
+    m = load(fullfile(dataDir, 'AxonFlightPaths.mat'), 'ff');
+    flightNodes = m.ff.nodes;
+    
+    % load results from flight path evaluation
+    m = load(fullfile(dataDir, 'AxonQueryOverlaps.mat'), 'results');
     flightResults = m.results;
-
-    m = load(fullfile(param.saveFolder, 'aggloState/', 'axons_04.mat'));
-    superAgglos = m.axons;
-
     clear m;
 
     %% run main function
-    flightNodes = flights.nodes;
-    
-    flightEndingOverlap.starts = connectEM.flightEndingOverlap( ...
-            param, origAgglos, endings, flightNodes, flightResults.startAgglo, superAgglos);
-
-    flightEndingOverlap.ends = connectEM.flightEndingOverlap( ...
-            param, origAgglos, endings, flightNodes, flightResults.endAgglo, superAgglos);
+    doIt = @(ids) connectEM.flightEndingOverlap( ...
+            param, origAgglos, endings, flightNodes, ids, superAgglos);
         
-    %% Display some statistics
+    out = struct;
+    out.startEndingOverlaps = doIt(flightResults.startAgglo);
+    out.endEndingOverlaps = doIt(flightResults.endAgglos);
+    
+    %% save result
+    outFile = fullfile(dataDir, 'AxonEndingOverlaps.mat');
+    Util.saveStruct(outFile, out);
+
+
+%% Display some statistics
     % Endings statistics:
     endingClusters = endings.borderClusters;
     clusterSizes = cellfun(@max, endingClusters);
@@ -40,8 +51,8 @@ function flightEndingOverlap = flightEndingOverlapRun()
     display([num2str(singleEnding./numel(clusterSizes)*100, '%.2f') '% of agglomerates have just one single ending']);
     display([num2str(singleEnding) ' in total']);
     
-    startEndings = unique(cell2mat(flightEndingOverlap.starts));
-    endEndings = unique(cell2mat(flightEndingOverlap.ends));
+    startEndings = unique(cell2mat(out.startEndingOverlaps));
+    endEndings = unique(cell2mat(out.endEndingOverlaps));
     totalEndings = union(startEndings,endEndings);
     
     display([num2str(numel(startEndings)./numel(endingClusters)*100, '%.2f') '% of endings have flight path attached at start']);
@@ -53,20 +64,18 @@ function flightEndingOverlap = flightEndingOverlapRun()
     display([num2str(numel(totalEndings)) ' in total']);
     
     % Flight path statistics:
-    display([num2str(sum(~cellfun('isempty',flightEndingOverlap.starts))./numel(flightEndingOverlap.starts)*100, '%.2f')...
+    display([num2str(sum(~cellfun('isempty',out.startEndingOverlaps))./numel(flightEndingOverlap.starts)*100, '%.2f')...
         '% of flight paths attach at start']);
-    display([num2str(sum(~cellfun('isempty',flightEndingOverlap.starts))) ' in total']);
-    display([num2str(sum(~cellfun('isempty',flightEndingOverlap.ends))./numel(flightEndingOverlap.starts)*100, '%.2f')...
+    display([num2str(sum(~cellfun('isempty',out.startEndingOverlaps))) ' in total']);
+    display([num2str(sum(~cellfun('isempty',out.endEndingOverlaps))./numel(flightEndingOverlap.starts)*100, '%.2f')...
         '% of flight paths attach at end']);
-    display([num2str(sum(~cellfun('isempty',flightEndingOverlap.ends))) ' in total']);
+    display([num2str(sum(~cellfun('isempty',out.endEndingOverlaps))) ' in total']);
     
-    flightEndingOverlap.total = cellfun( ...
-        @union, flightEndingOverlap.starts, ...
-        flightEndingOverlap.ends, 'UniformOutput', false);
+    totalEndingOverlaps = cellfun( ...
+        @union, out.startEndingOverlaps, ...
+        out.endEndingOverlaps, 'UniformOutput', false);
     
-    display([num2str(sum(~cellfun('isempty',flightEndingOverlap.total))./numel(flightEndingOverlap.total)*100, '%.2f') '% of flight paths attach at ending']);
-    display([num2str(sum(~cellfun('isempty',flightEndingOverlap.total))) ' in total']);
+    display([num2str(sum(~cellfun('isempty',totalEndingOverlaps))./numel(totalEndingOverlaps)*100, '%.2f') '% of flight paths attach at ending']);
+    display([num2str(sum(~cellfun('isempty',totalEndingOverlaps))) ' in total']);
     
-    
-    
-
+end
