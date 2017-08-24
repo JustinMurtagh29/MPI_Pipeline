@@ -45,9 +45,7 @@ if doChecks
         aggloNew(~idxSingleSegment)) == 1));
     
     % Check that all nodes are connected
-    assert(all(arrayfun(@(x)isempty(setdiff(1:size(x.nodes,1),x.edges(:))), ...
-        aggloNew(~idxSingleSegment))));
-    assert(all(arrayfun(@(x)isempty(setdiff(x.edges(:),1:size(x.nodes,1))), ...
+    assert(all(arrayfun(@(x)isempty(setxor(1:size(x.nodes,1),x.edges(:))), ...
         aggloNew(~idxSingleSegment))));
     
     % Check that equivalence classes are exclusive
@@ -55,7 +53,6 @@ if doChecks
     assert(all(histc(segIds, unique(segIds)) == 1));
     
     % Check that segments still belong to the same equivalence class
-    assert(all(arrayfun(@(x)isempty(setdiff(aggloOld{x},aggloNew(x).nodes(:,4))), 1:numel(aggloOld))));
-    assert(all(arrayfun(@(x)isempty(setdiff(aggloNew(x).nodes(:,4),aggloOld{x})), 1:numel(aggloOld))));
+    assert(all(arrayfun(@(x)isempty(setxor(aggloOld{x},aggloNew(x).nodes(:,4))), 1:numel(aggloOld))));
 end
 end
