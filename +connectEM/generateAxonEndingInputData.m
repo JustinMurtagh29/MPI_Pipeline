@@ -49,5 +49,3 @@ function generateAxonEndingInputData(param)
     outFile = fullfile(param.saveFolder, 'axonEndingInputData.mat');
     Util.saveStruct(outFile, out);
 end
-
-function clusterIds = clusterBorders(
