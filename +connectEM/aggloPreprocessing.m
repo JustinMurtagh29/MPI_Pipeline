@@ -94,7 +94,7 @@ if ~exist(fullfile(outputFolder,'axons_03.mat'),'file') || ~exist(fullfile(outpu
     % corresponding edges between them
     axons = cat(1,axons,dendrites(myelin_Dend));
     dendrites = dendrites(~myelin_Dend);
-    fprintf('Added %d agglos of the dendritic class (now %d remaining) to the axon class (now %d agglos)',sum(myelin_Dend),numel(dendrites),numel(axons));
+    fprintf('Added %d agglos of the dendritic class (now %d remaining) to the axon class (now %d agglos)\n',sum(myelin_Dend),numel(dendrites),numel(axons));
     
     % execute corresponding edges again on the merged axon class. This at the
     % same time merges all superagglos that have overlapping segments!

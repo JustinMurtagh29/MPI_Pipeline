@@ -60,6 +60,9 @@ else
     %  create node cell array including segID information
     newnodes = cellfun(@(x) [segmentMeta.point(:,x)',x],equivalenceClass,'uni',0)';
 
+    % tranform the segIds in the edge vector to index to the node
+    [~, newedges] = cellfun(@(x,y) ismember(x,y(:,4)),newedges,newnodes,'uni',0);
+
     newSuperagglos = cell2struct([newedges;newnodes],{'edges','nodes'},1);
 end
 
