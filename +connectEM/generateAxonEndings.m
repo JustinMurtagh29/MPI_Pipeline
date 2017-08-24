@@ -8,10 +8,14 @@ function generateAxonEndings(param)
     options.segDirScore = 0.8;
     options.distanceCutoff = 600; % in nm
     
+    % Directory with input / output data
+    dataDir = fullfile(param.saveFolder, 'aggloState');
+    
     % load directionality information
-    directionality = fullfile(param.saveFolder, 'axonEndingInputData.mat');
-    directionality = load(directionality, 'directionality');
-    directionality = directionality.directionality;
+    endingInput = fullfile(dataDir, 'axonEndingInputData.mat');
+    endingInput = load(endingInput, 'axonIds', 'directionality');
+    directionality = endingInput.directionality;
+    axonIds = endingInput.axonIds;
     
     % load border CoMs
     borderCoM = fullfile(param.saveFolder, 'globalBorder.mat');
@@ -29,15 +33,15 @@ function generateAxonEndings(param)
         @(x, y) find(x & y), ...
         idxDirectional, idxEnding, 'UniformOutput', false);
     
-    % Keep only agglomerates with at least one ending candidate
+    % Keep only those agglomerates with at least one ending candidate
     nrCanidates = cellfun(@numel, idxAll);
     axonMask = nrCanidates > 0;
-    axonIds = find(axonMask);
+    axonIds = axonIds(axonMask);
+   
     display([num2str(numel(axonMask)) ' agglomerates in total']);
     display([num2str(1 - (sum(axonMask)./numel(axonMask))*100, '%.2f') '% of agglomerates have not a single ending']);
     display([num2str(numel(axonMask) - sum(axonMask)) ' in total']);
-    
-        
+
     % clustering on left candidates
     borderIds = cellfun( ...
         @(x, y) x(y), ...
@@ -53,19 +57,18 @@ function generateAxonEndings(param)
     singleEnding = sum(clusterSizes == 1);
     display([num2str(singleEnding./numel(clusterSizes)*100, '%.2f') '% of agglomerates have just one single ending']);
     display([num2str(singleEnding) ' in total']);
-    
+   
     
     % save result
     out = struct;
-    out.axonMask = axonMask;
     out.axonIds = axonIds;
-    out.idxAll = idxAll;
+    out.axonMask = axonMask;
     out.borderIds = borderIds;
     out.borderPositions = borderPositions;
     out.borderClusters = borderClusters;
     out.gitInfo = Util.gitInfo();
     
-    Util.saveStruct(fullfile(param.saveFolder, 'aggloState/', 'axonEndings.mat'), out);
+    Util.saveStruct(fullfile(dataDir, 'axonEndings.mat'), out);
 end
 
 function clusterIds = clusterBorders(param, options, borderCoM)

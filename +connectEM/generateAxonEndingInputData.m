@@ -10,17 +10,21 @@ function generateAxonEndingInputData(param)
     % Parameters
     minAxonLength = 5000; % in nm
     bboxDist = 1000; % in nm
+    
+    % Directory with input / output data
+    dataDir = fullfile(param.saveFolder, 'aggloState');
 
     % Load data
    [graph, segmentMeta, borderMeta, globalSegmentPCA] = ...
        connectEM.loadAllSegmentationData(param);
 
     % Load state of axon agglomeration
-%     axonsNew = '/gaba/scratch/mberning/aggloGridSearch6/6_01_00046/metricsFinal.mat';
-%     axonsNew = load(axonsNew, 'axonsNew');
-%     axonsNew = axonsNew.axonsNew;
-    m = load(fullfile(param.saveFolder, 'aggloState/', 'axons_04.mat'));
-    axonsNew = m.axons;
+    axons = load(fullfile(dataDir, 'axons_04.mat'));
+    axons = axons.axons;
+    
+    % Convert to old-school agglomerates
+    axonAgglos = arrayfun( ...
+        @Agglo.fromSuperAgglo, axons, 'UniformOutput', false);
     
     % Calculate axon directionality
     options = struct;
@@ -28,26 +32,27 @@ function generateAxonEndingInputData(param)
     options.bboxDist = bboxDist;
     
     directionality = connectEM.calculateDirectionalityOfAgglomerates( ...
-        axonsNew, graph, segmentMeta, borderMeta, globalSegmentPCA, options);
+        axonAgglos, graph, segmentMeta, borderMeta, globalSegmentPCA, options);
+    
+    % Convert borders to nm
+    borderMeta.borderCoM = bsxfun( ...
+        @times, double(borderMeta.borderCoM), param.raw.voxelSize);
 
     % Calculate maximum border-to-border size within agglomerates
-    calculateLength = @(borderIds) max(pdist(bsxfun( ...
-        @times, double(borderMeta.borderCoM(borderIds, :)), param.raw.voxelSize)));
-    axonLength = cellfun(calculateLength, directionality.borderIdx, 'uni', 0);
-
-    % Keep only long enough axons
-    idxKeep = ~cellfun(@isempty, axonLength);
-    idxKeep(idxKeep) = cellfun(@(x) x > minAxonLength, axonLength(idxKeep));
+    calculateLength = @(borderIds) max([ ...
+        0, pdist(borderMeta.borderCoM(borderIds, :))]);
+    axonLengths = cellfun(calculateLength, directionality.borderIdx);
+    axonIds = find(axonLengths > minAxonLength);
     
     % Save results
     out = struct;
-    out.idxKeep = idxKeep;
-    out.axonsNew = axonsNew(idxKeep);
+    out.axons = axons(axonIds);
+    out.axonIds = axonIds;
+    out.axonLengths = axonLengths(axonIds);
     out.directionality = structfun( ...
-        @(x) x(idxKeep), directionality, 'UniformOutput', false);
-    out.axonLength = cell2mat(axonLength(idxKeep));
+        @(x) x(axonIds), directionality, 'UniformOutput', false);
     out.gitInfo = Util.gitInfo();
     
-    outFile = fullfile(param.saveFolder, 'aggloState/', 'axonEndingInputData.mat');
+    outFile = fullfile(dataDir, 'axonEndingInputData.mat');
     Util.saveStruct(outFile, out);
 end
