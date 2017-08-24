@@ -28,8 +28,8 @@ idx_comment = ~cellfun(@isempty,ff.comments);
 % ~600 queries do not have a start node, not sure why (maybe the ones with more than one tree), maybe check later
 idx_startEmpty = cellfun(@isempty, ff.startNode);
 
-save(fullfile(param.saveFolder, 'aggloState/', 'AxonFlightPaths.mat'), 'ff', 'idx_comment', 'idx_startEmpty')
-% load(fullfile(param.saveFolder, 'aggloState/', 'AxonFlightPaths.mat'))
+save(fullfile(param.saveFolder, 'aggloState', 'AxonFlightPaths.mat'), 'ff', 'idx_comment', 'idx_startEmpty')
+% load(fullfile(param.saveFolder, 'aggloState', 'AxonFlightPaths.mat'))
 
 ff = structfun(@(x)x(cellfun(@isempty, ff.comments)), ff, 'uni', 0);
 ff = structfun(@(x)x(~cellfun(@isempty, ff.startNode)), ff, 'uni', 0);
@@ -74,5 +74,5 @@ results.endAgglo = endAgglo;
 results.ff = ff;
 results.idxGood = idxGood;
 
-save(fullfile(param.saveFolder, 'aggloState/', 'AxonQueryOverlaps.mat'), 'results', 'queryOverlap', 'idxNoClearStart', 'idxNoClearEnd')
-save(fullfile(param.saveFolder, 'aggloState/', 'AxonPostQueryAnalysisState.mat'))
+save(fullfile(param.saveFolder, 'aggloState', 'AxonQueryOverlaps.mat'), 'results', 'queryOverlap', 'idxNoClearStart', 'idxNoClearEnd');
+save(fullfile(param.saveFolder, 'aggloState', 'AxonPostQueryAnalysisState.mat'));
