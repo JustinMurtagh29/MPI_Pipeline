@@ -3,10 +3,18 @@ function getAggloQueryOverlapB(p)
     %   Manuel Berning <manuel.berning@brain.mpg.de>
     %   Christian Schramm <christian.schramm@brain.mpg.de>
     
-    % Calculate the overlap between given agglomerate state and all queries
-    % done so far
+    % Directory with input / output data
     dataDir = fullfile(p.saveFolder, 'aggloState');
-    load(fullfile(dataDir, 'AxonFlightPaths.mat'))
+    
+    % Load flight paths
+    m = load(fullfile(dataDir, 'AxonFlightPaths.mat'), 'ff');
+    ff = m.ff;
+    
+    % Load axon agglomerates
+    m = load(fullfile(dataDir, 'axons_04.mat'));
+    axons = m.axons(m.indBigAxons);
+    axons = arrayfun(@Agglo.fromSuperAgglo, axons, 'UniformOutput', false);
+    clear m;
 
     ff = structfun(@(x)x(cellfun(@isempty, ff.comments)), ff, 'uni', 0);
     ff = structfun(@(x)x(~cellfun(@isempty, ff.startNode)), ff, 'uni', 0);

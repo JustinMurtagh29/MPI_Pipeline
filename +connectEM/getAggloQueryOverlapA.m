@@ -8,13 +8,6 @@ function getAggloQueryOverlapA(p)
     skeletonFolders = cellfun(@(x)[scratchFolder x filesep], skeletonFolders, 'uni', 0);
     skeletonFolders = [skeletonFolders {'/tmpscratch/scchr/AxonEndings/axonQueryResults/CS_MB_L4_AxonLeftQueries_nmls/'}];
 
-    % Current state of agglomerates
-    m = load(fullfile(p.saveFolder, 'aggloState', 'axons_04.mat'));
-
-    % Large axons only
-    axons = m.axons(m.indBigAxons);
-    axons = arrayfun(@Agglo.fromSuperAgglo, axons, 'UniformOutput', false);
-
     % Lookup segment ids of nodes+neighbours of nmls in all folders defined above
     [ff.segIds, ff.neighbours, ff.filenames, ff.nodes, ff.startNode, ff.comments] = connectEM.lookupNmlMulti(p, skeletonFolders, false);
 
