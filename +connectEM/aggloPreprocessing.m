@@ -46,6 +46,8 @@ if ~exist(fullfile(outputFolder,'dendrites_01.mat'),'file')
     [thisGrid.axonsNew, thisGrid.dendritesNew, thisGrid.garbageEdges] = connectEM.garbageCollection(graph, segmentMeta, thisGrid.axons, thisGrid.dendrites, thisGrid.heuristics.mapping);
     assert(all(cellfun(@(x,y)all(x==y), thisGrid.dendritesNew, thisGrid.dendritesFinal)));
     edgesGTall = [thisGrid.dendriteEdges; thisGrid.garbageEdges(all(ismember(thisGrid.garbageEdges,cell2mat(thisGrid.dendritesNew)),2),:)];
+    % remove all duplicates from hot edge list
+    edgesGTall = unique(sort(edgesGTall,2),'rows');
     save(fullfile(outputFolder,'dendritesEdgesGTall.mat'), 'edgesGTall');
     
     % get hot edges to each agglo and create first non-hybrid superagglo
@@ -62,6 +64,8 @@ if ~exist(fullfile(outputFolder,'axons_01.mat'),'file')
     % search (> 100 voxel)
     load('/gaba/scratch/mberning/aggloGridSearch6/6_01_00046/metricsFinal.mat', 'axonsNew');
     load('/tmpscratch/mberning/edgesGTall.mat', 'edgesGTall');
+    % remove all duplicates from hot edge list
+    edgesGTall = unique(sort(edgesGTall,2),'rows');
     save(fullfile(outputFolder,'axonsEdgesGTall.mat'), 'edgesGTall');
     axons = connectEM.transformAggloOldNewRepr(axonsNew, edgesGTall, segmentMeta,1);
     clear axonsNew edgesGTall;
