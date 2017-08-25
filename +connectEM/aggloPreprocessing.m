@@ -106,8 +106,8 @@ if ~exist(fullfile(outputFolder,'axons_03.mat'),'file') || ~exist(fullfile(outpu
     disp('Overlaps solved, now finding 5 micron agglos and surface myelin scores');
     %% get myelin surface scores, size scores and save final axon/dendrite class state
     
-    indBigDends = Agglo.isMaxBorderToBorderDistAbove(p, 5000, connectEM.transformAggloNewOldRepr(dendrites),graph);
-    indBigAxons = Agglo.isMaxBorderToBorderDistAbove(p, 5000, connectEM.transformAggloNewOldRepr(axons),graph);
+    indBigDends = Agglo.isMaxBorderToBorderDistAbove(p, 5000, connectEM.transformAggloNewOldRepr(dendrites));
+    indBigAxons = Agglo.isMaxBorderToBorderDistAbove(p, 5000, connectEM.transformAggloNewOldRepr(axons));
     [ myelin_Axon ] = connectEM.calculateSurfaceMyelinScore( axons, graph, borderMeta, heuristics );  % calculate myelin score for the axon class
     [ myelin_Dend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
     
