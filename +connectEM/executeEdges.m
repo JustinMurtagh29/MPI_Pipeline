@@ -25,6 +25,7 @@ else
     
     % Concatenate all agglo edges, self Edges, and edges to be executed
     allEdges = cat(1,aggloEdges, edgesToExecute,selfEdges);
+    allEdges = unique(sort(allEdges,2),'rows');
     
     % Connected components on all edges
     [equivalenceClass, aggloLUT] = Graph.findConnectedComponents(allEdges,0,0);
