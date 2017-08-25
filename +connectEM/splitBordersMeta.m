@@ -26,5 +26,6 @@ function job = splitBordersMeta(p)
     axons = superagglosBorderSplit;
     indBigAxons = axonLength > 5000;
     save(fullfile(p.saveFolder,'aggloState/axons_04.mat'), 'axons','indBigAxons');
+end
 function dummy()
 end    
