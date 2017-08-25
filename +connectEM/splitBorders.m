@@ -1,8 +1,7 @@
-function splitBorders(startidx)
+function splitBorders(startidx, p)
     % load needed data
-    load('/gaba/u/mberning/results/pipeline/20170217_ROI/allParameterWithSynapses.mat','p');
     temp = load(fullfile(p.saveFolder,'aggloState/axons_03.mat'));
-    superagglos = temp.axons(temp.indBigAxons);
+    superagglos = temp.axons;
     graph = connectEM.loadAllSegmentationData(p);
     borderMeta = load([p.saveFolder 'globalBorder.mat'], 'borderCoM');
 
@@ -65,7 +64,7 @@ function splitBorders(startidx)
         %writeNml(['b.nml'], writeSkeletonFromNodesAndEdges({superagglos(idx).nodes}, {superagglos(idx).edges},comments, repmat({'axon'},1,1), repmat({[0 0 1 1]},1,1)));
 
     end
-    save(['/tmpscratch/kboerg/splitBorder/splitBorder_' num2str(startidx)], 'superagglosBorderSplit','axonLength')
+    save([p.saveFolder 'splitBorder/splitBorder_' num2str(startidx)], 'superagglosBorderSplit','axonLength')
 end
 function dummy()
 end
