@@ -39,18 +39,15 @@ function generateAxonEndingInputData(param)
     % Convert borders to nm
     borderMeta.borderCoM = bsxfun( ...
         @times, double(borderMeta.borderCoM), param.raw.voxelSize);
-
-    % Calculate maximum border-to-border size within agglomerates
-    calculateLength = @(borderIds) max([ ...
-        0, pdist(borderMeta.borderCoM(borderIds, :))]);
-    axonLengths = cellfun(calculateLength, directionality.borderIdx);
-    axonIds = find(axonLengths > minAxonLength);
+    
+    axonMaskFunc = @(b) Util.isMaxPdistAbove( ...
+        borderMeta.borderCoM(b, :), minAxonLength);
+    axonIds = find(cellfun(axonMaskFunc, directionality.borderIdx));
     
     % Save results
     out = struct;
     out.axons = axons(axonIds);
     out.axonIds = axonIds;
-    out.axonLengths = axonLengths(axonIds);
     out.directionality = structfun( ...
         @(x) x(axonIds), directionality, 'UniformOutput', false);
     out.gitInfo = Util.gitInfo();
