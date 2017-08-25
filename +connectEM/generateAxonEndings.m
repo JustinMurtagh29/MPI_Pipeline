@@ -33,11 +33,15 @@ function generateAxonEndings(param)
         @(x, y) find(x & y), ...
         idxDirectional, idxEnding, 'UniformOutput', false);
     
-    % Keep only largest score in each agglomerate for now
+    % Keep only those agglomerates with at least one ending candidate
     nrCanidates = cellfun(@numel, idxAll);
     axonMask = nrCanidates > 0;
     axonIds = axonIds(axonMask);
-    
+   
+    display([num2str(numel(axonMask)) ' agglomerates in total']);
+    display([num2str(1 - (sum(axonMask)./numel(axonMask))*100, '%.2f') '% of agglomerates have not a single ending']);
+    display([num2str(numel(axonMask) - sum(axonMask)) ' in total']);
+
     % clustering on left candidates
     borderIds = cellfun( ...
         @(x, y) x(y), ...
@@ -48,6 +52,12 @@ function generateAxonEndings(param)
     borderClusters = cellfun( ...
         @(x) clusterBorders(param, options, x), ...
         borderPositions, 'UniformOutput', false);
+    
+    clusterSizes = cellfun(@max, borderClusters);
+    singleEnding = sum(clusterSizes == 1);
+    display([num2str(singleEnding./numel(clusterSizes)*100, '%.2f') '% of agglomerates have just one single ending']);
+    display([num2str(singleEnding) ' in total']);
+   
     
     % save result
     out = struct;
