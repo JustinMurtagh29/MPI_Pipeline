@@ -23,36 +23,37 @@ else
     % generate selfEdges of all superagglo segments
     selfEdges = repmat(segIds,1,2);
     
-    % Concatenate all agglo edges, self Edges, and edges to be executed
-    allEdges = cat(1,aggloEdges, edgesToExecute,selfEdges);
-    allEdges = unique(sort(allEdges,2),'rows');
-    
-    % Connected components on all edges
-    [equivalenceClass, aggloLUT] = Graph.findConnectedComponents(allEdges,0,0);
-    
+    % Concatenate all agglo edges and edges to be executed and remove
+    % duplicates
+    allNonSelfEdges = cat(1,aggloEdges, edgesToExecute);
+    allNonSelfEdges = unique(sort(allNonSelfEdges,2),'rows');
+
+    % Connected components on all edges including self edges
+    [equivalenceClass, aggloLUT] = Graph.findConnectedComponents(cat(1,allNonSelfEdges,selfEdges),0,0);
+
     % create boolean which equivalence classes contain single edges
     singleSegAgglos = true(numel(equivalenceClass),1);
-    singleSegAgglos(aggloLUT(allEdges(:))) = false;
+    singleSegAgglos(aggloLUT(allNonSelfEdges(:))) = false;
     
     % get indices to equivalence classes which have segments that were part
     % of the superagglo. These are kept later.
     eqClassesToKeep = unique(aggloLUT(segIds));
     
-    % create lookup table which edge of allEdges belongs to which
+    % create lookup table which edge of allNonSelfEdges belongs to which
     % equivalence class
-    edgesLUT = aggloLUT(allEdges(:,1));
+    edgesLUT = aggloLUT(allNonSelfEdges(:,1));
     
     % sort this LUT according to the agglos they will be put in and sort
     % edges accordingly
     [saggloLUT,sIdx] = sort(edgesLUT);
-    allEdges = allEdges(sIdx,:);
+    allNonSelfEdges = allNonSelfEdges(sIdx,:);
 
     % transform the edges into cell
     newedges = cell(numel(superagglos),1);
     % Treat agglomerates containing single segment separately
-    newedges(~singleSegAgglos) = mat2cell(allEdges,histc(saggloLUT,unique(saggloLUT)));
+    newedges(~singleSegAgglos) = mat2cell(allNonSelfEdges,histc(saggloLUT,unique(saggloLUT)));
     newedges(singleSegAgglos) = {zeros(0,2)}; % give empty edges correct dimension
-    
+       
     % filter edge and equivalence class list to keep only those which have
     % parts of the original superagglo
     newedges = newedges(eqClassesToKeep)';
