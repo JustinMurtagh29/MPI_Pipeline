@@ -108,7 +108,7 @@ function lookup = buildLookup(maxSegId, superagglos)
     % Analog to buildLUT from Alessandro for superagglos directly
     lookup = zeros(maxSegId, 1);
     agglos = arrayfun(@(x)unique(x.nodes(~isnan(x.nodes(:,4)),4)), superagglos, 'uni', 0);
-    lookup(cell2mat(agglos)) = repelem(1:numel(agglos), cellfun(@numel, agglos));
+    lookup(cell2mat(reshape(agglos,[],1))) = repelem(1:numel(agglos), cellfun(@numel, agglos));
 end
 
 function visualizeSplitsAndMergerAsNml(state1, state2, lookupPersistent, agglosMerged, agglosSplit, outputFolder)
@@ -190,7 +190,7 @@ end
 
 function visualizeSetOfSuperagglos(agglosBefore, agglosAfter, beforeIdx, afterIdx, outputFile)
 
-    agglos = cat(1, agglosBefore(beforeIdx), agglosAfter(afterIdx));
+    agglos = cat(1, reshape(agglosBefore(beforeIdx),[],1), reshape(agglosAfter(afterIdx),[],1));
     nodes = arrayfun(@(x)x.nodes(:,1:3), agglos, 'uni', 0);
     treeNamesB = arrayfun(@(x)sprintf('before_aggloIdx_%.7i', x), beforeIdx, 'uni', 0);
     treeNamesA = arrayfun(@(x)sprintf('after_aggloIdx_%.7i', x), afterIdx, 'uni', 0);
