@@ -9,9 +9,10 @@ function visualizeSuperaggloEvolution(idxState1, idxState2, outputFolder)
     load('/gaba/u/mberning/results/pipeline/20170217_ROI/allParameterWithSynapses.mat', 'p');
     load(fullfile(p.saveFolder, 'segmentMeta.mat'), 'maxSegId');
     state1 = load(fullfile(p.saveFolder, 'aggloState', ['axons_' num2str(idxState1, '%.2i') '.mat']));
-    state1 = state1.axons;
+    % The reshape necessary as superagglos currently change dimensionality going from step 3->4
+    state1 = reshape(state1.axons,[],1);
     state2 = load(fullfile(p.saveFolder, 'aggloState', ['axons_' num2str(idxState2, '%.2i') '.mat']));
-    state2 = state2.axons;
+    state2 = reshape(state2.axons,[],1);
 
     % Display statistics on single superagglos
     display(['-- Statistics superagglo state ' num2str(idxState1)]);
@@ -108,7 +109,7 @@ function lookup = buildLookup(maxSegId, superagglos)
     % Analog to buildLUT from Alessandro for superagglos directly
     lookup = zeros(maxSegId, 1);
     agglos = arrayfun(@(x)unique(x.nodes(~isnan(x.nodes(:,4)),4)), superagglos, 'uni', 0);
-    lookup(cell2mat(reshape(agglos,[],1))) = repelem(1:numel(agglos), cellfun(@numel, agglos));
+    lookup(cell2mat(agglos)) = repelem(1:numel(agglos), cellfun(@numel, agglos));
 end
 
 function visualizeSplitsAndMergerAsNml(state1, state2, lookupPersistent, agglosMerged, agglosSplit, outputFolder)
@@ -190,7 +191,7 @@ end
 
 function visualizeSetOfSuperagglos(agglosBefore, agglosAfter, beforeIdx, afterIdx, outputFile)
 
-    agglos = cat(1, reshape(agglosBefore(beforeIdx),[],1), reshape(agglosAfter(afterIdx),[],1));
+    agglos = cat(1, agglosBefore(beforeIdx), agglosAfter(afterIdx));
     nodes = arrayfun(@(x)x.nodes(:,1:3), agglos, 'uni', 0);
     treeNamesB = arrayfun(@(x)sprintf('before_aggloIdx_%.7i', x), beforeIdx, 'uni', 0);
     treeNamesA = arrayfun(@(x)sprintf('after_aggloIdx_%.7i', x), afterIdx, 'uni', 0);
