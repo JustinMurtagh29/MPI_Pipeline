@@ -55,7 +55,7 @@ function displaySuperaggloStats(state)
     display(['Number nodes: ' num2str(sum(arrayfun(@(x)size(x.nodes,1), state)))]);
     display(['Number edges: ' num2str(sum(arrayfun(@(x)size(x.edges,1), state)))]);
     sizeString = sprintf('%d ', sizeAgglos(1:10));
-    display(['Largest agglomerates (segment-wise): ' sizeString]);
+    display(['Largest agglomerates (segment-count): ' sizeString]);
 
 end
 
@@ -69,8 +69,8 @@ function [agglosMerged, agglosSplit, addedSegId, removedSegId] = displaySuperagg
     agglosMerged = agglosAfter(isMerger);
     display(['Number merged supperagglos: ' num2str(sum(isMerger))]);
     if sum(isMerger)
-        display(['Average number of superagglos merged: ' num2str(mean(mergerCount(isMerger)))]);
-        display(['Maximum number of superagglos merged: ' num2str(max(mergerCount(isMerger)))]);
+        display(['Average number of superagglos merged together: ' num2str(mean(mergerCount(isMerger)))]);
+        display(['Maximum number of superagglos merged together: ' num2str(max(mergerCount(isMerger)))]);
     end
 
     % Determine split superagglos
@@ -80,27 +80,27 @@ function [agglosMerged, agglosSplit, addedSegId, removedSegId] = displaySuperagg
     agglosSplit = agglosBefore(isSplit);
     display(['Number split superagglos: ' num2str(sum(isSplit))]);
     if sum(isSplit)
-        display(['Average number of superagglos split: ' num2str(mean(splitCount(isSplit)))]);
-        display(['Maximum number of superagglos split: ' num2str(max(splitCount(isSplit)))]);
+        display(['Average number of a superagglo split into: ' num2str(mean(splitCount(isSplit)))]);
+        display(['Maximum number of a superagglo split into: ' num2str(max(splitCount(isSplit)))]);
     end
 
     % Determine added segments
-    addedSegId = find(lookup(lookup(:,1) == 0,2) ~= 0);
+    addedSegId = find((lookup(:,1) == 0) & (lookup(:,2) ~= 0));
     addedToAgglo = lookup(addedSegId,2);
     addedSegPerAgglo = histc(addedToAgglo, unique(addedToAgglo));
     display(['Added segments: ' num2str(numel(addedSegId))]);
     if ~isempty(addedSegId)
         display(['Average number of segments added per agglomerate: ' num2str(mean(addedSegPerAgglo))]);
-        display(['Maximum number of segments added: ' num2str(max(addedSegPerAgglo))]);
+        display(['Maximum number of segments added per agglomerate: ' num2str(max(addedSegPerAgglo))]);
     end
     % Determine removed segments
-    removedSegId = find(lookup(lookup(:,2) == 0,1) ~= 0);
+    removedSegId = find((lookup(:,1) ~= 0) & (lookup(:,2) == 0));
     removedFromAgglo = lookup(removedSegId,1);
     removedSegPerAgglo = histc(removedFromAgglo, unique(removedFromAgglo));
     display(['Removed segments: ' num2str(numel(removedSegId))]);
     if ~isempty(removedSegId)
-        display(['Average number of segments added per agglomerate: ' num2str(mean(removedSegPerAgglo))]);
-        display(['Maximum number of segments added: ' num2str(max(removedSegPerAgglo))]);
+        display(['Average number of segments removed per agglomerate: ' num2str(mean(removedSegPerAgglo))]);
+        display(['Maximum number of segments removed per agglomerate: ' num2str(max(removedSegPerAgglo))]);
     end
 
 end
@@ -123,13 +123,11 @@ function visualizeSplitsAndMergerAsNml(state1, state2, lookupPersistent, agglosM
     end
 
     % Visualize largest merger (most agglos before merged into one)
-    mergerCount = histc(lookupPersistent(:,2), agglosMerged);
+    agglosAfterUnique = unique(lookupPersistent(:,2));
+    mergerCount = histc(lookupPersistent(:,2), agglosAfterUnique);
     [~, idx] = max(mergerCount);
-    theseAgglos = agglosMerged(idx);
-    for i=1:length(theseAgglos)
-        agglosBefore = lookupPersistent(lookupPersistent(:,2) == theseAgglos(i),1);
-        visualizeSetOfSuperagglos(state1, state2, agglosBefore, theseAgglos(i), strcat(outputFolder,'largestMerger',num2str(i,'%.3i'),'.nml'));
-    end
+    agglosBefore = lookupPersistent(lookupPersistent(:,2) == agglosAfterUnique(idx),1);
+    visualizeSetOfSuperagglos(state1, state2, agglosBefore, agglosAfterUnique(idx), strcat(outputFolder,'largestMerger',num2str(i,'%.3i'),'.nml'));
 
     % Visualize 100 random splits
     idx = randperm(numel(agglosSplit), min(numel(agglosSplit),100));
@@ -140,13 +138,11 @@ function visualizeSplitsAndMergerAsNml(state1, state2, lookupPersistent, agglosM
     end
 
     % Visualize largest split (agglo split into most agglos after)
-    splitCount = histc(lookupPersistent(:,1), agglosSplit);
+    agglosBeforeUnique = unique(lookupPersistent(:,1));
+    splitCount = histc(lookupPersistent(:,1), agglosBeforeUnique);
     [~, idx] = max(splitCount);
-    theseAgglos = agglosSplit(idx);
-    for i=1:length(theseAgglos)
-        agglosAfter = lookupPersistent(lookupPersistent(:,1) == theseAgglos(i),2);
-        visualizeSetOfSuperagglos(state1, state2, theseAgglos(i), agglosAfter, strcat(outputFolder,'largestSplit',num2str(i,'%.3i'),'.nml'));
-    end
+    agglosAfter = lookupPersistent(lookupPersistent(:,1) == agglosBeforeUnique(idx),2);
+    visualizeSetOfSuperagglos(state1, state2, agglosBeforeUnique(idx), agglosAfter, strcat(outputFolder,'largestSplit',num2str(i,'%.3i'),'.nml'));
 
 end
 
@@ -208,7 +204,7 @@ function visualizeSuperaggloWithComments(agglos, segIds, comment, treeNames, out
     theseSegId = arrayfun(@(x)x.nodes(:,4), agglos, 'uni', 0);
     idx = ismember(theseSegId{1}, segIds);
     comments = cell(1);
-    comments{1}(idx) = comment;
+    comments{1}(idx) = repmat({comment}, sum(idx), 1);
     edges = arrayfun(@(x)x.edges, agglos, 'uni', 0);
     connectEM.generateSkeletonFromNodes(outputFile, nodes, treeNames, comments, false, edges);
 
