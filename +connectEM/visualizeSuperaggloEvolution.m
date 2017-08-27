@@ -21,6 +21,7 @@ function visualizeSuperaggloEvolution(idxState1, idxState2, outputFolder)
     displaySuperaggloStats(state2);
 
     % Build lookup for each agglo
+    display('Building lookup table');
     lookup1 = buildLookup(maxSegId, state1);
     lookup2 = buildLookup(maxSegId, state2);
     lookup = cat(2, lookup1, lookup2);
@@ -30,12 +31,12 @@ function visualizeSuperaggloEvolution(idxState1, idxState2, outputFolder)
     % Keep only unique rows (used to remove redundant segment overlaps)
     lookupPersistent = unique(lookupPersistent, 'rows');
 
-
     % Display statistics on difference between states
     display(['-- Statistics superagglo difference between state ' num2str(idxState1) ' & ' num2str(idxState2)]);
     [agglosMerged, agglosSplit, addedSegId, removedSegId] = displaySuperaggloDiffStats(lookup, lookupPersistent);
 
     % Write .nmls of differences to inspect in wK
+    display(['Writing nmls to: ' outputFolder]);
     rng default; % Make sure seed is the same every time
     visualizeSplitsAndMergerAsNml(state1, state2, lookupPersistent, agglosMerged, agglosSplit, outputFolder);
     visualizeAddedAndRemovedSegmentsAsNml(state1, state2, lookup, addedSegId, removedSegId, outputFolder);
@@ -62,7 +63,6 @@ end
 function [agglosMerged, agglosSplit, addedSegId, removedSegId] = displaySuperaggloDiffStats(lookup, lookupPersistent)
 
     % Determine merged superagglos
-    % Merger show by double occurences in second column of edges
     agglosAfter = unique(lookupPersistent(:,2));
     mergerCount = histc(lookupPersistent(:,2), agglosAfter);
     isMerger = mergerCount > 1;
@@ -93,6 +93,7 @@ function [agglosMerged, agglosSplit, addedSegId, removedSegId] = displaySuperagg
         display(['Average number of segments added per agglomerate: ' num2str(mean(addedSegPerAgglo))]);
         display(['Maximum number of segments added per agglomerate: ' num2str(max(addedSegPerAgglo))]);
     end
+
     % Determine removed segments
     removedSegId = find((lookup(:,1) ~= 0) & (lookup(:,2) == 0));
     removedFromAgglo = lookup(removedSegId,1);
@@ -116,33 +117,49 @@ function visualizeSplitsAndMergerAsNml(state1, state2, lookupPersistent, agglosM
 
     % Visualize 100 random merger
     idx = randperm(numel(agglosMerged), min(numel(agglosMerged), 100));
-    theseAgglos = agglosMerged(idx);
-    for i=1:length(theseAgglos)
-        agglosBefore = lookupPersistent(lookupPersistent(:,2) == theseAgglos(i),1);
-        visualizeSetOfSuperagglos(state1, state2, agglosBefore, theseAgglos(i), strcat(outputFolder,'randomMerger',num2str(i,'%.3i'),'.nml'));
-    end
+    agglosAfter = num2cell(agglosMerged(idx));
+    agglosBefore = cellfun(@(x)lookupPersistent(lookupPersistent(:,2) == x,1), agglosAfter, 'uni', 0);
+    fileNames = arrayfun(@(x)strcat(outputFolder, 'merger_random_', num2str(x, '%.3i'), '.nml'), 1:numel(idx), 'uni', 0);
+    visualizeSetOfSuperagglos(state1, state2, agglosBefore, agglosAfter, fileNames);
 
-    % Visualize largest merger (most agglos before merged into one)
+    % Visualize largest 10 merger (most agglos before merged into one)
     agglosAfterUnique = unique(lookupPersistent(:,2));
     mergerCount = histc(lookupPersistent(:,2), agglosAfterUnique);
-    [~, idx] = max(mergerCount);
-    agglosBefore = lookupPersistent(lookupPersistent(:,2) == agglosAfterUnique(idx),1);
-    visualizeSetOfSuperagglos(state1, state2, agglosBefore, agglosAfterUnique(idx), strcat(outputFolder,'largestMerger',num2str(i,'%.3i'),'.nml'));
+    [~, idx] = sort(mergerCount, 'descend');
+    agglosAfter = num2cell(agglosAfterUnique(idx(1:min(sum(mergerCount > 1), 10))));
+    agglosBefore = cellfun(@(x)lookupPersistent(lookupPersistent(:,2) == x,1), agglosAfter, 'uni', 0);
+    fileNames = arrayfun(@(x)strcat(outputFolder, 'merger_largest_', num2str(x, '%.3i'), '.nml'), 1:numel(idx), 'uni', 0);
+    visualizeSetOfSuperagglos(state1, state2, agglosBefore, agglosAfter, fileNames);
 
     % Visualize 100 random splits
     idx = randperm(numel(agglosSplit), min(numel(agglosSplit),100));
-    theseAgglos = agglosSplit(idx);
-    for i=1:length(theseAgglos)
-        agglosAfter = lookupPersistent(lookupPersistent(:,1) == theseAgglos(i),2);
-        visualizeSetOfSuperagglos(state1, state2, theseAgglos(i), agglosAfter, strcat(outputFolder,'randomSplit',num2str(i,'%.3i'),'.nml'));
-    end
+    agglosBefore = num2cell(agglosSplit(idx));
+    agglosAfter = cellfun(@(x)lookupPersistent(lookupPersistent(:,1) == x,2), agglosBefore, 'uni', 0);
+    fileNames = arrayfun(@(x)strcat(outputFolder, 'split_random_', num2str(x, '%.3i'), '.nml'), 1:numel(idx), 'uni', 0);
+    visualizeSetOfSuperagglos(state1, state2, agglosBefore, agglosAfter, fileNames);
 
     % Visualize largest split (agglo split into most agglos after)
     agglosBeforeUnique = unique(lookupPersistent(:,1));
     splitCount = histc(lookupPersistent(:,1), agglosBeforeUnique);
-    [~, idx] = max(splitCount);
-    agglosAfter = lookupPersistent(lookupPersistent(:,1) == agglosBeforeUnique(idx),2);
-    visualizeSetOfSuperagglos(state1, state2, agglosBeforeUnique(idx), agglosAfter, strcat(outputFolder,'largestSplit',num2str(i,'%.3i'),'.nml'));
+    [~, idx] = sort(splitCount, 'descend');
+    agglosBefore = num2cell(agglosBeforeUnique(idx(1:min(sum(splitCount > 1), 10))));
+    agglosAfter = cellfun(@(x)lookupPersistent(lookupPersistent(:,1) == x,2), agglosBefore, 'uni', 0);
+    fileNames = arrayfun(@(x)strcat(outputFolder, 'split_largest_', num2str(x, '%.3i'), '.nml'), 1:numel(idx), 'uni', 0);
+    visualizeSetOfSuperagglos(state1, state2, agglosBefore, agglosAfter, fileNames);
+
+end
+
+function visualizeSetOfSuperagglos(agglosBefore, agglosAfter, beforeIdx, afterIdx, outputFiles)
+
+    for i=1:length(beforeIdx)
+        agglos = cat(1, agglosBefore(beforeIdx{i}), agglosAfter(afterIdx{i}));
+        nodes = arrayfun(@(x)x.nodes(:,1:3), agglos, 'uni', 0);
+        treeNamesB = arrayfun(@(x)sprintf('before_aggloIdx_%.7i', x), beforeIdx{i}, 'uni', 0);
+        treeNamesA = arrayfun(@(x)sprintf('after_aggloIdx_%.7i', x), afterIdx{i}, 'uni', 0);
+        treeNames = cat(1, treeNamesB, treeNamesA);
+        edges = arrayfun(@(x)x.edges, agglos, 'uni', 0);
+        connectEM.generateSkeletonFromNodes(outputFiles{i}, nodes, treeNames, [], false, edges);
+    end
 
 end
 
@@ -153,60 +170,52 @@ function visualizeAddedAndRemovedSegmentsAsNml(state1, state2, lookup, addedSegI
     removedAgglos = unique(lookup((lookup(:,2) == 0) & (lookup(:,1) ~= 0),1));
     removedAgglosUnique = unique(removedAgglos);
 
-    % Visualize 100 random agglos with added segments
-    idx = randperm(numel(addedAgglosUnique), min(numel(addedAgglosUnique),100));
-    for i=1:length(idx)
-        treeName = sprintf('after_aggloIdx_%.7i', addedAgglosUnique(idx(i)));
-        outputFile = strcat(outputFolder,'addedSegments',num2str(i,'%.3i'),'.nml');
-        visualizeSuperaggloWithComments(state2(idx(i)), addedSegId, 'added', treeName, outputFile);
+    if ~isempty(addedAgglosUnique)
+        % Visualize 100 random agglos with added segments
+        idx = randperm(numel(addedAgglosUnique), min(numel(addedAgglosUnique),100));
+        treeNames = arrayfun(@(x){sprintf('after_aggloIdx_%.7i', x)}, addedAgglosUnique(idx), 'uni', 0);
+        outputFiles = arrayfun(@(x)strcat(outputFolder,'addedSegments_random_',num2str(x,'%.3i'),'.nml'), 1:numel(idx), 'uni', 0);
+        visualizeSuperaggloWithComments(state2(idx), addedSegId, 'added', treeNames, outputFiles);
+
+        % Visualize agglo with most added segments
+        addedSegmentCount = histc(addedAgglos, addedAgglosUnique);
+        [~, idx] = sort(addedSegmentCount, 'descend');
+        idx = idx(1:min(numel(idx),10));
+        treeNames = arrayfun(@(x){sprintf('after_aggloIdx_%.7i', x)}, addedAgglosUnique(idx), 'uni', 0);
+        outputFiles = arrayfun(@(x)strcat(outputFolder,'addedSegments_most_',num2str(x,'%.3i'),'.nml'), 1:numel(idx), 'uni', 0);
+        visualizeSuperaggloWithComments(state2(idx), addedSegId, 'added', treeNames, outputFiles);
     end
 
-    % Visualize agglo with most added segments
-    addedSegmentCount = histc(addedAgglos, addedAgglosUnique);
-    [~, idx] = max(addedSegmentCount);
-    treeName = sprintf('after_aggloIdx_%.7i', addedAgglosUnique(idx));
-    outputFile = strcat(outputFolder,'addedSegmentsMost.nml');
-    visualizeSuperaggloWithComments(state2(idx), addedSegId, 'added', treeName, outputFile);
+    if ~isempty(removedAgglosUnique)
+        % Visualize 100 random agglos with removed segments
+        idx = randperm(numel(removedAgglosUnique), min(numel(removedAgglosUnique),100));
+        treeNames = arrayfun(@(x){sprintf('before_aggloIdx_%.7i', x)}, removedAgglosUnique(idx), 'uni', 0);
+        outputFiles = arrayfun(@(x)strcat(outputFolder,'removedSegments_random_',num2str(x,'%.3i'),'.nml'), 1:numel(idx), 'uni', 0);
+        visualizeSuperaggloWithComments(state1(idx), removedSegId, 'removed', treeNames, outputFiles);
 
-    % Visualize 100 random agglos with removed segments
-    idx = randperm(numel(removedAgglosUnique), min(numel(removedAgglosUnique),100));
-    for i=1:length(idx)
-        treeName = sprintf('before_aggloIdx_%.7i', removedAgglosUnique(idx(i)));
-        outputFile = strcat(outputFolder,'removedSegments',num2str(i,'%.3i'),'.nml');
-        visualizeSuperaggloWithComments(state1(idx(i)), removedSegId, 'removed', treeName, outputFile);
+        % Visualize agglo with most removed segments
+        removedSegmentCount = histc(removedAgglos, removedAgglosUnique);
+        [~, idx] = sort(removedSegmentCount, 'descend');
+        idx = idx(1:min(numel(idx),10));
+        treeNames = arrayfun(@(x){sprintf('before_aggloIdx_%.7i', x)}, removedAgglosUnique(idx), 'uni', 0);
+        outputFiles = arrayfun(@(x)strcat(outputFolder,'removedSegments_most_',num2str(x,'%.3i'),'.nml'), 1:numel(idx), 'uni', 0);
+        visualizeSuperaggloWithComments(state1(idx), removedSegId, 'removed', treeNames, outputFiles);
     end
-
-    % Visualize agglo with most removed segments
-    removedSegmentCount = histc(removedAgglos, removedAgglosUnique);
-    [~, idx] = max(removedSegmentCount);
-    treeName = sprintf('before_aggloIdx_%.7i', removedAgglosUnique(idx));
-    outputFile = strcat(outputFolder,'removedSegmentsMost.nml');
-    visualizeSuperaggloWithComments(state1(idx), removedSegId, 'removed', treeName, outputFile);
 
 end
 
-function visualizeSetOfSuperagglos(agglosBefore, agglosAfter, beforeIdx, afterIdx, outputFile)
+function visualizeSuperaggloWithComments(agglos, segIds, comment, treeNames, outputFiles);
+    % Currently only works for one superagglo
 
-    agglos = cat(1, agglosBefore(beforeIdx), agglosAfter(afterIdx));
-    nodes = arrayfun(@(x)x.nodes(:,1:3), agglos, 'uni', 0);
-    treeNamesB = arrayfun(@(x)sprintf('before_aggloIdx_%.7i', x), beforeIdx, 'uni', 0);
-    treeNamesA = arrayfun(@(x)sprintf('after_aggloIdx_%.7i', x), afterIdx, 'uni', 0);
-    treeNames = cat(1, treeNamesB, treeNamesA);
-    edges = arrayfun(@(x)x.edges, agglos, 'uni', 0);
-    connectEM.generateSkeletonFromNodes(outputFile, nodes, treeNames, [], false, edges);
-
-end
-
-function visualizeSuperaggloWithComments(agglos, segIds, comment, treeNames, outputFile);
-% Currently only works for one superagglo
-
-    nodes = arrayfun(@(x)x.nodes(:,1:3), agglos, 'uni', 0);
-    theseSegId = arrayfun(@(x)x.nodes(:,4), agglos, 'uni', 0);
-    idx = ismember(theseSegId{1}, segIds);
-    comments = cell(1);
-    comments{1}(idx) = repmat({comment}, sum(idx), 1);
-    edges = arrayfun(@(x)x.edges, agglos, 'uni', 0);
-    connectEM.generateSkeletonFromNodes(outputFile, nodes, treeNames, comments, false, edges);
+    for i=1:length(agglos)
+        nodes = arrayfun(@(x)x.nodes(:,1:3), agglos(i), 'uni', 0);
+        theseSegId = arrayfun(@(x)x.nodes(:,4), agglos(i), 'uni', 0);
+        idx = ismember(theseSegId{1}, segIds);
+        comments = cell(1);
+        comments{1}(idx) = repmat({comment}, sum(idx), 1);
+        edges = arrayfun(@(x)x.edges, agglos(i), 'uni', 0);
+        connectEM.generateSkeletonFromNodes(outputFiles{i}, nodes, treeNames{i}, comments, false, edges);
+    end
 
 end
 

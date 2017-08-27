@@ -2,14 +2,14 @@ function getAggloQueryOverlapB(p)
     % Written by
     %   Manuel Berning <manuel.berning@brain.mpg.de>
     %   Christian Schramm <christian.schramm@brain.mpg.de>
-    
+
     % Directory with input / output data
     dataDir = fullfile(p.saveFolder, 'aggloState');
-    
+
     % Load flight paths
     m = load(fullfile(dataDir, 'AxonFlightPaths.mat'), 'ff');
     ff = m.ff;
-    
+
     % Load axon agglomerates
     m = load(fullfile(dataDir, 'axons_04.mat'));
     axons = m.axons(m.indBigAxons);
@@ -18,7 +18,7 @@ function getAggloQueryOverlapB(p)
 
     ff = structfun(@(x)x(cellfun(@isempty, ff.comments)), ff, 'uni', 0);
     ff = structfun(@(x)x(~cellfun(@isempty, ff.startNode)), ff, 'uni', 0);
-    %%    
+    %%
     segmentsLeftover = [];
 
     % Calculate overlap of all queries with segments
