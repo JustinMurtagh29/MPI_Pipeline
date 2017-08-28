@@ -79,8 +79,8 @@ function flightEndings = flightEndingOverlap( ...
                 curBorderPos = curEndings{2}{curEndingIdx};
 
                 curDists = pdist2( ...
-                    curFlightNodes, curBorderPos, 'squaredeuclidean');
-                curEndingDists(curEndingIdx) = sqrt(min(curDists(:)));
+                    curFlightNodes, curBorderPos, 'euclidean');
+                curEndingDists(curEndingIdx) = min(curDists(:));
             end
             
             % no ending reached if above distance threshold
