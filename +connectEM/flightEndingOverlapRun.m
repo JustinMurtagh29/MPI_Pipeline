@@ -38,7 +38,7 @@ function flightEndingOverlapRun(param)
 
     out = struct;
     out.startEndingOverlaps = doIt(flightResults.startAgglo);
-    out.endEndingOverlaps = doIt(flightResults.endAgglos);
+    out.endEndingOverlaps = doIt(flightResults.endAgglo);
 
     %% save result
     outFile = fullfile(dataDir, 'axonEndingOverlaps.mat');
