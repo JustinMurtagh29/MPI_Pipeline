@@ -23,6 +23,8 @@ function flightEndingOverlapRun(param)
 
     % load flight paths
     m = load(fullfile(dataDir, 'axonFlightPaths.mat'), 'ff');
+    m.ff = structfun(@(x)x(cellfun(@isempty, m.ff.comments)), ff, 'uni', 0);
+    m.ff = structfun(@(x)x(~cellfun(@isempty, m.ff.startNode)), ff, 'uni', 0);
     flightNodes = m.ff.nodes;
 
     % load results from flight path evaluation
