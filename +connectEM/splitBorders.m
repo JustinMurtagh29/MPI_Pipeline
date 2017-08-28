@@ -1,6 +1,6 @@
 function splitBorders(startidx, p)
     % load needed data
-    temp = load(fullfile(p.saveFolder,'aggloState/axons_03.mat'));
+    temp = load(fullfile(p.saveFolder,'aggloState/axons_02.mat'));
     superagglos = temp.axons;
     graph = connectEM.loadAllSegmentationData(p);
     borderMeta = load([p.saveFolder 'globalBorder.mat'], 'borderCoM');
@@ -38,7 +38,9 @@ function splitBorders(startidx, p)
             all(bsxfun(@lt, borderPositions, bboxSmall(:, 2)'), 2));
         % remove all insulting edges
         edgesFinal = superagglos(idx).edges(usededges(usededges>0),:);
-        edgesFinal(outsideBbox&edgesCandidatesProb(usededges>0)<0.98, :) = [];
+        if ~isempty(edgesFinal)
+            edgesFinal(outsideBbox&edgesCandidatesProb(usededges>0)<0.98, :) = [];
+        end
         C = Graph.findConnectedComponents(edgesFinal);
         superagglosBorderSplit{idx} = struct('nodes', {},'edges', {});
         for idx2 = 1 : length(C)

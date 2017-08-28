@@ -8,10 +8,10 @@ function generateAxonQueries(param)
     % Load data from ending generation
     endingData = fullfile(dataDir, 'axonEndings.mat');
     endingData = load(endingData);
-    idxAll = endingData.out.idxAll;
-    idxCanidateFound = endingData.out.axonMask;
-    borderIds = endingData.out.borderIds;
-    Clusters = endingData.out.borderClusters ;
+    idxAll = endingData.idxAll;
+    idxCanidateFound = endingData.axonMask;
+    borderIds = endingData.borderIds;
+    Clusters = endingData.borderClusters ;
     
     % Load directionality information
     directionality = fullfile(dataDir, 'axonEndingInputData.mat');
@@ -24,12 +24,6 @@ function generateAxonQueries(param)
     borderCoM = borderCoM.borderCoM;
     borderPositions = cellfun(@(x) borderMeta.borderCoM(x,:), directionality.borderIdx(idxCanidateFound),'uni',0);
 
-    % Determine endings which are not redundant(already attached by flight path)
-    out = load(fullfile(dataDir, 'axonEndingOverlaps.mat'));
-    startEndings = unique(cell2mat(out.startEndingOverlaps));
-    endEndings = unique(cell2mat(out.endEndingOverlaps));
-    attachedEndings = union(startEndings,endEndings);
-
     % Load larger 5 micron agglomerates
     m = load(fullfile(dataDir, 'axons_04.mat'));
     axons = m.axons(m.indBigAxons);
@@ -37,10 +31,16 @@ function generateAxonQueries(param)
     clear m
     
     % Write new segmentation based on axon queries
-    mapping = connectEM.createLookup(segmentMeta, axonsNew);
-    Seg.Global.applyMappingToSegmentation(p, mapping, [outputFolder '1/']);
+    mapping = connectEM.createLookup(segmentMeta, axons);
+    Seg.Global.applyMappingToSegmentation(p, mapping, fullfile(dataDir, 'newSegmentation/1/'));
     clear mapping;
     
+    % Determine endings which are not redundant(already attached by flight path)
+    out = load(fullfile(dataDir, 'axonEndingOverlaps.mat'));
+    startEndings = unique(cell2mat(out.startEndingOverlaps));
+    endEndings = unique(cell2mat(out.endEndingOverlaps));
+    attachedEndings = union(startEndings,endEndings);
+
     % Find indices of ending candidates in directionality lists (scores,
     % pca...) and exclude redundant endings
     idxUse = idxAll(idxCanidateFound);
@@ -64,8 +64,8 @@ function generateAxonQueries(param)
     
     % Write out absolut values of seg direction scores
     SegDirScores = cellfun(@(x)abs(x),directionality.scores(idxCanidateFound),'uni',0);
-    SegDirScores = SegDirScores(redundant);
-    borderPositions = borderPositions(redundant);
+    SegDirScores = SegDirScores(~redundant);
+    borderPositions = borderPositions(~redundant);
     
     % Dataset border conditions
     borderNm = repmat(options.border, 1, 3);
@@ -91,17 +91,17 @@ function generateAxonQueries(param)
     % Write out scores and pca, apply all masks
     outside = cellfun('isempty',candidateUse);
     axons = axons(idxCanidateFound);
-    axons = axons(redundant);
+    axons = axons(~redundant);
     axons = axons(~outside);
     
     pcaFound = directionality.pca(idxCanidateFound);
-    pcaFound = pcaFound(redundant);
+    pcaFound = pcaFound(~redundant);
     pcaFound = pcaFound(~outside);
     scoresFound = directionality.scores(idxCanidateFound);
-    scoresFound = scoresFound(redundant);
+    scoresFound = scoresFound(~redundant);
     scoresFound = scoresFound(~outside);
     borderIdxFound = directionality.borderIdx(idxCanidateFound);
-    borderIdxFound = borderIdxFound(redundant);
+    borderIdxFound = borderIdxFound(~redundant);
     borderIdxFound = borderIdxFound(~outside);
     candidateUse = candidateUse(~outside);
     borderPositions = borderPositions(~outside);
@@ -124,7 +124,10 @@ function generateAxonQueries(param)
         end
     end
     
-    outputFolder = fullfile(param.saveFolder, 'aggloState/');
+    outputFolder = fullfile(dataDir, 'Queries/');
+    if ~exist(outputFolder)
+        mkdir(outputFolder)
+    end
         
     batchBoundaries = round(linspace(1, numel(axons), 101));
     for i=1:length(batchBoundaries)-1
