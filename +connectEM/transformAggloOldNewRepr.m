@@ -1,4 +1,11 @@
-function aggloNew = transformAggloOldNewRepr(aggloOld,edgesSegId,segmentMeta)
+function aggloNew = transformAggloOldNewRepr(aggloOld,edgesSegId,segmentMeta,doChecks)
+
+if ~exist('doChecks','var')
+    doChecks = 0;
+end
+
+% make sort the edges in second dim and make them unique
+edgesSegId = unique(sort(edgesSegId,2),'rows');
 
 % Lookup table to which agglo each segment id belongs
 numSegs = cellfun(@numel, aggloOld);
@@ -32,21 +39,26 @@ nodes = cellfun(@(x) [segmentMeta.point(:,x)' x],aggloOld,'uni',0);
 % transform into struct
 aggloNew = cell2struct([edges';nodes'],{'edges','nodes'},1);
 
-% Perform some sanity checks
-idxSingleSegment = numSegs == 1;
-% Check that each agglo is own CC
-assert(all(arrayfun(@(x)numel(Graph.findConnectedComponents(x.edges)), ...
-    aggloNew(~idxSingleSegment)) == 1));
-% Check that all nodes are connected
-assert(all(arrayfun(@(x)isempty(setdiff(1:size(x.nodes,1),x.edges(:))), ...
-    aggloNew(~idxSingleSegment)))); 
-assert(all(arrayfun(@(x)isempty(setdiff(x.edges(:),1:size(x.nodes,1))), ...
-    aggloNew(~idxSingleSegment)))); 
-% Check that equivalence classes are exclusive
-segIds = cell2mat(arrayfun(@(x)x.nodes(:,4), aggloNew, 'uni', 0));
-assert(all(histc(segIds, unique(segIds)) == 1));
-% Check that segments still belong to the same equivalence class
-assert(arrayfun(@(x)isempty(setdiff(aggloOld{x},aggloNew(x).nodes(:,4))), 1:numel(aggloOld)));
-assert(arrayfun(@(x)isempty(setdiff(aggloNew(x).nodes(:,4),aggloOld{x})), 1:numel(aggloOld)));
-
+if doChecks
+    % Perform some sanity checks
+    idxSingleSegment = numSegs == 1;
+    
+    % Check that each agglo is own CC
+    assert(all(arrayfun(@(x)numel(Graph.findConnectedComponents(x.edges)), ...
+        aggloNew(~idxSingleSegment)) == 1));
+    
+    % Check that all nodes are connected
+    assert(all(arrayfun(@(x)isempty(setxor(1:size(x.nodes,1),x.edges(:))), ...
+        aggloNew(~idxSingleSegment))));
+    
+    % Check that equivalence classes are exclusive
+    segIds = cell2mat(arrayfun(@(x)x.nodes(:,4), aggloNew, 'uni', 0));
+    assert(all(histc(segIds, unique(segIds)) == 1));
+    
+    % Check that segments still belong to the same equivalence class
+    assert(all(arrayfun(@(x)isempty(setxor(aggloOld{x},aggloNew(x).nodes(:,4))), 1:numel(aggloOld))));
+    
+    % Check that there are no edge duplets in any agglo
+    assert(all(arrayfun(@(x) size(reshape(x.nodes(x.edges,4),[],2),1)==size(unique(sort(reshape(x.nodes(x.edges,4),[],2),2),'rows'),1),aggloNew(~idxSingleSegment))))
+end
 end

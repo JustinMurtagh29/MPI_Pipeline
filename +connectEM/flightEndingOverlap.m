@@ -96,13 +96,13 @@ end
 
 function aggloEndings = buildAggloEndings(voxelSize, endings, aggloOrigIds)
     %% group endings within original agglomerates
-    origAggloCount = numel(endings.idxCanidateFound);
+    origAggloCount = numel(endings.axonMask);
     origAggloEndings = cell(origAggloCount, 2);
     
     curEndingOff = 0;
-    for curIdx = 1:numel(endings.mapping)
-        curAggloId = endings.mapping(curIdx);
-        curClusterIds = endings.T{curIdx};
+    for curIdx = 1:numel(endings.axonIds)
+        curAggloId = endings.axonIds(curIdx);
+        curClusterIds = endings.borderClusters{curIdx};
         
         % convert borders to nm space
         curBorderPos = double(endings.borderPositions{curIdx});

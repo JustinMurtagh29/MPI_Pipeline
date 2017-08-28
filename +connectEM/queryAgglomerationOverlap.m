@@ -20,13 +20,6 @@ queryOverlap.start = cellfun(@(x)determineGroupedAgglomerationOverlap(partition,
 end
 
 function result = determineGroupedAgglomerationOverlap(partition, segmentStruct)
-persistent index
-if isempty(index)
-    index = 0;
-else
-    index =  index+1;
-end
-disp(index);
 % Determine agglomeration that each segment belongs to and evidence (occurence) for each
 [Lia, Locb] = ismember(partition.segIds, segmentStruct.segIds);
 eqClass = partition.eqClass(Lia)';

@@ -6,44 +6,54 @@ function generateAxonEndingInputData(param)
     % Written by
     %   Manuel Berning <manuel.berning@brain.mpg.de>
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
-    
+
     % Parameters
     minAxonLength = 5000; % in nm
     bboxDist = 1000; % in nm
+
+    % Directory with input / output data
+    dataDir = fullfile(param.saveFolder, 'aggloState');
+    intermediateFile = fullfile(dataDir, 'axonDirectionality.mat');
+    outFile = fullfile(dataDir, 'axonEndingInputData.mat');
 
     % Load data
    [graph, segmentMeta, borderMeta, globalSegmentPCA] = ...
        connectEM.loadAllSegmentationData(param);
 
     % Load state of axon agglomeration
-    axonsNew = '/gaba/scratch/mberning/aggloGridSearch6/6_01_00046/metricsFinal.mat';
-    axonsNew = load(axonsNew, 'axonsNew');
-    axonsNew = axonsNew.axonsNew;
+    axons = load(fullfile(dataDir, 'axons_04.mat'));
+    axons = axons.axons;
+
+    % Convert to old-school agglomerates
+    axonAgglos = arrayfun( ...
+        @Agglo.fromSuperAgglo, axons, 'UniformOutput', false);
 
     % Calculate axon directionality
     options = struct;
     options.voxelSize = param.raw.voxelSize;
     options.bboxDist = bboxDist;
-    
+
     directionality = connectEM.calculateDirectionalityOfAgglomerates( ...
-        axonsNew, graph, segmentMeta, borderMeta, globalSegmentPCA, options);
+        axonAgglos, graph, segmentMeta, borderMeta, globalSegmentPCA, options);
+    save(intermediateFile, 'directionality', '-v7.3');
 
-    % Calculate maximum border-to-border size within agglomerates
-    calculateLength = @(borderIds) max(pdist(bsxfun( ...
-        @times, double(borderMeta.borderCoM(borderIds, :)), param.raw.voxelSize)));
-    axonLength = cellfun(calculateLength, directionality.borderIdx, 'uni', 0);
+    % Convert borders to nm
+    borderMeta.borderCoM = bsxfun( ...
+        @times, double(borderMeta.borderCoM), param.raw.voxelSize);
 
-    % Keep only long enough axons
-    idxKeep = ~cellfun(@isempty, axonLength);
-    idxKeep(idxKeep) = cellfun(@(x) x > minAxonLength, axonLength(idxKeep));
-    
+    axonMaskFunc = @(b) Util.isMaxPdistAbove( ...
+        borderMeta.borderCoM(b, :), minAxonLength);
+    axonIds = find(cellfun(axonMaskFunc, directionality.borderIdx));
+
     % Save results
     out = struct;
-    out.idxKeep = idxKeep;
-    out.axonsNew = axonsNew(idxKeep);
+    out.axons = axons(axonIds);
+    out.axonIds = axonIds;
     out.directionality = structfun( ...
-        @(x) x(idxKeep), directionality, 'UniformOutput', false);
-    out.axonLength = cell2mat(axonLength(idxKeep));
-    
-    Util.saveStruct(fullfile(outputFolder, 'endingInputData.mat'), out);
+        @(x) x(axonIds), directionality, 'UniformOutput', false);
+    out.gitInfo = Util.gitInfo();
+
+    Util.saveStruct(outFile, out);
+
 end
+

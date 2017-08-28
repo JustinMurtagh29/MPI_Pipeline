@@ -2,6 +2,16 @@ function [ newSuperagglos, equivalenceClass ] = executeEdges(superagglos, edgesT
 % executes the given edges between superagglos, and also adds
 % single segments of these edges
 
+% get all seg ids that are part of superagglos including single segment
+% superagglos
+segIds = cell2mat(arrayfun(@(x)x.nodes(:,4), superagglos, 'uni', 0));
+    
+% check for duplicates in the segIds vector. This means there were overlaps
+% between superagglos (or at least intra-agglo duplicates)
+if numel(segIds) ~= numel(unique(segIds))
+    warning('Detected overlapping segments in agglos. These will be merged, too, when re-executing all edges now!')
+end
+
 % Extract all segment ID based edges from superagglos
 aggloEdges = cell2mat(arrayfun(@(x) reshape(x.nodes(x.edges,4),[],2),...
     superagglos,'uni',0));
@@ -10,56 +20,53 @@ if all(ismember(edgesToExecute,aggloEdges,'rows'))
     newSuperagglos = superagglos;
     equivalenceClass = num2cell(1:numel(superagglos));
 else
-%     % Generate self edges for each segId (necessary for
-%     % findConnectedComponents on single segment agglos)
-%     segIds = cell2mat(arrayfun(@(x)x.nodes(:,4), superagglos, 'uni', 0));
-%     selfEdges = repmat(segIds, 1, 2);
-    segIds = cell2mat(arrayfun(@(x)x.nodes(:,4), superagglos, 'uni', 0));
-    % Concatenate all self, agglo and edges to be executed
-    allEdges = cat(1,aggloEdges, edgesToExecute);
-    % Connected components on all edges
-    [equivalenceClass, aggloLUT] = Graph.findConnectedComponents(allEdges,0,0);
+    % generate selfEdges of all superagglo segments
+    selfEdges = repmat(segIds,1,2);
     
+    % Concatenate all agglo edges and edges to be executed and remove
+    % duplicates
+    allNonSelfEdges = cat(1,aggloEdges, edgesToExecute);
+    allNonSelfEdges = unique(sort(allNonSelfEdges,2),'rows');
+
+    % Connected components on all edges including self edges
+    [equivalenceClass, aggloLUT] = Graph.findConnectedComponents(cat(1,allNonSelfEdges,selfEdges),0,0);
+
+    % create boolean which equivalence classes contain single edges
     singleSegAgglos = true(numel(equivalenceClass),1);
-    singleSegAgglos(allEdges(:)) = false;
+    singleSegAgglos(aggloLUT(allNonSelfEdges(:))) = false;
     
+    % get indices to equivalence classes which have segments that were part
+    % of the superagglo. These are kept later.
     eqClassesToKeep = unique(aggloLUT(segIds));
-%     edgesAggloBased = aggloLUT(allEdges);
     
-    % sort hot edges according to the agglos they will be put in
-    [saggloLUT,sIdx] = sort(aggloLUT);
-    allEdges = allEdges(sIdx,:);
+    % create lookup table which edge of allNonSelfEdges belongs to which
+    % equivalence class
+    edgesLUT = aggloLUT(allNonSelfEdges(:,1));
     
-    % transform the edges into cell and create node cell array including segID
-    % information
-    newedges = cell(numel(aggloOld),1);
+    % sort this LUT according to the agglos they will be put in and sort
+    % edges accordingly
+    [saggloLUT,sIdx] = sort(edgesLUT);
+    allNonSelfEdges = allNonSelfEdges(sIdx,:);
+
+    % transform the edges into cell
+    newedges = cell(numel(superagglos),1);
     % Treat agglomerates containing single segment separately
-    newedges(~singleSegAgglos) = mat2cell(allEdges,histc(saggloLUT,unique(saggloLUT)));
+    newedges(~singleSegAgglos) = mat2cell(allNonSelfEdges,histc(saggloLUT,unique(saggloLUT)));
     newedges(singleSegAgglos) = {zeros(0,2)}; % give empty edges correct dimension
-    
-    newedges = newedges(eqClassesToKeep);
+       
+    % filter edge and equivalence class list to keep only those which have
+    % parts of the original superagglo
+    newedges = newedges(eqClassesToKeep)';
     equivalenceClass = equivalenceClass(eqClassesToKeep);
     
-    %
-    %     [~,idx] = setdiff(1:numel(aggloLUT),segIds);
-%     aggloLUT(idx) = [];
-%     idxToKeep = unique(aggloLUT);
-%     idxToDelete = true(numel(equivalenceClass),1);
+    %  create node cell array including segID information
+    newnodes = cellfun(@(x) [segmentMeta.point(:,x)',x],equivalenceClass,'uni',0)';
 
-    %     idxToDelete(idxToKeep) = false;
-%     % Now remove everything that does not contain an inital superagglo
-%     equivalenceClass = equivalenceClass(idxToKeep);
-%     
-%     aggloLUT = connectEM.changeem(aggloLUT, (1:numel(equivalenceClass)) - cumsum(idxToDelete),1:numel(equivalenceClass))
-    
-    newnodes = cellfun(@(x) [segmentMeta.point(:,x)',x],equivalenceClass);
-%     [~, newedges] = cellfun(@(x) ismember(allEdges(aggloLUT(allEdges(:,1))==x,:),newnodes{x}(:,4)),1:numel(equivalenceClass),'uni',0);
-    newSuperagglos = cell2struct([newedges';newnodes'],{'edges','nodes'},1);
-    
+    % tranform the segIds in the edge vector to index to the node
+    [~, newedges] = cellfun(@(x,y) ismember(x,y(:,4)),newedges,newnodes,'uni',0);
+
+    newSuperagglos = cell2struct([newedges;newnodes],{'edges','nodes'},1);
 end
-
-% Check whether classes were mutually exclusive
-assert(numel(segIds) == numel(unique(segIds)));
 
 end
 
