@@ -7,7 +7,7 @@ function generateAxonQueries(param)
 
     % Load data from ending generation
     endingData = fullfile(dataDir, 'axonEndings.mat');
-    endingData = load(endingData, 'out');
+    endingData = load(endingData);
     idxAll = endingData.out.idxAll;
     idxCanidateFound = endingData.out.axonMask;
     borderIds = endingData.out.borderIds;
@@ -25,11 +25,22 @@ function generateAxonQueries(param)
     borderPositions = cellfun(@(x) borderMeta.borderCoM(x,:), directionality.borderIdx(idxCanidateFound),'uni',0);
 
     % Determine endings which are not redundant(already attached by flight path)
-    out = load(fullfile(dataDir, 'AxonEndingOverlaps.mat'));
+    out = load(fullfile(dataDir, 'axonEndingOverlaps.mat'));
     startEndings = unique(cell2mat(out.startEndingOverlaps));
     endEndings = unique(cell2mat(out.endEndingOverlaps));
     attachedEndings = union(startEndings,endEndings);
-       
+
+    % Load larger 5 micron agglomerates
+    m = load(fullfile(dataDir, 'axons_04.mat'));
+    axons = m.axons(m.indBigAxons);
+    axons = arrayfun(@Agglo.fromSuperAgglo, axons, 'UniformOutput', false);
+    clear m
+    
+    % Write new segmentation based on axon queries
+    mapping = connectEM.createLookup(segmentMeta, axonsNew);
+    Seg.Global.applyMappingToSegmentation(p, mapping, [outputFolder '1/']);
+    clear mapping;
+    
     % Find indices of ending candidates in directionality lists (scores,
     % pca...) and exclude redundant endings
     idxUse = idxAll(idxCanidateFound);
