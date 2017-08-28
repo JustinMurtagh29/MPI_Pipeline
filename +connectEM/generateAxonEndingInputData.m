@@ -39,7 +39,7 @@ function generateAxonEndingInputData(param)
 
     % Load big indices as loaded by Kevin
     m = load(fullfile(dataDir, 'axons_04.mat'), 'indBigAxons');
-    axonIds = m.indBigAxons;
+    axonIds = find(m.indBigAxons);
 
     % Save results
     out = struct;
