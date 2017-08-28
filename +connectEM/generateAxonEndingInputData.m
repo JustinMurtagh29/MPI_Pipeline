@@ -37,13 +37,9 @@ function generateAxonEndingInputData(param)
         axonAgglos, graph, segmentMeta, borderMeta, globalSegmentPCA, options);
     save(intermediateFile, 'directionality', '-v7.3');
 
-    % Convert borders to nm
-    borderMeta.borderCoM = bsxfun( ...
-        @times, double(borderMeta.borderCoM), param.raw.voxelSize);
-
-    axonMaskFunc = @(b) Util.isMaxPdistAbove( ...
-        borderMeta.borderCoM(b, :), minAxonLength);
-    axonIds = find(cellfun(axonMaskFunc, directionality.borderIdx));
+    % Load big indices as loaded by Kevin
+    m = load(fullfile(dataDir, 'axons_04.mat'), 'indBigAxons');
+    axonIds = find(m.indBigAxons);
 
     % Save results
     out = struct;
