@@ -7,7 +7,7 @@ function getAggloQueryOverlapB(p)
     dataDir = fullfile(p.saveFolder, 'aggloState');
 
     % Load flight paths
-    m = load(fullfile(dataDir, 'AxonFlightPaths.mat'), 'ff');
+    m = load(fullfile(dataDir, 'axonFlightPaths.mat'), 'ff');
     ff = m.ff;
 
     % Load axon agglomerates
@@ -18,7 +18,7 @@ function getAggloQueryOverlapB(p)
 
     ff = structfun(@(x)x(cellfun(@isempty, ff.comments)), ff, 'uni', 0);
     ff = structfun(@(x)x(~cellfun(@isempty, ff.startNode)), ff, 'uni', 0);
-    %%
+
     segmentsLeftover = [];
 
     % Calculate overlap of all queries with segments
@@ -64,6 +64,7 @@ function getAggloQueryOverlapB(p)
     results.idxGood = idxGood;
     results.gitInfo = Util.gitInfo();
 
-    save(fullfile(dataDir, 'AxonQueryOverlaps.mat'), 'results', 'queryOverlap', 'idxNoClearStart', 'idxNoClearEnd');
-    save(fullfile(dataDir, 'aggloState', 'AxonPostQueryAnalysisState.mat'));
+    save(fullfile(dataDir, 'axonQueryOverlaps.mat'), 'results', 'queryOverlap', 'idxNoClearStart', 'idxNoClearEnd');
+    save(fullfile(dataDir, 'axonPostQueryAnalysisState.mat'));
 end
+
