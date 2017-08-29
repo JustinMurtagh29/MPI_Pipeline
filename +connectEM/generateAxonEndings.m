@@ -58,6 +58,10 @@ function generateAxonEndings(param)
     display([num2str(singleEnding./numel(clusterSizes)*100, '%.2f') '% of agglomerates have just one single ending']);
     display([num2str(singleEnding) ' in total']);
 
+    % save all results for convenience in query generation
+    gitInfo = Util.gitInfo();
+    save(fullfile(dataDir, 'axonEndingsAllData.mat'));
+
     % save result
     out = struct;
     out.axonIds = axonIds;
