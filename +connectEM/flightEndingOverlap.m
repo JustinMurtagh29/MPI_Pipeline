@@ -27,7 +27,8 @@ function flightEndings = flightEndingOverlap( ...
     %
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
-    
+
+    assert(numel(flightNodes) == numel(flightAgglos));    
     maxSegId = Seg.Global.getMaxSegId(param);
     voxelSize = param.raw.voxelSize;
     maxDist = 300; % in nm
@@ -46,7 +47,6 @@ function flightEndings = flightEndingOverlap( ...
     aggloEndings = buildAggloEndings(voxelSize, endings, aggloOrigIds);
     
     %% do the magic
-    assert(numel(flightNodes) == numel(flightAgglos));
     flightEndings = cell(numel(flightNodes), 1);
     
     for curFlightIdx = 1:numel(flightEndings)
@@ -79,8 +79,8 @@ function flightEndings = flightEndingOverlap( ...
                 curBorderPos = curEndings{2}{curEndingIdx};
 
                 curDists = pdist2( ...
-                    curFlightNodes, curBorderPos, 'squaredeuclidean');
-                curEndingDists(curEndingIdx) = sqrt(min(curDists(:)));
+                    curFlightNodes, curBorderPos, 'euclidean');
+                curEndingDists(curEndingIdx) = min(curDists(:));
             end
             
             % no ending reached if above distance threshold

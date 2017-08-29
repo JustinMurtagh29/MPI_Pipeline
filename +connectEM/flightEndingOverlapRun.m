@@ -23,6 +23,8 @@ function flightEndingOverlapRun(param)
 
     % load flight paths
     m = load(fullfile(dataDir, 'axonFlightPaths.mat'), 'ff');
+    m.ff = structfun(@(x)x(cellfun(@isempty, m.ff.comments)), m.ff, 'uni', 0);
+    m.ff = structfun(@(x)x(~cellfun(@isempty, m.ff.startNode)), m.ff, 'uni', 0);
     flightNodes = m.ff.nodes;
 
     % load results from flight path evaluation
@@ -36,7 +38,7 @@ function flightEndingOverlapRun(param)
 
     out = struct;
     out.startEndingOverlaps = doIt(flightResults.startAgglo);
-    out.endEndingOverlaps = doIt(flightResults.endAgglos);
+    out.endEndingOverlaps = doIt(flightResults.endAgglo);
 
     %% save result
     outFile = fullfile(dataDir, 'axonEndingOverlaps.mat');

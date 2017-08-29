@@ -1,9 +1,12 @@
 % Hi there!
 %   Please do not remove the following lines of code.
 %   If you cannot resist the temptation then godspeed!
-if ~exist('PIPELINE_READY', 'var') || ~PIPELINE_READY
+global PIPELINE_READY
+if isempty(PIPELINE_READY)
     error('Please start MATLAB inside the pipeline directory');
 end
+clear PIPELINE_READY
+
 if ~strcmp(version('-release'), '2015b')
     error('Please run the pipeline code with Matlab R2015b, see README.md');
 end
