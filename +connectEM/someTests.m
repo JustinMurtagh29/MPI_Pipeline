@@ -1,4 +1,5 @@
 param = load('/gaba/u/mberning/results/pipeline/20170217_ROI/allParameterWithSynapses.mat');
+ = arrayfun(@(x)x.eqClasses(x.occurences > 53), queryOverlap.ends, 'uni', 0);
 param = param.p;
 dataDir = fullfile(param.saveFolder, 'aggloState');
 
@@ -49,4 +50,15 @@ caseDistinctions(~idxMatched) = 9;
 
 % Output count & frequency of each case
 tabulate(caseDistinctions)
+
+% I thought it was weird that we have no self attachment (case 7 or 8), so I investigated:
+% startAgglo already excluded from endAgglo in an earlier function
+m = load(fullfile(dataDir, 'axonPostQueryAnalysisState.mat'));
+startAgglo = arrayfun(@(x)x.eqClasses(x.occurences > 13), m.queryOverlap.start, 'uni', 0);
+endAgglo = arrayfun(@(x)x.eqClasses(x.occurences > 53), m.queryOverlap.ends, 'uni', 0);
+sum(cellfun(@(x,y)numel(intersect(x,y)), endAgglo, startAgglo, 'uni', 0));
+
+
+
+
 
