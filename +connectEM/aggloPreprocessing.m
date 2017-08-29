@@ -23,6 +23,9 @@ disp('correspondences extracted');
 if ~exist('segmentMeta','var')
     segmentMeta = load(fullfile(p.saveFolder, 'segmentMeta.mat'));
 end
+if ~isfield(segmentMeta,'dendriteProb')
+    segmentMeta = connectEM.addSegmentClassInformation(p,segmentMeta);
+end
 disp('segment meta loaded');
 
 if ~exist('borderMeta','var')
@@ -74,6 +77,7 @@ else
     load(fullfile(outputFolder,'axons_01.mat'),'axons');
 end
 disp('State 01 superagglos loaded/generated')
+
 %% execute corresponding edges
 if ~exist(fullfile(outputFolder,'axons_02.mat'),'file')
     axons = connectEM.executeEdges(axons,corrEdges,segmentMeta);
@@ -88,6 +92,24 @@ else
     load(fullfile(outputFolder,'dendrites_02.mat'),'dendrites');
 end
 disp('State 02 superagglos loaded/generated')
+
+%% remove somata from all classes and put into separate class
+if ~exist(fullfile(outputFolder,'somata_02b.mat'),'file')
+    load('/gaba/u/rhesse/forBenedikt/somasNoClosedHoles.mat')
+    ids = cell2mat(somas(:,3));
+    dendrites = connectEM.removeSegIdsFromAgglos(dendrites,ids);
+    axons = connectEM.removeSegIdsFromAgglos(axons,ids);
+    somata = connectEM.transformAggloOldNewRepr(somas(:,3), graph.edges, segmentMeta,1);
+    
+    save(fullfile(outputFolder,'axons_02b.mat'),'axons');
+    save(fullfile(outputFolder,'dendrites_02b.mat'),'dendrites');
+    save(fullfile(outputFolder,'somata_02b.mat'),'somata');
+else
+    load(fullfile(outputFolder,'axons_02b.mat'),'axons');
+    load(fullfile(outputFolder,'dendrites_02b.mat'),'dendrites');
+    load(fullfile(outputFolder,'somata_02b.mat'),'somata');
+end
+
 %% add myelinated processes to axon class
 if ~exist(fullfile(outputFolder,'axons_03.mat'),'file') || ~exist(fullfile(outputFolder,'dendrites_03.mat'),'file')
     disp('Add myelinated processes of dendrite class to axon class and execute correspondences again')
@@ -103,6 +125,12 @@ if ~exist(fullfile(outputFolder,'axons_03.mat'),'file') || ~exist(fullfile(outpu
     % execute corresponding edges again on the merged axon class. This at the
     % same time merges all superagglos that have overlapping segments!
     [ axons ] = connectEM.executeEdges(axons,corrEdges,segmentMeta);
+    
+    
+%     %%
+%     dendriteProbDend = arrayfun(@(x) median(segmentMeta.dendriteProb(x.nodes(:,4))),dendrites);
+%     axonProbDend = arrayfun(@(x) median(segmentMeta.axonProb(x.nodes(:,4))),dendrites);
+%     %%
     disp('Overlaps solved, now finding 5 micron agglos and surface myelin scores');
     %% get myelin surface scores, size scores and save final axon/dendrite class state
     
