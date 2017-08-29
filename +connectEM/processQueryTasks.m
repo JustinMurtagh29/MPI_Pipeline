@@ -23,6 +23,6 @@ function processQueryTasks(i,batchBoundaries,axons,borderPositions,directions,p,
     save([outputFolder 'batch' num2str(i, '%.4i') '.mat'], 'q', 'theseAxons');
     display(['Batch ' num2str(i, '%.4i') ' done']);
     clear these* q phi theta psi;
-    
+
 end
-        
+

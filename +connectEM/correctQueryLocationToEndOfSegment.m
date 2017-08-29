@@ -18,23 +18,26 @@ function newPos = correctQueryLocationToEndOfSegment(p, cc, pos, dir, nmStepback
     bboxToLoad(:,1) = pos - surroundToLoad;
     bboxToLoad(:,2) = pos + surroundToLoad;
 
-    % Load segmentation data 
+    % Load segmentation data
     seg = readKnossosRoi(p.seg.root, p.seg.prefix, bboxToLoad, ...
         'uint32', '', 'raw');
     % Calculate distance to watershed border of each voxel in loaded box
     segAggloDistToSurface = bwdist(~ismember(seg, cc));
 
     % Find all voxel in bbox which would provide maximal node evidence
-    voxelIds = find(segAggloDistToSurface(:) > 2);
+    maxDistToSurface = sort(unique(segAggloDistToSurface), 'descend');
+    display(num2str(maxDistToSurface(1)));
+    voxelIds = find(segAggloDistToSurface(:) > (maxDistToSurface(1)-0.1));
     [voxelPos(:,1), voxelPos(:,2), voxelPos(:,3)] = ...
         ind2sub(size(segAggloDistToSurface), voxelIds);
-    % Find the one closest to original position
+
+    % Find the one closest to original position if multiple
     distances = pdist2(voxelPos, centerOfBbox);
     [~,idx] = min(distances);
-    
+
     % New start position in local coordinates
     newPosLocal = voxelPos(idx,:);
-    
+
     if visualize
         close all;
         figure;
@@ -47,12 +50,7 @@ function newPos = correctQueryLocationToEndOfSegment(p, cc, pos, dir, nmStepback
         % Play video and pause execution
         implay(temp);
     end
-    
-    % This should always yield full node evidence at start position
-    if maxVal < 2 
-        error('could not determine a voxel with full node evidence');
-    end
-    
+
     % New position scale to global offset, also transfer from Matlab
     % coordinates as used here to webKnossos coordinates for API call
     newPos = newPosLocal + bboxToLoad(:,1)' - [2 2 2];

@@ -1,44 +1,41 @@
 function generateAxonQueries(param)
-    % Written by 
+    % Written by
     %   Manuel Berning <manuel.berning@brain.mpg.de>
     %   Christian Schramm <christian.schramm@brain.mpg.de>
-    
+
+
     dataDir = fullfile(param.saveFolder, 'aggloState');
 
     % Load data from ending generation
-    endingData = fullfile(dataDir, 'axonEndings.mat');
+    endingData = fullfile(dataDir, 'axonEndingsAllData.mat');
     endingData = load(endingData);
+    % Extract some variables
     idxAll = endingData.idxAll;
     idxCanidateFound = endingData.axonMask;
     borderIds = endingData.borderIds;
-    Clusters = endingData.borderClusters ;
-    
+    borderClusters = endingData.borderClusters ;
+
     % Load directionality information
     directionality = fullfile(dataDir, 'axonEndingInputData.mat');
     directionality = load(directionality, 'directionality');
     directionality = directionality.directionality;
-    
+
     % Load border CoMs
-    borderCoM = fullfile(dataDir, 'globalBorder.mat');
+    borderCoM = fullfile(param.saveFolder, 'globalBorder.mat');
     borderCoM = load(borderCoM, 'borderCoM');
     borderCoM = borderCoM.borderCoM;
-    borderPositions = cellfun(@(x) borderMeta.borderCoM(x,:), directionality.borderIdx(idxCanidateFound),'uni',0);
+    borderPositions = cellfun(@(x) borderCoM(x,:), directionality.borderIdx(idxCanidateFound),'uni',0);
 
     % Load larger 5 micron agglomerates
     m = load(fullfile(dataDir, 'axons_04.mat'));
     axons = m.axons(m.indBigAxons);
     axons = arrayfun(@Agglo.fromSuperAgglo, axons, 'UniformOutput', false);
     clear m
-    
-    % Write new segmentation based on axon queries
-    mapping = connectEM.createLookup(segmentMeta, axons);
-    Seg.Global.applyMappingToSegmentation(p, mapping, fullfile(dataDir, 'newSegmentation/1/'));
-    clear mapping;
-    
+
     % Determine endings which are not redundant(already attached by flight path)
-    out = load(fullfile(dataDir, 'axonEndingOverlaps.mat'));
-    startEndings = unique(cell2mat(out.startEndingOverlaps));
-    endEndings = unique(cell2mat(out.endEndingOverlaps));
+    axonEndingOverlap = load(fullfile(dataDir, 'axonEndingOverlaps.mat'));
+    startEndings = unique(cell2mat(axonEndingOverlap.startEndingOverlaps));
+    endEndings = unique(cell2mat(axonEndingOverlap.endEndingOverlaps));
     attachedEndings = union(startEndings,endEndings);
 
     % Find indices of ending candidates in directionality lists (scores,
@@ -46,31 +43,33 @@ function generateAxonQueries(param)
     idxUse = idxAll(idxCanidateFound);
     counter = 1;
     idxCluster = [];
-    for j=1:length(Clusters)
+    for j=1:length(borderClusters)
         idxCluster{j,1} = [];
-        for k=1:max(Clusters{j})
-            if ~ismember(counter,attachedEndings)
+        for k=1:max(borderClusters{j})
+            if ismember(counter,attachedEndings)
                 idxCluster{j,1}{k,1} = [];
             else
-                idxCluster{j,1}{k,1} = idxUse{j,1}(find(Clusters{j}==k));
+                idxCluster{j,1}{k,1} = idxUse{j,1}(find(borderClusters{j}==k));
             end
             counter = counter + 1;
         end
         idxCluster{j,1} = idxCluster{j,1}(~cellfun('isempty',idxCluster{j,1}));
     end
+
     % Exclude axons without a single ending left
     redundant = cellfun('isempty',idxCluster);
     idxCluster = idxCluster(~redundant);
-    
+
     % Write out absolut values of seg direction scores
     SegDirScores = cellfun(@(x)abs(x),directionality.scores(idxCanidateFound),'uni',0);
     SegDirScores = SegDirScores(~redundant);
     borderPositions = borderPositions(~redundant);
-    
+
     % Dataset border conditions
+    options.border = [3000; -3000];
     borderNm = repmat(options.border, 1, 3);
-    borderVoxel = round(bsxfun(@times, 1./p.raw.voxelSize, borderNm));
-    bboxSmall = p.bbox + borderVoxel';
+    borderVoxel = round(bsxfun(@times, 1./param.raw.voxelSize, borderNm));
+    bboxSmall = param.bbox + borderVoxel';
 
     % Keep only candidate with highest score for each cluster and exclude
     % candidate outside border cutoff
@@ -87,13 +86,13 @@ function generateAxonQueries(param)
             end
         end
     end
-    
+
     % Write out scores and pca, apply all masks
     outside = cellfun('isempty',candidateUse);
     axons = axons(idxCanidateFound);
     axons = axons(~redundant);
     axons = axons(~outside);
-    
+
     pcaFound = directionality.pca(idxCanidateFound);
     pcaFound = pcaFound(~redundant);
     pcaFound = pcaFound(~outside);
@@ -105,7 +104,7 @@ function generateAxonQueries(param)
     borderIdxFound = borderIdxFound(~outside);
     candidateUse = candidateUse(~outside);
     borderPositions = borderPositions(~outside);
-    
+
     % Extract some values for borders we want to query
     thisborderPositions = {};
     directions = {};
@@ -120,56 +119,23 @@ function generateAxonQueries(param)
             thisScores{j,1}(end+1,1) = scoresFound{j}(candidateUse{j}(k));
             thisBorderIdx{j,1}(end+1,1) = borderIdxFound{j}(candidateUse{j}(k));
             thisborderPositions{j,1}{end+1,1} = double(borderPositions{j,1}(candidateUse{j}(k),:));
-            directions{j,1}{end+1,1} = bsxfun(@times, bsxfun(@times, sign(thisScores{j,1}(end,1)), thisPca{j,1}(end,:)), 1 ./ p.raw.voxelSize);
+            directions{j,1}{end+1,1} = bsxfun(@times, bsxfun(@times, sign(thisScores{j,1}(end,1)), thisPca{j,1}(end,:)), 1 ./ param.raw.voxelSize);
         end
     end
-    
-    outputFolder = fullfile(dataDir, 'Queries/');
-    if ~exist(outputFolder)
+
+    outputFolder = fullfile(dataDir, 'queries/');
+    if ~exist(outputFolder, 'dir')
         mkdir(outputFolder)
     end
-        
+
     batchBoundaries = round(linspace(1, numel(axons), 101));
     for i=1:length(batchBoundaries)-1
-        inputList{i,1} = {i,batchBoundaries,axons,thisborderPositions,directions,p,outputFolder};
+        inputList{i,1} = {i};
     end
-    
+
+    sharedInputs = {batchBoundaries,axons,thisborderPositions,directions,param,outputFolder};
+    sharedInputsLocation = 2:7;
     cluster = Cluster.getCluster('-p -100','-tc 20','-l h_vmem=64G','-l s_rt=5:28:00','-l h_rt=5:29:00');
-    job = Cluster.startJob(@connectEM.processQueryTasks, inputList, 'name','queryGeneration','cluster', cluster)
+    job = Cluster.startJob(@connectEM.processQueryTasks, inputList, 'name', 'queryGeneration', 'cluster', cluster, ...
+        'sharedInputs', sharedInputs, 'sharedInputsLocation', sharedInputsLocation);
 
-    %{
-    for i=1:length(batchBoundaries)-1
-        tic;
-        theseIdx = batchBoundaries(i):batchBoundaries(i+1)-1;
-        theseAxons = axons(theseIdx);
-        theseBorderPositions = thisborderPositions(theseIdx);
-        theseDirections = directions(theseIdx);
-        
-        q.pos = {};
-        q.dir = {};
-        q.angles = {};
-        idxDelete = [];
-        for j=1:length(theseAxons)
-            tic;
-            thesePositions = cellfun(@(x,y,z)connectEM.correctQueryLocationToEndOfSegment(p, x, y, z, 200), ...
-                repmat(theseAxons(j),size(theseBorderPositions{j},1),1), theseBorderPositions{j}, theseDirections{j}, 'uni', 0);
-            
-            q.pos{end+1} = thesePositions;
-            q.dir{end+1} = theseDirections{j}(~cellfun('isempty',thesePositions));
-            [phi, theta, psi] = cellfun(@(x)connectEM.calculateEulerAngles(x, p.raw.voxelSize), q.dir{end});
-            q.angles{end+1} = mat2cell(cat(2, phi, theta, psi), ones(numel(phi),1), 3);
-            toc;
-        end
-        
-        for j=1:length(idxDelete)
-            theseAxons{idxDelete(j)} = [];
-        end
-        theseAxons = theseAxons(~logical(cellfun('isempty',theseAxons)));
-
-        % Calculate euler angles & put into old format
-        save([outputFolder 'batch' num2str(i, '%.4i') '.mat'], 'q', 'theseAxons');
-        display(['Batch ' num2str(i, '%.4i') ' done']);
-        clear these* q phi theta psi;
-        toc;
-    end
-    %}
