@@ -5,8 +5,9 @@ outputFolder ='/gaba/scratch/kboerg/queryResultsDendrite20170717/';
 load('/gaba/u/mberning/results/pipeline/20170217_ROI/allParameterWithSynapses.mat');
 segmentMeta = load([p.saveFolder 'segmentMeta.mat']);
 segmentMeta = connectEM.addSegmentClassInformation(p, segmentMeta);
-temp = load('/gaba/scratch/mberning/aggloGridSearch/search03_00514.mat');
-dendrites = temp.dendritesFinal;
+temp = load('/gaba/u/mberning/results/pipeline/20170217_ROI/aggloState/dendrites_03.mat');
+filternan = @(x)x(~isnan(x));
+dendrites = arrayfun(@(x){filternan(x.nodes(:,4))}, temp.dendrites(temp.indBigDends));
 clear temp
 segmentsLeftover = setdiff(find(segmentMeta.dendriteProb > 0.5), cell2mat(dendrites));
 dendritesAll = [dendrites; num2cell(segmentsLeftover)];
