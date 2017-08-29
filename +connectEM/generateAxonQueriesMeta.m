@@ -40,8 +40,6 @@
     axonLength = cell2mat(axonLength(idxKeep));
     clear idx*;
 
-
-
     % Write new segmentation based on axon queries
     mapping = connectEM.createLookup(segmentMeta, axonsNew);
     Seg.Global.applyMappingToSegmentation(p, mapping, [outputFolder '1/']);
@@ -56,5 +54,4 @@
         mkdir(querySaveFolder)
     end
     connectEM.generateAxonQueries(p, graph, segmentMeta, borderMeta, directionality, axonsNew, querySaveFolder);
-
 

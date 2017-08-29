@@ -16,5 +16,11 @@ function generateSegmentationForNewQueries(param)
     mapping = connectEM.createLookup(segmentMeta, axons);
     Seg.Global.applyMappingToSegmentation(param, mapping, fullfile(dataDir, '20170829_segmentationForQueries', '1'));
 
+    % Create resolution pyramid
+    thisBBox = [1, 1, 1; (ceil(param.bbox(:, 2) ./ 1024) .* 1024)']';
+    seg.root = fullfile(param.saveFolder, 'aggloState', '20170829_segmentationForQueries', '1');
+    seg.prefix = param.seg.prefix;
+    createResolutionPyramid(seg, thisBBox, [], true);
+
 end
 
