@@ -9,7 +9,7 @@ function p = runPipeline(p, startStep, endStep,runlocal)
 %       endStep: (Optional) PipelineStep object
 %           The step where the pipeline is stopped.
 %           (Default: PipelineStep.GraphConstruction)
-%       runlocal: (Optional) boolean to switch if 
+%       runlocal: (Optional) boolean to switch if
 %           some main functions of the pipeline should
 %           be run on the interactive node or on a worker (default)
 
@@ -24,29 +24,29 @@ function p = runPipeline(p, startStep, endStep,runlocal)
         runlocal = 0;
     end
 
-    % Runs CNN based forward pass for region defined in p.bbox,p.raw and saves as p.class	
-    % Because CNN is translation invariant, saved as KNOSSOS hierachy again 
+    % Runs CNN based forward pass for region defined in p.bbox,p.raw and saves as p.class
+    % Because CNN is translation invariant, saved as KNOSSOS hierachy again
     % Pass bounding box as well as tileSize will be added in bigFwdPass otherwise (legacy stuff)
-    % This uses CNN subfolder in code repository    
+    % This uses CNN subfolder in code repository
     if startStep <= PipelineStep.Classification && ...
        endStep >= PipelineStep.Classification
         job = bigFwdPass(p, p.bbox);
         Cluster.waitForJob(job);
     end
-    
+
     % If you set p.myelin.isUsed = true in configuration.m, the result of a myelin detection is
     % used to ensure a voxel detected as myelin will not be in one segment with voxel not detected
     % as myelin
     if isfield(p,'myelin') && p.myelin.isUsed && startStep <= PipelineStep.MyelinFix && ...
         endStep >= PipelineStep.MyelinFix
-    
+
         %define new classification prefix (NOTE: This will not be saved, but temporary files anyway)
         newPrefix = [p.class.prefix, '_mod'];
-    
+
         % run myelin detection
         job = Myelin.runFix(p, newPrefix);
         Cluster.waitForJob(job);
-    
+
         % use modified classification in subsequent steps
         p.class.prefix = newPrefix;
         clear newPrefix;
@@ -62,23 +62,23 @@ function p = runPipeline(p, startStep, endStep,runlocal)
         job = miniSegmentation(p);
         Cluster.waitForJob(job);
     end
-       
-    % Transfer segmentation from p.local(X).tempSegFile to p.local(X).segFile and drop overlaps 
+
+    % Transfer segmentation from p.local(X).tempSegFile to p.local(X).segFile and drop overlaps
     % Also in correspondences subfolder
     % Added routine to renumber CC of segments after cutting to non-overlapping region
     if startStep <= PipelineStep.OverlapRemoval && ...
        endStep >= PipelineStep.OverlapRemoval
         removeOverlaps(p);
     end
-    
+
     % Make segmentation IDs unique over dataset (were only unique in each
     % tile before), this will be called global IDs from time to time
-    % will work on segmentation see globalization subfolder 
+    % will work on segmentation see globalization subfolder
     if startStep <= PipelineStep.GlobalSegmentID && ...
        endStep >= PipelineStep.GlobalSegmentID
         job = globalizeSegmentation(p);
         Cluster.waitForJob(job);
-    end 
+    end
 
     % Find correspondences between tiles processed (segmented) in parallel
     % Uses correspondences subfolder in code repository
@@ -87,14 +87,14 @@ function p = runPipeline(p, startStep, endStep,runlocal)
         job = correspondenceFinderGlobal(p);
         Cluster.waitForJob(job);
     end
-    
+
     % Build segment meta data
     if startStep <= PipelineStep.BuildSegmentMetaData && ...
        endStep >= PipelineStep.BuildSegmentMetaData
         job = buildSegmentMetaData(p);
         Cluster.waitForJob(job);
     end
-        
+
     if startStep <= PipelineStep.SegmentationPyramid && ...
        endStep >= PipelineStep.SegmentationPyramid
         % Create resolution pyramid for the segmentation
@@ -103,13 +103,13 @@ function p = runPipeline(p, startStep, endStep,runlocal)
         createResolutionPyramid(p.seg, thisBBox, [], true);
         fprintf('done!\n'); toc;
     end
-    
+
     if startStep <= PipelineStep.CompressSegmentation && ...
        endStep >= PipelineStep.CompressSegmentation
         % Compress segmentation (at all resolutions)
         compressSegmentation(p);
     end
-        
+
     % Construct graph on globalized version of segmentation
     % This will create p.local(:).edgeFile & borderFile
     % See graphConstruction subfolder
@@ -118,13 +118,13 @@ function p = runPipeline(p, startStep, endStep,runlocal)
         job = graphConstruction(p);
         Cluster.waitForJob(job);
     end
-    
+
     % Run synapse detection as presented in Staffler et. al, 2017
     % see: http://biorxiv.org/content/early/2017/01/22/099994
     if startStep <= PipelineStep.SynapseDetection && ...
        endStep >= PipelineStep.SynapseDetection
         [p, job] = SynEM.Seg.pipelineRun(p);
-        % Save parameter file to new 
+        % Save parameter file to new
         Util.save([p.saveFolder 'allParameterWithSynapses.mat'], p);
         disp('SynEM modified parameter file. Load allParameterWithSynapses.mat for the next steps.')
         % Wait for completion of job
@@ -137,21 +137,21 @@ function p = runPipeline(p, startStep, endStep,runlocal)
         job = connectEM.calculateFeatures(p, 'Raw');
         Cluster.waitForJob(job);
     end
-    
+
     % Calculate features on CNN output as well
     if startStep <= PipelineStep.ClassFeatures && ...
        endStep >= PipelineStep.ClassFeatures
         job = connectEM.calculateFeatures(p, 'Class');
         Cluster.waitForJob(job);
     end
-    
+
     % Calculate neurite continuity predictions
     if startStep <= PipelineStep.NeuriteContinuityPrediction && ...
        endStep >= PipelineStep.NeuriteContinuityPrediction
         job = connectEM.predictDataset(p);
         Cluster.waitForJob(job);
     end
-        
+
     %Save the global SVG data
     if startStep <= PipelineStep.SaveGlobalSvgData && ...
             endStep >= PipelineStep.SaveGlobalSvgData
@@ -162,8 +162,8 @@ function p = runPipeline(p, startStep, endStep,runlocal)
             Cluster.waitForJob(job);
         end
     end
-    
-    %Create graph struct 
+
+    %Create graph struct
     if startStep <= PipelineStep.GlobalGraphStruct && ...
             endStep >= PipelineStep.GlobalGraphStruct
         if runlocal
