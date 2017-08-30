@@ -137,3 +137,5 @@ function generateAxonQueries(param)
     job = Cluster.startJob(@connectEM.processQueryTasks, inputList, 'name', 'queryGeneration', 'cluster', cluster, ...
         'sharedInputs', sharedInputs, 'sharedInputsLocation', sharedInputsLocation);
 
+end
+
