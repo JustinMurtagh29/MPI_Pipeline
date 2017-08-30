@@ -30,13 +30,11 @@ function generateAxonQueries(param)
     m = load(fullfile(dataDir, 'axons_04.mat'));
     axons = m.axons(m.indBigAxons);
     axons = arrayfun(@Agglo.fromSuperAgglo, axons, 'UniformOutput', false);
-    clear m
 
     % Determine endings which are not redundant(already attached by flight path)
-    axonEndingOverlap = load(fullfile(dataDir, 'axonEndingOverlaps.mat'));
-    startEndings = unique(cell2mat(axonEndingOverlap.startEndingOverlaps));
-    endEndings = unique(cell2mat(axonEndingOverlap.endEndingOverlaps));
-    attachedEndings = union(startEndings,endEndings);
+    m = load(fullfile(dataDir, 'attachedEndings.mat'), 'attachedEndings');
+    attachedEndings = m.attachedEndings;
+    clear m
 
     % Find indices of ending candidates in directionality lists (scores,
     % pca...) and exclude redundant endings
