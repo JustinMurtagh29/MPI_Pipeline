@@ -90,7 +90,7 @@ function makeEndingCaseDistinctions(param)
 
     % Chose cases that are defined as attachted
     casesToCountAttached = [5 9 10];
-    attachedQueries = linkages(ismember(caseDistinctions, casesToCountAttached),:);
+    attachedQueries = linkagesFlat(ismember(caseDistinctions, casesToCountAttached),:);
     attachedEndings = unique(attachedQueries(:));
 
     % Save
