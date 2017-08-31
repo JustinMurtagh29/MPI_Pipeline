@@ -1,0 +1,17 @@
+See my lablog post(s) for more information.
+
+Use this for reproduction:
+
+dendAggloStatePath = '/mnt/gaba/gaba/u/mberning/results/pipeline/20170217_ROI/aggloState/dendrites_03.mat';
+spineHeadsStatePath = '/home/zecevicm/Desktop/connectomics_git/L4_apicalDendrites/20170829_spineheadsAttached.mat';
+dendLensPath = '/home/zecevicm/Desktop/connectomics_git/L4_apicalDendrites/20170829_DendriteAggloLengths.mat';
+parameterPath = '/mnt/gaba/gaba/u/mberning/results/pipeline/20170217_ROI/allParameterWithSynapses.mat';
+metaPath = '/mnt/gaba/gaba/u/mberning/results/pipeline/20170217_ROI/segmentMeta.mat';
+local = '/mnt/gaba';
+somaStatePath = '/mnt/gaba/gaba/u/rhesse/forBenedikt/somasNoClosedHoles.mat';
+spineHeadCountsPath = '/home/zecevicm/Desktop/connectomics_git/L4_apicalDendrites/20170829_spineheadCounts(OnlyBig).mat';
+writePath = '/home/zecevicm/Desktop/connectomics_git/L4_apicalDendrites/20170830_funTest_dthr4000.nml';
+
+And you also need to have the Agglo Folder from Alessandros repo in your path,
+at least the function for calculating path length because the AIS script is dependent of it:
+	Agglo.calcPathLengths(p, aggloComponents);
