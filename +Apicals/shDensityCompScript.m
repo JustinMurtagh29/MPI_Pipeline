@@ -17,7 +17,7 @@ local = '';
 
 load('/tmpscratch/zecevicm/L4/Apicals/20170829_spineheadCounts(OnlyBig).mat', 'shCounts');
 
-aggloInd = 16;
+aggloInd = 2;
 
 %% get densities
 
