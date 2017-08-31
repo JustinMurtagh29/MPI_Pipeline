@@ -6,16 +6,16 @@
 
 %% load necessary files
 
-dendAggloStatePath = '/mnt/gaba/gaba/u/mberning/results/pipeline/20170217_ROI/aggloState/dendrites_03.mat';
-spineHeadsStatePath = '/home/zecevicm/Desktop/connectomics_git/L4_apicalDendrites/20170829_spineheadsAttached.mat';
-dendLensPath = '/home/zecevicm/Desktop/connectomics_git/L4_apicalDendrites/20170829_DendriteAggloLengths.mat';
-parameterPath = '/mnt/gaba/gaba/u/mberning/results/pipeline/20170217_ROI/allParameterWithSynapses.mat';
-metaPath = '/mnt/gaba/gaba/u/mberning/results/pipeline/20170217_ROI/segmentMeta.mat';
-local = '/mnt/gaba';
+dendAggloStatePath = '/gaba/u/mberning/results/pipeline/20170217_ROI/aggloState/dendrites_03.mat';
+spineHeadsStatePath = '/gaba/tmpscratch/zecevicm/L4/Apicals/20170829_spineheadsAttached.mat';
+dendLensPath = '/gaba/tmpscratch/zecevicm/L4/Apicals/20170829_DendriteAggloLengths.mat';
+parameterPath = '/gaba/u/mberning/results/pipeline/20170217_ROI/allParameterWithSynapses.mat';
+metaPath = '/gaba/u/mberning/results/pipeline/20170217_ROI/segmentMeta.mat';
+local = '';
 [ agglosNew, agglos, agglos_all, points, indBigDends, bounds, spineHeads, dendLens, sM, p ] = ...
     Apicals.loadDendAggloState(dendAggloStatePath, spineHeadsStatePath, dendLensPath, parameterPath, metaPath, local);
 
-load('/home/zecevicm/Desktop/connectomics_git/L4_apicalDendrites/20170829_spineheadCounts(OnlyBig).mat', 'shCounts');
+load('/gaba/tmpscratch/zecevicm/L4/Apicals/20170829_spineheadCounts(OnlyBig).mat', 'shCounts');
 
 
 %% get densities
@@ -37,7 +37,7 @@ shDensity(isnan(shDensity)) = 0;
 %% get somas
 
 % load somas from Robin
-load('/mnt/gaba/gaba/u/rhesse/forBenedikt/somasNoClosedHoles.mat');
+load('/gaba/u/rhesse/forBenedikt/somasNoClosedHoles.mat');
 somaAgglos = somas(:,3);
 % ones he probably excluded?
 somaAgglos(94) = []; somaAgglos(93) = []; somaAgglos(91) = [];

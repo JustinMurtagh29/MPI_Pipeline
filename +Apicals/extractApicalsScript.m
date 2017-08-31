@@ -5,12 +5,12 @@
 
 
 % load necessary data for filtering
-dendAggloStatePath = '/mnt/gaba/gaba/u/mberning/results/pipeline/20170217_ROI/aggloState/dendrites_03.mat';
-spineHeadsStatePath = '/home/zecevicm/Desktop/connectomics_git/L4_apicalDendrites/20170829_spineheadsAttached.mat';
-dendLensPath = '/home/zecevicm/Desktop/connectomics_git/L4_apicalDendrites/20170829_DendriteAggloLengths.mat';
-parameterPath = '/mnt/gaba/gaba/u/mberning/results/pipeline/20170217_ROI/allParameterWithSynapses.mat';
-metaPath = '/mnt/gaba/gaba/u/mberning/results/pipeline/20170217_ROI/segmentMeta.mat';
-local = '/mnt/gaba';
+dendAggloStatePath = '/gaba/u/mberning/results/pipeline/20170217_ROI/aggloState/dendrites_03.mat';
+spineHeadsStatePath = '/gaba/tmpscratch/zecevicm/L4/Apicals/20170829_spineheadsAttached.mat';
+dendLensPath = '/gaba/tmpscratch/zecevicm/L4/Apicals/20170829_DendriteAggloLengths.mat';
+parameterPath = '/gaba/u/mberning/results/pipeline/20170217_ROI/allParameterWithSynapses.mat';
+metaPath = '/gaba/u/mberning/results/pipeline/20170217_ROI/segmentMeta.mat';
+local = '';
 [ agglosNew, agglos, agglos_all, points, indBigDends, bounds, spineHeads, dendLens, sM, p ] = ...
     Apicals.loadDendAggloState(dendAggloStatePath, spineHeadsStatePath, dendLensPath, parameterPath, metaPath, local);
 
