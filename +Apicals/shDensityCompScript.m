@@ -17,6 +17,7 @@ local = '';
 
 load('/tmpscratch/zecevicm/L4/Apicals/20170829_spineheadCounts(OnlyBig).mat', 'shCounts');
 
+aggloInd = 16;
 
 %% get densities
 
@@ -40,8 +41,12 @@ shDensity(isnan(shDensity)) = 0;
 load('/gaba/u/rhesse/forBenedikt/somasNoClosedHoles.mat');
 somaAgglos = somas(:,3);
 % ones he probably excluded?
+% get this out at some point probably
 somaAgglos(94) = []; somaAgglos(93) = []; somaAgglos(91) = [];
 somaAgglos(90) = []; somaAgglos(86) = []; somaAgglos(75) = [];
+
+% soma of interest (take only one, some cases have two in them !)
+somaInd = isInSoma{aggloInd}(1);
 
 %% create lookup table
 
@@ -57,8 +62,8 @@ isInSoma = cellfun(@(x)nonzeros(unique(idToSoma(x))), agglos, 'uni', 0);
 
 % get one example
 %cut = Apicals.cutOutSoma(sM, somaAgglos{11}, agglos{3}, 700);
-% 16 is now to 78, which was nice kinda - know what is AIS through Ali
-[cut, mask] = Apicals.cutOutSoma(sM, somaAgglos{78}, agglos{16}, 700);
+% aggloInd is now to 78, which was nice kinda - know what is AIS through Ali
+[cut, mask] = Apicals.cutOutSoma(sM, somaAgglos{somaInd}, agglos{aggloInd}, 700);
 
 % collect the agglos which actually contain a soma (some contain even two)
 h = cellfun(@(x) ~isempty(x), isInSoma, 'uni', 0);
@@ -66,7 +71,7 @@ intersectingInd = find(vertcat(h{:}) == 1);
 
 %% write 
 
-% agglosToWrite = vertcat(agglos(16), somaAgglos(78), cut);
+% agglosToWrite = vertcat(agglos(aggloInd), somaAgglos(78), cut);
 % 
 % tic;
 % distthr = 3000;  % maximum distance between nodes that can be connected
@@ -79,7 +84,7 @@ intersectingInd = find(vertcat(h{:}) == 1);
 %% collect components
 
 % function to delete nodes
-aggloAdapted = Apicals.deleteNodesFromAgglo(agglosNew(16), mask);
+aggloAdapted = Apicals.deleteNodesFromAgglo(agglosNew(aggloInd), mask);
 
 % collect trees
 trees = Graph.findConnectedComponents(aggloAdapted.edges); % -> results in soma (need to convert nodes to segids to work for wK)
@@ -87,7 +92,7 @@ trees = Graph.findConnectedComponents(aggloAdapted.edges); % -> results in soma 
 % convert node to segid
 aggloComponents = [];
 for t=1:length(trees)
-   aggloComponents = vertcat(aggloComponents, {agglos{16}(trees{t})});
+   aggloComponents = vertcat(aggloComponents, {agglos{aggloInd}(trees{t})});
 end
 
 agglosToWrite = aggloComponents;
@@ -98,14 +103,14 @@ agglosToWrite = aggloComponents;
 [ segmentsReached ] = Apicals.collectSegmentsReached(spineHeads.edges, spineHeads.shAgglos);
 
 % check for agglo all the spine heads that got attached
-% sanity check: [ shAttached ] = Apicals.attachedTo( agglos{16}, segmentsReached, 16, shCounts );
+% sanity check: [ shAttached ] = Apicals.attachedTo( agglos{aggloInd}, segmentsReached, aggloInd, shCounts );
 aggloCompCounts = zeros(length(aggloComponents),1);
 for i=1:length(aggloComponents)
     [ shAttached ] = Apicals.attachedTo( aggloComponents{i}, segmentsReached);
     aggloCompCounts(i) = numel(shAttached);
 end
 % not exactly because I dont have a perfect soma cut out
-% assert(sum(aggloCompCounts) + countForSoma == shCounts(16));
+% assert(sum(aggloCompCounts) + countForSoma == shCounts(aggloInd));
 
 
 %% get densities for comp
