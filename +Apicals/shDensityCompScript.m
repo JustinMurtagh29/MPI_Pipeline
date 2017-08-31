@@ -7,15 +7,15 @@
 %% load necessary files
 
 dendAggloStatePath = '/gaba/u/mberning/results/pipeline/20170217_ROI/aggloState/dendrites_03.mat';
-spineHeadsStatePath = '/gaba/tmpscratch/zecevicm/L4/Apicals/20170829_spineheadsAttached.mat';
-dendLensPath = '/gaba/tmpscratch/zecevicm/L4/Apicals/20170829_DendriteAggloLengths.mat';
+spineHeadsStatePath = '/tmpscratch/zecevicm/L4/Apicals/20170829_spineheadsAttached.mat';
+dendLensPath = '/tmpscratch/zecevicm/L4/Apicals/20170829_DendriteAggloLengths.mat';
 parameterPath = '/gaba/u/mberning/results/pipeline/20170217_ROI/allParameterWithSynapses.mat';
 metaPath = '/gaba/u/mberning/results/pipeline/20170217_ROI/segmentMeta.mat';
 local = '';
 [ agglosNew, agglos, agglos_all, points, indBigDends, bounds, spineHeads, dendLens, sM, p ] = ...
     Apicals.loadDendAggloState(dendAggloStatePath, spineHeadsStatePath, dendLensPath, parameterPath, metaPath, local);
 
-load('/gaba/tmpscratch/zecevicm/L4/Apicals/20170829_spineheadCounts(OnlyBig).mat', 'shCounts');
+load('/tmpscratch/zecevicm/L4/Apicals/20170829_spineheadCounts(OnlyBig).mat', 'shCounts');
 
 
 %% get densities
