@@ -31,7 +31,7 @@ for i=1:length(agglos)
                 point = points{i}(k);
                 p2 = points{i}(k,:);
                 if point >= (xbounds(2) - tol)
-                    if ~moreContactPoints(points{i}, vertcat(p1,p2), tol, 0, tol, xbounds, ybounds, zbounds)
+                    if ~Apicals.moreContactPoints(points{i}, vertcat(p1,p2), tol, 0, tol, xbounds, ybounds, zbounds)
                         mask(i) = 1;
                     end
                 end
