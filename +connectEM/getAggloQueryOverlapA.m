@@ -1,15 +1,13 @@
-function getAggloQueryOverlapA(p)
+function getAggloQueryOverlapA(param,state)
     % Written by
     %   Manuel Berning <manuel.berning@brain.mpg.de>
     %   Christian Schramm <christian.schramm@brain.mpg.de>
 
-    scratchFolder = '/tmpscratch/mberning/axonQueryResults/';
-    skeletonFolders = {'MBKMB_L4_axons_queries_2017_a' 'MBKMB_L4_axons_queries_2017_b'};
-    skeletonFolders = cellfun(@(x)[scratchFolder x filesep], skeletonFolders, 'uni', 0);
-    skeletonFolders = [skeletonFolders {'/tmpscratch/scchr/AxonEndings/axonQueryResults/CS_MB_L4_AxonLeftQueries_nmls/'}];
+    % Set current state of queries
+    [skeletonFolders, suffix] = connectEM.setQueryState(state);    
 
     % Lookup segment ids of nodes+neighbours of nmls in all folders defined above
-    [ff.segIds, ff.neighbours, ff.filenames, ff.nodes, ff.startNode, ff.comments] = connectEM.lookupNmlMulti(p, skeletonFolders, false);
+    [ff.segIds, ff.neighbours, ff.filenames, ff.nodes, ff.startNode, ff.comments] = connectEM.lookupNmlMulti(param, skeletonFolders, false);
 
     tabulate(cellfun(@(x)x{1}{1}, cellfun(@(x)regexp(x, 'content="(.*)"', 'tokens'), ...
         cat(1, ff.comments{~cellfun(@isempty, ff.comments)}), 'uni', 0), 'uni', 0))
@@ -28,7 +26,7 @@ function getAggloQueryOverlapA(p)
     out.idx_startEmpty = idx_startEmpty;
     out.gitInfo = Util.gitInfo();
 
-    outFile = fullfile(p.saveFolder, 'aggloState', 'axonFlightPaths.mat');
+    outFile = fullfile(param.saveFolder, 'aggloState', strcat('axonFlightPaths',suffix,'.mat'));
     Util.saveStruct(outFile, out);
 
 end

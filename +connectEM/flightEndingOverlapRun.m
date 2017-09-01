@@ -1,6 +1,9 @@
-function flightEndingOverlapRun(param)
+function flightEndingOverlapRun(param,state)
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
+
+    %% Set current state of queries
+    [skeletonFolders, filenameFlightPaths, suffix] = connectEM.setQueryState(state);    
 
     %% load all the input data
 
@@ -41,7 +44,7 @@ function flightEndingOverlapRun(param)
     out.endEndingOverlaps = doIt(flightResults.endAgglo);
 
     %% save result
-    outFile = fullfile(dataDir, 'axonEndingOverlaps.mat');
+    outFile = fullfile(dataDir, strcat('axonEndingOverlaps',suffix,'.mat'));
     Util.saveStruct(outFile, out);
 
 

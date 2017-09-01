@@ -1,4 +1,4 @@
-function getAggloQueryOverlapB(param,state)
+function getAggloQueryOverlapB_comment(param,state)
     % Written by
     %   Manuel Berning <manuel.berning@brain.mpg.de>
     %   Christian Schramm <christian.schramm@brain.mpg.de>
@@ -7,7 +7,7 @@ function getAggloQueryOverlapB(param,state)
     dataDir = fullfile(param.saveFolder, 'aggloState');
     
     % State of query generation
-    [skeletonFolders, suffixFlightPaths, suffixOverlaps] = connectEM.setQueryState(state);    
+    [skeletonFolders, suffixFlightPaths, suffixOverlaps] = connectEM.setQueryState(state);   
 
     % Load flight paths
     m = load(fullfile(dataDir, suffixFlightPaths), 'ff');
@@ -19,8 +19,8 @@ function getAggloQueryOverlapB(param,state)
     axons = arrayfun(@Agglo.fromSuperAgglo, axons, 'UniformOutput', false);
     clear m;
 
-    % Get flight paths without comment but with start node
-    ff = structfun(@(x)x(cellfun(@isempty, ff.comments)), ff, 'uni', 0);
+    % Get flight paths with comment
+    ff = structfun(@(x)x(~cellfun(@isempty, ff.comments)), ff, 'uni', 0);
     ff = structfun(@(x)x(~cellfun(@isempty, ff.startNode)), ff, 'uni', 0);
 
     segmentsLeftover = [];
@@ -68,7 +68,6 @@ function getAggloQueryOverlapB(param,state)
     results.idxGood = idxGood;
     results.gitInfo = Util.gitInfo();
 
-    save(fullfile(dataDir, strcat('axonQueryOverlaps',suffixOverlaps,'.mat'), 'results', 'queryOverlap', 'idxNoClearStart', 'idxNoClearEnd');
     save(fullfile(dataDir, 'axonPostQueryAnalysisState',suffixOverlaps,'.mat'));
 end
 
