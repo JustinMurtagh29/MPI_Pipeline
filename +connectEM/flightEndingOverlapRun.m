@@ -24,7 +24,7 @@ function flightEndingOverlapRun(param,state)
     % load endings
     endings = load(fullfile(dataDir, 'axonEndings.mat'));
 
-    m = load(fullfile(dataDir, 'axonPostQueryAnalysisState',suffix,'.mat'), 'ff', 'results');
+    m = load(fullfile(dataDir, strcat('axonPostQueryAnalysisState',suffix,'.mat')), 'ff', 'results');
     % load flight paths
     flightNodes = m.ff.nodes;
     % load results from flight path evaluation
