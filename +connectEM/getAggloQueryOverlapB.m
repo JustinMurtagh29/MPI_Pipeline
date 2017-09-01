@@ -69,6 +69,6 @@ function getAggloQueryOverlapB(param,state)
     results.gitInfo = Util.gitInfo();
 
     save(fullfile(dataDir, strcat('axonQueryOverlaps',suffixOverlaps,'.mat'), 'results', 'queryOverlap', 'idxNoClearStart', 'idxNoClearEnd');
-    save(fullfile(dataDir, 'axonPostQueryAnalysisState',suffixOverlaps,'.mat'));
+    save(fullfile(dataDir, strcat('axonPostQueryAnalysisState',suffixOverlaps,'.mat')));
 end
 

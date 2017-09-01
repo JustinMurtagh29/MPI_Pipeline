@@ -3,7 +3,7 @@ function flightEndingOverlapRun(param,state)
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
 
     %% Set current state of queries
-    [skeletonFolders, filenameFlightPaths, suffix] = connectEM.setQueryState(state);    
+    [skeletonFolders, suffixFlightPaths, suffix] = connectEM.setQueryState(state);    
 
     %% load all the input data
 
@@ -31,7 +31,7 @@ function flightEndingOverlapRun(param,state)
     flightNodes = m.ff.nodes;
 
     % load results from flight path evaluation
-    m = load(fullfile(dataDir, 'axonQueryOverlaps.mat'), 'results');
+    m = load(fullfile(dataDir, strcat('axonPostQueryAnalysisState',suffix,'.mat')), 'results');
     flightResults = m.results;
     clear m;
 

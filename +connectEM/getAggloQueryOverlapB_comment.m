@@ -68,6 +68,6 @@ function getAggloQueryOverlapB_comment(param,state)
     results.idxGood = idxGood;
     results.gitInfo = Util.gitInfo();
 
-    save(fullfile(dataDir, 'axonPostQueryAnalysisState',suffixOverlaps,'.mat'));
+    save(fullfile(dataDir, strcat('axonPostQueryAnalysisState',suffixOverlaps,'.mat')));
 end
 
