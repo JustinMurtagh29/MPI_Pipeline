@@ -10,7 +10,7 @@ function getAggloQueryOverlapB(param,state)
     [skeletonFolders, suffixFlightPaths, suffixOverlaps] = connectEM.setQueryState(state);    
 
     % Load flight paths
-    m = load(fullfile(dataDir, suffixFlightPaths), 'ff');
+    m = load(fullfile(dataDir, strcat('axonFlightPaths',suffixFlightPaths,'.mat')), 'ff');
     ff = m.ff;
 
     % Load axon agglomerates
