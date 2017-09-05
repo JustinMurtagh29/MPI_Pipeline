@@ -96,5 +96,32 @@ function makeEndingCaseDistinctions(param)
     % Save
     save(fullfile(dataDir, 'attachedEndings.mat'));
 
+    % Choose cases we use to merge agglos to super agglos
+    casesToCountAttached = [5 9];
+    edgesCC = linkagesAgglos(ismember(caseDistinctions, casesToCountAttached),:);
+    edgesCC = sort(edgesCC, 2);
+    eqClassCC = Graph.findConnectedComponents(edgesCC, true, true);
+    eqClassCCfull = [eqClassCC; num2cell(setdiff(1 : length(superAgglos), cell2mat(eqClassCC)))'];
+    
+    % Choose cases that are additionally taken into account for super agglos
+    casesToCountAttached = [3 5 9 10];
+    startAgglo(~ismember(caseDistinctions, casesToCountAttached),:) = [];
+    endAgglo(~ismember(caseDistinctions, casesToCountAttached),:) = [];
+
+    [uniqueLinkages, positionUniques] = unique(sort(linkagesFlat,2), 'rows');
+    dublicates = ones(size(linkagesFlat,1),1);
+    dublicates(positionUniques) = 0;
+    dublicates = logical(dublicates);
+%     uniqueLinkages2 = linkagesFlat(~dublicates,:);
+%     uniqueLinkages3 = unique(sort(uniqueLinkages2,2), 'rows');
+    
+    startAgglo(dublicates,:) = [];
+    endAgglo(dublicates,:) = [];
+    
+    axons = mergeSuperagglosBasedOnFlightPath(superAgglos, eqClassCCfull, startAgglo, endAgglo, ff)
+
+    % Save super agglos
+    save(fullfile(dataDir, 'axons_05.mat'));
+
 end
 
