@@ -1,23 +1,34 @@
-function visualizeSuperaggloEvolution(idxState1, idxState2, outputFolder)
+function visualizeSuperaggloEvolution(idxState1, idxState2, outputFolder,prefix)
     % Compares axon superagglos between 2 different states including some statistics and visualization
-
+    if ~exist('prefix', 'var')
+        prefix = 'axons';
+    end
     if ~exist(outputFolder, 'dir')
         mkdir(outputFolder);
     end
-
+    if isnumeric(idxState1)
+        fileState1 = [prefix '_' num2str(idxState1, '%.2i') '.mat'];
+    else
+        fileState1 = idxState1;
+    end
+    if isnumeric(idxState2)
+        fileState2 = [prefix '_' num2str(idxState2, '%.2i') '.mat'];
+    else
+        fileState2 = idxState2;
+    end
     % Load parameter struct
     load('/gaba/u/mberning/results/pipeline/20170217_ROI/allParameterWithSynapses.mat', 'p');
     load(fullfile(p.saveFolder, 'segmentMeta.mat'), 'maxSegId');
-    state1 = load(fullfile(p.saveFolder, 'aggloState', ['axons_' num2str(idxState1, '%.2i') '.mat']));
+    state1 = load(fullfile(p.saveFolder, 'aggloState', fileState1));
     % The reshape necessary as superagglos currently change dimensionality going from step 3->4
     state1 = reshape(state1.axons,[],1);
-    state2 = load(fullfile(p.saveFolder, 'aggloState', ['axons_' num2str(idxState2, '%.2i') '.mat']));
+    state2 = load(fullfile(p.saveFolder, 'aggloState', fileState2));
     state2 = reshape(state2.axons,[],1);
 
     % Display statistics on single superagglos
-    display(['-- Statistics superagglo state ' num2str(idxState1)]);
+    display(['-- Statistics superagglo state ' fileState1]);
     displaySuperaggloStats(state1);
-    display(['-- Statistics superagglo state ' num2str(idxState2)]);
+    display(['-- Statistics superagglo state ' fileState2]);
     displaySuperaggloStats(state2);
 
     % Build lookup for each agglo
@@ -32,7 +43,7 @@ function visualizeSuperaggloEvolution(idxState1, idxState2, outputFolder)
     lookupPersistent = unique(lookupPersistent, 'rows');
 
     % Display statistics on difference between states
-    display(['-- Statistics superagglo difference between state ' num2str(idxState1) ' & ' num2str(idxState2)]);
+    display(['-- Statistics superagglo difference between state ' fileState1 ' & ' fileState2]);
     [agglosMerged, agglosSplit, addedSegId, removedSegId] = displaySuperaggloDiffStats(lookup, lookupPersistent);
 
     % Write .nmls of differences to inspect in wK
