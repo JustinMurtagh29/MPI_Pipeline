@@ -1,14 +1,18 @@
-function runAxonQueryAnalysis(state,comment,queries,chiasma)
+function runAxonQueryAnalysis(state,superagglo,comment,queries,chiasma)
 
 if nargin < 2
-    comment = false;
+    superagglo = false;
 end
 
 if nargin < 3
-    queries = false;
+    comment = false;
 end
 
 if nargin < 4
+    queries = false;
+end
+
+if nargin < 5
     chiasma = false;
 end
 
@@ -16,24 +20,28 @@ param = load('/gaba/u/mberning/results/pipeline/20170217_ROI/allParameterWithSyn
 param = param.p;
 
 % Optional after chiasmata splitting: 
-if chiasma
-    tic;connectEM.generateAxonEndings(param, state);toc;
-end
+% if chiasma
+%     tic;connectEM.generateAxonEndings(param, state);toc;
+% end
+% 
+% if ~comment
+%     tic;connectEM.getAggloQueryOverlapA(param, state);toc;
+% end
+% 
+% if comment
+%     tic;connectEM.getAggloQueryOverlapB_comment(param, state);toc;
+% else
+%     tic;connectEM.getAggloQueryOverlapB(param, state);toc;
+% end
+% 
+% tic;connectEM.flightEndingOverlapRun(param, state);toc;
 
 if ~comment
-    tic;connectEM.getAggloQueryOverlapA(param, state);toc;
+    tic;connectEM.makeEndingCaseDistinctions(param, state);toc;
 end
 
-if comment
-    tic;connectEM.getAggloQueryOverlapB_comment(param, state);toc;
-else
-    tic;connectEM.getAggloQueryOverlapB(param, state);toc;
-end
-
-tic;connectEM.flightEndingOverlapRun(param, state);toc;
-
-if ~comment
-    tic;connectEM.makeEndingCaseDistinction(param, state);toc;
+if superagglo
+    tic;connectEM.createNewSuperagglos(param,state);toc;
 end
 
 if queries
