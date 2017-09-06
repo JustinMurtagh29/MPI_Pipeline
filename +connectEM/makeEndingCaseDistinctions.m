@@ -92,9 +92,8 @@ function makeEndingCaseDistinctions(param,state)
     idxWithin = cellfun(@(x)all(all(bsxfun(@gt, x, bboxSmall(:, 1)'),2) ...
         & all(bsxfun(@lt, x, bboxSmall(:, 2)'),2),1), flightPaths.ff.nodes);
 
-    % Choose 13 for dangling edge with true ending
-    caseDistinctions(~idxWithin & caseDistinctions' == 3) = 13;
-
+    % Choose 13 for definition of dangling edge with true ending
+    caseDistinctions(~idxWithin & caseDistinctions' == 10) = 13;
 
     % Output count & frequency of each case
     tabulate(caseDistinctions)
