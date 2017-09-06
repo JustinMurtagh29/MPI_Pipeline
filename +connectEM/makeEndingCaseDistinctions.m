@@ -5,8 +5,8 @@ function makeEndingCaseDistinctions(param,state)
     [skeletonFolders, suffixFlightPaths, suffix] = connectEM.setQueryState(state);    
 
     endings = load(fullfile(dataDir, 'axonEndings.mat'));
-    endingOverlap = load(fullfile(dataDir, 'axonEndingOverlaps',suffix,'.mat'));
-    flightPaths = load(fullfile(dataDir, 'axonPostQueryAnalysisState',suffix,'.mat'), 'ff', 'startAgglo', 'endAgglo');
+    endingOverlap = load(fullfile(dataDir, strcat('axonEndingOverlaps',suffix,'.mat')));
+    flightPaths = load(fullfile(dataDir, strcat('axonPostQueryAnalysisState',suffix,'.mat')), 'ff', 'startAgglo', 'endAgglo');
     
     % Which endings are linked together
     [linkages, idxMultipleHits] = cellfun(@(x,y)connectEM.edgeCreator(x,y), endingOverlap.startEndingOverlaps, endingOverlap.endEndingOverlaps, 'uni', 0);
