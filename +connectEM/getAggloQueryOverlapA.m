@@ -26,8 +26,10 @@ function getAggloQueryOverlapA(param,state)
     out.idx_startEmpty = idx_startEmpty;
     out.gitInfo = Util.gitInfo();
 
+    % Save results and deprive writing permission
     outFile = fullfile(param.saveFolder, 'aggloState', strcat('axonFlightPaths',suffix,'.mat'));
     Util.saveStruct(outFile, out);
+    system(['chmod -w ' outFile])
 
 end
 

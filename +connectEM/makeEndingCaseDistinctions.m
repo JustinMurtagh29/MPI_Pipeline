@@ -1,16 +1,13 @@
-function makeEndingCaseDistinctions(param)
+function makeEndingCaseDistinctions(param,state)
 
     dataDir = fullfile(param.saveFolder, 'aggloState');
-
-    superAgglos = load(fullfile(dataDir, 'axons_04.mat'));
-    origAgglos = arrayfun(@Agglo.fromSuperAgglo, superAgglos.axons, 'uni', 0);
-    superAgglos = superAgglos.axons(superAgglos.indBigAxons);
+    
+    [skeletonFolders, suffixFlightPaths, suffix] = connectEM.setQueryState(state);    
 
     endings = load(fullfile(dataDir, 'axonEndings.mat'));
-    endingOverlap = load(fullfile(dataDir, 'axonEndingOverlaps.mat'));
-    flightPaths = load(fullfile(dataDir, 'axonPostQueryAnalysisState.mat'), 'ff', 'startAgglo', 'endAgglo');
-    clusterSizes = cellfun(@max, endings.borderClusters);
-
+    endingOverlap = load(fullfile(dataDir, 'axonEndingOverlaps',suffix,'.mat'));
+    flightPaths = load(fullfile(dataDir, 'axonPostQueryAnalysisState',suffix,'.mat'), 'ff', 'startAgglo', 'endAgglo');
+    
     % Which endings are linked together
     [linkages, idxMultipleHits] = cellfun(@(x,y)connectEM.edgeCreator(x,y), endingOverlap.startEndingOverlaps, endingOverlap.endEndingOverlaps, 'uni', 0);
     linkagesFlat = cat(1, linkages{:});
@@ -84,6 +81,20 @@ function makeEndingCaseDistinctions(param)
     count = histc(uniqueLinkages9(:), uniqueEndings9);
     idxFlight9 = any(ismember(linkagesFlat, uniqueEndings9(count > 1)),2);
     caseDistinctions(idx9 & idxFlight9) = 12;
+    
+    % Define exclusion zone for true ending definition
+    options.border = [500; -500];
+    borderNm = repmat(options.border, 1, 3);
+    borderVoxel = round(bsxfun(@times, 1./param.raw.voxelSize, borderNm));
+    bboxSmall = param.bbox + borderVoxel';
+    
+    % Check which flight path passes through exclusion zone of the dataset
+    idxWithin = cellfun(@(x)all(all(bsxfun(@gt, x, bboxSmall(:, 1)'),2) ...
+        & all(bsxfun(@lt, x, bboxSmall(:, 2)'),2),1), flightPaths.ff.nodes);
+
+    % Choose 13 for dangling edge with true ending
+    caseDistinctions(~idxWithin & caseDistinctions' == 3) = 13;
+
 
     % Output count & frequency of each case
     tabulate(caseDistinctions)
@@ -93,35 +104,10 @@ function makeEndingCaseDistinctions(param)
     attachedQueries = linkagesFlat(ismember(caseDistinctions, casesToCountAttached),:);
     attachedEndings = unique(attachedQueries(:));
 
-    % Save
-    save(fullfile(dataDir, 'attachedEndings.mat'));
-
-    % Choose cases we use to merge agglos to super agglos
-    casesToCountAttached = [5 9];
-    edgesCC = linkagesAgglos(ismember(caseDistinctions, casesToCountAttached),:);
-    edgesCC = sort(edgesCC, 2);
-    eqClassCC = Graph.findConnectedComponents(edgesCC, true, true);
-    eqClassCCfull = [eqClassCC; num2cell(setdiff(1 : length(superAgglos), cell2mat(eqClassCC)))'];
-    
-    % Choose cases that are additionally taken into account for super agglos
-    casesToCountAttached = [3 5 9 10];
-    startAgglo(~ismember(caseDistinctions, casesToCountAttached),:) = [];
-    endAgglo(~ismember(caseDistinctions, casesToCountAttached),:) = [];
-
-    [uniqueLinkages, positionUniques] = unique(sort(linkagesFlat,2), 'rows');
-    dublicates = ones(size(linkagesFlat,1),1);
-    dublicates(positionUniques) = 0;
-    dublicates = logical(dublicates);
-%     uniqueLinkages2 = linkagesFlat(~dublicates,:);
-%     uniqueLinkages3 = unique(sort(uniqueLinkages2,2), 'rows');
-    
-    startAgglo(dublicates,:) = [];
-    endAgglo(dublicates,:) = [];
-    
-    axons = mergeSuperagglosBasedOnFlightPath(superAgglos, eqClassCCfull, startAgglo, endAgglo, ff)
-
-    % Save super agglos
-    save(fullfile(dataDir, 'axons_05.mat'));
+    % Save and deprive writing permission
+    saveFile = fullfile(dataDir, strcat('attachedEndings',suffix,'.mat'));
+    save(saveFile);
+    system(['chmod -w ' saveFile])
 
 end
 

@@ -39,8 +39,9 @@ function flightEndingOverlapRun(param,state)
     out.startEndingOverlaps = doIt(flightResults.startAgglo);
     out.endEndingOverlaps = doIt(flightResults.endAgglo);
 
-    %% save result
+    %% save result and deprive writing permission
     outFile = fullfile(dataDir, strcat('axonEndingOverlaps',suffix,'.mat'));
     Util.saveStruct(outFile, out);
+    system(['chmod -w ' outFile])
 
 end
