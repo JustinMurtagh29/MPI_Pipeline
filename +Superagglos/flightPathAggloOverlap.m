@@ -37,18 +37,23 @@ end
 
 function ids = getFPNodeSegIds(p, fp)
 
-nodes = {fp.nodes}';
-l = cellfun(@(x)size(x, 1), nodes);
-nodes = cell2mat(nodes);
+l = cellfun(@(x)size(x, 1), fp.nodes);
+nodes = cell2mat(fp.nodes);
 ids = zeros(size(nodes, 1), 27);
 cubeIdx = Skeleton.findSegCubeIdxOfNodes(nodes, p);
 [group, cubeIdx] = Util.group2Cell(cubeIdx);
+if cubeIdx(1) == 0
+    group = group(2:end);
+    cubeIdx = cubeIdx(2:end);
+end
 for i = 1:length(cubeIdx)
     this_bbox = Util.addBorder(p.local(cubeIdx(i)).bboxSmall, [1, 1, 1]);
+    warning('off', 'all') % reading of empty cubes
     seg = Seg.IO.loadSeg(p, this_bbox);
-    curNodes = Util.indConversion(this_bbox, nodes(group(i),:));
+    warning('on', 'all')
+    curNodes = Util.indConversion(this_bbox, nodes(group{i},:));
     curNodes = bsxfun(@plus, curNodes, [0, Util.lneigh26(size(this_bbox))]);
-    ids(group(i)) = seg(curNodes);
+    ids(group{i}, :) = seg(curNodes);
 end
 ids = mat2cell(ids, l, 27);
 
