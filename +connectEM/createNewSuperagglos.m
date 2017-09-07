@@ -17,6 +17,8 @@ function createNewSuperagglos(param,state,casesToMerge)
         casesToMerge = [3 5 9 10];
     end
     edgesCC = linkagesAgglos(ismember(caseDistinctions, casesToMerge),:);
+    nans = isnan(edgesCC(:,1)) | isnan(edgesCC(:,2));
+    edgesCC = edgesCC(~nans,:);
     edgesCC = sort(edgesCC, 2);
     eqClassCC = Graph.findConnectedComponents(edgesCC, true, true);
     eqClassCCfull = [eqClassCC; num2cell(setdiff(1 : length(superAgglos), cell2mat(eqClassCC)))'];
