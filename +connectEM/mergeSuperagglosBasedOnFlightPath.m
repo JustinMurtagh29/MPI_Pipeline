@@ -11,7 +11,7 @@ function superagglos_new = mergeSuperagglosBasedOnFlightPath(superagglos, eqClas
         superagglos_new(i).edges = cat(1, edgeCell{:});
         % Find all queries that link to current superagglo (start or end) and all segIds of superagglo
         queryIdx = find(cellfun(@(x)any(ismember(x, eqClassCCfull{i})), attachments));
-        
+
         segIdsThisSuperagglo = superagglos_new(i).nodes(:,4);
         for j=1:length(queryIdx)
             % Add in flight path of current query that connects to current eqClass

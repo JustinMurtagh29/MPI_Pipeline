@@ -1,7 +1,7 @@
 function createNewSuperagglos(param,state,casesToMerge)
-        
+
     dataDir = fullfile(param.saveFolder, 'aggloState');
-    
+
     [skeletonFolders, suffixFlightPaths, suffix, axonVersion] = connectEM.setQueryState(state);
 
     % Load current state of agglomerates
@@ -11,7 +11,7 @@ function createNewSuperagglos(param,state,casesToMerge)
 
     load(fullfile(dataDir, strcat('attachedEndings',suffix,'.mat')),'caseDistinctions',...
         'linkagesAgglos','flightPaths','linkagesFlat');
-    
+
     % Choose cases we use to merge agglos to super agglos
     if nargin < 3
         casesToMerge = [3 5 9 10];
@@ -22,7 +22,7 @@ function createNewSuperagglos(param,state,casesToMerge)
     edgesCC = sort(edgesCC, 2);
     eqClassCC = Graph.findConnectedComponents(edgesCC, true, true);
     eqClassCCfull = [eqClassCC; num2cell(setdiff(1 : length(superAgglos), cell2mat(eqClassCC)))'];
-    
+
     % Choose cases that are taken into account for super agglos
     flightPaths.startAgglo(~ismember(caseDistinctions, casesToMerge),:) = [];
     flightPaths.endAgglo(~ismember(caseDistinctions, casesToMerge),:) = [];
@@ -33,17 +33,17 @@ function createNewSuperagglos(param,state,casesToMerge)
     [~, positionUniques] = unique(sort(linkagesFlat,2), 'rows');
     duplicates = true(size(linkagesFlat,1),1);
     duplicates(positionUniques) = 0;
-    
+
     flightPaths.startAgglo(duplicates,:) = [];
     flightPaths.endAgglo(duplicates,:) = [];
     flightPaths.ff = structfun(@(x)x(~duplicates), flightPaths.ff, 'uni', 0);
-    
-    axons = mergeSuperagglosBasedOnFlightPath(superAgglos, eqClassCCfull,...
+
+    axons = connectEM.mergeSuperagglosBasedOnFlightPath(superAgglos, eqClassCCfull,...
         flightPaths.startAgglo, flightPaths.endAgglo, flightPaths.ff);
 
     % Save super agglos and deprive writing permission
     saveFile = fullfile(dataDir, strcat('axons_',num2str(axonVersion+1,'%.2i'),'.mat'));
     save(saveFile, 'axons');
     system(['chmod -w ' saveFile])
-    
+
 end
