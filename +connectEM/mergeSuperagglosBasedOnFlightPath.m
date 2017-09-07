@@ -6,7 +6,7 @@ function superagglos_new = mergeSuperagglosBasedOnFlightPath(superagglos, eqClas
         % Concatenate superagglos of this equivalence class
         superagglos_new(i).nodes = cat(1, superagglos(eqClassCCfull{i}).nodes);
         nrNodes = arrayfun(@(x)size(x.nodes,1), superagglos(eqClassCCfull{i}));
-        nodeOffset = cat(2, 0, nrNodes(1:end-1));
+        nodeOffset = cat(1, 0, nrNodes(1:end-1));
         edgeCell = arrayfun(@(x,y)x.edges+y, superagglos(eqClassCCfull{i}), nodeOffset, 'uni', 0);
         superagglos_new(i).edges = cat(1, edgeCell{:});
         % Find all queries that link to current superagglo (start or end) and all segIds of superagglo
