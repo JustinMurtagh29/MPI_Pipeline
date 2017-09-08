@@ -2,7 +2,6 @@ function superagglos_new = mergeSuperagglosBasedOnFlightPath(superagglos, eqClas
 
     attachments = cellfun(@(x,y)[x y], startAgglo, endAgglo, 'uni', 0);
     % Generate new superagglo
-    superagglos_new = struct(
     for i=1:length(eqClassCCfull)
         % Concatenate superagglos of this equivalence class
         superagglos_new(i,1).nodes = cat(1, superagglos(eqClassCCfull{i}).nodes);
