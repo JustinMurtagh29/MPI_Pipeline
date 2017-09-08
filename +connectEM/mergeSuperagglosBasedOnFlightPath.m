@@ -2,33 +2,36 @@ function superagglos_new = mergeSuperagglosBasedOnFlightPath(superagglos, eqClas
 
     attachments = cellfun(@(x,y)[x y], startAgglo, endAgglo, 'uni', 0);
     % Generate new superagglo
+    superagglos_new = struct(
     for i=1:length(eqClassCCfull)
         % Concatenate superagglos of this equivalence class
-        superagglos_new(i).nodes = cat(1, superagglos(eqClassCCfull{i}).nodes);
-        nrNodes = arrayfun(@(x)size(x.nodes,1), superagglos(eqClassCCfull{i}));
+        superagglos_new(i,1).nodes = cat(1, superagglos(eqClassCCfull{i}).nodes);
+        nrNodes = cumsum(arrayfun(@(x)size(x.nodes,1), superagglos(eqClassCCfull{i})));
         nodeOffset = cat(1, 0, nrNodes(1:end-1));
         edgeCell = arrayfun(@(x,y)x.edges+y, superagglos(eqClassCCfull{i}), nodeOffset, 'uni', 0);
-        superagglos_new(i).edges = cat(1, edgeCell{:});
+        superagglos_new(i,1).edges = cat(1, edgeCell{:});
         % Find all queries that link to current superagglo (start or end) and all segIds of superagglo
         queryIdx = find(cellfun(@(x)any(ismember(x, eqClassCCfull{i})), attachments));
-
         segIdsThisSuperagglo = superagglos_new(i).nodes(:,4);
-        for j=1:length(queryIdx)
-            % Add in flight path of current query that connects to current eqClass
-            newNodes = ff.nodes{queryIdx(j)};
-            newNodes(:,4) = NaN(size(newNodes,1),1);
-            newEdges = minimalSpanningTree(newNodes(:,1:3));
-            segIdsHitByNewNodes = cat(2, ff.segIds{queryIdx(j)}, ff.neighbours{queryIdx(j)});
-            % Add in edges that connect current query to current superagglo
-            [idxNewNodes, idxOldNodes] = ismember(segIdsHitByNewNodes, segIdsThisSuperagglo);
-            newNodesBeingAttached = find(any(idxNewNodes,2));
-            flatten = @(x)x(:);
-            connectingEdges = cat(2, flatten(idxOldNodes(newNodesBeingAttached,:)), repmat(newNodesBeingAttached + size(superagglos_new(i).nodes,1),27,1));
-            connectingEdges(any(connectingEdges == 0,2),:) = [];
-            % Add to output structure
-            superagglos_new(i).edges = cat(1, superagglos_new.edges, cat(1, newEdges + size(superagglos_new(i).nodes,1), connectingEdges));
-            superagglos_new(i).nodes = cat(1, superagglos_new.nodes, newNodes);
-        end
+        % Add in flight path of current query that connects to current eqClass
+        newNodes = cat(1, ff.nodes{queryIdx});
+        newNodes(:,4) = NaN(size(newNodes,1),1);
+        edgeCell = cellfun(@minimalSpanningTree, ff.nodes(queryIdx), 'uni', 0);
+        nrNodes = cumsum(cellfun(@(x)size(x,1), ff.nodes(queryIdx)));
+        nodeOffset = cat(2, 0, nrNodes(1:end-1));
+        newEdges = cellfun(@(x,y)x+y, edgeCell, num2cell(nodeOffset), 'uni', 0);
+        newEdges = cat(1, newEdges{:});
+        % Add in edges that connect current query to current superagglo
+        segIdsHitByNewNodes = cat(2, cat(1, ff.segIds{queryIdx}), cat(1, ff.neighbours{queryIdx}));
+        [idxNewNodes, idxOldNodes] = ismember(segIdsHitByNewNodes, segIdsThisSuperagglo);
+        newNodesBeingAttached = find(any(idxNewNodes,2));
+        flatten = @(x)x(:);
+        connectingEdges = cat(2, flatten(idxOldNodes(newNodesBeingAttached,:)), repmat(newNodesBeingAttached + size(superagglos_new(i).nodes,1),27,1));
+        connectingEdges = unique(connectingEdges, 'rows');
+        connectingEdges(any(connectingEdges == 0,2),:) = [];
+        % Add to output structure
+        superagglos_new(i,1).edges = cat(1, superagglos_new(i).edges, newEdges + size(superagglos_new(i).nodes,1), connectingEdges);
+        superagglos_new(i,1).nodes = cat(1, superagglos_new(i).nodes, newNodes);
     end
 end
 
@@ -39,6 +42,7 @@ function edges = minimalSpanningTree(com)
     else
         % Minimal spanning tree, probably inefficent
         adj = squareform(pdist(com));
+        adj(adj > 1000) = 0;
         tree = graphminspantree(sparse(adj), 'Method', 'Kruskal');
         [edges(:,1), edges(:,2)] = find(tree);
     end
