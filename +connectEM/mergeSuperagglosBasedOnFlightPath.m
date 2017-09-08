@@ -11,7 +11,7 @@ function superagglos_new = mergeSuperagglosBasedOnFlightPath(superagglos, eqClas
         nodeOffset = cat(1, 0, nrNodes);
         edgeCell = arrayfun(@(x,y)x.edges+y, superagglos(eqClassCCfull{i}), nodeOffset(1:end-1), 'uni', 0);
         superagglos_new(i,1).edges = cat(1, edgeCell{:});
-        % Find all queries that link to current superagglo (start or end) and all segIds of superagglo
+        % Find all queries that link to current superagglo (start or end)
         queryIdx = attachmentsCC == i;
         if any(queryIdx)
             segIdsThisSuperagglo = superagglos_new(i).nodes(:,4);
