@@ -74,7 +74,7 @@ function [skeletonFolders, flightPathsSuffix, versionSuffix, axonVersion] = setQ
         % source folders for flight paths
         skeletonFolders = {'/u/mberning/results/pipeline/20170217_ROI/aggloState/queryAnswers/CS_MB_L4_axonEndingQueries_30_08_2017_nmls_finished/'};
         % filename for flight paths in getAggloQueryOverlapA
-        flightPathsSuffix = '_3.0';
+        flightPathsSuffix = '_3.1';
         % filename additionals for getAggloQueryOverlapB and flightEndingOverlapRun
         versionSuffix = '_3.1'; 
         axonVersion = [];
