@@ -61,7 +61,7 @@ function [skeletonFolders, flightPathsSuffix, versionSuffix, axonVersion] = setQ
         % source folders for flight paths
         scratchFolder = '/u/mberning/results/pipeline/20170217_ROI/aggloState/queryAnswers/';
         skeletonFolders = {'MBKMB_L4_axons_queries_2017_a' 'MBKMB_L4_axons_queries_2017_b' ...
-            'CS_MB_L4_AxonLeftQueries_nmls' 'CS_MB_L4_axonEndingQueries_30_08_2017_nmls_finished'};
+            'CS_MB_L4_AxonLeftQueries_nmls' 'CS_MB_L4_axonEndingQueries_30_08_2017'};
         skeletonFolders = cellfun(@(x)[scratchFolder x filesep], skeletonFolders, 'uni', 0);
         % filename for flight paths in getAggloQueryOverlapA
         flightPathsSuffix = '_3.0';
@@ -72,7 +72,7 @@ function [skeletonFolders, flightPathsSuffix, versionSuffix, axonVersion] = setQ
     % Commented queries of second run
     elseif strcmp(state,'3.1')
         % source folders for flight paths
-        skeletonFolders = {'/u/mberning/results/pipeline/20170217_ROI/aggloState/queryAnswers/CS_MB_L4_axonEndingQueries_30_08_2017_nmls_finished/'};
+        skeletonFolders = {'/u/mberning/results/pipeline/20170217_ROI/aggloState/queryAnswers/CS_MB_L4_axonEndingQueries_30_08_2017/'};
         % filename for flight paths in getAggloQueryOverlapA
         flightPathsSuffix = '_3.1';
         % filename additionals for getAggloQueryOverlapB and flightEndingOverlapRun
