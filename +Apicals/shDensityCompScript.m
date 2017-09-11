@@ -45,9 +45,6 @@ somaAgglos = somas(:,3);
 somaAgglos(94) = []; somaAgglos(93) = []; somaAgglos(91) = [];
 somaAgglos(90) = []; somaAgglos(86) = []; somaAgglos(75) = [];
 
-% soma of interest (take only one, some cases have two in them !)
-somaInd = isInSoma{aggloInd}(1);
-
 %% create lookup table
 
 % awesome code by Benedikt
@@ -57,6 +54,9 @@ idToSoma(cell2mat(somaAgglos)) = repelem(1:length(somaAgglos), cellfun(@length, 
 m = max(cellfun(@max, agglos));
 idToSoma(end+1:m) = 0;
 isInSoma = cellfun(@(x)nonzeros(unique(idToSoma(x))), agglos, 'uni', 0);
+
+% soma of interest (take only one, some cases have two in them !)
+somaInd = isInSoma{aggloInd}(1);
 
 %% get the cutoff agglos and look at density distribution
 
