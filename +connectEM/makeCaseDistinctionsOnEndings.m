@@ -67,9 +67,6 @@ function makeCaseDistinctionsOnEndings(param,state)
     outside = ~inside;
     
     endingOverlap = load(fullfile(dataDir, strcat('axonEndingOverlaps',suffix,'.mat')));
-%     flightPaths = load(fullfile(dataDir, strcat('axonPostQueryAnalysisState',suffix,'.mat')), 'ff', 'startAgglo', 'endAgglo');
-%     load(fullfile(dataDir, strcat('attachedEndings',suffix,'.mat')),'caseDistinctions',...
-%         'linkagesAgglos','flightPaths','linkagesFlat','idxMultipleHits');
     load(fullfile(dataDir, strcat('attachedEndings',suffix,'.mat')),'caseDistinctions','idxMultipleHits');
     
     startEndingOverlaps=endingOverlap.startEndingOverlaps;
@@ -96,7 +93,6 @@ function makeCaseDistinctionsOnEndings(param,state)
     
     endingCaseDistinctionsSingle = zeros(size(endingCases,1),1);
     notProcessed = cellfun('isempty',endingCases);
-%     notProcessed(outside) = 0;
     endingCaseDistinctionsSingle(notProcessed) = 16;
     endingCaseDistinctionsSingle(outside) = 15;
     endingCaseDistinctionsMulti = endingCaseDistinctionsSingle;

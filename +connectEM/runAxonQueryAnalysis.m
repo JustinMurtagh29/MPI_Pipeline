@@ -47,3 +47,5 @@ end
 if queries
     tic;connectEM.generateAxonQueries(param, state);toc;
 end
+
+tic;connectEM.makeCaseDistinctionsOnEndings(param, state);toc;
