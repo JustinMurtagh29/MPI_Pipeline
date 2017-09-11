@@ -53,8 +53,11 @@ if ~exist(fullfile(outputFolder,'dendrites_01.mat'),'file')
     edgesGTall = unique(sort(edgesGTall,2),'rows');
     save(fullfile(outputFolder,'dendritesEdgesGTall.mat'), 'edgesGTall');
     
+    % add the single segments
+    singleSegDendrites = num2cell(setdiff(segmentMeta.segID(segmentMeta.dendriteProb > 0.3),cell2mat(thisGrid.dendritesNew)));
+    
     % get hot edges to each agglo and create first non-hybrid superagglo
-    dendrites = connectEM.transformAggloOldNewRepr(thisGrid.dendritesNew,edgesGTall,segmentMeta,1);
+    dendrites = connectEM.transformAggloOldNewRepr(cat(1,thisGrid.dendritesNew,singleSegDendrites),edgesGTall,segmentMeta,1);
     clear thisGrid edgesGTall;
     save(fullfile(outputFolder,'dendrites_01.mat'),'dendrites');
 else
@@ -137,8 +140,8 @@ if ~exist(fullfile(outputFolder,'axons_03.mat'),'file') || ~exist(fullfile(outpu
     [ myelinAxon ] = connectEM.calculateSurfaceMyelinScore( axons, graph, borderMeta, heuristics );  % calculate myelin score for the axon class
     [ myelinDend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
     
-    save(fullfile(outputFolder,'axons_03.mat'),'axons','myelinAxon','indBigAxons');
-    save(fullfile(outputFolder,'dendrites_03.mat'),'dendrites','myelinDend','indBigDends');
+    save(fullfile(outputFolder,'axons_03test.mat'),'axons','myelinAxon','indBigAxons');
+    save(fullfile(outputFolder,'dendrites_03test.mat'),'dendrites','myelinDend','indBigDends');
 else
     load(fullfile(outputFolder,'axons_03.mat'),'axons','myelinAxon','indBigAxons');
     load(fullfile(outputFolder,'dendrites_03.mat'),'dendrites','myelinDend','indBigDends');
