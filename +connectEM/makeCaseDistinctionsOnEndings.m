@@ -67,7 +67,7 @@ function makeCaseDistinctionsOnEndings(param,state)
     outside = ~inside;
     
     endingOverlap = load(fullfile(dataDir, strcat('axonEndingOverlaps',suffix,'.mat')));
-    load(fullfile(dataDir, strcat('attachedEndings',suffix,'.mat')),'caseDistinctions','idxMultipleHits');
+    load(fullfile(dataDir, strcat('caseDistinctions',suffix,'.mat')),'caseDistinctions','idxMultipleHits');
     
     startEndingOverlaps=endingOverlap.startEndingOverlaps;
     startEndingOverlaps = startEndingOverlaps(~idxMultipleHits);
