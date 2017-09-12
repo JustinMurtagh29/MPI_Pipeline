@@ -138,7 +138,7 @@ function makeCaseDistinctionsOnEndings(param,state)
     
     % Chose cases that are defined as attachted
     casesToCountAttached = [1 2 3 4 5 6 7 8 10];
-    attachedEndings = find(ismember(endingCaseDistinctions, casesToCountAttached),:);
+    attachedEndings = find(ismember(endingCaseDistinctions, casesToCountAttached));
     
      % Save and deprive writing permission
     saveFile = fullfile(dataDir, strcat('attachedEndings',suffix,'.mat'));
