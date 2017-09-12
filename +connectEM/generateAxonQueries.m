@@ -1,4 +1,4 @@
-function generateAxonQueries(param)
+function generateAxonQueries(param,state)
     % Written by
     %   Manuel Berning <manuel.berning@brain.mpg.de>
     %   Christian Schramm <christian.schramm@brain.mpg.de>
