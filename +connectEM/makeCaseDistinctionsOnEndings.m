@@ -137,7 +137,7 @@ function makeCaseDistinctionsOnEndings(param,state)
     endingCaseDistinctions(isnan(endingCaseDistinctionsMulti)) = 11;
     
     % Chose cases that are defined as attachted
-    casesToCountAttached = [1 2 3 4 5 6 7 8 10];
+    casesToCountAttached = [1 2 3 4 5 6 7 8 10 11];
     attachedEndings = find(ismember(endingCaseDistinctions, casesToCountAttached));
     
      % Save and deprive writing permission
