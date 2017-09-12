@@ -142,7 +142,7 @@ function makeCaseDistinctionsOnEndings(param,state)
     
      % Save and deprive writing permission
     saveFile = fullfile(dataDir, strcat('attachedEndings',suffix,'.mat'));
-    save(saveFile);
+    save(saveFile,'attachedEndings');
     system(['chmod -w ' saveFile])
 
 
