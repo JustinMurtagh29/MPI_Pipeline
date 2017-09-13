@@ -54,12 +54,14 @@ if ~exist(fullfile(outputFolder,'dendrites_01.mat'),'file')
     save(fullfile(outputFolder,'dendritesEdgesGTall.mat'), 'edgesGTall');
     
     % add the single segments
-    singleSegDendrites = num2cell(setdiff(segmentMeta.segID(segmentMeta.dendriteProb > 0.3),cell2mat(thisGrid.dendritesNew)));
+    singleSegDendrites = num2cell(double(setdiff(segmentMeta.segIds(segmentMeta.dendriteProb > 0.3),cell2mat(thisGrid.dendritesNew))));
     
     % get hot edges to each agglo and create first non-hybrid superagglo
     dendrites = connectEM.transformAggloOldNewRepr(cat(1,thisGrid.dendritesNew,singleSegDendrites),edgesGTall,segmentMeta,1);
+    indSingleSeg = true(numel(dendrites),1);
+    indSingleSeg(1:end-numel(singleSegDendrites)) = false;
     clear thisGrid edgesGTall;
-    save(fullfile(outputFolder,'dendrites_01.mat'),'dendrites');
+    save(fullfile(outputFolder,'dendrites_01.mat'),'dendrites','indSingleSeg');
 else
     load(fullfile(outputFolder,'dendrites_01.mat'),'dendrites');
 end
@@ -90,9 +92,10 @@ else
 end
 if ~exist(fullfile(outputFolder,'dendrites_02.mat'),'file')
     dendrites = connectEM.executeEdges(dendrites,corrEdges,segmentMeta);
-    save(fullfile(outputFolder,'dendrites_02.mat'),'dendrites');
+    indSingleSeg = arrayfun(@(x) size(x.nodes,1),dendrites)==1;
+    save(fullfile(outputFolder,'dendrites_02.mat'),'dendrites','indSingleSeg');
 else
-    load(fullfile(outputFolder,'dendrites_02.mat'),'dendrites');
+    load(fullfile(outputFolder,'dendrites_02.mat'),'dendrites','indSingleSeg');
 end
 disp('State 02 superagglos loaded/generated')
 
@@ -120,9 +123,11 @@ if ~exist(fullfile(outputFolder,'axons_03.mat'),'file') || ~exist(fullfile(outpu
     myelinDend = myelinDend > 0.08;  % use the empiric myelin threshold for dendrite agglos
     
     [dendriteProbDend,axonProbDend,gliaProbDend,voxSize] = arrayfun(@(x) deal(median(segmentMeta.dendriteProb(x.nodes(:,4))),median(segmentMeta.axonProb(x.nodes(:,4))),median(segmentMeta.gliaProb(x.nodes(:,4))),sum(segmentMeta.voxelCount(x.nodes(:,4)))),dendrites);
-    moveToAxon = myelinDend & axonProbDend >= dendriteProbDend & axonProbDend >= gliaProbDend & voxSize > 200;
-    
-    % add the myelinated "dendrites" to the axon class and execute
+    moveToAxon = ~indSingleSeg & myelinDend & axonProbDend >= dendriteProbDend & axonProbDend >= gliaProbDend & voxSize > 200;
+    indMoveToAxon = find(moveToAxon);
+    connectEM.generateSkeletonFromAggloNew(dendrites(moveToAxon), arrayfun(@(x) sprintf('dendSkel_%d',indMoveToAxon(x)),1:numel(indMoveToAxon),'uni',0), '/tmpscratch/mbeining/myelinMove/', segmentMeta.maxSegId)
+
+
     % corresponding edges between them
     axons = cat(1,axons,dendrites(moveToAxon));
     dendrites = dendrites(~moveToAxon);
