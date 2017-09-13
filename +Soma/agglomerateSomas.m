@@ -10,15 +10,15 @@ somaIDs = linspace(1,125,125);
 somaIDs([6,8,19,21,23,27,28,36,38,41,44,51,57,61,82,87,90,92,95,98,100,104,108,110,117,124]) = [];
 somaIDs(61) = []; %makes problems
 
-cells1 = getSomaNodesPar(p, graph, meta, rp, gb, 0.98, 1500, somaIDs);
+cells1 = Somas.getSomaNodesPar(p, graph, meta, rp, gb, 0.98, 1500, somaIDs);
 
 %second run
 somaIDs = [5,29,33,34,39,53,55,65,83,85,97,99,101,113,119];
-cells2 = getSomaNodesPar(p, graph, meta, rp, gb, 0.99, 2000, somaIDs);
+cells2 = Somas.getSomaNodesPar(p, graph, meta, rp, gb, 0.99, 2000, somaIDs);
 
 %third run
 somaIDs = [29,33,39,55,83,85,97,99,101,113,119];
-cells3 = getSomaNodesPar(p, graph, meta, rp, gb, 0.995, 2250, somaIDs);
+cells3 = Somas.getSomaNodesPar(p, graph, meta, rp, gb, 0.995, 2250, somaIDs);
 
 save('/tmpscratch/rhesse/soma/results/cells1.mat','cells1')
 save('/tmpscratch/rhesse/soma/results/cells2.mat','cells2')

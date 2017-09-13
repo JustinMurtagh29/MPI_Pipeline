@@ -55,7 +55,7 @@ edgePoints2 = bsxfun(@times, single(edgePoints2), voxelSize);
 idx = find(pdist2(edgePoints1, seedC) < r | pdist2(edgePoints2, seedC) < r );
 
 
-[ids, cEdges] = agglomerateSeed(seedIds, edges(idx, :),borderSize(idx),...
+[ids, cEdges] = Soma.agglomerateSeed(seedIds, edges(idx, :),borderSize(idx),...
     borderIdx(idx), mergeP(idx), tp, ts);
 
 
