@@ -31,9 +31,9 @@ function [ nodes, name, segIds ] = getSomaNodes( p, graph, meta, rp, gb, probThr
     bbox = bsxfun(@plus,bsxfun(@plus,4.*bboxM4Cropped,[-1, 2]),  mag1bbox(:,1));
 
     %% load nuclei und segId-Nuclei-Mapping
-    load(strcat('/tmpscratch/rhesse/soma/Nuclei/Nucleus',...
+    load(strcat('/gaba/u/mberning/results/pipeline/20170217_ROI/soma/Nuclei/Nucleus',...
         int2str(somaID), '.mat'));
-    load('/tmpscratch/rhesse/soma/manuNucleiMapping.mat', 'mapping');
+    load('/gaba/u/mberning/results/pipeline/20170217_ROI/soma/manuNucleiMapping.mat', 'mapping');
     
     %% get all the seed ids from nuclei and mapping
     somaSeg = readKnossosRoi('/gaba/wKcubes.new/Connectomics department/2012-09-28_ex145_07x2_ROI2017/segmentation/1','2012-09-28_ex145_07x2_ROI2016_corrected_mag1', ...
