@@ -1,6 +1,6 @@
 %% load graph etc
 % Comment MB: executed with clean state, e.g. ~exist will all trigger
-
+overwrite = 1;
 load('/gaba/u/mberning/results/pipeline/20170217_ROI/allParameterWithSynapses.mat');
 disp('Parameters loaded');
 outputFolder = fullfile(p.saveFolder, 'aggloState');
@@ -39,7 +39,7 @@ end
 disp('heuristics loaded');
 
 %% load dendrite equivalence classes after grid search & create dendrite superagglo
-if ~exist(fullfile(outputFolder,'dendrites_01.mat'),'file')
+if ~exist(fullfile(outputFolder,'dendrites_01.mat'),'file') || overwrite
     % load all dendrite agglomerate results from after grid search
     thisGrid = load('/gaba/scratch/mberning/aggloGridSearch/search03_00514.mat','axons','dendrites','heuristics','dendritesFinal','dendriteEdges');
     
@@ -67,7 +67,7 @@ else
 end
 
 %% load/ create axon superagglos
-if ~exist(fullfile(outputFolder,'axons_01.mat'),'file')
+if ~exist(fullfile(outputFolder,'axons_01.mat'),'file') || overwrite
     % all axons agglomerate results from after directionality based grid
     % search (> 100 voxel)
     load('/gaba/scratch/mberning/aggloGridSearch6/6_01_00046/metricsFinal.mat', 'axonsNew');
@@ -84,13 +84,13 @@ end
 disp('State 01 superagglos loaded/generated')
 
 %% execute corresponding edges
-if ~exist(fullfile(outputFolder,'axons_02.mat'),'file')
+if ~exist(fullfile(outputFolder,'axons_02.mat'),'file') || overwrite
     axons = connectEM.executeEdges(axons,corrEdges,segmentMeta);
     save(fullfile(outputFolder,'axons_02.mat'),'axons');
 else
     load(fullfile(outputFolder,'axons_02.mat'),'axons');
 end
-if ~exist(fullfile(outputFolder,'dendrites_02.mat'),'file')
+if ~exist(fullfile(outputFolder,'dendrites_02.mat'),'file') || overwrite
     dendrites = connectEM.executeEdges(dendrites,corrEdges,segmentMeta);
     indSingleSeg = arrayfun(@(x) size(x.nodes,1),dendrites)==1;
     save(fullfile(outputFolder,'dendrites_02.mat'),'dendrites','indSingleSeg');
@@ -117,13 +117,22 @@ disp('State 02 superagglos loaded/generated')
 % end
 
 %% add myelinated processes to axon class
-if ~exist(fullfile(outputFolder,'axons_03.mat'),'file') || ~exist(fullfile(outputFolder,'dendrites_03.mat'),'file')
+if ~exist(fullfile(outputFolder,'axons_03.mat'),'file') || ~exist(fullfile(outputFolder,'dendrites_03.mat'),'file') || overwrite
     disp('Add myelinated processes of dendrite class to axon class and execute correspondences again')
-    [ myelinDend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
-    myelinDend = myelinDend > 0.08;  % use the empiric myelin threshold for dendrite agglos
     
-    [dendriteProbDend,axonProbDend,gliaProbDend,voxSize] = arrayfun(@(x) deal(median(segmentMeta.dendriteProb(x.nodes(:,4))),median(segmentMeta.axonProb(x.nodes(:,4))),median(segmentMeta.gliaProb(x.nodes(:,4))),sum(segmentMeta.voxelCount(x.nodes(:,4)))),dendrites);
-    moveToAxon = ~indSingleSeg & myelinDend & axonProbDend >= dendriteProbDend & axonProbDend >= gliaProbDend & voxSize > 200;
+    % load somata including merged somata
+    somaAgglos = load(fullfile(outputFolder,'somas_with_merged_somas.mat'));
+    somaAggloIds = cell2mat(somaAgglos.somas(:,3));
+    
+    [ myelinDend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class    
+%     [dendriteProbDend,axonProbDend,gliaProbDend,voxSize,hasSoma] = arrayfun(@(x) deal(median(segmentMeta.dendriteProb(x.nodes(:,4))),median(segmentMeta.axonProb(x.nodes(:,4))),median(segmentMeta.gliaProb(x.nodes(:,4))),sum(segmentMeta.voxelCount(x.nodes(:,4))),any(ismember(x.nodes(:,4),somaAggloIds))),dendrites);
+    [numSeg,voxSize] = arrayfun(@(x) deal(size(x.nodes,1),sum(segmentMeta.voxelCount(x.nodes(:,4)))),dendrites);
+    dendLUT = repelem(1:numel(dendrites),numSeg);
+    hasSoma = false(numel(dendrites),1);
+    hasSoma(dendLUT(ismember(cell2mat(connectEM.transformAggloNewOldRepr(dendrites)),somaAggloIds))) = true;
+    % use the empiric myelin threshold for dendrite agglos and other
+    % thresholds to get the myelinated axons
+    moveToAxon = ~hasSoma & ((numSeg > 25 & myelinDend > 0.08) | (myelinDend > 0.25)) & voxSize > 200000;% & axonProbDend >= dendriteProbDend 
     indMoveToAxon = find(moveToAxon);
     connectEM.generateSkeletonFromAggloNew(dendrites(moveToAxon), arrayfun(@(x) sprintf('dendSkel_%d',indMoveToAxon(x)),1:numel(indMoveToAxon),'uni',0), '/tmpscratch/mbeining/myelinMove/', segmentMeta.maxSegId)
 
