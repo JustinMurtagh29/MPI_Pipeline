@@ -3,7 +3,7 @@ function visualizeSuperaggloEvolution(idxState1, idxState2, outputFolder,prefix)
     if ~exist('prefix', 'var')
         prefix = 'axons';
     end
-    if exist('outputFolder', 'var') && ~exist(outputFolder, 'dir')
+    if exist('outputFolder', 'var') && ~isempty(outputFolder) && ~exist(outputFolder, 'dir')
         mkdir(outputFolder);
     end
     if isnumeric(idxState1)
@@ -46,7 +46,7 @@ function visualizeSuperaggloEvolution(idxState1, idxState2, outputFolder,prefix)
     display(['-- Statistics superagglo difference between state ' fileState1 ' & ' fileState2]);
     [agglosMerged, agglosSplit, addedSegId, removedSegId] = displaySuperaggloDiffStats(lookup, lookupPersistent);
 
-    if exist('outputFolder','var')
+    if exist('outputFolder','var')&& ~isempty(outputFolder) 
         % Write .nmls of differences to inspect in wK
         display(['Writing nmls to: ' outputFolder]);
         rng default; % Make sure seed is the same every time

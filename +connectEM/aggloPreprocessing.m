@@ -1,6 +1,6 @@
 %% load graph etc
 % Comment MB: executed with clean state, e.g. ~exist will all trigger
-overwrite = 1;
+overwrite = 0;
 load('/gaba/u/mberning/results/pipeline/20170217_ROI/allParameterWithSynapses.mat');
 disp('Parameters loaded');
 outputFolder = fullfile(p.saveFolder, 'aggloState');
@@ -38,6 +38,9 @@ if ~exist('heuristics','var')
 end
 disp('heuristics loaded');
 
+% remove myelinated segments from corrEdges
+corrEdges = corrEdges(all(heuristics.myelinScore(corrEdges) <= 0.5,2),:);
+
 %% load dendrite equivalence classes after grid search & create dendrite superagglo
 if ~exist(fullfile(outputFolder,'dendrites_01.mat'),'file') || overwrite
     % load all dendrite agglomerate results from after grid search
@@ -54,10 +57,14 @@ if ~exist(fullfile(outputFolder,'dendrites_01.mat'),'file') || overwrite
     save(fullfile(outputFolder,'dendritesEdgesGTall.mat'), 'edgesGTall');
     
     % add the single segments
-    singleSegDendrites = num2cell(double(setdiff(segmentMeta.segIds(segmentMeta.dendriteProb > 0.3),cell2mat(thisGrid.dendritesNew))));
+    singleSegDendrites = (double(setdiff(segmentMeta.segIds(segmentMeta.dendriteProb > 0.3),cell2mat(thisGrid.dendritesNew))));
     
+    % concatenate agglos and single segments but first throw out all
+    % myelinated segments that might have been added by garbage collection
+    % etc
+    dendrites = cat(1, cellfun(@(x) x(heuristics.myelinScore(x) <= 0.5),thisGrid.dendritesNew,'uni',0),num2cell(singleSegDendrites(heuristics.myelinScore(singleSegDendrites) <= 0.5)));
     % get hot edges to each agglo and create first non-hybrid superagglo
-    dendrites = connectEM.transformAggloOldNewRepr(cat(1,thisGrid.dendritesNew,singleSegDendrites),edgesGTall,segmentMeta,1);
+    dendrites = connectEM.transformAggloOldNewRepr(dendrites,edgesGTall,segmentMeta,1);
     indSingleSeg = true(numel(dendrites),1);
     indSingleSeg(1:end-numel(singleSegDendrites)) = false;
     clear thisGrid edgesGTall;
@@ -75,7 +82,10 @@ if ~exist(fullfile(outputFolder,'axons_01.mat'),'file') || overwrite
     % remove all duplicates from hot edge list
     edgesGTall = unique(sort(edgesGTall,2),'rows');
     save(fullfile(outputFolder,'axonsEdgesGTall.mat'), 'edgesGTall');
-    axons = connectEM.transformAggloOldNewRepr(axonsNew, edgesGTall, segmentMeta,1);
+    %throw out all myelinated segments that might have been added in
+    %garbage collection etc
+    axons = cellfun(@(x) x(heuristics.myelinScore <= 0.5),axonsNew,'uni',0);
+    axons = connectEM.transformAggloOldNewRepr(axons, edgesGTall, segmentMeta,1);
     clear axonsNew edgesGTall;
     save(fullfile(outputFolder,'axons_01.mat'),'axons');
 else
