@@ -1,9 +1,9 @@
 %% load graph etc
 % Comment MB: executed with clean state, e.g. ~exist will all trigger
-overwrite = 0;
+overwrite = 1;
 load('/gaba/u/mberning/results/pipeline/20170217_ROI/allParameterWithSynapses.mat');
 disp('Parameters loaded');
-outputFolder = fullfile(p.saveFolder, 'aggloStateTest');
+outputFolder = fullfile(p.saveFolder, 'aggloState');
 
 if ~exist('graph','var') || ~all(isfield(graph,{'edges','prob','borderIdx'}))
     graph = load(fullfile(p.saveFolder, 'graphNew.mat'),'edges','prob','borderIdx');
