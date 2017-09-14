@@ -182,15 +182,12 @@ function makeCaseDistinctionsOnEndings(param,state)
         end
     end
         
-    % Chose cases that are defined as attachted
-    casesToCountAttached = [1 2 3 4 5 6 7 8 10 12];
-    attachedEndings = find(ismember(endingCaseDistinctions, casesToCountAttached));
-    
     % E5 cases:
     casesE5 = find(endingCaseDistinctions == 12);
 %     flightsE5 = flightsOfEndingCases(endingCaseDistinctions == 12);
     casesE5Distinctions = zeros(length(casesE5),1);
     endingCasesDanglingChecked = endingCases;
+    flightsOfEndingCasesDanglingChecked = flightsOfEndingCases;
     for i=1:length(casesE5)
         % E5b
         danglings = flightsOfEndingCases{casesE5(i)}(find(endingCases{casesE5(i)} == 3));
@@ -202,6 +199,7 @@ function makeCaseDistinctionsOnEndings(param,state)
                 bsxfun(@times,x, [11.24 11.24 28]))),ff.nodes(others));
             if any(distances < 500)
                 endingCasesDanglingChecked{casesE5(i)}(j) = [];
+                flightsOfEndingCasesDanglingChecked{casesE5(i)}(j) = [];
             end
             if numel(endingCasesDanglingChecked{casesE5(i)}) == 1
                 endingCaseDistinctionsSingle(casesE5(i),1) = endingCasesDanglingChecked{casesE5(i)};
@@ -271,52 +269,10 @@ function makeCaseDistinctionsOnEndings(param,state)
      
     tabulate(endingCaseDistinctions)
     
-    casesToMerge = [1:10 ];
-    endingCasesDanglingChecked
+    casesToMerge = [1:10];
+    executedFlightPaths = flightsOfEndingCasesDanglingChecked(ismember(endingCaseDistinctions, casesToMerge));
+    executedFlightPaths = cat(2,executedFlightPaths{:})';
    
-%     casesE5 = endingCasesDanglingChecked(endingCaseDistinctions == 12);
-% %     casesE5 = endingCases(endingCaseDistinctions == 12);
-%     
-%     flightsE5 = flightsOfEndingCases(endingCaseDistinctions == 12);
-%     casesE5Distinctions = zeros(length(casesE5),1);
-%        
-%     for i=1:length(casesE5)
-%         currentEnding = unique(casesE5{i});
-%         % E5b
-%         if isequal(currentEnding,[5 9])
-%             casesE5Distinctions(i,1) = 1;
-%         end
-%         % E5d
-%         if ismember(9,currentEnding)
-%             if any(ismember([3 10 13],currentEnding))
-%                 casesE5Distinctions(i,1) = 2;
-%             end
-%         end
-%         % E5e
-%         if ismember(5,currentEnding)
-%             if any(ismember([3 10 13],currentEnding))
-%                 casesE5Distinctions(i,1) = 3;
-%             end
-%         end
-%         if any(ismember([2 4 6],currentEnding))
-%             casesE5Distinctions(i,1) = 4;
-%         end
-%         % E5f
-%         if isequal(currentEnding,[3 10])
-%             casesE5Distinctions(i,1) = 5;
-%         end
-%         if isequal(currentEnding,[3 13])
-%             casesE5Distinctions(i,1) = 5;
-%         end
-%         if isequal(currentEnding,[10 13])
-%             casesE5Distinctions(i,1) = 5;
-%         end
-%         if isequal(currentEnding,[3 10 13])
-%             casesE5Distinctions(i,1) = 5;
-%         end
-%     end
-%             
-%     tabulate(casesE5Distinctions)
     
     % Save and deprive writing permission
     saveFile = fullfile(dataDir, strcat('attachedEndings',suffix,'.mat'));
