@@ -9,7 +9,7 @@ function createNewSuperagglos(param,state,casesToMerge)
     origAgglos = arrayfun(@Agglo.fromSuperAgglo, superAgglos.axons, 'uni', 0);
     superAgglos = superAgglos.axons(superAgglos.indBigAxons);
 
-    load(fullfile(dataDir, strcat('attachedEndings',suffix,'.mat')),'caseDistinctions',...
+    load(fullfile(dataDir, strcat('caseDistinctions',suffix,'.mat')),'caseDistinctions',...
         'linkagesAgglos','flightPaths','linkagesFlat');
 
     % Choose cases we use to merge agglos to super agglos

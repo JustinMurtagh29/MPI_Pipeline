@@ -24,9 +24,7 @@ if chiasma
     tic;connectEM.generateAxonEndings(param, state);toc;
 end
 
-if ~comment
-    tic;connectEM.getAggloQueryOverlapA(param, state);toc;
-end
+tic;connectEM.getAggloQueryOverlapA(param, state);toc;
 
 if comment
     tic;connectEM.getAggloQueryOverlapB_comment(param, state);toc;
@@ -40,10 +38,15 @@ if ~comment
     tic;connectEM.makeEndingCaseDistinctions(param, state);toc;
 end
 
-if superagglo
-    tic;connectEM.createNewSuperagglos(param,state);toc;
+if ~comment
+    tic;connectEM.makeCaseDistinctionsOnEndings(param, state);toc;
 end
 
 if queries
     tic;connectEM.generateAxonQueries(param, state);toc;
 end
+
+if superagglo
+    tic;connectEM.createNewSuperagglos(param,state);toc;
+end
+

@@ -1,10 +1,12 @@
-function generateAxonQueries(param)
+function generateAxonQueries(param,state)
     % Written by
     %   Manuel Berning <manuel.berning@brain.mpg.de>
     %   Christian Schramm <christian.schramm@brain.mpg.de>
 
 
     dataDir = fullfile(param.saveFolder, 'aggloState');
+
+    [skeletonFolders, suffixFlightPaths, suffix] = connectEM.setQueryState(state);    
 
     % Load data from ending generation
     endingData = fullfile(dataDir, 'axonEndingsAllData.mat');
@@ -32,7 +34,7 @@ function generateAxonQueries(param)
     axons = arrayfun(@Agglo.fromSuperAgglo, axons, 'UniformOutput', false);
 
     % Determine endings which are not redundant(already attached by flight path)
-    m = load(fullfile(dataDir, 'attachedEndings.mat'), 'attachedEndings');
+    m = load(fullfile(dataDir, strcat('attachedEndings',suffix,'.mat')), 'attachedEndings');
     attachedEndings = m.attachedEndings;
     clear m
 
@@ -121,7 +123,7 @@ function generateAxonQueries(param)
         end
     end
 
-    outputFolder = fullfile(dataDir, 'queries/');
+    outputFolder = fullfile(dataDir, 'queries_3/');
     if ~exist(outputFolder, 'dir')
         mkdir(outputFolder)
     end

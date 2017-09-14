@@ -104,7 +104,7 @@ function makeEndingCaseDistinctions(param,state)
     attachedEndings = unique(attachedQueries(:));
 
     % Save and deprive writing permission
-    saveFile = fullfile(dataDir, strcat('attachedEndings',suffix,'.mat'));
+    saveFile = fullfile(dataDir, strcat('caseDistinctions',suffix,'.mat'));
     save(saveFile);
     system(['chmod -w ' saveFile])
 

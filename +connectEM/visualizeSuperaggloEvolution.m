@@ -3,7 +3,7 @@ function visualizeSuperaggloEvolution(idxState1, idxState2, outputFolder,prefix)
     if ~exist('prefix', 'var')
         prefix = 'axons';
     end
-    if ~exist(outputFolder, 'dir')
+    if exist('outputFolder', 'var') && ~isempty(outputFolder) && ~exist(outputFolder, 'dir')
         mkdir(outputFolder);
     end
     if isnumeric(idxState1)
@@ -46,12 +46,13 @@ function visualizeSuperaggloEvolution(idxState1, idxState2, outputFolder,prefix)
     display(['-- Statistics superagglo difference between state ' fileState1 ' & ' fileState2]);
     [agglosMerged, agglosSplit, addedSegId, removedSegId] = displaySuperaggloDiffStats(lookup, lookupPersistent);
 
-    % Write .nmls of differences to inspect in wK
-    display(['Writing nmls to: ' outputFolder]);
-    rng default; % Make sure seed is the same every time
-    visualizeSplitsAndMergerAsNml(state1, state2, lookupPersistent, agglosMerged, agglosSplit, outputFolder);
-    visualizeAddedAndRemovedSegmentsAsNml(state1, state2, lookup, addedSegId, removedSegId, outputFolder);
-
+    if exist('outputFolder','var')&& ~isempty(outputFolder) 
+        % Write .nmls of differences to inspect in wK
+        display(['Writing nmls to: ' outputFolder]);
+        rng default; % Make sure seed is the same every time
+        visualizeSplitsAndMergerAsNml(state1, state2, lookupPersistent, agglosMerged, agglosSplit, outputFolder);
+        visualizeAddedAndRemovedSegmentsAsNml(state1, state2, lookup, addedSegId, removedSegId, outputFolder);
+    end
 end
 
 function displaySuperaggloStats(state)
@@ -130,7 +131,7 @@ function visualizeSplitsAndMergerAsNml(state1, state2, lookupPersistent, agglosM
     idx = randperm(numel(agglosMerged), min(numel(agglosMerged), 100));
     agglosAfter = num2cell(agglosMerged(idx));
     agglosBefore = cellfun(@(x)lookupPersistent(lookupPersistent(:,2) == x,1), agglosAfter, 'uni', 0);
-    fileNames = arrayfun(@(x)strcat(outputFolder, 'merger_random_', num2str(x, '%.3i'), '.nml'), 1:numel(idx), 'uni', 0);
+    fileNames = arrayfun(@(x)fullfile(outputFolder, ['merger_random_', num2str(x, '%.3i'), '.nml']), 1:numel(idx), 'uni', 0);
     visualizeSetOfSuperagglos(state1, state2, agglosBefore, agglosAfter, fileNames);
 
     % Visualize largest 10 merger (most agglos before merged into one)
@@ -139,14 +140,14 @@ function visualizeSplitsAndMergerAsNml(state1, state2, lookupPersistent, agglosM
     [~, idx] = sort(mergerCount, 'descend');
     agglosAfter = num2cell(agglosAfterUnique(idx(1:min(sum(mergerCount > 1), 10))));
     agglosBefore = cellfun(@(x)lookupPersistent(lookupPersistent(:,2) == x,1), agglosAfter, 'uni', 0);
-    fileNames = arrayfun(@(x)strcat(outputFolder, 'merger_largest_', num2str(x, '%.3i'), '.nml'), 1:numel(idx), 'uni', 0);
+    fileNames = arrayfun(@(x)fullfile(outputFolder, ['merger_largest_', num2str(x, '%.3i'), '.nml']), 1:numel(idx), 'uni', 0);
     visualizeSetOfSuperagglos(state1, state2, agglosBefore, agglosAfter, fileNames);
 
     % Visualize 100 random splits
     idx = randperm(numel(agglosSplit), min(numel(agglosSplit),100));
     agglosBefore = num2cell(agglosSplit(idx));
     agglosAfter = cellfun(@(x)lookupPersistent(lookupPersistent(:,1) == x,2), agglosBefore, 'uni', 0);
-    fileNames = arrayfun(@(x)strcat(outputFolder, 'split_random_', num2str(x, '%.3i'), '.nml'), 1:numel(idx), 'uni', 0);
+    fileNames = arrayfun(@(x)fullfile(outputFolder, ['split_random_', num2str(x, '%.3i'), '.nml']), 1:numel(idx), 'uni', 0);
     visualizeSetOfSuperagglos(state1, state2, agglosBefore, agglosAfter, fileNames);
 
     % Visualize largest split (agglo split into most agglos after)
