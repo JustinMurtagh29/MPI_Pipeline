@@ -30,7 +30,11 @@ edgesSegId = edgesSegId(sIdx,:);
 % information
 edges = cell(numel(aggloOld),1);
 % Treat agglomerates containing single segment separately
-edges(numSegs>1) = mat2cell(edgesSegId,histc(sedgesLookup,unique(sedgesLookup)));
+try
+    edges(numSegs>1) = mat2cell(edgesSegId,histc(sedgesLookup,unique(sedgesLookup)));
+catch
+    error('Error in edge assignment. Please check if an agglo has members that are not interconnected via the given edges')
+end
 edges(numSegs==1) = {zeros(0,2)}; % give empty edges correct dimension
 nodes = cellfun(@(x) [segmentMeta.point(:,x)' x],aggloOld,'uni',0);
 % tranform the segIds in the edge vector to index to the node

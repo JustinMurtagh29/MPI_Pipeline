@@ -62,12 +62,18 @@ if ~exist(fullfile(outputFolder,'dendrites_01.mat'),'file') || overwrite
     % concatenate agglos and single segments but first throw out all
     % myelinated segments that might have been added by garbage collection
     % etc
-    dendrites = cat(1, cellfun(@(x) x(heuristics.myelinScore(x) <= 0.5),thisGrid.dendritesNew,'uni',0),num2cell(singleSegDendrites(heuristics.myelinScore(singleSegDendrites) <= 0.5)));
+    dendritesNoMyelin = cat(1, cellfun(@(x) x(heuristics.myelinScore(x) <= 0.5),thisGrid.dendritesNew,'uni',0),num2cell(singleSegDendrites(heuristics.myelinScore(singleSegDendrites) <= 0.5)));
+    dendritesNoMyelin = dendritesNoMyelin(~cellfun(@isempty,dendritesNoMyelin));
+    % recheck agglos as there might be unconnected parts in some agglos
+    dendVec = cell2mat(dendritesNoMyelin);
+    edgesFiltered = edgesGTall(all(ismember(edgesGTall,dendVec),2),:);
+    dendrites = Graph.findConnectedComponents(cat(1,edgesFiltered,repmat(dendVec,1,2)),0,1);
+    
     % get hot edges to each agglo and create first non-hybrid superagglo
     dendrites = connectEM.transformAggloOldNewRepr(dendrites,edgesGTall,segmentMeta,1);
     indSingleSeg = true(numel(dendrites),1);
     indSingleSeg(1:end-numel(singleSegDendrites)) = false;
-    clear thisGrid edgesGTall;
+    clear thisGrid edgesGTall dendritesNoMyelin edgesFiltered dendVec;
     save(fullfile(outputFolder,'dendrites_01.mat'),'dendrites','indSingleSeg');
 else
     load(fullfile(outputFolder,'dendrites_01.mat'),'dendrites');
@@ -82,11 +88,16 @@ if ~exist(fullfile(outputFolder,'axons_01.mat'),'file') || overwrite
     % remove all duplicates from hot edge list
     edgesGTall = unique(sort(edgesGTall,2),'rows');
     save(fullfile(outputFolder,'axonsEdgesGTall.mat'), 'edgesGTall');
-    %throw out all myelinated segments that might have been added in
+    % throw out all myelinated segments that might have been added in
     %garbage collection etc
-    axons = cellfun(@(x) x(heuristics.myelinScore(x) <= 0.5),axonsNew,'uni',0);
+    axonsNoMyelin = cellfun(@(x) x(heuristics.myelinScore(x) <= 0.5),axonsNew,'uni',0);
+    axonsNoMyelin = axonsNoMyelin(~cellfun(@isempty,axonsNoMyelin));
+    % recheck agglos as there might be unconnected parts in some agglos
+    axVec = cell2mat(axonsNoMyelin);
+    edgesFiltered = edgesGTall(all(ismember(edgesGTall,axVec),2),:);
+    axons = Graph.findConnectedComponents(cat(1,edgesFiltered,repmat(axVec,1,2)),0,1);
     axons = connectEM.transformAggloOldNewRepr(axons, edgesGTall, segmentMeta,1);
-    clear axonsNew edgesGTall;
+    clear axonsNew edgesGTall axonsNoMyelin axVec edgesFiltered;
     save(fullfile(outputFolder,'axons_01.mat'),'axons');
 else
     load(fullfile(outputFolder,'axons_01.mat'),'axons');
