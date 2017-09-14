@@ -3,7 +3,7 @@
 overwrite = 0;
 load('/gaba/u/mberning/results/pipeline/20170217_ROI/allParameterWithSynapses.mat');
 disp('Parameters loaded');
-outputFolder = fullfile(p.saveFolder, 'aggloState');
+outputFolder = fullfile(p.saveFolder, 'aggloStateTest');
 
 if ~exist('graph','var') || ~all(isfield(graph,{'edges','prob','borderIdx'}))
     graph = load(fullfile(p.saveFolder, 'graphNew.mat'),'edges','prob','borderIdx');
@@ -84,7 +84,7 @@ if ~exist(fullfile(outputFolder,'axons_01.mat'),'file') || overwrite
     save(fullfile(outputFolder,'axonsEdgesGTall.mat'), 'edgesGTall');
     %throw out all myelinated segments that might have been added in
     %garbage collection etc
-    axons = cellfun(@(x) x(heuristics.myelinScore <= 0.5),axonsNew,'uni',0);
+    axons = cellfun(@(x) x(heuristics.myelinScore(x) <= 0.5),axonsNew,'uni',0);
     axons = connectEM.transformAggloOldNewRepr(axons, edgesGTall, segmentMeta,1);
     clear axonsNew edgesGTall;
     save(fullfile(outputFolder,'axons_01.mat'),'axons');
