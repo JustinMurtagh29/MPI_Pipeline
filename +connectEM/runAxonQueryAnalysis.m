@@ -38,10 +38,6 @@ if ~comment
     tic;connectEM.makeEndingCaseDistinctions(param, state);toc;
 end
 
-if superagglo
-    tic;connectEM.createNewSuperagglos(param,state);toc;
-end
-
 if ~comment
     tic;connectEM.makeCaseDistinctionsOnEndings(param, state);toc;
 end
@@ -49,3 +45,8 @@ end
 if queries
     tic;connectEM.generateAxonQueries(param, state);toc;
 end
+
+if superagglo
+    tic;connectEM.createNewSuperagglos(param,state);toc;
+end
+

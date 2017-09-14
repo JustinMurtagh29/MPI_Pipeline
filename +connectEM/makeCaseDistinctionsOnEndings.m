@@ -134,17 +134,6 @@ function makeCaseDistinctionsOnEndings(param,state)
     % attachment
     endingCaseDistinctions(outside) = 14;
     
-    % Start ending and end ending (single flight path)
-    endingCaseDistinctions(endingCaseDistinctionsSingle == 9) = 1;
-    % Dangling flight path to EoDS 3um (single flight path)
-    endingCaseDistinctions(endingCaseDistinctionsSingle == 10) = 3;
-    % Dangling flight path to EoDS 0.5um (single flight path)
-    endingCaseDistinctions(endingCaseDistinctionsSingle == 13) = 5;
-    % Start ending and end agglo not an ending (single flight path)
-    endingCaseDistinctions(endingCaseDistinctionsSingle == 5) = 7;
-    % Dangling flight path within DS (single flight path)
-    endingCaseDistinctions(endingCaseDistinctionsSingle == 3) = 9;
-    
     % Cases with redudancy, set those with more than 50% consensus as
     % solved
     for i=1:length(redundancies)
@@ -171,6 +160,11 @@ function makeCaseDistinctionsOnEndings(param,state)
     endingCaseDistinctions(endingCaseDistinctionsMulti == 3) = 10;
     % Contradicting redundancy
     endingCaseDistinctions(isnan(endingCaseDistinctionsMulti)) = 12;
+    % Merger case E5a
+    endingCaseDistinctions(endingCaseDistinctionsMulti == 12) = 15;
+    % Merger case E5c
+    endingCaseDistinctions(endingCaseDistinctionsMulti == 11) = 16;
+    
     
     % Check the redundancy of dangling flight paths. For those which end
     % nodes have more than 1um distance another redundancy condition is
@@ -191,6 +185,138 @@ function makeCaseDistinctionsOnEndings(param,state)
     % Chose cases that are defined as attachted
     casesToCountAttached = [1 2 3 4 5 6 7 8 10 12];
     attachedEndings = find(ismember(endingCaseDistinctions, casesToCountAttached));
+    
+    % E5 cases:
+    casesE5 = find(endingCaseDistinctions == 12);
+%     flightsE5 = flightsOfEndingCases(endingCaseDistinctions == 12);
+    casesE5Distinctions = zeros(length(casesE5),1);
+    endingCasesDanglingChecked = endingCases;
+    for i=1:length(casesE5)
+        % E5b
+        danglings = flightsOfEndingCases{casesE5(i)}(find(endingCases{casesE5(i)} == 3));
+        others = flightsOfEndingCases{casesE5(i)}(find(endingCases{casesE5(i)} ~= 3));
+        endNodes = cellfun(@(x)x(end,:),ff.nodes(danglings),'uni',0);
+        endNodes = cell2mat(endNodes');
+        for j=1:length(danglings)
+            distances = cellfun(@(x)min(pdist2(bsxfun(@times,endNodes, [11.24 11.24 28]),...
+                bsxfun(@times,x, [11.24 11.24 28]))),ff.nodes(others));
+            if any(distances < 500)
+                endingCasesDanglingChecked{casesE5(i)}(j) = [];
+            end
+            if numel(endingCasesDanglingChecked{casesE5(i)}) == 1
+                endingCaseDistinctionsSingle(casesE5(i),1) = endingCasesDanglingChecked{casesE5(i)};
+            end
+        end
+    end
+    
+    % Start ending and end ending (single flight path)
+    endingCaseDistinctions(endingCaseDistinctionsSingle == 9) = 1;
+    % Dangling flight path to EoDS 3um (single flight path)
+    endingCaseDistinctions(endingCaseDistinctionsSingle == 10) = 3;
+    % Dangling flight path to EoDS 0.5um (single flight path)
+    endingCaseDistinctions(endingCaseDistinctionsSingle == 13) = 5;
+    % Start ending and end agglo not an ending (single flight path)
+    endingCaseDistinctions(endingCaseDistinctionsSingle == 5) = 7;
+    % Dangling flight path within DS (single flight path)
+    endingCaseDistinctions(endingCaseDistinctionsSingle == 3) = 9;
+    % Merger case E5a
+    endingCaseDistinctions(endingCaseDistinctionsSingle == 12) = 15;
+
+        tabulate(endingCaseDistinctions)
+        
+%         endingCasesDanglingChecked
+    casesE5 = find(endingCaseDistinctions == 12);
+%     casesE5 = endingCases(endingCaseDistinctions == 12);
+    casesE5Distinctions = zeros(length(casesE5),1);
+       
+    for i=1:length(casesE5)
+        currentEnding = unique(endingCasesDanglingChecked{casesE5(i)});
+        % E5b
+        if isequal(currentEnding,[5 9])
+            endingCaseDistinctions(casesE5(i),1) = 17;
+        end
+        % E5d
+        if ismember(9,currentEnding)
+            if any(ismember([3 10 13],currentEnding))
+                endingCaseDistinctions(casesE5(i),1) = 18;
+            end
+        end
+        % E5e
+        if ismember(5,currentEnding)
+            if any(ismember([3 10 13],currentEnding))
+                endingCaseDistinctions(casesE5(i),1) = 19;
+            end
+        end
+        if any(ismember([2 4 6],currentEnding))
+            endingCaseDistinctions(casesE5(i),1) = 20;
+        end
+        % E5f
+        if isequal(currentEnding,[3 10])
+            endingCaseDistinctions(casesE5(i),1) = 21;
+        end
+        if isequal(currentEnding,[3 13])
+            endingCaseDistinctions(casesE5(i),1) = 21;
+        end
+        if isequal(currentEnding,[10 13])
+            endingCaseDistinctions(casesE5(i),1) = 21;
+        end
+        if isequal(currentEnding,[3 10 13])
+            endingCaseDistinctions(casesE5(i),1) = 21;
+        end
+        if any(ismember([12],currentEnding))
+            endingCaseDistinctions(casesE5(i),1) = 22;
+        end
+        
+    end
+     
+    tabulate(endingCaseDistinctions)
+    
+    casesToMerge = [1:10 ];
+    endingCasesDanglingChecked
+   
+%     casesE5 = endingCasesDanglingChecked(endingCaseDistinctions == 12);
+% %     casesE5 = endingCases(endingCaseDistinctions == 12);
+%     
+%     flightsE5 = flightsOfEndingCases(endingCaseDistinctions == 12);
+%     casesE5Distinctions = zeros(length(casesE5),1);
+%        
+%     for i=1:length(casesE5)
+%         currentEnding = unique(casesE5{i});
+%         % E5b
+%         if isequal(currentEnding,[5 9])
+%             casesE5Distinctions(i,1) = 1;
+%         end
+%         % E5d
+%         if ismember(9,currentEnding)
+%             if any(ismember([3 10 13],currentEnding))
+%                 casesE5Distinctions(i,1) = 2;
+%             end
+%         end
+%         % E5e
+%         if ismember(5,currentEnding)
+%             if any(ismember([3 10 13],currentEnding))
+%                 casesE5Distinctions(i,1) = 3;
+%             end
+%         end
+%         if any(ismember([2 4 6],currentEnding))
+%             casesE5Distinctions(i,1) = 4;
+%         end
+%         % E5f
+%         if isequal(currentEnding,[3 10])
+%             casesE5Distinctions(i,1) = 5;
+%         end
+%         if isequal(currentEnding,[3 13])
+%             casesE5Distinctions(i,1) = 5;
+%         end
+%         if isequal(currentEnding,[10 13])
+%             casesE5Distinctions(i,1) = 5;
+%         end
+%         if isequal(currentEnding,[3 10 13])
+%             casesE5Distinctions(i,1) = 5;
+%         end
+%     end
+%             
+%     tabulate(casesE5Distinctions)
     
     % Save and deprive writing permission
     saveFile = fullfile(dataDir, strcat('attachedEndings',suffix,'.mat'));
