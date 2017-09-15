@@ -38,12 +38,15 @@ function createNewSuperagglos(param,state,casesToMerge)
     flightPaths.endAgglo(duplicates,:) = [];
     flightPaths.ff = structfun(@(x)x(~duplicates), flightPaths.ff, 'uni', 0);
 
-    axons = connectEM.mergeSuperagglosBasedOnFlightPath(superAgglos, eqClassCCfull,...
+    axonsNew = connectEM.mergeSuperagglosBasedOnFlightPath(superAgglos, eqClassCCfull,...
         flightPaths.startAgglo, flightPaths.endAgglo, flightPaths.ff);
+    axons = cat(1,axonsNew, superAgglos.axons(~superAgglos.indBigAxons));
+    indBigAxons = false(length(axons));
+    indBigAxons(1:length(axonsNew)) = true;
 
     % Save super agglos and deprive writing permission
     saveFile = fullfile(dataDir, strcat('axons_',num2str(axonVersion+1,'%.2i'),'.mat'));
-    save(saveFile, 'axons');
+    save(saveFile, 'axons','indBigAxons');
     system(['chmod -w ' saveFile])
 
 end
