@@ -323,7 +323,7 @@ function makeCaseDistinctionsOnEndings(param,state)
     executedFlightPaths = flightsOfEndingCasesDanglingChecked(ismember(endingCaseDistinctions, casesToMerge));
     executedFlightPaths = cat(2,executedFlightPaths{:})';
    
-    casesToCountAttached = [1:6 7:14 16 17];
+    casesToCountAttached = [1:6 8:14 16 17];
     attachedEndings = find(ismember(endingCaseDistinctions, casesToCountAttached));
 
     
