@@ -323,6 +323,10 @@ function makeCaseDistinctionsOnEndings(param,state)
     executedFlightPaths = flightsOfEndingCasesDanglingChecked(ismember(endingCaseDistinctions, casesToMerge));
     executedFlightPaths = cat(2,executedFlightPaths{:})';
    
+    casesToCountAttached = [1:6 7:14 16 17];
+    attachedEndings = find(ismember(endingCaseDistinctions, casesToCountAttached));
+
+    
     
     % Save and deprive writing permission
     saveFile = fullfile(dataDir, strcat('attachedEndings',suffix,'.mat'));

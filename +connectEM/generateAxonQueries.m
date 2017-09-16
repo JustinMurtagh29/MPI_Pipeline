@@ -123,7 +123,7 @@ function generateAxonQueries(param,state)
         end
     end
 
-    outputFolder = fullfile(dataDir, 'queries_3/');
+    outputFolder = fullfile(dataDir, 'queries_4/');
     if ~exist(outputFolder, 'dir')
         mkdir(outputFolder)
     end
