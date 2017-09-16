@@ -10,7 +10,7 @@
     bbox = reshape(bbox, 6, 1);
 
     % Where to find query information (position and euler angles)
-    batchFolder = '/gaba/u/mberning/results/pipeline/20170217_ROI/aggloState/queries_3/';
+    batchFolder = '/gaba/u/mberning/results/pipeline/20170217_ROI/aggloState/queries_4/';
 
     % Define constant task parameters
     dataSet = '2012-09-28_ex145_07x2_20170829_queries';
