@@ -1,6 +1,6 @@
 %% load graph etc
 % Comment MB: executed with clean state, e.g. ~exist will all trigger
-overwrite = 1;
+overwrite = 0;
 load('/gaba/u/mberning/results/pipeline/20170217_ROI/allParameterWithSynapses.mat');
 disp('Parameters loaded');
 outputFolder = fullfile(p.saveFolder, 'aggloState');
@@ -175,8 +175,8 @@ if ~exist(fullfile(outputFolder,'axons_03.mat'),'file') || ~exist(fullfile(outpu
     [ myelinAxon ] = connectEM.calculateSurfaceMyelinScore( axons, graph, borderMeta, heuristics );  % calculate myelin score for the axon class
     [ myelinDend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
     
-    save(fullfile(outputFolder,'axons_03test.mat'),'axons','myelinAxon','indBigAxons');
-    save(fullfile(outputFolder,'dendrites_03test.mat'),'dendrites','myelinDend','indBigDends');
+    save(fullfile(outputFolder,'axons_03.mat'),'axons','myelinAxon','indBigAxons');
+    save(fullfile(outputFolder,'dendrites_03.mat'),'dendrites','myelinDend','indBigDends');
 else
     load(fullfile(outputFolder,'axons_03.mat'),'axons','myelinAxon','indBigAxons');
     load(fullfile(outputFolder,'dendrites_03.mat'),'dendrites','myelinDend','indBigDends');
