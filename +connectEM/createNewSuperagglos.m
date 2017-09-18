@@ -11,12 +11,17 @@ function createNewSuperagglos(param,state,casesToMerge)
 
     load(fullfile(dataDir, strcat('caseDistinctions',suffix,'.mat')),'caseDistinctions',...
         'linkagesAgglos','flightPaths','linkagesFlat');
+    load(fullfile(dataDir, strcat('attachedEndings',suffix,'.mat')),'executedFlightPaths');
+    execusion = false(size(linkagesAgglos,1),1);
+    execusion(executedFlightPaths) = true;
+    executedFlightPaths = execusion;
 
     % Choose cases we use to merge agglos to super agglos
     if nargin < 3
         casesToMerge = [3 5 9 10];
     end
-    edgesCC = linkagesAgglos(ismember(caseDistinctions, casesToMerge),:);
+%     edgesCC = linkagesAgglos(ismember(caseDistinctions, casesToMerge),:);
+    edgesCC = linkagesAgglos(executedFlightPaths,:);
     nans = isnan(edgesCC(:,1)) | isnan(edgesCC(:,2));
     edgesCC = edgesCC(~nans,:);
     edgesCC = sort(edgesCC, 2);
@@ -24,10 +29,14 @@ function createNewSuperagglos(param,state,casesToMerge)
     eqClassCCfull = [eqClassCC; num2cell(setdiff(1 : length(superAgglos), cell2mat(eqClassCC)))'];
 
     % Choose cases that are taken into account for super agglos
-    flightPaths.startAgglo(~ismember(caseDistinctions, casesToMerge),:) = [];
-    flightPaths.endAgglo(~ismember(caseDistinctions, casesToMerge),:) = [];
-    flightPaths.ff = structfun(@(x)x(ismember(caseDistinctions, casesToMerge)), flightPaths.ff, 'uni', 0);
-    linkagesFlat = linkagesFlat(ismember(caseDistinctions, casesToMerge));
+%     flightPaths.startAgglo(~ismember(caseDistinctions, casesToMerge),:) = [];
+    flightPaths.startAgglo(~executedFlightPaths,:) = [];
+%     flightPaths.endAgglo(~ismember(caseDistinctions, casesToMerge),:) = [];
+    flightPaths.endAgglo(~executedFlightPaths,:) = [];
+%     flightPaths.ff = structfun(@(x)x(ismember(caseDistinctions, casesToMerge)), flightPaths.ff, 'uni', 0);
+    flightPaths.ff = structfun(@(x)x(executedFlightPaths), flightPaths.ff, 'uni', 0);
+%     linkagesFlat = linkagesFlat(ismember(caseDistinctions, casesToMerge));
+    linkagesFlat = linkagesFlat(executedFlightPaths);
 
     % Eliminate duplicate flight paths
     [~, positionUniques] = unique(sort(linkagesFlat,2), 'rows');

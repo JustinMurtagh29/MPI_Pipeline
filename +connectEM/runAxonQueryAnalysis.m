@@ -50,3 +50,7 @@ if superagglo
     tic;connectEM.createNewSuperagglos(param,state);toc;
 end
 
+tic;connectEM.makeCaseDistinctionsOnEndings(param, state);toc;
+tic;connectEM.generateAxonQueries(param, state);toc;
+tic;connectEM.visualizeAxonQueriesAndCreateTasksInWK_forCS;toc
+
