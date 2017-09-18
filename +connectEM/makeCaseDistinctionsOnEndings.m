@@ -135,7 +135,9 @@ function makeCaseDistinctionsOnEndings(param,state)
     % attachment
     endingCaseDistinctions(outside) = 16;
     
-    % Eliminiate cases without start attachment at endings
+    % Eliminiate cases without start attachment at endings (only for
+    % redundant endings since the old queries disturb the analysis at this
+    % point.
     redundantCases = find(redundancies == 1);
     for i=1:length(redundantCases)
         noStartAttachments = cell2mat(arrayfun(@(x)ismember(x,[2 4 6]),endingCases{redundantCases(i)},'uni',0));
@@ -280,6 +282,7 @@ function makeCaseDistinctionsOnEndings(param,state)
             end
         end
         
+        % Rest
         if isequal(currentEnding,[3 10])
             endingCaseDistinctions(casesE5(i),1) = 18;
         end
@@ -300,6 +303,8 @@ function makeCaseDistinctionsOnEndings(param,state)
         
     end
     
+    % Check distance between all remaining dangling flight paths. With more
+    % than 2 um add to case E5 f
     danglings = find(endingCaseDistinctions == 18);
     for i=1:length(danglings)
         danglingFlights = flightsOfEndingCases{danglings(i)}...
@@ -311,10 +316,10 @@ function makeCaseDistinctionsOnEndings(param,state)
         end
     end
     
+    % Sum up all remaining configurations
     endingCaseDistinctions(endingCaseDistinctions == 0) = 17;
     endingCaseDistinctions(endingCaseDistinctions == 18) = 17;
     endingCaseDistinctions(endingCaseDistinctions == 19) = 17;
-    
     
      
     tabulate(endingCaseDistinctions)
