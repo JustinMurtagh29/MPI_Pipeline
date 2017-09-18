@@ -45,8 +45,8 @@ function createNewSuperagglos(param,state,casesToMerge)
         flightPaths.startAgglo, flightPaths.endAgglo, flightPaths.ff);
     % Concatenate small axons below 5 um
     axons = cat(1,axonsNew, agglos.axons(~agglos.indBigAxons));
-    indBigAxons = false(length(axons));
-    indBigAxons(1:length(axonsNew)) = true;
+    indBigAxons = false(length(axons),1);
+    indBigAxons(1:length(axonsNew),1) = true;
 
     % Save super agglos and deprive writing permission
     saveFile = fullfile(dataDir, strcat('axons_',num2str(axonVersion+1,'%.2i'),'.mat'));
