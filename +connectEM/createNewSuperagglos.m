@@ -5,9 +5,9 @@ function createNewSuperagglos(param,state,casesToMerge)
     [skeletonFolders, suffixFlightPaths, suffix, axonVersion] = connectEM.setQueryState(state);
 
     % Load current state of agglomerates
-    superAgglos = load(fullfile(dataDir, strcat('axons_',num2str(axonVersion,'%.2i'),'.mat')));
+    agglos = load(fullfile(dataDir, strcat('axons_',num2str(axonVersion,'%.2i'),'.mat')));
     origAgglos = arrayfun(@Agglo.fromSuperAgglo, superAgglos.axons, 'uni', 0);
-    superAgglos = superAgglos.axons(superAgglos.indBigAxons);
+    superAgglos = agglos.axons(agglos.indBigAxons);
 
     % Load linkages and cases for execusion
     load(fullfile(dataDir, strcat('caseDistinctions',suffix,'.mat')),...
@@ -44,7 +44,7 @@ function createNewSuperagglos(param,state,casesToMerge)
     axonsNew = connectEM.mergeSuperagglosBasedOnFlightPath(superAgglos, eqClassCCfull,...
         flightPaths.startAgglo, flightPaths.endAgglo, flightPaths.ff);
     % Concatenate small axons below 5 um
-    axons = cat(1,axonsNew, superAgglos.axons(~superAgglos.indBigAxons));
+    axons = cat(1,axonsNew, agglos.axons(~agglos.indBigAxons));
     indBigAxons = false(length(axons));
     indBigAxons(1:length(axonsNew)) = true;
 
