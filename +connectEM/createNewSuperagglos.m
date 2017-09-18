@@ -6,7 +6,7 @@ function createNewSuperagglos(param,state,casesToMerge)
 
     % Load current state of agglomerates
     agglos = load(fullfile(dataDir, strcat('axons_',num2str(axonVersion,'%.2i'),'.mat')));
-    origAgglos = arrayfun(@Agglo.fromSuperAgglo, superAgglos.axons, 'uni', 0);
+    origAgglos = arrayfun(@Agglo.fromSuperAgglo, agglos.axons, 'uni', 0);
     superAgglos = agglos.axons(agglos.indBigAxons);
 
     % Load linkages and cases for execusion
