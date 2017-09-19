@@ -326,7 +326,7 @@ function makeCaseDistinctionsOnEndings(param,state)
     
     % Choose cases for merging and generation of queries
     casesToMerge = [1:6, 8:14];
-    executedFlightPaths = flightsOfEndingCasesDanglingChecked(ismember(endingCaseDistinctions, casesToMerge));
+    executedFlightPaths = flightsOfEndingCases(ismember(endingCaseDistinctions, casesToMerge));
     executedFlightPaths = unique(cat(2,executedFlightPaths{:})');
    
     casesToCountAttached = [1:6 8:14 16 17];
@@ -336,7 +336,7 @@ function makeCaseDistinctionsOnEndings(param,state)
     
     % Save and deprive writing permission
     saveFile = fullfile(dataDir, strcat('attachedEndings',suffix,'.mat'));
-    save(saveFile,'attachedEndings','executedFlightPaths');
+    save(saveFile,'attachedEndings','executedFlightPaths','endingCaseDistinctions','flightsOfEndingCases','endingCases');
     system(['chmod -w ' saveFile])
     
     tabulate(endingCaseDistinctions)
