@@ -336,7 +336,8 @@ function makeCaseDistinctionsOnEndings(param,state)
     
     % Save and deprive writing permission
     saveFile = fullfile(dataDir, strcat('attachedEndings',suffix,'.mat'));
-    save(saveFile,'attachedEndings','executedFlightPaths','endingCaseDistinctions','flightsOfEndingCases','endingCases');
+    save(saveFile,'attachedEndings','executedFlightPaths','endingCaseDistinctions',...
+        'flightsOfEndingCases','flightsOfEndingCasesDanglingChecked','endingCases');
     system(['chmod -w ' saveFile])
     
     tabulate(endingCaseDistinctions)
