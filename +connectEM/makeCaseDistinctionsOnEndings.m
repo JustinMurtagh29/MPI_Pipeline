@@ -81,6 +81,7 @@ function makeCaseDistinctionsOnEndings(param,state)
     
     clusterSizes = cellfun(@max, endingData.borderClusters);
     
+    %% Case distinctions:
     % Read out caseID for all attachments at start ending 
     endingCases = cell(sum(clusterSizes),1);
     for i=1:length(caseDistinctions)
@@ -128,34 +129,89 @@ function makeCaseDistinctionsOnEndings(param,state)
     endingCaseDistinctions = zeros(size(endingCases,1),1);
     % Endings inside which are not attached by any flight path (beyond 3um
     % cutoff will be overwritten in next step)
-    endingCaseDistinctions(notProcessed) = 13;
+    endingCaseDistinctions(notProcessed) = 15;
     % Endings beyond 3um cutoff. Will be overwritten for those endings
     % attached by any constellation following below, so ouside without
     % attachment
-    endingCaseDistinctions(outside) = 14;
+    endingCaseDistinctions(outside) = 16;
     
+    % Eliminiate cases without start attachment at endings (only for
+    % redundant endings since the old queries disturb the analysis at this
+    % point.
+    redundantCases = find(redundancies == 1);
+    for i=1:length(redundantCases)
+        noStartAttachments = cell2mat(arrayfun(@(x)ismember(x,[2 4 6]),endingCases{redundantCases(i)},'uni',0));
+        endingCases{redundantCases(i)}(noStartAttachments) = [];
+        flightsOfEndingCases{redundantCases(i)}(noStartAttachments) = [];
+        if numel(endingCases{redundantCases(i)}) == 1
+            endingCaseDistinctionsSingle(redundantCases(i),1) = endingCases{redundantCases(i)};
+        end
+    end
+    
+    % Check redundancy of dangling flight paths, those which are getting 
+    % continued by another flight path are no longer taken into account.   
+    redundancy = cellfun(@numel,endingCases);
+    redundancies = redundancy > 1;
+    redundantCases = find(redundancies == 1);
+    endingCasesDanglingChecked = endingCases;
+    flightsOfEndingCasesDanglingChecked = flightsOfEndingCases;
+    for i=1:length(redundantCases)
+        danglings = flightsOfEndingCases{redundantCases(i)}(find(endingCases{redundantCases(i)} == 3));
+        others = flightsOfEndingCases{redundantCases(i)}(find(endingCases{redundantCases(i)} ~= 3));
+        endNodes = cellfun(@(x)x(end,:),ff.nodes(danglings),'uni',0);
+        endNodes = cell2mat(endNodes');
+        distances = [];
+        if ~isempty(others)
+            for j=1:length(danglings)
+                distance = cell2mat(cellfun(@(x)min(pdist2(bsxfun(@times,endNodes(j,:), [11.24 11.24 28]),...
+                    bsxfun(@times,x, [11.24 11.24 28]))),ff.nodes(others),'uni',0));
+                distances(j,1) = min(distance);
+            end
+        end
+        redundantDanglings = distances < 500;
+        endingCasesDanglingChecked{redundantCases(i)}(redundantDanglings) = [];
+        flightsOfEndingCasesDanglingChecked{redundantCases(i)}(redundantDanglings) = [];
+        if numel(endingCasesDanglingChecked{redundantCases(i)}) == 1
+            endingCaseDistinctionsSingle(redundantCases(i),1) = endingCasesDanglingChecked{redundantCases(i)};
+        end
+    end
+    endingCases = endingCasesDanglingChecked;
+    flightsOfEndingCases = flightsOfEndingCasesDanglingChecked;
+    
+    
+    %% Set obvious cases for endings with just a single flight path:
     % Start ending and end ending (single flight path)
     endingCaseDistinctions(endingCaseDistinctionsSingle == 9) = 1;
     % Dangling flight path to EoDS 3um (single flight path)
     endingCaseDistinctions(endingCaseDistinctionsSingle == 10) = 3;
     % Dangling flight path to EoDS 0.5um (single flight path)
-    endingCaseDistinctions(endingCaseDistinctionsSingle == 13) = 5;
+    endingCaseDistinctions(endingCaseDistinctionsSingle == 13) = 3;
     % Start ending and end agglo not an ending (single flight path)
-    endingCaseDistinctions(endingCaseDistinctionsSingle == 5) = 7;
+    endingCaseDistinctions(endingCaseDistinctionsSingle == 5) = 5;
     % Dangling flight path within DS (single flight path)
-    endingCaseDistinctions(endingCaseDistinctionsSingle == 3) = 9;
-    
-    % Cases with redudancy, set those with more than 50% consensus as
+    endingCaseDistinctions(endingCaseDistinctionsSingle == 3) = 7;
+    % Merger case E5a
+    endingCaseDistinctions(endingCaseDistinctionsSingle == 12) = 9;
+
+    %% Cases with redudancy, set those with more than 50% consensus as
     % solved
-    for i=1:length(redundancies)
-        if redundancies(i) == 1 & notProcessed(i) == 0
-            tbl=tabulate(endingCases{i});
-            if any(tbl(:,3) > 50)
-                caseID = tbl(find(tbl(:,3) > 50),1);
-                endingCaseDistinctionsMulti(i,1) = caseID;
-            else
-                endingCaseDistinctionsMulti(i,1) = NaN;
+    redundancy = cellfun(@numel,endingCases);
+    redundancies = redundancy > 1;
+    redundantCases = find(redundancies == 1);
+    for i=1:length(redundantCases)
+        tbl=tabulate(endingCases{redundantCases(i)});
+        if any(tbl(:,3) > 50)
+            caseID = tbl(find(tbl(:,3) > 50),1);
+            endingCaseDistinctionsMulti(redundantCases(i),1) = caseID;
+            otherCases = unique(endingCases{redundantCases(i)}(endingCases{redundantCases(i)} ~= caseID));
+            if ~isempty(otherCases)
+                for j=1:length(otherCases)
+                    endingCases{redundantCases(i)}(endingCases{redundantCases(i)} == otherCases(j)) = [];
+                    flightsOfEndingCases{redundantCases(i)}(endingCases{redundantCases(i)} == otherCases(j)) = [];
+                end
             end
+        else
+            endingCaseDistinctionsMulti(redundantCases(i),1) = NaN;
         end
     end
     % Set redundancy cases
@@ -164,37 +220,124 @@ function makeCaseDistinctionsOnEndings(param,state)
     % Dangling flight path to EoDS 3um (with more than 50% consensus redundancy)
     endingCaseDistinctions(endingCaseDistinctionsMulti == 10) = 4;
     % Dangling flight path to EoDS 0.5um (with more than 50% consensus redundancy)
-    endingCaseDistinctions(endingCaseDistinctionsMulti == 13) = 6;
+    endingCaseDistinctions(endingCaseDistinctionsMulti == 13) = 4;
     % Start ending and end agglo not an ending (with more than 50% consensus redundancy)
-    endingCaseDistinctions(endingCaseDistinctionsMulti == 5) = 8;
+    endingCaseDistinctions(endingCaseDistinctionsMulti == 5) = 6;
     % Dangling flight path within DS (with more than 50% consensus redundancy)
-    endingCaseDistinctions(endingCaseDistinctionsMulti == 3) = 10;
+    endingCaseDistinctions(endingCaseDistinctionsMulti == 3) = 8;
     % Contradicting redundancy
-    endingCaseDistinctions(isnan(endingCaseDistinctionsMulti)) = 12;
+    endingCaseDistinctions(isnan(endingCaseDistinctionsMulti)) = 17;
+    % Merger case E5a
+    endingCaseDistinctions(endingCaseDistinctionsMulti == 12) = 9;
+    % Merger case E5c
+    endingCaseDistinctions(endingCaseDistinctionsMulti == 11) = 11;
+    
     
     % Check the redundancy of dangling flight paths. For those which end
     % nodes have more than 1um distance another redundancy condition is
     % introduced, again min. 50% of the flight paths must have less than
     % the 1um distance.
-    danglings = find(endingCaseDistinctions == 10);
+    danglings = find(endingCaseDistinctions == 8);
     for i=1:length(danglings)
         danglingFlights = flightsOfEndingCases{danglings(i)}(endingCases{danglings(i)} == 3);
         endNodes = cellfun(@(x)x(end,:),ff.nodes(danglingFlights),'uni',0);
         distances = pdist(bsxfun(@times,cell2mat(endNodes'), [11.24 11.24 28]));
         if any(distances > 1000)
             if sum(distances < 1000) / numel(distances) <= 0.5
-                endingCaseDistinctions(danglings(i)) = 11;
+                endingCaseDistinctions(danglings(i)) = 18;
             end
         end
     end
         
-    % Chose cases that are defined as attachted
-    casesToCountAttached = [1 2 3 4 5 6 7 8 10 12];
+    
+    
+        tabulate(endingCaseDistinctions)
+        
+    %% Remaining E5 cases:
+
+    casesE5 = find(endingCaseDistinctions == 17);
+       
+    for i=1:length(casesE5)
+        currentEnding = unique(endingCases{casesE5(i)});
+        % E5b
+        if isequal(currentEnding,[5 9])
+            endingCaseDistinctions(casesE5(i),1) = 10;
+        end
+        % E5d
+        if ismember(9,currentEnding)
+            if any(ismember([3 10 13],currentEnding))
+                endingCaseDistinctions(casesE5(i),1) = 12;
+            end
+        end
+        % E5e
+        if ismember(5,currentEnding)
+            if any(ismember([3 10 13],currentEnding))
+                endingCaseDistinctions(casesE5(i),1) = 13;
+            end
+        end
+        % E5f
+        if ismember(3,currentEnding)
+            if any(ismember([10 13],currentEnding))
+                endingCaseDistinctions(casesE5(i),1) = 14;
+            end
+        end
+        
+        % Rest
+        if isequal(currentEnding,[3 10])
+            endingCaseDistinctions(casesE5(i),1) = 18;
+        end
+        if isequal(currentEnding,[3 13])
+            endingCaseDistinctions(casesE5(i),1) = 18;
+        end
+        if isequal(currentEnding,[3 10 13])
+            endingCaseDistinctions(casesE5(i),1) = 18;
+        end
+        
+        if isequal(currentEnding,[10 13])
+            endingCaseDistinctions(casesE5(i),1) = 18;
+        end
+        
+        if any(ismember([12],currentEnding))
+            endingCaseDistinctions(casesE5(i),1) = 19;
+        end
+        
+    end
+    
+    % Check distance between all remaining dangling flight paths. With more
+    % than 2 um add to case E5 f
+    danglings = find(endingCaseDistinctions == 18);
+    for i=1:length(danglings)
+        danglingFlights = flightsOfEndingCases{danglings(i)}...
+            (endingCases{danglings(i)} == 3 | endingCases{danglings(i)} == 10 | endingCases{danglings(i)} == 13);
+        endNodes = cellfun(@(x)x(end,:),ff.nodes(danglingFlights),'uni',0);
+        distances = pdist(bsxfun(@times,cell2mat(endNodes'), [11.24 11.24 28]));
+        if any(distances > 2000)
+            endingCaseDistinctions(danglings(i)) = 14;
+        end
+    end
+    
+    % Sum up all remaining configurations
+    endingCaseDistinctions(endingCaseDistinctions == 0) = 17;
+    endingCaseDistinctions(endingCaseDistinctions == 18) = 17;
+    endingCaseDistinctions(endingCaseDistinctions == 19) = 17;
+    
+     
+    tabulate(endingCaseDistinctions)
+    
+    % Choose cases for merging and generation of queries
+    casesToMerge = [1:6, 8:14];
+    executedFlightPaths = flightsOfEndingCases(ismember(endingCaseDistinctions, casesToMerge));
+    executedFlightPaths = unique(cat(2,executedFlightPaths{:})');
+   
+    casesToCountAttached = [1:6 8:14 16 17];
     attachedEndings = find(ismember(endingCaseDistinctions, casesToCountAttached));
+
+    
     
     % Save and deprive writing permission
     saveFile = fullfile(dataDir, strcat('attachedEndings',suffix,'.mat'));
-    save(saveFile,'attachedEndings');
+    save(saveFile,'attachedEndings','executedFlightPaths','endingCaseDistinctions',...
+        'flightsOfEndingCases','flightsOfEndingCasesDanglingChecked','endingCases');
     system(['chmod -w ' saveFile])
     
     tabulate(endingCaseDistinctions)

@@ -3,7 +3,7 @@ function visualizeSuperaggloEvolution(idxState1, idxState2, outputFolder,prefix)
     if ~exist('prefix', 'var')
         prefix = 'axons';
     end
-    if ~exist(outputFolder, 'dir')
+    if exist('outputFolder', 'var') && ~isempty(outputFolder) && ~exist(outputFolder, 'dir')
         mkdir(outputFolder);
     end
     if isnumeric(idxState1)
@@ -46,12 +46,13 @@ function visualizeSuperaggloEvolution(idxState1, idxState2, outputFolder,prefix)
     display(['-- Statistics superagglo difference between state ' fileState1 ' & ' fileState2]);
     [agglosMerged, agglosSplit, addedSegId, removedSegId] = displaySuperaggloDiffStats(lookup, lookupPersistent);
 
-    % Write .nmls of differences to inspect in wK
-    display(['Writing nmls to: ' outputFolder]);
-    rng default; % Make sure seed is the same every time
-    visualizeSplitsAndMergerAsNml(state1, state2, lookupPersistent, agglosMerged, agglosSplit, outputFolder);
-    visualizeAddedAndRemovedSegmentsAsNml(state1, state2, lookup, addedSegId, removedSegId, outputFolder);
-
+    if exist('outputFolder','var')&& ~isempty(outputFolder) 
+        % Write .nmls of differences to inspect in wK
+        display(['Writing nmls to: ' outputFolder]);
+        rng default; % Make sure seed is the same every time
+        visualizeSplitsAndMergerAsNml(state1, state2, lookupPersistent, agglosMerged, agglosSplit, outputFolder);
+        visualizeAddedAndRemovedSegmentsAsNml(state1, state2, lookup, addedSegId, removedSegId, outputFolder);
+    end
 end
 
 function displaySuperaggloStats(state)
