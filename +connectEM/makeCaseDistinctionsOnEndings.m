@@ -1,5 +1,8 @@
 function makeCaseDistinctionsOnEndings(param,state)
-    
+    % Written by
+    %   Christian Schramm <christian.schramm@brain.mpg.de>
+    % NOTE(amotta): This function loads `caseDistinctions_X.mat` and must
+    % thus be run after +connectEM/makeEndingCaseDistinctions.
     dataDir = fullfile(param.saveFolder, 'aggloState');
     
     [skeletonFolders, suffixFlightPaths, suffix] = connectEM.setQueryState(state);    
@@ -7,6 +10,7 @@ function makeCaseDistinctionsOnEndings(param,state)
     % Load data from ending generation
     endingData = fullfile(dataDir, 'axonEndingsAllData.mat');
     endingData = load(endingData);
+    
     % Extract some variables
     idxAll = endingData.idxAll;
     idxCanidateFound = endingData.axonMask;
@@ -26,6 +30,10 @@ function makeCaseDistinctionsOnEndings(param,state)
 
     % Find indices of ending candidates in directionality lists (scores,
     % pca...) and exclude redundant endings
+    % NOTE(amotta): This block collects for each (sufficiently large axon
+    % fragment) the relative border indices which meet all requirements for
+    % being part of an ending. Not sure how this eliminates redundant
+    % endings.
     idxUse = idxAll(idxCanidateFound);
     idxCluster = [];
     for j=1:length(borderClusters)
@@ -36,6 +44,7 @@ function makeCaseDistinctionsOnEndings(param,state)
     end
 
     % Write out absolut values of seg direction scores
+    % NOTE(amotta): Directionality scores for each border of each axon
     SegDirScores = cellfun(@(x)abs(x),directionality.scores(idxCanidateFound),'uni',0);
 
     % Dataset border conditions
@@ -46,18 +55,19 @@ function makeCaseDistinctionsOnEndings(param,state)
 
     % Keep only candidate with highest score for each cluster and exclude
     % candidate outside border cutoff
-    candidateUse = {};
+    candidateUse = cell(numel(idxCluster), 1);
     for j=1:length(idxCluster)
-        candidateUse{j,1} = [];
+        candidateUse{j,1} = zeros(numel(idxCluster{j}), 1);
         for k=1:length(idxCluster{j})
+            % NOTE(amotta): find candidate by looking for most directed
             scoreClusters = SegDirScores{j,1}(idxCluster{j,1}{k,1});
-            [~, sortIdx] = sort(scoreClusters, 'descend');
-            candidate = idxCluster{j,1}{k,1}(sortIdx(1));
+            [~, maxIdx] = max(scoreClusters);
+            candidate = idxCluster{j,1}{k,1}(maxIdx);
+            
+            % NOTE(amotta): Check if candidate is within small bounding box
             if all(bsxfun(@gt, borderPositions{j}(candidate,:), bboxSmall(:, 1)'),2)...
-                    & all(bsxfun(@lt, borderPositions{j}(candidate,:), bboxSmall(:, 2)'),2)
+                    && all(bsxfun(@lt, borderPositions{j}(candidate,:), bboxSmall(:, 2)'),2)
                 candidateUse{j,1}(end+1,1) = candidate;
-            else
-                candidateUse{j,1}(end+1,1) = 0;
             end
         end
     end
