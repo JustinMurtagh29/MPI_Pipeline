@@ -29,7 +29,7 @@ curBox = 5000;
 curAxonId = descIds(1);
 
 % restrict nodes and edges to bounding box
-curAxon = axons(curAxonId);
+curAxon = mergerAxon;
 curNodes = curAxon.nodes;
 curEdges = curAxon.edges;
 
@@ -77,6 +77,22 @@ curEdges = curEdges(all(curEdges, 2), :);
 
 % sanity check
 assert(max(curEdges(:)) <= size(curNodes, 1));
+
+%% show random (path-corrected) samples from other axons
+curAxons = otherAxons;
+curAxonLens = arrayfun( ...
+    @(a) connectEM.getPathLengthFromNodes({a.nodes(:, 1:3)}), curAxons);
+
+%%
+rng(9); % NOTE(amotta): increment seed!
+curAxonId = datasample(descIds(2:end), 1, 'Weights', curAxonLens);
+curAxon = axons(curAxonId);
+
+% fake entry
+curNodeIdAbs = 0;
+
+curNodes = curAxon.nodes;
+curEdges = curAxon.edges;
 
 %%
 % NOTE(amotta): I should also split into connected components
