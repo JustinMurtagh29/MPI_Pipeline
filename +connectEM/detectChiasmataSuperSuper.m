@@ -1,4 +1,4 @@
-function detectChiasmataSuperSuper(p)
+function job = detectChiasmataSuperSuper(p)
 
 addpath('/gaba/u/kboerg/code/manuelCode/games') %for a clean version of findCCaccordingToGraph
 functionH = @connectEM.detectChiasmataSuper;
