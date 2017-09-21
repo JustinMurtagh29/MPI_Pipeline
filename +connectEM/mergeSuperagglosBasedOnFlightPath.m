@@ -3,10 +3,14 @@ function superagglos_new = mergeSuperagglosBasedOnFlightPath( ...
     % Written by
     %   Manuel Berning <manuel.berning@brain.mpg.de>
     %   Christian Schramm <christian.schramm@brain.mpg.de>
+    %   Alessandro Motta <alessandro.motta@brain.mpg.de>
+    
+    % configuration
+    voxelSize = [11.24, 11.24, 28];
     
     % find connected component for each flight path
     attachments = cellfun(@(x,y)[x y], startAgglo, endAgglo, 'uni', 0);
-    ccLookup = buildLUT(max(cell2mat(eqClassCCfull)), eqClassCCfull);
+    ccLookup = Agglo.buildLUT(max(cell2mat(eqClassCCfull)), eqClassCCfull);
     attachmentsCC = cellfun(@(x)unique(ccLookup(x)), attachments);
     
     % Generate new superagglo
@@ -31,7 +35,9 @@ function superagglos_new = mergeSuperagglosBasedOnFlightPath( ...
             newNodes(:,4) = NaN(size(newNodes,1),1);
             
             % reconstruct flight path edges using MST
-            edgeCell = cellfun(@minimalSpanningTree, ff.nodes(queryIdx), 'uni', 0);
+            edgeCell = cellfun(@(n) ...
+                Graph.getMST(bsxfun(@times, n(:, 1:3), voxelSize)), ...
+                ff.nodes(queryIdx), 'uni', 0);
             
             % collect and renumber edges
             nrNodes = cumsum(cellfun(@(x)size(x,1), ff.nodes(queryIdx)));
@@ -58,23 +64,3 @@ function superagglos_new = mergeSuperagglosBasedOnFlightPath( ...
         end
     end
 end
-
-function edges = minimalSpanningTree(com)
-    com = bsxfun(@times, com, [11.24 11.24 28]);
-    if size(com,1) < 2
-        edges = [];
-    else
-        % Minimal spanning tree, probably inefficent
-        adj = squareform(pdist(com));
-        adj(adj > 1000) = 0;
-        tree = graphminspantree(sparse(adj), 'Method', 'Kruskal');
-        [edges(:,1), edges(:,2)] = find(tree);
-    end
-end
-
-function lut = buildLUT(maxSegId, agglos)
-    lut = zeros(maxSegId, 1);
-    lut(cell2mat(agglos)) = repelem( ...
-        1:numel(agglos), cellfun(@numel, agglos));
-end
-
