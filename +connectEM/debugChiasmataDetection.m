@@ -21,25 +21,27 @@ segmentCount = arrayfun(@(a) sum(a.nodes(:, end) > 0), axons);
 fprintf('Number of segments in largest agglomerates:\n');
 disp(descSegmentCount(1:10));
 
-mergerAxon = axons(descIds(1));
-otherAxons = axons(descIds(2:end));
-
 %% inspect parts of the percolating merger
 curBox = 5000;
+
 curAxonId = descIds(1);
+curAxon = axons(curAxonId);
 
 % restrict nodes and edges to bounding box
-curAxon = mergerAxon;
 curNodes = curAxon.nodes;
 curEdges = curAxon.edges;
+
+% keep track of node IDs
+% TODO(amotta): use table
+curNodeIds = 1:size(curNodes, 1);
+curNodeIds = reshape(curNodeIds, [], 1);
 
 % make edges undirected
 curEdges = sort(curEdges, 2);
 
 % select random node
-rng(3); % NOTE(amotta): increment seed from zero to 3
+rng(0); % NOTE(amotta): increment seed from zero to 3
 curNodeId = randperm(size(curNodes, 1), 1);
-curNodeIdAbs = curNodeId;
 
 % box centered on selected node
 curBox = round(curBox ./ param.raw.voxelSize(:));
@@ -51,6 +53,7 @@ curIds = ...
     all(curNodes(:, 1:3) >= curBox(:, 1)', 2) ...
   & all(curNodes(:, 1:3) <= curBox(:, 2)', 2);
 curNodes = curNodes(curIds, :);
+curNodeIds = curNodeIds(curIds);
 
 curIds = find(curIds);
 [~, curNodeId] = ismember(curNodeId, curIds);
@@ -72,27 +75,49 @@ curIds = find(curCompIds == curCompId);
 [~, curNodeId] = ismember(curNodeId, curIds);
 
 curNodes = curNodes(curIds, :);
+curNodeIds = curNodeIds(curIds);
+
 [~, curEdges] = ismember(curEdges, curIds);
 curEdges = curEdges(all(curEdges, 2), :);
 
 % sanity check
 assert(max(curEdges(:)) <= size(curNodes, 1));
+assert(size(curNodeIds, 1) == size(curNodes, 1));
+
+curNodeIdAbs = curNodeIds(curNodeId);
+
+%% calculate path length for other axons
+curAxonLens = arrayfun( ...
+    @(a) connectEM.getPathLengthFromNodes({a.nodes(:, 1:3)}), ...
+    axon(descIds(2:end)));
 
 %% show random (path-corrected) samples from other axons
-curAxons = otherAxons;
-curAxonLens = arrayfun( ...
-    @(a) connectEM.getPathLengthFromNodes({a.nodes(:, 1:3)}), curAxons);
-
-%%
 rng(9); % NOTE(amotta): increment seed!
 curAxonId = datasample(descIds(2:end), 1, 'Weights', curAxonLens);
 curAxon = axons(curAxonId);
 
-% fake entry
-curNodeIdAbs = 0;
-
 curNodes = curAxon.nodes;
 curEdges = curAxon.edges;
+curNodeIdAbs = 0;
+
+%% prepare to show chiasmatic nodes
+% `connectEM.detectChiasmata` saves a `isIntersection` for each axon
+% agglomerate. Let's use this to highlight nodes.
+
+% load results of chiasmata detection
+% see https://gitlab.mpcdf.mpg.de/connectomics/pipeline/blob/master/+connectEM/detectChiasmataSuper.m
+chiasmDir = fullfile( ...
+    param.saveFolder, 'chiasmata', ...
+    sprintf('chiasmataX%d_%d', 32, floor(curAxonId / 100)), ...
+    sprintf('visX%d_%d', 32, curAxonId));
+chiasmFile = fullfile(chiasmDir, 'results.mat');
+
+chiasmNodes = load(chiasmFile, 'output');
+chiasmNodes = find(chiasmNodes.output.isIntersection);
+
+% restrict to node subset
+[~, chiasmNodes] = ismember(chiasmNodes, curNodeIds);
+chiasmNodes = setdiff(chiasmNodes, 0);
 
 %%
 % NOTE(amotta): I should also split into connected components
@@ -104,5 +129,10 @@ curFileName = fullfile('/home/amotta/Desktop', curFileName);
 
 skel = skeleton();
 skel = skel.addTree(curTreeName, curNodes(:, 1:3), curEdges);
+
+% show chiasmata nodes in yellow
+skel = skel.addNodesAsTrees(curNodes(chiasmaNodes, 1:3), 'Chiasma');
+skel.colors((end - numel(chiasmaNodes) - 1):end) = {[1, 1, 0, 1]};
+
 skel = Skeleton.setParams4Pipeline(skel, param);
 skel.write(curFileName);
