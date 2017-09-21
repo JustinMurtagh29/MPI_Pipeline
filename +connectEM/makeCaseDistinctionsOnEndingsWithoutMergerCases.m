@@ -1,7 +1,9 @@
-function makeCaseDistinctionsOnEndingsWithoutMergerCases(param)
+function makeCaseDistinctionsOnEndingsWithoutMergerCases(param,state)
     
     dataDir = fullfile(param.saveFolder, 'aggloState');
     
+    [skeletonFolders, suffixFlightPaths, suffix] = connectEM.setQueryState(state);    
+
     % Load data from ending generation
     endingData = fullfile(dataDir, 'axonEndingsAllData.mat');
     endingData = load(endingData);
