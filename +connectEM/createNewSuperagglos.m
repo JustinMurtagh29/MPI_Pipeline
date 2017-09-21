@@ -1,12 +1,14 @@
-function createNewSuperagglos(param,state,casesToMerge)
-
+function createNewSuperagglos(param,state)
+    % Written by
+    %   Christian Schramm <christian.schramm@brain.mpg.de>
+    %   Manuel Berning <manuel.berning@brain.mpg.de>
+    
     dataDir = fullfile(param.saveFolder, 'aggloState');
 
-    [skeletonFolders, suffixFlightPaths, suffix, axonVersion] = connectEM.setQueryState(state);
+    [~, ~, suffix, axonVersion] = connectEM.setQueryState(state);
 
     % Load current state of agglomerates
     agglos = load(fullfile(dataDir, strcat('axons_',num2str(axonVersion,'%.2i'),'.mat')));
-    origAgglos = arrayfun(@Agglo.fromSuperAgglo, agglos.axons, 'uni', 0);
     superAgglos = agglos.axons(agglos.indBigAxons);
 
     % Load linkages and cases for execusion
