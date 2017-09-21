@@ -1,5 +1,5 @@
-function [isIntersection,nrExits] = detectChiasmataSub(startidx)
-    load(['/tmpscratch/kboerg/visX19_0/visX19_1/prep.mat']);
+function [isIntersection,nrExits] = detectChiasmataSub(startidx, outputFolder)
+    load([outputFolder  'prep.mat']);
     isIntersection = false(size(nodes,1),1);
     nrExits = zeros(size(nodes,1),1);
     for i=startidx:5000:size(nodes,1)

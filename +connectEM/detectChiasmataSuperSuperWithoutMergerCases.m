@@ -1,7 +1,7 @@
-function job = detectChiasmataSuperSuper(p)
+function job = detectChiasmataSuperSuperWithoutMergerCases(p)
 
 addpath('/gaba/u/kboerg/code/manuelCode/games') %for a clean version of findCCaccordingToGraph
-functionH = @connectEM.detectChiasmataSuper;
+functionH = @connectEM.detectChiasmataSuperWithoutMergerCases;
 inputCell = cellfun(@(x){x}, num2cell(1 : 500), 'uni', 0);
 
 cluster = Cluster.getCluster( ...

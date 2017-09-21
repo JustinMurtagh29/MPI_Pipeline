@@ -1,20 +1,18 @@
-function createNewSuperagglos(param,state)
-    % Written by
-    %   Christian Schramm <christian.schramm@brain.mpg.de>
-    %   Manuel Berning <manuel.berning@brain.mpg.de>
-    
+function createNewSuperagglosWithoutMergerCases(param,state,casesToMerge)
+
     dataDir = fullfile(param.saveFolder, 'aggloState');
 
-    [~, ~, suffix, axonVersion] = connectEM.setQueryState(state);
+    [skeletonFolders, suffixFlightPaths, suffix, axonVersion] = connectEM.setQueryState(state);
 
     % Load current state of agglomerates
     agglos = load(fullfile(dataDir, strcat('axons_',num2str(axonVersion,'%.2i'),'.mat')));
+    origAgglos = arrayfun(@Agglo.fromSuperAgglo, agglos.axons, 'uni', 0);
     superAgglos = agglos.axons(agglos.indBigAxons);
 
     % Load linkages and cases for execusion
     load(fullfile(dataDir, strcat('caseDistinctions',suffix,'.mat')),...
         'linkagesAgglos','flightPaths','linkagesFlat');
-    load(fullfile(dataDir, strcat('attachedEndings',suffix,'.mat')),'executedFlightPaths');
+    load(fullfile(dataDir, 'flightPathsWithoutMergerCases.mat'),'executedFlightPaths');
     execusion = false(size(linkagesAgglos,1),1);
     execusion(executedFlightPaths) = true;
     executedFlightPaths = execusion;
@@ -51,7 +49,7 @@ function createNewSuperagglos(param,state)
     indBigAxons(1:length(axonsNew),1) = true;
 
     % Save super agglos and deprive writing permission
-    saveFile = fullfile(dataDir, strcat('axons_',num2str(axonVersion+1,'%.2i'),'.mat'));
+    saveFile = fullfile(dataDir, 'axons_05_withoutMergerCases.mat');
     save(saveFile, 'axons','indBigAxons');
     system(['chmod -w ' saveFile])
 
