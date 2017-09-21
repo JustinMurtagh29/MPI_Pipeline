@@ -28,7 +28,6 @@ function superagglos_new = mergeSuperagglosBasedOnFlightPath( ...
         queryIdx = attachmentsCC == i;
         
         if any(queryIdx)
-            
             % concatenate nodes from flight paths
             % by definition, flight paths nodes have `nan` as segment ID
             newNodes = cat(1, ff.nodes{queryIdx});
@@ -62,5 +61,14 @@ function superagglos_new = mergeSuperagglosBasedOnFlightPath( ...
             superagglos_new(i,1).edges = cat(1, superagglos_new(i).edges, newEdges + size(superagglos_new(i).nodes,1), connectingEdges);
             superagglos_new(i,1).nodes = cat(1, superagglos_new(i).nodes, newNodes);
         end
+        
+        % sanity checks
+        % * edges are correctly sorted
+        assert(all(diff(superagglos_new(i,1).edges(:), 1, 2) > 0));
+        
+        % * single connected component
+        assert(isequal( ...
+            transpose(1:size(superagglos_new(i,1).nodes, 1)), ...
+            unique(superagglos_new(i,1).edges(:))));
     end
 end
