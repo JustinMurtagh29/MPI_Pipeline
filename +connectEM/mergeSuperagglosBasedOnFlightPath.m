@@ -64,11 +64,17 @@ function superagglos_new = mergeSuperagglosBasedOnFlightPath( ...
         
         % sanity checks
         % * edges are correctly sorted
-        assert(all(diff(superagglos_new(i,1).edges(:), 1, 2) > 0));
+        assert(all(diff(superagglos_new(i,1).edges, 1, 2) > 0));
         
         % * single connected component
-        assert(isequal( ...
-            transpose(1:size(superagglos_new(i,1).nodes, 1)), ...
-            unique(superagglos_new(i,1).edges(:))));
+        switch size(superagglos_new(i,1).nodes, 1)
+            case 0
+                assert(false);
+            case 1
+                assert(isempty(superagglos_new(i,1).edges));
+            otherwise
+                assert(numel(Graph.findConnectedComponents( ...
+                    superagglos_new(i).edges)) == 1);
+        end
     end
 end
