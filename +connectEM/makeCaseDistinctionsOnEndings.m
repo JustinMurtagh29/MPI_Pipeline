@@ -5,7 +5,7 @@ function makeCaseDistinctionsOnEndings(param,state)
     % thus be run after +connectEM/makeEndingCaseDistinctions.
     dataDir = fullfile(param.saveFolder, 'aggloState');
     
-    [skeletonFolders, suffixFlightPaths, suffix] = connectEM.setQueryState(state);    
+    [~, ~, suffix] = connectEM.setQueryState(state);    
 
     % Load data from ending generation
     endingData = fullfile(dataDir, 'axonEndingsAllData.mat');
@@ -67,7 +67,7 @@ function makeCaseDistinctionsOnEndings(param,state)
             % NOTE(amotta): Check if candidate is within small bounding box
             if all(bsxfun(@gt, borderPositions{j}(candidate,:), bboxSmall(:, 1)'),2)...
                     && all(bsxfun(@lt, borderPositions{j}(candidate,:), bboxSmall(:, 2)'),2)
-                candidateUse{j,1}(end+1,1) = candidate;
+                candidateUse{j,1}(k,1) = candidate;
             end
         end
     end
