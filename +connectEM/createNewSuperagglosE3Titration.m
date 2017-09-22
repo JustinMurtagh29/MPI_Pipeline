@@ -118,4 +118,9 @@ function createNewSuperagglosE3Titration(param,state,titrationQuatity)
     saveFile = fullfile(dataDir, strcat('axons_',axonVersionNew,num2str(titrationQuatity),'k.mat'));
     save(saveFile, 'axons','indBigAxons');
     system(['chmod -w ' saveFile]);
+    
+    saveFile = fullfile(dataDir, strcat('eqClasses_',axonVersionNew,num2str(titrationQuatity),'k.mat'));
+    save(saveFile, 'eqClassCC','eqClassCCfull');
+    system(['chmod -w ' saveFile]);
+    
 end
