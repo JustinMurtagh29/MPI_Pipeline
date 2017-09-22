@@ -56,10 +56,13 @@ function [segIds, neighbours, filenames, nodes, startNode, comments] = lookupNml
             nodes{i} = unique(nodes{i}, 'rows');
         end
     end
+    
     filenames(idxTooManyTrees) = [];
     nodes(idxTooManyTrees) = [];
     startNode(idxTooManyTrees) = [];
+    comments(idxTooManyTrees) = [];
     toc;
+    
     temp.nodes = nodes;
     [segIds, neighbours] = connectEM.lookupSkelGT(p, temp);
 
