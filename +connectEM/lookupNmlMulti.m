@@ -5,15 +5,20 @@ function [segIds, neighbours, filenames, nodes, startNode, comments] = lookupNml
     end
 
     tic;
+    filenames = cell(1, numel(folders));
     for f=1:length(folders)
         files = dir([folders{f} '*.nml']);
         filenames{f} = cellfun(@(x)[folders{f} x], {files(:).name}, 'uni', 0);
     end
     toc;
+    
     tic;
     filenames = cat(2, filenames{:});
+    nodes = cell(1, numel(filenames));
+    startNode = cell(1, numel(filenames));
     idxTooManyTrees = false(length(filenames),1);
     comments = cell(length(filenames),1);
+    
     for i=1:length(filenames)
         try
             [~,skel] = evalc('parseNml_webKnossos(filenames{i})');
@@ -23,6 +28,7 @@ function [segIds, neighbours, filenames, nodes, startNode, comments] = lookupNml
             display(ME.message);
             continue;
         end
+        
         if length(skel) >= 2
             if removeNmlWithMoreThanOneTree
                 display(filenames{i});
