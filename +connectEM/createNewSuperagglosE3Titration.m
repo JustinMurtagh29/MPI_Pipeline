@@ -5,7 +5,7 @@ function createNewSuperagglosE3Titration(param,state,titrationQuatity)
     
     dataDir = fullfile(param.saveFolder, 'aggloState');
 
-    [~, ~, suffix, axonVersion, axonVersionNew, casesToMerge, titrationQuatity] = connectEM.setQueryState(state);
+    [~, ~, suffix, axonVersion, axonVersionNew, casesToMerge] = connectEM.setQueryState(state);
 
     % Load current state of agglomerates
     agglos = load(fullfile(dataDir, strcat('axons_',num2str(axonVersion,'%.2i'),'.mat')));
