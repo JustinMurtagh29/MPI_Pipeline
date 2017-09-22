@@ -1,5 +1,5 @@
 function [skeletonFolders, flightPathsSuffix, versionSuffix, axonVersion,...
-    axonVersionNew, casesToMerge, titrationQuatity] = setQueryState(state)
+    axonVersionNew, casesToMerge] = setQueryState(state)
     % Written by
     %   Christian Schramm <christian.schramm@brain.mpg.de>
     
@@ -171,7 +171,7 @@ function [skeletonFolders, flightPathsSuffix, versionSuffix, axonVersion,...
         axonVersionNew = '05_d';
         casesToMerge = [1:6,8:14];
      
-    elseif strcmp(state,'5.4_2')
+    elseif strcmp(state,'5.6')
         % source folders for flight paths
         skeletonFolders = {};
         % filename for flight paths in getAggloQueryOverlapA
