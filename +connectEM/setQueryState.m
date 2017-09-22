@@ -1,5 +1,5 @@
 function [skeletonFolders, flightPathsSuffix, versionSuffix, axonVersion,...
-    axonVersionNew, casesToMerge] = setQueryState(state)
+    axonVersionNew, casesToMerge, titrationQuatity] = setQueryState(state)
     % Written by
     %   Christian Schramm <christian.schramm@brain.mpg.de>
     
@@ -170,6 +170,62 @@ function [skeletonFolders, flightPathsSuffix, versionSuffix, axonVersion,...
         axonVersion = 4;
         axonVersionNew = '05_d';
         casesToMerge = [1:6,8:14];
+     
+    elseif strcmp(state,'5.4_2')
+        % source folders for flight paths
+        skeletonFolders = {};
+        % filename for flight paths in getAggloQueryOverlapA
+        flightPathsSuffix = [];
+        % filename additionals for getAggloQueryOverlapB and flightEndingOverlapRun
+        versionSuffix = '_5.0'; 
+        axonVersion = 4;
+        axonVersionNew = '05_E3a_2k';
+        casesToMerge = [1:6,8:14];
+        titrationQuatity = 2000;
+    elseif strcmp(state,'5.4_4')
+        % source folders for flight paths
+        skeletonFolders = {};
+        % filename for flight paths in getAggloQueryOverlapA
+        flightPathsSuffix = [];
+        % filename additionals for getAggloQueryOverlapB and flightEndingOverlapRun
+        versionSuffix = '_5.0'; 
+        axonVersion = 4;
+        axonVersionNew = '05_E3a_4k';
+        casesToMerge = [1:6,8:14];
+        titrationQuatity = 4000;
+    elseif strcmp(state,'5.4_6')
+        % source folders for flight paths
+        skeletonFolders = {};
+        % filename for flight paths in getAggloQueryOverlapA
+        flightPathsSuffix = [];
+        % filename additionals for getAggloQueryOverlapB and flightEndingOverlapRun
+        versionSuffix = '_5.0'; 
+        axonVersion = 4;
+        axonVersionNew = '05_E3a_6k';
+        casesToMerge = [1:6,8:14];
+        titrationQuatity = 6000;
+    elseif strcmp(state,'5.4_8')
+        % source folders for flight paths
+        skeletonFolders = {};
+        % filename for flight paths in getAggloQueryOverlapA
+        flightPathsSuffix = [];
+        % filename additionals for getAggloQueryOverlapB and flightEndingOverlapRun
+        versionSuffix = '_5.0'; 
+        axonVersion = 4;
+        axonVersionNew = '05_E3a_8k';
+        casesToMerge = [1:6,8:14];
+        titrationQuatity = 8000;
+    elseif strcmp(state,'5.4_10')
+        % source folders for flight paths
+        skeletonFolders = {};
+        % filename for flight paths in getAggloQueryOverlapA
+        flightPathsSuffix = [];
+        % filename additionals for getAggloQueryOverlapB and flightEndingOverlapRun
+        versionSuffix = '_5.0'; 
+        axonVersion = 4;
+        axonVersionNew = '05_E3a_10k';
+        casesToMerge = [1:6,8:14];
+        titrationQuatity = 10000;
         
     end
 
