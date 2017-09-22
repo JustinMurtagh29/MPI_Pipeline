@@ -62,7 +62,7 @@ function createNewSuperagglos(param,state)
     flightPaths.startAgglo(~executedFlightPaths,:) = [];
     flightPaths.endAgglo(~executedFlightPaths,:) = [];
     flightPaths.ff = structfun(@(x)x(executedFlightPaths), flightPaths.ff, 'uni', 0);
-    linkagesFlat = linkagesFlat(executedFlightPaths);
+    linkagesFlat(~executedFlightPaths, :) = [];
 
     % Eliminate duplicate flight paths
     % NOTE(amotta): Flight paths do **not** require to attach to
