@@ -8,8 +8,28 @@ function superagglosNew = mergeSuperagglosBasedOnFlightPath( ...
     % configuration
     voxelSize = [11.24, 11.24, 28];
     
+    % sanity check
+    % Make sure that flight paths actually do have a segment overlap with
+    % their `startAgglo` and, if present, `endAgglo`.
+    for curIdx = 1:numel(ff.filenames)
+        curSegIdsHit = cat( ...
+            2, ff.segIds{curIdx}, ff.neighbours{curIdx});
+        curSegIdsHit = curSegIdsHit(curSegIdsHit > 0);
+        curSegIdsHit = unique(curSegIdsHit);
+        
+        % make sure there is overlap with start agglomerate
+        curStartSegIds = superagglos(startAgglo{curIdx}).nodes(:, 4);
+        assert(numel(intersect(curSegIdsHit, curStartSegIds)) > 0);
+        
+        % same test if there is an end agglomerate
+        if isempty(endAgglo{curIdx}); continue; end;
+        curEndSegIds = superagglos(endAgglo{curIdx}).nodes(:, 4);
+        assert(numel(intersect(curSegIdsHit, curEndSegIds)) > 0);
+    end
+    
     % find connected component for each flight path
     attachments = cellfun(@(x,y)[x y], startAgglo, endAgglo, 'uni', 0);
+    
     ccLookup = Agglo.buildLUT(max(cell2mat(eqClassCCfull)), eqClassCCfull);
     attachmentsCC = cellfun(@(x)unique(ccLookup(x)), attachments);
     
