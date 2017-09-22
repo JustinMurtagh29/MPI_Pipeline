@@ -25,8 +25,7 @@ function createNewSuperagglosE3Titration(param,state,titrationQuatity)
     end
     % Indices of E3a cases
     E3aCases = find(endingCaseDistinctions == 5);
-%     titrate = E3aCases(titrationQuatity*1000+1:end);
-    titrate = E3aCases(2000+1:end);
+    titrate = E3aCases(titrationQuatity*1000+1:end);
     endingCaseDistinctions(titrate) = 0;
     
     executedFlightPaths = flightsOfEndingCases(ismember(endingCaseDistinctions, casesToMerge));
