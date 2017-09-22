@@ -5,7 +5,7 @@ function createNewSuperagglos(param,state)
     
     dataDir = fullfile(param.saveFolder, 'aggloState');
 
-    [~, ~, suffix, axonVersion] = connectEM.setQueryState(state);
+    [~, ~, suffix, axonVersion, axonVersionNew, casesToMerge] = connectEM.setQueryState(state);
 
     % Load current state of agglomerates
     agglos = load(fullfile(dataDir, strcat('axons_',num2str(axonVersion,'%.2i'),'.mat')));
@@ -17,8 +17,15 @@ function createNewSuperagglos(param,state)
     % Load linkages and cases for execusion
     load(fullfile(dataDir, strcat('caseDistinctions',suffix,'.mat')),...
         'linkagesAgglos','flightPaths','linkagesFlat');
-    load(fullfile(dataDir, strcat('attachedEndings',suffix,'.mat')),'executedFlightPaths');
+    load(fullfile(dataDir, strcat('attachedEndings',suffix,'.mat')),'flightsOfEndingCases','endingCaseDistinctions');
     
+    % Choose cases for merging and generation of queries
+    if ~exist 
+        casesToMerge = [1:6, 8:14];
+    end
+    executedFlightPaths = flightsOfEndingCases(ismember(endingCaseDistinctions, casesToMerge));
+    executedFlightPaths = unique(cat(2,executedFlightPaths{:})');
+       
     % sanity checks
     assert(isequal(size(linkagesAgglos), size(linkagesFlat)));
     assert(size(linkagesAgglos, 1) == numel(flightPaths.startAgglo));
@@ -103,7 +110,7 @@ function createNewSuperagglos(param,state)
     indBigAxons(1:length(axonsNew),1) = true;
 
     % Save super agglos and deprive writing permission
-    saveFile = fullfile(dataDir, strcat('axons_',num2str(axonVersion+1,'%.2i'),'.mat'));
+    saveFile = fullfile(dataDir, strcat('axons_',axonVersionNew,'.mat'));
     save(saveFile, 'axons','indBigAxons');
     system(['chmod -w ' saveFile]);
 end
