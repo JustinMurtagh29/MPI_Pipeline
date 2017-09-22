@@ -21,6 +21,7 @@ function [segIds, neighbours, filenames, nodes, startNode, comments] = lookupNml
             display(filenames{i});
             warning('parseNml generated an error');
             display(ME.message);
+            continue;
         end
         if length(skel) >= 2
             if removeNmlWithMoreThanOneTree
