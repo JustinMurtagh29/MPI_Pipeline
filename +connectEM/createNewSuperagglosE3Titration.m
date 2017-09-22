@@ -28,7 +28,7 @@ function createNewSuperagglosE3Titration(param,state,titrationQuatity)
     titrate = E3aCases(titrationQuatity*1000+1:end);
     endingCaseDistinctions(titrate) = 0;
     
-    executedFlightPaths = flightspOfEndingCases(ismember(endingCaseDistinctions, casesToMerge));
+    executedFlightPaths = flightsOfEndingCases(ismember(endingCaseDistinctions, casesToMerge));
     executedFlightPaths = unique(cat(2,executedFlightPaths{:})');
        
     % sanity checks
