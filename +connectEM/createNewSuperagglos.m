@@ -20,7 +20,7 @@ function createNewSuperagglos(param,state)
     load(fullfile(dataDir, strcat('attachedEndings',suffix,'.mat')),'flightsOfEndingCases','endingCaseDistinctions');
     
     % Choose cases for merging and generation of queries
-    if ~exist 
+    if isempty(casesToMerge)
         casesToMerge = [1:6, 8:14];
     end
     executedFlightPaths = flightsOfEndingCases(ismember(endingCaseDistinctions, casesToMerge));
