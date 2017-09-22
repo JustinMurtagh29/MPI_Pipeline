@@ -160,6 +160,17 @@ function [skeletonFolders, flightPathsSuffix, versionSuffix, axonVersion,...
         axonVersionNew = '05_c';
         casesToMerge = [1:4,6,8:14];
         
+    elseif strcmp(state,'5.5')
+        % source folders for flight paths
+        skeletonFolders = {};
+        % filename for flight paths in getAggloQueryOverlapA
+        flightPathsSuffix = [];
+        % filename additionals for getAggloQueryOverlapB and flightEndingOverlapRun
+        versionSuffix = '_5.0'; 
+        axonVersion = 4;
+        axonVersionNew = '05_d';
+        casesToMerge = [1:6,8:14];
+        
     end
 
 end
