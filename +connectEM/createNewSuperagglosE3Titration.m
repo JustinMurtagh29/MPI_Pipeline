@@ -84,6 +84,12 @@ function createNewSuperagglosE3Titration(param,state,titrationQuatity)
     duplicates = true(size(linkagesFlat,1),1);
     duplicates(positionUniques) = 0;
     
+    % NOTE(amotta): No-endings (i.e., ending #0) cannot be compared for
+    % equality. Ending zero of one flight path **is not the same** as
+    % the ending zero of another flight path. These are the flight paths
+    % producing case E5c endings.
+    duplicates(any(linkagesFlat == 0, 2)) = false;
+    
     % NOTE(amotta): Dimensions agree!
     flightPaths.id(duplicates) = [];
     flightPaths.startAgglo(duplicates,:) = [];
