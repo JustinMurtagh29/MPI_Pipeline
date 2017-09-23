@@ -182,6 +182,8 @@ function [skeletonFolders, flightPathsSuffix, versionSuffix, axonVersion,...
         axonVersionNew = '05_E3a_';
         casesToMerge = [1:6,8:14];
         
+    else
+        error('Unknown state ''%s''', state);
     end
 
 end
