@@ -1,4 +1,4 @@
-function [segIds, neighbours, filenames, nodes, startNode, comments] = lookupNmlMulti(p, folders, removeNmlWithMoreThanOneTree)
+function [segIds, neighbours, filenames, nodes, startNode, comments, errors] = lookupNmlMulti(p, folders, removeNmlWithMoreThanOneTree)
 % loads all nmls within the locations descriped in "folders"
     if nargin < 3
         removeNmlWithMoreThanOneTree = true;
@@ -18,6 +18,7 @@ function [segIds, neighbours, filenames, nodes, startNode, comments] = lookupNml
     startNode = cell(1, numel(filenames));
     idxTooManyTrees = false(length(filenames),1);
     comments = cell(length(filenames),1);
+    errors = cell(length(filenames),1);
     
     for i=1:length(filenames)
         try
@@ -26,6 +27,7 @@ function [segIds, neighbours, filenames, nodes, startNode, comments] = lookupNml
             display(filenames{i});
             warning('parseNml generated an error');
             display(ME.message);
+            errors{i,1} = ME.message;
             continue;
         end
         
@@ -62,6 +64,7 @@ function [segIds, neighbours, filenames, nodes, startNode, comments] = lookupNml
     nodes(idxTooManyTrees) = [];
     startNode(idxTooManyTrees) = [];
     comments(idxTooManyTrees) = [];
+    errors(idxTooManyTrees) = [];
     toc;
     
     temp.nodes = nodes;
