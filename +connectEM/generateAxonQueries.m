@@ -34,9 +34,11 @@ function generateAxonQueries(param,state)
     axons = arrayfun(@Agglo.fromSuperAgglo, axons, 'UniformOutput', false);
 
     % Determine endings which are not redundant(already attached by flight path)
-    m = load(fullfile(dataDir, strcat('attachedEndings',suffix,'.mat')), 'attachedEndings');
-    attachedEndings = m.attachedEndings;
+    m = load(fullfile(dataDir, strcat('attachedEndings',suffix,'.mat')), 'endingCaseDistinctions');
+    casesToCountAttached = [1:4 6:17];
+    attachedEndings = find(ismember(m.endingCaseDistinctions, casesToCountAttached));
     clear m
+    
 
     % Find indices of ending candidates in directionality lists (scores,
     % pca...) and exclude redundant endings

@@ -335,17 +335,11 @@ function makeCaseDistinctionsOnEndings(param,state)
     tabulate(endingCaseDistinctions)
     
     
-    casesToCountAttached = [1:6 8:14 16 17];
-    attachedEndings = find(ismember(endingCaseDistinctions, casesToCountAttached));
-
-    
-    
     % Save and deprive writing permission
     saveFile = fullfile(dataDir, strcat('attachedEndings',suffix,'.mat'));
     save(saveFile,'attachedEndings','endingCaseDistinctions',...
         'flightsOfEndingCases','flightsOfEndingCasesDanglingChecked','endingCases');
     system(['chmod -w ' saveFile])
     
-    tabulate(endingCaseDistinctions)
 end
     

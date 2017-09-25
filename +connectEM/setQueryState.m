@@ -149,6 +149,7 @@ function [skeletonFolders, flightPathsSuffix, versionSuffix, axonVersion,...
         axonVersionNew = '05_b';
         casesToMerge = [1:4,6,8];
     
+        % all cases but E3a
     elseif strcmp(state,'5.4')
         % source folders for flight paths
         skeletonFolders = {};
@@ -160,6 +161,7 @@ function [skeletonFolders, flightPathsSuffix, versionSuffix, axonVersion,...
         axonVersionNew = '05_c';
         casesToMerge = [1:4,6,8:14];
         
+        % all cases
     elseif strcmp(state,'5.5')
         % source folders for flight paths
         skeletonFolders = {};
@@ -171,6 +173,7 @@ function [skeletonFolders, flightPathsSuffix, versionSuffix, axonVersion,...
         axonVersionNew = '05_d';
         casesToMerge = [1:6,8:14];
      
+        % titration of E3a cases
     elseif strcmp(state,'5.6')
         % source folders for flight paths
         skeletonFolders = {};
