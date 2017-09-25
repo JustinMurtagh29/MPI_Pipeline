@@ -183,7 +183,7 @@ function [skeletonFolders, flightPathsSuffix, versionSuffix, axonVersion,...
         versionSuffix = '_5.0'; 
         axonVersion = 4;
         axonVersionNew = '05_E3a_';
-        casesToMerge = [1:6,8:14];
+        
         
         % Clean run after solving the nml-lookup bug
     elseif strcmp(state,'6.0')
@@ -198,8 +198,25 @@ function [skeletonFolders, flightPathsSuffix, versionSuffix, axonVersion,...
         % filename additionals for getAggloQueryOverlapB and flightEndingOverlapRun
         versionSuffix = '_6.0';
         axonVersion = 4;
-        axonVersionNew = '06';
-    
+        axonVersionNew = '06_a';
+        casesToMerge = [1:6,8:14];
+        
+        % All cases but E3a
+    elseif strcmp(state,'6.2')
+        % source folders for flight paths
+        scratchFolder = '/u/mberning/results/pipeline/20170217_ROI/aggloState/queryAnswers/';
+        skeletonFolders = {'MBKMB_L4_axons_queries_2017_a' 'MBKMB_L4_axons_queries_2017_b' ...
+            'CS_MB_L4_AxonLeftQueries_nmls' 'CS_MB_L4_axonEndingQueries_30_08_2017' ...
+            'CS_MB_L4_axEndQuerySpecial_14_09_2017' 'CS_MB_L4_axEndQuerySpecial2_16_09_2017'};
+        skeletonFolders = cellfun(@(x)[scratchFolder x filesep], skeletonFolders, 'uni', 0);
+        % filename for flight paths in getAggloQueryOverlapA
+        flightPathsSuffix = '_6.0';
+        % filename additionals for getAggloQueryOverlapB and flightEndingOverlapRun
+        versionSuffix = '_6.0';
+        axonVersion = 4;
+        axonVersionNew = '06_b';
+        casesToMerge = [1:4,6,8:14];
+        
         
     else
         error('Unknown state ''%s''', state);
