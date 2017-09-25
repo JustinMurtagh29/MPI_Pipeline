@@ -52,8 +52,9 @@ function [segIds, neighbours, filenames, nodes, startNode, comments] = lookupNml
             time = skel{1}.nodesNumDataAll(:,8);
             [~, idxT] = sort(time);
             startNode{i} = nodes{i}(idxT(1),:);
+            nodes{i} = nodes{i}(idxT,:);
             % Fix nodes (double nodes at same position)
-            nodes{i} = unique(nodes{i}, 'rows');
+            nodes{i} = unique(nodes{i}, 'rows','stable'); % preserve the order of time
         end
     end
     
