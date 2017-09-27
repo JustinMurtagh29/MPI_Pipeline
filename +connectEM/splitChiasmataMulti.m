@@ -53,12 +53,12 @@ function splitChiasmataMulti(agglo, tasks, p, backup, aggloidx,outputFile)
             @(idx2) max(pdist2(thisNodes(idx2, :), ...
             agglo.nodesScaled(tasks(idx).centeridx,:))) > 3000, C)));
         
-        % NOTE(amotta): Each entry of `groups` contains a list of exists
+        % NOTE(amotta): Each entry of `groups` contains a list of exits
         % which were grouped together by virtue of chiasmata queries.
         groups = cell(1, 0);
         conns = zeros(0, 2);
         
-        if nrExists == 4
+        if nrExits == 4
             todoTracings = 1;
         else
             % TODO(amota): Find out why the upper limit is commented out
@@ -68,7 +68,7 @@ function splitChiasmataMulti(agglo, tasks, p, backup, aggloidx,outputFile)
         % NOTE(amotta): Process flight paths until done. We're done when
         % one of the following conditions is true:
         %
-        % * no more open exists
+        % * no more open exits
         % * no more flight paths to process
         % * exactly two open exits
         %
@@ -123,7 +123,7 @@ function splitChiasmataMulti(agglo, tasks, p, backup, aggloidx,outputFile)
         % NOTE(amotta): Find index of node closest to chiasma center for
         % each component. These are the nodes from which the new edges will
         % be made.
-        closest = nan(1, nrExists);
+        closest = nan(1, nrExits);
         for idx2 = 1 : nrExits
             [~,closest(idx2)] = min(pdist2( ...
                 agglo.nodesScaled(lookupnodes(C{idx2}), :), ...
