@@ -200,7 +200,12 @@ function splitChiasmataMulti(agglo, tasks, p, backup, aggloidx,outputFile)
     %% for debugging
     if doExportNml
         skel = skeleton();
-        skel = skel.addTree('Original', agglo.nodes, agglo.edges);
+        
+        comments = repmat({''}, size(agglo.nodes, 1), 1);
+        comments(cat(1, tasks.centeridx)) = {'Chiasma'};
+        
+        skel = skel.addTree( ...
+            'Original', agglo.nodes, agglo.edges, [], [], comments);
         skel = skel.addBranchpoint(cat(1, tasks.centeridx));
         
         for curIdx = 1:newAggloCount
@@ -211,6 +216,6 @@ function splitChiasmataMulti(agglo, tasks, p, backup, aggloidx,outputFile)
         
         skel = Skeleton.setParams4Pipeline(skel, p);
         skel.write(strcat(outputFile, '.nml'));
-        clear skel;
+        clear comments skel;
     end
 end
