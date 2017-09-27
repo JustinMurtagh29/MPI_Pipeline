@@ -44,9 +44,7 @@ function splitChiasmataMulti(agglo, tasks, p, backup, aggloidx,outputFile)
         % NOTE(amotta): Make sure there are at least five connected
         % components. This must be true because this code was written to
         % handle >4 chiasmata.
-        % TODO(amotta): Relax this to greater-equal if this same function
-        % is also used to process the four-fold chiasmata.
-        assert(length(C) > 4);
+        assert(length(C) >= 4);
         nrExits = length(C);
         
         % TODO(amotta): Make sure each connected component has at least one
