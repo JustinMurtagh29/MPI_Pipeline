@@ -131,9 +131,8 @@ function splitChiasmataMulti(agglo, tasks, p, backup, aggloidx,outputFile)
             closest(idx2) = lookupnodes(C{idx2}(closest(idx2)));
         end
         
-        % NOTE(amotta): Build new edges
-        thisEdgesNew = closest(conns);
-        thisEdgesNew = sort(thisEdgesNew, 2);
+        % NOTE(amotta): Translate connections to node IDs
+        conns = sort(closest(conns), 2);
         
         % NOTE(amotta): Build skeleton where only core is cut out
         p.sphereRadiusOuter = Inf; % in nm
@@ -149,6 +148,7 @@ function splitChiasmataMulti(agglo, tasks, p, backup, aggloidx,outputFile)
         % set and only keep the ones which never are part of a core.
         thisEdgesCol=intersect(thisEdgesCol, lookupnodes(thisEdges), 'rows');
         nodesToDelete = [nodesToDelete, setdiff(1:size(agglo.nodesScaled, 1), lookupnodes)];
+        thisEdgesNew = [thisEdgesNew; conns];
     end
     
     % NOTE(amotta): Make sure that none of the nodes involved in edges is
@@ -183,5 +183,5 @@ function splitChiasmataMulti(agglo, tasks, p, backup, aggloidx,outputFile)
         newAgglos(idx).edges = curEdges;
     end
     
-    Util.save(outputFile, newAgglos);
+    % Util.save(outputFile, newAgglos);
 end
