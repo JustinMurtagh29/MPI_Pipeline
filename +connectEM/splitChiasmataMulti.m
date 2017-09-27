@@ -18,6 +18,7 @@ function splitChiasmataMulti(agglo, tasks, p, backup, aggloidx,outputFile)
     % applied to the original super-agglomerate.
     nodesToDelete = [];
     thisEdgesCol = agglo.edges;
+    thisEdgesNew = zeros(0, 2);
     
     % TODO(amotta): Verify that sphere radius is the same one here as in
     % the processing of 4-fold chiasmata. That's what we want, I assume.
@@ -183,5 +184,5 @@ function splitChiasmataMulti(agglo, tasks, p, backup, aggloidx,outputFile)
         newAgglos(idx).edges = curEdges;
     end
     
-    % Util.save(outputFile, newAgglos);
+    Util.save(outputFile, newAgglos);
 end
