@@ -2,6 +2,9 @@ function splitChiasmataMulti(agglo, tasks, p, backup, aggloidx,outputFile)
     % Written by
     %   Kevin Boergens <kevin.boergens@brain.mpg.de>
     
+    % configuration
+    doExportNml = false;
+    
     % TODO(amotta): Check where and how the `agglo` and `tasks` inputs are
     % generated. `agglo` must contain at least a `nodesScaled` field.
     % `tasks` is a structure array with `centeridx` containing the index of
@@ -42,29 +45,34 @@ function splitChiasmataMulti(agglo, tasks, p, backup, aggloidx,outputFile)
         C = Graph.findConnectedComponents(thisEdges);
         [~,lookupnodes]=ismember(thisNodes,agglo.nodesScaled,'rows');
         
-        % NOTE(amotta): Make sure there are at least five connected
-        % components. This must be true because this code was written to
-        % handle >4 chiasmata.
-        assert(length(C) >= 4);
-        nrExits = length(C);
-        
-        % TODO(amotta): Make sure each connected component has at least one
-        % node that is more than 3 µm from the center node. Why?
-        assert(all(cellfun( ...
+        % NOTE(amotta): For a component to be considered an exit, it must
+        % contain at least one node which is more than 3 µm from the
+        % chiasma center.
+        isExit = cellfun( ...
             @(idx2) max(pdist2(thisNodes(idx2, :), ...
-            agglo.nodesScaled(tasks(idx).centeridx,:))) > 3000, C)));
+            agglo.nodesScaled(tasks(idx).centeridx,:))) > 3000, C);
+        
+        % NOTE(amotta): Make sure there are at least four connected
+        % components. This must be true because this code was written to
+        % handle >=4 chiasmata.
+        assert(sum(isExit) >= 4);
+        nrExits = sum(isExit);
+        
+        if nrExits == 4
+            todoTracings = 1;
+        else
+            % TODO(amotta,kboerg): Change!
+            todoTracings = 1;
+        end
+        
+        % NOTE(amotta): Non-exit components are dropped (for now at least)
+        nonExitNodeIds = lookupnodes(cell2mat(C(~isExit)));
+        C = C(isExit);
         
         % NOTE(amotta): Each entry of `groups` contains a list of exits
         % which were grouped together by virtue of chiasmata queries.
         groups = cell(1, 0);
         conns = zeros(0, 2);
-        
-        if nrExits == 4
-            todoTracings = 1;
-        else
-            % TODO(amota): Find out why the upper limit is commented out
-            todoTracings = 1; %: nrExits; % make list of tracings TEMPORARILY FOR 1st BATCH ONLY
-        end
         
         % NOTE(amotta): Process flight paths until done. We're done when
         % one of the following conditions is true:
@@ -141,14 +149,17 @@ function splitChiasmataMulti(agglo, tasks, p, backup, aggloidx,outputFile)
              connectEM.detectChiasmataPruneToSphere( ...
              agglo.nodesScaled, agglo.edges, ...
              ones(size(agglo.edges,1),1), p, tasks(idx).centeridx);
-         
-        C = Graph.findConnectedComponents(thisEdges);
         [~,lookupnodes]=ismember(thisNodes,agglo.nodesScaled,'rows');
+        
+        % NOTE(amotta): Non-exits are dropped from the agglomerate
+        nodesToDelete = union(nodesToDelete, nonExitNodeIds);
+        thisEdgesCol(any(ismember(thisEdgesCol, nonExitNodeIds), 2), :) = [];
         
         % NOTE(amotta): Build set of edges to keep. We start with the full
         % set and only keep the ones which never are part of a core.
         thisEdgesCol=intersect(thisEdgesCol, lookupnodes(thisEdges), 'rows');
-        nodesToDelete = [nodesToDelete, setdiff(1:size(agglo.nodesScaled, 1), lookupnodes)];
+        nodesToDelete = union(nodesToDelete, setdiff( ...
+            1:size(agglo.nodesScaled, 1), lookupnodes));
         thisEdgesNew = [thisEdgesNew; conns];
     end
     
@@ -185,4 +196,21 @@ function splitChiasmataMulti(agglo, tasks, p, backup, aggloidx,outputFile)
     end
     
     Util.save(outputFile, newAgglos);
+    
+    %% for debugging
+    if doExportNml
+        skel = skeleton();
+        skel = skel.addTree('Original', agglo.nodes, agglo.edges);
+        skel = skel.addBranchpoint(cat(1, tasks.centeridx));
+        
+        for curIdx = 1:newAggloCount
+            skel = skel.addTree( ...
+                sprintf('Component %d', curIdx), ...
+                newAgglos(curIdx).nodes, newAgglos(curIdx).edges);
+        end
+        
+        skel = Skeleton.setParams4Pipeline(skel, p);
+        skel.write(strcat(outputFile, '.nml'));
+        clear skel;
+    end
 end
