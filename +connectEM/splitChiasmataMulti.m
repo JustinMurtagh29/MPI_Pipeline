@@ -31,7 +31,7 @@ function splitChiasmataMulti(agglo, tasks, p, backup, aggloidx,outputFile)
     for idx = 1 : length(tasks)
         % NOTE(amotta): Restrict skeleton to components within shell
         p.sphereRadiusOuter = 10000; % in nm
-        [thisNodes, thisEdges] = ... % cut down to sphere
+        [thisNodes, thisEdges, ~, thisNodeIds] = ...
             connectEM.detectChiasmataPruneToSphere( ...
             agglo.nodesScaled, agglo.edges, ...
             ones(size(agglo.edges,1),1), p, tasks(idx).centeridx);
@@ -43,7 +43,6 @@ function splitChiasmataMulti(agglo, tasks, p, backup, aggloidx,outputFile)
         %assert(isequal(thisEdges, backup.thisEdges)); NO CHECKING RIGHT NOW
         
         C = Graph.findConnectedComponents(thisEdges);
-        [~,lookupnodes]=ismember(thisNodes,agglo.nodesScaled,'rows');
         
         % NOTE(amotta): For a component to be considered an exit, it must
         % contain at least one node which is more than 3 µm from the
@@ -66,7 +65,7 @@ function splitChiasmataMulti(agglo, tasks, p, backup, aggloidx,outputFile)
         end
         
         % NOTE(amotta): Non-exit components are dropped (for now at least)
-        nonExitNodeIds = lookupnodes(cell2mat(C(~isExit)));
+        nonExitNodeIds = thisNodeIds(cell2mat(C(~isExit)));
         C = C(isExit);
         
         % NOTE(amotta): Each entry of `groups` contains a list of exits
@@ -135,9 +134,9 @@ function splitChiasmataMulti(agglo, tasks, p, backup, aggloidx,outputFile)
         closest = nan(1, nrExits);
         for idx2 = 1 : nrExits
             [~,closest(idx2)] = min(pdist2( ...
-                agglo.nodesScaled(lookupnodes(C{idx2}), :), ...
+                agglo.nodesScaled(thisNodeIds(C{idx2}), :), ...
                 agglo.nodesScaled(tasks(idx).centeridx, :)));
-            closest(idx2) = lookupnodes(C{idx2}(closest(idx2)));
+            closest(idx2) = thisNodeIds(C{idx2}(closest(idx2)));
         end
         
         % NOTE(amotta): Translate connections to node IDs
@@ -145,11 +144,10 @@ function splitChiasmataMulti(agglo, tasks, p, backup, aggloidx,outputFile)
         
         % NOTE(amotta): Build skeleton where only core is cut out
         p.sphereRadiusOuter = Inf; % in nm
-        [thisNodes, thisEdges] = ...
+        [~, thisEdges, ~, thisNodeIds] = ...
              connectEM.detectChiasmataPruneToSphere( ...
              agglo.nodesScaled, agglo.edges, ...
              ones(size(agglo.edges,1),1), p, tasks(idx).centeridx);
-        [~,lookupnodes]=ismember(thisNodes,agglo.nodesScaled,'rows');
         
         % NOTE(amotta): Non-exits are dropped from the agglomerate
         nodesToDelete = union(nodesToDelete, nonExitNodeIds);
@@ -157,9 +155,9 @@ function splitChiasmataMulti(agglo, tasks, p, backup, aggloidx,outputFile)
         
         % NOTE(amotta): Build set of edges to keep. We start with the full
         % set and only keep the ones which never are part of a core.
-        thisEdgesCol=intersect(thisEdgesCol, lookupnodes(thisEdges), 'rows');
+        thisEdgesCol=intersect(thisEdgesCol, thisNodeIds(thisEdges), 'rows');
         nodesToDelete = union(nodesToDelete, setdiff( ...
-            1:size(agglo.nodesScaled, 1), lookupnodes));
+            1:size(agglo.nodesScaled, 1), thisNodeIds));
         thisEdgesNew = [thisEdgesNew; conns];
     end
     
