@@ -39,7 +39,7 @@ else   % new representation, more complicated as edges have to be established
         [~,idx] = arrayfun(@(x) ismember(segIds(aggloIdx==x,:),newnodes{x}(:,4)),(1:numel(newnodes))','uni',0);
         % this gives the edge which has to be added to the edge list to
         % concatenate them with the corrEdge
-        newedges = cellfun(@(x,y) sortrows(cat(1,x,sort(y(all(y,2),:),2))),newedges,idx,'uni',0);
+        newedges = cellfun(@(x,y) unique(cat(1,x,sort(y(all(y,2),:),2)),'rows'),newedges,idx,'uni',0);
     end
     newAgglos = cell2struct([newedges';newnodes'],{'edges','nodes'},1);
 end

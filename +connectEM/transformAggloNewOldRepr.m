@@ -4,7 +4,9 @@ function aggloOld = transformAggloNewOldRepr(aggloNew)
 % author marcel.beining@brain.mpg.de
 
 if isfield(aggloNew,'nodes')  % new representation
-    aggloOld = cellfun(@(x) x(~isnan(x(:,4)),4),{aggloNew.nodes},'uni',0);
+    empt = arrayfun(@(x) isempty(x.nodes),aggloNew);
+    aggloOld = cell(numel(aggloNew),1);
+    aggloOld(~empt) = cellfun(@(x) x(~isnan(x(:,4)),4),{aggloNew(~empt).nodes},'uni',0);
     aggloOld = aggloOld(:);
 else
     aggloOld = aggloNew(:);
