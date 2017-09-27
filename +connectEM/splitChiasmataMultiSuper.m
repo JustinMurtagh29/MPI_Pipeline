@@ -3,11 +3,9 @@ load('/gaba/u/mberning/results/pipeline/20170217_ROI/allParameter.mat', 'p');
 temp=load(fullfile(p.saveFolder,'aggloState/axons_06_b.mat'));
 temp.axons = temp.axons(temp.indBigAxons);
 
-% TODO(amotta): The next line throws an error:
-% Undefined function or variable 'diffToEulerAngle'.
-
 % get query data, i.e. agglo idx, center idx
-queries = connectEM.generateQueriesFromChiasmata('/tmpscratch/kboerg/', temp)
+queries = connectEM.generateQueriesFromChiasmata('/tmpscratch/kboerg/', temp);
+
 % get taskdata from Heiko
 fid = fopen('/tmpscratch/kboerg/IDs_MBKMB_L4_chiasma_axon_queries_26_09_2017.txt');
 taskdata = fread(fid);

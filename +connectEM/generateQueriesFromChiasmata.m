@@ -38,7 +38,7 @@ function [phi, thetha, psi] = calculateEulerAngles(di, voxelSize)
     di = di .* voxelSize;
     di = di ./ norm(di);
     % Calculate euler angles, from wk-paper -> RESCOPaaS
-    eulerAngles = diffToEulerAngle(di);
+    eulerAngles = connectEM.diffToEulerAngle(di);
     phi = round(eulerAngles(1));
     thetha = round(eulerAngles(2));
     psi = round(eulerAngles(3));
