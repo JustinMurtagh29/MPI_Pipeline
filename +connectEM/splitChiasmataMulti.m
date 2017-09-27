@@ -180,8 +180,8 @@ function splitChiasmataMulti(agglo, tasks, p, backup, aggloidx,outputFile)
         [~, curEdges] = ismember(curEdges, curNodeIds);
         assert(all(curEdges(:)));
         
-        newAgglos(idx).nodes = curNodes;
-        newAgglos(idx).edges = curEdges;
+        newAgglos(curIdx).nodes = curNodes;
+        newAgglos(curIdx).edges = curEdges;
     end
     
     Util.save(outputFile, newAgglos);
