@@ -38,12 +38,12 @@ for curIdx = 1:aggloCount
     curData = load(curFile);
     chiasmata{curIdx} = curData.output;
     
-    if ~mod(curIdx, 500); fprintf('%d done\n', curIdx); end;
+    if ~mod(curIdx, 500); fprintf('%d done\n', curIdx); end
 end
 toc;
 
 %% start couting...
-clearvars -except chiasmata;
+clearvars -except param outputDir chiasmata;
 
 % count number of nodes
 nodeCount = cellfun(@(s) size(s.nodes, 1), chiasmata);
@@ -76,6 +76,7 @@ fprintf('\nLargest number of chiasma nodes per agglomerate:\n');
 fprintf('%s\n', strjoin(arrayfun(@num2str, temp(1:10), 'Uni', false), ', '));
 
 %% write out largest chiasmata
+mkdir(outputDir);
 [descVals, descIds] = sort(chiasmaSizes, 'descend');
 
 % discard chiasmata with more than 500 nodes
