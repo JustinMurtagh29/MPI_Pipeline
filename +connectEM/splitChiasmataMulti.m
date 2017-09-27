@@ -7,9 +7,6 @@ function splitChiasmataMulti(agglo, tasks, p, backup, aggloidx,outputFile)
     % `tasks` is a structure array with `centeridx` containing the index of
     % the center node for chiasma `idx`.
     
-    % TODO(amotta): Find out whether `nodesScaled` has a fourth column with
-    % the segment ID.
-    
     % TODO(amotta): Remove the `backup` input variable.
     % TODO(amotta): Find out whether this same code can now also be used
     % for the four-fold chiasmata.
@@ -160,19 +157,32 @@ function splitChiasmataMulti(agglo, tasks, p, backup, aggloidx,outputFile)
     assert(~any(ismember(thisEdgesCol(:), nodesToDelete)));
     assert(~any(ismember(thisEdgesNew(:), nodesToDelete)));
     
-    agglo.nodes(nodesToDelete,:) = [];
+    %% build new super-agglomerates
     nodesToKeep = setdiff(1:size(agglo.nodesScaled,1), nodesToDelete);
-    lookupNTK(nodesToKeep) = 1 : length(nodesToKeep);
-    edgesToWrite = lookupNTK([thisEdgesCol;thisEdgesNew]);
-    edgesToWrite = sort(edgesToWrite, 2);
+    newMaxSegId = nodesToKeep(end);
     
-    comments = cell(size(agglo.nodes,1), 1);
-    %writeNml([outputFile(1:end-4) '.nml'], writeSkeletonFromNodesAndEdges({agglo.nodes}, {edgesToWrite}, {comments}, {'axon'}, {[0 0 1 1]}));
+    newEdges = cat(1, thisEdgesCol, thisEdgesNew);
+    newNodeComps = Graph.findConnectedComponents(newEdges);
+    newNodeComps = cat(1, newNodeComps, num2cell(reshape( ...
+        setdiff(nodesToKeep, cell2mat(newNodeComps)), [], 1)));
     
-    newAgglo = struct;
-    newAgglo.nodes = agglo.nodes;
-    newAgglo.edges = edgesToWrite;
-    Util.saveStruct(outputFile, newAgglo);
-end
-function dummy()
+    newNodeLUT = Agglo.buildLUT(newMaxSegId, newNodeComps);
+    newEdgeComps = newNodeLUT(newEdges(:, 1));
+    
+    newAggloCount = numel(newNodeComps);
+    newAgglos = struct;
+    
+    for curIdx = 1:newAggloCount
+        curNodeIds = newNodeComps{curIdx};
+        curNodes = agglo.nodes(curNodeIds, :);
+        
+        curEdges = newEdges(newEdgeComps == curIdx, :);
+        [~, curEdges] = ismember(curEdges, curNodeIds);
+        assert(all(curEdges(:)));
+        
+        newAgglos(idx).nodes = curNodes;
+        newAgglos(idx).edges = curEdges;
+    end
+    
+    Util.save(outputFile, newAgglos);
 end
