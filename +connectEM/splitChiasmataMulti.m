@@ -130,10 +130,11 @@ function splitChiasmataMulti(agglo, tasks, p, backup, aggloidx,outputFile)
             [~,closest(idx2)] = min(pdist2( ...
                 agglo.nodesScaled(lookupnodes(C{idx2}), :), ...
                 agglo.nodesScaled(tasks(idx).centeridx, :)));
+            closest(idx2) = lookupnodes(C{idx2}(closest(idx2)));
         end
         
         % NOTE(amotta): Build new edges
-        thisEdgesNew = lookupnodes(closest(conns));
+        thisEdgesNew = closest(conns);
         thisEdgesNew = sort(thisEdgesNew, 2);
         
         % NOTE(amotta): Build skeleton where only core is cut out
