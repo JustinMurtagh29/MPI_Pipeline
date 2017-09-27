@@ -23,6 +23,14 @@ function splitChiasmataMulti(agglo, tasks, p, backup, aggloidx,outputFile)
     thisEdgesCol = agglo.edges;
     thisEdgesNew = zeros(0, 2);
     
+    summary = struct;
+    summary.nrChiasmata = numel(tasks);
+    summary.nrExits = nan(numel(tasks), 1);
+    summary.nrNonExits = nan(numel(tasks), 1);
+    summary.nrTracings = nan(numel(tasks), 1);
+    summary.tracings = cell(numel(tasks), 1);
+    summary.solved = false(numel(tasks), 1);
+    
     % TODO(amotta): Verify that sphere radius is the same one here as in
     % the processing of 4-fold chiasmata. That's what we want, I assume.
     p.voxelSize = [11.24 11.24 28];
@@ -56,6 +64,14 @@ function splitChiasmataMulti(agglo, tasks, p, backup, aggloidx,outputFile)
         % handle >=4 chiasmata.
         assert(sum(isExit) >= 4);
         nrExits = sum(isExit);
+        nrTracings = numel(tasks(idx).tracings);
+        
+        summary.nrExits(idx) = nrExits;
+        summary.nrNonExits(idx) = sum(~isExit);
+        summary.nrTracings(idx) = nrTracings;
+        summary.tracings{idx} = struct;
+        summary.tracings{idx}.processed = zeros(nrTracings, 1);
+        summary.tracings{idx}.overlaps = cell(nrTracings, 1);
         
         if nrExits == 4
             todoTracings = 1;
@@ -72,6 +88,7 @@ function splitChiasmataMulti(agglo, tasks, p, backup, aggloidx,outputFile)
         % which were grouped together by virtue of chiasmata queries.
         groups = cell(1, 0);
         conns = zeros(0, 2);
+        tracingIdx = 1;
         
         % NOTE(amotta): Process flight paths until done. We're done when
         % one of the following conditions is true:
@@ -113,6 +130,9 @@ function splitChiasmataMulti(agglo, tasks, p, backup, aggloidx,outputFile)
             nonull = @(x)x(x~=0);
             whichones = find(cellfun(@(x)any(ismember(getIdsFromCC(x),nonull(tasks(idx).tracings(idx2).segids))),C))';
             
+            summary.tracings{idx}.processed(idx2) = tracingIdx;
+            summary.tracings{idx}.overlaps{idx2} = whichones;
+            
             if length(whichones) ~= 2
                 % NOTE(amotta): Flight is invalid. Go to next...
                 continue;
@@ -120,6 +140,7 @@ function splitChiasmataMulti(agglo, tasks, p, backup, aggloidx,outputFile)
             
             conns(end + 1, :) = whichones;
             groups = Graph.findConnectedComponents(conns);
+            tracingIdx = tracingIdx + 1;
         end
         
         % NOTE(amotta): If we're unable to solve a chiasma, it is left
@@ -127,6 +148,8 @@ function splitChiasmataMulti(agglo, tasks, p, backup, aggloidx,outputFile)
         if nrExits ~= sum(cellfun(@length, groups)) %unable to solve chiasma
             continue;
         end
+        
+        summary.solved(idx) = true;
         
         % NOTE(amotta): Find index of node closest to chiasma center for
         % each component. These are the nodes from which the new edges will
@@ -193,7 +216,7 @@ function splitChiasmataMulti(agglo, tasks, p, backup, aggloidx,outputFile)
         newAgglos(curIdx).edges = curEdges;
     end
     
-    Util.save(outputFile, newAgglos);
+    Util.save(outputFile, newAgglos, summary);
     
     %% for debugging
     if doExportNml
