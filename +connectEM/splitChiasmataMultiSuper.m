@@ -85,7 +85,8 @@ function splitChiasmataMultiSuper(p)
     out.summaryIds = (find(oldAgglos.indBigAxons))';
     
     out.newAgglos = cat(1, data{:, 1});
-    out.parentIds = repelem(summaryIds, cellfun(@numel, data(:, 1)));
+    out.parentIds = repelem( ...
+        out.summaryIds, cellfun(@numel, data(:, 1)));
     
     % NOTE(amotta): Add `endings` field to old agglomerates
    [oldAgglos.axons.endings] = deal([]);
