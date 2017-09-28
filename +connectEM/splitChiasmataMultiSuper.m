@@ -3,7 +3,10 @@ function splitChiasmataMultiSuper(p)
     %   Kevin Boergens <kevin.boergens@brain.mpg.de>
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     
-    agglos = load(fullfile(p.saveFolder,'aggloState/axons_06_b.mat'));
+    oldAgglos = load(fullfile( ...
+        p.saveFolder, 'aggloState', 'axons_06_b.mat'));
+    
+    agglos = oldAgglos;
     agglos.axons = agglos.axons(agglos.indBigAxons);
 
     %{
@@ -56,6 +59,7 @@ function splitChiasmataMultiSuper(p)
         % find all queries in current axon
         curQueryIds = find(queries(:, 1) == curAxonIdx);
         curQueries = queries(curQueryIds, :);
+    out.gitInfo = Util.gitInfo();
         assert(issorted(curQueries(:, 1:3), 'rows'));
 
         % find task IDs and ff indices
@@ -91,6 +95,35 @@ function splitChiasmataMultiSuper(p)
         'sharedInputs', sharedInputArgs, ...
         'taskGroupSize', ceil(axonCount / 500), ...
         'numOutputs', 2);
+    Cluster.waitForJob(job);
+    
+    %% save results
+    data = fetchOutputs(job);
+    data = cat(1, data{:});
+    
+    out = struct;
+    out.p = p;
+    out.oldAgglos = oldAgglos;
+    out.gitInfo = Util.gitInfo();
+    
+    out.summary = cat(1, data{:, 2});
+    out.summaryIds = (find(oldAgglos.indBigAxons))';
+    
+    out.newAgglos = cat(1, data{:, 1});
+    out.parentIds = repelem(summaryIds, cellfun(@numel, data(:, 1)));
+    
+    % NOTE(amotta): Add `endings` field to old agglomerates
+   [oldAgglos.axons.endings] = deal([]);
+    
+    % add small agglomerates
+    out.newAgglos = cat( ...
+        1, out.newAgglos, oldAgglos.axons(~oldAgglos.indBigAxons));
+    out.parentIds = cat( ...
+        1, out.parentIds, (find(~oldAgglos.indBigAxons))');
+    
+    outFile = sprintf('%s-results.mat', datestr(now, 3));
+    outFile = fullfile(outputDir, outFile);
+    Util.saveStruct(outFile, out);
 end
 
 %%
