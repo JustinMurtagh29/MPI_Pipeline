@@ -4,7 +4,8 @@ temp=load(fullfile(p.saveFolder,'aggloState/axons_06_b.mat'));
 temp.axons = temp.axons(temp.indBigAxons);
 
 % get query data, i.e. agglo idx, center idx
-queries = connectEM.generateQueriesFromChiasmata('/tmpscratch/kboerg/', temp);
+queryDir = fullfile(p.saveFolder, 'chiasmata');
+queries = connectEM.generateQueriesFromChiasmata(queryDir, temp);
 
 % get taskdata from Heiko
 fid = fopen('/tmpscratch/kboerg/IDs_MBKMB_L4_chiasma_axon_queries_26_09_2017.txt');

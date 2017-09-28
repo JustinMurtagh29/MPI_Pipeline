@@ -1,8 +1,9 @@
-function output = generateQueriesFromChiasmata(outputFolder, temp2)
-    % TODO change hardcoded paths and ==4 vs >4 distinction
-    fid = fopen([outputFolder datestr(clock,30) '_flightTasks.txt'], 'w');
+function output = generateQueriesFromChiasmata(outputFolder, agglos)
+    fid = sprintf('%s_flightTasks.txt', datestr(clock,30));
+    fid = fopen(fullfile(outputFolder, fid), 'w');
+    
     output = [];
-    for idx_agglo = find(temp2.indBigAxons)'
+    for idx_agglo = find(agglos.indBigAxons)'
         idx_agglo
         temp = load(['/tmpscratch/kboerg/chiasmata/chiasmataX33_' num2str(floor(idx_agglo/100)) '/visX33_' num2str(idx_agglo) '/result.mat']);
         for i=1:length(temp.output.position)
@@ -31,6 +32,7 @@ function output = generateQueriesFromChiasmata(outputFolder, temp2)
     end
     fclose(fid);
 end
+
 function [phi, thetha, psi] = calculateEulerAngles(di, voxelSize)
     % Calculate angles (as deinfed in wK) in degrees from direction vector
 
