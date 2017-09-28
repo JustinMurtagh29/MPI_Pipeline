@@ -59,7 +59,6 @@ function splitChiasmataMultiSuper(p)
         % find all queries in current axon
         curQueryIds = find(queries(:, 1) == curAxonIdx);
         curQueries = queries(curQueryIds, :);
-    out.gitInfo = Util.gitInfo();
         assert(issorted(curQueries(:, 1:3), 'rows'));
 
         % find task IDs and ff indices
@@ -126,7 +125,6 @@ function splitChiasmataMultiSuper(p)
     Util.saveStruct(outFile, out);
 end
 
-%%
 function taskIds = loadTaskIds(taskFile)
     fid = fopen(taskFile, 'rt');
     data = fread(fid, 'char=>char');
