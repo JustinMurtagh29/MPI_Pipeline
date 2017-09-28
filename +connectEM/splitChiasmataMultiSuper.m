@@ -76,26 +76,27 @@ function splitChiasmataMultiSuper(p)
     data = fetchOutputs(job);
     data = cat(1, data{:});
     
+    % NOTE(amotta): Add `endings` field to old agglomerates
+   [oldAgglos.axons.endings] = deal([]);
+    oldAgglos.indBigAxons = oldAgglos.indBigAxons(:);
+    
     out = struct;
     out.p = p;
     out.oldAgglos = oldAgglos;
     out.gitInfo = Util.gitInfo();
     
     out.summary = cat(1, data{:, 2});
-    out.summaryIds = (find(oldAgglos.indBigAxons))';
+    out.summaryIds = find(oldAgglos.indBigAxons);
     
     out.newAgglos = cat(1, data{:, 1});
     out.parentIds = repelem( ...
         out.summaryIds, cellfun(@numel, data(:, 1)));
     
-    % NOTE(amotta): Add `endings` field to old agglomerates
-   [oldAgglos.axons.endings] = deal([]);
-    
     % add small agglomerates
     out.newAgglos = cat( ...
         1, out.newAgglos, oldAgglos.axons(~oldAgglos.indBigAxons));
     out.parentIds = cat( ...
-        1, out.parentIds, (find(~oldAgglos.indBigAxons))');
+        1, out.parentIds, find(~oldAgglos.indBigAxons));
     
     outFile = sprintf('%s-results.mat', datestr(now, 3));
     outFile = fullfile(outputDir, outFile);
