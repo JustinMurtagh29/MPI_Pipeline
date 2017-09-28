@@ -28,7 +28,7 @@ function splitChiasmataMultiSuper(p)
     %}
     
     %% NOTE(amotta): Run this code to
-    clearvars -except p temp;
+    clearvars -except p agglos;
 
     curDir = fullfile( ...
         p.saveFolder, 'chiasmataSplitting', ...
