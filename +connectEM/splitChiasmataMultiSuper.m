@@ -22,6 +22,12 @@ ff.filenamesShort = cellfun(@(x)second(strsplit(x,'__')), ff.filenames);
 
 outputDir = '/tmpscratch/kboerg/chiasmaSplit26';
 
+% NOTE(amotta): Sort queries to make processing easier
+[~, sortedRows] = sortrows(queries(:, 1:3));
+queries = queries(sortedRows, :);
+taskIds = taskIds(sortedRows);
+clear sortedRows;
+
 for curAxonIdx = 1 : length(temp.axons)
     curAxonIdx
     
@@ -29,12 +35,28 @@ for curAxonIdx = 1 : length(temp.axons)
     curQueryIds = find(queries(:, 1) == curAxonIdx);
     if isempty(curQueryIds); continue; end
     
+    curQueries = queries(curQueryIds, :);
+    assert(issorted(curQueries(:, 1:3), 'rows'));
+    
     % find task IDs and ff indices
     curTaskIds = taskIds(curQueryIds);
     curFfIds = cellfun(@(x) find(strcmp(ff.filenamesShort, x)), curTaskIds);
+    assert(numel(curFfIds) == size(curQueries, 1));
+    
+    % group flights by chiasma
+    curFfGroups = accumarray( ...
+        curQueries(:, 2), curFfIds, ...
+       [curQueries(end, 2), 1], @(ids) {ids}, {});
+    curCenterIds = unique(curQueries(:, 7), 'stable');
     
     % create task defintions
-    tasks = arrayfun(@(x,y)struct('tracings',struct('segids',ff.segIds(x),'nodes',ff.nodes(x)),'centeridx',queries(y,7)),curFfIds,curQueryIds);
+    tasks = arrayfun(@(cIdx, ffIds) struct( ...
+        'tracings', arrayfun(@(ffIdx) struct( ...
+            'segids', ff.segIds(ffIdx), ...
+            'nodes', ff.nodes(ffIdx)), ...
+            ffIds{1}), ...
+        'centeridx', cIdx), ...
+        curCenterIds, curFfGroups);
     
     % run splitting
     temp.axons(curAxonIdx).nodesScaled = bsxfun( ...
