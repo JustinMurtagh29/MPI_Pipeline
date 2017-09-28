@@ -174,6 +174,16 @@ function [newAgglos, summary] = ...
         thisEdgesNew = [thisEdgesNew; conns];
     end
     
+    % NOTE(amotta): See KMB's email from Wednesday, 27.09.2017.
+    %
+    % It's possible that the point-of-attachment for a solved chiasma query
+    % is within another chiasma. As a result, the point-of-attachment is
+    % pruned away and the new edge cannot be made. Is only one end of these
+    % edges is pruned away, mark the remaining node as new open ending.
+    prunedMask = any(ismember(thisEdgesNew, nodesToDelete), 2);
+    newEndingNodes = setdiff(thisEdgesNew(prunedMask, :), nodesToDelete);
+    thisEdgesNew(prunedMask, :) = [];
+    
     % NOTE(amotta): Make sure that none of the nodes involved in edges is
     % being removed by one of the other chiasmata.
     assert(~any(ismember(thisEdgesCol(:), nodesToDelete)));
@@ -197,6 +207,7 @@ function [newAgglos, summary] = ...
     for curIdx = 1:newAggloCount
         curNodeIds = newNodeComps{curIdx};
         curNodes = agglo.nodes(curNodeIds, :);
+        curEndings = find(ismember(curNodeIds, newEndingNodes));
         
         curEdges = newEdges(newEdgeComps == curIdx, :);
         [~, curEdges] = ismember(curEdges, curNodeIds);
@@ -204,6 +215,7 @@ function [newAgglos, summary] = ...
         
         newAgglos(curIdx).nodes = curNodes;
         newAgglos(curIdx).edges = curEdges;
+        newAgglos(curIdx).endings = curEndings;
     end
     
     % NOTE(amotta): The rest is only executed if `outputFile` is set
