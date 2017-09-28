@@ -77,8 +77,7 @@ function splitChiasmataMulti(p, agglo, tasks, outputFile)
         if nrExits == 4
             todoTracings = 1;
         else
-            % TODO(amotta,kboerg): Change!
-            todoTracings = 1;
+            todoTracings = 1:nrExits;
         end
         
         % NOTE(amotta): Non-exit components are dropped (for now at least)
