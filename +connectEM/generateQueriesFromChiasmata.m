@@ -37,6 +37,7 @@ function output = generateQueriesFromChiasmata(outputFolder, agglos)
     % NOTE(amotta): Store `output` on disk so that we can avoid running all
     % of the above stuff in the future (e.g., when splitting chiasmata).
     out = struct;
+    out.agglos = agglos;
     out.queries = output;
     out.gitInfo = Util.gitInfo();
     
