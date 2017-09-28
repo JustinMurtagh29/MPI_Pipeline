@@ -1,5 +1,6 @@
 function output = generateQueriesFromChiasmata(outputFolder, agglos)
-    fid = sprintf('%s_flightTasks.txt', datestr(clock,30));
+    curDateStr = datestr(clock, 30);
+    fid = sprintf('%s_flightTasks.txt', curDateStr);
     fid = fopen(fullfile(outputFolder, fid), 'w');
     
     output = [];
@@ -30,7 +31,18 @@ function output = generateQueriesFromChiasmata(outputFolder, agglos)
             end
         end
     end
+    
     fclose(fid);
+    
+    % NOTE(amotta): Store `output` on disk so that we can avoid running all
+    % of the above stuff in the future (e.g., when splitting chiasmata).
+    out = struct;
+    out.queries = output;
+    out.gitInfo = Util.gitInfo();
+    
+    saveFile = sprintf('%s_data.mat', curDateStr);
+    saveFile = fullfile(outputFolder, saveFile);
+    Util.saveStruct(saveFile, out);
 end
 
 function [phi, thetha, psi] = calculateEulerAngles(di, voxelSize)
