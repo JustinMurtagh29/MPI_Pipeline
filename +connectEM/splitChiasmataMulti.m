@@ -1,6 +1,7 @@
-function splitChiasmataMulti(agglo, tasks, p, outputFile)
+function splitChiasmataMulti(p, agglo, tasks, outputFile)
     % Written by
     %   Kevin Boergens <kevin.boergens@brain.mpg.de>
+    %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     
     % configuration
     doExportNml = false;
