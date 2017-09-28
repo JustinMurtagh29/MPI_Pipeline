@@ -1,6 +1,6 @@
 function [partition, queryOverlap] = queryAgglomerationOverlap(agglos, segmentsLeftover, uniqueSegments, neighboursStartNode)
-agglos = connectEM.transformAggloNewOldRepr(agglos);
-segmentsLeftover = connectEM.transformAggloNewOldRepr(segmentsLeftover);
+agglos = Superagglos.transformAggloNewOldRepr(agglos);
+segmentsLeftover = Superagglos.transformAggloNewOldRepr(segmentsLeftover);
 
 % Find start agglomeration and overlap of each query
 

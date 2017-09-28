@@ -80,7 +80,7 @@ function [agglos, aggloSize, aggloEdges] = aggloSimple(p,borderSizeThreshold, pr
     display('Writing skeletons for debugging the process:');
     tic;
     % Use only agglos 2:15000 here as first is large percolator, you should try to find out what/why that is
-    connectEM.skeletonFromAgglo(graphCut.edges, segmentMeta, ...
+    Superagglos.skeletonFromAgglo(graphCut.edges, segmentMeta, ...
         agglos(2:15000), 'agglos', outputFolder,parameters);
     toc;
 

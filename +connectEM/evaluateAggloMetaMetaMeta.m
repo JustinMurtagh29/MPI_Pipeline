@@ -80,7 +80,7 @@ tempa = cellfun(@(x)length(intersect(x, tempbouton2)), temprandomagglos, 'uni', 
 segmentMeta2 = segmentMeta;
 segmentMeta2.point = segmentMeta2.point';
 mkdir('/gaba/scratch/kboerg/throwback_tuesday/');
-connectEM.skeletonFromAgglo(graph.edges, segmentMeta2, temprandomagglos(cell2mat(tempa)>0), 'throwback_tuesday', '/gaba/scratch/kboerg/throwback_tuesday/')
+Superagglos.skeletonFromAgglo(graph.edges, segmentMeta2, temprandomagglos(cell2mat(tempa)>0), 'throwback_tuesday', '/gaba/scratch/kboerg/throwback_tuesday/')
 tempidx =[];
 for idx = 1 : 206770
 temp = segmentMeta.point(:, gridAgglo_03{514}.dendritesFinal{idx})';
@@ -89,7 +89,7 @@ if temp2(1)>4000 && temp2(2)<1000 && temp2(3)<500
     tempidx(end+1) = idx;
 end
 end
-connectEM.skeletonFromAgglo(graph2.edges, segmentMeta2, gridAgglo_03{514}.dendritesFinal(tempidx) , 'apicals', '/gaba/scratch/kboerg/apicals/')
+Superagglos.skeletonFromAgglo(graph2.edges, segmentMeta2, gridAgglo_03{514}.dendritesFinal(tempidx) , 'apicals', '/gaba/scratch/kboerg/apicals/')
 gridAgglo_05{364} = load('/gaba/scratch/mberning/aggloGridSearch/search05_00364.mat');
 ygrid5{364} = connectEM.evaluateAggloMetaMeta(graph, gridAgglo_05{364}.axonsFinal, gridAgglo_05{364}.dendritesFinal, 'rungrid5_364', segmentMeta); 
 

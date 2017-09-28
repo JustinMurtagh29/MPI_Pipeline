@@ -22,8 +22,8 @@ agglosNew = data.dendrites(data.indBigDends);
 indBigDends = data.indBigDends;
 
 % generate all agglo representation for following code
-agglos = connectEM.transformAggloNewOldRepr(agglosNew);
-agglos_all = connectEM.transformAggloNewOldRepr(agglosNew_all);
+agglos = Superagglos.transformAggloNewOldRepr(agglosNew);
+agglos_all = Superagglos.transformAggloNewOldRepr(agglosNew_all);
 
 % all lengths (number of seg ids) of the agglos
 l = cellfun(@length, agglos);
