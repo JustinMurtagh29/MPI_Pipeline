@@ -15,9 +15,12 @@ taskIds = loadTaskIds(taskIdFile);
 assert(size(queries, 1) == numel(taskIds));
 
 % get FF structure
-[ff.segIds, ff.neighbours, ff.filenames, ff.nodes, ff.startNode, ff.comments] = connectEM.lookupNmlMulti(p, {'/tmpscratch/kboerg/L4_chiasma_axon_queries_26_09_2017_nmls/'}, false);
+nmlDirs = {'/tmpscratch/kboerg/L4_chiasma_axon_queries_26_09_2017_nmls/'};
+[ff.segIds, ff.neighbours, ff.filenames, ff.nodes, ff.startNode, ff.comments] = connectEM.lookupNmlMulti(p, nmlDirs, false);
 second = @(x)x(2);
 ff.filenamesShort = cellfun(@(x)second(strsplit(x,'__')), ff.filenames);
+
+outputDir = '/tmpscratch/kboerg/chiasmaSplit26';
 
 for curAxonIdx = 1 : length(temp.axons)
     curAxonIdx
@@ -35,9 +38,10 @@ for curAxonIdx = 1 : length(temp.axons)
     
     % run splitting
     temp.axons(curAxonIdx).nodesScaled = bsxfun( ...
-        @times, temp.axons(curAxonIdx).nodes(:, 1:3), [11.24, 11.24, 28]);
+        @times, temp.axons(curAxonIdx).nodes(:, 1:3), p.raw.voxelSize);
     connectEM.splitChiasmataMulti( ...
-        p,temp.axons(curAxonIdx),tasks,['/tmpscratch/kboerg/chiasmaSplit26/' num2str(curAxonIdx) '.mat'])
+        p, temp.axons(curAxonIdx), tasks, ...
+        fullfile(outputDir, num2str(curAxonIdx)));
 end
 
 function taskIds = loadTaskIds(taskFile)

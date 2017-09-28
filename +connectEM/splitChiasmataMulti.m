@@ -216,7 +216,7 @@ function splitChiasmataMulti(p, agglo, tasks, outputFile)
         newAgglos(curIdx).edges = curEdges;
     end
     
-    Util.save(outputFile, agglo, tasks, newAgglos, summary);
+    Util.save(strcat(outputFile, '.mat'), agglo, tasks, newAgglos, summary);
     
     %% for debugging
     if doExportNml
