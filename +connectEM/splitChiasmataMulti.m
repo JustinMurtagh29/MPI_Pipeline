@@ -217,6 +217,8 @@ function [newAgglos, summary] = ...
         newAgglos(curIdx).edges = curEdges;
     end
     
+    % NOTE(amotta): The rest is only executed if `outputFile` is set
+    if ~exist('outputFile', 'var') || isempty(outputFile); return; end
     Util.save(strcat(outputFile, '.mat'), agglo, tasks, newAgglos, summary);
     
     %% for debugging
