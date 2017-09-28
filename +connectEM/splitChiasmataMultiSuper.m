@@ -3,6 +3,7 @@ load('/gaba/u/mberning/results/pipeline/20170217_ROI/allParameter.mat', 'p');
 temp=load(fullfile(p.saveFolder,'aggloState/axons_06_b.mat'));
 temp.axons = temp.axons(temp.indBigAxons);
 
+%{
 % get query data, i.e. agglo idx, center idx
 queryDir = fullfile(p.saveFolder, 'chiasmata');
 queries = connectEM.generateQueriesFromChiasmata(queryDir, temp);
@@ -21,6 +22,20 @@ second = @(x)x(2);
 ff.filenamesShort = cellfun(@(x)second(strsplit(x,'__')), ff.filenames);
 
 outputDir = '/tmpscratch/kboerg/chiasmaSplit26';
+%}
+%% NOTE(amotta): Run this code to
+
+clearvars -except p temp;
+
+curDir = fullfile( ...
+    p.saveFolder, 'chiasmataSplitting', ...
+    '20170928T132211-projects-a-and-b');
+outputDir = fullfile(curDir, 'outputs');
+
+load(fullfile(curDir, 'input-data.mat'));
+clear curDir;
+
+%%
 
 % NOTE(amotta): Sort queries to make processing easier
 [~, sortedRows] = sortrows(queries(:, 1:3));
@@ -31,9 +46,11 @@ clear sortedRows;
 % NOTE(amotta): Fix dimensions of `ff` fields
 ff = structfun(@(x) x(:), ff, 'UniformOutput', false);
 
-for curAxonIdx = 1 : length(temp.axons)
-    curAxonIdx
-    
+axonCount = numel(temp.axons);
+inputArgs = cell(axonCount, 1);
+sharedInputArgs = {p};
+
+for curAxonIdx = 1:axonCount
     % find all queries in current axon
     curQueryIds = find(queries(:, 1) == curAxonIdx);
     curQueries = queries(curQueryIds, :);
@@ -60,12 +77,18 @@ for curAxonIdx = 1 : length(temp.axons)
             curFfGroups, 'UniformOutput', false), ...
         'centeridx', num2cell(curCenterIds));
     
-    % run splitting
     temp.axons(curAxonIdx).nodesScaled = bsxfun( ...
         @times, temp.axons(curAxonIdx).nodes(:, 1:3), p.raw.voxelSize);
-    connectEM.splitChiasmataMulti(p, temp.axons(curAxonIdx), tasks);
+    inputArgs{curAxonIdx} = {temp.axons(curAxonIdx), tasks};
 end
 
+job = Cluster.startJob( ...
+    @connectEM.splitChiasmataMulti, inputArgs, ...
+    'sharedInputs', sharedInputArgs, ...
+    'taskGroupSize', ceil(axonCount / 500), ...
+    'numOutputs', 2);
+
+%%
 function taskIds = loadTaskIds(taskFile)
     fid = fopen(taskFile, 'rt');
     data = fread(fid, 'char=>char');
