@@ -18,6 +18,7 @@ function [newAgglos, summary] = ...
     
     summary = struct;
     summary.nrChiasmata = numel(tasks);
+    summary.centerIdx = nan(numel(tasks), 1);
     summary.nrExits = nan(numel(tasks), 1);
     summary.nrNonExits = nan(numel(tasks), 1);
     summary.nrTracings = nan(numel(tasks), 1);
@@ -28,12 +29,14 @@ function [newAgglos, summary] = ...
     p.sphereRadiusInner = 1000; % in nm
     
     for idx = 1 : length(tasks)
+        centerIdx = tasks(idx).centeridx;
+        
         % NOTE(amotta): Restrict skeleton to components within shell
         p.sphereRadiusOuter = 10000; % in nm
         [thisNodes, thisEdges, ~, thisNodeIds] = ...
             connectEM.detectChiasmataPruneToSphere( ...
             agglo.nodesScaled, agglo.edges, ...
-            ones(size(agglo.edges,1),1), p, tasks(idx).centeridx);
+            ones(size(agglo.edges, 1), 1), p, centerIdx);
         
         % make sure we have the same conn components as for the detection 
         % so that our indexing of tasks(idx).tracings(idx2) works
@@ -48,7 +51,7 @@ function [newAgglos, summary] = ...
         % chiasma center.
         isExit = cellfun( ...
             @(idx2) max(pdist2(thisNodes(idx2, :), ...
-            agglo.nodesScaled(tasks(idx).centeridx,:))) > 3000, C);
+            agglo.nodesScaled(centerIdx, :))) > 3000, C);
         
         % NOTE(amotta): Make sure there are at least four connected
         % components. This must be true because this code was written to
@@ -58,6 +61,7 @@ function [newAgglos, summary] = ...
         nrTracings = numel(tasks(idx).tracings);
         
         summary.nrExits(idx) = nrExits;
+        summary.centerIdx(idx) = centerIdx;
         summary.nrNonExits(idx) = sum(~isExit);
         summary.nrTracings(idx) = nrTracings;
         summary.tracings{idx} = struct;
@@ -148,7 +152,7 @@ function [newAgglos, summary] = ...
         for idx2 = 1 : nrExits
             [~,closest(idx2)] = min(pdist2( ...
                 agglo.nodesScaled(thisNodeIds(C{idx2}), :), ...
-                agglo.nodesScaled(tasks(idx).centeridx, :)));
+                agglo.nodesScaled(centerIdx, :)));
             closest(idx2) = thisNodeIds(C{idx2}(closest(idx2)));
         end
         
@@ -160,7 +164,7 @@ function [newAgglos, summary] = ...
         [~, thisEdges, ~, thisNodeIds] = ...
              connectEM.detectChiasmataPruneToSphere( ...
              agglo.nodesScaled, agglo.edges, ...
-             ones(size(agglo.edges,1),1), p, tasks(idx).centeridx);
+             ones(size(agglo.edges, 1), 1), p, centerIdx);
         
         % NOTE(amotta): Non-exits are dropped from the agglomerate
         nodesToDelete = union(nodesToDelete, nonExitNodeIds);
