@@ -1,4 +1,5 @@
-function splitChiasmataMulti(p, agglo, tasks, outputFile)
+function [newAgglos, summary] = ...
+        splitChiasmataMulti(p, agglo, tasks, outputFile)
     % Written by
     %   Kevin Boergens <kevin.boergens@brain.mpg.de>
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
