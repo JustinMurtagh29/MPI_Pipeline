@@ -7,16 +7,7 @@ function [newAgglos, summary] = ...
     % configuration
     doExportNml = false;
     
-    % TODO(amotta): Check where and how the `agglo` and `tasks` inputs are
-    % generated. `agglo` must contain at least a `nodesScaled` field.
-    % `tasks` is a structure array with `centeridx` containing the index of
-    % the center node for chiasma `idx`.
-    
-    % TODO(amotta): Remove the `backup` input variable.
-    % TODO(amotta): Find out whether this same code can now also be used
-    % for the four-fold chiasmata.
-    
-    rng(0); % to make randperm further down reproducible)
+    rng(0); % to make randperm further down reproducible
     
     % NOTE(amotta): Initialize key variables which are modified in the for
     % loop below. These variables collect all changes which need to be
@@ -33,9 +24,7 @@ function [newAgglos, summary] = ...
     summary.tracings = cell(numel(tasks), 1);
     summary.solved = false(numel(tasks), 1);
     
-    % TODO(amotta): Verify that sphere radius is the same one here as in
-    % the processing of 4-fold chiasmata. That's what we want, I assume.
-    p.voxelSize = [11.24 11.24 28];
+    p.voxelSize = p.raw.voxelSize;
     p.sphereRadiusInner = 1000; % in nm
     
     for idx = 1 : length(tasks)
