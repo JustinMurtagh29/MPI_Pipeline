@@ -98,7 +98,7 @@ function splitChiasmataMultiSuper(p)
     out.parentIds = cat( ...
         1, out.parentIds, find(~oldAgglos.indBigAxons));
     
-    outFile = sprintf('%s-results.mat', datestr(now, 3));
+    outFile = sprintf('%s-results.mat', datestr(now, 30));
     outFile = fullfile(outputDir, outFile);
     Util.saveStruct(outFile, out);
 end
