@@ -1,4 +1,4 @@
-function splitChiasmataMulti(agglo, tasks, p, backup, aggloidx,outputFile)
+function splitChiasmataMulti(agglo, tasks, p, outputFile)
     % Written by
     %   Kevin Boergens <kevin.boergens@brain.mpg.de>
     
@@ -14,7 +14,7 @@ function splitChiasmataMulti(agglo, tasks, p, backup, aggloidx,outputFile)
     % TODO(amotta): Find out whether this same code can now also be used
     % for the four-fold chiasmata.
     
-    rng(aggloidx+1337); % to make randperm further down reproducible)
+    rng(0); % to make randperm further down reproducible)
     
     % NOTE(amotta): Initialize key variables which are modified in the for
     % loop below. These variables collect all changes which need to be
@@ -216,7 +216,7 @@ function splitChiasmataMulti(agglo, tasks, p, backup, aggloidx,outputFile)
         newAgglos(curIdx).edges = curEdges;
     end
     
-    Util.save(outputFile, newAgglos, summary);
+    Util.save(outputFile, agglo, tasks, newAgglos, summary);
     
     %% for debugging
     if doExportNml

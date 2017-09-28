@@ -34,5 +34,5 @@ for idx = 1 : length(temp.axons)
     % create task defintions
     tasks = arrayfun(@(x,y)struct('tracings',struct('segids',ff.segIds(x),'nodes',ff.nodes(x)),'centeridx',queries(y,7)),taskids3,taskids);
     % run splitting
-    connectEM.splitChiasmataMulti(temp.axons(idx),tasks,p,[],1,['/tmpscratch/kboerg/chiasmaSplit26/' num2str(idx) '.mat'])
+    connectEM.splitChiasmataMulti(temp.axons(idx),tasks,p,['/tmpscratch/kboerg/chiasmaSplit26/' num2str(idx) '.mat'])
 end
