@@ -8,9 +8,14 @@ function output = generateQueriesFromChiasmata(outputFolder, agglos)
         idx_agglo
         temp = load(['/tmpscratch/kboerg/chiasmata/chiasmataX33_' num2str(floor(idx_agglo/100)) '/visX33_' num2str(idx_agglo) '/result.mat']);
         for i=1:length(temp.output.position)
+            % sanity check
+            assert(size(temp.output.direction{i}, 1) ...
+                == temp.output.nrExits(temp.output.ccCenterIdx(i)));
+            
             if temp.output.nrExits(temp.output.ccCenterIdx(i))<4 
                 continue
             end
+            
             for j=1 % 2:size(temp.output.direction{i},1) %only one task per chiasma CHANGE FOR >4 CHIASMATA
                 extend = round(4000 ./[11.24,11.24,28]);
                 dd = sqrt(sum((temp.output.direction{i}(j,:) .* [11.24,11.24,28]).^2));
