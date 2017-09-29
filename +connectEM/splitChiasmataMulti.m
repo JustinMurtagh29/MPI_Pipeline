@@ -54,9 +54,10 @@ function [newAgglos, summary] = ...
             @(idx2) max(pdist2(thisNodes(idx2, :), ...
             agglo.nodesScaled(centerIdx, :))) > 3000, C);
         % find endings that are part of redundancies
-        isRedudantCollected = zeros(sum(isExit),length(redundancies))
+        isRedundantCollected = zeros(sum(isExit),length(redundancies))
         for idx2 = find(isExit)
             for idx3 = 1 : length(redundancies)
+                isRedundant{idx2,idx3} = [];
                 for idx4 = 1 : length(redundancies{idx3})
                     isRedundant{idx2,idx3}(idx4) = all(ismember(agglo.node(thisNodeIDs(C{idx2}),1:3),redundancies{idx3}{idx4},'rows'));
                 end
