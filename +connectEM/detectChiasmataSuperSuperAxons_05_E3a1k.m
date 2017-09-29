@@ -1,7 +1,7 @@
-function job = detectChiasmataSuperSuper(p)
+function job = detectChiasmataSuperSuperAxons_05_E3a1k(p)
 
 addpath('/gaba/u/kboerg/code/manuelCode/games') %for a clean version of findCCaccordingToGraph
-functionH = @connectEM.detectChiasmataSuper;
+functionH = @connectEM.detectChiasmataSuperAxons_05_E3a1k;
 inputCell = cellfun(@(x){x}, num2cell(1 : 500), 'uni', 0);
 
 cluster = Cluster.getCluster( ...

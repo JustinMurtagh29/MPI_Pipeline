@@ -2,7 +2,7 @@
 % ---------------------
 origStatePath = '/home/zecevicm/Desktop/connectomics_git/L4_apicalDendrites/getClassificationOfComponents/dendrites_02.mat';
 load(origStatePath);
-agglos = connectEM.transformAggloNewOldRepr(dendrites);
+agglos = Superagglos.transformAggloNewOldRepr(dendrites);
 
 % get soma to cut out
 % -------------------

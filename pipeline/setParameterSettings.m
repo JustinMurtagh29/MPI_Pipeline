@@ -125,7 +125,7 @@ function p = setParameterSettings(p)
                 p.local(i,j,k).borderFile =  [p.local(i,j,k).saveFolder 'borders.mat'];
                 p.local(i,j,k).weightFile = [p.local(i,j,k).saveFolder 'weights.mat'];
                 p.local(i,j,k).probFile = [p.local(i,j,k).saveFolder 'neuriteContinuityProb.mat'];
-                p.local(i,j,k).synapseFile = [p.local(i,j,k).saveFolder 'synapses.mat'];
+                p.local(i,j,k).synapseFile = [p.local(i,j,k).saveFolder 'synapseScores.mat'];
 
                 % Same files for glia prediction
                 p.local(i,j,k).segmentFile = [p.local(i,j,k).saveFolder 'segments.mat'];

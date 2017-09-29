@@ -82,6 +82,22 @@ function [ nodes, name, segIds ] = getSomaNodes( p, graph, meta, rp, gb, probThr
 	        aggloSegIds=cat(1, aggloSegIds, CCcut{i});
         end
     end
+
+    %% remove not connected components
+    newSegIds = unique(aggloSegIds);
+    surridx = any(xor(ismember(graph.edges, newSegIds),2),2);
+    theseEdges = graph.edges(~surridx,:);
+    CCcut = Graph.findConnectedComponents(theseEdges, false, true);
+
+    if size(CCcut,1) > 1
+        [maxsize] = cellfun(@(C) size(C,1), CCcut);
+        %just to test if connected component is somatic
+        if max(maxsize) < 10000 
+        	CCcut(maxsize~=max(maxsize)) = [];
+        end
+    end
+    aggloSegIds = CCcut{1};
+
     %% return
     aggloSegIds=unique(aggloSegIds);
     segIds = aggloSegIds;

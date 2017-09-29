@@ -1,4 +1,5 @@
-function [skeletonFolders, flightPathsSuffix, versionSuffix, axonVersion] = setQueryState(state)
+function [skeletonFolders, flightPathsSuffix, versionSuffix, axonVersion,...
+    axonVersionNew, casesToMerge] = setQueryState(state)
     % Written by
     %   Christian Schramm <christian.schramm@brain.mpg.de>
     
@@ -77,8 +78,7 @@ function [skeletonFolders, flightPathsSuffix, versionSuffix, axonVersion] = setQ
         flightPathsSuffix = '_3.1';
         % filename additionals for getAggloQueryOverlapB and flightEndingOverlapRun
         versionSuffix = '_3.1'; 
-        axonVersion = [];
-       
+        
         % Fourth run
     elseif strcmp(state,'4.0')
         % source folders for flight paths
@@ -101,8 +101,7 @@ function [skeletonFolders, flightPathsSuffix, versionSuffix, axonVersion] = setQ
         flightPathsSuffix = '_4.1';
         % filename additionals for getAggloQueryOverlapB and flightEndingOverlapRun
         versionSuffix = '_4.1'; 
-        axonVersion = [];
-
+        
      % Fourth run
     elseif strcmp(state,'5.0')
         % source folders for flight paths
@@ -116,7 +115,8 @@ function [skeletonFolders, flightPathsSuffix, versionSuffix, axonVersion] = setQ
         % filename additionals for getAggloQueryOverlapB and flightEndingOverlapRun
         versionSuffix = '_5.0';
         axonVersion = 4;
-     
+        axonVersionNew = '05';
+        
     % Commented queries of second run
     elseif strcmp(state,'5.1')
         % source folders for flight paths
@@ -125,7 +125,104 @@ function [skeletonFolders, flightPathsSuffix, versionSuffix, axonVersion] = setQ
         flightPathsSuffix = '_5.1';
         % filename additionals for getAggloQueryOverlapB and flightEndingOverlapRun
         versionSuffix = '_5.1'; 
-        axonVersion = [];
+        
+    %% Choose cases for different axon states
+    elseif strcmp(state,'5.2')
+        % source folders for flight paths
+        skeletonFolders = {};
+        % filename for flight paths in getAggloQueryOverlapA
+        flightPathsSuffix = [];
+        % filename additionals for getAggloQueryOverlapB and flightEndingOverlapRun
+        versionSuffix = '_5.0'; 
+        axonVersion = 4;
+        axonVersionNew = '05_a';
+        casesToMerge = [1:6,8];
+    
+    elseif strcmp(state,'5.3')
+        % source folders for flight paths
+        skeletonFolders = {};
+        % filename for flight paths in getAggloQueryOverlapA
+        flightPathsSuffix = [];
+        % filename additionals for getAggloQueryOverlapB and flightEndingOverlapRun
+        versionSuffix = '_5.0'; 
+        axonVersion = 4;
+        axonVersionNew = '05_b';
+        casesToMerge = [1:4,6,8];
+    
+        % all cases but E3a
+    elseif strcmp(state,'5.4')
+        % source folders for flight paths
+        skeletonFolders = {};
+        % filename for flight paths in getAggloQueryOverlapA
+        flightPathsSuffix = [];
+        % filename additionals for getAggloQueryOverlapB and flightEndingOverlapRun
+        versionSuffix = '_5.0'; 
+        axonVersion = 4;
+        axonVersionNew = '05_c';
+        casesToMerge = [1:4,6,8:14];
+        
+        % all cases
+    elseif strcmp(state,'5.5')
+        % source folders for flight paths
+        skeletonFolders = {};
+        % filename for flight paths in getAggloQueryOverlapA
+        flightPathsSuffix = [];
+        % filename additionals for getAggloQueryOverlapB and flightEndingOverlapRun
+        versionSuffix = '_5.0'; 
+        axonVersion = 4;
+        axonVersionNew = '05_d';
+        casesToMerge = [1:6,8:14];
+     
+        % titration of E3a cases
+    elseif strcmp(state,'5.6')
+        % source folders for flight paths
+        skeletonFolders = {};
+        % filename for flight paths in getAggloQueryOverlapA
+        flightPathsSuffix = [];
+        % filename additionals for getAggloQueryOverlapB and flightEndingOverlapRun
+        versionSuffix = '_5.0'; 
+        axonVersion = 4;
+        axonVersionNew = '05_E3a_';
+        
+        
+        % Clean run after solving the nml-lookup bug
+    elseif strcmp(state,'6.0')
+        % source folders for flight paths
+        scratchFolder = '/u/mberning/results/pipeline/20170217_ROI/aggloState/queryAnswers/';
+        skeletonFolders = {'MBKMB_L4_axons_queries_2017_a' 'MBKMB_L4_axons_queries_2017_b' ...
+            'CS_MB_L4_AxonLeftQueries_nmls' 'CS_MB_L4_axonEndingQueries_30_08_2017' ...
+            'CS_MB_L4_axEndQuerySpecial_14_09_2017' 'CS_MB_L4_axEndQuerySpecial2_16_09_2017'};
+        skeletonFolders = cellfun(@(x)[scratchFolder x filesep], skeletonFolders, 'uni', 0);
+        % filename for flight paths in getAggloQueryOverlapA
+        flightPathsSuffix = '_6.0';
+        % filename additionals for getAggloQueryOverlapB and flightEndingOverlapRun
+        versionSuffix = '_6.0';
+        axonVersion = 4;
+        axonVersionNew = '06_a';
+        casesToMerge = [1:6,8:14];
+        
+        % All cases but E3a
+    elseif strcmp(state,'6.2')
+        % source folders for flight paths
+        scratchFolder = '/u/mberning/results/pipeline/20170217_ROI/aggloState/queryAnswers/';
+        skeletonFolders = {'MBKMB_L4_axons_queries_2017_a' 'MBKMB_L4_axons_queries_2017_b' ...
+            'CS_MB_L4_AxonLeftQueries_nmls' 'CS_MB_L4_axonEndingQueries_30_08_2017' ...
+            'CS_MB_L4_axEndQuerySpecial_14_09_2017' 'CS_MB_L4_axEndQuerySpecial2_16_09_2017'};
+        skeletonFolders = cellfun(@(x)[scratchFolder x filesep], skeletonFolders, 'uni', 0);
+        % filename for flight paths in getAggloQueryOverlapA
+        flightPathsSuffix = '_6.0';
+        % filename additionals for getAggloQueryOverlapB and flightEndingOverlapRun
+        versionSuffix = '_6.0';
+        axonVersion = 4;
+        axonVersionNew = '06_b';
+        casesToMerge = [1:4,6,8:14];
+        
+        
+    else
+        error('Unknown state ''%s''', state);
     end
+
+end
+
     
     

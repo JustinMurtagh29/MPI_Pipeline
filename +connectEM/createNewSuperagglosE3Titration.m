@@ -1,4 +1,4 @@
-function createNewSuperagglos(param,state)
+function createNewSuperagglosE3Titration(param,state,titrationQuatity)
     % Written by
     %   Christian Schramm <christian.schramm@brain.mpg.de>
     %   Manuel Berning <manuel.berning@brain.mpg.de>
@@ -23,6 +23,11 @@ function createNewSuperagglos(param,state)
     if isempty(casesToMerge)
         casesToMerge = [1:6, 8:14];
     end
+    % Indices of E3a cases
+    E3aCases = find(endingCaseDistinctions == 5);
+    titrate = E3aCases(titrationQuatity*1000+1:end);
+    endingCaseDistinctions(titrate) = 0;
+    
     executedFlightPaths = flightsOfEndingCases(ismember(endingCaseDistinctions, casesToMerge));
     executedFlightPaths = unique(cat(2,executedFlightPaths{:})');
        
@@ -116,7 +121,12 @@ function createNewSuperagglos(param,state)
     indBigAxons(1:length(axonsNew),1) = true;
 
     % Save super agglos and deprive writing permission
-    saveFile = fullfile(dataDir, strcat('axons_',axonVersionNew,'.mat'));
+    saveFile = fullfile(dataDir, strcat('axons_',axonVersionNew,num2str(titrationQuatity),'k.mat'));
     save(saveFile, 'axons','indBigAxons');
     system(['chmod -w ' saveFile]);
+    
+    saveFile = fullfile(dataDir, strcat('eqClasses_',axonVersionNew,num2str(titrationQuatity),'k.mat'));
+    save(saveFile, 'eqClassCC','eqClassCCfull');
+    system(['chmod -w ' saveFile]);
+    
 end

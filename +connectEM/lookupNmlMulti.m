@@ -1,19 +1,25 @@
-function [segIds, neighbours, filenames, nodes, startNode, comments] = lookupNmlMulti(p, folders, removeNmlWithMoreThanOneTree)
+function [segIds, neighbours, filenames, nodes, startNode, comments, errors] = lookupNmlMulti(p, folders, removeNmlWithMoreThanOneTree)
 % loads all nmls within the locations descriped in "folders"
     if nargin < 3
         removeNmlWithMoreThanOneTree = true;
     end
 
     tic;
+    filenames = cell(1, numel(folders));
     for f=1:length(folders)
         files = dir([folders{f} '*.nml']);
         filenames{f} = cellfun(@(x)[folders{f} x], {files(:).name}, 'uni', 0);
     end
     toc;
+    
     tic;
     filenames = cat(2, filenames{:});
+    nodes = cell(1, numel(filenames));
+    startNode = cell(1, numel(filenames));
     idxTooManyTrees = false(length(filenames),1);
     comments = cell(length(filenames),1);
+    errors = cell(length(filenames),1);
+    
     for i=1:length(filenames)
         try
             [~,skel] = evalc('parseNml_webKnossos(filenames{i})');
@@ -21,7 +27,10 @@ function [segIds, neighbours, filenames, nodes, startNode, comments] = lookupNml
             display(filenames{i});
             warning('parseNml generated an error');
             display(ME.message);
+            errors{i,1} = ME.message;
+            continue;
         end
+        
         if length(skel) >= 2
             if removeNmlWithMoreThanOneTree
                 display(filenames{i});
@@ -45,14 +54,19 @@ function [segIds, neighbours, filenames, nodes, startNode, comments] = lookupNml
             time = skel{1}.nodesNumDataAll(:,8);
             [~, idxT] = sort(time);
             startNode{i} = nodes{i}(idxT(1),:);
+            nodes{i} = nodes{i}(idxT,:);
             % Fix nodes (double nodes at same position)
-            nodes{i} = unique(nodes{i}, 'rows');
+            nodes{i} = unique(nodes{i}, 'rows','stable'); % preserve the order of time
         end
     end
+    
     filenames(idxTooManyTrees) = [];
     nodes(idxTooManyTrees) = [];
     startNode(idxTooManyTrees) = [];
+    comments(idxTooManyTrees) = [];
+    errors(idxTooManyTrees) = [];
     toc;
+    
     temp.nodes = nodes;
     [segIds, neighbours] = connectEM.lookupSkelGT(p, temp);
 

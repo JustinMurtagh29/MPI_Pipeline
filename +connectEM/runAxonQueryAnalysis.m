@@ -49,6 +49,7 @@ end
 
 if superagglo
     tic;connectEM.createNewSuperagglos(param,state);toc;
+    state = '6.2';
+    tic;connectEM.createNewSuperagglos(param,state);toc;
 end
-
 

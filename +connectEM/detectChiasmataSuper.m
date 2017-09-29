@@ -1,8 +1,10 @@
 function detectChiasmataSuper(startidx,p)
-    temp = load(fullfile(p.saveFolder,'aggloState/axons_0X.mat'));
+    temp = load(fullfile(p.saveFolder,'aggloState/axons_05.mat'));
+    temp.axons = temp.axons(temp.indBigAxons);
+    numstr='32';
     for idx = startidx : 500 : length(temp.axons)
-        outputFolder = fullfile(p.saveFolder, 'chiasmata' ['chiasmataX', numstr, '_' num2str(floor(idx_agglo/100)) '/']);
+        outputFolder = fullfile(p.saveFolder, 'chiasmata', ['chiasmataX', numstr, '_' num2str(floor(idx/100)) '/visX', numstr, '_' num2str(idx) '/']);
         mkdir(outputFolder);
-        detectChiasmata(p, temp.axons(1).nodes, temp.axons(1).edges, false, outputFolder);
+        connectEM.detectChiasmata(p, temp.axons(idx).nodes(:, 1:3), temp.axons(idx).edges, false, outputFolder);
     end
 end

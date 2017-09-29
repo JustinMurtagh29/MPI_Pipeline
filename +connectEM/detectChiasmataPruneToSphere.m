@@ -1,4 +1,4 @@
-function [thisNodes, thisEdges, thisProb] = detectChiasmataPruneToSphere(nodes, edges, prob, p, i)
+function [thisNodes, thisEdges, thisProb, thisNodeIdxFinal] = detectChiasmataPruneToSphere(nodes, edges, prob, p, i)
 % Prune nodes, edges and prob to sphere around node in row i with param p
 
 % Distance from all nodes to "current" node
@@ -7,6 +7,8 @@ thisDistance = pdist2(nodes(i,:), nodes);
 
 % first make it small to keep it fast
 thisNodeIdx = find(thisDistance < p.sphereRadiusOuter);
+% saving thisNodeIdx for lookup
+thisNodeIdxOld = thisNodeIdx;
 edges(~all(ismember(edges,thisNodeIdx),2),:) = [];
 lookup(thisNodeIdx) = 1 : length(thisNodeIdx);
 edges = lookup(edges);
@@ -46,6 +48,9 @@ thisProb = prob(thisEdgeIdx);
 thisEdges = thisOffset(thisEdges);
 thisEdges = reshape(thisEdges,[],2); % Renumber according to new node indices
 %visualizeSingleSphere(nodes, edges, prob, ~thisNodeIdx, thisNodeIdx, p);
+% make lookup
+thisNodeIdxFinal = thisNodeIdxOld(thisNodeIdx);
+
 end
 function visualizeSingleSphere(nodes, edges, prob, currentNodeIdx, outerNodesIdx, p)
 

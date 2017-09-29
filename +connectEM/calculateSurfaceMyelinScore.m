@@ -17,7 +17,7 @@ function [ fracMyelinAggloBorder,aggloNeighBordersMyelin, aggloNeighBordersNoMye
 %                           agglo that are at the surface of the agglo
 
 % transform new into old superagglo representation
-agglos = connectEM.transformAggloNewOldRepr(agglos);
+agglos = Superagglos.transformAggloNewOldRepr(agglos);
 
 % get only the neighbouring segments outside of each agglo (and the indices
 % in graph.neighbours

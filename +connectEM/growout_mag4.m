@@ -1,4 +1,7 @@
 function [y, mincoord] = growout_mag4 (agglo, segmentMeta)
+if size(segmentMeta.point,2)~= 3 && size(segmentMeta.point,1)== 3
+    segmentMeta.point = segmentMeta.point';
+end
 todos = [0,0,0;0,0,1;0,1,0;0,1,1;1,0,0;1,0,1;1,1,0;1,1,1];
 base_c = segmentMeta.point(agglo,:) / 128 / 4;
 cube_coord = [];

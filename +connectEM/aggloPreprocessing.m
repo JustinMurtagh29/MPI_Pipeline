@@ -70,7 +70,7 @@ if ~exist(fullfile(outputFolder,'dendrites_01.mat'),'file') || overwrite
     dendrites = Graph.findConnectedComponents(cat(1,edgesFiltered,repmat(dendVec,1,2)),0,1);
     
     % get hot edges to each agglo and create first non-hybrid superagglo
-    dendrites = connectEM.transformAggloOldNewRepr(dendrites,edgesGTall,segmentMeta,1);
+    dendrites = Superagglos.transformAggloOldNewRepr(dendrites,edgesGTall,segmentMeta,1);
     indSingleSeg = true(numel(dendrites),1);
     indSingleSeg(1:end-numel(singleSegDendrites)) = false;
     clear thisGrid edgesGTall dendritesNoMyelin edgesFiltered dendVec;
@@ -96,7 +96,7 @@ if ~exist(fullfile(outputFolder,'axons_01.mat'),'file') || overwrite
     axVec = cell2mat(axonsNoMyelin);
     edgesFiltered = edgesGTall(all(ismember(edgesGTall,axVec),2),:);
     axons = Graph.findConnectedComponents(cat(1,edgesFiltered,repmat(axVec,1,2)),0,1);
-    axons = connectEM.transformAggloOldNewRepr(axons, edgesGTall, segmentMeta,1);
+    axons = Superagglos.transformAggloOldNewRepr(axons, edgesGTall, segmentMeta,1);
     clear axonsNew edgesGTall axonsNoMyelin axVec edgesFiltered;
     save(fullfile(outputFolder,'axons_01.mat'),'axons');
 else
@@ -124,9 +124,9 @@ disp('State 02 superagglos loaded/generated')
 % if ~exist(fullfile(outputFolder,'somata_02b.mat'),'file')
 %     load('/gaba/u/rhesse/forBenedikt/somasNoClosedHoles.mat')
 %     ids = cell2mat(somas(:,3));
-%     dendrites = connectEM.removeSegIdsFromAgglos(dendrites,ids);
-%     axons = connectEM.removeSegIdsFromAgglos(axons,ids);
-%     somata = connectEM.transformAggloOldNewRepr(somas(:,3), graph.edges, segmentMeta,1);
+%     dendrites = Superagglos.removeSegIdsFromAgglos(dendrites,ids);
+%     axons = Superagglos.removeSegIdsFromAgglos(axons,ids);
+%     somata = Superagglos.transformAggloOldNewRepr(somas(:,3), graph.edges, segmentMeta,1);
 %     
 %     save(fullfile(outputFolder,'axons_02b.mat'),'axons');
 %     save(fullfile(outputFolder,'dendrites_02b.mat'),'dendrites');
@@ -150,7 +150,7 @@ if ~exist(fullfile(outputFolder,'axons_03.mat'),'file') || ~exist(fullfile(outpu
     [numSeg,voxSize] = arrayfun(@(x) deal(size(x.nodes,1),sum(segmentMeta.voxelCount(x.nodes(:,4)))),dendrites);
     dendLUT = repelem(1:numel(dendrites),numSeg);
     hasSoma = false(numel(dendrites),1);
-    hasSoma(dendLUT(ismember(cell2mat(connectEM.transformAggloNewOldRepr(dendrites)),somaAggloIds))) = true;
+    hasSoma(dendLUT(ismember(cell2mat(Superagglos.transformAggloNewOldRepr(dendrites)),somaAggloIds))) = true;
     % use the empiric myelin threshold for dendrite agglos and other
     % thresholds to get the myelinated axons
     moveToAxon = ~hasSoma & ((numSeg > 25 & myelinDend > 0.08) | (myelinDend > 0.25)) & voxSize > 200000;% & axonProbDend >= dendriteProbDend 
@@ -170,8 +170,8 @@ if ~exist(fullfile(outputFolder,'axons_03.mat'),'file') || ~exist(fullfile(outpu
     disp('Overlaps solved, now finding 5 micron agglos and surface myelin scores');
     %% get myelin surface scores, size scores and save final axon/dendrite class state
     
-    indBigDends = Agglo.isMaxBorderToBorderDistAbove(p, 5000, connectEM.transformAggloNewOldRepr(dendrites));
-    indBigAxons = Agglo.isMaxBorderToBorderDistAbove(p, 5000, connectEM.transformAggloNewOldRepr(axons));
+    indBigDends = Agglo.isMaxBorderToBorderDistAbove(p, 5000, Superagglos.transformAggloNewOldRepr(dendrites));
+    indBigAxons = Agglo.isMaxBorderToBorderDistAbove(p, 5000, Superagglos.transformAggloNewOldRepr(axons));
     [ myelinAxon ] = connectEM.calculateSurfaceMyelinScore( axons, graph, borderMeta, heuristics );  % calculate myelin score for the axon class
     [ myelinDend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
     

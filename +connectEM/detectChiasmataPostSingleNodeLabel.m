@@ -1,10 +1,14 @@
-function [output, queryIdx] = detectChiasmataPostSingleNodeLabel(edges, isIntersection, nrExits, nodes, p, nodesV, prob)
+function [output, queryIdx] = detectChiasmataPostSingleNodeLabel(edges, isIntersection, nrExits, nodes, p, nodesV, prob,outputFolder)
 if sum(isIntersection) > 1
     N = sum(isIntersection);
     if N > 10000
         distances = pdist(nodes(isIntersection,:));
-        connections = find(distances < 2000);
+        connections = [];
+        for idx = 1 : 100
+            connections = [connections, find(distances(idx:100:end)<2000)];
+        end
         clear distances
+        connections = sort(connections);
         % pdist lists the distances in a special way (see documentation)
         % the next two lines define the borders of the right column of those replies
         idxs_end = cumsum(N-1:-1:1);
@@ -43,7 +47,7 @@ queryIdx = cell(length(cc),1);
 pos = cell(length(cc),1);
 dir = cell(length(cc),1);
 if sum(isIntersection) > 100000
-    save('/tmpscratch/kboerg/visX19_0/visX19_1/prep_singlenodelabel.mat','-v7.3');
+    save([outputFolder 'prep_singlenodelabel.mat'],'-v7.3');
     
     functionH = @connectEM.detectChiasmataPostSingleNodeLabelSub;
     inputCell = cellfun(@(x){x}, num2cell(1 : 500), 'uni', 0);
@@ -55,11 +59,12 @@ if sum(isIntersection) > 100000
         '-l h_rt=24:00:00');
     job = Cluster.startJob( functionH, inputCell, ...
         'name', 'chiasmata2', ...
+        'sharedInputs', {outputFolder},  'sharedInputsLocation', 2, ...
         'cluster', cluster);
     Cluster.waitForJob(job);
     for idx = 1 : 500
-        if exist(['/tmpscratch/kboerg/visX19_0/visX19_1/temp_singlenodelabel_' num2str(idx) '.mat'], 'file')
-            temp = load(['/tmpscratch/kboerg/visX19_0/visX19_1/temp_singlenodelabel_' num2str(idx)]);
+        if exist([outputFolder 'temp_singlenodelabel_' num2str(idx) '.mat'], 'file')
+            temp = load([outputFolder 'temp_singlenodelabel_' num2str(idx)]);
             pos(idx:500:length(cc)) = temp.pos(idx:500:length(cc));
             dir(idx:500:length(cc)) = temp.dir(idx:500:length(cc));
             queryIdx(idx:500:length(cc)) = temp.queryIdx(idx:500:length(cc));

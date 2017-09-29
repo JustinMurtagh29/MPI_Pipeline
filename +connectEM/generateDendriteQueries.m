@@ -1,6 +1,4 @@
 function generateDendriteQueries(idxmain)
-    addpath('/gaba/u/kboerg/code/skeleton3d-matlab/')
-    addpath('/gaba/u/kboerg/code/skel2graph3d-matlab/')
     addpath('/gaba/u/kboerg/code/manuelCode/games/');
     addpath('/gaba/u/kboerg/code/RESCOPaaS/auxiliary/eulerAngles/')
     addpath('/gaba/u/kboerg/code/pipeline/')
@@ -50,7 +48,7 @@ function createTasks(idxmain)
             continue;
         end
         %get skeletonization ends
-        nodes= useVolume(segmentMeta, collection, aggloidx);
+        nodes= connectEM.getEndingsDendrite(segmentMeta, collection.dendrites{aggloidx});
         
         todo = collection.result.latent{aggloidx}(:, 1) > 0.7;
         todo = todo & abs(collection.result.scores{aggloidx}) > 0.9;
@@ -94,18 +92,4 @@ function createTasks(idxmain)
     q.dir={direction_col(ia, :)};
     mkdir(['/gaba/scratch/kboerg/testFlightQuery20170528/', num2str(idxmain), filesep]);
     connectEM.generateQueriesFromData(p, segmentMeta, q, ['/gaba/scratch/kboerg/testFlightQuery20170528/', num2str(idxmain), filesep], struct('writeTasksToFile', true, 'queryBoundingBoxSize', 2000))
-end
-function nodes = useVolume(segmentMeta, collection, aggloidx)
-    % get smoothed BW data (and offset)
-    [voxelRepresentation2, min_coord] = connectEM.findQueries(collection.dendrites{aggloidx}, segmentMeta, struct('debug', false));
-
-    %create skeleton from BW data
-    skel = Skeleton3D(voxelRepresentation2>0);
-    node2 = connectEM.querySkeleton(skel)
-    nodes = [];
-    for idx = 1 : length(node2)
-        if length(node2(idx).links) == 1
-            nodes(end + 1, :) = round([node2(idx).comx * 8, node2(idx).comy*8, node2(idx).comz*8/2.313]+min_coord); % move again into dataset coords
-        end
-    end
 end

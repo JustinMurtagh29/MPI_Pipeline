@@ -7,7 +7,7 @@ function getAggloQueryOverlapA(param,state)
     [skeletonFolders, suffix] = connectEM.setQueryState(state);    
 
     % Lookup segment ids of nodes+neighbours of nmls in all folders defined above
-    [ff.segIds, ff.neighbours, ff.filenames, ff.nodes, ff.startNode, ff.comments] = connectEM.lookupNmlMulti(param, skeletonFolders, false);
+    [ff.segIds, ff.neighbours, ff.filenames, ff.nodes, ff.startNode, ff.comments, ff.errors] = connectEM.lookupNmlMulti(param, skeletonFolders, false);
 
     tabulate(cellfun(@(x)x{1}{1}, cellfun(@(x)regexp(x, 'content="(.*)"', 'tokens'), ...
         cat(1, ff.comments{~cellfun(@isempty, ff.comments)}), 'uni', 0), 'uni', 0))
