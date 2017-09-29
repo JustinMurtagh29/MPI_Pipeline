@@ -6,7 +6,7 @@ function [newAgglos, summary] = ...
     
     % configuration
     doExportNml = false;
-    cutoffDistNm = 300;
+    cutoffDistNm = 100;
     
     rng(0); % to make randperm further down reproducible
     
