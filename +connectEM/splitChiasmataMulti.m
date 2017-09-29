@@ -128,8 +128,8 @@ function [newAgglos, summary] = ...
             tracingScaled = bsxfun(@times, tracingScaled, p.voxelSize);
             
             % NOTE(amotta): Find components touched by flight path
-            overlaps = find(cellfun(@(ids) min(min(pdist2( ...
-                tracingScaled, thisNodes(ids, :)))) < cutoffDistNm, C));
+            overlaps = find(cellfun(@(ids) any(any(pdist2( ...
+                tracingScaled, thisNodes(ids, :)) < cutoffDistNm)), C));
             
             summary.tracings{idx}.processed(idx2) = tracingIdx;
             summary.tracings{idx}.overlaps{idx2} = overlaps;
