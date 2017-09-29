@@ -16,7 +16,8 @@ function splitChiasmataMultiSuper(p)
 
     load(fullfile(curDir, 'input-data.mat'));
     clear curDir;
-
+    % load redundancy definition
+    load(fullfile(p.saveFolder, 'chiasmataSplitting', 'redundancies'), 'redundancies');
     %%
     % NOTE(amotta): Sort queries to make processing easier
     [~, sortedRows] = sortrows(queries(:, 1:3));
@@ -61,7 +62,7 @@ function splitChiasmataMultiSuper(p)
 
         agglos.axons(curAxonIdx).nodesScaled = bsxfun(@times, ...
             agglos.axons(curAxonIdx).nodes(:, 1:3), p.raw.voxelSize);
-        inputArgs{curAxonIdx} = {agglos.axons(curAxonIdx), tasks};
+        inputArgs{curAxonIdx} = {agglos.axons(curAxonIdx), tasks,redundancies{curAxonIdx}};
     end
 
     job = Cluster.startJob( ...

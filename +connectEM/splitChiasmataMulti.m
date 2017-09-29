@@ -1,5 +1,5 @@
 function [newAgglos, summary] = ...
-        splitChiasmataMulti(p, agglo, tasks, outputFile)
+        splitChiasmataMulti(p, agglo, tasks, redundacies, outputFile)
     % Written by
     %   Kevin Boergens <kevin.boergens@brain.mpg.de>
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
@@ -53,11 +53,37 @@ function [newAgglos, summary] = ...
         isExit = cellfun( ...
             @(idx2) max(pdist2(thisNodes(idx2, :), ...
             agglo.nodesScaled(centerIdx, :))) > 3000, C);
+        % find endings that are part of redundancies
+        isRedudantCollected = zeros(sum(isExit),length(redundancies))
+        for idx2 = find(isExit)
+            for idx3 = 1 : length(redundancies)
+                for idx4 = 1 : length(redundancies{idx3})
+                    isRedundant{idx2,idx3}(idx4) = all(ismember(agglo.node(thisNodeIDs(C{idx2}),1:3),redundancies{idx3}{idx4},'rows'));
+                end
+                % make sure each ending overlaps only with one query
+                assert(sum(isRedundant{idx2,idx3}) < 2);
+                if any(isRedundant{idx2,idx3})
+                    isRedundantCollected(idx2,idx3) = idx3;
+                end
+            end
+        end
+        % make sure each ending overlaps only with one cluster of queries
+        assert(all(sum(isRedundantCollected>0,2)<2))
+        % remove redundancies
+        isRedundantFinal = sum(isRedundantCollected,2);
+        [~, firstHit] = unique(isRedundantFinal);
+        firstHitBinary = false(size(isRedundantFinal));
+        firstHitBinary(firstHit) = true;
+        isExit = isExit & (isRedundantFinal == 0 | firstHitBinary);
         
         % NOTE(amotta): Make sure there are at least four connected
         % components. This must be true because this code was written to
         % handle >=4 chiasmata.
-        assert(sum(isExit) >= 4);
+        % NOTE(kboerg): UPDATED: Make sure there are at least four connected
+        % components. If not they were redundant and we should continue with the next task
+        if(sum(isExit) < 4)
+            continue;
+        end
         nrExits = sum(isExit);
         nrTracings = numel(tasks(idx).tracings);
         
