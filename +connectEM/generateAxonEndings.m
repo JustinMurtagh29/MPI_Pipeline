@@ -1,4 +1,4 @@
-function generateAxonEndings(param)
+function generateAxonEndings(param,suffix)
     % Written by
     %   Manuel Berning <manuel.berning@brain.mpg.de>
     %   Christian Schramm <christian.schramm@brain.mpg.de>
@@ -8,11 +8,14 @@ function generateAxonEndings(param)
     options.segDirScore = 0.8;
     options.distanceCutoff = 600; % in nm
 
+    if ~exist('suffix','var')
+        suffix = '';
+    end
     % Directory with input / output data
     dataDir = fullfile(param.saveFolder, 'aggloState');
 
     % load directionality information
-    endingInput = fullfile(dataDir, 'axonEndingInputData.mat');
+    endingInput = fullfile(dataDir, sprintf('axonEndingInputData%s.mat',suffix));
     endingInput = load(endingInput, 'axonIds', 'directionality');
     directionality = endingInput.directionality;
     axonIds = endingInput.axonIds;
