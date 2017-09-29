@@ -65,6 +65,8 @@ function [newAgglos, summary] = ...
         summary.nrNonExits(idx) = sum(~isExit);
         summary.nrTracings(idx) = nrTracings;
         summary.tracings{idx} = struct;
+        summary.tracings{idx}.nodes = ...
+            reshape({tasks(idx).tracings.nodes}, [], 1);
         summary.tracings{idx}.processed = zeros(nrTracings, 1);
         summary.tracings{idx}.overlaps = cell(nrTracings, 1);
         
