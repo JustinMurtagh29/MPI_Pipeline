@@ -17,13 +17,21 @@ function [ agglosNew, agglos, agglos_all, points, indBigDends, bounds, spineHead
 tic;
 % collect the dendrite agglos (file from Marcel in new format) only > 5 um
 data = load(dendAggloStatePath);
+%agglosNew_all = data.newAgglos; % for my file with removed soma
 agglosNew_all = data.dendrites;
-agglosNew = data.dendrites(data.indBigDends); 
-indBigDends = data.indBigDends;
+if exist('indBigDends','var')
+    agglosNew = data.dendrites(data.indBigDends); 
+    indBigDends = data.indBigDends;
 
-% generate all agglo representation for following code
-agglos = connectEM.transformAggloNewOldRepr(agglosNew);
-agglos_all = connectEM.transformAggloNewOldRepr(agglosNew_all);
+    % generate all agglo representation for following code
+    agglos = connectEM.transformAggloNewOldRepr(agglosNew);
+    agglos_all = connectEM.transformAggloNewOldRepr(agglosNew_all);
+else
+    indBigDends = NaN;
+    agglosNew = agglosNew_all;
+    agglos = connectEM.transformAggloNewOldRepr(agglosNew_all);
+    agglos_all = agglos;
+end
 
 % all lengths (number of seg ids) of the agglos
 l = cellfun(@length, agglos);

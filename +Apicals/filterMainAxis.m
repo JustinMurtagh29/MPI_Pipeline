@@ -8,10 +8,11 @@
 % spThr - threshold for the angle between the mean axis and the considered
 % Outputs:
 % filtered agglos & points, sps - scalarproducts to mean FPC
+% meanFPC - mean first principal component
 % rInd - indeces of filtered
 % -------------------------------------------------------------------------
 % Author: Matej Zecevic <matej.zecevic@brain.mpg.de>
-function [ filteredAgglos, filteredPoints, sps, rInd ] = filterMainAxis( agglos, points, varThr, spThr, rInd )
+function [ filteredAgglos, filteredPoints, meanFPC, sps, rInd ] = filterMainAxis( agglos, points, varThr, spThr, rInd )
 tic;
 % calculate PCA and var explained for each agglo
 pcaMain = zeros(3, length(points)); 
