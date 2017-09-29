@@ -63,7 +63,7 @@ function generateAxonEndings(param,suffix)
 
     % save all results for convenience in query generation
     gitInfo = Util.gitInfo();
-    save(fullfile(dataDir, 'axonEndingsAllData.mat'));
+    save(fullfile(dataDir, sprintf('axonEndingsAllData%s.mat',suffix)));
 
     % save result
     out = struct;
@@ -74,7 +74,7 @@ function generateAxonEndings(param,suffix)
     out.borderClusters = borderClusters;
     out.gitInfo = Util.gitInfo();
 
-    Util.saveStruct(fullfile(dataDir, 'axonEndings.mat'), out);
+    Util.saveStruct(fullfile(dataDir, sprintf('axonEndings%s.mat',suffix)), out);
 end
 
 function clusterIds = clusterBorders(param, options, borderCoM)
