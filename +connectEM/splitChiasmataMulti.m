@@ -6,6 +6,7 @@ function [newAgglos, summary] = ...
     
     % configuration
     doExportNml = false;
+    cutoffDistNm = 300;
     
     rng(0); % to make randperm further down reproducible
     
@@ -120,21 +121,22 @@ function [newAgglos, summary] = ...
             
             % NOTE(amotta): Mark tracing as processed
             todoTracings = setdiff(todoTracings, idx2);
+            tracing = tasks(idx).tracings(idx2);
             
             % NOTE(amotta): Find components touched by flight path
-            getIdsFromCC=@(x)agglo.nodes(ismember(agglo.nodesScaled,thisNodes(x,:),'rows'),4);
-            nonull = @(x)x(x~=0);
-            whichones = find(cellfun(@(x)any(ismember(getIdsFromCC(x),nonull(tasks(idx).tracings(idx2).segids))),C))';
+            overlaps = find(cellfun(@(ids) min(min(pdist2( ...
+                bsxfun(@times, tracing.nodes, p.voxelSize), ...
+                thisNodes(ids, :)))) < cutoffDistNm, C));
             
             summary.tracings{idx}.processed(idx2) = tracingIdx;
-            summary.tracings{idx}.overlaps{idx2} = whichones;
+            summary.tracings{idx}.overlaps{idx2} = overlaps;
             
-            if length(whichones) ~= 2
+            if numel(overlaps) ~= 2
                 % NOTE(amotta): Flight is invalid. Go to next...
                 continue;
             end
             
-            conns(end + 1, :) = whichones;
+            conns(end + 1, :) = overlaps;
             groups = Graph.findConnectedComponents(conns);
             tracingIdx = tracingIdx + 1;
         end
