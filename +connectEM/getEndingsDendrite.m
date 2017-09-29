@@ -18,7 +18,7 @@ end
 skel = Skeleton3D(voxelRepresentation2>0);
 if  any(skel(:))
     node2 = connectEM.querySkeleton(skel);
-    nodes = cell2mat(arrayfun(@(x) round([x.comx * 8, x.comy*8, x.comz*8/2.313]+min_coord),node2(arrayfun(@(x) length(x.links==1),node2)),'uni',0));  % move again into dataset coords
+    nodes = cell2mat(arrayfun(@(x) round([x.comx * 8, x.comy*8, x.comz*8/2.313]+min_coord),node2(arrayfun(@(x) length(x.links)==1,node2)),'uni',0));  % move again into dataset coords
 else
     nodes = [];
 end
