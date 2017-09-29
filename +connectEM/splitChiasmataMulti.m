@@ -121,12 +121,15 @@ function [newAgglos, summary] = ...
             
             % NOTE(amotta): Mark tracing as processed
             todoTracings = setdiff(todoTracings, idx2);
-            tracing = tasks(idx).tracings(idx2);
+            
+            % NOTE(amotta): A tracing may be empty (hence the reshape)
+            tracingScaled = tasks(idx).tracings(idx2).nodes;
+            tracingScaled = reshape(tracingScaled, [], 3);
+            tracingScaled = bsxfun(@times, tracingScaled, p.voxelSize);
             
             % NOTE(amotta): Find components touched by flight path
             overlaps = find(cellfun(@(ids) min(min(pdist2( ...
-                bsxfun(@times, tracing.nodes, p.voxelSize), ...
-                thisNodes(ids, :)))) < cutoffDistNm, C));
+                tracingScaled, thisNodes(ids, :)))) < cutoffDistNm, C));
             
             summary.tracings{idx}.processed(idx2) = tracingIdx;
             summary.tracings{idx}.overlaps{idx2} = overlaps;
