@@ -1,7 +1,8 @@
 % Written by
 %   Alessandro Motta <alessandro.motta@brain.mpg.de>
 
-resultsFile = '/home/amotta/Desktop/20170928T222837-results.mat';
+resultsFile = '/home/amotta/Desktop/20170929T113827-results.mat';
+outputDir = '/home/amotta/Desktop/chiasmata-splitting';
 data = load(resultsFile);
 
 %% Show fraction solved per size
@@ -20,9 +21,10 @@ disp(results)
 %% Export examples
 clearvars -except data;
 
-nrExits = 5;
-solved = true;
-outputDir = '/home/amotta/Desktop';
+nrExits = 4;
+solved = false;
+
+mkdir(outputDir);
 
 prefix = {'unsolved', 'solved'};
 prefix = sprintf('%d-fold__%s', nrExits, prefix{1 + solved});
@@ -60,10 +62,35 @@ for row = 1:size(t, 1)
     skel = skel.addTree( ...
         'Original', agglo.nodes, agglo.edges, [], [], comments);
     
-    % add components
-    newAgglos = data.newAgglos(data.parentIds == parentId);
-    for newAgglo = newAgglos(:)'
-        skel = skel.addTree('Split', newAgglo.nodes, newAgglo.edges);
+    if solved
+        % in "solved" case, show components
+        newAgglos = data.newAgglos(data.parentIds == parentId);
+        for newAgglo = newAgglos(:)'
+            skel = skel.addTree('Split', newAgglo.nodes, newAgglo.edges);
+        end
+    else
+        % in "unsolved" case, also show flight paths
+        axonId = t.axonId(row);
+        chiasmaId = t.chiasmaId(row);
+        flights = data.summary(axonId).tracings{chiasmaId};
+        
+        for ffIdx = 1:numel(flights.nodes)
+            ffNodes = flights.nodes{ffIdx};
+            ffProcessed = flights.processed(ffIdx);
+            
+            ffOverlaps = flights.overlaps{ffIdx};
+            ffOverlaps = arrayfun(@num2str, ffOverlaps, 'Uni', false);
+            ffOverlaps = cat(2, ffOverlaps(:)', {'?', '?'});
+            ffOverlaps = strjoin(ffOverlaps(1:2), '-');
+            
+            ffEdges = Graph.getMST(bsxfun( ...
+                @times, ffNodes, data.p.raw.voxelSize));
+            
+            ffName = sprintf( ...
+                'Flight Path %d. Processed %d. Overlaps %s', ...
+                ffIdx, ffProcessed, ffOverlaps);
+            skel = skel.addTree(ffName, ffNodes, ffEdges);
+        end
     end
     
     skelFile = sprintf( ...
