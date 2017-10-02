@@ -92,7 +92,7 @@ function createNewSuperagglos(param, state)
         unique(aggloEndPairs(:, 1:2), 'rows');
     pairFlightGroups = arrayfun( ...
         @(idx) aggloIds(pairFlightGroups == idx), ...
-        (1:size(uniAggloPairs, 1))', 'UniformOutput', false);
+        (1:max(pairFlightGroups))', 'UniformOutput', false);
 
     %% handle dangling flight paths
     assert(all(linkagesFlat(dangIds, 1) > 0));
@@ -102,7 +102,7 @@ function createNewSuperagglos(param, state)
    [~, ~, dangFlightGroups] = unique(dangEndIds);
     dangFlightGroups = arrayfun( ...
         @(idx) dangIds(dangFlightGroups == idx), ...
-        (1:numel(dangFlightIds))', 'UniformOutput', false);
+        (1:max(dangFlightGroups))', 'UniformOutput', false);
 
     %% put it all together
     flightGroups = cat(1, pairFlightGroups, dangFlightGroups);
@@ -113,7 +113,7 @@ function createNewSuperagglos(param, state)
 
     eqClasses = Graph.findConnectedComponents(uniAggloPairs, true, true);
     eqClasses = [eqClasses; num2cell(setdiff( ...
-        1 : length(superAgglos), cell2mat(eqClasses)))'];
+        1:numel(superAgglos), cell2mat(eqClasses)))'];
 
     %% build super-agglomerates
     flightPaths.startAgglo = ...
