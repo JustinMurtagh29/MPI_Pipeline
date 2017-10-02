@@ -1,30 +1,52 @@
-function createNewSuperagglos(param,state)
+function createNewSuperagglos(param, state)
+    % The key idea is that we want at most one flight path between any pair
+    % of agglomerates during the generation of super-agglomerates.
+    % 
+    % In a first step we thus only look at flight paths which attach to
+    % exactly two agglomerates. For each occuring pair of agglomerates we
+    % want to pick exactly one flight path from one or multiple ones.
+    % 
+    % To do so, the flight paths connecting a given pair of agglomerates
+    % are sorted by descending "reliability" and only the top one is
+    % chosen. I've decided to use the number of involved endings as measure
+    % for reliability:
+    % 
+    % Two is better than one is better than none.
+    % 
+    % What remains are the dangling flight paths: By definition these
+    % attach to exactly one ending. To remove redundant flight paths we
+    % allow at most one dangling flight path per ending.
+    %
+    % From an email from AM to the entire L4 team on Sunday, 01.10.2017.
+    %
     % Written by
     %   Christian Schramm <christian.schramm@brain.mpg.de>
     %   Manuel Berning <manuel.berning@brain.mpg.de>
+    %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     
     dataDir = fullfile(param.saveFolder, 'aggloState');
 
-    [~, ~, suffix, axonVersion, axonVersionNew, casesToMerge] = connectEM.setQueryState(state);
+    [~, ~, suffix, axonVersion, axonVersionNew, casesToMerge] = ...
+        connectEM.setQueryState(state);
 
     % Load current state of agglomerates
-    agglos = load(fullfile(dataDir, strcat('axons_',num2str(axonVersion,'%.2i'),'.mat')));
+    agglos = load(fullfile( ...
+        dataDir, sprintf('axons_%02d.mat', axonVersion)));
     superAgglos = agglos.axons(agglos.indBigAxons);
     
     % NOTE(amotta): `agglos` contains all super-agglomerates. `superAgglos`
     % is restricted to the large-enough ones.
 
     % Load linkages and cases for execusion
-    load(fullfile(dataDir, strcat('caseDistinctions',suffix,'.mat')),...
-        'linkagesAgglos','flightPaths','linkagesFlat');
-    load(fullfile(dataDir, strcat('attachedEndings',suffix,'.mat')),'flightsOfEndingCases','endingCaseDistinctions');
+    load(fullfile(dataDir, sprintf('caseDistinctions%s.mat', suffix)), ...
+        'linkagesAgglos', 'flightPaths', 'linkagesFlat');
+    load(fullfile(dataDir, sprintf('attachedEndings%s.mat', suffix)), ...
+        'flightsOfEndingCases', 'endingCaseDistinctions');
     
     % Choose cases for merging and generation of queries
-    if isempty(casesToMerge)
-        casesToMerge = [1:6, 8:14];
-    end
-    executedFlightPaths = flightsOfEndingCases(ismember(endingCaseDistinctions, casesToMerge));
-    executedFlightPaths = unique(cat(2,executedFlightPaths{:})');
+    executedFlightPaths = flightsOfEndingCases( ...
+        ismember(endingCaseDistinctions, casesToMerge));
+    executedFlightPaths = unique(cat(2, executedFlightPaths{:})');
        
     % sanity checks
     assert(isequal(size(linkagesAgglos), size(linkagesFlat)));
@@ -33,90 +55,98 @@ function createNewSuperagglos(param,state)
     assert(size(linkagesAgglos, 1) == numel(flightPaths.ff.segIds));
     assert(~any(diff(structfun(@numel, flightPaths.ff))));
     assert(max(executedFlightPaths) < size(linkagesAgglos, 1));
-    
-    execusion = false(size(linkagesAgglos,1),1);
-    execusion(executedFlightPaths) = true;
-    
-    executedFlightPaths = execusion;
-    clear execusion;
 
-    % NOTE(amotta):
-    % Q: `superAgglos` contains only the large-enough axons. Is it also
-    %    true that the agglomerate IDs in `linkagesAgglos` refer to the
-    %    large-enough axons?
-    % A: The `linkagesAgglos` are directly generated from `startAgglo` and
-    %    `endAgglo` of `flightPaths`. It seems like these fields also only
-    %    refer to the large-enough axons.
-    % See:
-    %    https://gitlab.mpcdf.mpg.de/connectomics/pipeline/blob/master/+connectEM/getAggloQueryOverlapB.m#L18
+    %% preparation for redundancy detection
+    mask = false(size(linkagesAgglos, 1), 1);
+    mask(executedFlightPaths) = true;
 
-    % Find connected components of equivalent classes
-    % NOTE(amotta): Only use flights which attach at both end to
-    % agglomerates. This makes sense.
-    edgesCC = linkagesAgglos(executedFlightPaths,:);
-    edgesCC(any(isnan(edgesCC), 2), :) = [];
-    edgesCC = sort(edgesCC, 2);
+    % mask for flight that attach at both ends
+    validAttach = ...
+        @(ids) numel(ids) == 1 && ids(1) > 0;
+    aggloMask = ...
+        cellfun(validAttach, flightPaths.startAgglo) ...
+      & cellfun(validAttach, flightPaths.endAgglo);
+  
+    % find ids of dangling and doubly attached flights
+    dangIds = find(mask & ~aggloMask);
+    aggloIds = find(mask & aggloMask);
     
-    eqClassCC = Graph.findConnectedComponents(edgesCC, true, true);
-    eqClassCCfull = [eqClassCC; num2cell(setdiff(1 : length(superAgglos), cell2mat(eqClassCC)))'];
+    %% handle doubly attached flight paths
+    aggloPairs = horzcat( ...
+        cell2mat(flightPaths.startAgglo(aggloIds)), ...
+        cell2mat(flightPaths.endAgglo(aggloIds)));
+    aggloPairs = sort(aggloPairs, 2);
 
-    % NOTE(amotta): Add flight path ID for tracking
-    flightPaths.id = reshape(1:numel(flightPaths.startAgglo), [], 1);
-    
-    % Use only those flight paths for execusion with the chosen case IDs
-    % NOTE(amotta): Dimensions agree!
-    flightPaths.id(~executedFlightPaths) = [];
-    flightPaths.startAgglo(~executedFlightPaths,:) = [];
-    flightPaths.endAgglo(~executedFlightPaths,:) = [];
-    flightPaths.ff = structfun(@(x)x(executedFlightPaths), flightPaths.ff, 'uni', 0);
-    linkagesFlat(~executedFlightPaths, :) = [];
+    % NOTE(amotta): Build a table with the pairs-of-agglomerates and pairs-
+    % of-endings. By sorting this table DESCENDING ENDING IDS for each pair
+    % of agglomerates and then taking the unique agglomerate pairs, we
+    % favor ending attachments.
+    endPairs = linkagesFlat(aggloIds, :);
+    endPairs = sort(endPairs, 2);
 
-    % Eliminate duplicate flight paths
-    % NOTE(amotta): Flight paths do **not** require to attach to
-    % agglomerates at both ends. This is true for dangling flight queries,
-    % for example.
-    [~, positionUniques] = unique(sort(linkagesFlat,2), 'rows');
-    duplicates = true(size(linkagesFlat,1),1);
-    duplicates(positionUniques) = 0;
-    
-    % NOTE(amotta): No-endings (i.e., ending #0) cannot be compared for
-    % equality. Ending zero of one flight path **is not the same** as
-    % the ending zero of another flight path. These are the flight paths
-    % producing case E5c endings.
-    duplicates(any(linkagesFlat == 0, 2)) = false;
-    
-    % NOTE(amotta): Dimensions agree!
-    flightPaths.id(duplicates) = [];
-    flightPaths.startAgglo(duplicates,:) = [];
-    flightPaths.endAgglo(duplicates,:) = [];
-    flightPaths.ff = structfun(@(x)x(~duplicates), flightPaths.ff, 'uni', 0);
-    
-    % NOTE(amotta): At this point each agglomerate should still be a
-    % single connected component. That's what Marcel checked. Can confirm.
-    
-    % sanity check
-    % NOTE(amotta): passes!
-    % assert(all(arrayfun(@(x) ...
-    %     numel(Graph.findConnectedComponents(x.edges)) == 1, ...
-    %     superAgglos(arrayfun(@(x) size(x.nodes, 1), superAgglos) > 1))));
+    aggloEndPairs = horzcat(aggloPairs, endPairs);
+   [aggloEndPairs, sortIds] = sortrows(aggloEndPairs, [1, 2, -3, -4]);
+    aggloIds = aggloIds(sortIds);
 
-    % Merging to super agglos
+   [uniAggloPairs, ~, pairFlightGroups] = ...
+        unique(aggloEndPairs(:, 1:2), 'rows');
+    pairFlightGroups = arrayfun( ...
+        @(idx) aggloIds(pairFlightGroups == idx), ...
+        (1:size(uniAggloPairs, 1))', 'UniformOutput', false);
+
+    %% handle dangling flight paths
+    assert(all(linkagesFlat(dangIds, 1) > 0));
+    assert(all(isnan(linkagesFlat(dangIds, 2))));
+    dangEndIds = linkagesFlat(dangIds, 1);
+
+   [~, ~, dangFlightGroups] = unique(dangEndIds);
+    dangFlightGroups = arrayfun( ...
+        @(idx) dangIds(dangFlightGroups == idx), ...
+        (1:numel(dangFlightIds))', 'UniformOutput', false);
+
+    %% put it all together
+    flightGroups = cat(1, pairFlightGroups, dangFlightGroups);
+    uniFlightIds = cellfun(@(ids) ids(1), flightGroups);
+
+   [uniFlightIds, sortIds] = sort(uniFlightIds);
+    flightGroups = flightGroups(sortIds);
+
+    eqClasses = Graph.findConnectedComponents(uniAggloPairs, true, true);
+    eqClasses = [eqClasses; num2cell(setdiff( ...
+        1 : length(superAgglos), cell2mat(eqClasses)))'];
+
+    %% build super-agglomerates
+    flightPaths.startAgglo = ...
+        flightPaths.startAgglo(uniFlightIds);
+    flightPaths.endAgglo = ...
+        flightPaths.endAgglo(uniFlightIds);
+    flightPaths.ff = structfun( ...
+        @(x) x(uniFlightIds), flightPaths.ff, ...
+        'UniformOutput', false);
+
     axonsNew = connectEM.mergeSuperagglosBasedOnFlightPath( ...
-        superAgglos, eqClassCCfull, flightPaths.startAgglo, ...
+        superAgglos, eqClasses, flightPaths.startAgglo, ...
         flightPaths.endAgglo, flightPaths.ff);
-    
+
     % sanity check
     assert(all(arrayfun(@(x) ...
         numel(Graph.findConnectedComponents(x.edges)) == 1, ...
         axonsNew(arrayfun(@(x) size(x.nodes, 1), axonsNew) > 1))));
+
+    out = struct;
+    out.param = param;
+    out.state = state;
+    out.gitInfo = Util.gitInfo();
     
-    % Concatenate small axons below 5 um
-    axons = cat(1,axonsNew, agglos.axons(~agglos.indBigAxons));
-    indBigAxons = false(length(axons),1);
-    indBigAxons(1:length(axonsNew),1) = true;
+    out.eqClasses = eqClasses;
+    out.flightGroups = flightGroups;
+    
+    out.axons = cat(1, axonsNew, agglos.axons(~agglos.indBigAxons));
+    out.indBigAxons = false(length(out.axons),1);
+    out.indBigAxons(1:numel(axonsNew), 1) = true;
 
     % Save super agglos and deprive writing permission
-    saveFile = fullfile(dataDir, strcat('axons_',axonVersionNew,'.mat'));
-    save(saveFile, 'axons','indBigAxons');
-    system(['chmod -w ' saveFile]);
+    saveFile = fullfile(dataDir, sprintf('axons_%s.mat', axonVersionNew));
+    Util.saveStruct(saveFile, out);
+    system(sprintf('chmod -w "%s"', saveFile));
 end
