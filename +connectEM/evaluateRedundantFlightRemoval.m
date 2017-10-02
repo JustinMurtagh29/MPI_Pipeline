@@ -71,7 +71,14 @@ aggloPairIds = aggloPairIds(sortIds);
     unique(aggloEndPairs(:, 1:2), 'rows', 'first');
 pairFlightIds = aggloPairIds(pairFlightIds);
 
-% endings for dangling ones
+pairDupFlights = arrayfun( ...
+    @(idx) aggloPairIds(pairFlightGroups == idx), ...
+    (1:numel(pairFlightIds))', 'UniformOutput', false);
+pairDupFlights = cellfun( ...
+    @(ids) ids(2:end), pairDupFlights, ...
+    'UniformOutput', false);
+
+%% handle dangling flight paths
 assert(all(linkagesFlat(dangIds, 1) > 0));
 assert(all(isnan(linkagesFlat(dangIds, 2))));
 dangEndIds = linkagesFlat(dangIds, 1);
@@ -79,8 +86,44 @@ dangEndIds = linkagesFlat(dangIds, 1);
 [~, dangFlightIds, dangFlightGroups] = unique(dangEndIds);
 dangFlightIds = dangIds(dangFlightIds);
 
-% put it all together
-uniFlightIds = sort(cat(1, pairFlightIds, dangFlightIds));
+dangDupFlights = arrayfun( ...
+    @(idx) dangIds(dangFlightGroups == idx), ...
+    (1:numel(dangFlightIds))', 'UniformOutput', false);
+dangDupFlights = cellfun( ...
+    @(ids) ids(2:end), dangDupFlights, ...
+    'UniformOutput', false);
+
+%% put it all together
+uniFlightIds = cat(1, pairFlightIds, dangFlightIds);
+dupFlights = cat(1, pairDupFlights, dangDupFlights);
+assert(isequal(size(uniFlightIds), size(dupFlights)));
+
+[uniFlightIds, sortIds] = sort(uniFlightIds);
+dupFlights = dupFlights(sortIds);
+
 eqNew = Graph.findConnectedComponents(uniAggloPairs, true, true);
 eqNew = [eqNew; num2cell(setdiff( ...
     1 : length(superAgglos), cell2mat(eqNew)))'];
+
+%%
+flightPaths.startAgglo = ...
+    flightPaths.startAgglo(uniFlightIds);
+flightPaths.endAgglo = ...
+    flightPaths.endAgglo(uniFlightIds);
+flightPaths.ff = structfun( ...
+    @(x) x(uniFlightIds), flightPaths.ff, ...
+    'UniformOutput', false);
+
+axonsNew = connectEM.mergeSuperagglosBasedOnFlightPath( ...
+    superAgglos, eqNew, flightPaths.startAgglo, ...
+    flightPaths.endAgglo, flightPaths.ff);
+
+% sanity check
+assert(all(arrayfun(@(x) ...
+    numel(Graph.findConnectedComponents(x.edges)) == 1, ...
+    axonsNew(arrayfun(@(x) size(x.nodes, 1), axonsNew) > 1))));
+
+% Concatenate small axons below 5 um
+axons = cat(1,axonsNew, agglos.axons(~agglos.indBigAxons));
+indBigAxons = false(length(axons),1);
+indBigAxons(1:length(axonsNew),1) = true;
