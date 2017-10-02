@@ -53,8 +53,10 @@ chiasmaNodeFracs = chiasmaNodeCounts ./ nodeCount;
 chiasmaCounts = cellfun(@(s) numel(s.ccCenterIdx), chiasmata);
 chiasmaTotalCount = sum(chiasmaCounts);
 
-chiasmaSizes = cell2mat(cellfun(@ ...
-    (s) cellfun(@numel, s.ccNodeIdx(:)), chiasmata, 'Uni', false));
+chiasmaSizes = cell2mat(cellfun(@(s) ...
+    cellfun(@numel, s.ccNodeIdx(:)), chiasmata, 'Uni', false));
+chiasmaNrExits = cell2mat(cellfun(@(c) ...
+    cellfun(@(p) size(p, 1), c.position), chiasmata, 'Uni', false));
 
 chiasmaAggloMask = chiasmaCounts > 0;
 chiasmaAggloFrac = mean(chiasmaAggloMask);
@@ -74,6 +76,11 @@ fprintf('%s\n', strjoin(arrayfun(@num2str, temp(1:10), 'Uni', false), ', '));
 temp = sort(chiasmaNodeCounts, 'descend');
 fprintf('\nLargest number of chiasma nodes per agglomerate:\n');
 fprintf('%s\n', strjoin(arrayfun(@num2str, temp(1:10), 'Uni', false), ', '));
+
+temp = table;
+temp.nrExits = (4:max(chiasmaNrExits))';
+temp.nrChiasmata = arrayfun(@(c) sum(chiasmaNrExits == c), temp.nrExits);
+fprintf('\n'); disp(temp);
 
 %% write out largest chiasmata
 mkdir(outputDir);
