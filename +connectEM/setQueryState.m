@@ -220,7 +220,7 @@ function [skeletonFolders, flightPathsSuffix, versionSuffix, axonVersion,...
         % All cases but E3a, but with different version number for output.
         % The only difference is that +connectEM/createNewSuperagglos was
         % changed to use an improved routine for redundancy elimination.
-    elseif strcmp(state,'6.2')
+    elseif strcmp(state,'6.3')
         % source folders for flight paths
         scratchFolder = '/u/mberning/results/pipeline/20170217_ROI/aggloState/queryAnswers/';
         skeletonFolders = {'MBKMB_L4_axons_queries_2017_a' 'MBKMB_L4_axons_queries_2017_b' ...
