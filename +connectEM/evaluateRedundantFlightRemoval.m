@@ -61,7 +61,7 @@ aggloPairs = sort(aggloPairs, 2);
 % pair of agglomerates and then taking the unique agglomerate pairs, we
 % favor ending attachments.
 endPairs = linkagesFlat(aggloPairIds, :);
-endPairs = sort(endPairs, 2, 'descend');
+endPairs = sort(endPairs, 2);
 
 aggloEndPairs = horzcat(aggloPairs, endPairs);
 [aggloEndPairs, sortIds] = sortrows(aggloEndPairs, [1, 2, -3, -4]);
