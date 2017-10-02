@@ -8,10 +8,10 @@
 
 % configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-axonFile = fullfile(rootDir, 'aggloState', 'axons_05.mat');
+axonFile = fullfile(rootDir, 'aggloState', 'axons_06_c.mat');
 
-chiasmId = 31;
-chiasmDir = '/tmpscratch/kboerg/chiasmataX31/chiasmata';
+chiasmId = 34;
+chiasmDir = '/tmpscratch/kboerg/chiasmata';
 
 outputDir = '/home/amotta/Desktop';
 
