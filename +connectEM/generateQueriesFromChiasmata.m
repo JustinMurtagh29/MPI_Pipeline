@@ -6,7 +6,7 @@ function output = generateQueriesFromChiasmata(outputFolder, agglos)
     output = [];
     for idx_agglo = find(agglos.indBigAxons)'
         idx_agglo
-        temp = load(['/tmpscratch/kboerg/chiasmata/chiasmataX33_' num2str(floor(idx_agglo/100)) '/visX33_' num2str(idx_agglo) '/result.mat']);
+        temp = load(['/tmpscratch/kboerg/chiasmata/chiasmataX34_' num2str(floor(idx_agglo/100)) '/visX34_' num2str(idx_agglo) '/result.mat']);
         for i=1:length(temp.output.position)
             % sanity check
             assert(size(temp.output.direction{i}, 1) ...
