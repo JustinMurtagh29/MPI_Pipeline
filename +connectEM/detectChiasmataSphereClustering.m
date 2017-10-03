@@ -35,6 +35,7 @@ for i=1:size(nodes,1)
             distances = squareform(pdist(thisNodesOuterSphere, 'cosine'));
             adjMatrix = sparse(double(distances < p.minimumCosineDistance));
             cc = Graph.findConnectedComponents(adjMatrix, false, false);
+
             if length(cc) > 2;
             	isIntersection(i) = true;
             end
