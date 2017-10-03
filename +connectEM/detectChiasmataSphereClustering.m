@@ -35,13 +35,12 @@ for i=1:size(nodes,1)
             distances = squareform(pdist(thisNodesOuterSphere, 'cosine'));
             adjMatrix = sparse(double(distances < p.minimumCosineDistance));
             cc = Graph.findConnectedComponents(adjMatrix, false, false);
-
-            if length(cc) > 2;
+            curNrExits = sum(cellfun(@(idx) ...
+                                max(pdist2(thisNodes(idx, :), nodes(i, :))) > 3000, cc));
+            if curNrExits > 2;
             	isIntersection(i) = true;
+                nrExits(i) = length(curNrExits);
             end
-            nrExits(i) = length(cc);
-        else
-            nrExits(i) = nodeSphereDegree;
         end
     end
 
