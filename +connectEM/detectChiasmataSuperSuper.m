@@ -1,4 +1,9 @@
-function job = detectChiasmataSuperSuper(p)
+function job = detectChiasmataSuperSuper(p, useSphereClustering)
+
+if nargin < 2
+    % set to true for alternate approach of clustering on sphere (detectChiasmata vs. detectChiasmataSphereClustering)
+    useSphereClustering = false;
+end
 
 addpath('/gaba/u/kboerg/code/manuelCode/games') %for a clean version of findCCaccordingToGraph
 functionH = @connectEM.detectChiasmataSuper;
@@ -12,5 +17,5 @@ cluster = Cluster.getCluster( ...
     '-l h_rt=24:00:00');
 job = Cluster.startJob( functionH, inputCell, ...
     'name', 'chiasmata', ...
-    'sharedInputs', {p},  'sharedInputsLocation', 2, ...
+    'sharedInputs', {p, useSphereClustering},  'sharedInputsLocation', [2, 3], ...
     'cluster', cluster);
