@@ -8,8 +8,8 @@ if ~exist(outputFolder, 'dir')
 end
 
 % Not very beautiful to temporary add to p structure
-p.sphereRadiusOuter = 3500; % in nm
-p.sphereRadiusInner = 3000; % in nm
+p.sphereRadiusOuter = 1500; % in nm
+p.sphereRadiusInner = 1000; % in nm
 p.minimumCosineDistance = 0.2;
 
 % Scale to nm
