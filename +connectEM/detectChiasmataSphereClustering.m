@@ -7,8 +7,13 @@ if ~exist(outputFolder, 'dir')
     mkdir(outputFolder);
 end
 
+% Not very beautiful to temporary add to p structure
+p.sphereRadiusOuter = 3500; % in nm
+p.sphereRadiusInner = 3000; % in nm
+p.minimumCosineDistance = 0.2;
+
 % Scale to nm
-nodes = bsxfun(@times, nodesV, p.voxelSize);
+nodes = bsxfun(@times, nodesV, p.raw.voxelSize);
 
 % for each node with node degree > 2 ("marching sphere" approach to merger detection)
 isIntersection = false(size(nodes,1),1);
@@ -31,7 +36,7 @@ for i=1:size(nodes,1)
             adjMatrix = sparse(double(distances < p.minimumCosineDistance));
             cc = Graph.findConnectedComponents(adjMatrix, false, false);
             if length(cc) > 2;
-            	isIntersection(i) = true;                   
+            	isIntersection(i) = true;
             end
             nrExits(i) = length(cc);
         else
@@ -48,7 +53,7 @@ for i=1:size(nodes,1)
         subplot(2,2,2);
         visualizeClustering(thisNodes, thisEdges, thisIdx, thisIdxOuter, p, thisNodesOuterSphere, cc);
         title('Clusters in sphere hull as detected by cluster visualization');
-        % Third subplot 
+        % Third subplot
         subplot(2,2,3);
         imagesc(distances);
         axis equal; axis off;
@@ -99,7 +104,7 @@ for i=1:length(cc)
         % Save position direction and length of query
         pos{i} = nodesV(queryIdx{i},:);
         dir{i} = bsxfun(@minus, pos{i}, nodesV(cc{i}(centerOfCC(i)),:));
-        dist{i} = pdist2(bsxfun(@times, pos{i}, p.voxelSize), bsxfun(@times, nodesV(cc{i}(centerOfCC(i)),:), p.voxelSize), 'chebychev');
+        dist{i} = pdist2(bsxfun(@times, pos{i}, p.raw.voxelSize), bsxfun(@times, nodesV(cc{i}(centerOfCC(i)),:), p.raw.voxelSize), 'chebychev');
     else
         %toDel(i) = true;
     end
