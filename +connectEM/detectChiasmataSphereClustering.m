@@ -36,7 +36,7 @@ for i=1:size(nodes,1)
             adjMatrix = sparse(double(distances < p.minimumCosineDistance));
             cc = Graph.findConnectedComponents(adjMatrix, false, false);
             curNrExits = sum(cellfun(@(idx) ...
-                                max(pdist2(thisNodes(idx, :), nodes(i, :))) > 3000, cc));
+                                max(pdist2(thisNodesOuterSphere(idx, :), nodes(i, :))) > 3000, cc));
             if curNrExits > 2;
             	isIntersection(i) = true;
                 nrExits(i) = length(curNrExits);
