@@ -43,6 +43,7 @@ for i=1:size(nodes,1)
             nrExits(i) = nodeSphereDegree;
         end
     end
+
     if visualize && isIntersection(i)
         figure('Position', [3841 1 1920 999]);
         % First subplot visualizing pruning to sphere (Step 1)
@@ -67,11 +68,16 @@ for i=1:size(nodes,1)
         pause(2);
         close all;
     end
+
 end
 
 % Find CC of detected intersections according to graph
-temp.edges = edges;
-cc = findCCaccordingToGraph(temp, find(isIntersection));
+if isempty(edges)
+    cc = {};
+else
+    temp.edges = edges;
+    cc = findCCaccordingToGraph(temp, find(isIntersection));
+end
 [~, centerOfCC] = cellfun(@(x)min(pdist2(bsxfun(@minus, nodes(x,:), mean(nodes(x,:),1)), [0 0 0])), cc);
 
 % Find out where to query for each CC
@@ -127,6 +133,9 @@ output.queryIdx = queryIdx;
 output.position = pos;
 output.direction = dir;
 output.distance = dist;
+
+% Save result
+save([outputFolder 'result.mat'], 'output');
 
 end
 
