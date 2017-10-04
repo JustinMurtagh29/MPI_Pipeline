@@ -9,6 +9,9 @@ addpath('/gaba/u/kboerg/code/manuelCode/games') %for a clean version of findCCac
 functionH = @connectEM.detectChiasmataSuper;
 inputCell = cellfun(@(x){x}, num2cell(1 : 500), 'uni', 0);
 
+% set id for detected chiasmata
+p.chiasmataVersion = datestr(now, 30);
+
 cluster = Cluster.getCluster( ...
     '-pe openmp 1', ...
     '-p 0', ...
