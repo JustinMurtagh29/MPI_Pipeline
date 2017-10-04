@@ -1,4 +1,5 @@
-function output = detectChiasmata(p, nodesV, edges, visualize, outputFolder )
+function output = detectChiasmataSphereClustering( ...
+        p, nodesV, edges, visualize, outputFolder)
 % Detect chiasmata in skeletons based on marching sphere algorithm
 % Nodes should be in voxel, scaled here
 
@@ -71,14 +72,9 @@ for i=1:size(nodes,1)
 
 end
 
-% Find CC of detected intersections according to graph
-if isempty(edges)
-    cc = {};
-else
-    temp.edges = edges;
-    cc = findCCaccordingToGraph(temp, find(isIntersection));
-end
-[~, centerOfCC] = cellfun(@(x)min(pdist2(bsxfun(@minus, nodes(x,:), mean(nodes(x,:),1)), [0 0 0])), cc);
+% Build chiasmata from chiasmatic nodes
+[cc, centerOfCC] = ...
+    connectEM.detectChiasmataNodesCluster(nodes, isIntersection);
 
 % Find out where to query for each CC
 queryIdx = cell(length(cc),1);
