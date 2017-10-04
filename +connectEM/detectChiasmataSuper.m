@@ -5,7 +5,7 @@ function detectChiasmataSuper(startidx,p, useSphereClustering)
     end
     temp = load(fullfile(p.saveFolder,'aggloState/axons_06_c.mat'));
     temp.axons = temp.axons(temp.indBigAxons);
-    numstr='35';
+    numstr='36';
     for idx = startidx : 500 : length(temp.axons)
         outputFolder = fullfile('/tmpscratch/kboerg/chiasmata', ['chiasmataX', numstr, '_' num2str(floor(idx/100)) '/visX', numstr, '_' num2str(idx) '/']);
         mkdir(outputFolder);

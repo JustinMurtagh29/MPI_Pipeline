@@ -37,9 +37,9 @@ for i=1:size(nodes,1)
             cc = Graph.findConnectedComponents(adjMatrix, false, false);
             curNrExits = sum(cellfun(@(idx) ...
                                 max(pdist2(thisNodesOuterSphere(idx, :), nodes(i, :))) > 3000, cc));
-            if curNrExits > 2;
+            if curNrExits > 3;
             	isIntersection(i) = true;
-                nrExits(i) = length(curNrExits);
+                nrExits(i) = curNrExits;
             end
         end
     end
