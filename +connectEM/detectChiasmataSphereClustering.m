@@ -20,56 +20,8 @@ nodes = bsxfun(@times, nodesV, p.raw.voxelSize);
 isIntersection = false(size(nodes,1),1);
 nrExits = zeros(size(nodes,1),1);
 for i=1:size(nodes,1)
-    nodeDegree = sum(edges(:) == i);
-    % If node degree of current node larger than 2
-    if nodeDegree > 2
-        % Step 1: Prune to sphere (around node in row i) and keep only CC of nodes connected to i
-        [thisNodes, thisEdges, thisIdx, thisIdxOuter] = pruneToSphere(p, nodes, edges, i);
-        % Sphere degree of node is defined as number of nodes connecting to the
-        % outside of the outer sphere just pruned to
-        edgesToOutside = thisEdges(any(ismember(thisEdges, thisIdxOuter),2),:);
-        nodeSphereDegree = length(setdiff(edgesToOutside, thisIdxOuter));
-        if nodeSphereDegree > 2
-            % Step 2: Restrict to edges in outer sphere (and interpolate along them)
-            thisNodesOuterSphere = sphereHull(p, thisNodes, thisEdges, thisIdx);
-            % Step 3: Cluster into groups using single linkage clustering
-            distances = squareform(pdist(thisNodesOuterSphere, 'cosine'));
-            adjMatrix = sparse(double(distances < p.minimumCosineDistance));
-            cc = Graph.findConnectedComponents(adjMatrix, false, false);
-            curNrExits = sum(cellfun(@(idx) ...
-                                max(pdist2(thisNodesOuterSphere(idx, :), nodes(i, :))) > 3000, cc));
-            if curNrExits > 3;
-            	isIntersection(i) = true;
-                nrExits(i) = curNrExits;
-            end
-        end
-    end
-
-    if visualize && isIntersection(i)
-        figure('Position', [3841 1 1920 999]);
-        % First subplot visualizing pruning to sphere (Step 1)
-        subplot(2,2,1);
-        visualizeSingleSphere(thisNodes, thisEdges, thisIdx, thisIdxOuter, p);
-        title('Pruned to CC of edges within outer sphere');
-        % Second subplot visualizing result of inital clustering
-        subplot(2,2,2);
-        visualizeClustering(thisNodes, thisEdges, thisIdx, thisIdxOuter, p, thisNodesOuterSphere, cc);
-        title('Clusters in sphere hull as detected by cluster visualization');
-        % Third subplot
-        subplot(2,2,3);
-        imagesc(distances);
-        axis equal; axis off;
-        colorbar;
-        title('Cosine distances between nodes in outer sphere');
-        subplot(2,2,4);
-        imagesc(distances > p.minimumCosineDistance);
-        axis equal; axis off;
-        colorbar;
-        title(['Final result: Detected intersection with ' num2str(nrExits(i)) ' exits']);
-        pause(2);
-        close all;
-    end
-
+    nrExits(i) = forNode(p, nodes, edges, i, visualize);
+    isIntersection(i) = nrExits(i) > 3;
 end
 
 % Build chiasmata from chiasmatic nodes
@@ -77,46 +29,13 @@ end
     connectEM.detectChiasmataNodesCluster(nodes, isIntersection);
 
 % Find out where to query for each CC
-queryIdx = cell(length(cc),1);
-pos = cell(length(cc),1);
-dir = cell(length(cc),1);
-dist = cell(length(cc),1);
-toDel = false(length(cc),1);
-for i=1:length(cc)
-    % Find all nodes outside CC of detected intersections that are neighbours to CC
-    edgesIdx = any(ismember(edges, cc{i}),2);
-    queryIdx{i} = setdiff(edges(edgesIdx,:), cc{i});
-    % Keep edges not connected to CC
-    edgesPruned = edges(~edgesIdx, :);
-    nodeDegree = histc(edgesPruned(:), 1:size(nodes,1));
-    % Find CC of graph with 5 or more elements after removing CC of intersections
-    ccAfterPruning = Graph.findConnectedComponents(edgesPruned, false, true);
-    ccAfterPruning = ccAfterPruning(cellfun('length', ccAfterPruning) > 4);
-    % Keep only one one queryIdx for each of those CC (the one with maximum node degree)
-    queryLocation = cellfun(@(x)intersect(x, queryIdx{i}), ccAfterPruning, 'uni', 0);
-    queryLocation = queryLocation(~cellfun('isempty', queryLocation));
-    [maxVal, maxIdx] = cellfun(@(x)max(nodeDegree(x)), queryLocation, 'uni', 0);
-    if any(cellfun(@(x)x < 1, maxVal))
-        % As Graph.findCC is used above with 3rd argument set to true
-        error('This should not happen');
-    end
-    queryIdx{i} = cellfun(@(x,y)x(y), queryLocation, maxIdx);
-    % Only generate queries for this CC if at least 2 queries
-    if length(queryIdx{i}) > 1
-        % Save position direction and length of query
-        pos{i} = nodesV(queryIdx{i},:);
-        dir{i} = bsxfun(@minus, pos{i}, nodesV(cc{i}(centerOfCC(i)),:));
-        dist{i} = pdist2(bsxfun(@times, pos{i}, p.raw.voxelSize), bsxfun(@times, nodesV(cc{i}(centerOfCC(i)),:), p.raw.voxelSize), 'chebychev');
-    else
-        %toDel(i) = true;
-    end
+queryIdx = reshape(cc, [], 1);
+pos = cell(numel(cc),1);
+dir = cell(numel(cc),1);
+for i=1:numel(cc)
+    [~, pos{i}, dir{i}] = forNode( ...
+        p, nodes, edges, cc{i}(centerOfCC(i)), false);
 end
-queryIdx(toDel) = [];
-pos(toDel) = [];
-dir(toDel) = [];
-dist(toDel) = [];
-cc(toDel) = [];
-centerOfCC(toDel) = [];
 
 % Create an output structure
 output.nodes = nodesV;
@@ -128,11 +47,93 @@ output.ccCenterIdx = cellfun(@(x,y)x(y), cc, num2cell(centerOfCC));
 output.queryIdx = queryIdx;
 output.position = pos;
 output.direction = dir;
-output.distance = dist;
 
 % Save result
 save([outputFolder 'result.mat'], 'output');
 
+end
+
+function [nrExits, pos, dir] = forNode(p, nodes, edges, i, visualize)
+    nrExits = 0;
+    pos = nan(0, 3);
+    dir = nan(0, 3);
+    
+    %% analyse node vincinity
+    nodeDegree = sum(edges(:) == i);
+    if nodeDegree < 3; return; end;
+    
+    % Step 1: Prune to sphere (around node in row i) and keep only CC of nodes connected to i
+    [thisNodes, thisEdges, thisIdx, thisIdxOuter] = pruneToSphere(p, nodes, edges, i);
+    
+    % Sphere degree of node is defined as number of nodes connecting to the
+    % outside of the outer sphere just pruned to
+    edgesToOutside = thisEdges(any(ismember(thisEdges, thisIdxOuter),2),:);
+    nodeSphereDegree = length(setdiff(edgesToOutside, thisIdxOuter));
+    if nodeSphereDegree < 3; return; end;
+    
+    % Step 2: Restrict to edges in outer sphere (and interpolate along them)
+    hullNodes = sphereHull(p, thisNodes, thisEdges, thisIdx);
+    
+    % Step 3: Cluster into groups using single linkage clustering
+    distances = squareform(pdist(hullNodes, 'cosine'));
+    adjMatrix = sparse(double(distances < p.minimumCosineDistance));
+    cc = Graph.findConnectedComponents(adjMatrix, false, false);
+    
+    exitIds = find(cellfun(@(idx) max(pdist2( ...
+        hullNodes(idx, :), nodes(i, :))) > 3000, cc));
+    cc = cc(exitIds);
+    
+    nrExits = numel(exitIds);
+    if ~nrExits; return; end;
+    
+    %% determine queries, if desired
+    if nargout > 2
+        pos = nan(nrExits, 3);
+        dir = nan(nrExits, 3);
+        
+        descale = @(nm) ceil(bsxfun(@times, nm, 1 ./ p.raw.voxelSize));
+        
+        for curIdx = 1:numel(cc)
+            % find outer node corresponding to cluster
+            curNodeIds = cc{curIdx};
+            curNodePos = hullNodes(curNodeIds, :);
+            
+            % find node with largest distance from center
+           [~, curMaxIdx] = max(sum(curNodePos .* curNodePos, 2));
+            curNodePos = curNodePos(curMaxIdx, :);
+            curNodePos = curNodePos + nodes(i, :);
+            
+            % TODO(amotta): Could be improved
+            pos(curIdx, :) = descale(curNodePos);
+            dir(curIdx, :) = pos(curIdx, :) - descale(nodes(i, :));
+        end
+    end
+    
+    %% possibly to visualization
+    if visualize
+        figure('Position', [3841 1 1920 999]);
+        % First subplot visualizing pruning to sphere (Step 1)
+        subplot(2,2,1);
+        visualizeSingleSphere(thisNodes, thisEdges, thisIdx, thisIdxOuter, p);
+        title('Pruned to CC of edges within outer sphere');
+        % Second subplot visualizing result of inital clustering
+        subplot(2,2,2);
+        visualizeClustering(thisNodes, thisEdges, thisIdx, thisIdxOuter, p, hullNodes, cc);
+        title('Clusters in sphere hull as detected by cluster visualization');
+        % Third subplot
+        subplot(2,2,3);
+        imagesc(distances);
+        axis equal; axis off;
+        colorbar;
+        title('Cosine distances between nodes in outer sphere');
+        subplot(2,2,4);
+        imagesc(distances > p.minimumCosineDistance);
+        axis equal; axis off;
+        colorbar;
+        title(['Final result: Detected intersection with ' num2str(nrExits) ' exits']);
+        pause(2);
+        close all;
+    end
 end
 
 function [thisNodes, thisEdges, thisIdx, thisIdxOuter] = pruneToSphere(p, nodes, edges, i)
