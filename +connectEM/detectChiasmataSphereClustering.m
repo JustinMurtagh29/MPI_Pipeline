@@ -54,7 +54,7 @@ output.direction = dir;
 
 % Save result
 if ~isempty(outputFolder)
-    save(fullfile(outputFolder 'result.mat'), 'output');
+    save(fullfile(outputFolder, 'result.mat'), 'output');
 end
 
 end
