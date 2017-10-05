@@ -3,8 +3,12 @@ function output = detectChiasmataSphereClustering( ...
 % Detect chiasmata in skeletons based on marching sphere algorithm
 % Nodes should be in voxel, scaled here
 
+if ~exist('outputFolder', 'var')
+    outputFolder = [];
+end
+
 % Create output folder if it does not exist
-if ~exist(outputFolder, 'dir')
+if ~isempty(outputFolder) && ~exist(outputFolder, 'dir')
     mkdir(outputFolder);
 end
 
@@ -29,11 +33,11 @@ end
     connectEM.detectChiasmataNodesCluster(nodes, isIntersection);
 
 % Find out where to query for each CC
-queryIdx = reshape(cc, [], 1);
+queryIdx = cell(numel(cc), 1);
 pos = cell(numel(cc),1);
 dir = cell(numel(cc),1);
 for i=1:numel(cc)
-    [~, pos{i}, dir{i}] = forNode( ...
+    [~, pos{i}, dir{i}, queryIdx{i}] = forNode( ...
         p, nodes, edges, cc{i}(centerOfCC(i)), false);
 end
 
@@ -49,7 +53,9 @@ output.position = pos;
 output.direction = dir;
 
 % Save result
-save([outputFolder 'result.mat'], 'output');
+if ~isempty(outputFolder)
+    save(fullfile(outputFolder 'result.mat'), 'output');
+end
 
 end
 
