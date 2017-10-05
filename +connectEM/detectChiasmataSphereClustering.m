@@ -53,10 +53,12 @@ save([outputFolder 'result.mat'], 'output');
 
 end
 
-function [nrExits, pos, dir] = forNode(p, nodes, edges, i, visualize)
+function [nrExits, pos, dir, queryIdx] = ...
+        forNode(p, nodes, edges, i, visualize)
     nrExits = 0;
     pos = nan(0, 3);
     dir = nan(0, 3);
+    queryIdx = nan(1, 0);
     
     %% analyse node vincinity
     nodeDegree = sum(edges(:) == i);
@@ -90,6 +92,7 @@ function [nrExits, pos, dir] = forNode(p, nodes, edges, i, visualize)
     if nargout > 2
         pos = nan(nrExits, 3);
         dir = nan(nrExits, 3);
+        queryIdx = nan(1, nrExits);
         
         descale = @(nm) ceil(bsxfun(@times, nm, 1 ./ p.raw.voxelSize));
         
@@ -103,9 +106,11 @@ function [nrExits, pos, dir] = forNode(p, nodes, edges, i, visualize)
             curNodePos = curNodePos(curMaxIdx, :);
             curNodePos = curNodePos + nodes(i, :);
             
-            % TODO(amotta): Could be improved
             pos(curIdx, :) = descale(curNodePos);
             dir(curIdx, :) = pos(curIdx, :) - descale(nodes(i, :));
+            
+            % TODO(amotta): Implement!
+            queryIdx(curIdx) = nan;
         end
     end
     
