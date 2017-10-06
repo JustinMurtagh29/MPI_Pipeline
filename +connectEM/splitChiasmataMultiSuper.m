@@ -3,11 +3,9 @@ function splitChiasmataMultiSuper(p)
     %   Kevin Boergens <kevin.boergens@brain.mpg.de>
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     
-    oldAgglos = load(fullfile( ...
+    oldAxons = load(fullfile( ...
         p.saveFolder, 'aggloState', 'axons_06_c.mat'));
-    
-    agglos = oldAgglos;
-    agglos.axons = agglos.axons(agglos.indBigAxons);
+    axons = oldAxons.axons(oldAxons.indBigAxons);
     
     curDir = fullfile( ...
         p.saveFolder, 'chiasmataSplitting', ...
@@ -30,7 +28,7 @@ function splitChiasmataMultiSuper(p)
     % NOTE(amotta): Fix dimensions of `ff` fields
     ff = structfun(@(x) x(:), ff, 'UniformOutput', false);
 
-    axonCount = numel(agglos.axons);
+    axonCount = numel(axons);
     inputArgs = cell(axonCount, 1);
     sharedInputArgs = {p};
 
@@ -62,9 +60,9 @@ function splitChiasmataMultiSuper(p)
                 curFfGroups, 'UniformOutput', false), ...
             'centeridx', num2cell(curCenterIds));
 
-        agglos.axons(curAxonIdx).nodesScaled = bsxfun(@times, ...
-            agglos.axons(curAxonIdx).nodes(:, 1:3), p.raw.voxelSize);
-        inputArgs{curAxonIdx} = {agglos.axons(curAxonIdx), tasks};
+        axons(curAxonIdx).nodesScaled = bsxfun(@times, ...
+            axons(curAxonIdx).nodes(:, 1:3), p.raw.voxelSize);
+        inputArgs{curAxonIdx} = {axons(curAxonIdx), tasks};
     end
 
     job = Cluster.startJob( ...
@@ -80,29 +78,29 @@ function splitChiasmataMultiSuper(p)
     data = cat(1, data{:});
     
     % NOTE(amotta): Add `endings` field to old agglomerates
-   [oldAgglos.axons.endings] = deal([]);
-    oldAgglos.indBigAxons = oldAgglos.indBigAxons(:);
+   [oldAxons.axons.endings] = deal([]);
+    oldAxons.indBigAxons = oldAxons.indBigAxons(:);
     
     out = struct;
     out.p = p;
-    out.oldAgglos = oldAgglos;
+    out.oldAxons = oldAxons;
     out.gitInfo = Util.gitInfo();
     
     out.summary = cat(1, data{:, 2});
-    out.summaryIds = find(oldAgglos.indBigAxons);
+    out.summaryIds = find(oldAxons.indBigAxons);
     
-    out.agglos = cat(1, data{:, 1});
+    out.axons = cat(1, data{:, 1});
     out.parentIds = repelem( ...
         out.summaryIds, cellfun(@numel, data(:, 1)));
     
     % add small agglomerates
-    out.agglos = cat( ...
-        1, out.agglos, oldAgglos.axons(~oldAgglos.indBigAxons));
+    out.axons = cat( ...
+        1, out.axons, oldAxons.axons(~oldAxons.indBigAxons));
     out.parentIds = cat( ...
-        1, out.parentIds, find(~oldAgglos.indBigAxons));
+        1, out.parentIds, find(~oldAxons.indBigAxons));
     
     % build `indBigAxons` mask
-    out.indBigAxons = oldAgglos.indBigAxons(out.parentIds);
+    out.indBigAxons = oldAxons.indBigAxons(out.parentIds);
     
     outFile = sprintf('%s-results.mat', datestr(now, 30));
     outFile = fullfile(outputDir, outFile);
