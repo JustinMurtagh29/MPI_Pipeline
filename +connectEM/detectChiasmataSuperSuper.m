@@ -1,15 +1,18 @@
-function job = detectChiasmataSuperSuper(p, useSphereClustering)
+function job = detectChiasmataSuperSuper(p, inputFile, useSphereClustering)
 
-if nargin < 2
-    % set to true for alternate approach of clustering on sphere (detectChiasmata vs. detectChiasmataSphereClustering)
+if ~exist('useSphereClustering', 'var')
+    % set to true for alternate approach of clustering on sphere
+    % (detectChiasmata vs. detectChiasmataSphereClustering)
     useSphereClustering = false;
 end
 
-addpath('/gaba/u/kboerg/code/manuelCode/games') %for a clean version of findCCaccordingToGraph
+%for a clean version of findCCaccordingToGraph
+addpath('/gaba/u/kboerg/code/manuelCode/games');
 functionH = @connectEM.detectChiasmataSuper;
 inputCell = cellfun(@(x){x}, num2cell(1 : 500), 'uni', 0);
 
 % set id for detected chiasmata
+p.inputFile = inputFile;
 p.chiasmataVersion = datestr(now, 30);
 
 cluster = Cluster.getCluster( ...
@@ -20,5 +23,6 @@ cluster = Cluster.getCluster( ...
     '-l h_rt=24:00:00');
 job = Cluster.startJob( functionH, inputCell, ...
     'name', 'chiasmata', ...
-    'sharedInputs', {p, useSphereClustering},  'sharedInputsLocation', [2, 3], ...
+    'sharedInputs', {p, useSphereClustering}, ...
+    'sharedInputsLocation', [2, 3], ...
     'cluster', cluster);

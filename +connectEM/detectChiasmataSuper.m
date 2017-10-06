@@ -1,18 +1,30 @@
-function detectChiasmataSuper(startidx,p, useSphereClustering)
-
+function detectChiasmataSuper(startidx, p, useSphereClustering)
     if nargin < 3
         useSphereClustering = false;
     end
-    temp = load(fullfile(p.saveFolder,'aggloState/axons_06_c.mat'));
-    temp.axons = temp.axons(temp.indBigAxons);
+    
+    agglos = load(p.inputFile);
+    agglos.axons = agglos.axons(agglos.indBigAxons);
+
+    % set version number
     numstr = p.chiasmataVersion;
-    for idx = startidx : 500 : length(temp.axons)
-        outputFolder = fullfile('/tmpscratch/kboerg/chiasmata', ['chiasmataX', numstr, '_' num2str(floor(idx/100)) '/visX', numstr, '_' num2str(idx) '/']);
+    
+    % decide which function to use
+    if useSphereClustering
+        detectFunc = @connectEM.detectChiasmataSphereClustering;
+    else
+        detectFunc = @connectEM.detectChiasmata;
+    end
+    
+    for idx = startidx : 500 : length(agglos.axons)
+        outputFolder = fullfile( ...
+            '/tmpscratch/kboerg/chiasmata', ...
+            sprintf('chiasmataX%s_%d', num2str, floor(idx/100)), ...
+            sprintf('visX%s_%d/', numstr, idx));
         mkdir(outputFolder);
-        if useSphereClustering
-            connectEM.detectChiasmataSphereClustering(p, temp.axons(idx).nodes(:, 1:3), temp.axons(idx).edges, false, outputFolder);
-        else
-            connectEM.detectChiasmata(p, temp.axons(idx).nodes(:, 1:3), temp.axons(idx).edges, false, outputFolder);
-        end
+        
+        detectFunc( ...
+            p, agglos.axons(idx).nodes(:, 1:3), ...
+            agglos.axons(idx).edges, false, outputFolder);
     end
 end
