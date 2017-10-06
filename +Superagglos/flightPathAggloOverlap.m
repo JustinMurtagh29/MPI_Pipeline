@@ -11,6 +11,7 @@ function ov = flightPathAggloOverlap( p, fp, agglos, nodeEv )
 %           paths are calculated.
 %       nodeEv: (Optional) double
 %           Minimal required node evidence for an agglo to be picked up.
+%           (Default: 54)
 % OUTPUT ov: [Nx1] cell
 %           Cell array containing the linear indices of the agglos that are
 %           overlapping with the corresponding flight path.
@@ -18,6 +19,10 @@ function ov = flightPathAggloOverlap( p, fp, agglos, nodeEv )
 
 if isstruct(agglos)
     agglos = Superagglos.getSegIds(agglos);
+end
+
+if ~exist('nodeEv', 'var') || isempty(nodeEv)
+    nodeEv = 54;
 end
 
 aggloLUT = L4.Agglo.buildLUT(agglos);
