@@ -12,7 +12,10 @@ function splitChiasmataMultiSuper(p)
     curDir = fullfile( ...
         p.saveFolder, 'chiasmataSplitting', ...
         '20171006T113613-kmb-on-axons-6c');
+    
+    % set and create output directory
     outputDir = fullfile(curDir, 'outputs');
+    if ~exist(outputDir, 'dir'); mkdir(outputDir); end
 
     load(fullfile(curDir, 'input-data.mat'));
     clear curDir;
@@ -88,15 +91,18 @@ function splitChiasmataMultiSuper(p)
     out.summary = cat(1, data{:, 2});
     out.summaryIds = find(oldAgglos.indBigAxons);
     
-    out.newAgglos = cat(1, data{:, 1});
+    out.agglos = cat(1, data{:, 1});
     out.parentIds = repelem( ...
         out.summaryIds, cellfun(@numel, data(:, 1)));
     
     % add small agglomerates
-    out.newAgglos = cat( ...
-        1, out.newAgglos, oldAgglos.axons(~oldAgglos.indBigAxons));
+    out.agglos = cat( ...
+        1, out.agglos, oldAgglos.axons(~oldAgglos.indBigAxons));
     out.parentIds = cat( ...
         1, out.parentIds, find(~oldAgglos.indBigAxons));
+    
+    % build `indBigAxons` mask
+    out.indBigAxons = oldAgglos.indBigAxons(out.parentIds);
     
     outFile = sprintf('%s-results.mat', datestr(now, 30));
     outFile = fullfile(outputDir, outFile);
