@@ -105,7 +105,6 @@ for curIdx = 1:10
     curNodeIds = curAgglo.ccNodeIdx{curChiasmaIdx};
     assert(numel(curNodeIds) == descVals(curIdx));
     
-    
     % build skeleton
     curName = sprintf( ...
         'Superagglo_%d__Chiasma_%d', curAggloIdx, curChiasmaIdx);
@@ -114,6 +113,21 @@ for curIdx = 1:10
     skel = skeleton();
     skel = skel.addTree(curName, curAgglo.nodes, curAgglo.edges);
     skel = skel.addBranchpoint(curNodeIds);
+    
+    % show queries
+    curPositions = curAgglo.position{curChiasmaIdx};
+    curDirections = curAgglo.direction{curChiasmaIdx};
+    
+    for curQueryIdx = 1:size(curPositions, 1)
+        curStartPos = curPositions(curQueryIdx, :);
+        curEndPos = curStartPos - curDirections(curQueryIdx, :);
+        
+        skel = skel.addTree( ...
+            sprintf( ...
+                'Chiasma_%d__Query_%d', ...
+                curChiasmaIdx, curQueryIdx), ...
+            cat(1, curStartPos, curEndPos));
+    end
     
     skel = Skeleton.setParams4Pipeline(skel, param);
     skel.write(curFileName);
