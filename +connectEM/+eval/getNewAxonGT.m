@@ -1,5 +1,6 @@
 function [ skels, segIds ] = getNewAxonGT(p)
-%GETNEWAXONGT Load the axons in the evaluationData/new_axon_gt/ folder.
+%GETNEWAXONGT Load the axons in the evaluationData/new_axon_gt/ folder and
+% transform them to the ROI2017 alignment.
 % INPUT p: (Optional) struct
 %           Segmentation parameter struct for ROI2017.
 %           (Default: Gaba.getSegParameters('ex145_ROI2017'))
