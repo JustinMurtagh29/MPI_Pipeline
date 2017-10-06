@@ -1,22 +1,35 @@
-function output = generateQueriesFromChiasmata(outputFolder, agglos)
+function output = generateQueriesFromChiasmata( ...
+        aggloFile, chiasmataId, outputFolder)
+    % load axon agglomerates
+    agglos = load(aggloFile, 'axons', 'indBigAxons');
+    
     curDateStr = datestr(clock, 30);
     fid = sprintf('%s_flightTasks.txt', curDateStr);
     fid = fopen(fullfile(outputFolder, fid), 'w');
     
     output = [];
-    for idx_agglo = find(agglos.indBigAxons)'
-        idx_agglo
-        temp = load(['/tmpscratch/kboerg/chiasmata/chiasmataX34_' num2str(floor(idx_agglo/100)) '/visX34_' num2str(idx_agglo) '/result.mat']);
-        for i=1:length(temp.output.position)
+    for agglo_idx = find(agglos.indBigAxons)'
+        temp = load(fullfile( ...
+            '/tmpscratch/kboerg/chiasmata', ...
+            sprintf('chiasmataX%s_%d', chiasmataId, floor(agglo_idx / 100)), ...
+            sprintf('visX%s_%d', chiasmataId, agglo_idx), ...
+            'result.mat'));
+        
+        for i = 1:numel(temp.output.position)
             % sanity check
             assert(size(temp.output.direction{i}, 1) ...
                 == temp.output.nrExits(temp.output.ccCenterIdx(i)));
+            curNrExits = size(temp.output.direction{i}, 1);
             
-            if temp.output.nrExits(temp.output.ccCenterIdx(i))<4 
-                continue
+            if curNrExits < 4
+                curNrQueries = 0;
+            elseif curNrExits == 4
+                curNrQueries = 1;
+            else
+                curNrQueries = curNrExits;
             end
             
-            for j=1 % 2:size(temp.output.direction{i},1) %only one task per chiasma CHANGE FOR >4 CHIASMATA
+            for j = 1:curNrQueries
                 extend = round(4000 ./[11.24,11.24,28]);
                 dd = sqrt(sum((temp.output.direction{i}(j,:) .* [11.24,11.24,28]).^2));
                 if dd>2000
@@ -32,7 +45,7 @@ function output = generateQueriesFromChiasmata(outputFolder, agglos)
                     num2str(minPos(1)) ',' num2str(minPos(2)) ',' num2str(minPos(3)) ',' ...
                     num2str(sizeBbox(1)) ',' num2str(sizeBbox(2)) ',' num2str(sizeBbox(3)) ',' 'queriesMHchiasma'];
                 fprintf(fid, '%s\n', taskString);
-                output(end+1,:) = [idx_agglo, i, j, temp.output.position{i}(j,:), temp.output.ccCenterIdx(i)];
+                output(end+1,:) = [agglo_idx, i, j, temp.output.position{i}(j,:), temp.output.ccCenterIdx(i)];
             end
         end
     end
@@ -42,7 +55,9 @@ function output = generateQueriesFromChiasmata(outputFolder, agglos)
     % NOTE(amotta): Store `output` on disk so that we can avoid running all
     % of the above stuff in the future (e.g., when splitting chiasmata).
     out = struct;
-    out.agglos = agglos;
+    out.aggloFile = aggloFile;
+    out.chiasmataId = chiasmataId;
+    
     out.queries = output;
     out.gitInfo = Util.gitInfo();
     
