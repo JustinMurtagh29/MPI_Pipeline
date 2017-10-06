@@ -4,14 +4,14 @@ function splitChiasmataMultiSuper(p)
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     
     oldAgglos = load(fullfile( ...
-        p.saveFolder, 'aggloState', 'axons_06_b.mat'));
+        p.saveFolder, 'aggloState', 'axons_06_c.mat'));
     
     agglos = oldAgglos;
     agglos.axons = agglos.axons(agglos.indBigAxons);
     
     curDir = fullfile( ...
         p.saveFolder, 'chiasmataSplitting', ...
-        '20170928T132211-projects-a-and-b');
+        '20171006T113613-kmb-on-axons-6c');
     outputDir = fullfile(curDir, 'outputs');
 
     load(fullfile(curDir, 'input-data.mat'));
@@ -101,22 +101,4 @@ function splitChiasmataMultiSuper(p)
     outFile = sprintf('%s-results.mat', datestr(now, 30));
     outFile = fullfile(outputDir, outFile);
     Util.saveStruct(outFile, out);
-end
-
-function taskIds = loadTaskIds(taskFile)
-    fid = fopen(taskFile, 'rt');
-    data = fread(fid, 'char=>char');
-    fclose(fid);
-    
-    % split into lines
-    data = reshape(data, 1, []);
-    data = strsplit(data, '\n');
-    
-    % remove header
-    data(1) = [];
-    
-    % extract first column with task IDs
-    taskIds = cellfun( ...
-        @(x) x(1:(find(x == ',', 1) - 1)), ...
-        data(:), 'UniformOutput', false);
 end
