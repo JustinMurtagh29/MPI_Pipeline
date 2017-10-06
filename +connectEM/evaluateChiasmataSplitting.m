@@ -6,7 +6,7 @@ outputDir = '/home/amotta/Desktop/chiasmata-splitting';
 data = load(resultsFile);
 
 %% Show fraction solved per size
-clearvars -except data;
+clearvars -except outputDir data;
 
 nrExits = cat(1, data.summary.nrExits);
 solved = cat(1, data.summary.solved);
@@ -19,7 +19,7 @@ results.nrTotal = accumarray(nrExits, solved, [], @numel, 0);
 disp(results)
 
 %% Export examples
-clearvars -except data;
+clearvars -except outputDir data;
 
 nrExits = 4;
 solved = false;
