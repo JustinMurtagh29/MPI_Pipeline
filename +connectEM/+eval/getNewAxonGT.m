@@ -19,6 +19,8 @@ if ~exist('p', 'var') || isempty(p)
 end
 
 skels = skeleton.loadSkelCollection(ax_gt_path, [], true);
+skels = convertToROI2017Alignment(skels);
+
 if nargout > 1
     segIds = cellfun(@(x)Skeleton.getSegmentIdsOfSkel(p, x), skels, ...
         'uni', 0);
@@ -27,3 +29,12 @@ if nargout > 1
 end
 end
 
+function skels = convertToROI2017Alignment(skels)
+% code taken from connectEM.evaluateAggloMeta
+for i = 1:10
+    skels{i}.nodes{1}(:,1:3) = bsxfun(@minus, skels{i}.nodes{1}(:,1:3), ...
+        [1195, 1515, 115] - (129 - [25 25 10]));
+    skels{i}.nodes{idx}(skels{i}.nodes{1} <= 0) = 1;
+    skels{i}.nodesNumDataAll{1}(:, 3:5) = skel.nodes{idx}(:, 1:3);
+end
+end
