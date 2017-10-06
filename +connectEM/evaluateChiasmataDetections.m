@@ -12,7 +12,7 @@
 dataA = load('/home/amotta/Desktop/input-data-kmb.mat');
 dataA = dataA.chiasmata;
 
-dataB = load('/home/amotta/Desktop/input-data-mb.mat');
+dataB = load('/home/amotta/Desktop/input-data-mb-3.mat');
 dataB = dataB.chiasmata;
 
 assert(isequal(size(dataA), size(dataB)));
@@ -89,4 +89,74 @@ results.nrA = results.nrOnlyA + results.nrAAlsoB;
 results = results(:, [end, 1:(end - 1)]);
 
 fprintf('\nResults in terms of chiasmata:\n\n');
-disp(results)
+disp(results);
+
+%% export detections to webKNOSSOS (preparation)
+outputDir = '/home/amotta/Desktop/chiasmata-detections';
+if ~exist(outputDir, 'dir'); mkdir(outputDir); end
+
+rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
+param = load(fullfile(rootDir, 'allParameter.mat'), 'p');
+param = param.p;
+
+axons = load(fullfile(rootDir,'aggloState/axons_06_c.mat'));
+axons = axons.axons(axons.indBigAxons);
+
+%% export detections to webKNOSSOS
+% only look at axons with at least one chiasma
+axonIds = find( ...
+    cellfun(@(a) numel(a.ccNodeIdx) > 0, dataA) ...
+  | cellfun(@(a) numel(a.ccNodeIdx) > 0, dataB));
+
+rng(0);
+randIds = axonIds(randperm(numel(axonIds)));
+
+for curAggloIdx = 1:10
+    skel = skeleton();
+    curAxonIdx = randIds(curAggloIdx);
+    curVenn = chiasmaVenn(curAxonIdx, :);
+    curAxon = axons(curAxonIdx);
+    
+    curA = dataA{curAxonIdx};
+    
+    curB = dataB{curAxonIdx};
+    
+    curComments = repmat({''}, size(curAxon.nodes, 1), 1);
+    curComments(curA.ccCenterIdx(curVenn.onlyA{1})) = {'A only'};
+    curComments(curA.ccCenterIdx(curVenn.aAlsoB{1})) = {'A and B'};
+    
+    skel = skel.addTree( ...
+        'Detections A', curAxon.nodes(:, 1:3), ...
+        curAxon.edges, [1, 0, 0, 1], [], curComments);
+    skel = skel.addBranchpoint(find(curA.isIntersection)); %#ok
+    
+    curComments = repmat({''}, size(curAxon.nodes, 1), 1);
+    curComments(curB.ccCenterIdx(curVenn.onlyB{1})) = {'B only'};
+    curComments(curB.ccCenterIdx(curVenn.bAlsoA{1})) = {'A and B'};
+    skel = skel.addBranchpoint( ...
+        size(curAxon.nodes, 1) + find(curB.isIntersection));
+    
+    skel = skel.addTree( ...
+        'Detections B', curAxon.nodes(:, 1:3), ...
+        curAxon.edges, [0, 0, 1, 1], [], curComments);
+    skel = Skeleton.setParams4Pipeline(skel, param);
+    
+    curFile = sprintf('axon-%d.nml', curAxonIdx);
+    skel.write(fullfile(outputDir, curFile));
+end
+
+%% sanity check
+bOnly = cell(aggloCount, 1);
+
+for curAggloIdx = 1:aggloCount
+    curData = dataB{curAggloIdx};
+    if ~any(curData.isIntersection); continue; end
+    
+    curCenterIds = curData.ccCenterIdx;
+    curNrExits = curData.nrExits(curCenterIds);
+    curNrQueries = cellfun(@(p) size(p, 1), curData.position);
+    
+    assert(all(curNrExits >= 4));
+    assert(isequal(curNrExits, curNrQueries));
+end
+disp('All good!');
