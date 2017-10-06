@@ -26,7 +26,9 @@ if ~exist('nodeEv', 'var') || isempty(nodeEv)
 end
 
 aggloLUT = L4.Agglo.buildLUT(agglos);
-fp.nodes = cellfun(@(x)x(:,1:3), {fp.nodes}', 'uni', 0);
+nodes = cellfun(@(x)x(:,1:3), {fp.nodes}', 'uni', 0);
+clear fp
+fp.nodes = nodes;
 fpIds = getFPNodeSegIds(p, fp);
 
 % get nodes in agglos
