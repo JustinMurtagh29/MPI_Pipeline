@@ -34,7 +34,7 @@ function skels = convertToROI2017Alignment(skels)
 for i = 1:10
     skels{i}.nodes{1}(:,1:3) = bsxfun(@minus, skels{i}.nodes{1}(:,1:3), ...
         [1195, 1515, 115] - (129 - [25 25 10]));
-    skels{i}.nodes{idx}(skels{i}.nodes{1} <= 0) = 1;
-    skels{i}.nodesNumDataAll{1}(:, 3:5) = skel.nodes{idx}(:, 1:3);
+    skels{i}.nodes{1}(skels{i}.nodes{1} <= 0) = 1;
+    skels{i}.nodesNumDataAll{1}(:, 3:5) = skels{i}.nodes{1}(:, 1:3);
 end
 end
