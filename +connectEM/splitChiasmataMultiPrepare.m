@@ -1,5 +1,5 @@
 function [queries, taskIds, ff] = ...
-        splitChiasmataMultiPrepare(taskGenDir, taskGenId)
+        splitChiasmataMultiPrepare(p, taskGenDir, taskGenId)
     % Written by
     %   Kevin Boergens <kevin.boergens@brain.mpg.de>
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
@@ -16,7 +16,7 @@ function [queries, taskIds, ff] = ...
     
     % load flight path NMLs
     nmlDir = sprintf('%s_flightPaths/', taskGenId);
-    ff = loadFlightPaths(nmlDir);
+    ff = loadFlightPaths(p, nmlDir);
 end
 
 function taskIds = loadTaskIds(taskFile)
@@ -37,7 +37,7 @@ function taskIds = loadTaskIds(taskFile)
         data(:), 'UniformOutput', false);
 end
 
-function ff = loadFlightPaths(nmlDirs)
+function ff = loadFlightPaths(p, nmlDirs)
     if ~iscell(nmlDirs)
         nmlDirs = {nmlDirs};
     end
