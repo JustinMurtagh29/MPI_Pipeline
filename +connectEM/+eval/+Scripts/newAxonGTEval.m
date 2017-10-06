@@ -15,7 +15,7 @@ agglos = m.axons(m.indBigAxons);
 ov = connectEM.eval.getNewAxonGTAggloOverlap(segIds, agglos);
 
 outFile = fullfile(p.agglo.saveFolder, 'eval', ...
-    sprintf('axon_gt_eval_%s.mat', datestr(clock, now)));
+    sprintf('axon_gt_eval_%s.mat', datestr(clock, 30)));
 
 if ~exist(outFile, 'file')
     save(outFile, 'info', 'ov', 'skels', 'agglos');
