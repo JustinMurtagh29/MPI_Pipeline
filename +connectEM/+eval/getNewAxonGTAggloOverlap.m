@@ -18,6 +18,7 @@ gtSegIds = cellfun(@(x)setdiff(x, [0, -1]), gtSegIds, 'uni', 0);
 % segments ids of agglos
 if isstruct(sagglos)
     sagglos = Superagglos.getSegIds(sagglos);
+    sagglos = cellfun(@(x)x(~isnan(x)), sagglos, 'uni', 0);
 end
 
 % lookup table for gt seg ids in agglos
