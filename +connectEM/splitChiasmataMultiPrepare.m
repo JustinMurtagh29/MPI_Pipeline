@@ -16,7 +16,7 @@ function [queries, taskIds, ff] = ...
     
     % load flight path NMLs
     nmlDir = sprintf('%s_flightPaths/', taskGenId);
-    ff = loadFlightPaths(p, nmlDir);
+    ff = loadFlightPaths(p, fullfile(taskGenDir, nmlDir));
 end
 
 function taskIds = loadTaskIds(taskFile)
