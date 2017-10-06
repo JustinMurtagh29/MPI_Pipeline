@@ -23,8 +23,9 @@ switch mode
             fp(i, 1) = fpsFromSagglo(sagglos(i));
         end
     case 'nodes'
-        fp.nodes = cellfun(@(x)x(isnan(x(:,4)), 1:3), {sagglos.nodes}', ...
+        nodes = cellfun(@(x)x(isnan(x(:,4)), 1:3), {sagglos.nodes}', ...
             'uni', 0);
+        fp = cell2struct(nodes, 'nodes', 2);
     otherwise
         errro('Unknown mode %s.', mode);
 end
