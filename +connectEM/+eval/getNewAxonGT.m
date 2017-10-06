@@ -14,7 +14,7 @@ thisPath = mfilename('fullpath');
 ax_gt_path = fileparts(fileparts(thisPath));
 ax_gt_path = fullfile(ax_gt_path, 'evaluationData', 'new_axon_gt');
 
-if ~exist('p', 'var') || isempty(p)
+if (~exist('p', 'var') || isempty(p)) && nargout > 1
     p = Gaba.getSegParameters('ex145_ROI2017');
 end
 
@@ -36,5 +36,6 @@ for i = 1:10
         [1195, 1515, 115] - (129 - [25 25 10]));
     skels{i}.nodes{1}(skels{i}.nodes{1} <= 0) = 1;
     skels{i}.nodesNumDataAll{1}(:, 3:5) = skels{i}.nodes{1}(:, 1:3);
+    skels{i} = Skeleton.setParams4Dataset(skels{i}, 'ex145_ROI2017');
 end
 end
