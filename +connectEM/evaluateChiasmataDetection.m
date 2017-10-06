@@ -10,7 +10,7 @@
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 axonFile = fullfile(rootDir, 'aggloState', 'axons_06_c.mat');
 
-chiasmId = 34;
+chiasmId = '20171005T162727';
 chiasmDir = '/tmpscratch/kboerg/chiasmata';
 
 outputDir = '/home/amotta/Desktop';
@@ -32,8 +32,8 @@ tic;
 for curIdx = 1:aggloCount
     curFile = fullfile( ...
         chiasmDir, ...
-        sprintf('chiasmataX%d_%d', chiasmId, floor(curIdx / 100)), ...
-        sprintf('visX%d_%d', chiasmId, curIdx), 'result.mat');
+        sprintf('chiasmataX%s_%d', chiasmId, floor(curIdx / 100)), ...
+        sprintf('visX%s_%d', chiasmId, curIdx), 'result.mat');
     
     curData = load(curFile);
     chiasmata{curIdx} = curData.output;
