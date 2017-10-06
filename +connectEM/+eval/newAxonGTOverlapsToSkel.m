@@ -29,6 +29,7 @@ for i = 1:length(skels)
     Util.log('Processing axon %d.', i);
     toAddAgglos = ov{i}(ov{i}(:,2) >= minOv, 1);
     skels{i} = L4.Agglo.superAgglo2Skel(sagglos(toAddAgglos), skels{i});
+    skels{i}.names{1} = sprintf('AxonGT_%d', i);
     skels{i}.names(2:end) = arrayfun(@(x)sprintf('Agglo_%d', x), ...
         toAddAgglos, 'uni', 0);
 end
