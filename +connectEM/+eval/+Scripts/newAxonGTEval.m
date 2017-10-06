@@ -23,11 +23,9 @@ end
 
 %% everything to nml
 
-ovSkels1 = connectEM.eval.newAxonGTOverlapsToSkel(skels, agglos, ov);
-ovSkels10 = connectEM.eval.newAxonGTOverlapsToSkel(skels, agglos, ov, 10);
+ovSkels = connectEM.eval.newAxonGTOverlapsToSkel(skels, agglos, ov);
 
-% % write to tracings
-% for i = 1:10
-%     ovSkels1{i}.write(sprintf('Axon%02d_ov1.nml', i));
-%     ovSkels10{i}.write(sprintf('Axon%02d_ov2.nml', i));
-% end
+% write to tracings
+for i = 1:10
+    ovSkels1{i}.write(sprintf('Axon%02d_ov1.nml', i));
+end
