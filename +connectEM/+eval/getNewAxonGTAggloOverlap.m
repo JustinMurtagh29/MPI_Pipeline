@@ -21,11 +21,12 @@ if isstruct(sagglos)
 end
 
 % lookup table for gt seg ids in agglos
-m = max([cellfun(@max, gtSegIds), cellfun(@max, sagglos)]);
+m = max([cellfun(@max, gtSegIds); cellfun(@max, sagglos)]);
 lut = Agglo.buildLUT(m, sagglos);
 
 % get overlaps
-ov = cellfun(@(x)unique(lut(x)), gtSegIds, 'uni', 0);
+ov = cellfun(@(x)tabulate(lut(x)), gtSegIds, 'uni', 0);
+ov = cellfun(@(x)x(x(:,1) > 0, 1:2), ov, 'uni', 0);
 
 end
 
