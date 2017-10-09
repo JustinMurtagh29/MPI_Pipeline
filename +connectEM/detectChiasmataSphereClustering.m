@@ -87,6 +87,10 @@ function [nrExits, pos, dir, queryIdx] = ...
     adjMatrix = sparse(double(distances < p.minimumCosineDistance));
     cc = Graph.findConnectedComponents(adjMatrix, false, false);
     
+    % FIXME(amotta): This is wrong! The coordinates in `hullNodes` are
+    % relative to the node of interest, whereas `nodes` is in global nm
+    % space. Except for a tiny corner in the dataset this condition is
+    % always true.
     exitIds = find(cellfun(@(idx) max(pdist2( ...
         hullNodes(idx, :), nodes(i, :))) > 3000, cc));
     cc = cc(exitIds);
