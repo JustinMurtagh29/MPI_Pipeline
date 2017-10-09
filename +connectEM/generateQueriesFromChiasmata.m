@@ -70,9 +70,9 @@ function output = generateQueriesFromChiasmata( ...
     taskDef = taskDef(randIds, :);
     
     % make batches of 500 chiasmata
-   [~, uniChiasma] = unique(output(:, 1:2), 'rows', 'stable');
+   [~, ~, uniChiasma] = unique(output(:, 1:2), 'rows', 'stable');
     
-    for curLimit = 1:500:size(output, 1)
+    for curLimit = 1:500:max(uniChiasma)
         curMask = uniChiasma < curLimit;
         
         % bubble to the top
@@ -88,6 +88,7 @@ function output = generateQueriesFromChiasmata( ...
     out.chiasmataId = chiasmataId;
     
     out.queries = output;
+    out.taskDef = taskDef;
     out.gitInfo = Util.gitInfo();
     
     saveFile = sprintf('%s_data.mat', curDateStr);
