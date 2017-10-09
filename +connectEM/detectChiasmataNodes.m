@@ -8,7 +8,7 @@ function [nrExits, pos, dir, queryIdx] = ...
     nrExits = numel(goodcomps);
     
     %% do query generation, if desired
-    if ngargout < 2; return; end;
+    if nargout < 2; return; end
     
     pos = nan(nrExits, 3);
     dir = nan(nrExits, 3);
