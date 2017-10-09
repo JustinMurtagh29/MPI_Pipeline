@@ -2,7 +2,7 @@ function output = detectChiasmata(p, nodesV, edges, visualize, outputFolder )
 % Detect chiasmata in skeletons based on marching sphere algorithm
 % Nodes should be in voxel, scaled here
 % Create output folder if it does not exist
-if ~exist(outputFolder, 'dir')
+if ~isempty(outputFolder) && ~exist(outputFolder, 'dir')
     mkdir(outputFolder);
 end
 
@@ -89,8 +89,8 @@ if visualize
     writeNml([outputFolder 'skelQueries.nml'], writeSkeletonFromNodesAndEdges(n, e, comments, t, col));
 end
 
-save([outputFolder 'result.mat'], 'output');
-
+if ~isempty(outputFolder)
+    save(fullfile(outputFolder 'result.mat'), 'output');
 end
-function dummy()
+
 end
