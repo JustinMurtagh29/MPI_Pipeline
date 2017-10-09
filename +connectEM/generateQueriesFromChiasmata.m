@@ -67,10 +67,10 @@ function output = generateQueriesFromChiasmata( ...
     
     % shuffle chiasmata
     output = output(randIds, :);
-    taskDef = output(taskDef, :);
+    taskDef = taskDef(randIds, :);
     
     % make batches of 500 chiasmata
-   [~, uniChiasma] = unique(output(:, 1:2), 'rows');
+   [~, uniChiasma] = unique(output(:, 1:2), 'rows', 'stable');
     
     for curLimit = 1:500:size(output, 1)
         curMask = uniChiasma < curLimit;
