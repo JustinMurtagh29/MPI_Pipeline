@@ -16,7 +16,7 @@ function [nrExits, pos, dir, queryIdx] = ...
     
     nodesMask = find(ismember(nodes, thisNodes, 'rows'));
     
-    for idx = 1:numel(CC)
+    for idx = 1:numel(C)
         nodesMask2 = find(ismember(nodes, thisNodes(C{idx}, :), 'rows'));
         transitioningEdge = find(any(ismember(edges,nodesMask2),2)& ... %one node of the edge should be a member of nodesMask2
             any(~ismember(edges,nodesMask),2)& ... %the other shouldn't be a member of nodesMask or nodesMask2 (which is a subset of nodesMask)
