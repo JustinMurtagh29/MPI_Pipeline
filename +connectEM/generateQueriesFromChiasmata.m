@@ -61,6 +61,25 @@ function output = generateQueriesFromChiasmata( ...
             end
         end
     end
+
+    rng(0);
+    randIds = randperm(size(output, 1));
+    
+    % shuffle chiasmata
+    output = output(randIds, :);
+    taskDef = output(taskDef, :);
+    
+    % make batches of 500 chiasmata
+   [~, uniChiasma] = unique(output(:, 1:2), 'rows');
+    
+    for curLimit = 1:500:size(output, 1)
+        curMask = uniChiasma < curLimit;
+        
+        % bubble to the top
+        output = cat(1, output(curMask, :), output(~curMask, :));
+        taskDef = cat(1, taskDef(curMask, :), taskDef(~curMask, :));
+        uniChiasma = cat(1, uniChiasma(curMask), uniChiasma(~curMask));
+    end
     
     % NOTE(amotta): Store `output` on disk so that we can avoid running all
     % of the above stuff in the future (e.g., when splitting chiasmata).
