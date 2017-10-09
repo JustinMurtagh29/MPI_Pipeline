@@ -90,7 +90,7 @@ if visualize
 end
 
 if ~isempty(outputFolder)
-    save(fullfile(outputFolder 'result.mat'), 'output');
+    save(fullfile(outputFolder, 'result.mat'), 'output');
 end
 
 end
