@@ -68,7 +68,7 @@ function [nrExits, pos, dir, queryIdx] = ...
     
     %% analyse node vincinity
     nodeDegree = sum(edges(:) == i);
-    if nodeDegree < 3; return; end;
+    if nodeDegree < 3; return; end
     
     % Step 1: Prune to sphere (around node in row i) and keep only CC of nodes connected to i
     [thisNodes, thisEdges, thisIdx, thisIdxOuter] = pruneToSphere(p, nodes, edges, i);
@@ -77,7 +77,7 @@ function [nrExits, pos, dir, queryIdx] = ...
     % outside of the outer sphere just pruned to
     edgesToOutside = thisEdges(any(ismember(thisEdges, thisIdxOuter),2),:);
     nodeSphereDegree = length(setdiff(edgesToOutside, thisIdxOuter));
-    if nodeSphereDegree < 3; return; end;
+    if nodeSphereDegree < 3; return; end
     
     % Step 2: Restrict to edges in outer sphere (and interpolate along them)
     hullNodes = sphereHull(p, thisNodes, thisEdges, thisIdx);
@@ -92,7 +92,7 @@ function [nrExits, pos, dir, queryIdx] = ...
     cc = cc(exitIds);
     
     nrExits = numel(exitIds);
-    if ~nrExits; return; end;
+    if ~nrExits; return; end
     
     %% determine queries, if desired
     if nargout > 2
