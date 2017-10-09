@@ -3,9 +3,9 @@ function [nrExits, pos, dir, queryIdx] = ...
     [thisNodes, thisEdges] = connectEM.detectChiasmataPruneToSphere( ...
             nodes, edges, prob, p, nodeIdx);
     C = Graph.findConnectedComponents(thisEdges, false);
-    goodcomps = find(cellfun(@(idx) max(pdist2( ...
+    C = C(cellfun(@(idx) max(pdist2( ...
         thisNodes(idx, :), nodes(nodeIdx, :))) > 2000, C));
-    nrExits = numel(goodcomps);
+    nrExits = numel(C);
     
     %% do query generation, if desired
     if nargout < 2; return; end
@@ -16,7 +16,7 @@ function [nrExits, pos, dir, queryIdx] = ...
     
     nodesMask = find(ismember(nodes, thisNodes, 'rows'));
     
-    for idx = reshape(goodcomps, 1, [])
+    for idx = 1:numel(CC)
         nodesMask2 = find(ismember(nodes, thisNodes(C{idx}, :), 'rows'));
         transitioningEdge = find(any(ismember(edges,nodesMask2),2)& ... %one node of the edge should be a member of nodesMask2
             any(~ismember(edges,nodesMask),2)& ... %the other shouldn't be a member of nodesMask or nodesMask2 (which is a subset of nodesMask)
@@ -27,4 +27,9 @@ function [nrExits, pos, dir, queryIdx] = ...
         dir(idx, :) = bsxfun(@minus, pos(idx, :), descale(nodes(nodeIdx,:)));
         queryIdx(idx) = max([-1;queryTemp(:)]);
     end
+    
+    % sanity checks
+    assert(size(pos, 1) == nrExits);
+    assert(size(dir, 1) == nrExits);
+    assert(size(queryIdx, 2) == nrExits);
 end
