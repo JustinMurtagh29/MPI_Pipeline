@@ -32,8 +32,6 @@ function output = generateQueriesFromChiasmata( ...
             
             if curNrExits < 4
                 curNrQueries = 0;
-            elseif curNrExits == 4
-                curNrQueries = 1;
             else
                 curNrQueries = curNrExits;
             end
