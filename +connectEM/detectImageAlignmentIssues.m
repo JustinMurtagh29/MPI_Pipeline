@@ -2,7 +2,9 @@ function [x_max, y_max] = detectImageAlignmentIssues(p, planeIdx)
 
     raw1 = loadPlane(p.raw, p.bbox, planeIdx);
     raw2 = loadPlane(p.raw, p.bbox, planeIdx+1);
-    [X,Y] = ndgrid(p.bbox(1,1)+80:40:p.bbox(1,2)-80, p.bbox(2,1)+80:40:p.bbox(2,2)-80);
+    xSteps = p.bbox(1,1)+80:40:p.bbox(1,2)-p.bbox(1,1)-80;
+    ySteps = p.bbox(2,1)+80:40:p.bbox(2,2)-p.bbox(2,1)-80;
+    [X,Y] = ndgrid(xSteps, ySteps);
     for i=1:length(X)
         for j=1:length(Y)
             fov1 = raw1(X(i)-80:X(i)+80,Y(j)-80:Y(j)+80);
