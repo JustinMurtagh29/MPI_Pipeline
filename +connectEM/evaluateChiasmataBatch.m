@@ -105,6 +105,7 @@ flightEval.tooManyEndings = (numEndings > 2);
 temp = varfun(@sum, flightEval);
 temp.Properties.VariableNames = flightEval.Properties.VariableNames;
 
+fprintf('\n');
 fprintf('Flight path evaluation:\n\n');
 disp(temp);
 
