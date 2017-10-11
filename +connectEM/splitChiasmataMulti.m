@@ -1,14 +1,31 @@
 function [newAgglos, summary] = ...
-        splitChiasmataMulti(p, agglo, tasks, outputFile)
+        splitChiasmataMulti(p, agglo, queries, varargin)
+    % TODO(amotta):
+    % • We still don't make use of the seed location / node of the
+    %   tracings. In theory we only need to infer the end location.
+    %
     % Written by
     %   Kevin Boergens <kevin.boergens@brain.mpg.de>
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     
+    opts = struct;
+    opts.outputFile = [];
+    opts.dryRun = false;
+    opts.exportNml = false;
+    opts = Util.modifyStruct(opts, varargin{:});
+    
     % configuration
-    doExportNml = false;
     cutoffDistNm = 100;
     
     rng(0); % to make randperm further down reproducible
+    
+    % Group queries into chiasmata
+   [~, chiasmata, queries.uniChiasmaId] = unique(queries.chiasmaId);
+    chiasmata = queries(chiasmata, {'chiasmaId', 'centerNodeId'});
+    chiasmaCount = size(chiasmata, 1);
+    chiasmaTracings = accumarray( ...
+        queries.uniChiasmaId, (1:size(queries, 1))', ...
+        [], @(rows) {queries(rows, :)});
     
     % NOTE(amotta): Initialize key variables which are modified in the for
     % loop below. These variables collect all changes which need to be
@@ -18,32 +35,27 @@ function [newAgglos, summary] = ...
     thisEdgesNew = zeros(0, 2);
     
     summary = struct;
-    summary.nrChiasmata = numel(tasks);
-    summary.centerIdx = nan(numel(tasks), 1);
-    summary.nrExits = nan(numel(tasks), 1);
-    summary.nrNonExits = nan(numel(tasks), 1);
-    summary.nrTracings = nan(numel(tasks), 1);
-    summary.tracings = cell(numel(tasks), 1);
-    summary.solved = false(numel(tasks), 1);
+    summary.nrChiasmata = chiasmaCount;
+    summary.centerIdx = nan(chiasmaCount, 1);
+    summary.nrExits = nan(chiasmaCount, 1);
+    summary.nrNonExits = nan(chiasmaCount, 1);
+    summary.nrExits = nan(chiasmaCount, 1);
+    summary.tracings = cell(chiasmaCount, 1);
+    summary.solved = false(chiasmaCount, 1);
     
     p.voxelSize = p.raw.voxelSize;
     p.sphereRadiusInner = 1000; % in nm
     
-    for idx = 1 : length(tasks)
-        centerIdx = tasks(idx).centeridx;
+    for chiIdx = 1:chiasmaCount
+        centerIdx = chiasmata.centerNodeId(chiIdx);
+        expectedNrExits = size(chiasmaTracings{chiIdx}, 1);
         
         % NOTE(amotta): Restrict skeleton to components within shell
         p.sphereRadiusOuter = 10000; % in nm
-        [thisNodes, thisEdges, ~, thisNodeIds] = ...
+       [thisNodes, thisEdges, ~, thisNodeIds] = ...
             connectEM.detectChiasmataPruneToSphere( ...
             agglo.nodesScaled, agglo.edges, ...
             ones(size(agglo.edges, 1), 1), p, centerIdx);
-        
-        % make sure we have the same conn components as for the detection 
-        % so that our indexing of tasks(idx).tracings(idx2) works
-        % i.e. so that tracings(idx2) starts at C{idx2}
-        %assert(isequal(thisNodes, backup.thisNodes)); NO CHECKING RIGHT NOW
-        %assert(isequal(thisEdges, backup.thisEdges)); NO CHECKING RIGHT NOW
         
         C = Graph.findConnectedComponents(thisEdges);
         
@@ -54,28 +66,19 @@ function [newAgglos, summary] = ...
             @(idx2) max(pdist2(thisNodes(idx2, :), ...
             agglo.nodesScaled(centerIdx, :))) > 2000, C);
         
-        % NOTE(amotta): Make sure there are at least four connected
-        % components. This must be true because this code was written to
-        % handle >=4 chiasmata.
-        assert(sum(isExit) >= 4);
+        % NOTE(amotta): Since we query all endings we expect the number of
+        % tracings to match the number of found exits.
         nrExits = sum(isExit);
-        nrTracings = numel(tasks(idx).tracings);
+        assert(nrExits == expectedNrExits);
         
-        summary.nrExits(idx) = nrExits;
-        summary.centerIdx(idx) = centerIdx;
-        summary.nrNonExits(idx) = sum(~isExit);
-        summary.nrTracings(idx) = nrTracings;
-        summary.tracings{idx} = struct;
-        summary.tracings{idx}.nodes = ...
-            reshape({tasks(idx).tracings.nodes}, [], 1);
-        summary.tracings{idx}.processed = zeros(nrTracings, 1);
-        summary.tracings{idx}.overlaps = cell(nrTracings, 1);
-        
-        if nrExits == 4
-            todoTracings = 1;
-        else
-            todoTracings = 1:nrExits;
-        end
+        summary.nrExits(chiIdx) = nrExits;
+        summary.centerIdx(chiIdx) = centerIdx;
+        summary.nrNonExits(chiIdx) = sum(~isExit);
+        summary.nrExits(chiIdx) = nrExits;
+        summary.tracings{chiIdx} = struct;
+        summary.tracings{chiIdx}.nodes = ...
+            chiasmaTracings{chiIdx}.flightNodes;
+        summary.tracings{chiIdx}.overlaps = cell(nrExits, 1);
         
         % NOTE(amotta): Non-exit components are dropped (for now at least)
         nonExitNodeIds = thisNodeIds(cell2mat(C(~isExit)));
@@ -85,64 +88,20 @@ function [newAgglos, summary] = ...
         % which were grouped together by virtue of chiasmata queries.
         groups = cell(1, 0);
         conns = zeros(0, 2);
-        tracingIdx = 1;
         
-        % NOTE(amotta): Process flight paths until done. We're done when
-        % one of the following conditions is true:
-        %
-        % * no more open exits
-        % * no more flight paths to process
-        % * exactly two open exits
-        %
-        % In the last case, the two endings are connected automatically.
-        % This is the same behaviour as for the 4-fold chiasmata.
-        while true
-            nrOpenExits = nrExits - sum(cellfun(@length, groups));
-            
-            if nrOpenExits == 0
-                break;
-            elseif nrOpenExits == 2
-                conns(end+1, :) = setdiff(1:nrExits, cell2mat(groups));
-                groups(end+1) = {conns(end, :)};
-                break;
-            end
-            
-            % NOTE(amotta): `idx2pre` contains the list of open tracings
-            randomOne = @(x)x(randperm(length(x),1));
-            idx2pre = setdiff(todoTracings, cell2mat(groups));
-            
-            if ~isempty(idx2pre)
-                idx2 = randomOne(idx2pre);
-            elseif ~isempty(todoTracings)
-                idx2 = randomOne(todoTracings);
-            else
-                break;
-            end
-            
-            % NOTE(amotta): Mark tracing as processed
-            todoTracings = setdiff(todoTracings, idx2);
-            
+        for trIdx = 1:nrExits
             % NOTE(amotta): A tracing may be empty (hence the reshape)
-            tracingScaled = tasks(idx).tracings(idx2).nodes;
+            tracingScaled = chiasmaTracings{chiIdx}.flightNodes{trIdx};
             tracingScaled = reshape(tracingScaled, [], 3);
             tracingScaled = bsxfun(@times, tracingScaled, p.voxelSize);
             
             % NOTE(amotta): Find components touched by flight path
             overlaps = find(cellfun(@(ids) any(any(pdist2( ...
                 tracingScaled, thisNodes(ids, :)) < cutoffDistNm)), C));
-            
-            summary.tracings{idx}.processed(idx2) = tracingIdx;
-            summary.tracings{idx}.overlaps{idx2} = overlaps;
-            
-            if numel(overlaps) ~= 2
-                % NOTE(amotta): Flight is invalid. Go to next...
-                continue;
-            end
-            
-            conns(end + 1, :) = overlaps;
-            groups = Graph.findConnectedComponents(conns);
-            tracingIdx = tracingIdx + 1;
+            summary.tracings{chiIdx}.overlaps{trIdx} = overlaps;
         end
+        
+        if opts.dryRun; continue; end
         
         % NOTE(amotta): If we're unable to solve a chiasma, it is left
         % untouched and remains part of the super-agglomerate.
@@ -150,7 +109,7 @@ function [newAgglos, summary] = ...
             continue;
         end
         
-        summary.solved(idx) = true;
+        summary.solved(chiIdx) = true;
         
         % NOTE(amotta): Find index of node closest to chiasma center for
         % each component. These are the nodes from which the new edges will
@@ -231,12 +190,15 @@ function [newAgglos, summary] = ...
     
     newAgglos = reshape(newAgglos, [], 1);
     
-    % NOTE(amotta): The rest is only executed if `outputFile` is set
-    if ~exist('outputFile', 'var') || isempty(outputFile); return; end
-    Util.save(strcat(outputFile, '.mat'), agglo, tasks, newAgglos, summary);
+    % Save results
+    if ~isempty(opts.outputFile)
+        Util.save( ...
+            strcat(opts.outputFile, '.mat'), ...
+            agglo, queries, newAgglos, summary);
+    end
     
-    %% for debugging
-    if doExportNml
+    % NML for debuggin
+    if opts.exportNml
         skel = skeleton();
         
         comments = repmat({''}, size(agglo.nodes, 1), 1);
@@ -253,7 +215,7 @@ function [newAgglos, summary] = ...
         end
         
         skel = Skeleton.setParams4Pipeline(skel, p);
-        skel.write(strcat(outputFile, '.nml'));
+        skel.write(strcat(opts.outputFile, '.nml'));
         clear comments skel;
     end
 end
