@@ -109,6 +109,34 @@ fprintf('\n');
 fprintf('Flight path evaluation:\n\n');
 disp(temp);
 
+%% Look at flight paths with too few attachments
+% Make sure that start was correctly identified
+tooFewQueries = queries(flightEval.tooFewEndings, :);
+mean(arrayfun( ...
+    @(a, b) ismember(a, b{1}), ...
+    tooFewQueries.exitId, tooFewQueries.overlaps));
+
+rng(0);
+randIds = randperm(size(tooFewQueries, 1));
+randIds = randIds(1:20);
+
+for curIdx = randIds
+    skel = skeleton();
+    
+    curQuery = tooFewQueries(curIdx, :);
+    curName = curQuery.taskId;
+    curNodes = reshape(curQuery.flightNodes{1}, [], 3);
+    skel = skel.addTree(curName, curNodes);
+    
+    curAxon = axons(curQuery.axonId);
+    skel = skel.addTree('Axon', curAxon.nodes(:, 1:3), curAxon.edges);
+    
+    skel = Skeleton.setParams4Pipeline(skel, p);
+    skel.write(fullfile( ...
+        '/home/amotta/Desktop', ...
+        sprintf('too-few-endings-%d.nml', curIdx)));
+end
+
 %%
 [~, ~, queries.uniChiasmaId] = unique( ...
     queries(:, {'axonId', 'chiasmaId'}), 'rows');
