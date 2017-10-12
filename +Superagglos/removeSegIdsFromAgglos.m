@@ -13,8 +13,12 @@ segIDedges = segIDedges(all(~ismember(segIDedges,ids),2),:);
 % generate selfEdges of all superagglo segments
 selfEdges = repmat(nodes(:,4),1,2);
 
-[equivalenceClass, aggloLUT] = Graph.findConnectedComponents(cat(1,selfEdges,segIDedges),0,0);
+[equivalenceClass, aggloLUT] = Graph.findConnectedComponents(cat(1,selfEdges,segIDedges),0,1);
 
+if isempty(equivalenceClass)
+    newSuperagglos = struct('edges',[],'nodes',[]);
+    return
+end
 % create boolean which equivalence classes contain single edges
 singleSegAgglos = true(numel(equivalenceClass),1);
 singleSegAgglos(aggloLUT(segIDedges(:))) = false;

@@ -1,9 +1,17 @@
-function generateSkeletonFromAggloNew(agglo, treeNames, outputFolder, maxSegId,parameters)
+function allSkel = generateSkeletonFromAggloNew(agglo, treeNames, outputFolder, maxSegId,parameters,filename)
+% if filename is given, all skeletons are written into one file
+
+if ~exist('parameters','var') || isempty(parameters)
+    parameters.experiment.name='2012-09-28_ex145_07x2_ROI2017';
+    parameters.scale.x = '11.24';
+    parameters.scale.y = '11.24';
+    parameters.scale.z = '28';
+    parameters.offset.x = '0';
+    parameters.offset.y = '0';
+    parameters.offset.z = '0';
+end
 if ~exist(outputFolder,'dir')
     mkdir(outputFolder);
-end
-if nargin < 7
-    parameters = [];
 end
 if ~exist('maxSegId','var') || isempty(maxSegId)
     maxSegId = max(cat(1,agglo(:).nodes),[],1);
@@ -13,26 +21,26 @@ end
 colors = distinguishable_colors(min(length(agglo),100), [0 0 0; 1 1 1]);
 colors = repmat(colors, ceil(length(agglo)/100), 1);
 colors(:,4) = 0;
+allSkel = skeleton();
+allSkel.parameters = parameters;
+allSkel.scale = structfun(@str2double, allSkel.parameters.scale)';
+
 for tr=1:length(agglo)
     if ~isempty(agglo(tr).nodes)
         % Generate parameters for skeleton
         theseCoM = agglo(tr).nodes(:,1:3);
-        skel = initializeSkeleton(parameters);
-        skel{1}.thingID = 1;
-        skel{1}.name = [treeNames{tr} '_' num2str(size(theseCoM,1))];
-        skel{1}.color = colors(tr,:);
-        % Get information to write to skeleton
-        
-        theseEdgesNodes = agglo(tr).edges;
-        % Write to structure for writeNml
-        skel{1}.nodesNumDataAll = zeros(size(theseCoM,1),14);
-        skel{1}.nodesNumDataAll(:,1) = 1:size(theseCoM,1);
-        skel{1}.nodesNumDataAll(:,2) = 10*ones(size(theseCoM,1),1);
-        skel{1}.nodesNumDataAll(:,3:5) = theseCoM;
-        skel{1}.edges = theseEdgesNodes;
-        writeNmlSilent(fullfile(outputFolder,[ treeNames{tr} '.nml']), skel, 1);
-        clear skel;
+        skel = skeleton();
+        skel = skel.addTree([treeNames{tr} '_' num2str(size(theseCoM,1))],[theseCoM,ones(size(agglo(tr).nodes,1),1)*10],agglo(tr).edges,colors(tr,:));
+        allSkel = allSkel.addTreeFromSkel(skel);
+        if ~exist('filename','var') || isempty(filename)
+            skel.parameters = parameters;        
+            skel.scale = structfun(@str2double, skel.parameters.scale)';
+            skel.write(fullfile(outputFolder,[ treeNames{tr} '.nml']), [], 1);
+        end
     end
+end
+if exist('filename','var') && ~isempty(filename)
+    allSkel.write(fullfile(outputFolder,filename), [], 1)
 end
 mappingFile = fullfile(outputFolder, [treeNames{1} '.txt']);
 script = WK.makeMappingScript(maxSegId, Superagglos.transformAggloNewOldRepr(agglo), false);
@@ -40,22 +48,4 @@ fileHandle = fopen(mappingFile, 'w');
 fwrite(fileHandle, script);
 fclose(fileHandle);
 
-end
-
-function skel = initializeSkeleton(parameters)
-if nargin > 0 && ~isempty(parameters)
-    skel{1}.parameters = parameters;
-else
-    % Set parameters
-    skel{1}.parameters.experiment.name='2012-09-28_ex145_07x2_ROI2017';
-    skel{1}.parameters.scale.x = '11.24';
-    skel{1}.parameters.scale.y = '11.24';
-    skel{1}.parameters.scale.z = '28';
-    skel{1}.parameters.offset.x = '0';
-    skel{1}.parameters.offset.y = '0';
-    skel{1}.parameters.offset.z = '0';
-end
-skel{1}.commentsString = {'<comments></comments>'};
-skel{1}.branchpointsString = {};
-skel{1}.branchpoints = [];
 end
