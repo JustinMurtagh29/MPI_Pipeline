@@ -2,6 +2,7 @@
 %   Alessandro Motta <alessandro.motta@brain.mpg.de>
 
 clear;
+outputDir = '/home/amotta/Desktop';
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 load(fullfile(rootDir, 'allParameter.mat'), 'p');
 
@@ -120,6 +121,9 @@ rng(0);
 randIds = randperm(size(tooFewQueries, 1));
 randIds = randIds(1:20);
 
+curOutputDir = fullfile(outputDir, 'too-few-endings');
+if ~exist(curOutputDir, 'dir'); mkdir(curOutputDir); end
+
 for curIdx = randIds
     skel = skeleton();
     
@@ -145,8 +149,7 @@ for curIdx = randIds
     end
     
     skel = Skeleton.setParams4Pipeline(skel, p);
-    skel.write(fullfile( ...
-        '/home/amotta/Desktop', ...
+    skel.write(fullfile(curOutputDir, ...
         sprintf('too-few-endings-%d.nml', curIdx)));
 end
 
@@ -187,3 +190,48 @@ temp.Properties.VariableNames = chiasmaEval.Properties.VariableNames;
 
 fprintf('4-fold chiasmata evaluation:\n\n');
 disp(temp);
+
+%% show chiasmata which invalidate bidirectionality
+chiasmaIds = find(chiasmaEval.invalidBidir);
+chiasmaIds = reshape(chiasmaIds, 1, []);
+
+rng(0);
+randIds = randperm(numel(chiasmaIds));
+randIds = chiasmaIds(randIds(1:10));
+
+curOutputDir = fullfile(outputDir, 'invalid-bidir');
+if ~exist(curOutputDir, 'dir'); mkdir(curOutputDir); end
+
+for curIdx = randIds
+    skel = skeleton();
+    
+    curQueries = queries(queries.uniChiasmaId == curIdx, :);
+    curAxon = axons(curQueries.axonId(1));
+    
+    skel = skel.addTree('Axon', curAxon.nodes(:, 1:3), curAxon.edges);
+    
+    for curQueryIdx = 1:size(curQueries, 1)
+        curExitId = curQueries.exitId(curQueryIdx);
+        curOverlaps = curQueries.overlaps{curQueryIdx};
+        
+        assert(any(curOverlaps == curExitId));
+        curOverlaps(curOverlaps == curExitId) = [];
+        
+        curQueryName = sprintf( ...
+            'Flight %d → %d', curExitId, curOverlaps(1));
+        skel = skel.addTree( ...
+            curQueryName, curQueries.flightNodes{curQueryIdx});
+    end
+    
+    curCenterPos = curAxon.nodes(curQueries.centerNodeId(1), 1:3);
+    
+    for curExitIdx = 1:size(curQueries, 1)
+        skel = skel.addTree( ...
+            sprintf('Exit %d', curQueries.exitId(curExitIdx)), ...
+            cat(1, curQueries.seedPos(curExitIdx, :), curCenterPos));
+    end
+    
+    skel = Skeleton.setParams4Pipeline(skel, p);
+    skel.write(fullfile(curOutputDir, ...
+        sprintf('invalid-bidir-%d.nml', curIdx)));
+end
