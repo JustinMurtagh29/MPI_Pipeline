@@ -128,8 +128,21 @@ for curIdx = randIds
     curNodes = reshape(curQuery.flightNodes{1}, [], 3);
     skel = skel.addTree(curName, curNodes);
     
+    % show super-agglomerate
     curAxon = axons(curQuery.axonId);
     skel = skel.addTree('Axon', curAxon.nodes(:, 1:3), curAxon.edges);
+    
+    % show other exits of chiasma
+    curQueries = queries( ...
+        queries.axonId == curQuery.axonId ...
+      & queries.chiasmaId == curQuery.chiasmaId, :);
+    curCenterPos = curAxon.nodes(curQuery.centerNodeId, 1:3);
+    
+    for curExitIdx = 1:size(curQueries, 1)
+        skel = skel.addTree( ...
+            sprintf('Exit %d', curQueries.exitId(curExitIdx)), ...
+            cat(1, curQueries.seedPos(curExitIdx, :), curCenterPos));
+    end
     
     skel = Skeleton.setParams4Pipeline(skel, p);
     skel.write(fullfile( ...
