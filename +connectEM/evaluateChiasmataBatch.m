@@ -251,8 +251,7 @@ for curIdx = 1:chiasmaCount
         % Do not consider chiasmata which contain flight paths that attach
         % to too many exits. Having less than two exit overlaps is okay.
         % This may happen in 3 + 1, 2 + 1 + 1 or 1 + 1 + 1 + 1 partitions.
-        chiasma.partition{curIdx} = zeros(curNrExits, 1);
-        chiasma.partitionIsValid(curIdx) = false;
+        chiasmaPartition{curIdx} = zeros(curNrExits, 1);
         continue;
     end
     
