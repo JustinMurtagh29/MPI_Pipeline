@@ -93,16 +93,36 @@ function [newAgglos, summary] = ...
         exitNodesScaled = bsxfun(@times, exitNodesScaled, p.voxelSize);
         
         for trIdx = 1:nrExits
+            tr = chiasmaTracings{chiIdx}(trIdx, :);
+            assert(tr.exitId == trIdx);
+            
+            % NOTE(amotta): To map a query to its chiasma exit we simply
+            % walk from the tail of the flight path to its head. When we
+            % first come into proximity of a (or multiple) exit nodes, we
+            % stop. Proximity is defined by the `cutoffDistNm` distance
+            % threshold. If there are multiple exit nodes within proximity,
+            % then the closer one wins.
+            
             % NOTE(amotta): A tracing may be empty (hence the reshape)
-            tracingScaled = chiasmaTracings{chiIdx}.flightNodes{trIdx};
-            tracingScaled = reshape(tracingScaled, [], 3);
+            tracingScaled = reshape(tr.flightNodes{1}, [], 3);
             tracingScaled = bsxfun(@times, tracingScaled, p.voxelSize);
             
-            % NOTE(amotta): This assumes that nodes are correctly sorted!
+            % NOTE(amotta): Make sure nodes are correctly sorted
+            seedPosScaled = tr.seedPos .* p.voxelSize;
+           [~, minIdx] = min(pdist2(seedPosScaled, tracingScaled));
+            assert(minIdx == 1);
+            
+            % NOTE(amotta): Calculate distance from flight path to exit
+            % nodes. But prevent overlap with seed by setting distance to
+            % infinity.
             overlaps = pdist2(exitNodesScaled, tracingScaled);
+            overlaps(tr.exitId, :) = inf;
+            
             overlapNode = find(any(overlaps < cutoffDistNm, 1), 1, 'last');
            [~, overlaps] = min(overlaps(:, overlapNode));
-            
+           
+            overlaps((end + 1):1) = 0;
+            overlaps = cat(1, tr.exitId, overlaps);
             summary.tracings{chiIdx}.overlaps{trIdx} = overlaps;
         end
         
