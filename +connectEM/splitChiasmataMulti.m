@@ -110,7 +110,7 @@ function [newAgglos, summary] = ...
             % NOTE(amotta): Make sure nodes are correctly sorted
             seedPosScaled = tr.seedPos .* p.voxelSize;
            [~, minIdx] = min(pdist2(seedPosScaled, tracingScaled));
-            assert(minIdx == 1);
+            assert(isempty(tracingScaled) || minIdx == 1);
             
             % NOTE(amotta): Calculate distance from flight path to exit
             % nodes. But prevent overlap with seed by setting distance to
