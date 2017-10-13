@@ -115,10 +115,12 @@ gtQueries = load(gtFile, 'randQueries');
 gtQueries = gtQueries.randQueries;
 
 % ignore entries without groundtruth annotation
+gtQueries.id = reshape(1:size(gtQueries, 1), [], 1);
 gtQueries(isnan(gtQueries.gtExit), :) = [];
 gtCount = size(gtQueries, 1);
 
 gtEval = table;
+gtEval.id = nan(gtCount, 1);
 gtEval.expected = cell(gtCount, 1);
 gtEval.found = cell(gtCount, 1);
 gtEval.correct = false(gtCount, 1);
@@ -142,6 +144,7 @@ for curIdx = 1:size(gtQueries, 1)
     curFound = curFound.overlaps{curQuery.exitId};
     curFound = setdiff(curFound, curQuery.exitId);
     
+    gtEval.id(curIdx) = curQuery.id;
     gtEval.found{curIdx} = curFound;
     gtEval.expected{curIdx} = setdiff(curQuery.gtExit, 0);
 end
