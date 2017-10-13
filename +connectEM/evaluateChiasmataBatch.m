@@ -67,6 +67,49 @@ queries = queries(ismember( ...
 queries.uniChiasmaId = [];
 
 %%
+% Write out random flight paths. I will then manually annotate the ground
+% truth overlaps. This can then be used to optimize the overlap detection
+% routine.
+
+rng(0);
+randIds = randperm(size(queries, 1));
+randQueries = queries(randIds(1:50), :);
+
+curOutputDir = fullfile(outputDir, 'rand-queries');
+if ~exist(curOutputDir, 'dir'); mkdir(curOutputDir); end
+
+for curIdx = 1:size(randQueries, 1)
+    skel = skeleton();
+    
+    curQuery = randQueries(curIdx, :);
+    curNodes = reshape(curQuery.flightNodes{1}, [], 3);
+    skel = skel.addTree('Flight', curNodes);
+    
+    % show super-agglomerate
+    curAxon = axons(curQuery.axonId);
+    skel = skel.addTree('Axon', curAxon.nodes(:, 1:3), curAxon.edges);
+    
+    % show other exits of chiasma
+    curQueries = queries( ...
+        queries.axonId == curQuery.axonId ...
+      & queries.chiasmaId == curQuery.chiasmaId, :);
+    curCenterPos = curAxon.nodes(curQuery.centerNodeId, 1:3);
+    
+    for curExitIdx = 1:size(curQueries, 1)
+        skel = skel.addTree( ...
+            sprintf('Exit %d', curQueries.exitId(curExitIdx)), ...
+            cat(1, curQueries.seedPos(curExitIdx, :), curCenterPos));
+    end
+    
+    skel = Skeleton.setParams4Pipeline(skel, p);
+    skel.write(fullfile(curOutputDir, ...
+        sprintf('rand-query-%d.nml', curIdx)));
+end
+
+% extend table and manually manipulate it
+randQueries.gtExit = nan(size(randQueries, 1), 1);
+
+%%
 % Group queries by axons
 queries.row = reshape(1:size(queries, 1), [], 1);
 [uniAxonIds, ~, queries.uniAxonId] = unique(queries.axonId);
