@@ -15,7 +15,7 @@ function [newAgglos, summary] = ...
     opts = Util.modifyStruct(opts, varargin{:});
     
     % configuration
-    cutoffDistNm = 100;
+    cutoffDistNm = 175;
     
     rng(0); % to make randperm further down reproducible
     
@@ -89,15 +89,20 @@ function [newAgglos, summary] = ...
         groups = cell(1, 0);
         conns = zeros(0, 2);
         
+        exitNodesScaled = chiasmaTracings{chiIdx}.seedPos;
+        exitNodesScaled = bsxfun(@times, exitNodesScaled, p.voxelSize);
+        
         for trIdx = 1:nrExits
             % NOTE(amotta): A tracing may be empty (hence the reshape)
             tracingScaled = chiasmaTracings{chiIdx}.flightNodes{trIdx};
             tracingScaled = reshape(tracingScaled, [], 3);
             tracingScaled = bsxfun(@times, tracingScaled, p.voxelSize);
             
-            % NOTE(amotta): Find components touched by flight path
-            overlaps = find(cellfun(@(ids) any(any(pdist2( ...
-                tracingScaled, thisNodes(ids, :)) < cutoffDistNm)), C));
+            % NOTE(amotta): This assumes that nodes are correctly sorted!
+            overlaps = pdist2(exitNodesScaled, tracingScaled);
+            overlapNode = find(any(overlaps < cutoffDistNm, 1), 1, 'last');
+           [~, overlaps] = min(overlaps(:, overlapNode));
+            
             summary.tracings{chiIdx}.overlaps{trIdx} = overlaps;
         end
         
