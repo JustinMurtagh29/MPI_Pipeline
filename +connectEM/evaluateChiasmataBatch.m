@@ -145,7 +145,7 @@ for curIdx = 1:size(gtQueries, 1)
     curFound = setdiff(curFound, curQuery.exitId);
     
     gtEval.id(curIdx) = curQuery.id;
-    gtEval.found{curIdx} = curFound;
+    gtEval.found{curIdx} = setdiff(curFound, 0);
     gtEval.expected{curIdx} = setdiff(curQuery.gtExit, 0);
 end
 
@@ -153,6 +153,7 @@ gtEval.correct = cellfun( ...
     @(e, f) isequal(e(:), f(:)), ...
     gtEval.expected, gtEval.found);
 
+%%
 fprintf('\n');
 fprintf('Evaluation of attachment:\n\n');
 disp(gtEval);
@@ -192,12 +193,11 @@ end
 queries.uniAxonId = [];
 
 %% evaluate flight path attachment
-numEndings = cellfun(@numel, queries.overlaps);
+numEndings = cellfun(@(o) sum(o > 0), queries.overlaps);
 
 flightEval = table;
 flightEval.twoEndings = (numEndings == 2);
 flightEval.tooFewEndings = (numEndings < 2);
-flightEval.tooManyEndings = (numEndings > 2);
 
 temp = varfun(@sum, flightEval);
 temp.Properties.VariableNames = flightEval.Properties.VariableNames;
@@ -249,123 +249,28 @@ for curIdx = randIds
         sprintf('too-few-endings-%d.nml', curIdx)));
 end
 
-%%
-[~, ~, queries.uniChiasmaId] = unique( ...
-    queries(:, {'axonId', 'chiasmaId'}), 'rows');
-chiasmaCount = max(queries.uniChiasmaId);
-chiasmaEval = array2table( ...
-    false(chiasmaCount, 3), 'VariableNames', ...
-    {'invalidOverlaps', 'invalidBidir', 'valid'});
-
-for curIdx = 1:chiasmaCount
-    curQueries = queries(queries.uniChiasmaId == curIdx, :);
-    curOverlaps = curQueries.overlaps;
-    
-    if ~all(cellfun(@numel, curOverlaps) == 2)
-        % all flight paths must have start and end
-        chiasmaEval.invalidOverlaps(curIdx) = true;
-        continue;
-    end
-    
-    curOverlaps = cell2mat(curOverlaps(:)');
-    curOverlaps = sort(curOverlaps, 1)';
-   [curPairs, ~, curPairCount] = unique(curOverlaps, 'rows');
-    curPairCount = accumarray(curPairCount, 1);
-    
-    if ~all(curPairCount == 2)
-        % flight paths must be in mutual agreement
-        chiasmaEval.invalidBidir(curIdx) = true;
-        continue;
-    end
-    
-    chiasmaEval.valid(curIdx) = true;
-end
-
-temp = varfun(@sum, chiasmaEval);
-temp.Properties.VariableNames = chiasmaEval.Properties.VariableNames;
-
-fprintf('4-fold chiasmata evaluation:\n\n');
-disp(temp);
-
-%% show chiasmata which invalidate bidirectionality
-chiasmaIds = find(chiasmaEval.invalidBidir);
-chiasmaIds = reshape(chiasmaIds, 1, []);
-
-rng(0);
-randIds = randperm(numel(chiasmaIds));
-randIds = chiasmaIds(randIds(1:10));
-
-curOutputDir = fullfile(outputDir, 'invalid-bidir');
-if ~exist(curOutputDir, 'dir'); mkdir(curOutputDir); end
-
-for curIdx = randIds
-    skel = skeleton();
-    
-    curQueries = queries(queries.uniChiasmaId == curIdx, :);
-    curAxon = axons(curQueries.axonId(1));
-    
-    skel = skel.addTree('Axon', curAxon.nodes(:, 1:3), curAxon.edges);
-    
-    for curQueryIdx = 1:size(curQueries, 1)
-        curExitId = curQueries.exitId(curQueryIdx);
-        curOverlaps = curQueries.overlaps{curQueryIdx};
-        
-        assert(any(curOverlaps == curExitId));
-        curOverlaps(curOverlaps == curExitId) = [];
-        
-        curQueryName = sprintf( ...
-            'Flight %d → %d', curExitId, curOverlaps(1));
-        skel = skel.addTree( ...
-            curQueryName, curQueries.flightNodes{curQueryIdx});
-    end
-    
-    curCenterPos = curAxon.nodes(curQueries.centerNodeId(1), 1:3);
-    
-    for curExitIdx = 1:size(curQueries, 1)
-        skel = skel.addTree( ...
-            sprintf('Exit %d', curQueries.exitId(curExitIdx)), ...
-            cat(1, curQueries.seedPos(curExitIdx, :), curCenterPos));
-    end
-    
-    skel = Skeleton.setParams4Pipeline(skel, p);
-    skel.write(fullfile(curOutputDir, ...
-        sprintf('invalid-bidir-%d.nml', curIdx)));
-end
-
 %% calculate partitioning
 [~, ~, queries.uniChiasmaId] = unique( ...
     queries(:, {'axonId', 'chiasmaId'}), 'rows');
 chiasmaCount = max(queries.uniChiasmaId);
 chiasmaPartition = cell(chiasmaCount, 1);
+chiasmaValid = false(chiasmaCount, 1);
 
 for curIdx = 1:chiasmaCount
     curQueries = queries(queries.uniChiasmaId == curIdx, :);
     curNrExits = size(curQueries, 1);
     
-    curOverlaps = curQueries.overlaps;
-    if ~all(cellfun(@numel, curOverlaps) <= 2)
-        % Do not consider chiasmata which contain flight paths that attach
-        % to too many exits. Having less than two exit overlaps is okay.
-        % This may happen in 3 + 1, 2 + 1 + 1 or 1 + 1 + 1 + 1 partitions.
-        chiasmaPartition{curIdx} = zeros(curNrExits, 1);
-        continue;
-    end
-    
-    % Pad overlaps with zeros
-    % → Non-attachment is exit #0
-    curOverlaps = cellfun( ...
-        @(o) cat(1, o, zeros(2 - numel(o), 1)), ...
-        curOverlaps, 'UniformOutput', false);
-    curPairsAll = sort(cat(2, curOverlaps{:}), 1)';
-    
-    curPairs = curPairsAll;
-    curPairs(~all(curPairs, 2), :) = [];
-    curPairs = unique(curPairs, 'rows');
-    curPairs = reshape(curPairs, [], 2);
+    curEdgesAll = curQueries.overlaps;
+    curEdgesAll = cat(2, curEdgesAll{:})';
+     
+    curEdges = sort(curEdgesAll, 2);
+    curEdges(~all(curEdges, 2), :) = [];
+    curEdges = unique(curEdges, 'rows');
+    curEdges = reshape(curEdges, [], 2);
     
     % Find parition
     curAdj = sparse( ...
-        curPairs(:, 2), curPairs(:, 1), ...
+        curEdges(:, 2), curEdges(:, 1), ...
         true, curNrExits, curNrExits);
     
    [~, curLUT] = graphconncomp(curAdj, 'Directed', false);
@@ -374,20 +279,27 @@ for curIdx = 1:chiasmaCount
     curPartition = accumarray(curLUT(:), 1);
     curPartition = sort(curPartition, 'descend');
     
+    % For each component with at least two elements, there exists an edge.
+    % Hence, there is no excuse of the flight paths involved in these
+    % components to be dangling.
+    curIsValid = ~any( ...
+        curEdgesAll(:, 2) == 0 & ismember( ...
+        curEdgesAll(:, 1), curEdgesAll(:, 2)));
+    
     chiasmaPartition{curIdx} = curPartition;
+    chiasmaValid(curIdx) = curIsValid;
 end
 
 %% evaluate partitions
 chiasmaPartitionStr = cellfun(@(p) ...
     strjoin(arrayfun(@num2str, p(:)', 'Uni', false), '-'), ...
     chiasmaPartition, 'UniformOutput', false);
-[uniPartitions, ~, uniPartitionCount] = unique(chiasmaPartitionStr);
-uniPartitionCount = accumarray(uniPartitionCount, 1);
-
+[uniPartitions, ~, uniPartitionIds] = unique(chiasmaPartitionStr);
 
 partitionEval = table;
 partitionEval.partition = uniPartitions;
-partitionEval.count = uniPartitionCount;
+partitionEval.count = accumarray(uniPartitionIds, 1);
+partitionEval.valid = accumarray(uniPartitionIds, chiasmaValid);
 
 fprintf('Evaluation of chiasmata partitioning:\n\n');
 disp(partitionEval);
