@@ -235,3 +235,112 @@ for curIdx = randIds
     skel.write(fullfile(curOutputDir, ...
         sprintf('invalid-bidir-%d.nml', curIdx)));
 end
+
+%% calculate partitioning
+[~, ~, queries.uniChiasmaId] = unique( ...
+    queries(:, {'axonId', 'chiasmaId'}), 'rows');
+chiasmaCount = max(queries.uniChiasmaId);
+chiasmaPartition = cell(chiasmaCount, 1);
+
+for curIdx = 1:chiasmaCount
+    curQueries = queries(queries.uniChiasmaId == curIdx, :);
+    curNrExits = size(curQueries, 1);
+    
+    curOverlaps = curQueries.overlaps;
+    if ~all(cellfun(@numel, curOverlaps) <= 2)
+        % Do not consider chiasmata which contain flight paths that attach
+        % to too many exits. Having less than two exit overlaps is okay.
+        % This may happen in 3 + 1, 2 + 1 + 1 or 1 + 1 + 1 + 1 partitions.
+        chiasma.partition{curIdx} = zeros(curNrExits, 1);
+        chiasma.partitionIsValid(curIdx) = false;
+        continue;
+    end
+    
+    % Pad overlaps with zeros
+    % → Non-attachment is exit #0
+    curOverlaps = cellfun( ...
+        @(o) cat(1, o, zeros(2 - numel(o), 1)), ...
+        curOverlaps, 'UniformOutput', false);
+    curPairsAll = sort(cat(2, curOverlaps{:}), 1)';
+    
+    curPairs = curPairsAll;
+    curPairs(~all(curPairs, 2), :) = [];
+    curPairs = unique(curPairs, 'rows');
+    curPairs = reshape(curPairs, [], 2);
+    
+    % Find parition
+    curAdj = sparse( ...
+        curPairs(:, 2), curPairs(:, 1), ...
+        true, curNrExits, curNrExits);
+    
+   [~, curLUT] = graphconncomp(curAdj, 'Directed', false);
+   
+    % Build partition
+    curPartition = accumarray(curLUT(:), 1);
+    curPartition = sort(curPartition, 'descend');
+    
+    chiasmaPartition{curIdx} = curPartition;
+end
+
+%% evaluate partitions
+chiasmaPartitionStr = cellfun(@(p) ...
+    strjoin(arrayfun(@num2str, p(:)', 'Uni', false), '-'), ...
+    chiasmaPartition, 'UniformOutput', false);
+[uniPartitions, ~, uniPartitionCount] = unique(chiasmaPartitionStr);
+uniPartitionCount = accumarray(uniPartitionCount, 1);
+
+
+partitionEval = table;
+partitionEval.partition = uniPartitions;
+partitionEval.count = uniPartitionCount;
+
+fprintf('Evaluation of chiasmata partitioning:\n\n');
+disp(partitionEval);
+
+%% find 3 + 1 chiasmata
+curPartitionStr = '3-1';
+chiasmaIds = find(strcmpi(chiasmaPartitionStr, curPartitionStr));
+chiasmaIds = reshape(chiasmaIds, 1, []);
+
+rng(0);
+randIds = randperm(numel(chiasmaIds));
+randIds = chiasmaIds(randIds(1:min(10, numel(chiasmaIds))));
+
+curOutputDir = fullfile( ...
+    outputDir, sprintf('%s-partition', curPartitionStr));
+if ~exist(curOutputDir, 'dir'); mkdir(curOutputDir); end
+
+for curIdx = randIds
+    skel = skeleton();
+    
+    curQueries = queries(queries.uniChiasmaId == curIdx, :);
+    curAxon = axons(curQueries.axonId(1));
+    
+    skel = skel.addTree('Axon', curAxon.nodes(:, 1:3), curAxon.edges);
+    
+    for curQueryIdx = 1:size(curQueries, 1)
+        curExitId = curQueries.exitId(curQueryIdx);
+        curOverlaps = curQueries.overlaps{curQueryIdx};
+        
+        assert(any(curOverlaps == curExitId));
+        curOverlaps(curOverlaps == curExitId) = [];
+        curOverlaps(end + 1) = 0; %#ok
+        
+        curQueryName = sprintf( ...
+            'Flight %d → %d', curExitId, curOverlaps(1));
+        skel = skel.addTree( ...
+            curQueryName, curQueries.flightNodes{curQueryIdx});
+    end
+    
+    curCenterPos = curAxon.nodes(curQueries.centerNodeId(1), 1:3);
+    
+    for curExitIdx = 1:size(curQueries, 1)
+        skel = skel.addTree( ...
+            sprintf('Exit %d', curQueries.exitId(curExitIdx)), ...
+            cat(1, curQueries.seedPos(curExitIdx, :), curCenterPos));
+    end
+    
+    skel = Skeleton.setParams4Pipeline(skel, p);
+    skel.write(fullfile(curOutputDir, sprintf( ...
+        '%s-partition-%d.nml', curPartitionStr, curIdx)));
+end
