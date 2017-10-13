@@ -7,7 +7,7 @@ function detectChiasmataSuper(startidx, p, useSphereClustering)
     if isfield(agglos,'axons')
         agglos = agglos.axons(agglos.indBigAxons);
     else
-        agglos = agglos.dendrites(agglos.indBigDendrites);
+        agglos = agglos.dendrites(agglos.indBigDends);
     end
     % set version number
     numstr = p.chiasmataVersion;
