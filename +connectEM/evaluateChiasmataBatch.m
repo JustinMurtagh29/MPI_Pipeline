@@ -110,6 +110,56 @@ end
 randQueries.gtExit = nan(size(randQueries, 1), 1);
 
 %%
+gtFile = '/mnt/mpibr/data/Personal/mottaa/L4/2017-10-13-Chiasmata-Attachment-GT/chiasma-gt-exits.mat';
+gtQueries = load(gtFile, 'randQueries');
+gtQueries = gtQueries.randQueries;
+
+% ignore entries without groundtruth annotation
+gtQueries(isnan(gtQueries.gtExit), :) = [];
+gtCount = size(gtQueries, 1);
+
+gtEval = table;
+gtEval.expected = cell(gtCount, 1);
+gtEval.found = cell(gtCount, 1);
+gtEval.correct = false(gtCount, 1);
+
+for curIdx = 1:size(gtQueries, 1)
+    curQuery = gtQueries(curIdx, :);
+    
+    curAxon = axons(curQuery.axonId);
+    curAxon.nodesScaled = bsxfun(@times, ...
+        curAxon.nodes(:, 1:3), p.raw.voxelSize);
+    
+    curQueries = queries( ...
+        queries.axonId == curQuery.axonId ...
+      & queries.chiasmaId == curQuery.chiasmaId, :);
+    
+   [~, curSummary] = ...
+        connectEM.splitChiasmataMulti( ...
+            p, curAxon, curQueries, 'dryRun', true);
+        
+    curFound = curSummary.tracings{1};
+    curFound = curFound.overlaps{curQuery.exitId};
+    curFound = setdiff(curFound, curQuery.exitId);
+    
+    gtEval.found{curIdx} = curFound;
+    gtEval.expected{curIdx} = setdiff(curQuery.gtExit, 0);
+end
+
+gtEval.correct = cellfun( ...
+    @(e, f) isequal(e(:), f(:)), ...
+    gtEval.expected, gtEval.found);
+
+fprintf('\n');
+fprintf('Evaluation of attachment:\n\n');
+disp(gtEval);
+
+fprintf('Correct: %.2f %%\n', 100 * mean(gtEval.correct));
+fprintf('Too many attachments: %.2f %%\n', 100 * mean( ...
+    cellfun(@numel, gtEval.found) > cellfun(@numel, gtEval.expected)));
+fprintf('Too few attachments: %.2f %%\n', 100 * mean( ...
+    cellfun(@numel, gtEval.found) < cellfun(@numel, gtEval.expected)));
+%%
 % Group queries by axons
 queries.row = reshape(1:size(queries, 1), [], 1);
 [uniAxonIds, ~, queries.uniAxonId] = unique(queries.axonId);
