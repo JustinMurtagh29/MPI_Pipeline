@@ -67,6 +67,7 @@ queries = queries(ismember( ...
 queries.uniChiasmaId = [];
 
 %%
+%{
 % Write out random flight paths. I will then manually annotate the ground
 % truth overlaps. This can then be used to optimize the overlap detection
 % routine.
@@ -163,6 +164,8 @@ fprintf('Too many attachments: %.2f %%\n', 100 * mean( ...
     cellfun(@numel, gtEval.found) > cellfun(@numel, gtEval.expected)));
 fprintf('Too few attachments: %.2f %%\n', 100 * mean( ...
     cellfun(@numel, gtEval.found) < cellfun(@numel, gtEval.expected)));
+%}
+
 %%
 % Group queries by axons
 queries.row = reshape(1:size(queries, 1), [], 1);
@@ -207,6 +210,7 @@ fprintf('Flight path evaluation:\n\n');
 disp(temp);
 
 %% Look at flight paths with too few attachments
+%{
 % Make sure that start was correctly identified
 tooFewQueries = queries(flightEval.tooFewEndings, :);
 mean(arrayfun( ...
@@ -248,6 +252,7 @@ for curIdx = randIds
     skel.write(fullfile(curOutputDir, ...
         sprintf('too-few-endings-%d.nml', curIdx)));
 end
+%}
 
 %% calculate partitioning
 [~, ~, queries.uniChiasmaId] = unique( ...
@@ -307,6 +312,7 @@ fprintf('Evaluation of chiasmata partitioning:\n\n');
 disp(partitionEval);
 
 %% find 3 + 1 chiasmata
+%{
 curPartitionStr = '3-1';
 chiasmaIds = find(strcmpi(chiasmaPartitionStr, curPartitionStr));
 chiasmaIds = reshape(chiasmaIds, 1, []);
@@ -353,3 +359,4 @@ for curIdx = randIds
     skel.write(fullfile(curOutputDir, sprintf( ...
         '%s-partition-%d.nml', curPartitionStr, curIdx)));
 end
+%}
