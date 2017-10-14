@@ -11,7 +11,8 @@ function [x_shift1, y_shift1, x_shift2, y_shift2] = detectImageAlignmentIssues(p
             fov2 = raw2(X(i)-80:X(i)+80,Y(j)-80:Y(j)+80);
             % This first function still yields useless results
             %[x_shift1, y_shift1]= connectEM.xcorr2_fft(fov1, fov2);
-            [x_shift1, y_shift1, x_shift2, y_shift2]= connectEM.xcorr2_template(fov1, fov2);
+            % This seems to work
+            [x_shift1(i,j), y_shift1(i,j), x_shift2(i,j), y_shift2(i,j)]= connectEM.xcorr2_template(fov1, fov2);
        end
     end
 end

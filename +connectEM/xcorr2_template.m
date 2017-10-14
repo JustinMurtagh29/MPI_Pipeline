@@ -1,8 +1,10 @@
 function [x_shiftA, y_shiftA, x_shiftB, y_shiftB] = xcorr2_template(A, B)
-    % Normalized cross-correlation for 2 dimensional arrays
+    % Cross-correlation for 2 dimensional arrays
     % A and B should habe uneven number of elements in each dim and be square
 
-    templateHalfSize = 20;
+    templateHalfSize = 50;
+    A = single(A);
+    B = single(B);
 
     % Do template matching in both directions to check for symetry
     midA = (size(A,1)-1)/2+1;
