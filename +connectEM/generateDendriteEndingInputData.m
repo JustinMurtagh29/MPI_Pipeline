@@ -57,7 +57,7 @@ function generateDendriteEndingInputData(param,stateFile,suffix)
 
     % Save results
     out = struct;
-    out.dendrites = dendrites(dendriteIds);
+    out.dendrites = dendrites;
     out.dendriteIds = dendriteIds;
 %     out.directionality = structfun( ...
 %         @(x) x(dendriteIds), directionality, 'UniformOutput', false);
