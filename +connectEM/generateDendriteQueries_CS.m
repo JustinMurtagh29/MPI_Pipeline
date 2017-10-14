@@ -6,7 +6,7 @@ function generateDendriteQueries_CS(param,state)
 
     dataDir = fullfile(param.saveFolder, 'aggloState');
 
-    [~, ~, suffix] = connectEM.setQueryState(state);    
+%     [~, ~, suffix] = connectEM.setQueryState(state);    
 
     % Load data from ending generation
     endingData = fullfile(dataDir, 'dendriteEndingsAllData.mat');
@@ -32,6 +32,8 @@ function generateDendriteQueries_CS(param,state)
     m = load(fullfile(dataDir, 'dendrites_03_v2.mat'));
     dendrites = m.dendrites(m.indBigDends);
     dendrites = arrayfun(@Agglo.fromSuperAgglo, dendrites, 'UniformOutput', false);
+    display([num2str(numel(m.indBigDends) ' dendrites in total']);
+    display([num2str(sum(m.indBigDends) ' larger 5um']);
 
     % Determine endings which are not redundant(already attached by flight path)
 %     m = load(fullfile(dataDir, strcat('attachedEndings',suffix,'.mat')), 'endingCaseDistinctions');
