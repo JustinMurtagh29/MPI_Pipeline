@@ -1,4 +1,4 @@
-function job = buildIsosurfaceOfAggloStart(p, outputFolder, segIds, namePrefix)
+function job = detectImageAlignmentIssuesStart(p)
 
     inputCell = {num2cell(p.local.bbox(3,1):p.local.bbox(3,2)-1)};
     sharedInputs = {p};
