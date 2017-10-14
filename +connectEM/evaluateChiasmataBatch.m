@@ -253,8 +253,10 @@ end
 [~, ~, queries.uniChiasmaId] = unique( ...
     queries(:, {'axonId', 'chiasmaId'}), 'rows');
 chiasmaCount = max(queries.uniChiasmaId);
-chiasmaPartition = cell(chiasmaCount, 1);
-chiasmaValid = false(chiasmaCount, 1);
+
+chiasma = table;
+chiasma.partition = cell(chiasmaCount, 1);
+chiasma.valid = false(chiasmaCount, 1);
 
 for curIdx = 1:chiasmaCount
     curQueries = queries(queries.uniChiasmaId == curIdx, :);
@@ -286,20 +288,20 @@ for curIdx = 1:chiasmaCount
         curEdgesAll(:, 2) == 0 & ismember( ...
         curEdgesAll(:, 1), curEdgesAll(:, 2)));
     
-    chiasmaPartition{curIdx} = curPartition;
-    chiasmaValid(curIdx) = curIsValid;
+    chiasma.partition{curIdx} = curPartition;
+    chiasma.valid(curIdx) = curIsValid;
 end
 
 %% evaluate partitions
 chiasmaPartitionStr = cellfun(@(p) ...
     strjoin(arrayfun(@num2str, p(:)', 'Uni', false), '-'), ...
-    chiasmaPartition, 'UniformOutput', false);
+    chiasma.partition, 'UniformOutput', false);
 [uniPartitions, ~, uniPartitionIds] = unique(chiasmaPartitionStr);
 
 partitionEval = table;
 partitionEval.partition = uniPartitions;
 partitionEval.count = accumarray(uniPartitionIds, 1);
-partitionEval.valid = accumarray(uniPartitionIds, chiasmaValid);
+partitionEval.valid = accumarray(uniPartitionIds, chiasma.valid);
 
 fprintf('Evaluation of chiasmata partitioning:\n\n');
 disp(partitionEval);
