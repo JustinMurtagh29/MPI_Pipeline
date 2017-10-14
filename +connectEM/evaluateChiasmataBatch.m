@@ -49,21 +49,50 @@ fprintf('# chiasmata answered: %d\n', numel(uniChiasmaDoneIds));
 % Limit ourselves to done chiasmata
 queries = queries(ismember( ...
     queries.uniChiasmaId, uniChiasmaDoneIds), :);
+
 queries.flightNodes = flights.nodes(queries.flightId);
 queries.flightSegIds = flights.segIds(queries.flightId);
+queries.flightComment = flights.comments(queries.flightId);
+
+fprintf('\n');
+fprintf('# queries without nodes: %d\n', ...
+    sum(cellfun(@isempty, queries.flightNodes)));
+fprintf('# queries with comment: %d\n', ...
+    sum(~cellfun(@isempty, queries.flightComment)));
+fprintf('⇒ Removing the above queries ...\n');
+
+% removing invalid flights and their chiasmata
+invalidFlightMask = ...
+    cellfun(@isempty, queries.flightNodes) ...
+ | ~cellfun(@isempty, queries.flightComment);
+
+invalidChiasmaIds = unique(queries.uniChiasmaId(invalidFlightMask));
+queries(ismember(queries.uniChiasmaId, invalidChiasmaIds), :) = [];
+
+[~, ~, queries.uniChiasmaId] = unique( ...
+    queries(:, {'axonId', 'chiasmaId'}), 'rows');
+uniChiasmaDoneIds = find(accumarray( ...
+    queries.uniChiasmaId, queries.flightId, [], @all));
+
+fprintf('\n');
+fprintf('# answered chiasmata left: %d\n', numel(uniChiasmaDoneIds));
 
 % Clean-up
 queries(:, {'flightId', 'uniChiasmaId'}) = [];
 
 %% Limit to 4-fold chiasmata
+chiasmaFold = 4;
+
 [~, ~, queries.uniChiasmaId] = unique( ...
     queries(:, {'axonId', 'chiasmaId'}), 'rows');
+uniChiasmaIds = find(accumarray(queries.uniChiasmaId, 1) == chiasmaFold);
 
-uniChiasma4Fold = find(accumarray(queries.uniChiasmaId, 1) == 4);
-fprintf('# 4-fold chiasmata answered: %d\n', numel(uniChiasma4Fold));
+fprintf(...
+    '# %d-fold chiasmata answered: %d\n', ...
+    chiasmaFold, numel(uniChiasmaIds));
 
 queries = queries(ismember( ...
-    queries.uniChiasmaId, uniChiasma4Fold), :);
+    queries.uniChiasmaId, uniChiasmaIds), :);
 queries.uniChiasmaId = [];
 
 %%
