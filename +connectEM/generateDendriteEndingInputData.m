@@ -39,12 +39,12 @@ function generateDendriteEndingInputData(param,stateFile,suffix)
     % Load state of axon agglomeration and load big indices as loaded by Kevin
     dendrites = load(fullfile(dataDir, stateFile));
     dendriteIds = find(dendrites.indBigDends);
-    dendrites = dendrites.dendrites;
+    dendrites = dendrites.dendrites(dendrites.indBigDends);
 
     % Convert to old-school agglomerates
-%     dendriteAgglos = arrayfun( ...
-%         @Agglo.fromSuperAgglo, dendrites, 'UniformOutput', false);
-    dendriteAgglos = arrayfun(@(x)x.nodes(:,4),dendrites,'uni',0);
+    dendriteAgglos = arrayfun( ...
+        @Agglo.fromSuperAgglo, dendrites, 'UniformOutput', false);
+%     dendriteAgglos = arrayfun(@(x)x.nodes(:,4),dendrites,'uni',0);
 
     % Calculate axon directionality
     options = struct;
