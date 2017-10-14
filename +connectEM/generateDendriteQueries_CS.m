@@ -32,8 +32,8 @@ function generateDendriteQueries_CS(param,state)
     m = load(fullfile(dataDir, 'dendrites_03_v2.mat'));
     dendrites = m.dendrites(m.indBigDends);
     dendrites = arrayfun(@Agglo.fromSuperAgglo, dendrites, 'UniformOutput', false);
-    display([num2str(numel(m.indBigDends) ' dendrites in total']);
-    display([num2str(sum(m.indBigDends) ' larger 5um']);
+    display([num2str(numel(m.indBigDends)) ' dendrites in total']);
+    display([num2str(sum(m.indBigDends)) ' larger 5um']);
 
     % Determine endings which are not redundant(already attached by flight path)
 %     m = load(fullfile(dataDir, strcat('attachedEndings',suffix,'.mat')), 'endingCaseDistinctions');
@@ -98,9 +98,9 @@ function generateDendriteQueries_CS(param,state)
     endingsInside = endingsInside > 0;
     % Logical matrix which indicates endings beyond cutoff border
     endingsOutside = ~endingsInside;
-    display([num2str(numel(endingsOutside) ' endings in total']);
-    display([num2str(sum(endingsOutside) ' endings outside']);
-    display([num2str(sum(endingsInside) ' endings to query']);
+    display([num2str(numel(endingsOutside)) ' endings in total']);
+    display([num2str(sum(endingsOutside)) ' endings outside']);
+    display([num2str(sum(endingsInside)) ' endings to query']);
     
     % Write out scores and pca, apply all masks
     outside = cellfun('isempty',candidateUse);
