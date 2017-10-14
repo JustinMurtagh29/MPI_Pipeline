@@ -59,8 +59,9 @@ function generateDendriteEndingInputData(param,stateFile,suffix)
     out = struct;
     out.dendrites = dendrites(dendriteIds);
     out.dendriteIds = dendriteIds;
-    out.directionality = structfun( ...
-        @(x) x(dendriteIds), directionality, 'UniformOutput', false);
+%     out.directionality = structfun( ...
+%         @(x) x(dendriteIds), directionality, 'UniformOutput', false);
+    out.directionality = directionality;
     out.gitInfo = Util.gitInfo();
 
     Util.saveStruct(outFile, out);
