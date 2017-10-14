@@ -22,9 +22,20 @@ function generateDendriteEndingInputData(param,stateFile,suffix)
     outFile = fullfile(dataDir, sprintf('dendriteEndingInputData%s.mat',suffix));
 
     % Load data
-   [graph, segmentMeta, borderMeta, globalSegmentPCA] = ...
-       connectEM.loadAllSegmentationData(param);
+%    [graph, segmentMeta, borderMeta, globalSegmentPCA] = ...
+%        connectEM.loadAllSegmentationData(param);
+    graph=load('/gaba/u/mberning/results/pipeline/20170217_ROI/graphNewNew.mat')
+borderMeta = load('/gaba/u/mberning/results/pipeline/20170217_ROI/globalBorder.mat', 'borderSize', 'borderCoM');
+segmentMeta = load('/gaba/u/mberning/results/pipeline/20170217_ROI/segmentMeta.mat', 'voxelCount', 'point', 'maxSegId', 'cubeIdx', 'centroid', 'box');
+load('/gaba/u/mberning/results/pipeline/20170217_ROI/allParameterWithSynapses.mat', 'p');
+segmentMeta = connectEM.addSegmentClassInformation(p, segmentMeta);
+globalSegmentPCA = load('/gaba/u/mberning/results/pipeline/20170217_ROI/globalSegmentPCA.mat', 'covMat');
+[graph.neighbours, neighboursIdx] = Graph.edges2Neighbors(graph.edges);
+graph.neighProb = cellfun(@(x)graph.prob(x), neighboursIdx, 'uni', 0);
+graph.neighBorderIdx = cellfun(@(x)graph.borderIdx(x), neighboursIdx, 'uni', 0);
 
+   
+   
     % Load state of axon agglomeration and load big indices as loaded by Kevin
     dendrites = load(fullfile(dataDir, stateFile));
     dendriteIds = find(dendrites.indBigDends);
