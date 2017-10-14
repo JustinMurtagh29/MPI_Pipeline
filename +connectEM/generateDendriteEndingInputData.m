@@ -32,7 +32,7 @@ function generateDendriteEndingInputData(param,stateFile,suffix)
 
     % Convert to old-school agglomerates
     dendriteAgglos = arrayfun( ...
-        @Agglo.fromSuperAgglo, axons, 'UniformOutput', false);
+        @Agglo.fromSuperAgglo, dendrites, 'UniformOutput', false);
 
     % Calculate axon directionality
     options = struct;
