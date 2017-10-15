@@ -12,7 +12,7 @@ function generateDendriteQueries_CS(param,state)
     endingData = fullfile(dataDir, 'dendriteEndingsAllData.mat');
     endingData = load(endingData);
     % Extract some variables
-    idxEnding = endingData.idxEnding;
+    idxAll = endingData.idxAll;
     idxCanidateFound = endingData.dendriteMask;
     borderIds = endingData.borderIds;
     borderClusters = endingData.borderClusters ;
@@ -44,7 +44,7 @@ function generateDendriteQueries_CS(param,state)
 
     % Find indices of ending candidates in directionality lists (scores,
     % pca...) and exclude redundant endings
-    idxUse = idxEnding(idxCanidateFound);
+    idxUse = idxAll(idxCanidateFound);
     counter = 1;
     idxCluster = [];
     for j=1:length(borderClusters)
