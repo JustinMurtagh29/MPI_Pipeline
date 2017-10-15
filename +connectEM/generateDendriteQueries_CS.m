@@ -48,7 +48,7 @@ function generateDendriteQueries_CS(param,state)
     counter = 1;
     idxCluster = [];
     for j=1:length(borderClusters)
-        idxCluster{j,1} = [];
+        idxCluster{j,1} = {};
         for k=1:max(borderClusters{j})
             if ismember(counter,attachedEndings)
                 idxCluster{j,1}{k,1} = [];
