@@ -57,7 +57,7 @@ function generateDendriteEndings(param,suffix)
         borderPositions, 'UniformOutput', false);
 
     clusterSizes = cellfun(@max, borderClusters,'uni',0);
-    singleEnding = sum(clusterSizes == 1);
+    singleEnding = sum(cell2mat(clusterSizes) == 1);
     display([num2str(singleEnding./numel(clusterSizes)*100, '%.2f') '% of agglomerates have just one single ending']);
     display([num2str(singleEnding) ' in total']);
 
