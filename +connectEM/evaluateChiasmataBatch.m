@@ -289,6 +289,7 @@ end
 chiasmaCount = max(queries.uniChiasmaId);
 
 chiasma = table;
+chiasma.lut = cell(chiasmaCount, 1);
 chiasma.partition = cell(chiasmaCount, 1);
 chiasma.valid = false(chiasmaCount, 1);
 
@@ -310,9 +311,10 @@ for curIdx = 1:chiasmaCount
         true, curNrExits, curNrExits);
     
    [~, curLUT] = graphconncomp(curAdj, 'Directed', false);
+    curLUT = reshape(curLUT, [], 1);
    
     % Build partition
-    curPartition = accumarray(curLUT(:), 1);
+    curPartition = accumarray(curLUT, 1);
     curPartition = sort(curPartition, 'descend');
     
     % For each component with at least two elements, there exists an edge.
@@ -322,14 +324,16 @@ for curIdx = 1:chiasmaCount
         curEdgesAll(:, 2) == 0 & ismember( ...
         curEdgesAll(:, 1), curEdgesAll(:, 2)));
     
+    chiasma.lut{curIdx} = curLUT;
     chiasma.partition{curIdx} = curPartition;
     chiasma.valid(curIdx) = curIsValid;
 end
 
 %% evaluate partitions
-chiasmaPartitionStr = cellfun(@(p) ...
-    strjoin(arrayfun(@num2str, p(:)', 'Uni', false), '-'), ...
-    chiasma.partition, 'UniformOutput', false);
+makePartitionStr = @(p) strjoin( ...
+    arrayfun(@num2str, p(:)', 'Uni', false), '-');
+chiasmaPartitionStr = cellfun( ...
+    makePartitionStr, chiasma.partition, 'UniformOutput', false);
 [uniPartitions, ~, uniPartitionIds] = unique(chiasmaPartitionStr);
 
 partitionEval = table;
@@ -340,10 +344,20 @@ partitionEval.valid = accumarray(uniPartitionIds, chiasma.valid);
 fprintf('Evaluation of chiasmata partitioning:\n\n');
 disp(partitionEval);
 
-%% find 3 + 1 chiasmata
+%% look at partitions
 %{
-curPartitionStr = '3-1';
-chiasmaIds = find(strcmpi(chiasmaPartitionStr, curPartitionStr));
+thisValid = true;
+thisPartition = [3; 1];
+
+thisPartitionStr = {'invalid', 'valid'};
+thisPartitionStr = strcat( ...
+    thisPartitionStr{1 + thisValid}, ...
+    '-', makePartitionStr(thisPartition));
+
+chiasmaIds = find(arrayfun( ...
+    @(v, p) v == thisValid && ...
+    isequal(p{1}, thisPartition), ...
+    chiasma.valid, chiasma.partition));
 chiasmaIds = reshape(chiasmaIds, 1, []);
 
 rng(0);
@@ -351,7 +365,7 @@ randIds = randperm(numel(chiasmaIds));
 randIds = chiasmaIds(randIds(1:min(10, numel(chiasmaIds))));
 
 curOutputDir = fullfile( ...
-    outputDir, sprintf('%s-partition', curPartitionStr));
+    outputDir, sprintf('%s-partition', thisPartitionStr));
 if ~exist(curOutputDir, 'dir'); mkdir(curOutputDir); end
 
 for curIdx = randIds
@@ -386,6 +400,44 @@ for curIdx = randIds
     
     skel = Skeleton.setParams4Pipeline(skel, p);
     skel.write(fullfile(curOutputDir, sprintf( ...
-        '%s-partition-%d.nml', curPartitionStr, curIdx)));
+        '%s-partition-%d.nml', thisPartitionStr, curIdx)));
 end
 %}
+
+%% select chiasmata to split and flight paths to apply
+thisValid = true;
+thisPartition = [2; 2];
+
+chiasmaIds = find(arrayfun( ...
+    @(v, p) v == thisValid && ...
+    isequal(p{1}, thisPartition), ...
+    chiasma.valid, chiasma.partition));
+chiasmaIds = reshape(chiasmaIds, 1, []);
+
+theseQueries = queries( ...
+    ismember(queries.uniChiasmaId, chiasmaIds), :);
+theseQueries.execute = false(size(theseQueries, 1), 1);
+
+% find minimal set of flight paths to execute
+for curIdx = chiasmaIds
+    curQueryIds = find(theseQueries.uniChiasmaId == curIdx);
+    curQueries = theseQueries(curQueryMask, :);
+    
+    curNrExits = size(curQueries, 1);
+    curQueryEdges = cell2mat(curQueries.overlaps(:)');
+    curQueryEdges = sort(curQueryEdges, 1)';
+    
+    curAdj = curQueryEdges;
+    curAdj(~all(curAdj, 2), :) = [];
+    
+    % build minimal spanning tree per component
+    curAdj = sparse(curAdj(:, 2), curAdj(:, 1), 1, curNrExits, curNrExits);
+   	curAdj = graphminspantree(curAdj, 'Method', 'Kruskal');
+    
+    clear curEdges;
+   [curEdges(:, 2), curEdges(:, 1)] = find(curAdj);
+   
+    % find flights which form the minimal spanning tree
+   [~, curExecIds] = ismember(curEdges, curQueryEdges, 'rows');
+    theseQueries.execute(curQueryIds(curExecIds)) = true;
+end
