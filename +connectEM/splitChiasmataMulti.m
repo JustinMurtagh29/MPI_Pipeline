@@ -23,7 +23,7 @@ function [newAgglos, summary] = ...
    [~, chiasmata, queries.uniChiasmaId] = unique(queries.chiasmaId);
     chiasmata = queries(chiasmata, {'chiasmaId', 'centerNodeId'});
     chiasmaCount = size(chiasmata, 1);
-    chiasmaTracings = accumarray( ...
+    chiasmataTracings = accumarray( ...
         queries.uniChiasmaId, (1:size(queries, 1))', ...
         [], @(rows) {queries(rows, :)});
     
@@ -31,6 +31,9 @@ function [newAgglos, summary] = ...
     % loop below. These variables collect all changes which need to be
     % applied to the original super-agglomerate.
     nodesToDelete = [];
+    nodesToAdd = zeros(0, 3);
+    nodeCount = size(agglo.nodes, 1);
+    
     thisEdgesCol = agglo.edges;
     thisEdgesNew = zeros(0, 2);
     
@@ -48,7 +51,8 @@ function [newAgglos, summary] = ...
     
     for chiIdx = 1:chiasmaCount
         centerIdx = chiasmata.centerNodeId(chiIdx);
-        expectedNrExits = size(chiasmaTracings{chiIdx}, 1);
+        chiasmaTracings = chiasmataTracings{chiIdx};
+        expectedNrExits = size(chiasmaTracings, 1);
         
         % NOTE(amotta): Restrict skeleton to components within shell
         p.sphereRadiusOuter = 10000; % in nm
@@ -77,8 +81,9 @@ function [newAgglos, summary] = ...
         summary.nrExits(chiIdx) = nrExits;
         summary.tracings{chiIdx} = struct;
         summary.tracings{chiIdx}.nodes = ...
-            chiasmaTracings{chiIdx}.flightNodes;
+            chiasmaTracings.flightNodes;
         summary.tracings{chiIdx}.overlaps = cell(nrExits, 1);
+        summary.tracings{chiIdx}.overlapNodes = nan(nrExits, 1);
         
         % NOTE(amotta): Non-exit components are dropped (for now at least)
         nonExitNodeIds = thisNodeIds(cell2mat(C(~isExit)));
@@ -89,11 +94,11 @@ function [newAgglos, summary] = ...
         groups = cell(1, 0);
         conns = zeros(0, 2);
         
-        exitNodesScaled = chiasmaTracings{chiIdx}.seedPos;
+        exitNodesScaled = chiasmaTracings.seedPos;
         exitNodesScaled = bsxfun(@times, exitNodesScaled, p.voxelSize);
         
         for trIdx = 1:nrExits
-            tr = chiasmaTracings{chiIdx}(trIdx, :);
+            tr = chiasmaTracings(trIdx, :);
             assert(tr.exitId == trIdx);
             
             % NOTE(amotta): To map a query to its chiasma exit we simply
@@ -124,31 +129,43 @@ function [newAgglos, summary] = ...
             overlaps((end + 1):1) = 0;
             overlaps = cat(1, tr.exitId, overlaps);
             summary.tracings{chiIdx}.overlaps{trIdx} = overlaps;
+            summary.tracings{chiIdx}.overlapNodes(trIdx) = overlapNode;
         end
         
         if opts.dryRun; continue; end
         
-        % NOTE(amotta): If we're unable to solve a chiasma, it is left
-        % untouched and remains part of the super-agglomerate.
-        if nrExits ~= sum(cellfun(@length, groups)) %unable to solve chiasma
-            continue;
+        % TODO(amotta): To some magic to determine which flight paths to
+        % execute. This is determined in connectEM.evaluateChiasmataBatch
+        % for now and then passed in here via tha `execute` variable of
+        % `queries.`
+        
+        for trIdx = 1:reshape(find(chiasmaTracings.execute), 1, [])
+            tr = chiasmaTracings(trIdx, :);
+            trNodes = tr.flightNodes{1};
+            
+            trLastNode = summary.tracings{chiIdx}.overlapNodes(trIdx);
+            trNodes = trNodes(2:trLastNode, :);
+            
+            % collect new edges
+            trNodeCount = size(trNodes, 1);
+            trEdges = zeros((trNodeCount - 1) + 2, 2);
+            trEdges(2:(end - 1), 1) = 1:(trNodeCount - 1);
+            trEdges(2:(end - 1), 2) = (1 + 1):trNodeCount;
+            
+            trNodeOff = nodeCount + size(nodesToAdd, 1);
+            trEdges = trEdges + trNodeOff;
+            
+            % edge to seed node
+            trEdges(1, 1) = tr.exitNodeId;
+            trEdges(1, 2) = trEdges(2, 1);
+            
+            % edge to attachment node
+            trEdges(end, 1) = trEdges((end - 1), 2);
+            trEdges(end, 2) = chiasmaTracings.exitNodeId(tr.overlaps{1}(end));
+            
+            nodesToAdd = cat(1, nodesToAdd, trNodes);
+            thisEdgesNew = cat(1, thisEdgesNew, trEdges);
         end
-        
-        summary.solved(chiIdx) = true;
-        
-        % NOTE(amotta): Find index of node closest to chiasma center for
-        % each component. These are the nodes from which the new edges will
-        % be made.
-        closest = nan(1, nrExits);
-        for idx2 = 1 : nrExits
-            [~,closest(idx2)] = min(pdist2( ...
-                agglo.nodesScaled(thisNodeIds(C{idx2}), :), ...
-                agglo.nodesScaled(centerIdx, :)));
-            closest(idx2) = thisNodeIds(C{idx2}(closest(idx2)));
-        end
-        
-        % NOTE(amotta): Translate connections to node IDs
-        conns = sort(closest(conns), 2);
         
         % NOTE(amotta): Build skeleton where only core is cut out
         p.sphereRadiusOuter = Inf; % in nm
@@ -163,10 +180,9 @@ function [newAgglos, summary] = ...
         
         % NOTE(amotta): Build set of edges to keep. We start with the full
         % set and only keep the ones which never are part of a core.
-        thisEdgesCol=intersect(thisEdgesCol, thisNodeIds(thisEdges), 'rows');
+        thisEdgesCol = intersect(thisEdgesCol, thisNodeIds(thisEdges), 'rows');
         nodesToDelete = union(nodesToDelete, setdiff( ...
             1:size(agglo.nodesScaled, 1), thisNodeIds));
-        thisEdgesNew = [thisEdgesNew; conns];
     end
     
     % NOTE(amotta): See KMB's email from Wednesday, 27.09.2017.

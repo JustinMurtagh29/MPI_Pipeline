@@ -20,6 +20,7 @@ queries = table;
 queries.axonId = curData.queries(:, 1);
 queries.chiasmaId = curData.queries(:, 2);
 queries.exitId = curData.queries(:, 3);
+queries.exitNodeId = curData.queries(:, 8);
 queries.seedPos = curData.queries(:, 4:6);
 queries.centerNodeId = curData.queries(:, 7);
 queries.taskId = curData.taskIds;
