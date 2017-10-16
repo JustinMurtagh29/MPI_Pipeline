@@ -1,4 +1,4 @@
-function [x_max, y_max] = detectImageAlignmentIssues(p, planeIdx)
+function [x_shift1, y_shift1, x_shift2, y_shift2] = detectImageAlignmentIssues(p, planeIdx)
 
     raw1 = loadPlane(p.raw, p.bbox, planeIdx);
     raw2 = loadPlane(p.raw, p.bbox, planeIdx+1);
@@ -9,19 +9,16 @@ function [x_max, y_max] = detectImageAlignmentIssues(p, planeIdx)
         for j=1:length(Y)
             fov1 = raw1(X(i)-80:X(i)+80,Y(j)-80:Y(j)+80);
             fov2 = raw2(X(i)-80:X(i)+80,Y(j)-80:Y(j)+80);
-            xcorr = xcorr2_fft(fov1, fov2);
-            [~, idx] = max(xcorr(:));
-            [x_max(i,j), y_max(i,j)] = ind2sub(size(xcorr), idx);
-        end
+            % This first function still yields useless results
+            %[x_shift1, y_shift1]= connectEM.xcorr2_fft(fov1, fov2);
+            % This seems to work
+            [x_shift1(i,j), y_shift1(i,j), x_shift2(i,j), y_shift2(i,j)]= connectEM.xcorr2_template(fov1, fov2);
+       end
     end
 end
 
 function raw = loadPlane(raw, bbox, planeIdx)
     bbox(3,1:2) = [planeIdx planeIdx];
     raw = loadRawData(raw, bbox);
-end
-
-function result = xcorr2_fft(a, b)
-    result = real(ifft2(fft2(a).*fft2(b(end:-1:1,end:-1:1))));
 end
 

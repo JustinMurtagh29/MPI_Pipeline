@@ -1,24 +1,25 @@
-function generateAxonQueries(param,state)
+function generateDendriteQueries_CS(param,suffix)
     % Written by
     %   Manuel Berning <manuel.berning@brain.mpg.de>
     %   Christian Schramm <christian.schramm@brain.mpg.de>
 
+    if ~exist('suffix','var')
+        suffix = '';
+    end
 
     dataDir = fullfile(param.saveFolder, 'aggloState');
 
-    [~, ~, suffix] = connectEM.setQueryState(state);    
-
     % Load data from ending generation
-    endingData = fullfile(dataDir, 'axonEndingsAllData.mat');
+    endingData = fullfile(dataDir, sprintf('dendriteEndingsAllData%s.mat',suffix));
     endingData = load(endingData);
     % Extract some variables
     idxAll = endingData.idxAll;
-    idxCanidateFound = endingData.axonMask;
+    idxCanidateFound = endingData.dendriteMask;
     borderIds = endingData.borderIds;
     borderClusters = endingData.borderClusters ;
 
     % Load directionality information
-    directionality = fullfile(dataDir, 'axonEndingInputData.mat');
+    directionality = fullfile(dataDir, sprintf('dendriteEndingInputData%s.mat',suffix));
     directionality = load(directionality, 'directionality');
     directionality = directionality.directionality;
 
@@ -29,16 +30,18 @@ function generateAxonQueries(param,state)
     borderPositions = cellfun(@(x) borderCoM(x,:), directionality.borderIdx(idxCanidateFound),'uni',0);
 
     % Load larger 5 micron agglomerates
-    m = load(fullfile(dataDir, 'axons_04.mat'));
-    axons = m.axons(m.indBigAxons);
-    axons = arrayfun(@Agglo.fromSuperAgglo, axons, 'UniformOutput', false);
+    m = load(fullfile(dataDir, 'dendrites_03_v2.mat'));
+    dendrites = m.dendrites(m.indBigDends);
+    dendrites = arrayfun(@Agglo.fromSuperAgglo, dendrites, 'UniformOutput', false);
+    display([num2str(numel(m.indBigDends)) ' dendrites in total']);
+    display([num2str(sum(m.indBigDends)) ' larger 5um']);
 
     % Determine endings which are not redundant(already attached by flight path)
-    m = load(fullfile(dataDir, strcat('attachedEndings',suffix,'.mat')), 'endingCaseDistinctions');
-    casesToCountAttached = [1:4 6:17];
-    attachedEndings = find(ismember(m.endingCaseDistinctions, casesToCountAttached));
-    clear m
-    
+%     m = load(fullfile(dataDir, strcat('attachedEndings',suffix,'.mat')), 'endingCaseDistinctions');
+%     casesToCountAttached = [1:4 6:17];
+%     attachedEndings = find(ismember(m.endingCaseDistinctions, casesToCountAttached));
+%     clear m
+    attachedEndings = [];
 
     % Find indices of ending candidates in directionality lists (scores,
     % pca...) and exclude redundant endings
@@ -46,7 +49,7 @@ function generateAxonQueries(param,state)
     counter = 1;
     idxCluster = [];
     for j=1:length(borderClusters)
-        idxCluster{j,1} = [];
+        idxCluster{j,1} = {};
         for k=1:max(borderClusters{j})
             if ismember(counter,attachedEndings)
                 idxCluster{j,1}{k,1} = [];
@@ -76,8 +79,10 @@ function generateAxonQueries(param,state)
     % Keep only candidate with highest score for each cluster and exclude
     % candidate outside border cutoff
     candidateUse = {};
+    candidateOutside = {};
     for j=1:length(idxCluster)
         candidateUse{j,1} = [];
+        candidateOutside{j,1} = zeros(numel(idxCluster{j}), 1);
         for k=1:length(idxCluster{j})
             scoreClusters = SegDirScores{j,1}(idxCluster{j,1}{k,1});
             [~, sortIdx] = sort(scoreClusters, 'descend');
@@ -85,15 +90,24 @@ function generateAxonQueries(param,state)
             if all(bsxfun(@gt, borderPositions{j}(candidate,:), bboxSmall(:, 1)'),2)...
                     & all(bsxfun(@lt, borderPositions{j}(candidate,:), bboxSmall(:, 2)'),2)
                 candidateUse{j,1}(end+1,1) = candidate;
+                candidateOutside{j,1}(end+1,1) = 1;
             end
         end
     end
-
+    
+    endingsInside = cat(1,candidateOutside{:});
+    endingsInside = endingsInside > 0;
+    % Logical matrix which indicates endings beyond cutoff border
+    endingsOutside = ~endingsInside;
+    display([num2str(numel(endingsOutside)) ' endings in total']);
+    display([num2str(sum(endingsOutside)) ' endings outside']);
+    display([num2str(sum(endingsInside)) ' endings to query']);
+    
     % Write out scores and pca, apply all masks
     outside = cellfun('isempty',candidateUse);
-    axons = axons(idxCanidateFound);
-    axons = axons(~redundant);
-    axons = axons(~outside);
+    dendrites = dendrites(idxCanidateFound);
+    dendrites = dendrites(~redundant);
+    dendrites = dendrites(~outside);
 
     pcaFound = directionality.pca(idxCanidateFound);
     pcaFound = pcaFound(~redundant);
@@ -125,17 +139,17 @@ function generateAxonQueries(param,state)
         end
     end
 
-    outputFolder = fullfile(dataDir, 'queries_4/');
+    outputFolder = fullfile(dataDir, 'dendriteQueries_2/');
     if ~exist(outputFolder, 'dir')
         mkdir(outputFolder)
     end
 
-    batchBoundaries = round(linspace(1, numel(axons), 101));
+    batchBoundaries = round(linspace(1, numel(dendrites), 101));
     for i=1:length(batchBoundaries)-1
         inputList{i,1} = {i};
     end
 
-    sharedInputs = {batchBoundaries,axons,thisborderPositions,directions,param,outputFolder};
+    sharedInputs = {batchBoundaries,dendrites,thisborderPositions,directions,param,outputFolder};
     sharedInputsLocation = 2:7;
     cluster = Cluster.getCluster('-p -100','-tc 20','-l h_vmem=64G','-l s_rt=5:28:00','-l h_rt=5:29:00');
     job = Cluster.startJob(@connectEM.processQueryTasks, inputList, 'name', 'queryGeneration', 'cluster', cluster, ...

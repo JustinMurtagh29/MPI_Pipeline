@@ -1,18 +1,81 @@
 
+outputFolder ='/gaba/scratch/kboerg/queryResultsDendrite20170717/';
 
-graph=load('/gaba/u/mberning/results/pipeline/20170217_ROI/graphNewNew.mat')
-borderMeta = load('/gaba/u/mberning/results/pipeline/20170217_ROI/globalBorder.mat', 'borderSize', 'borderCoM');
-segmentMeta = load('/gaba/u/mberning/results/pipeline/20170217_ROI/segmentMeta.mat', 'voxelCount', 'point', 'maxSegId', 'cubeIdx', 'centroid', 'box');
-load('/gaba/u/mberning/results/pipeline/20170217_ROI/allParameterWithSynapses.mat', 'p');
+% Load data
+load('/gaba/u/mberning/results/pipeline/20170217_ROI/allParameterWithSynapses.mat');
+segmentMeta = load([p.saveFolder 'segmentMeta.mat']);
 segmentMeta = connectEM.addSegmentClassInformation(p, segmentMeta);
-globalSegmentPCA = load('/gaba/u/mberning/results/pipeline/20170217_ROI/globalSegmentPCA.mat', 'covMat');
-bboxDist = 5000;
-[graph.neighbours, neighboursIdx] = Graph.edges2Neighbors(graph.edges);
-graph.neighProb = cellfun(@(x)graph.prob(x), neighboursIdx, 'uni', 0);
-graph.neighBorderIdx = cellfun(@(x)graph.borderIdx(x), neighboursIdx, 'uni', 0);
-todo = [30    16    44    92    53    15    36     4    63    35    33    31    23     8    11    19    13    41    21    29    22    24    12     3    10    7];
-parfor idx = 1:length(todo);
-    idx
-    y = connectEM.agglomerateDirectionality(dendritesFinal(todo(idx)), graph, segmentMeta, borderMeta, globalSegmentPCA, bboxDist, false)
-    save(['/tmpscratch/kboerg/2017-10-12_directionalityDendrites' num2str(todo(idx)) '.mat'],'y')
-end
+temp = load('/gaba/u/mberning/results/pipeline/20170217_ROI/aggloState/dendrites_03.mat');
+filternan = @(x)x(~isnan(x));
+dendrites = arrayfun(@(x){filternan(x.nodes(:,4))}, temp.dendrites(temp.indBigDends));
+clear temp
+segmentsLeftover = setdiff(find(segmentMeta.dendriteProb > 0.5), cell2mat(dendrites));
+dendritesAll = [dendrites; num2cell(segmentsLeftover)];
+dendritesAll(cellfun(@(x)sum(segmentMeta.voxelCount(x)),dendritesAll)<200000) = [];
+% Not needed so far
+%graph = load([p.saveFolder 'graphNew.mat'], 'edges', 'prob', 'borderIdx');
+
+% Where to find skeletons that were returned from the queries
+scratchFolder = '/tmpscratch/kboerg/';
+% These are the downloaded queries (see wK projects: L4_focus_flight-1 & 2, L4_focus_flight-reseed-1 & 2 (2 contains 2nd and 3rd round of reseeding now))
+% And new queries from after switching to new (agglomerate based) query analysis: L4_focus_flight-new-1
+skeletonFolders = {'MBKMB_L4_dendrite_queries_2017_c_nmls','MBKMB_L4_dendrite_queries_2017_c_inverse_nmls'};
+skeletonFolders = cellfun(@(x)[scratchFolder x filesep], skeletonFolders, 'uni', 0);
+% Lookup segment ids of nodes+neighbours of nmls in all folders defined above
+[ff.segIds, ff.neighbours, ff.filenames, ff.nodes, ff.startNode, ff.comments] = connectEM.lookupNmlMulti(p, skeletonFolders, false);
+ff.segIds(cellfun('isempty', ff.startNode)) = [];
+ff.neighbours(cellfun('isempty', ff.startNode)) = [];
+ff.filenames(cellfun('isempty', ff.startNode)) = [];
+ff.nodes(cellfun('isempty', ff.startNode)) = [];
+ff.comments(cellfun('isempty', ff.startNode)) = [];
+ff.startNode(cellfun('isempty', ff.startNode)) = [];
+display([num2str(sum(~cellfun(@isempty,ff.comments))) '/' num2str(numel(ff.comments)) ' queries contain comment and will not be used']);
+tabulate(cellfun(@(x)x{1}{1}, cellfun(@(x)regexp(x, 'content="(.*)"', 'tokens'), ...
+    cat(1, ff.comments{~cellfun(@isempty, ff.comments)}), 'uni', 0), 'uni', 0))
+% Where to find skeletons that were returned from the queries
+ff = structfun(@(x)x(cellfun(@isempty,ff.comments)), ff, 'uni', 0);
+
+
+% Calculate overlap of all queries with segments
+[uniqueSegments, neighboursStartNode, nodesExcludedIdx, startNodeIdx] = cellfun(@connectEM.queryAnalysis, ...
+        ff.segIds, ff.neighbours, ff.nodes', ff.startNode', 'uni', 0);
+% Determine all overlaps of agglomerations with given queries
+[partition, queryOverlap] = connectEM.queryAgglomerationOverlap(dendritesAll, [], uniqueSegments, neighboursStartNode);
+% Make decision(s), here evidence/occurence threshold is applied
+% Always one (or none if evidence below 14, 1/2 node) start eqClass
+startAgglo = arrayfun(@(x)x.eqClasses(x.occurences > 13), queryOverlap.start, 'uni', 0);
+% Exclude all queries that do not have a clear starting point
+idxNoClearStart = cellfun('isempty', startAgglo);
+% Multiple ends (all above 53vx evidence, corresponds to 2 full nodes)
+endAgglo = arrayfun(@(x)x.eqClasses(x.occurences > 53), queryOverlap.ends, 'uni', 0);
+% Exclude startAgglo from endAgglo (as we do not want to count self-attachment)
+endAgglo = cellfun(@(x,y)setdiff(x,y), endAgglo, startAgglo, 'uni', 0);
+% Exclude all queries that do not have (at least one) clear end
+idxNoClearEnd = cellfun('isempty', endAgglo);
+% 18.5% of queries excluded overall due to missing start or end (or both)
+idxGood = ~(idxNoClearStart | idxNoClearEnd);
+% Display some statistics
+display([num2str(sum(idxNoClearStart)./numel(idxNoClearStart)*100, '%.2f') '% of remaining queries have no clear start']);
+display([num2str(sum(idxNoClearEnd)./numel(idxNoClearEnd)*100, '%.2f') '% of remaining queries have no clear end']);
+display([num2str(sum(idxGood)./numel(idxGood)*100, '%.2f') '% of remaining queries have clear start and ending']);
+display([num2str(numel(cat(2, endAgglo{idxGood}))) ' attachments made by ' num2str(sum(idxGood)) ' queries']);
+% Find CC of eqClasses to be joined
+edges = cellfun(@(x,y)combnk([x y], 2), startAgglo(idxGood), endAgglo(idxGood), 'uni', 0);
+edges = cat(1,edges{:});
+edges(edges(:,1) == edges(:,2),:) = [];
+eqClassCC = Graph.findConnectedComponents(edges, true, true);
+eqClassCCfull = [eqClassCC; num2cell(setdiff(1 : length(dendritesAll), cell2mat(eqClassCC)))'];
+dendritesPostQuery = cellfun(@(x){cell2mat(dendritesAll(x))}, eqClassCCfull);
+save('/tmpscratch/kboerg/dendritesPostQuery.mat','dendritesPostQuery');
+
+% Visualization of queries and connections made
+idx = find(idxGood);
+idx = idx(randperm(numel(idx), 50));
+temp = structfun(@(x)x(idx), ff, 'uni', 0);
+connectEM.debugQueryAttachment(segmentMeta.point', dendritesAll, temp, outputFolder, 'queryAttachted');
+idx = find(~idxGood);
+idx = idx(randperm(numel(idx), 50));
+temp = structfun(@(x)x(idx), ff, 'uni', 0);
+connectEM.debugQueryAttachment(segmentMeta.point', dendritesAll, temp, outputFolder, 'queryOpenEnd');
+clear idx temp;
+
