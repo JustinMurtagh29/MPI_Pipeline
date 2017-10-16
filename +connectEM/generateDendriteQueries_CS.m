@@ -1,15 +1,16 @@
-function generateDendriteQueries_CS(param,state)
+function generateDendriteQueries_CS(param,suffix)
     % Written by
     %   Manuel Berning <manuel.berning@brain.mpg.de>
     %   Christian Schramm <christian.schramm@brain.mpg.de>
 
+    if ~exist('suffix','var')
+        suffix = '';
+    end
 
     dataDir = fullfile(param.saveFolder, 'aggloState');
 
-%     [~, ~, suffix] = connectEM.setQueryState(state);    
-
     % Load data from ending generation
-    endingData = fullfile(dataDir, 'dendriteEndingsAllData.mat');
+    endingData = fullfile(dataDir, sprintf('dendriteEndingsAllData%s.mat',suffix));
     endingData = load(endingData);
     % Extract some variables
     idxAll = endingData.idxAll;
@@ -18,7 +19,7 @@ function generateDendriteQueries_CS(param,state)
     borderClusters = endingData.borderClusters ;
 
     % Load directionality information
-    directionality = fullfile(dataDir, 'dendriteEndingInputData.mat');
+    directionality = fullfile(dataDir, sprintf('dendriteEndingInputData%s.mat',suffix));
     directionality = load(directionality, 'directionality');
     directionality = directionality.directionality;
 
@@ -138,7 +139,7 @@ function generateDendriteQueries_CS(param,state)
         end
     end
 
-    outputFolder = fullfile(dataDir, 'dendriteQueries_1/');
+    outputFolder = fullfile(dataDir, 'dendriteQueries_2/');
     if ~exist(outputFolder, 'dir')
         mkdir(outputFolder)
     end

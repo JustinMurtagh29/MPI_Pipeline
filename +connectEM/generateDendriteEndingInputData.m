@@ -11,7 +11,7 @@ function generateDendriteEndingInputData(param,stateFile,suffix)
     minDendriteLength = 5000; % in nm
     bboxDist = 1000; % in nm
     if ~exist('stateFile','var')
-        stateFile = 'dendrites_03_v2.mat';
+        stateFile = 'dendrites_03_v2_splitmerged.mat';
     end
     if ~exist('suffix','var')
         suffix = '';
@@ -24,17 +24,6 @@ function generateDendriteEndingInputData(param,stateFile,suffix)
     % Load data
    [graph, segmentMeta, borderMeta, globalSegmentPCA] = ...
        connectEM.loadAllSegmentationData(param);
-%     graph=load('/gaba/u/mberning/results/pipeline/20170217_ROI/graphNewNew.mat')
-% borderMeta = load('/gaba/u/mberning/results/pipeline/20170217_ROI/globalBorder.mat', 'borderSize', 'borderCoM');
-% segmentMeta = load('/gaba/u/mberning/results/pipeline/20170217_ROI/segmentMeta.mat', 'voxelCount', 'point', 'maxSegId', 'cubeIdx', 'centroid', 'box');
-% load('/gaba/u/mberning/results/pipeline/20170217_ROI/allParameterWithSynapses.mat', 'p');
-% segmentMeta = connectEM.addSegmentClassInformation(p, segmentMeta);
-% globalSegmentPCA = load('/gaba/u/mberning/results/pipeline/20170217_ROI/globalSegmentPCA.mat', 'covMat');
-% [graph.neighbours, neighboursIdx] = Graph.edges2Neighbors(graph.edges);
-% graph.neighProb = cellfun(@(x)graph.prob(x), neighboursIdx, 'uni', 0);
-% graph.neighBorderIdx = cellfun(@(x)graph.borderIdx(x), neighboursIdx, 'uni', 0);
-
-   
    
     % Load state of axon agglomeration and load big indices as loaded by Kevin
     dendrites = load(fullfile(dataDir, stateFile));
@@ -44,13 +33,12 @@ function generateDendriteEndingInputData(param,stateFile,suffix)
     % Convert to old-school agglomerates
     dendriteAgglos = arrayfun( ...
         @Agglo.fromSuperAgglo, dendrites, 'UniformOutput', false);
-%     dendriteAgglos = arrayfun(@(x)x.nodes(:,4),dendrites,'uni',0);
 
-    % Calculate axon directionality
+    % Calculate dendrite directionality
     options = struct;
     options.voxelSize = param.raw.voxelSize;
     options.bboxDist = bboxDist;
-
+    % Just calculate for the larger 5um denrites since there occurs some issue with the smaller ones    
     directionality = connectEM.calculateDirectionalityOfAgglomerates( ...
         dendriteAgglos, graph, segmentMeta, borderMeta, globalSegmentPCA, options);
     save(intermediateFile, 'directionality', '-v7.3');
