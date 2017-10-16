@@ -124,6 +124,8 @@ function [newAgglos, summary] = ...
             overlaps((end + 1):1) = 0;
             overlaps = cat(1, tr.exitId, overlaps);
             summary.tracings{chiIdx}.overlaps{trIdx} = overlaps;
+            
+            overlapNode((end + 1):1) = 0;
             summary.tracings{chiIdx}.overlapNodes(trIdx) = overlapNode;
         end
         
