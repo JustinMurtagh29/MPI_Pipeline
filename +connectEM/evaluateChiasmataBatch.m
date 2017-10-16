@@ -14,7 +14,7 @@ curDir = fullfile( ...
     p.saveFolder, 'chiasmataSplitting', ...
     '20171009T193744-kmb-on-axons-6c');
 
-curData = load(fullfile(curDir, 'input-data.mat'));
+curData = load(fullfile(curDir, '20171016T105535_input-data.mat'));
 
 queries = table;
 queries.axonId = curData.queries(:, 1);
@@ -198,6 +198,7 @@ fprintf('Too few attachments: %.2f %%\n', 100 * mean( ...
 
 %%
 % Group queries by axons
+queries.execute = false(size(queries, 1), 1);
 queries.row = reshape(1:size(queries, 1), [], 1);
 [uniAxonIds, ~, queries.uniAxonId] = unique(queries.axonId);
 
@@ -442,3 +443,18 @@ for curIdx = chiasmaIds
    [~, curExecIds] = ismember(curEdges, curQueryEdges, 'rows');
     theseQueries.execute(curQueryIds(curExecIds)) = true;
 end
+
+%% execute flight paths
+[uniAxonIds, ~, theseQueries.uniAxonId] = unique(theseQueries.axonId);
+
+for curAxonIdx = 1:numel(uniAxonIds)
+    curAxon = axons(uniAxonIds(curAxonIdx));
+    curAxon.nodesScaled = bsxfun(@times, ...
+        curAxon.nodes(:, 1:3), p.raw.voxelSize);
+    curQueries = theseQueries( ...
+        theseQueries.uniAxonId == curAxonIdx, :);
+    
+   	curAxonsNew = connectEM.splitChiasmataMulti(p, curAxon, curQueries);
+end
+
+theseQueries.uniAxonId = [];
