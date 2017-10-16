@@ -27,8 +27,10 @@ function generateDendriteEndingInputData(param,stateFile,suffix)
    
     % Load state of axon agglomeration and load big indices as loaded by Kevin
     dendrites = load(fullfile(dataDir, stateFile));
-    dendriteIds = find(dendrites.indBigDends);
-    dendrites = dendrites.dendrites(dendrites.indBigDends);
+%     dendriteIds = find(dendrites.indBigDends);
+%     dendrites = dendrites.dendrites(dendrites.indBigDends);
+    dendriteIds = [1:numel(dendrites.dendrites)]';
+    dendrites = dendrites.dendrites;
 
     % Convert to old-school agglomerates
     dendriteAgglos = arrayfun( ...
