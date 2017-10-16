@@ -1,81 +1,86 @@
 
-outputFolder ='/gaba/scratch/kboerg/queryResultsDendrite20170717/';
+% load('/gaba/scratch/mberning/20170404T172554_agglomeration/aggloNew.mat','dendritesFinal');
+dendrites = load('/u/mberning/results/pipeline/20170217_ROI/aggloState/dendrites_April.mat')
+dendrites = dendrites.dendrites;
+dendrites_v2 = load('/u/mberning/results/pipeline/20170217_ROI/aggloState/dendrites_03_v2.mat')
+dendrites_v2 = dendrites_v2.dendrites(dendrites_v2.ind;
+dendrites_v2 = dendrites_v2.
 
-% Load data
-load('/gaba/u/mberning/results/pipeline/20170217_ROI/allParameterWithSynapses.mat');
-segmentMeta = load([p.saveFolder 'segmentMeta.mat']);
+options.latentScore = 0.7;
+options.segDirScore = 0.9;
+options.neuriCScore = 0.7;
+options.borderSize = 30;
+options.axonScore = 0.3;
+options.sourceSize = 2000;
+options.recursionSteps = 10;
+options.minSize = 100;
+options.bboxDist = 1000;
+options.voxelSize = [11.24 11.24 28];
+options.myelinScore = 0.5;
+
+graph=load('/gaba/u/mberning/results/pipeline/20170217_ROI/graphNewNew.mat')
+borderMeta = load('/gaba/u/mberning/results/pipeline/20170217_ROI/globalBorder.mat', 'borderSize', 'borderCoM');
+segmentMeta = load('/gaba/u/mberning/results/pipeline/20170217_ROI/segmentMeta.mat', 'voxelCount', 'point', 'maxSegId', 'cubeIdx', 'centroid', 'box');
+load('/gaba/u/mberning/results/pipeline/20170217_ROI/allParameterWithSynapses.mat', 'p');
 segmentMeta = connectEM.addSegmentClassInformation(p, segmentMeta);
-temp = load('/gaba/u/mberning/results/pipeline/20170217_ROI/aggloState/dendrites_03.mat');
-filternan = @(x)x(~isnan(x));
-dendrites = arrayfun(@(x){filternan(x.nodes(:,4))}, temp.dendrites(temp.indBigDends));
-clear temp
-segmentsLeftover = setdiff(find(segmentMeta.dendriteProb > 0.5), cell2mat(dendrites));
-dendritesAll = [dendrites; num2cell(segmentsLeftover)];
-dendritesAll(cellfun(@(x)sum(segmentMeta.voxelCount(x)),dendritesAll)<200000) = [];
-% Not needed so far
-%graph = load([p.saveFolder 'graphNew.mat'], 'edges', 'prob', 'borderIdx');
+globalSegmentPCA = load('/gaba/u/mberning/results/pipeline/20170217_ROI/globalSegmentPCA.mat', 'covMat');
+[graph.neighbours, neighboursIdx] = Graph.edges2Neighbors(graph.edges);
+graph.neighProb = cellfun(@(x)graph.prob(x), neighboursIdx, 'uni', 0);
+graph.neighBorderIdx = cellfun(@(x)graph.borderIdx(x), neighboursIdx, 'uni', 0);
 
-% Where to find skeletons that were returned from the queries
-scratchFolder = '/tmpscratch/kboerg/';
-% These are the downloaded queries (see wK projects: L4_focus_flight-1 & 2, L4_focus_flight-reseed-1 & 2 (2 contains 2nd and 3rd round of reseeding now))
-% And new queries from after switching to new (agglomerate based) query analysis: L4_focus_flight-new-1
-skeletonFolders = {'MBKMB_L4_dendrite_queries_2017_c_nmls','MBKMB_L4_dendrite_queries_2017_c_inverse_nmls'};
-skeletonFolders = cellfun(@(x)[scratchFolder x filesep], skeletonFolders, 'uni', 0);
-% Lookup segment ids of nodes+neighbours of nmls in all folders defined above
-[ff.segIds, ff.neighbours, ff.filenames, ff.nodes, ff.startNode, ff.comments] = connectEM.lookupNmlMulti(p, skeletonFolders, false);
-ff.segIds(cellfun('isempty', ff.startNode)) = [];
-ff.neighbours(cellfun('isempty', ff.startNode)) = [];
-ff.filenames(cellfun('isempty', ff.startNode)) = [];
-ff.nodes(cellfun('isempty', ff.startNode)) = [];
-ff.comments(cellfun('isempty', ff.startNode)) = [];
-ff.startNode(cellfun('isempty', ff.startNode)) = [];
-display([num2str(sum(~cellfun(@isempty,ff.comments))) '/' num2str(numel(ff.comments)) ' queries contain comment and will not be used']);
-tabulate(cellfun(@(x)x{1}{1}, cellfun(@(x)regexp(x, 'content="(.*)"', 'tokens'), ...
-    cat(1, ff.comments{~cellfun(@isempty, ff.comments)}), 'uni', 0), 'uni', 0))
-% Where to find skeletons that were returned from the queries
-ff = structfun(@(x)x(cellfun(@isempty,ff.comments)), ff, 'uni', 0);
+segDendrites = arrayfun(@(x)x.nodes(:,4),dendrites,'uni',0);
+
+% Indices of whole cells
+idx = [30    16    44    92    53    15    36     4    63    35    33    31    23     8    11    19    13    41    21    29    22    24    12     3    10    7];
+versionMapping = [31182 21658 4422 62371 5962 31948 6080 31948 51596 10507 67731 63975 56872 23548 71793 32339 54895 35415 45307 75813 13553 2472 127899 23912 85261 9217]';
+idx = versionMapping;
+
+wholeCellDendrites = dendrites(idx);
+wholeCellDendriteSegments = segDendrites(idx);
+
+directionality = connectEM.calculateDirectionalityOfAgglomerates(wholeCellDendriteSegments, graph,...
+    segmentMeta, borderMeta, globalSegmentPCA, options);
+    
+% save('/u/mberning/results/pipeline/20170217_ROI/aggloState/dendriteEndings/2017-10-13_directionalityDendrites_1um.mat','directionality')
+save('/u/mberning/results/pipeline/20170217_ROI/aggloState/dendriteEndings/2017-10-13_directionalityDendrites_v03_v2_um.mat','directionality')
 
 
-% Calculate overlap of all queries with segments
-[uniqueSegments, neighboursStartNode, nodesExcludedIdx, startNodeIdx] = cellfun(@connectEM.queryAnalysis, ...
-        ff.segIds, ff.neighbours, ff.nodes', ff.startNode', 'uni', 0);
-% Determine all overlaps of agglomerations with given queries
-[partition, queryOverlap] = connectEM.queryAgglomerationOverlap(dendritesAll, [], uniqueSegments, neighboursStartNode);
-% Make decision(s), here evidence/occurence threshold is applied
-% Always one (or none if evidence below 14, 1/2 node) start eqClass
-startAgglo = arrayfun(@(x)x.eqClasses(x.occurences > 13), queryOverlap.start, 'uni', 0);
-% Exclude all queries that do not have a clear starting point
-idxNoClearStart = cellfun('isempty', startAgglo);
-% Multiple ends (all above 53vx evidence, corresponds to 2 full nodes)
-endAgglo = arrayfun(@(x)x.eqClasses(x.occurences > 53), queryOverlap.ends, 'uni', 0);
-% Exclude startAgglo from endAgglo (as we do not want to count self-attachment)
-endAgglo = cellfun(@(x,y)setdiff(x,y), endAgglo, startAgglo, 'uni', 0);
-% Exclude all queries that do not have (at least one) clear end
-idxNoClearEnd = cellfun('isempty', endAgglo);
-% 18.5% of queries excluded overall due to missing start or end (or both)
-idxGood = ~(idxNoClearStart | idxNoClearEnd);
-% Display some statistics
-display([num2str(sum(idxNoClearStart)./numel(idxNoClearStart)*100, '%.2f') '% of remaining queries have no clear start']);
-display([num2str(sum(idxNoClearEnd)./numel(idxNoClearEnd)*100, '%.2f') '% of remaining queries have no clear end']);
-display([num2str(sum(idxGood)./numel(idxGood)*100, '%.2f') '% of remaining queries have clear start and ending']);
-display([num2str(numel(cat(2, endAgglo{idxGood}))) ' attachments made by ' num2str(sum(idxGood)) ' queries']);
-% Find CC of eqClasses to be joined
-edges = cellfun(@(x,y)combnk([x y], 2), startAgglo(idxGood), endAgglo(idxGood), 'uni', 0);
-edges = cat(1,edges{:});
-edges(edges(:,1) == edges(:,2),:) = [];
-eqClassCC = Graph.findConnectedComponents(edges, true, true);
-eqClassCCfull = [eqClassCC; num2cell(setdiff(1 : length(dendritesAll), cell2mat(eqClassCC)))'];
-dendritesPostQuery = cellfun(@(x){cell2mat(dendritesAll(x))}, eqClassCCfull);
-save('/tmpscratch/kboerg/dendritesPostQuery.mat','dendritesPostQuery');
+%%
+options.latentScore = 0.5;
+options.segDirScore = 0.9;
+options.border = [3000; -3000];
+options.bboxDist = 1000;
 
-% Visualization of queries and connections made
-idx = find(idxGood);
-idx = idx(randperm(numel(idx), 50));
-temp = structfun(@(x)x(idx), ff, 'uni', 0);
-connectEM.debugQueryAttachment(segmentMeta.point', dendritesAll, temp, outputFolder, 'queryAttachted');
-idx = find(~idxGood);
-idx = idx(randperm(numel(idx), 50));
-temp = structfun(@(x)x(idx), ff, 'uni', 0);
-connectEM.debugQueryAttachment(segmentMeta.point', dendritesAll, temp, outputFolder, 'queryOpenEnd');
-clear idx temp;
+segDendrites = arrayfun(@(x)x.nodes(:,4),dendrites,'uni',0);
+segDendrites_v2 = arrayfun(@(x)x.nodes(:,4),dendrites_v2,'uni',0);
 
+directionality = connectEM.calculateDirectionalityOfAgglomerates(segDendrites, graph,...
+    segmentMeta, borderMeta, globalSegmentPCA, options);
+
+directionality_v2 = connectEM.calculateDirectionalityOfAgglomerates(segDendrites_v2, graph,...
+    segmentMeta, borderMeta, globalSegmentPCA, options);
+
+
+% idxDirectional = cellfun(@(x)x(:,1) > options.latentScore, directionality.latent, 'uni', 0);
+idxDirectional = cellfun(@(x)true(size(x,1),1),directionality.latent,'uni',0);
+idxEnding = cellfun(@(x)abs(x) > options.segDirScore, directionality.scores, 'uni', 0);
+idxAll = cellfun(@(x,y)find(x&y), idxDirectional, idxEnding, 'uni', 0);
+    
+thisBorderIdx = cellfun(@(x,y)x(y), directionality.borderIdx, idxAll,'uni',0);
+borderPositions = cellfun(@(x) borderMeta.borderCoM(x,:), thisBorderIdx,'uni',0);
+ 
+distance_cutoff = 800;
+T = cellfun(@(x) AxonEndings.clusterSynapticInterfaces(x,distance_cutoff,[11.24 11.24 28]), borderPositions, 'uni', 0);
+
+
+idxDirectional = cellfun(@(x)true(size(x,1),1),directionality_v2.latent,'uni',0);
+idxEnding = cellfun(@(x)abs(x) > options.segDirScore, directionality_v2.scores, 'uni', 0);
+idxAll = cellfun(@(x,y)find(x&y), idxDirectional, idxEnding, 'uni', 0);
+    
+thisBorderIdx = cellfun(@(x,y)x(y), directionality_v2.borderIdx, idxAll,'uni',0);
+borderPositions = cellfun(@(x) borderMeta.borderCoM(x,:), thisBorderIdx,'uni',0);
+ 
+T_v2 = cellfun(@(x) AxonEndings.clusterSynapticInterfaces(x,distance_cutoff,[11.24 11.24 28]), borderPositions, 'uni', 0);
+
+sum(cell2mat(cellfun(@(x)max(x),T,'uni',0)))
+sum(cell2mat(cellfun(@(x)max(x),T_v2,'uni',0)))
