@@ -406,6 +406,34 @@ for curIdx = randIds
 end
 %}
 
+%% auto-correct 4-components
+thisValid = true;
+thisPartition = [4];
+
+chiasmaIds = find(arrayfun( ...
+    @(v, p) v == thisValid && ...
+    isequal(p{1}, thisPartition), ...
+    chiasma.valid, chiasma.partition));
+chiasmaIds = reshape(chiasmaIds, 1, []);
+
+for curIdx = chiasmaIds
+    curQueries = queries(queries.uniChiasmaId == curIdx, :);
+    curOverlaps = cell2mat(curQueries.overlaps(:)')';
+    
+   [uniOverlaps, ~, uniCount] = unique(sort(curOverlaps, 2), 'rows');
+    uniOverlapsCount = accumarray(uniCount, 1);
+    validOverlap = uniOverlaps(uniOverlapsCount > 1, :);
+    
+    errorId = ismember(curOverlaps, validOverlap);
+    errorId = find(xor(errorId(:, 1), errorId(:, 2)));
+    
+    if numel(errorId) == 1
+        % correct error and turn into invalid 2-2
+        curRow = curQueries.row(errorId);
+        queries.overlaps{curRow}(end) = 0;
+    end
+end
+
 %% select chiasmata to split and flight paths to apply
 thisValid = true;
 thisPartition = [2; 2];
