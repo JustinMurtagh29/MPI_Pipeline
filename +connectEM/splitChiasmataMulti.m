@@ -11,9 +11,8 @@ function [newAgglos, summary] = ...
     opts = Util.modifyStruct(opts, varargin{:});
     
     % configuration
-    cutoffDistNm = 175;
-    
-    rng(0); % to make randperm further down reproducible
+    cutoffDistNm = 300; % only consider exits within X nm of flight path
+    cutoffTracingNm = 1000; % ignore the first X nm of flight path
     
     % Group queries into chiasmata
    [~, chiasmata, queries.uniChiasmaId] = unique(queries.chiasmaId);
@@ -97,35 +96,43 @@ function [newAgglos, summary] = ...
             assert(tr.exitId == trIdx);
             
             % NOTE(amotta): To map a query to its chiasma exit we simply
-            % walk from the tail of the flight path to its head. When we
-            % first come into proximity of a (or multiple) exit nodes, we
-            % stop. Proximity is defined by the `cutoffDistNm` distance
-            % threshold. If there are multiple exit nodes within proximity,
-            % then the closer one wins.
+            % search for the exit which comes closest to the flight path.
+            % However, the first `cutoffTracingNm` nm of the flight path
+            % are ignored. And so are exits which do not come closer than
+            % `cutoffDistNm` to the flight path.
             
             % NOTE(amotta): A tracing may be empty (hence the reshape)
-            tracingScaled = reshape(tr.flightNodes{1}, [], 3);
-            tracingScaled = bsxfun(@times, tracingScaled, p.voxelSize);
+            trNodesScaled = reshape(tr.flightNodes{1}, [], 3);
+            trNodesScaled = bsxfun(@times, trNodesScaled, p.voxelSize);
             
             % NOTE(amotta): Make sure nodes are correctly sorted
-            seedPosScaled = tr.seedPos .* p.voxelSize;
-           [~, minIdx] = min(pdist2(seedPosScaled, tracingScaled));
-            assert(isempty(tracingScaled) || minIdx == 1);
+            trSeedScaled = tr.seedPos .* p.voxelSize;
+           [~, minIdx] = min(pdist2(trSeedScaled, trNodesScaled));
+            assert(isempty(trNodesScaled) || minIdx == 1);
+            
+            trDist = diff(trNodesScaled, 1, 1);
+            trDist = sqrt(sum(trDist .* trDist, 2));
+            trDist = cumsum(cat(1, 0, trDist)) < cutoffTracingNm;
             
             % NOTE(amotta): Calculate distance from flight path to exit
             % nodes. But prevent overlap with seed by setting distance to
-            % infinity.
-            overlaps = pdist2(exitNodesScaled, tracingScaled);
-            overlaps(tr.exitId, :) = inf;
+            % infinity. Also ignore the first stretch of flight path.
+            trProximity = pdist2(exitNodesScaled, trNodesScaled);
+            trProximity(tr.exitId, :) = inf;
+            trProximity(:, trDist) = inf;
             
-            overlapNode = find(any(overlaps < cutoffDistNm, 1), 1, 'last');
-           [~, overlaps] = min(overlaps(:, overlapNode));
+           [trOverlapDist, overlaps] = min(trProximity(:));
            
-            overlaps((end + 1):1) = 0;
+            if trOverlapDist < cutoffDistNm
+               [overlaps, overlapNode] =  ...
+                   ind2sub(size(trProximity), overlaps);
+            else
+                overlapNode = 0;
+                overlaps = 0;
+            end
+           
             overlaps = cat(1, tr.exitId, overlaps);
             summary.tracings{chiIdx}.overlaps{trIdx} = overlaps;
-            
-            overlapNode((end + 1):1) = 0;
             summary.tracings{chiIdx}.overlapNodes(trIdx) = overlapNode;
         end
         
