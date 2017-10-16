@@ -161,7 +161,7 @@ function [newAgglos, summary] = ...
     for chiIdx = 1:chiasmaCount
         chiasmaTracings = chiasmataTracings{chiIdx};
         
-        for trIdx = 1:reshape(find(chiasmaTracings.execute), 1, [])
+        for trIdx = reshape(find(chiasmaTracings.execute), 1, [])
             tr = chiasmaTracings(trIdx, :);
             
             % segment ID `nan` on flight paths
