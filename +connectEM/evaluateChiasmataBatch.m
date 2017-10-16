@@ -422,7 +422,7 @@ theseQueries.execute = false(size(theseQueries, 1), 1);
 % find minimal set of flight paths to execute
 for curIdx = chiasmaIds
     curQueryIds = find(theseQueries.uniChiasmaId == curIdx);
-    curQueries = theseQueries(curQueryMask, :);
+    curQueries = theseQueries(curQueryIds, :);
     
     curNrExits = size(curQueries, 1);
     curQueryEdges = cell2mat(curQueries.overlaps(:)');
