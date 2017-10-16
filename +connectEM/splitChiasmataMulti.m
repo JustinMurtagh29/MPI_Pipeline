@@ -263,7 +263,7 @@ function [newAgglos, summary] = ...
             agglo, queries, newAgglos, summary);
     end
     
-    % NML for debuggin
+    % NML for debugging
     if opts.exportNml
         skel = skeleton();
         
