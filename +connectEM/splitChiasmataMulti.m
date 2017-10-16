@@ -31,7 +31,7 @@ function [newAgglos, summary] = ...
     edgesToKeep = agglo.edges;
     nodeCount = size(agglo.nodes, 1);
     
-    nodesToAdd = zeros(0, 2);
+    nodesToAdd = zeros(0, 4);
     edgesToAdd = zeros(0, 2);
     
     summary = struct;
