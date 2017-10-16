@@ -146,6 +146,11 @@ function [newAgglos, summary] = ...
             nodesToDelete, setdiff(1:nodeCount, thisNodeIds));
     end
     
+    if opts.dryRun
+        newAgglos = agglo;
+        return;
+    end
+    
     %% decide how to solve chiasma
     % TODO(amotta): To some magic to determine which flight paths to
     % execute. This is determined in connectEM.evaluateChiasmataBatch
