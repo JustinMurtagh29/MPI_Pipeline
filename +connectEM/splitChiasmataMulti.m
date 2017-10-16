@@ -67,16 +67,6 @@ function [newAgglos, summary] = ...
             @(idx2) max(pdist2(thisNodes(idx2, :), ...
             agglo.nodesScaled(centerIdx, :))) > 2000, C);
         
-        summary.nrExits(chiIdx) = nrExits;
-        summary.centerIdx(chiIdx) = centerIdx;
-        summary.nrNonExits(chiIdx) = sum(~isExit);
-        summary.nrExits(chiIdx) = nrExits;
-        summary.tracings{chiIdx} = struct;
-        summary.tracings{chiIdx}.nodes = ...
-            chiasmaTracings.flightNodes;
-        summary.tracings{chiIdx}.overlaps = cell(nrExits, 1);
-        summary.tracings{chiIdx}.overlapNodes = nan(nrExits, 1);
-        
         % NOTE(amotta): Non-exit components are dropped (for now at least)
         nonExitNodeIds = thisNodeIds(cell2mat(C(~isExit)));
         nodesToDelete = union(nodesToDelete, nonExitNodeIds);
@@ -87,6 +77,16 @@ function [newAgglos, summary] = ...
         C = C(isExit);
         nrExits = numel(C);
         assert(nrExits == expectedNrExits);
+        
+        summary.nrExits(chiIdx) = nrExits;
+        summary.centerIdx(chiIdx) = centerIdx;
+        summary.nrNonExits(chiIdx) = sum(~isExit);
+        summary.nrExits(chiIdx) = nrExits;
+        summary.tracings{chiIdx} = struct;
+        summary.tracings{chiIdx}.nodes = ...
+            chiasmaTracings.flightNodes;
+        summary.tracings{chiIdx}.overlaps = cell(nrExits, 1);
+        summary.tracings{chiIdx}.overlapNodes = nan(nrExits, 1);
         
         %%
         exitNodesScaled = chiasmaTracings.seedPos;
