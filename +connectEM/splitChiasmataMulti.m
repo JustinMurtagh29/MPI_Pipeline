@@ -175,24 +175,21 @@ function [newAgglos, summary] = ...
             % collect new edges
             trNodeCount = size(trNodes, 1);
             trEdges = zeros((trNodeCount - 1) + 2, 2);
-            trEdges(2:(end - 1), 1) = 1:(trNodeCount - 1);
-            trEdges(2:(end - 1), 2) = (1 + 1):trNodeCount;
+            trEdges((1 + 1):end, 1) = 1:trNodeCount;
+            trEdges(1:(end - 1), 2) = 1:trNodeCount;
             
             trNodeOff = nodeCount + size(nodesToAdd, 1);
             trEdges = trEdges + trNodeOff;
             
-            % edge to seed node
-            trEdges(1, :) = [tr.exitNodeId, trEdges(2, 1)];
-            
-            % edge to attachment node
-            trEdges(end, :) = [ ...
-                trEdges((end - 1), 2), ...
+            % find exit nodes to be connected
+            trShortEdge = [ ...
+                tr.exitNodeId, ...
                 chiasmaTracings.exitNodeId(tr.overlaps{1}(end))];
+            trEdges([1, end]) = trShortEdge;
             
             % It's possible that one of the two exit nodes got already
             % pruned away by cutting out one of the earlier chiasmata. For
             % more info, see KMB's email from Wednesday, 27.09.2017
-            trShortEdge = trEdges([1, end]);
             trShortEdge = setdiff(trShortEdge, nodesToDelete);
             
             if numel(trShortEdge) == 2
