@@ -40,9 +40,8 @@ function [newAgglos, summary] = ...
     summary.nrNonExits = nan(chiasmaCount, 1);
     summary.nrExits = nan(chiasmaCount, 1);
     summary.split = false(chiasmaCount, 1);
-    summary.splitted = false(chiasmaCount, 1);
-    summary.tracings = cell(chiasmaCount, 1);
     summary.solved = false(chiasmaCount, 1);
+    summary.tracings = cell(chiasmaCount, 1);
     
     p.voxelSize = p.raw.voxelSize;
     p.sphereRadiusInner = 1000; % in nm
@@ -232,8 +231,8 @@ function [newAgglos, summary] = ...
             summary.tracings{chiIdx}.execute(trId) = true;
         end
         
-        % mark chiasma as split
-        summary.splitted(chiIdx) = true;
+        % mark chiasma as solved
+        summary.solved(chiIdx) = true;
     end
     
     % NOTE(amotta): Make sure that none of the nodes involved in edges is
