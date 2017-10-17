@@ -19,7 +19,8 @@ function [splitChiasma, executeTracings] = forChiasma(tracings)
     executeTracings = false(nrExits, 1);
     
     % partition chiasma
-   [partition, isValid] = buildPartition(overlaps);
+   [~, ~, lut] = buildPartition(overlaps);
+   [partition, isValid] = fixFourPartitions(overlaps, lut);
    
     % do not cut out sphere if there's nothing we can do
     if isequal(partition, nrExits); return; end
@@ -53,7 +54,7 @@ function execute = selectTracings(overlaps)
     execute(tracingIds) = true;
 end
 
-function [partition, isValid] = buildPartition(overlaps)
+function [partition, isValid, lut] = buildPartition(overlaps)
     % build effective edges
     edges = sort(overlaps, 2);
     edges(~all(edges, 2), :) = [];
@@ -76,4 +77,37 @@ function [partition, isValid] = buildPartition(overlaps)
     isValid = ~any( ...
         overlaps(:, 2) == 0 & ismember( ...
         overlaps(:, 1), overlaps(:, 2)));
+end
+
+function [partition, isValid, lut] = fixFourPartitions(overlaps, lut)
+    % Email excerpt from amotta to L4team@mhlab.net (16.10.2017)
+    % 
+    % When we have flight paths A→B, B→A, C→D, D→A, this results in a 4-
+    % partition. Assuming that there are no true branch points with 4
+    % exits (which is not true, I've found one such bouton), the wrong
+    % tracing can automatically be spotted (D→A) and corrected (D→C),
+    % yielding a 2-2-partition. This error-correction is right in all
+    % examples I've looked at.
+    rawPartition = accumarray(lut, 1);
+    fourPartitions = find(rawPartition == 4);
+    
+    for curPartition = reshape(fourPartitions, 1, [])
+        curRows = find(lut == curPartition);
+        curOverlaps = overlaps(curRows, :);
+        
+       [curUniOverlaps, ~, curUniCount] = ...
+           unique(sort(curOverlaps, 2), 'rows');
+        curUniOverlapsCount = accumarray(curUniCount, 1);
+        curValidOverlap = curUniOverlaps(curUniOverlapsCount > 1, :);
+        
+        curErrorId = ismember(curOverlaps, curValidOverlap);
+        curErrorId = find(xor(curErrorId(:, 1), curErrorId(:, 2)));
+        
+        % only proceed for valid 
+        if numel(curErrorId) ~= 1; continue; end
+        overlaps(curRows(curErrorId), 2) = 0;
+    end
+    
+    % determine new partition
+   [partition, isValid, lut] = buildPartition(overlaps);
 end
