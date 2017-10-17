@@ -205,6 +205,10 @@ queries.row = reshape(1:size(queries, 1), [], 1);
 % Start applying chiasmata
 queries.overlaps(:) = {[]};
 
+axonsBefore = axons(uniAxonIds);
+axonsAfter = cell(numel(uniAxonIds), 1);
+summaries = cell(numel(uniAxonIds), 1);
+
 for curAxonIdx = 1:numel(uniAxonIds)
     curAxon = axons(uniAxonIds(curAxonIdx));
     curAxon.nodesScaled = bsxfun(@times, ...
@@ -212,15 +216,15 @@ for curAxonIdx = 1:numel(uniAxonIds)
     curQueries = queries( ...
         queries.uniAxonId == curAxonIdx, :);
     
-   [~, curSummary] = ...
-        connectEM.splitChiasmataMulti( ...
-            p, curAxon, curQueries, 'dryRun', true);
+   [axonsAfter{curAxonIdx}, curSummary] = ...
+        connectEM.splitChiasmataMulti(p, curAxon, curQueries);
         
     curOverlaps = cellfun(@(t) ...
         t.overlaps, curSummary.tracings, ...
         'UniformOutput', false);
     curOverlaps = cat(1, curOverlaps{:});
     
+    summaries{curAxonIdx} = curSummary;
     queries.overlaps(curQueries.row) = curOverlaps;
 end
 
@@ -291,7 +295,6 @@ end
 chiasmaCount = max(queries.uniChiasmaId);
 
 chiasma = table;
-chiasma.lut = cell(chiasmaCount, 1);
 chiasma.partition = cell(chiasmaCount, 1);
 chiasma.valid = false(chiasmaCount, 1);
 
@@ -326,7 +329,6 @@ for curIdx = 1:chiasmaCount
         curEdgesAll(:, 2) == 0 & ismember( ...
         curEdgesAll(:, 1), curEdgesAll(:, 2)));
     
-    chiasma.lut{curIdx} = curLUT;
     chiasma.partition{curIdx} = curPartition;
     chiasma.valid(curIdx) = curIsValid;
 end
@@ -348,8 +350,8 @@ disp(partitionEval);
 
 %% look at partitions
 %{
-thisValid = true;
-thisPartition = [3; 1];
+thisValid = false;
+thisPartition = [4];
 
 thisPartitionStr = {'invalid', 'valid'};
 thisPartitionStr = strcat( ...
@@ -407,7 +409,8 @@ end
 %}
 
 %% auto-correct 4-components
-thisValid = true;
+%{
+thisValid = false;
 thisPartition = [4];
 
 chiasmaIds = find(arrayfun( ...
@@ -433,56 +436,36 @@ for curIdx = chiasmaIds
         queries.overlaps{curRow}(end) = 0;
     end
 end
+%}
 
-%% select chiasmata to split and flight paths to apply
-thisValid = true;
-thisPartition = [2; 2];
+%% look at results from chiasma splitting
+rng(0);
+randIds = randperm(numel(axonsBefore));
+axonsWithSolvedChiasma = find(cellfun(@(s) any(s.solved), summaries));
+randIds = intersect(randIds, axonsWithSolvedChiasma);
+randIds = randIds(1:min(10, numel(randIds)));
 
-chiasmaIds = find(arrayfun( ...
-    @(v, p) v == thisValid && ...
-    isequal(p{1}, thisPartition), ...
-    chiasma.valid, chiasma.partition));
-chiasmaIds = reshape(chiasmaIds, 1, []);
+curOutputDir = fullfile(outputDir, 'split-axons');
+if ~exist(curOutputDir, 'dir'); mkdir(curOutputDir); end
 
-theseQueries = queries( ...
-    ismember(queries.uniChiasmaId, chiasmaIds), :);
-theseQueries.execute = false(size(theseQueries, 1), 1);
+addTreeFromAxon = @(skel, name, a) ...
+    skel.addTree(name, a.nodes(:, 1:3), a.edges);
 
-% find minimal set of flight paths to execute
-for curIdx = chiasmaIds
-    curQueryIds = find(theseQueries.uniChiasmaId == curIdx);
-    curQueries = theseQueries(curQueryIds, :);
+for curIdx = reshape(randIds, 1, [])
+    curAxonBefore = axonsBefore(curIdx);
+    curAxonsAfter = axonsAfter{curIdx};
     
-    curNrExits = size(curQueries, 1);
-    curQueryEdges = cell2mat(curQueries.overlaps(:)');
-    curQueryEdges = sort(curQueryEdges, 1)';
+    skel = skeleton();
+    skel = addTreeFromAxon(skel, 'Original Axon', curAxonBefore);
     
-    curAdj = curQueryEdges;
-    curAdj(~all(curAdj, 2), :) = [];
+    for curAfterIdx = 1:numel(curAxonsAfter)
+        skel = addTreeFromAxon(skel, ...
+            sprintf('Split Axon %d', curAfterIdx), ...
+            curAxonsAfter(curAfterIdx));
+    end
     
-    % build minimal spanning tree per component
-    curAdj = sparse(curAdj(:, 2), curAdj(:, 1), 1, curNrExits, curNrExits);
-   	curAdj = graphminspantree(curAdj, 'Method', 'Kruskal');
+    skel = Skeleton.setParams4Pipeline(skel, p);
     
-    clear curEdges;
-   [curEdges(:, 2), curEdges(:, 1)] = find(curAdj);
-   
-    % find flights which form the minimal spanning tree
-   [~, curExecIds] = ismember(curEdges, curQueryEdges, 'rows');
-    theseQueries.execute(curQueryIds(curExecIds)) = true;
+    skelFile = sprintf('axon-%d.nml', curIdx);
+    skel.write(fullfile(curOutputDir, skelFile));
 end
-
-%% execute flight paths
-[uniAxonIds, ~, theseQueries.uniAxonId] = unique(theseQueries.axonId);
-
-for curAxonIdx = 1:numel(uniAxonIds)
-    curAxon = axons(uniAxonIds(curAxonIdx));
-    curAxon.nodesScaled = bsxfun(@times, ...
-        curAxon.nodes(:, 1:3), p.raw.voxelSize);
-    curQueries = theseQueries( ...
-        theseQueries.uniAxonId == curAxonIdx, :);
-    
-   	curAxonsNew = connectEM.splitChiasmataMulti(p, curAxon, curQueries);
-end
-
-theseQueries.uniAxonId = [];
