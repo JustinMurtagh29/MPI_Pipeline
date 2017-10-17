@@ -1,49 +1,61 @@
 function [newAgglos, summary] = ...
-        splitChiasmataMulti(p, agglo, tasks, outputFile)
+        splitChiasmataMulti(p, agglo, queries, varargin)
     % Written by
     %   Kevin Boergens <kevin.boergens@brain.mpg.de>
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     
-    % configuration
-    doExportNml = false;
-    cutoffDistNm = 100;
+    opts = struct;
+    opts.outputFile = [];
+    opts.dryRun = false;
+    opts.exportNml = false;
+    opts = Util.modifyStruct(opts, varargin{:});
     
-    rng(0); % to make randperm further down reproducible
+    % configuration
+    cutoffDistNm = 300; % only consider exits within X nm of flight path
+    cutoffTracingNm = 1000; % ignore the first X nm of flight path
+    
+    % Group queries into chiasmata
+   [~, chiasmata, queries.uniChiasmaId] = unique(queries.chiasmaId);
+    chiasmata = queries(chiasmata, {'chiasmaId', 'centerNodeId'});
+    chiasmaCount = size(chiasmata, 1);
+    chiasmataTracings = accumarray( ...
+        queries.uniChiasmaId, (1:size(queries, 1))', ...
+        [], @(rows) {queries(rows, :)});
     
     % NOTE(amotta): Initialize key variables which are modified in the for
     % loop below. These variables collect all changes which need to be
     % applied to the original super-agglomerate.
-    nodesToDelete = [];
-    thisEdgesCol = agglo.edges;
-    thisEdgesNew = zeros(0, 2);
+    newEndings = [];
+    nodesToDelete = cell(chiasmaCount, 1);
+    edgesToDelete = cell(chiasmaCount, 1);
+    nodeCount = size(agglo.nodes, 1);
+    
+    nodesToAdd = zeros(0, 4);
+    edgesToAdd = zeros(0, 2);
     
     summary = struct;
-    summary.nrChiasmata = numel(tasks);
-    summary.centerIdx = nan(numel(tasks), 1);
-    summary.nrExits = nan(numel(tasks), 1);
-    summary.nrNonExits = nan(numel(tasks), 1);
-    summary.nrTracings = nan(numel(tasks), 1);
-    summary.tracings = cell(numel(tasks), 1);
-    summary.solved = false(numel(tasks), 1);
+    summary.nrChiasmata = chiasmaCount;
+    summary.centerIdx = nan(chiasmaCount, 1);
+    summary.nrExits = nan(chiasmaCount, 1);
+    summary.nrNonExits = nan(chiasmaCount, 1);
+    summary.nrExits = nan(chiasmaCount, 1);
+    summary.solved = false(chiasmaCount, 1);
+    summary.tracings = cell(chiasmaCount, 1);
     
     p.voxelSize = p.raw.voxelSize;
     p.sphereRadiusInner = 1000; % in nm
     
-    for idx = 1 : length(tasks)
-        centerIdx = tasks(idx).centeridx;
+    for chiIdx = 1:chiasmaCount
+        centerIdx = chiasmata.centerNodeId(chiIdx);
+        chiTracings = chiasmataTracings{chiIdx};
+        expectedNrExits = size(chiTracings, 1);
         
         % NOTE(amotta): Restrict skeleton to components within shell
         p.sphereRadiusOuter = 10000; % in nm
-        [thisNodes, thisEdges, ~, thisNodeIds] = ...
+       [thisNodes, thisEdges, ~, thisNodeIds] = ...
             connectEM.detectChiasmataPruneToSphere( ...
             agglo.nodesScaled, agglo.edges, ...
             ones(size(agglo.edges, 1), 1), p, centerIdx);
-        
-        % make sure we have the same conn components as for the detection 
-        % so that our indexing of tasks(idx).tracings(idx2) works
-        % i.e. so that tracings(idx2) starts at C{idx2}
-        %assert(isequal(thisNodes, backup.thisNodes)); NO CHECKING RIGHT NOW
-        %assert(isequal(thisEdges, backup.thisEdges)); NO CHECKING RIGHT NOW
         
         C = Graph.findConnectedComponents(thisEdges);
         
@@ -52,164 +64,201 @@ function [newAgglos, summary] = ...
         % chiasma center.
         isExit = cellfun( ...
             @(idx2) max(pdist2(thisNodes(idx2, :), ...
-            agglo.nodesScaled(centerIdx, :))) > 3000, C);
-        
-        % NOTE(amotta): Make sure there are at least four connected
-        % components. This must be true because this code was written to
-        % handle >=4 chiasmata.
-        assert(sum(isExit) >= 4);
-        nrExits = sum(isExit);
-        nrTracings = numel(tasks(idx).tracings);
-        
-        summary.nrExits(idx) = nrExits;
-        summary.centerIdx(idx) = centerIdx;
-        summary.nrNonExits(idx) = sum(~isExit);
-        summary.nrTracings(idx) = nrTracings;
-        summary.tracings{idx} = struct;
-        summary.tracings{idx}.nodes = ...
-            reshape({tasks(idx).tracings.nodes}, [], 1);
-        summary.tracings{idx}.processed = zeros(nrTracings, 1);
-        summary.tracings{idx}.overlaps = cell(nrTracings, 1);
-        
-        if nrExits == 4
-            todoTracings = 1;
-        else
-            todoTracings = 1:nrExits;
-        end
+            agglo.nodesScaled(centerIdx, :))) > 2000, C);
         
         % NOTE(amotta): Non-exit components are dropped (for now at least)
         nonExitNodeIds = thisNodeIds(cell2mat(C(~isExit)));
+        
+        % NOTE(amotta): Since we query all endings we expect the number of
+        % tracings to match the number of found exits.
         C = C(isExit);
+        nrExits = numel(C);
+        assert(nrExits == expectedNrExits);
         
-        % NOTE(amotta): Each entry of `groups` contains a list of exits
-        % which were grouped together by virtue of chiasmata queries.
-        groups = cell(1, 0);
-        conns = zeros(0, 2);
-        tracingIdx = 1;
+        summary.nrExits(chiIdx) = nrExits;
+        summary.centerIdx(chiIdx) = centerIdx;
+        summary.nrNonExits(chiIdx) = sum(~isExit);
+        summary.nrExits(chiIdx) = nrExits;
+        summary.tracings{chiIdx} = struct;
+        summary.tracings{chiIdx}.nodes = ...
+            chiTracings.flightNodes;
+        summary.tracings{chiIdx}.overlaps = cell(nrExits, 1);
+        summary.tracings{chiIdx}.overlapNodes = nan(nrExits, 1);
+        summary.tracings{chiIdx}.execute = false(nrExits, 1);
         
-        % NOTE(amotta): Process flight paths until done. We're done when
-        % one of the following conditions is true:
-        %
-        % * no more open exits
-        % * no more flight paths to process
-        % * exactly two open exits
-        %
-        % In the last case, the two endings are connected automatically.
-        % This is the same behaviour as for the 4-fold chiasmata.
-        while true
-            nrOpenExits = nrExits - sum(cellfun(@length, groups));
+        %%
+        exitNodesScaled = chiTracings.seedPos;
+        exitNodesScaled = bsxfun(@times, exitNodesScaled, p.voxelSize);
+        
+        for trIdx = 1:nrExits
+            tr = chiTracings(trIdx, :);
+            assert(tr.exitId == trIdx);
             
-            if nrOpenExits == 0
-                break;
-            elseif nrOpenExits == 2
-                conns(end+1, :) = setdiff(1:nrExits, cell2mat(groups));
-                groups(end+1) = {conns(end, :)};
-                break;
-            end
-            
-            % NOTE(amotta): `idx2pre` contains the list of open tracings
-            randomOne = @(x)x(randperm(length(x),1));
-            idx2pre = setdiff(todoTracings, cell2mat(groups));
-            
-            if ~isempty(idx2pre)
-                idx2 = randomOne(idx2pre);
-            elseif ~isempty(todoTracings)
-                idx2 = randomOne(todoTracings);
-            else
-                break;
-            end
-            
-            % NOTE(amotta): Mark tracing as processed
-            todoTracings = setdiff(todoTracings, idx2);
+            % NOTE(amotta): To map a query to its chiasma exit we simply
+            % search for the exit which comes closest to the flight path.
+            % However, the first `cutoffTracingNm` nm of the flight path
+            % are ignored. And so are exits which do not come closer than
+            % `cutoffDistNm` to the flight path.
             
             % NOTE(amotta): A tracing may be empty (hence the reshape)
-            tracingScaled = tasks(idx).tracings(idx2).nodes;
-            tracingScaled = reshape(tracingScaled, [], 3);
-            tracingScaled = bsxfun(@times, tracingScaled, p.voxelSize);
+            trNodesScaled = reshape(tr.flightNodes{1}, [], 3);
+            trNodesScaled = bsxfun(@times, trNodesScaled, p.voxelSize);
             
-            % NOTE(amotta): Find components touched by flight path
-            overlaps = find(cellfun(@(ids) any(any(pdist2( ...
-                tracingScaled, thisNodes(ids, :)) < cutoffDistNm)), C));
+            % NOTE(amotta): Make sure nodes are correctly sorted
+            trSeedScaled = tr.seedPos .* p.voxelSize;
+           [~, minIdx] = min(pdist2(trSeedScaled, trNodesScaled));
+            assert(isempty(trNodesScaled) || minIdx == 1);
             
-            summary.tracings{idx}.processed(idx2) = tracingIdx;
-            summary.tracings{idx}.overlaps{idx2} = overlaps;
+            trDist = diff(trNodesScaled, 1, 1);
+            trDist = sqrt(sum(trDist .* trDist, 2));
+            trDist = cumsum(cat(1, 0, trDist)) < cutoffTracingNm;
             
-            if numel(overlaps) ~= 2
-                % NOTE(amotta): Flight is invalid. Go to next...
-                continue;
+            % NOTE(amotta): Calculate distance from flight path to exit
+            % nodes. But prevent overlap with seed by setting distance to
+            % infinity. Also ignore the first stretch of flight path.
+            trProximity = pdist2(exitNodesScaled, trNodesScaled);
+            trProximity(tr.exitId, :) = inf;
+            trProximity(:, trDist) = inf;
+            
+           [trOverlapDist, overlaps] = min(trProximity(:));
+           
+            if trOverlapDist < cutoffDistNm
+               [overlaps, overlapNode] =  ...
+                   ind2sub(size(trProximity), overlaps);
+            else
+                overlapNode = 0;
+                overlaps = 0;
             end
-            
-            conns(end + 1, :) = overlaps;
-            groups = Graph.findConnectedComponents(conns);
-            tracingIdx = tracingIdx + 1;
+           
+            overlaps = cat(1, tr.exitId, overlaps);
+            summary.tracings{chiIdx}.overlaps{trIdx} = overlaps;
+            summary.tracings{chiIdx}.overlapNodes(trIdx) = overlapNode;
         end
         
-        % NOTE(amotta): If we're unable to solve a chiasma, it is left
-        % untouched and remains part of the super-agglomerate.
-        if nrExits ~= sum(cellfun(@length, groups)) %unable to solve chiasma
-            continue;
-        end
-        
-        summary.solved(idx) = true;
-        
-        % NOTE(amotta): Find index of node closest to chiasma center for
-        % each component. These are the nodes from which the new edges will
-        % be made.
-        closest = nan(1, nrExits);
-        for idx2 = 1 : nrExits
-            [~,closest(idx2)] = min(pdist2( ...
-                agglo.nodesScaled(thisNodeIds(C{idx2}), :), ...
-                agglo.nodesScaled(centerIdx, :)));
-            closest(idx2) = thisNodeIds(C{idx2}(closest(idx2)));
-        end
-        
-        % NOTE(amotta): Translate connections to node IDs
-        conns = sort(closest(conns), 2);
+        if opts.dryRun; continue; end
         
         % NOTE(amotta): Build skeleton where only core is cut out
         p.sphereRadiusOuter = Inf; % in nm
-        [~, thisEdges, ~, thisNodeIds] = ...
+       [~, thisEdges, ~, thisNodeIds] = ...
              connectEM.detectChiasmataPruneToSphere( ...
              agglo.nodesScaled, agglo.edges, ...
              ones(size(agglo.edges, 1), 1), p, centerIdx);
         
-        % NOTE(amotta): Non-exits are dropped from the agglomerate
-        nodesToDelete = union(nodesToDelete, nonExitNodeIds);
-        thisEdgesCol(any(ismember(thisEdgesCol, nonExitNodeIds), 2), :) = [];
-        
-        % NOTE(amotta): Build set of edges to keep. We start with the full
-        % set and only keep the ones which never are part of a core.
-        thisEdgesCol=intersect(thisEdgesCol, thisNodeIds(thisEdges), 'rows');
-        nodesToDelete = union(nodesToDelete, setdiff( ...
-            1:size(agglo.nodesScaled, 1), thisNodeIds));
-        thisEdgesNew = [thisEdgesNew; conns];
+        % NOTE(amotta): Find node and edges to delete. There are two
+        % contributors to this list:
+        % * cutting out of the inner sphere
+        % * short branchlets which leaves the pruned sphere
+        nodesToDelete{chiIdx} = cat( ...
+            1, nonExitNodeIds(:), ...
+            setdiff((1:nodeCount)', thisNodeIds));
+        edgesToDelete{chiIdx} = find( ...
+            any(ismember(agglo.edges, nonExitNodeIds), 2) ...
+         | ~ismember(agglo.edges, thisNodeIds(thisEdges), 'rows'));
     end
     
-    % NOTE(amotta): See KMB's email from Wednesday, 27.09.2017.
-    %
-    % It's possible that the point-of-attachment for a solved chiasma query
-    % is within another chiasma. As a result, the point-of-attachment is
-    % pruned away and the new edge cannot be made. Is only one end of these
-    % edges is pruned away, mark the remaining node as new open ending.
-    prunedMask = any(ismember(thisEdgesNew, nodesToDelete), 2);
-    newEndingNodes = setdiff(thisEdgesNew(prunedMask, :), nodesToDelete);
-    thisEdgesNew(prunedMask, :) = [];
+    %% decide which chiasmata to split
+    summary = connectEM.splitChiasmataMultiLogic(summary);
+    
+    if opts.dryRun
+        newAgglos = agglo;
+        return;
+    end
+    
+    %% assemble final list of nodes and edges to remove
+    nodesToDelete = cell2mat(nodesToDelete(summary.split));
+    edgesToDelete = cell2mat(edgesToDelete(summary.split));
+    
+    %% patch in flight paths
+    for chiIdx = 1:chiasmaCount
+        chiTracings = chiasmataTracings{chiIdx};
+        
+        % check if chiasma is scheduled for splitting
+        if ~summary.split(chiIdx); continue; end
+        
+        chiSummary = summary.tracings{chiIdx};
+        chiExecuteIds = find(chiSummary.execute);
+        
+        % mark 1-components as new open endings
+        chiOpenExitNodes = find(accumarray(chiSummary.lut, 1) == 1);
+        chiOpenExitNodes = ismember(chiSummary.lut, chiOpenExitNodes);
+        chiOpenExitNodes = chiTracings.exitNodeId(chiOpenExitNodes);
+        newEndings = union(newEndings, chiOpenExitNodes);
+        
+        % determine short edges
+        chiShortEdges = chiSummary.overlaps(chiExecuteIds);
+        chiShortEdges = reshape(chiShortEdges, 1, []);
+        chiShortEdges = transpose(cell2mat(chiShortEdges));
+        chiShortEdges = chiTracings.exitNodeId(chiShortEdges);
+
+        if any(ismember(chiShortEdges(:), nodesToDelete))
+            % We cannot attach the flight paths and thus not split the
+            % chiasma if any of the needed exit nodes got pruned away.
+            % Instead, the remaining nodes are marked as new open endings.
+            newEndings = union( ...
+                newEndings, setdiff(chiShortEdges, nodesToDelete));
+            continue;
+        end
+        
+        for trIdx = 1:numel(chiExecuteIds)
+            trId = chiExecuteIds(trIdx);
+            tr = chiTracings(trId, :);
+            
+            % segment ID `nan` on flight paths
+            trNodes = tr.flightNodes{1};
+            trNodes(:, 4) = nan;
+            
+            % cut off tail of flight path
+            trLastNode = chiSummary.overlapNodes(trId);
+            trNodes = trNodes(2:trLastNode, :);
+            
+            % collect new edges
+            trNodeCount = size(trNodes, 1);
+            trEdges = zeros((trNodeCount - 1) + 2, 2);
+            trEdges((1 + 1):end, 1) = 1:trNodeCount;
+            trEdges(1:(end - 1), 2) = 1:trNodeCount;
+            
+            trNodeOff = nodeCount + size(nodesToAdd, 1);
+            trEdges = trEdges + trNodeOff;
+            
+            % find exit nodes to be connected
+            trEdges([1, end]) = chiShortEdges(trIdx, :);
+            
+            nodesToAdd = cat(1, nodesToAdd, trNodes);
+            edgesToAdd = cat(1, edgesToAdd, trEdges);
+            
+            % mark flight path as executed
+            summary.tracings{chiIdx}.execute(trId) = true;
+        end
+        
+        % mark chiasma as solved
+        summary.solved(chiIdx) = true;
+    end
     
     % NOTE(amotta): Make sure that none of the nodes involved in edges is
     % being removed by one of the other chiasmata.
-    assert(~any(ismember(thisEdgesCol(:), nodesToDelete)));
-    assert(~any(ismember(thisEdgesNew(:), nodesToDelete)));
+    assert(~any(ismember(edgesToAdd(:), nodesToDelete)));
     
     %% build new super-agglomerates
-    nodesToKeep = setdiff(1:size(agglo.nodesScaled,1), nodesToDelete);
-    newMaxSegId = nodesToKeep(end);
+    % build new nodes
+    newNodes = cat(1, agglo.nodes, nodesToAdd);
+    nodesToKeep = setdiff(1:size(newNodes, 1), nodesToDelete);
+    newNodes = newNodes(nodesToKeep, :);
     
-    newEdges = cat(1, thisEdgesCol, thisEdgesNew);
+    % renumber node IDs in `newEndings`
+   [~, newEndings] = ismember(newEndings, nodesToKeep);
+    newEndings(~newEndings) = [];
+    
+    % renumber node IDs in edges
+    newEdges = cat(1, agglo.edges, edgesToAdd);
+    newEdges(edgesToDelete, :) = [];
+   [~, newEdges] = ismember(newEdges, nodesToKeep);
+    assert(all(newEdges(:)));
+   
     newNodeComps = Graph.findConnectedComponents(newEdges);
     newNodeComps = cat(1, newNodeComps, num2cell(reshape( ...
-        setdiff(nodesToKeep, cell2mat(newNodeComps)), [], 1)));
+        setdiff(size(newNodes, 1), cell2mat(newNodeComps)), [], 1)));
     
-    newNodeLUT = Agglo.buildLUT(newMaxSegId, newNodeComps);
+    newNodeLUT = Agglo.buildLUT(size(newNodes, 1), newNodeComps);
     newEdgeComps = newNodeLUT(newEdges(:, 1));
     
     newAggloCount = numel(newNodeComps);
@@ -217,8 +266,8 @@ function [newAgglos, summary] = ...
     
     for curIdx = 1:newAggloCount
         curNodeIds = newNodeComps{curIdx};
-        curNodes = agglo.nodes(curNodeIds, :);
-        curEndings = find(ismember(curNodeIds, newEndingNodes));
+        curNodes = newNodes(curNodeIds, :);
+        curEndings = find(ismember(curNodeIds, newEndings));
         
         curEdges = newEdges(newEdgeComps == curIdx, :);
         [~, curEdges] = ismember(curEdges, curNodeIds);
@@ -231,12 +280,15 @@ function [newAgglos, summary] = ...
     
     newAgglos = reshape(newAgglos, [], 1);
     
-    % NOTE(amotta): The rest is only executed if `outputFile` is set
-    if ~exist('outputFile', 'var') || isempty(outputFile); return; end
-    Util.save(strcat(outputFile, '.mat'), agglo, tasks, newAgglos, summary);
+    % Save results
+    if ~isempty(opts.outputFile)
+        Util.save( ...
+            strcat(opts.outputFile, '.mat'), ...
+            agglo, queries, newAgglos, summary);
+    end
     
-    %% for debugging
-    if doExportNml
+    % NML for debugging
+    if opts.exportNml
         skel = skeleton();
         
         comments = repmat({''}, size(agglo.nodes, 1), 1);
@@ -253,7 +305,7 @@ function [newAgglos, summary] = ...
         end
         
         skel = Skeleton.setParams4Pipeline(skel, p);
-        skel.write(strcat(outputFile, '.nml'));
+        skel.write(strcat(opts.outputFile, '.nml'));
         clear comments skel;
     end
 end
