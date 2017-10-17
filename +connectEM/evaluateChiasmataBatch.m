@@ -8,13 +8,15 @@ load(fullfile(rootDir, 'allParameter.mat'), 'p');
 
 oldAxons = load(fullfile( ...
     p.saveFolder, 'aggloState', 'axons_06_c.mat'));
-axons = oldAxons.axons(oldAxons.indBigAxons);
+
+bigAxonIds = find(oldAxons.indBigAxons(:));
+axons = oldAxons.axons(bigAxonIds);
 
 curDir = fullfile( ...
     p.saveFolder, 'chiasmataSplitting', ...
     '20171009T193744-kmb-on-axons-6c');
-
-curData = load(fullfile(curDir, '20171016T105535_input-data.mat'));
+curData = load(fullfile( ...
+    curDir, '20171016T105535_input-data.mat'));
 
 queries = table;
 queries.axonId = curData.queries(:, 1);
@@ -81,121 +83,6 @@ fprintf('# answered chiasmata left: %d\n', numel(uniChiasmaDoneIds));
 % Clean-up
 queries(:, {'flightId', 'uniChiasmaId'}) = [];
 
-%% Limit to 4-fold chiasmata
-chiasmaFold = 4;
-
-[~, ~, queries.uniChiasmaId] = unique( ...
-    queries(:, {'axonId', 'chiasmaId'}), 'rows');
-uniChiasmaIds = find(accumarray(queries.uniChiasmaId, 1) == chiasmaFold);
-
-fprintf(...
-    '# %d-fold chiasmata answered: %d\n', ...
-    chiasmaFold, numel(uniChiasmaIds));
-
-queries = queries(ismember( ...
-    queries.uniChiasmaId, uniChiasmaIds), :);
-queries.uniChiasmaId = [];
-
-%%
-%{
-% Write out random flight paths. I will then manually annotate the ground
-% truth overlaps. This can then be used to optimize the overlap detection
-% routine.
-
-rng(0);
-randIds = randperm(size(queries, 1));
-randQueries = queries(randIds(1:50), :);
-
-curOutputDir = fullfile(outputDir, 'rand-queries');
-if ~exist(curOutputDir, 'dir'); mkdir(curOutputDir); end
-
-for curIdx = 1:size(randQueries, 1)
-    skel = skeleton();
-    
-    curQuery = randQueries(curIdx, :);
-    curNodes = reshape(curQuery.flightNodes{1}, [], 3);
-    skel = skel.addTree('Flight', curNodes);
-    
-    % show super-agglomerate
-    curAxon = axons(curQuery.axonId);
-    skel = skel.addTree('Axon', curAxon.nodes(:, 1:3), curAxon.edges);
-    
-    % show other exits of chiasma
-    curQueries = queries( ...
-        queries.axonId == curQuery.axonId ...
-      & queries.chiasmaId == curQuery.chiasmaId, :);
-    curCenterPos = curAxon.nodes(curQuery.centerNodeId, 1:3);
-    
-    for curExitIdx = 1:size(curQueries, 1)
-        skel = skel.addTree( ...
-            sprintf('Exit %d', curQueries.exitId(curExitIdx)), ...
-            cat(1, curQueries.seedPos(curExitIdx, :), curCenterPos));
-    end
-    
-    skel = Skeleton.setParams4Pipeline(skel, p);
-    skel.write(fullfile(curOutputDir, ...
-        sprintf('rand-query-%d.nml', curIdx)));
-end
-
-% extend table and manually manipulate it
-randQueries.gtExit = nan(size(randQueries, 1), 1);
-
-%%
-gtFile = '/mnt/mpibr/data/Personal/mottaa/L4/2017-10-13-Chiasmata-Attachment-GT/chiasma-gt-exits.mat';
-gtQueries = load(gtFile, 'randQueries');
-gtQueries = gtQueries.randQueries;
-
-% ignore entries without groundtruth annotation
-gtQueries.id = reshape(1:size(gtQueries, 1), [], 1);
-gtQueries(isnan(gtQueries.gtExit), :) = [];
-gtCount = size(gtQueries, 1);
-
-gtEval = table;
-gtEval.id = nan(gtCount, 1);
-gtEval.expected = cell(gtCount, 1);
-gtEval.found = cell(gtCount, 1);
-gtEval.correct = false(gtCount, 1);
-
-for curIdx = 1:size(gtQueries, 1)
-    curQuery = gtQueries(curIdx, :);
-    
-    curAxon = axons(curQuery.axonId);
-    curAxon.nodesScaled = bsxfun(@times, ...
-        curAxon.nodes(:, 1:3), p.raw.voxelSize);
-    
-    curQueries = queries( ...
-        queries.axonId == curQuery.axonId ...
-      & queries.chiasmaId == curQuery.chiasmaId, :);
-    
-   [~, curSummary] = ...
-        connectEM.splitChiasmataMulti( ...
-            p, curAxon, curQueries, 'dryRun', true);
-        
-    curFound = curSummary.tracings{1};
-    curFound = curFound.overlaps{curQuery.exitId};
-    curFound = setdiff(curFound, curQuery.exitId);
-    
-    gtEval.id(curIdx) = curQuery.id;
-    gtEval.found{curIdx} = setdiff(curFound, 0);
-    gtEval.expected{curIdx} = setdiff(curQuery.gtExit, 0);
-end
-
-gtEval.correct = cellfun( ...
-    @(e, f) isequal(e(:), f(:)), ...
-    gtEval.expected, gtEval.found);
-
-%%
-fprintf('\n');
-fprintf('Evaluation of attachment:\n\n');
-disp(gtEval);
-
-fprintf('Correct: %.2f %%\n', 100 * mean(gtEval.correct));
-fprintf('Too many attachments: %.2f %%\n', 100 * mean( ...
-    cellfun(@numel, gtEval.found) > cellfun(@numel, gtEval.expected)));
-fprintf('Too few attachments: %.2f %%\n', 100 * mean( ...
-    cellfun(@numel, gtEval.found) < cellfun(@numel, gtEval.expected)));
-%}
-
 %%
 % Group queries by axons
 queries.execute = false(size(queries, 1), 1);
@@ -205,10 +92,10 @@ queries.row = reshape(1:size(queries, 1), [], 1);
 % Start applying chiasmata
 queries.overlaps(:) = {[]};
 
-axonsBefore = axons(uniAxonIds);
-axonsAfter = cell(numel(uniAxonIds), 1);
+axonsSplit = cell(numel(uniAxonIds), 1);
 summaries = cell(numel(uniAxonIds), 1);
 
+tic
 for curAxonIdx = 1:numel(uniAxonIds)
     curAxon = axons(uniAxonIds(curAxonIdx));
     curAxon.nodesScaled = bsxfun(@times, ...
@@ -216,7 +103,7 @@ for curAxonIdx = 1:numel(uniAxonIds)
     curQueries = queries( ...
         queries.uniAxonId == curAxonIdx, :);
     
-   [axonsAfter{curAxonIdx}, curSummary] = ...
+   [axonsSplit{curAxonIdx}, curSummary] = ...
         connectEM.splitChiasmataMulti(p, curAxon, curQueries);
         
     curOverlaps = cellfun(@(t) ...
@@ -227,6 +114,7 @@ for curAxonIdx = 1:numel(uniAxonIds)
     summaries{curAxonIdx} = curSummary;
     queries.overlaps(curQueries.row) = curOverlaps;
 end
+toc
 
 queries.uniAxonId = [];
 
@@ -244,52 +132,8 @@ fprintf('\n');
 fprintf('Flight path evaluation:\n\n');
 disp(temp);
 
-%% Look at flight paths with too few attachments
-%{
-% Make sure that start was correctly identified
-tooFewQueries = queries(flightEval.tooFewEndings, :);
-mean(arrayfun( ...
-    @(a, b) ismember(a, b{1}), ...
-    tooFewQueries.exitId, tooFewQueries.overlaps));
-
-rng(0);
-randIds = randperm(size(tooFewQueries, 1));
-randIds = randIds(1:20);
-
-curOutputDir = fullfile(outputDir, 'too-few-endings');
-if ~exist(curOutputDir, 'dir'); mkdir(curOutputDir); end
-
-for curIdx = randIds
-    skel = skeleton();
-    
-    curQuery = tooFewQueries(curIdx, :);
-    curName = curQuery.taskId;
-    curNodes = reshape(curQuery.flightNodes{1}, [], 3);
-    skel = skel.addTree(curName, curNodes);
-    
-    % show super-agglomerate
-    curAxon = axons(curQuery.axonId);
-    skel = skel.addTree('Axon', curAxon.nodes(:, 1:3), curAxon.edges);
-    
-    % show other exits of chiasma
-    curQueries = queries( ...
-        queries.axonId == curQuery.axonId ...
-      & queries.chiasmaId == curQuery.chiasmaId, :);
-    curCenterPos = curAxon.nodes(curQuery.centerNodeId, 1:3);
-    
-    for curExitIdx = 1:size(curQueries, 1)
-        skel = skel.addTree( ...
-            sprintf('Exit %d', curQueries.exitId(curExitIdx)), ...
-            cat(1, curQueries.seedPos(curExitIdx, :), curCenterPos));
-    end
-    
-    skel = Skeleton.setParams4Pipeline(skel, p);
-    skel.write(fullfile(curOutputDir, ...
-        sprintf('too-few-endings-%d.nml', curIdx)));
-end
-%}
-
 %% calculate partitioning
+% TODO(amotta): Use info from summary
 [~, ~, queries.uniChiasmaId] = unique( ...
     queries(:, {'axonId', 'chiasmaId'}), 'rows');
 chiasmaCount = max(queries.uniChiasmaId);
@@ -348,124 +192,30 @@ partitionEval.valid = accumarray(uniPartitionIds, chiasma.valid);
 fprintf('Evaluation of chiasmata partitioning:\n\n');
 disp(partitionEval);
 
-%% look at partitions
-%{
-thisValid = false;
-thisPartition = [4];
+%%
+% NOTE(amotta): Add `endings` field to old agglomerates
+[oldAxons.axons.endings] = deal([]);
+oldAxons.indBigAxons = oldAxons.indBigAxons(:);
 
-thisPartitionStr = {'invalid', 'valid'};
-thisPartitionStr = strcat( ...
-    thisPartitionStr{1 + thisValid}, ...
-    '-', makePartitionStr(thisPartition));
+out = struct;
+out.p = p;
+out.oldAxons = oldAxons;
+out.gitInfo = Util.gitInfo();
 
-chiasmaIds = find(arrayfun( ...
-    @(v, p) v == thisValid && ...
-    isequal(p{1}, thisPartition), ...
-    chiasma.valid, chiasma.partition));
-chiasmaIds = reshape(chiasmaIds, 1, []);
+out.summary = cat(1, summaries{:});
+out.summaryIds = bigAxonIds(uniAxonIds);
 
-rng(0);
-randIds = randperm(numel(chiasmaIds));
-randIds = chiasmaIds(randIds(1:min(10, numel(chiasmaIds))));
+out.axons = cat(1, axonsSplit{:});
+out.parentIds = repelem(out.summaryIds, cellfun(@numel, axonsSplit));
+otherAxons = setdiff((1:numel(oldAxons.axons))', out.summaryIds);
 
-curOutputDir = fullfile( ...
-    outputDir, sprintf('%s-partition', thisPartitionStr));
-if ~exist(curOutputDir, 'dir'); mkdir(curOutputDir); end
+% add small agglomerates
+out.axons = cat(1, out.axons, oldAxons.axons(otherAxons));
+out.parentIds = cat(1, out.parentIds, otherAxons);
 
-for curIdx = randIds
-    skel = skeleton();
-    
-    curQueries = queries(queries.uniChiasmaId == curIdx, :);
-    curAxon = axons(curQueries.axonId(1));
-    
-    skel = skel.addTree('Axon', curAxon.nodes(:, 1:3), curAxon.edges);
-    
-    for curQueryIdx = 1:size(curQueries, 1)
-        curExitId = curQueries.exitId(curQueryIdx);
-        curOverlaps = curQueries.overlaps{curQueryIdx};
-        
-        assert(any(curOverlaps == curExitId));
-        curOverlaps(curOverlaps == curExitId) = [];
-        curOverlaps(end + 1) = 0; %#ok
-        
-        curQueryName = sprintf( ...
-            'Flight %d → %d', curExitId, curOverlaps(1));
-        skel = skel.addTree( ...
-            curQueryName, curQueries.flightNodes{curQueryIdx});
-    end
-    
-    curCenterPos = curAxon.nodes(curQueries.centerNodeId(1), 1:3);
-    
-    for curExitIdx = 1:size(curQueries, 1)
-        skel = skel.addTree( ...
-            sprintf('Exit %d', curQueries.exitId(curExitIdx)), ...
-            cat(1, curQueries.seedPos(curExitIdx, :), curCenterPos));
-    end
-    
-    skel = Skeleton.setParams4Pipeline(skel, p);
-    skel.write(fullfile(curOutputDir, sprintf( ...
-        '%s-partition-%d.nml', thisPartitionStr, curIdx)));
-end
-%}
+% build `indBigAxons` mask
+out.indBigAxons = oldAxons.indBigAxons(out.parentIds);
 
-%% auto-correct 4-components
-%{
-thisValid = false;
-thisPartition = [4];
-
-chiasmaIds = find(arrayfun( ...
-    @(v, p) v == thisValid && ...
-    isequal(p{1}, thisPartition), ...
-    chiasma.valid, chiasma.partition));
-chiasmaIds = reshape(chiasmaIds, 1, []);
-
-for curIdx = chiasmaIds
-    curQueries = queries(queries.uniChiasmaId == curIdx, :);
-    curOverlaps = cell2mat(curQueries.overlaps(:)')';
-    
-   [uniOverlaps, ~, uniCount] = unique(sort(curOverlaps, 2), 'rows');
-    uniOverlapsCount = accumarray(uniCount, 1);
-    validOverlap = uniOverlaps(uniOverlapsCount > 1, :);
-    
-    errorId = ismember(curOverlaps, validOverlap);
-    errorId = find(xor(errorId(:, 1), errorId(:, 2)));
-    
-    if numel(errorId) == 1
-        % correct error and turn into invalid 2-2
-        curRow = curQueries.row(errorId);
-        queries.overlaps{curRow}(end) = 0;
-    end
-end
-%}
-
-%% look at results from chiasma splitting
-rng(0);
-randIds = randperm(numel(axonsBefore));
-axonsWithSolvedChiasma = find(cellfun(@(s) any(s.solved), summaries));
-randIds = intersect(randIds, axonsWithSolvedChiasma, 'stable');
-randIds = randIds(1:min(10, numel(randIds)));
-
-curOutputDir = fullfile(outputDir, 'split-axons');
-if ~exist(curOutputDir, 'dir'); mkdir(curOutputDir); end
-
-addTreeFromAxon = @(skel, name, a) ...
-    skel.addTree(name, a.nodes(:, 1:3), a.edges);
-
-for curIdx = reshape(randIds, 1, [])
-    curAxonBefore = axonsBefore(curIdx);
-    curAxonsAfter = axonsAfter{curIdx};
-    
-    skel = skeleton();
-    skel = addTreeFromAxon(skel, 'Original Axon', curAxonBefore);
-    
-    for curAfterIdx = 1:numel(curAxonsAfter)
-        skel = addTreeFromAxon(skel, ...
-            sprintf('Split Axon %d', curAfterIdx), ...
-            curAxonsAfter(curAfterIdx));
-    end
-    
-    skel = Skeleton.setParams4Pipeline(skel, p);
-    
-    skelFile = sprintf('axon-%d.nml', curIdx);
-    skel.write(fullfile(curOutputDir, skelFile));
-end
+outFile = sprintf('%s-results.mat', datestr(now, 30));
+outFile = fullfile(outputDir, outFile);
+Util.saveStruct(outFile, out);
