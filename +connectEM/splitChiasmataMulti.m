@@ -185,7 +185,6 @@ function [newAgglos, summary] = ...
         
         chiSummary = summary.tracings{chiIdx};
         chiExecuteIds = find(chiSummary.execute);
-        keyboard
         
         % determine short edges
         chiShortEdges = chiSummary.overlaps(chiExecuteIds);
