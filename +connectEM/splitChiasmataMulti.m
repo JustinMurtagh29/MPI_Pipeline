@@ -39,7 +39,6 @@ function [newAgglos, summary] = ...
     summary.nrExits = nan(chiasmaCount, 1);
     summary.nrNonExits = nan(chiasmaCount, 1);
     summary.nrExits = nan(chiasmaCount, 1);
-    summary.split = false(chiasmaCount, 1);
     summary.solved = false(chiasmaCount, 1);
     summary.tracings = cell(chiasmaCount, 1);
     
@@ -158,13 +157,7 @@ function [newAgglos, summary] = ...
     end
     
     %% decide which chiasmata to split
-   [summary.split, execFlightIds] = ...
-       connectEM.splitChiasmataMultiLogic(summary);
-   
-    for chiIdx = 1:chiasmaCount
-        % There doesn't seem to be a nicer way to do this...
-        summary.tracings{chiIdx}.execute = execFlightIds{chiIdx};
-    end
+    summary = connectEM.splitChiasmataMultiLogic(summary);
     
     if opts.dryRun
         newAgglos = agglo;

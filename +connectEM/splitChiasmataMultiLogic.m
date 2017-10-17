@@ -1,36 +1,43 @@
-function [splitChiasma, executeFlights] = splitChiasmataMultiLogic(summary)
-    % [splitChiasma, executeFlights] = splitChiasmataMultiLogic(summary)
+function summary = splitChiasmataMultiLogic(summary)
+    % summary = splitChiasmataMultiLogic(summary)
     %   This function decides which chiasmata can be safely split and which
     %   flight paths need to be applied to do so.
     %
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
-   [splitChiasma, executeFlights] = cellfun( ...
-       @forChiasma, summary.tracings, 'UniformOutput', false);
-    splitChiasma = cell2mat(splitChiasma);
-end
+    
+    chiCount = numel(summary.tracings);
+    summary.split = false(chiCount, 1);
+    
+    for chiIdx = 1:numel(summary.tracings)
+        tracings = summary.tracings{chiIdx};
+        
+        overlaps = reshape(tracings.overlaps, 1, []);
+        overlaps = transpose(cell2mat(overlaps));
+        nrExits = size(overlaps, 1);
 
-function [splitChiasma, executeTracings] = forChiasma(tracings)
-    overlaps = reshape(tracings.overlaps, 1, []);
-    overlaps = transpose(cell2mat(overlaps));
-    nrExits = size(overlaps, 1);
-
-    splitChiasma = false;
-    executeTracings = false(nrExits, 1);
-    
-    % partition chiasma
-   [~, ~, lut] = buildPartition(overlaps);
-   [partition, isValid] = fixFourPartitions(overlaps, lut);
-   
-    % do not cut out sphere if there's nothing we can do
-    if isequal(partition, nrExits); return; end
-    
-    % do not process chiasmata with invalid solutions (for now)
-    if ~isValid; return; end
-    
-    % select flight paths
-    splitChiasma = true;
-    executeTracings = selectTracings(overlaps);
+        % partition chiasma
+       [~, ~, lut] = buildPartition(overlaps);
+       [partition, isValid, lut] = fixFourPartitions(overlaps, lut);
+       
+        if isequal(partition, [2; 2]) || ...
+                (isValid && numel(partition) > 1)
+            % do process
+            % * all 2-2 partitions (valid and invalid)
+            % * all valid partitions (except fully connected)
+            splitChiasma = true;
+            executeTracings = selectTracings(overlaps);
+        else
+            splitChiasma = false;
+            executeTracings = false(nrExits, 1);
+        end
+        
+        summary.split(chiIdx) = splitChiasma;
+        summary.tracings{chiIdx}.execute = executeTracings;
+        summary.tracings{chiIdx}.partition = partition;
+        summary.tracings{chiIdx}.partitionIsValid = isValid;
+        summary.tracings{chiIdx}.lut = lut;
+    end
 end
 
 function execute = selectTracings(overlaps)
@@ -42,7 +49,7 @@ function execute = selectTracings(overlaps)
     
     % build minimal spanning tree per component
     adjMat = sparse(adjMat(:, 2), adjMat(:, 1), 1, nrExits, nrExits);
-   	adjMat = graphminspantree(adjMat, 'Method', 'Kruskal');
+    adjMat = graphminspantree(adjMat, 'Method', 'Kruskal');
     
    [edges(:, 2), edges(:, 1)] = find(adjMat);
    
