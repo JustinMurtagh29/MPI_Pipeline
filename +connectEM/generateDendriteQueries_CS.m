@@ -30,7 +30,7 @@ function generateDendriteQueries_CS(param,suffix)
     borderPositions = cellfun(@(x) borderCoM(x,:), directionality.borderIdx(idxCanidateFound),'uni',0);
 
     % Load larger 5 micron agglomerates
-    m = load(fullfile(dataDir, 'dendrites_03_v2.mat'));
+    m = load(fullfile(dataDir, 'dendrites_03_v2_splitmerged.mat'));
     dendrites = m.dendrites(m.indBigDends);
     dendrites = arrayfun(@Agglo.fromSuperAgglo, dendrites, 'UniformOutput', false);
     display([num2str(numel(m.indBigDends)) ' dendrites in total']);
