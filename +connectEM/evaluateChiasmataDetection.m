@@ -8,12 +8,13 @@
 
 % configuration
 rootDir = 'G:/gaba/u/mberning/results/pipeline/20170217_ROI';
-aggloFile = fullfile(rootDir, 'aggloState', 'dendrites_03_v2_splitmerged.mat');
+aggloState = 'dendrites_03_v2_splitmerged';
+aggloFile = fullfile(rootDir, 'aggloState', [aggloState '.mat']);
 
-chiasmId = '20171017T044832';
+chiasmId = '20171017T043945';
 chiasmDir = 'G:/tmpscratch/kboerg/chiasmata';
 % chiasmataX20171017T044832_0
-outputDir = 'D:/Marcel/Code/Marcel/chiasma';
+outputDir = 'D:/Marcel/Code/Marcel/chiasma2';
 
 %% load parameter (for skeleton)
 param = fullfile(rootDir, 'allParameter.mat');
@@ -47,7 +48,9 @@ end
 toc;
 
 %% start couting...
-clearvars -except param outputDir chiasmata;
+clearvars -except param outputDir chiasmata chiasmId aggloState;
+
+save(fullfile(outputDir,sprintf('chiasmata_%s_%s.mat',chiasmId,aggloState)))
 
 % count number of nodes
 nodeCount = cellfun(@(s) size(s.nodes, 1), chiasmata);
