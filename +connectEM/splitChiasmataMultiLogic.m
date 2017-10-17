@@ -21,8 +21,11 @@ function [splitChiasma, executeTracings] = forChiasma(tracings)
     % partition chiasma
    [partition, isValid] = buildPartition(overlaps);
    
-    % only execute valid 2-2-partitions for now
-    if ~isequal(partition, [2; 2]) || ~isValid; return; end
+    % do not cut out sphere if there's nothing we can do
+    if isequal(partition, nrExits); return; end
+    
+    % do not process chiasmata with invalid solutions (for now)
+    if ~isValid; return; end
     
     % select flight paths
     splitChiasma = true;
