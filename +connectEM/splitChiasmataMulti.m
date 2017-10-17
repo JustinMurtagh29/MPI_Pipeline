@@ -178,12 +178,18 @@ function [newAgglos, summary] = ...
         chiSummary = summary.tracings{chiIdx};
         chiExecuteIds = find(chiSummary.execute);
         
+        % mark 1-components as new open endings
+        chiOpenExitNodes = find(accumarray(chiSummary.lut, 1) == 1);
+        chiOpenExitNodes = ismember(chiSummary.lut, chiOpenExitNodes);
+        chiOpenExitNodes = chiTracings.exitNodeId(chiOpenExitNodes);
+        newEndings = union(newEndings, chiOpenExitNodes);
+        
         % determine short edges
         chiShortEdges = chiSummary.overlaps(chiExecuteIds);
         chiShortEdges = reshape(chiShortEdges, 1, []);
         chiShortEdges = transpose(cell2mat(chiShortEdges));
         chiShortEdges = chiTracings.exitNodeId(chiShortEdges);
-        
+
         if any(ismember(chiShortEdges(:), nodesToDelete))
             % We cannot attach the flight paths and thus not split the
             % chiasma if any of the needed exit nodes got pruned away.
