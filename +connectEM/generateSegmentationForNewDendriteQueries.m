@@ -19,7 +19,7 @@ function generateSegmentationForNewDendriteQueries(param)
 
     % Create resolution pyramid
     thisBBox = [1, 1, 1; (ceil(param.bbox(:, 2) ./ 1024) .* 1024)']';
-    seg.root = fullfile(param.saveFolder, 'aggloState', '20171017_segmentationForDendriteQueries', '1');
+    seg.root = fullfile(segDir, '20171017_segmentationForDendriteQueries', '1');
     seg.prefix = param.seg.prefix;
     createResolutionPyramid(seg, thisBBox, [], true);
 
