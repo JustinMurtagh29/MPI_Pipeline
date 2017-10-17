@@ -442,7 +442,7 @@ end
 rng(0);
 randIds = randperm(numel(axonsBefore));
 axonsWithSolvedChiasma = find(cellfun(@(s) any(s.solved), summaries));
-randIds = intersect(randIds, axonsWithSolvedChiasma);
+randIds = intersect(randIds, axonsWithSolvedChiasma, 'stable');
 randIds = randIds(1:min(10, numel(randIds)));
 
 curOutputDir = fullfile(outputDir, 'split-axons');
