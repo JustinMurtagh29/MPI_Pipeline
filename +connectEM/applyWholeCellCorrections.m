@@ -108,7 +108,9 @@ for f = 1:numel(files)
                endingSkelEdgesClusters{n}(endingSkelEdgesClusters{n}>nodesToDelete(d)) = endingSkelEdgesClusters{n}(endingSkelEdgesClusters{n}>nodesToDelete(d)) - 1;
            end
            segIdEdges = skelSegIds(endingSkelEdgesClusters{n});  % get segId edge vector of skeleton
-                      
+           if length(segIdEdges) ~= size(segIdEdges,2) % fix stupid 1 value pair problem
+               segIdEdges = segIdEdges';
+           end
            agglos(aggloSomaId(ind)) = Superagglos.applyEquivalences({1:numel(indToAdd)+1},agglos([aggloSomaId(ind),indToAdd]),segIdEdges);
            
 %            skel2 = Superagglos.toSkel(agglos(aggloSomaId(ind)));
