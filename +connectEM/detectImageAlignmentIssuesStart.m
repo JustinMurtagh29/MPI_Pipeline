@@ -1,6 +1,7 @@
 function job = detectImageAlignmentIssuesStart(p)
 
-    inputCell = {num2cell(p.local.bbox(3,1):p.local.bbox(3,2)-1)};
+    inputCell = arrayfun(@(x){x}, p.bbox(3,1):p.bbox(3,2)-1, 'uni', 0);
+    functionH = @connectEM.detectImageAlignmentIssues;
     sharedInputs = {p};
     cluster = Cluster.getCluster( ...
                 '-pe openmp 1', ...
