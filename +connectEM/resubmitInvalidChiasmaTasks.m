@@ -48,6 +48,7 @@ fprintf('# queries with comment: %d\n', sum(maskComment));
 
 %% resubmit tasks
 curDateStr = datestr(now, 30);
+if ~exist(outputDir, 'dir'); mkdir(outputDir); end
 
 out = struct;
 out.gitInfo = Util.gitInfo();
