@@ -112,8 +112,8 @@ for curIdx = 1:10
         curAggloIdx = find(invLUT >= curChiasmaIdx, 1) - 1;
         curChiasmaIdx = curChiasmaIdx - invLUT(curAggloIdx);
         
-        curAgglo = chiasmata{curAggloIdx};
-        curNodeIds = curAgglo.ccNodeIdx{curChiasmaIdx};
+        curChiasma = chiasmata{curAggloIdx};
+        curNodeIds = curChiasma.ccNodeIdx{curChiasmaIdx};
         if n == 1
             assert(numel(curNodeIds) == descVals(curIdx));
              curName = sprintf( ...
@@ -128,12 +128,12 @@ for curIdx = 1:10
         curFileName = fullfile(outputDir, strcat(lower(curName), '.nml'));
         
         skel = skeleton();
-        skel = skel.addTree(curName, curAgglo.nodes, curAgglo.edges);
+        skel = skel.addTree(curName, curChiasma.nodes, curChiasma.edges);
         skel = skel.addBranchpoint(curNodeIds);
         
         % show queries
-        curPositions = curAgglo.position{curChiasmaIdx};
-        curDirections = curAgglo.direction{curChiasmaIdx};
+        curPositions = curChiasma.position{curChiasmaIdx};
+        curDirections = curChiasma.direction{curChiasmaIdx};
         
         for curQueryIdx = 1:size(curPositions, 1)
             curStartPos = curPositions(curQueryIdx, :);
