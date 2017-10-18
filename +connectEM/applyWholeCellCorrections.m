@@ -88,7 +88,7 @@ for f = 1:numel(files)
        skelEdges = cell2mat(arrayfun(@(x) skel.edges{x}+sum(skelNumNodes(1:x-1)),(1:numel(skel.nodes))','uni',0));% putting all edges together (inceasing index for each skel
        endingSkelEdges = skelEdges(any(ismember(skelEdges,nodesToAdd),2),:);   %edges of skeletons including the last node of the original skeleton
        endingClusters = Graph.findConnectedComponents(endingSkelEdges,1,1);   % cluster each extended ending
-       [~,endingSkelEdgesClusters] = cellfun(@(x) ismember(endingSkelEdges,x),endingClusters,'uni',0);  % get the skel edges for each ending
+       [~,endingSkelEdgesClusters] = cellfun(@(x) ismember(endingSkelEdges(all(ismember(endingSkelEdges,x),2),:),x),endingClusters,'uni',0);  % get the skel edges for each ending
        for n = 1:numel(endingClusters)
            skelSegIds = Seg.Global.getSegIds(p,skelCoords(endingClusters{n},:));  % extract the seg Ids of these nodes that were added
            
@@ -110,7 +110,7 @@ for f = 1:numel(files)
 %            skel2 = Superagglos.toSkel(agglos(aggloSomaId(ind)));
 %            subplot(1,2,2);hold all;skel2.plot;axis equal
            aggloLUT(cell2mat(arrayfun(@(x) x.nodes(:,4),agglos(indToAdd),'uni',0))) = aggloSomaId(ind); % update LUT
-           remove agglo which has been added and update LUT
+           % remove agglo which has been added and update LUT
            aggloLUT = connectEM.changem(aggloLUT,(0:numel(agglos))-cumsum(accumarray(indToAdd,1,[numel(agglos)+1,1]))',0:numel(agglos));
            agglos(indToAdd) = [];
        end

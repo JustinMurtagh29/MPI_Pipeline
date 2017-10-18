@@ -183,20 +183,19 @@ else
 end
 disp('State 03 superagglos loaded/generated')
 
+%%
+somaAgglos = load(fullfile(outputFolder,'center_somas.mat'));
+somaAgglos = somaAgglos.result(:,2);
+somaAgglos = somaAgglos(~cellfun(@isempty,somaAgglos)); % remove not found somata
+somaSegIds = cell2mat(somaAgglos);
+% remove duplicate segIds
+[~,ic] = unique(somaSegIds);
+duplicates = somaSegIds(setdiff(1:numel(somaSegIds),ic));
+% somaDuplicateIds = cellfun(@(x) any(intersect(x,duplicates)),somaAgglos);
+somaAgglos = cellfun(@(x) setdiff(x,duplicates),somaAgglos,'uni',0);
+somaSegIds = cell2mat(somaAgglos);
 %% apply manual fixes of whole cells in dendrite class
 if ~exist(fullfile(outputFolder,'dendrites_03_v2_splitmerged.mat'),'file') || overwrite
-    
-    somaAgglos = load(fullfile(outputFolder,'center_somas.mat'));
-    somaAgglos = somaAgglos.result(:,2);
-    somaAgglos = somaAgglos(~cellfun(@isempty,somaAgglos)); % remove not found somata
-    somaSegIds = cell2mat(somaAgglos);
-    % remove duplicate segIds
-    [~,ic] = unique(somaSegIds);
-    duplicates = somaSegIds(setdiff(1:numel(somaSegIds),ic));
-    % somaDuplicateIds = cellfun(@(x) any(intersect(x,duplicates)),somaAgglos);
-    somaAgglos = cellfun(@(x) setdiff(x,duplicates),somaAgglos,'uni',0);
-    somaSegIds = cell2mat(somaAgglos);
-    
     [dendrites,dendriteLUT] = connectEM.applyWholeCellCorrections(dendrites,somaAgglos,p,fullfile(outputFolder,'autoView_wholecells_03_v2_fixedmh'));
     dendriteSegIds = find(dendriteLUT);
     [ismem,ind] = ismember(somaSegIds,dendriteSegIds);
@@ -209,3 +208,20 @@ if ~exist(fullfile(outputFolder,'dendrites_03_v2_splitmerged.mat'),'file') || ov
 else
     load(fullfile(outputFolder,'dendrites_03_v2_splitmerged.mat'))
 end
+
+%% next round of fixes
+%% apply manual fixes of whole cells in dendrite class
+if ~exist(fullfile(outputFolder,'dendrites_04_tmp.mat'),'file') || overwrite
+    [dendrites,dendriteLUT] = connectEM.applyWholeCellCorrections(dendrites,somaAgglos,p,fullfile(outputFolder,'DendriteEndings_03_v2_splitmerged'));
+    dendriteSegIds = find(dendriteLUT);
+    [ismem,ind] = ismember(somaSegIds,dendriteSegIds);
+    % get each dend id which contains most of the seg ids of each soma
+    WholeCellId = accumarray(somaLUT(somaSegIds(ismem))',dendriteLUT(dendriteSegIds(ind(ismem)))',[],@mode);
+ 
+    indBigDends = Agglo.isMaxBorderToBorderDistAbove(p, 5000, Superagglos.transformAggloNewOldRepr(dendrites));
+    [ myelinDend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
+    save(fullfile(outputFolder,'dendrites_04_tmp.mat'),'dendrites','myelinDend','indBigDends','WholeCellId');
+else
+    load(fullfile(outputFolder,'dendrites_04_tmp.mat'))
+end
+[dendrites,dendriteLUT] = connectEM.applyWholeCellCorrections(dendrites,somaAgglos,p,'/gaba/u/mberning/results/pipeline/20170217_ROI/aggloState/DendriteEnding_03_v2_splitmerged')
