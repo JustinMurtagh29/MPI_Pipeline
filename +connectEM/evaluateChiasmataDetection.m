@@ -11,10 +11,10 @@ rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 aggloState = 'dendrites_03_v2_splitmerged';
 aggloFile = fullfile(rootDir, 'aggloState', [aggloState '.mat']);
 
-chiasmId = '20171017T044832';
+chiasmId = '20171018T114032';
 chiasmDir = '/tmpscratch/kboerg/chiasmata';
 % chiasmataX20171017T044832_0
-outputDir = '/tmpscratch/mbeining/chiasma';
+outputDir = '/tmpscratch/mbeining/chiasma2';
 
 %% load parameter (for skeleton)
 param = fullfile(rootDir, 'allParameter.mat');

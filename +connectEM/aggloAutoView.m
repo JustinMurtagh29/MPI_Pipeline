@@ -136,7 +136,7 @@ switch show
             if ~ isnan(randDends(n))
                 theseDends = agglos(randDends(n));
                 if skelOutput
-                    skel = connectEM.generateSkeletonFromAggloNew(theseDends,{sprintf('RandDend_%02d',n)} , outputFolder, max(dendriteSegIds),[],sprintf('RandDend_%02d.nml',n));
+                    skel = connectEM.generateSkeletonFromAggloNew(theseDends,{sprintf('RandDend_%s_%02d',aggloFile,n)} , outputFolder, max(dendriteSegIds),[],sprintf('RandDend_%02d.nml',n));
                 else
                     skel = Superagglos.toSkel(theseDends);
                 end
@@ -155,10 +155,10 @@ switch show
                 ylim([0 100000])
                 zlim([0 100000])
             end
-            if rem(n,prod(raster))==0 || n == numel(randDends)
+            if (rem(n,prod(raster))==0 || n == numel(randDends))
                 drawnow
                 pause(0.5)
-                tprint(sprintf('RandDend_%s_%02d-%02d',aggloFile,startN,n),'-pdf-R',[],'-p')
+                print(sprintf('RandDend_%s_%02d-%02d',aggloFile,startN,n),'-pdf')
                 pause(1)
                 close(fig);
             end
