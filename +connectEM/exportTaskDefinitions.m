@@ -2,7 +2,7 @@ function exportTaskDefinitions(param, taskDef, outFile)
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     fullTaskDef = taskDef;
-    fullTaskDef.dataSet(:) = {param.dataset};
+    fullTaskDef.dataSet(:) = {param.dataSet};
     fullTaskDef.taskTypeId(:) = {param.taskTypeId};
     fullTaskDef.expDomain(:) = {param.expDomain};
     fullTaskDef.expMinVal(:) = param.expMinVal;
