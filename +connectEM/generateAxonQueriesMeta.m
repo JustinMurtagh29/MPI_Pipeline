@@ -42,7 +42,8 @@
 
     % Write new segmentation based on axon queries
     mapping = connectEM.createLookup(segmentMeta, axonsNew);
-    Seg.Global.applyMappingToSegmentation(p, mapping, [outputFolder '1/']);
+    Seg.Global.applyMappingToSegmentation(p, mapping, struct( ...
+        'root', [outputFolder '1/'], 'prefix', 'axonQueriesMeta'));
     clear mapping;
 
     % Save state for bookkeeping
