@@ -30,7 +30,10 @@ for tr=1:length(agglo)
         % Generate parameters for skeleton
         theseCoM = agglo(tr).nodes(:,1:3);
         skel = skeleton();
-        skel = skel.addTree([treeNames{tr} '_' num2str(size(theseCoM,1))],[theseCoM,ones(size(agglo(tr).nodes,1),1)*10],agglo(tr).edges,colors(tr,:));
+        if ~isfield(agglo(tr),'comments')
+            agglo(tr).comments = [];
+        end
+        skel = skel.addTree([treeNames{tr} '_' num2str(size(theseCoM,1))],[theseCoM,ones(size(agglo(tr).nodes,1),1)*10],agglo(tr).edges,colors(tr,:),[],agglo(tr).comments);
         allSkel = allSkel.addTreeFromSkel(skel);
         if ~exist('filename','var') || isempty(filename)
             skel.parameters = parameters;        

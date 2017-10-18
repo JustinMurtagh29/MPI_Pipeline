@@ -107,7 +107,7 @@ function p = runPipeline(p, startStep, endStep,runlocal)
     if startStep <= PipelineStep.CompressSegmentation && ...
        endStep >= PipelineStep.CompressSegmentation
         % Compress segmentation (at all resolutions)
-        compressSegmentation(p);
+        compressSegmentation(p.seg);
     end
 
     % Construct graph on globalized version of segmentation

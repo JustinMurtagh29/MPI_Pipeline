@@ -1,4 +1,4 @@
-function detectChiasmataSuper(startidx, p, useSphereClustering)
+function detectChiasmataSuper(startidx, p, useSphereClustering, visualization)
     if nargin < 3
         useSphereClustering = false;
     end
@@ -28,6 +28,6 @@ function detectChiasmataSuper(startidx, p, useSphereClustering)
         
         detectFunc( ...
             p, agglos(idx).nodes(:, 1:3), ...
-            agglos(idx).edges, false, outputFolder);
+            agglos(idx).edges, visualization, outputFolder);
     end
 end

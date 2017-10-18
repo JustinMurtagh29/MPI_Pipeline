@@ -53,9 +53,11 @@ function y = calculateDirectionalityOfAgglomerates(agglos, graph, segmentMeta, b
             comVecsIn = bsxfun(@times, segmentMeta.centroid(:, currentAgglo)', options.voxelSize);
             [~, comVecsOut, covMatsOut] = Agglo.mergeStatisticalMoments(massesIn, comVecsIn, covMatsIn, surroundLocal);
             clear massesIn comVecsIn;
-        else
+        elseif numel(currentAgglo) == 1
             comVecsOut = bsxfun(@times, segmentMeta.centroid(:, currentAgglo)', options.voxelSize);
             covMatsOut = reshape(globalSegmentPCA.covMat(currentAgglo, :), [1, 3, 3]);
+        else
+            continue
         end
         clear covMatsIn;
         % Get representation of all borders out of current agglomerate

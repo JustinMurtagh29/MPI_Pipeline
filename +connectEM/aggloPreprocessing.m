@@ -138,7 +138,7 @@ disp('State 02 superagglos loaded/generated')
 % end
 
 %% add myelinated processes to axon class
-if ~exist(fullfile(outputFolder,'axons_03.mat'),'file') || ~exist(fullfile(outputFolder,'dendrites_03.mat'),'file') || overwrite
+if ~exist(fullfile(outputFolder,'axons_03.mat'),'file') || ~exist(fullfile(outputFolder,'dendrites_03_v2.mat'),'file') || overwrite
     disp('Add myelinated processes of dendrite class to axon class and execute correspondences again')
     
     % load somata including merged somata
@@ -176,9 +176,36 @@ if ~exist(fullfile(outputFolder,'axons_03.mat'),'file') || ~exist(fullfile(outpu
     [ myelinDend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
     
     save(fullfile(outputFolder,'axons_03.mat'),'axons','myelinAxon','indBigAxons');
-    save(fullfile(outputFolder,'dendrites_03.mat'),'dendrites','myelinDend','indBigDends');
+    save(fullfile(outputFolder,'dendrites_03_v2.mat'),'dendrites','myelinDend','indBigDends');
 else
     load(fullfile(outputFolder,'axons_03.mat'),'axons','myelinAxon','indBigAxons');
-    load(fullfile(outputFolder,'dendrites_03.mat'),'dendrites','myelinDend','indBigDends');
+    load(fullfile(outputFolder,'dendrites_03_v2.mat'),'dendrites','myelinDend','indBigDends');
 end
 disp('State 03 superagglos loaded/generated')
+
+%% apply manual fixes of whole cells in dendrite class
+if ~exist(fullfile(outputFolder,'dendrites_03_v2_splitmerged.mat'),'file') || overwrite
+    
+    somaAgglos = load(fullfile(outputFolder,'center_somas.mat'));
+    somaAgglos = somaAgglos.result(:,2);
+    somaAgglos = somaAgglos(~cellfun(@isempty,somaAgglos)); % remove not found somata
+    somaSegIds = cell2mat(somaAgglos);
+    % remove duplicate segIds
+    [~,ic] = unique(somaSegIds);
+    duplicates = somaSegIds(setdiff(1:numel(somaSegIds),ic));
+    % somaDuplicateIds = cellfun(@(x) any(intersect(x,duplicates)),somaAgglos);
+    somaAgglos = cellfun(@(x) setdiff(x,duplicates),somaAgglos,'uni',0);
+    somaSegIds = cell2mat(somaAgglos);
+    
+    [dendrites,dendriteLUT] = connectEM.applyWholeCellCorrections(dendrites,somaAgglos,p,fullfile(outputFolder,'autoView_wholecells_03_v2_fixedmh'));
+    dendriteSegIds = find(dendriteLUT);
+    [ismem,ind] = ismember(somaSegIds,dendriteSegIds);
+    % get each dend id which contains most of the seg ids of each soma
+    WholeCellId = accumarray(somaLUT(somaSegIds(ismem))',dendriteLUT(dendriteSegIds(ind(ismem)))',[],@mode);
+ 
+    indBigDends = Agglo.isMaxBorderToBorderDistAbove(p, 5000, Superagglos.transformAggloNewOldRepr(dendrites));
+    [ myelinDend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
+    save(fullfile(outputFolder,'dendrites_03_v2_splitmerged.mat'),'dendrites','myelinDend','indBigDends','WholeCellId');
+else
+    load(fullfile(outputFolder,'dendrites_03_v2_splitmerged.mat'))
+end
