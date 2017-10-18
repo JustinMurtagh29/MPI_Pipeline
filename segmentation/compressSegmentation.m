@@ -10,8 +10,8 @@ function compressSegmentation(p)
     taskCount = 50;
     
     % only WKW datasets can be compressed
-    if ~isfield(p.seg, 'backend'); return; end;
-    if p.seg.backend ~= 'wkwrap'; return; end;
+    if ~isfield(p.seg, 'backend'); return; end
+    if p.seg.backend ~= 'wkwrap'; return; end
     
     % find input root
     inRoot = buildInRoot(p.seg);
@@ -49,7 +49,7 @@ function inRoot = buildInRoot(inParam)
     dirParts = strsplit(inParam.root, filesep);
     
     % drop trailing file separator, if any
-    if isempty(dirParts{end}); dirParts(end) = []; end;
+    if isempty(dirParts{end}); dirParts(end) = []; end
     
     % go one level up
     dirParts(end) = [];
