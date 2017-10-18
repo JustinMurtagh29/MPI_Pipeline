@@ -1,7 +1,7 @@
 % Written by
 %   Alessandro Motta <alessandro.motta@brain.mpg.de>
 
-resultsFile = '/home/amotta/Desktop/20170929T113827-results.mat';
+resultsFile = '/gaba/u/mberning/results/pipeline/20170217_ROI/chiasmataSplitting/20171009T193744-kmb-on-axons-6c/outputs/20171018T110637_results.mat';
 outputDir = '/home/amotta/Desktop/chiasmata-splitting';
 data = load(resultsFile);
 
@@ -35,7 +35,7 @@ t.solved = cat(1, data.summary.solved);
 t.centerIdx = cat(1, data.summary.centerIdx);
 
 allNrChiasmata = cat(1, data.summary.nrChiasmata);
-t.axonId = repelem((1:numel(allNrChiasmata))', allNrChiasmata);
+t.axonId = repelem(data.summaryIds, allNrChiasmata);
 t.chiasmaId = cell2mat(arrayfun(@(ids) ...
     (1:ids)', allNrChiasmata, 'UniformOutput', false));
 
@@ -47,7 +47,7 @@ t = t(t.solved == solved, :);
 rng(0);
 t = t(randperm(size(t, 1), 10), :);
 
-parentIds = find(data.oldAgglos.indBigAxons);
+parentIds = find(data.oldAxons.indBigAxons);
 t.parentId = parentIds(t.axonId);
 
 for row = 1:size(t, 1)
@@ -55,7 +55,7 @@ for row = 1:size(t, 1)
     
     % add parent
     parentId = t.parentId(row);
-    agglo = data.oldAgglos.axons(parentId);
+    agglo = data.oldAxons.axons(parentId);
     
     comments = repmat({''}, size(agglo.nodes, 1), 1);
     comments{t.centerIdx(row)} = 'Chiasma';
@@ -64,7 +64,7 @@ for row = 1:size(t, 1)
     
     if solved
         % in "solved" case, show components
-        newAgglos = data.newAgglos(data.parentIds == parentId);
+        newAgglos = data.axons(data.parentIds == parentId);
         for newAgglo = newAgglos(:)'
             skel = skel.addTree('Split', newAgglo.nodes, newAgglo.edges);
         end
