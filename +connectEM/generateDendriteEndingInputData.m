@@ -18,8 +18,8 @@ function generateDendriteEndingInputData(param,stateFile,suffix)
     end
     % Directory with input / output data
     dataDir = fullfile(param.saveFolder, 'aggloState');
-    intermediateFile = fullfile(dataDir, sprintf('dendriteDirectionality%s.mat',suffix));
-    outFile = fullfile(dataDir, sprintf('dendriteEndingInputData%s.mat',suffix));
+    intermediateFile = fullfile(dataDir, sprintf('dendriteDirectionality_%s.mat',suffix));
+    outFile = fullfile(dataDir, sprintf('dendriteEndingInputData_%s.mat',suffix));
 
     % Load data
    [graph, segmentMeta, borderMeta, globalSegmentPCA] = ...
