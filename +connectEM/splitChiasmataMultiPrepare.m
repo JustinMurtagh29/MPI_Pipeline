@@ -1,22 +1,32 @@
-function [queries, taskIds, ff] = ...
-        splitChiasmataMultiPrepare(p, taskGenDir, taskGenId)
+function out = splitChiasmataMultiPrepare(p, taskGenDir, taskGenId)
     % Written by
     %   Kevin Boergens <kevin.boergens@brain.mpg.de>
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     
     % load results from query generation
-    queriesFile = sprintf('%s_data.mat', taskGenId);
-    queries = load(fullfile(taskGenDir, queriesFile));
-    queries = queries.queries;
+    dataFile = sprintf('%s_data.mat', taskGenId);
+    data = load(fullfile(taskGenDir, dataFile));
+    assert(size(data.queries, 1) == size(data.taskDef, 1));
     
     % load webKNOSSOS task IDs
     taskFile = sprintf('%s_flightTaskIDs.txt', taskGenId);
     taskIds = loadTaskIds(fullfile(taskGenDir, taskFile));
-    assert(size(queries, 1) == numel(taskIds));
+    assert(size(data.queries, 1) == numel(taskIds));
     
     % load flight path NMLs
     nmlDir = sprintf('%s_flightPaths/', taskGenId);
     ff = loadFlightPaths(p, fullfile(taskGenDir, nmlDir));
+    
+    out = struct;
+    out.gitInfo = Util.gitInfo();
+    
+    out.p = p;
+    out.taskGenDir = taskGenDir;
+    out.taskGenId = taskGenId;
+    out.queries = data.queries;
+    out.taskDef = data.taskDef;
+    out.taskIds = taskIds;
+    out.ff = ff;
 end
 
 function taskIds = loadTaskIds(taskFile)
