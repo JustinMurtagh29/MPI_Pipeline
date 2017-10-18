@@ -9,7 +9,7 @@ dataDir = fullfile( ...
     '20171009T193744-kmb-on-axons-6c');
 outputDir = fullfile(dataDir, 'requeries');
 data = load(fullfile( ...
-    dataDir, '20171018T104038_input-data.mat'));
+    dataDir, '20171018T205736_input-data.mat'));
 
 queries = table;
 queries.axonId = data.queries(:, 1);
