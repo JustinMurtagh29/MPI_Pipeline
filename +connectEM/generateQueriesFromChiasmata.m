@@ -95,8 +95,18 @@ function output = generateQueriesFromChiasmata( ...
     saveFile = sprintf('%s_data.mat', curDateStr);
     Util.saveStruct(fullfile(outputFolder, saveFile), out);
     
+    taskParam = struct;
+    taskParam.dataSet = '2012-09-28_ex145_07x2_ROI2017';
+    taskParam.taskTypeId = '56d6a7c6140000d81030701e';
+    taskParam.expDomain = 'queriesMHchiasma';
+    taskParam.expMinVal = 1;
+    taskParam.instances = 1;
+    taskParam.team = 'Connectomics department';
+    taskParam.project = 'queriesMHchiasma';
+    
     taskDefFile = sprintf('%s_flightTasks.txt', curDateStr);
-    writeTaskDefinition(taskDef, fullfile(outputFolder, taskDefFile));
+    connectEM.exportTaskDefinitions( ...
+        taskParam, taskDef, fullfile(outputFolder, taskDefFile));
 end
 
 function [phi, thetha, psi] = calculateEulerAngles(di, voxelSize)
@@ -110,24 +120,4 @@ function [phi, thetha, psi] = calculateEulerAngles(di, voxelSize)
     phi = round(eulerAngles(1));
     thetha = round(eulerAngles(2));
     psi = round(eulerAngles(3));
-end
-
-function writeTaskDefinition(taskDef, outFile)
-    fullTaskDef = taskDef;
-    fullTaskDef.dataSet(:) = {'2012-09-28_ex145_07x2_ROI2017'};
-    fullTaskDef.taskTypeId(:) = {'56d6a7c6140000d81030701e'};
-    fullTaskDef.expDomain(:) = {'queriesMHchiasma'};
-    fullTaskDef.expMinVal(:) = 1;
-    fullTaskDef.instances(:) = 1;
-    fullTaskDef.team(:) = {'Connectomics department'};
-    fullTaskDef.project(:) = {'queriesMHchiasma'};
-    
-    % reorder-columns
-    columnOrder = { ...
-        'dataSet', 'taskTypeId', 'expDomain', 'expMinVal', ...
-        'position', 'rotation', 'instances', 'team', 'bbox', 'project'};
-    fullTaskDef = fullTaskDef(:, columnOrder);
-    
-    % write CSV file
-    writetable(fullTaskDef, outFile, 'WriteVariableNames', false);
 end
