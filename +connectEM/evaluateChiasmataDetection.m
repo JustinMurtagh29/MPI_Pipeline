@@ -14,7 +14,7 @@ aggloFile = fullfile(rootDir, 'aggloState', [aggloState '.mat']);
 chiasmId = '20171017T044832';
 chiasmDir = '/tmpscratch/kboerg/chiasmata';
 % chiasmataX20171017T044832_0
-outputDir = '/tmpscratch/Marcel/chiasma';
+outputDir = '/tmpscratch/mbeining/chiasma';
 
 %% load parameter (for skeleton)
 param = fullfile(rootDir, 'allParameter.mat');

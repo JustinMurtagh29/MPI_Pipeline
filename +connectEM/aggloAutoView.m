@@ -92,7 +92,7 @@ switch show
         raster = [4,3];
         fig = figure('Units','centimeters','Position',[0 -2 23 30]);
         startN = 1;
-        % delete(sprintf('SomaAgglo_%s',dendFile))
+        % delete(sprintf('SomaAgglo_%s',aggloFile))
         for n = 1:numel(somaAgglos)
             if skelOutput
                 skel = connectEM.generateSkeletonFromAggloNew(agglos(dendSomaId(n)), {sprintf('SomaAgglo_%02d',n)} , outputFolder, max(dendriteSegIds),[],sprintf('SomaAgglo_%s_%02d.nml',aggloFile,n));
@@ -100,7 +100,7 @@ switch show
                 skel = Superagglos.toSkel(agglos(dendSomaId(n)));
             end
             %     theseDends = agglos(dendOfSoma(dendOfSoma(:,1)==n,2));
-            %     skel = connectEM.generateSkeletonFromAggloNew(theseDends, arrayfun(@(x) sprintf('SomaAgglo_%02d_%03d',n,x),1:numel(theseDends),'uni',0) , outputFolder, max(dendriteSegIds),[],sprintf('SomaAggloAll_%s_%02d.nml',dendFile,n));
+            %     skel = connectEM.generateSkeletonFromAggloNew(theseDends, arrayfun(@(x) sprintf('SomaAgglo_%02d_%03d',n,x),1:numel(theseDends),'uni',0) , outputFolder, max(dendriteSegIds),[],sprintf('SomaAggloAll_%s_%02d.nml',aggloFile,n));
             if ~ishandle(fig)
                 fig = figure('Units','centimeters','Position',[0 -2 23 30]);
                 startN = n;
@@ -115,7 +115,7 @@ switch show
             if rem(n,prod(raster))==0 || n == numel(somaAgglos)
                 pause(0.5)
                 drawnow
-                %         export_fig(sprintf('SomaAgglo_%s',dendFile),'-pdf','-append')
+                %         export_fig(sprintf('SomaAgglo_%s',aggloFile),'-pdf','-append')
                 tprint(sprintf('SomaAgglo_%s_%02d-%02d',aggloFile,startN,n),'-pdf-R',[],'-p')
                 pause(0.5)
                 close(fig);
@@ -158,8 +158,7 @@ switch show
             if rem(n,prod(raster))==0 || n == numel(randDends)
                 drawnow
                 pause(0.5)
-                %         export_fig(sprintf('RandDend_%s',dendFile),'-pdf','-append')
-                tprint(sprintf('RandDend_%s_%02d-%02d',dendFile,startN,n),'-pdf-R',[],'-p')
+                tprint(sprintf('RandDend_%s_%02d-%02d',aggloFile,startN,n),'-pdf-R',[],'-p')
                 pause(1)
                 close(fig);
             end
