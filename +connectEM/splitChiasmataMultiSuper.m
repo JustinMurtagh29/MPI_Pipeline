@@ -2,7 +2,6 @@
 %   Alessandro Motta <alessandro.motta@brain.mpg.de>
 
 clear;
-outputDir = '/home/amotta/Desktop';
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 load(fullfile(rootDir, 'allParameter.mat'), 'p');
 
@@ -15,6 +14,7 @@ axons = oldAxons.axons(bigAxonIds);
 curDir = fullfile( ...
     p.saveFolder, 'chiasmataSplitting', ...
     '20171009T193744-kmb-on-axons-6c');
+outputDir = fullfile(curDir, 'outputs');
 curData = load(fullfile( ...
     curDir, '20171018T104038_input-data.mat'));
 
