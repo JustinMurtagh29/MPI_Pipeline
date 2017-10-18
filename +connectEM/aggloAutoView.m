@@ -103,7 +103,7 @@ switch show
                 if ~isempty(aggloEndings)
                     idxComments = ismember(agglos(dendSomaId(n)).nodes(:,4),aggloEndings{dendSomaId(n)});
                     if any(idxComments)
-                        agglos(dendSomaId(n)).comments = cell(size(agglos(dendSomaId(n)).nodes,1),1);
+                        agglos(dendSomaId(n)).comments = repmat({''},size(agglos(dendSomaId(n)).nodes,1),1);
                         agglos(dendSomaId(n)).comments(idxComments) = repmat({'ending'},sum(idxComments),1);
                     end
                 end
@@ -128,7 +128,7 @@ switch show
                 pause(0.5)
                 drawnow
                 %         export_fig(sprintf('SomaAgglo_%s',aggloFile),'-pdf','-append')
-                print(sprintf('SomaAgglo_%s_%02d-%02d',aggloFile,startN,n),'-pdf')
+                print(sprintf('SomaAgglo_%s_%02d-%02d',aggloFile,startN,n),'-dpdf')
                 pause(0.5)
                 close(fig);
             end
@@ -170,7 +170,7 @@ switch show
             if (rem(n,prod(raster))==0 || n == numel(randDends))
                 drawnow
                 pause(0.5)
-                print(sprintf('RandDend_%s_%02d-%02d',aggloFile,startN,n),'-pdf')
+                print(sprintf('RandDend_%s_%02d-%02d',aggloFile,startN,n),'-dpdf')
                 pause(1)
                 close(fig);
             end

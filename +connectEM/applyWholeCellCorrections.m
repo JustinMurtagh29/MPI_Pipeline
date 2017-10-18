@@ -40,14 +40,11 @@ for f = 1:numel(files)
     % get soma index for current skeleton
     overlapsSoma = cellfun(@(y) sum(ismember(y, cell2mat(cellfun(@(x) x(:,1:3),skel.nodes,'uni',0)),'rows')),somaAgglosCoord);
     [~,ind] = max(overlapsSoma);  
-%     figure
-%     subplot(1,2,1)
-%     skel.plot
-%     axis equal
     
     nodesToDelete = find(~ismember(agglos(aggloSomaId(ind)).nodes(:,1:3),cell2mat(cellfun(@(x) x(:,1:3),skel.nodes,'uni',0)),'rows'));  % find node ind which has to be deleted by checking which one is missing in the loaded skeleton compared to the skeleton before modification
-%     nodesToAdd = find(~ismember(cell2mat(cellfun(@(x) x(:,1:3),skel.nodes,'uni',0)),agglos(aggloSomaId(ind)).nodes(:,1:3),'rows'));  % find node ind which has to be deleted by checking which one is missing in the loaded skeleton compared to the skeleton before modification
+    nodesToAdd = find(~ismember(cell2mat(cellfun(@(x) x(:,1:3),skel.nodes,'uni',0)),agglos(aggloSomaId(ind)).nodes(:,1:3),'rows'));  % find node ind which has to be deleted by checking which one is missing in the loaded skeleton compared to the skeleton before modification
     
+    % correct mergers
     if ~isempty(nodesToDelete)
         splitAgglo = Superagglos.removeSegIdsFromAgglos(agglos(aggloSomaId(ind)),agglos(aggloSomaId(ind)).nodes(nodesToDelete,4)); % get the splitted agglos when node is deleted
         overlapped = 0;
@@ -82,17 +79,24 @@ for f = 1:numel(files)
             warning('Did not find any soma overlapping the split agglos (that should belong to soma %d) by more than 20%!',ind)
         end
     end
-%     if ~isempty(nodesToAdd)
-%        skelCoords = cell2mat(cellfun(@(x) x(:,1:3),skel.nodes,'uni',0));
-%        skelSegIds = Seg.Global.getSegIds(p,skelCoords(nodesToAdd,:));  % extract the seg Ids of these nodes that were added
-%        indToAdd = setdiff(aggloLUT(setdiff(skelSegIds,0)),0);
-%        agglos(aggloSomaId(ind)) = Superagglos.applyEquivalences({1:numel(indToAdd)+1},agglos([aggloSomaId(ind),indToAdd]));
-%        skel2 = Superagglos.toSkel(agglos(aggloSomaId(ind)));
-%        subplot(1,2,2);hold all;skel2.plot;axis equal
-%        aggloLUT(cell2mat(arrayfun(@(x) x.nodes(:,4),agglos(indToAdd),'uni',0))) = aggloSomaId(ind); % update LUT
-%        remove agglo which has been added and update LUT
-%        aggloLUT = connectEM.changem(aggloLUT,(0:numel(agglos))-cumsum(accumarray(indToAdd,1,[numel(agglos)+1,1]))',0:numel(agglos));
-%        agglos(indToAdd) = [];
-%     end
     
+    % correct splits
+    if ~isempty(nodesToAdd)
+       
+       skelCoords = cell2mat(cellfun(@(x) x(:,1:3),skel.nodes,'uni',0));
+       skelNumNodes = cellfun(@(x) size(x,1),skel.nodes);
+       skelEdges = cell2mat(arrayfun(@(x) skel.edges{x}+sum(skelNumNodes(1:x-1)),1:numel(skel.nodes),'uni',0));
+       endingSkelEdges = skelEdges(any(ismember(skelEdges,nodesToAdd),2),:);
+       endingClusters = Graph.findConnectedComponents(endingSkelEdges);
+       
+       skelSegIds = Seg.Global.getSegIds(p,skelCoords(nodesToAdd,:));  % extract the seg Ids of these nodes that were added
+       indToAdd = setdiff(aggloLUT(setdiff(skelSegIds,0)),0); % get the index 
+       agglos(aggloSomaId(ind)) = Superagglos.applyEquivalences({1:numel(indToAdd)+1},agglos([aggloSomaId(ind),indToAdd]));
+       skel2 = Superagglos.toSkel(agglos(aggloSomaId(ind)));
+       subplot(1,2,2);hold all;skel2.plot;axis equal
+       aggloLUT(cell2mat(arrayfun(@(x) x.nodes(:,4),agglos(indToAdd),'uni',0))) = aggloSomaId(ind); % update LUT
+       remove agglo which has been added and update LUT
+       aggloLUT = connectEM.changem(aggloLUT,(0:numel(agglos))-cumsum(accumarray(indToAdd,1,[numel(agglos)+1,1]))',0:numel(agglos));
+       agglos(indToAdd) = [];
+    end
 end
