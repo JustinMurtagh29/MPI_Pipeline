@@ -7,14 +7,14 @@
 %   Alessandro Motta <alessandro.motta@brain.mpg.de>
 
 % configuration
-rootDir = 'G:/gaba/u/mberning/results/pipeline/20170217_ROI';
+rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 aggloState = 'dendrites_03_v2_splitmerged';
 aggloFile = fullfile(rootDir, 'aggloState', [aggloState '.mat']);
 
-chiasmId = '20171017T043945';
-chiasmDir = 'G:/tmpscratch/kboerg/chiasmata';
+chiasmId = '20171017T044832';
+chiasmDir = '/tmpscratch/kboerg/chiasmata';
 % chiasmataX20171017T044832_0
-outputDir = 'D:/Marcel/Code/Marcel/chiasma2';
+outputDir = '/tmpscratch/Marcel/chiasma';
 
 %% load parameter (for skeleton)
 param = fullfile(rootDir, 'allParameter.mat');
@@ -49,7 +49,7 @@ toc;
 
 %% start couting...
 clearvars -except param outputDir chiasmata chiasmId aggloState;
-
+mkdir(outputDir);
 save(fullfile(outputDir,sprintf('chiasmata_%s_%s.mat',chiasmId,aggloState)))
 
 % count number of nodes
@@ -89,8 +89,7 @@ temp.nrExits = (4:max(chiasmaNrExits))';
 temp.nrChiasmata = arrayfun(@(c) sum(chiasmaNrExits == c), temp.nrExits);
 fprintf('\n'); disp(temp);
 
-%% write out largest chiasmata
-mkdir(outputDir);
+%% write out largest chiasmata and random chiasmata
 [descVals, descIds] = sort(chiasmaSizes, 'descend');
 
 % discard chiasmata with more than 500 nodes
