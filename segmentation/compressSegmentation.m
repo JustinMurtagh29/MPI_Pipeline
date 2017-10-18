@@ -1,5 +1,5 @@
-function compressSegmentation(p)
-    % compressSegmentation(p)
+function compressSegmentation(seg)
+    % compressSegmentation(seg)
     %   Compresses a segmentation, if possible.
     %
     % Written by
@@ -10,11 +10,11 @@ function compressSegmentation(p)
     taskCount = 50;
     
     % only WKW datasets can be compressed
-    if ~isfield(p.seg, 'backend'); return; end
-    if p.seg.backend ~= 'wkwrap'; return; end
+    if ~isfield(seg, 'backend'); return; end
+    if seg.backend ~= 'wkwrap'; return; end
     
     % find input root
-    inRoot = buildInRoot(p.seg);
+    inRoot = buildInRoot(seg);
     bakRoot = strcat(inRoot, '-uncompressed');
     outRoot = strcat(inRoot, '-wip');
     
