@@ -83,20 +83,35 @@ for f = 1:numel(files)
     % correct splits
     if ~isempty(nodesToAdd)
        
-       skelCoords = cell2mat(cellfun(@(x) x(:,1:3),skel.nodes,'uni',0));
+       skelCoords = cell2mat(cellfun(@(x) x(:,1:3),skel.nodes,'uni',0));  % putting all skel nodes together
        skelNumNodes = cellfun(@(x) size(x,1),skel.nodes);
-       skelEdges = cell2mat(arrayfun(@(x) skel.edges{x}+sum(skelNumNodes(1:x-1)),1:numel(skel.nodes),'uni',0));
-       endingSkelEdges = skelEdges(any(ismember(skelEdges,nodesToAdd),2),:);
-       endingClusters = Graph.findConnectedComponents(endingSkelEdges);
-       
-       skelSegIds = Seg.Global.getSegIds(p,skelCoords(nodesToAdd,:));  % extract the seg Ids of these nodes that were added
-       indToAdd = setdiff(aggloLUT(setdiff(skelSegIds,0)),0); % get the index 
-       agglos(aggloSomaId(ind)) = Superagglos.applyEquivalences({1:numel(indToAdd)+1},agglos([aggloSomaId(ind),indToAdd]));
-       skel2 = Superagglos.toSkel(agglos(aggloSomaId(ind)));
-       subplot(1,2,2);hold all;skel2.plot;axis equal
-       aggloLUT(cell2mat(arrayfun(@(x) x.nodes(:,4),agglos(indToAdd),'uni',0))) = aggloSomaId(ind); % update LUT
-       remove agglo which has been added and update LUT
-       aggloLUT = connectEM.changem(aggloLUT,(0:numel(agglos))-cumsum(accumarray(indToAdd,1,[numel(agglos)+1,1]))',0:numel(agglos));
-       agglos(indToAdd) = [];
+       skelEdges = cell2mat(arrayfun(@(x) skel.edges{x}+sum(skelNumNodes(1:x-1)),(1:numel(skel.nodes))','uni',0));% putting all edges together (inceasing index for each skel
+       endingSkelEdges = skelEdges(any(ismember(skelEdges,nodesToAdd),2),:);   %edges of skeletons including the last node of the original skeleton
+       endingClusters = Graph.findConnectedComponents(endingSkelEdges,1,1);   % cluster each extended ending
+       [~,endingSkelEdgesClusters] = cellfun(@(x) ismember(endingSkelEdges,x),endingClusters,'uni',0);  % get the skel edges for each ending
+       for n = 1:numel(endingClusters)
+           skelSegIds = Seg.Global.getSegIds(p,skelCoords(endingClusters{n},:));  % extract the seg Ids of these nodes that were added
+           
+           segIdEdges = skelSegIds(endingSkelEdgesClusters{n});  % get segId edge vector of skeleton
+           
+           nodesToDelete = find(~ismember(skelSegIds,cell2mat(arrayfun(@(x) x.nodes(:,4),agglos([aggloSomaId(ind),indToAdd]),'uni',0))));
+           for d = 1:numel(nodesToDelete)
+               %find neighbors
+               neighborIdx = setdiff(endingSkelEdgesClusters{n}(any(endingSkelEdgesClusters{n} == nodesToDelete(d),2),:),nodesToDelete(d));
+               endingSkelEdgesClusters{n} = unique(cat(1,endingSkelEdgesClusters{n}(~any(endingSkelEdgesClusters{n}==nodesToDelete(d),2),:),combnk(neighborIdx,2)),'rows'); % add edges bridging the deleted node 
+               endingClusters{n}(nodesToDelete(d)) = [];
+               endingSkelEdgesClusters{n}(endingSkelEdgesClusters{n}>nodesToDelete(d)) = endingSkelEdgesClusters{n}(endingSkelEdgesClusters{n}>nodesToDelete(d)) - 1;
+           end
+           indToAdd = setdiff(aggloLUT(setdiff(skelSegIds,0)),[0,aggloSomaId(ind)]); % get the index of the superagglo(s) to add
+                      
+           agglos(aggloSomaId(ind)) = Superagglos.applyEquivalences({1:numel(indToAdd)+1},agglos([aggloSomaId(ind),indToAdd]),segIdEdges);
+           
+%            skel2 = Superagglos.toSkel(agglos(aggloSomaId(ind)));
+%            subplot(1,2,2);hold all;skel2.plot;axis equal
+           aggloLUT(cell2mat(arrayfun(@(x) x.nodes(:,4),agglos(indToAdd),'uni',0))) = aggloSomaId(ind); % update LUT
+           remove agglo which has been added and update LUT
+           aggloLUT = connectEM.changem(aggloLUT,(0:numel(agglos))-cumsum(accumarray(indToAdd,1,[numel(agglos)+1,1]))',0:numel(agglos));
+           agglos(indToAdd) = [];
+       end
     end
 end
