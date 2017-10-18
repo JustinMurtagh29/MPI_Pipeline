@@ -111,7 +111,7 @@ for f = 1:numel(files)
 %            subplot(1,2,2);hold all;skel2.plot;axis equal
            aggloLUT(cell2mat(arrayfun(@(x) x.nodes(:,4),agglos(indToAdd),'uni',0))) = aggloSomaId(ind); % update LUT
            % remove agglo which has been added and update LUT
-           aggloLUT = connectEM.changem(aggloLUT,(0:numel(agglos))-cumsum(accumarray(indToAdd,1,[numel(agglos)+1,1]))',0:numel(agglos));
+           aggloLUT = connectEM.changem(aggloLUT,(0:numel(agglos))-cumsum(accumarray(indToAdd',1,[numel(agglos)+1,1]))',0:numel(agglos));
            agglos(indToAdd) = [];
        end
     end
