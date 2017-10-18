@@ -93,6 +93,10 @@ for f = 1:numel(files)
            skelSegIds = Seg.Global.getSegIds(p,skelCoords(endingClusters{n},:));  % extract the seg Ids of these nodes that were added
            
            indToAdd = setdiff(aggloLUT(setdiff(skelSegIds,0)),[0,aggloSomaId(ind)]); % get the index of the superagglo(s) to add
+           if isempty(indToAdd)
+               warning('Skel %s contained an ending which could not be processed, because the tracing did not reach a segId not belonging to the whole cell agglo')
+               continue
+           end
            nodesToDelete = sort(find(~ismember(skelSegIds,cell2mat(arrayfun(@(x) x.nodes(:,4),agglos([aggloSomaId(ind),indToAdd]),'uni',0)))),'descend');
            skelSegIds(nodesToDelete) = [];
            for d = 1:numel(nodesToDelete)
