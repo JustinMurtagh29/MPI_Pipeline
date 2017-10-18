@@ -128,7 +128,7 @@ switch show
                 pause(0.5)
                 drawnow
                 %         export_fig(sprintf('SomaAgglo_%s',aggloFile),'-pdf','-append')
-                tprint(sprintf('SomaAgglo_%s_%02d-%02d',aggloFile,startN,n),'-pdf-R',[],'-p')
+                print(sprintf('SomaAgglo_%s_%02d-%02d',aggloFile,startN,n),'-pdf')
                 pause(0.5)
                 close(fig);
             end
