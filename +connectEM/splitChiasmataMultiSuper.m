@@ -33,7 +33,7 @@ clear curDir curData;
 fprintf('# handed out queries: %d\n', size(queries, 1));
 fprintf('# queries answered: %d\n', numel(flights.segIds));
 
-%%
+%% cleaning up input data
 % Sort queries to make processing easier
 queries = sortrows(queries, {'axonId', 'chiasmaId', 'exitId'});
 flights = structfun(@(x) x(:), flights, 'UniformOutput', false);
@@ -83,7 +83,7 @@ fprintf('# answered chiasmata left: %d\n', numel(uniChiasmaDoneIds));
 % Clean-up
 queries(:, {'flightId', 'uniChiasmaId'}) = [];
 
-%%
+%% process axons
 % Group queries by axons
 queries.execute = false(size(queries, 1), 1);
 queries.row = reshape(1:size(queries, 1), [], 1);
@@ -116,6 +116,7 @@ for curAxonIdx = 1:numel(uniAxonIds)
 end
 toc
 
+summaries = cat(1, summaries{:});
 queries.uniAxonId = [];
 
 %% evaluate flight path attachment
@@ -132,52 +133,18 @@ fprintf('\n');
 fprintf('Flight path evaluation:\n\n');
 disp(temp);
 
-%% calculate partitioning
-% TODO(amotta): Use info from summary
-[~, ~, queries.uniChiasmaId] = unique( ...
-    queries(:, {'axonId', 'chiasmaId'}), 'rows');
-chiasmaCount = max(queries.uniChiasmaId);
-
-chiasma = table;
-chiasma.partition = cell(chiasmaCount, 1);
-chiasma.valid = false(chiasmaCount, 1);
-
-for curIdx = 1:chiasmaCount
-    curQueries = queries(queries.uniChiasmaId == curIdx, :);
-    curNrExits = size(curQueries, 1);
-    
-    curEdgesAll = curQueries.overlaps;
-    curEdgesAll = cat(2, curEdgesAll{:})';
-     
-    curEdges = sort(curEdgesAll, 2);
-    curEdges(~all(curEdges, 2), :) = [];
-    curEdges = unique(curEdges, 'rows');
-    curEdges = reshape(curEdges, [], 2);
-    
-    % Find parition
-    curAdj = sparse( ...
-        curEdges(:, 2), curEdges(:, 1), ...
-        true, curNrExits, curNrExits);
-    
-   [~, curLUT] = graphconncomp(curAdj, 'Directed', false);
-    curLUT = reshape(curLUT, [], 1);
-   
-    % Build partition
-    curPartition = accumarray(curLUT, 1);
-    curPartition = sort(curPartition, 'descend');
-    
-    % For each component with at least two elements, there exists an edge.
-    % Hence, there is no excuse of the flight paths involved in these
-    % components to be dangling.
-    curIsValid = ~any( ...
-        curEdgesAll(:, 2) == 0 & ismember( ...
-        curEdgesAll(:, 1), curEdgesAll(:, 2)));
-    
-    chiasma.partition{curIdx} = curPartition;
-    chiasma.valid(curIdx) = curIsValid;
-end
-
 %% evaluate partitions
+chiasma = arrayfun(@(s) ...
+    cellfun(@(t) { ...
+        t.partition(:), t.partitionIsValid}, ...
+        s.tracings, 'UniformOutput', false), ...
+    summaries, 'UniformOutput', false);
+chiasma = cat(1, chiasma{:});
+chiasma = cat(1, chiasma{:});
+
+chiasma = cell2table( ...
+    chiasma, 'VariableNames', {'partition', 'valid'});
+
 makePartitionStr = @(p) strjoin( ...
     arrayfun(@num2str, p(:)', 'Uni', false), '-');
 chiasmaPartitionStr = cellfun( ...
@@ -202,7 +169,7 @@ out.p = p;
 out.oldAxons = oldAxons;
 out.gitInfo = Util.gitInfo();
 
-out.summary = cat(1, summaries{:});
+out.summary = summaries;
 out.summaryIds = bigAxonIds(uniAxonIds);
 
 out.axons = cat(1, axonsSplit{:});
@@ -216,6 +183,6 @@ out.parentIds = cat(1, out.parentIds, otherAxons);
 % build `indBigAxons` mask
 out.indBigAxons = oldAxons.indBigAxons(out.parentIds);
 
-outFile = sprintf('%s-results.mat', datestr(now, 30));
+outFile = sprintf('%s_results.mat', datestr(now, 30));
 outFile = fullfile(outputDir, outFile);
 Util.saveStruct(outFile, out);
