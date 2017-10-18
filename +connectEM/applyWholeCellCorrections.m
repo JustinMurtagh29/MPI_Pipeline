@@ -92,17 +92,18 @@ for f = 1:numel(files)
        for n = 1:numel(endingClusters)
            skelSegIds = Seg.Global.getSegIds(p,skelCoords(endingClusters{n},:));  % extract the seg Ids of these nodes that were added
            
-           segIdEdges = skelSegIds(endingSkelEdgesClusters{n});  % get segId edge vector of skeleton
-           
+           indToAdd = setdiff(aggloLUT(setdiff(skelSegIds,0)),[0,aggloSomaId(ind)]); % get the index of the superagglo(s) to add
            nodesToDelete = find(~ismember(skelSegIds,cell2mat(arrayfun(@(x) x.nodes(:,4),agglos([aggloSomaId(ind),indToAdd]),'uni',0))));
+           skelSegIds(nodesToDelete) = [];
            for d = 1:numel(nodesToDelete)
                %find neighbors
                neighborIdx = setdiff(endingSkelEdgesClusters{n}(any(endingSkelEdgesClusters{n} == nodesToDelete(d),2),:),nodesToDelete(d));
                endingSkelEdgesClusters{n} = unique(cat(1,endingSkelEdgesClusters{n}(~any(endingSkelEdgesClusters{n}==nodesToDelete(d),2),:),combnk(neighborIdx,2)),'rows'); % add edges bridging the deleted node 
+               % delete node and reduce edge indices above this node idx by 1
                endingClusters{n}(nodesToDelete(d)) = [];
                endingSkelEdgesClusters{n}(endingSkelEdgesClusters{n}>nodesToDelete(d)) = endingSkelEdgesClusters{n}(endingSkelEdgesClusters{n}>nodesToDelete(d)) - 1;
            end
-           indToAdd = setdiff(aggloLUT(setdiff(skelSegIds,0)),[0,aggloSomaId(ind)]); % get the index of the superagglo(s) to add
+           segIdEdges = skelSegIds(endingSkelEdgesClusters{n});  % get segId edge vector of skeleton
                       
            agglos(aggloSomaId(ind)) = Superagglos.applyEquivalences({1:numel(indToAdd)+1},agglos([aggloSomaId(ind),indToAdd]),segIdEdges);
            
