@@ -1,4 +1,4 @@
-function [agglos,aggloLUT] = applyWholeCellCorrections(agglos,somaAgglos,p,folder)
+function [agglos,aggloLUT] = applyWholeCellCorrections(agglos,somaAgglos,p,folder,onlySplit)
 % this function applied the changes (merges/splits) made in the nml files located in
 % "folder" to all whole cell superagglos
 %
@@ -8,6 +8,7 @@ function [agglos,aggloLUT] = applyWholeCellCorrections(agglos,somaAgglos,p,folde
 %              each soma
 % p            parameter structure from the pipeline
 % folder       path to the folder containing the nml files with the changes
+% onlySplit    boolean: only apply splits, not merges (DEFAULT 0)
 %
 % OUTPUT
 % agglos       modified agglos in the superagglo format
@@ -16,6 +17,9 @@ function [agglos,aggloLUT] = applyWholeCellCorrections(agglos,somaAgglos,p,folde
 %
 % by Marcel Beining <marcel.beining@brain.mpg.de>
 
+if ~exist('onlySplit','var') || isempty(onlySplit)
+    onlySplit = 0;
+end
 segmentMeta = load(fullfile(p.saveFolder, 'segmentMeta.mat'),'point');
 
 aggloSegIds = cell2mat(arrayfun(@(x) x.nodes(:,4),agglos,'uni',0));
@@ -46,8 +50,11 @@ for f = 1:numel(files)
     end
     usedCells(ind) = f;
     nodesToDelete = find(~ismember(agglos(aggloSomaId(ind)).nodes(:,1:3),cell2mat(cellfun(@(x) x(:,1:3),skel.nodes,'uni',0)),'rows'));  % find node ind which has to be deleted by checking which one is missing in the loaded skeleton compared to the skeleton before modification
-    nodesToAdd = find(~ismember(cell2mat(cellfun(@(x) x(:,1:3),skel.nodes,'uni',0)),agglos(aggloSomaId(ind)).nodes(:,1:3),'rows'));  % find node ind which has to be deleted by checking which one is missing in the loaded skeleton compared to the skeleton before modification
-    
+    if ~onlySplit
+        nodesToAdd = find(~ismember(cell2mat(cellfun(@(x) x(:,1:3),skel.nodes,'uni',0)),agglos(aggloSomaId(ind)).nodes(:,1:3),'rows'));  % find node ind which has to be deleted by checking which one is missing in the loaded skeleton compared to the skeleton before modification
+    else
+        nodesToAdd = [];
+    end
     % correct mergers
     if ~isempty(nodesToDelete)
         splitAgglo = Superagglos.removeSegIdsFromAgglos(agglos(aggloSomaId(ind)),agglos(aggloSomaId(ind)).nodes(nodesToDelete,4)); % get the splitted agglos when node is deleted
@@ -97,13 +104,19 @@ for f = 1:numel(files)
 %        skelSegIds = Seg.Global.getSegIds(p,skelCoords(nodesToAdd,:));  % extract the seg Ids of these nodes that were added
        % put this in later
        for n = 1:numel(endingClusters)
+           if ~any(ismember(endingSkelEdgesClusters{n}(:),agglos(aggloSomaId(ind)).nodes(:,4)))
+               warning('Skel %s contained an ending which could not be processed, because it seemed to be part of a merged agglo which had been split away now.',skel.filename)
+               continue
+           end
            skelSegIds = Seg.Global.getSegIds(p,skelCoords(endingClusters{n},:));  % extract the seg Ids of these nodes that were added
            
            indToAdd = setdiff(aggloLUT(setdiff(skelSegIds,0)),[0,aggloSomaId(ind)]); % get the index of the superagglo(s) to add
            if isempty(indToAdd)
-               warning('Skel %s contained an ending which could not be processed, because the tracing did not reach a segId not belonging to the whole cell agglo',skel.filename)
+               warning('Skel %s contained an ending which could not be processed, because the tracing did not reach a segId not already belonging to the whole cell agglo',skel.filename)
                continue
            end
+           % find nodes at segIds that are not part of the whole cell or
+           % the superagglos to add and delete those
            nodesToDelete = sort(find(~ismember(skelSegIds,cell2mat(arrayfun(@(x) x.nodes(:,4),agglos([aggloSomaId(ind),indToAdd]),'uni',0)))),'descend');
            skelSegIds(nodesToDelete) = [];
            for d = 1:numel(nodesToDelete)

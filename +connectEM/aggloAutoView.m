@@ -45,7 +45,7 @@ smallbbox = bsxfun(@plus,[zeros(3,1), smallbbox'],offset'+2000);
 load(fullfile(aggloFolder,'randDendIds50.mat'),'segIdsForRandDend')
 
 % load somata including merged somata
-somaAgglos = connectEM.getCenterSomaAgglos;
+somaAgglos = connectEM.getCenterSomaAgglos(fullfile(aggloFolder,'somas_with_merged_somas.mat'));
 somaSegIds = cell2mat(somaAgglos);
 % remove duplicate segIds
 [~,ic] = unique(somaSegIds);

@@ -1,6 +1,6 @@
-function somas = getCenterSomaAgglos
+function somas = getCenterSomaAgglos(filename)
 
-load('/gaba/u/mberning/results/pipeline/20170217_ROI/aggloState/somas_with_merged_somas.mat') 
+load(filename) 
 somaCoordinates =   bsxfun(@times,[1392        2835        2779;
         3638        6240        1491;
         3044        1628         571;
