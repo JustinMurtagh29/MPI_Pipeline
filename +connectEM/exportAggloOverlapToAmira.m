@@ -1,32 +1,20 @@
-function exportAggloOverlapToAmira(param, aggloOverlaps, outDir, varargin)
-    % exportAggloOverlapToAmira(param, aggloOverlaps, outDir)
-    %   Exports all agglomerates which with a given ground truth skeleton
-    %   to PLY files for Amira.
-    %
-    % aggloOverlaps
-    %   Nested cell arrays where aggloOverlaps{cellIdx}{aggloIdx} contains
-    %   the segment IDs in agglomerate `aggloIdx` which overlaps with cell
-    %   `cellIdx`.
-    %
-    % outDir
-    %   Output directory. One PLY file per cell in `aggloOverlaps` will be
-    %   written. This means that one PLY file might contain multiple
-    %   meshes.
+function exportAggloOverlapToAmira( ...
+        param, agglos, skelToAgglos, outDir, varargin)
+    % exportAggloOverlapToAmira(param, agglos, skelToAgglos, outDir, ...)
+    % Exports all agglomerates which with a given ground truth skeleton to
+    % PLY files for Amira.
     %
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     
-    assert(iscell(aggloOverlaps));
-    assert(all(@iscell, aggloOverlaps));
-    
     % calculate all isosurfaces in parallel
     cellIds = repelem( ...
-        (1:numel(aggloOverlaps))', ...
-        cellfun(@numel, aggloOverlaps));
-    agglos = cat(1, aggloOverlaps{:});
+        (1:numel(skelToAgglos))', ...
+        cellfun(@numel, skelToAgglos));
+    allAgglos = agglos(cell2mat(skelToAgglos));
     
     isoSurfs = buildIsoSurfaces( ...
-        param, agglos, outDir, varargin{:});
+        param, allAgglos, outDir, varargin{:});
     
     % write PLY files
     for curCellIdx = 1:max(cellIds)
