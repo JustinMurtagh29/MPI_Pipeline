@@ -15,7 +15,7 @@ function generateDendriteEndingsWholeCells(param,suffix)
     dataDir = fullfile(param.saveFolder, 'aggloState');
 
     % load directionality information
-    endingInput = fullfile(dataDir, sprintf('dendriteEndingInputData%s.mat',suffix));
+    endingInput = fullfile(dataDir, sprintf('dendriteEndingInputData_%s.mat',suffix));
     endingInput = load(endingInput, 'dendriteIds', 'directionality');
     directionality = endingInput.directionality;
     dendriteIds = endingInput.dendriteIds;
@@ -63,7 +63,7 @@ function generateDendriteEndingsWholeCells(param,suffix)
 
     % save all results for convenience in query generation
     gitInfo = Util.gitInfo();
-    save(fullfile(dataDir, sprintf('dendriteEndingsAllData%s.mat',suffix)));
+    save(fullfile(dataDir, sprintf('dendriteEndingsAllData_%s.mat',suffix)));
 
     % save result
     out = struct;
@@ -74,7 +74,7 @@ function generateDendriteEndingsWholeCells(param,suffix)
     out.borderClusters = borderClusters;
     out.gitInfo = Util.gitInfo();
 
-    Util.saveStruct(fullfile(dataDir, sprintf('dendriteEndings%s.mat',suffix)), out);
+    Util.saveStruct(fullfile(dataDir, sprintf('dendriteEndings_%s.mat',suffix)), out);
 end
 
 function clusterIds = clusterBorders(param, options, borderCoM)
