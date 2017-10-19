@@ -7,14 +7,14 @@ function getDendriteQueryOverlapB(param,state)
     dataDir = fullfile(param.saveFolder, 'aggloState');
     
     % State of query generation
-    [~, suffixFlightPaths, suffixOverlaps] = connectEM.setDendriteQueryState(state);    
+    [~, suffixFlightPaths, suffixDendrites] = connectEM.setDendriteQueryState(state);    
 
     % Load flight paths
     m = load(fullfile(dataDir, strcat('dendriteFlightPaths',suffixFlightPaths,'.mat')), 'ff');
     ff = m.ff;
 
     % Load axon agglomerates
-    m = load(fullfile(dataDir, sprintf('dendrites_%s.mat',suffix)));
+    m = load(fullfile(dataDir, sprintf('dendrites_%s.mat',suffixDendrites)));
     dendrites = m.dendrites(m.indBigDends);
     dendrites = arrayfun(@Agglo.fromSuperAgglo, dendrites, 'UniformOutput', false);
     clear m;
