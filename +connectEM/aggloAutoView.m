@@ -45,9 +45,7 @@ smallbbox = bsxfun(@plus,[zeros(3,1), smallbbox'],offset'+2000);
 load(fullfile(aggloFolder,'randDendIds50.mat'),'segIdsForRandDend')
 
 % load somata including merged somata
-somaAgglos = load(fullfile(aggloFolder,'center_somas.mat'));
-somaAgglos = somaAgglos.result(:,2);
-somaAgglos = somaAgglos(~cellfun(@isempty,somaAgglos)); % remove not found somata
+somaAgglos = connectEM.getCenterSomaAgglos;
 somaSegIds = cell2mat(somaAgglos);
 % remove duplicate segIds
 [~,ic] = unique(somaSegIds);
@@ -73,7 +71,7 @@ switch show
         dendOfSoma = unique([somaLUT(somaSegIds(ismem))',aggloLUT(aggloSegIds(ind(ismem)))'],'rows');
         
         % get each dend id which contains most of the seg ids of each soma
-        dendSomaId = accumarray(somaLUT(somaSegIds(ismem))',aggloLUT(aggloSegIds(ind(ismem)))',[],@mode);
+        aggloSomaId = accumarray(somaLUT(somaSegIds(ismem))',aggloLUT(aggloSegIds(ind(ismem)))',[],@mode);
         
         
         % check if dendrite overlaps with more than one soma!
@@ -101,15 +99,15 @@ switch show
         for n = 1:numel(somaAgglos)
             if skelOutput
                 if ~isempty(aggloEndings)
-                    idxComments = ismember(agglos(dendSomaId(n)).nodes(:,4),aggloEndings{dendSomaId(n)});
+                    idxComments = ismember(agglos(aggloSomaId(n)).nodes(:,4),aggloEndings{aggloSomaId(n)});
                     if any(idxComments)
-                        agglos(dendSomaId(n)).comments = repmat({''},size(agglos(dendSomaId(n)).nodes,1),1);
-                        agglos(dendSomaId(n)).comments(idxComments) = repmat({'ending'},sum(idxComments),1);
+                        agglos(aggloSomaId(n)).comments = repmat({''},size(agglos(aggloSomaId(n)).nodes,1),1);
+                        agglos(aggloSomaId(n)).comments(idxComments) = repmat({'ending'},sum(idxComments),1);
                     end
                 end
-                skel = connectEM.generateSkeletonFromAggloNew(agglos(dendSomaId(n)), {sprintf('SomaAgglo_%02d',n)} , outputFolder, max(aggloSegIds),[],sprintf('SomaAgglo_%s_%02d.nml',aggloFile,n));
+                skel = connectEM.generateSkeletonFromAggloNew(agglos(aggloSomaId(n)), {sprintf('SomaAgglo_%02d',n)} , outputFolder, max(aggloSegIds),[],sprintf('SomaAgglo_%s_%02d.nml',aggloFile,n));
             else
-                skel = Superagglos.toSkel(agglos(dendSomaId(n)));
+                skel = Superagglos.toSkel(agglos(aggloSomaId(n)));
             end
             %     theseDends = agglos(dendOfSoma(dendOfSoma(:,1)==n,2));
             %     skel = connectEM.generateSkeletonFromAggloNew(theseDends, arrayfun(@(x) sprintf('SomaAgglo_%02d_%03d',n,x),1:numel(theseDends),'uni',0) , outputFolder, max(dendriteSegIds),[],sprintf('SomaAggloAll_%s_%02d.nml',aggloFile,n));
@@ -128,7 +126,7 @@ switch show
                 pause(0.5)
                 drawnow
                 %         export_fig(sprintf('SomaAgglo_%s',aggloFile),'-pdf','-append')
-                print(sprintf('SomaAgglo_%s_%02d-%02d',aggloFile,startN,n),'-dpdf')
+                tprint(sprintf('SomaAgglo_%s_%02d-%02d',aggloFile,startN,n),'-pdf-R')
                 pause(0.5)
                 close(fig);
             end
