@@ -13,8 +13,7 @@ function exportAggloOverlapToAmira( ...
         cellfun(@numel, skelToAgglos));
     allAgglos = agglos(cell2mat(skelToAgglos));
     
-    isoSurfs = buildIsoSurfaces( ...
-        param, allAgglos, outDir, varargin{:});
+    isoSurfs = buildIsoSurfaces(param, allAgglos, varargin{:});
     
     % write PLY files
     for curCellIdx = 1:max(cellIds)
