@@ -205,11 +205,12 @@ if ~exist(fullfile(outputFolder,'dendrites_03_v2_splitmerged.mat'),'file') || ov
     % get each dend id which contains most of the seg ids of each soma
     WholeCellId = accumarray(somaLUT(somaSegIds(ismem))',dendriteLUT(dendriteSegIds(ind(ismem)))',[],@mode);
  
-%     indBigDends = Agglo.isMaxBorderToBorderDistAbove(p, 5000, Superagglos.transformAggloNewOldRepr(dendrites));
-%     [ myelinDend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
-    save(fullfile(outputFolder,'dendrites_03_v2_splitmerged.mat'),'dendrites','WholeCellId')%,'myelinDend','indBigDends');
+    indBigDends = Agglo.isMaxBorderToBorderDistAbove(p, 5000, Superagglos.transformAggloNewOldRepr(dendrites));
+    [ myelinDend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
+    save(fullfile(outputFolder,'dendrites_03_v2_splitmerged.mat'),'dendrites','WholeCellId','myelinDend','indBigDends');
 else
-    load(fullfile(outputFolder,'dendrites_03_v2_splitmerged.mat'),'dendrites','myelinDend','indBigDends','WholeCellId');
+    clear dendrites myelinDend indBigDends
+    load(fullfile(outputFolder,'dendrites_03_v2_splitmerged.mat'),'dendrites','WholeCellId')%,'myelinDend','indBigDends');
 end
 disp('Dendrites state 03 splitmerged superagglos loaded/generated')
 
@@ -228,6 +229,7 @@ if ~exist(fullfile(outputFolder,'dendrites_04.mat'),'file') || overwrite
     [ myelinDend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
     save(fullfile(outputFolder,'dendrites_04.mat'),'dendrites','WholeCellId','myelinDend','indBigDends');
 else
+    clear dendrites myelinDend indBigDends
     load(fullfile(outputFolder,'dendrites_04.mat'))
 end
 disp('Dendrites state 04 superagglos loaded/generated')

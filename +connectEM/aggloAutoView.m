@@ -132,7 +132,7 @@ switch show
             end
         end
         
-    case 'singles'
+    case {'singles','dendrites','dends'}
         
         
         %% find and plot the 50 pseudo random agglos
