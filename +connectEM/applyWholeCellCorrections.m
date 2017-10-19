@@ -17,12 +17,13 @@ function [agglos,aggloLUT] = applyWholeCellCorrections(agglos,somaAgglos,p,folde
 % by Marcel Beining <marcel.beining@brain.mpg.de>
 
 segmentMeta = load(fullfile(p.saveFolder, 'segmentMeta.mat'),'point');
-somaAgglosCoord = cellfun(@(x) segmentMeta.point(:,x)',somaAgglos,'uni',0);
 
 aggloSegIds = cell2mat(arrayfun(@(x) x.nodes(:,4),agglos,'uni',0));
 aggloLUT(aggloSegIds)  = repelem(1:numel(agglos),arrayfun(@(x) numel(x.nodes(:,4)),agglos));
+
 somaSegIds = cell2mat(somaAgglos);
 somaLUT(somaSegIds) = repelem(1:numel(somaAgglos),cellfun(@numel,somaAgglos));
+somaAgglosCoord = cellfun(@(x) segmentMeta.point(:,x)',somaAgglos,'uni',0);
 
 % check which segId of soma is found in which agglo
 [ismem,ind] = ismember(somaSegIds,aggloSegIds);
@@ -93,7 +94,7 @@ for f = 1:numel(files)
        endingClusters = Graph.findConnectedComponents(endingSkelEdges,1,1);   % cluster each extended ending
        [~,endingSkelEdgesClusters] = cellfun(@(x) ismember(endingSkelEdges(all(ismember(endingSkelEdges,x),2),:),x),endingClusters,'uni',0);  % get the skel edges for each ending
        
-       skelSegIds = Seg.Global.getSegIds(p,skelCoords(nodesToAdd,:));  % extract the seg Ids of these nodes that were added
+%        skelSegIds = Seg.Global.getSegIds(p,skelCoords(nodesToAdd,:));  % extract the seg Ids of these nodes that were added
        % put this in later
        for n = 1:numel(endingClusters)
            skelSegIds = Seg.Global.getSegIds(p,skelCoords(endingClusters{n},:));  % extract the seg Ids of these nodes that were added
@@ -125,6 +126,8 @@ for f = 1:numel(files)
            % remove agglo which has been added and update LUT
            aggloLUT = connectEM.changem(aggloLUT,(0:numel(agglos))-cumsum(accumarray(indToAdd',1,[numel(agglos)+1,1]))',0:numel(agglos));
            agglos(indToAdd) = [];
+           % update aggloSomaId
+           aggloSomaId =  aggloSomaId - sum(bsxfun(@ge,aggloSomaId,indToAdd),2);
        end
     end
 end
