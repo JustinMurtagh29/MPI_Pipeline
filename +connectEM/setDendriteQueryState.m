@@ -14,8 +14,8 @@ function [skeletonFolders, versionSuffix, dendrtieVersion,...
     % First 'clean' run
     if strcmp(state,'1.0') 
         % source folders for flight paths
-        scratchFolder = '/u/mberning/results/pipeline/20170217_ROI/aggloState/dendriteQueryAnswers/';
-        skeletonFolders = {'L4_dendrite_queries_18_10_2017'};
+        scratchFolder = '/u/mberning/results/pipeline/20170217_ROI/aggloState/dendQueryAnswers/';
+        skeletonFolders = {'dend_queries_18_10_2017'};
         skeletonFolders = cellfun(@(x)[scratchFolder x filesep], skeletonFolders, 'uni', 0);
         % filename additionals for getAggloQueryOverlapB and flightEndingOverlapRun
         versionSuffix = '1.0';
