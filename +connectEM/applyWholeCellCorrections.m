@@ -31,7 +31,7 @@ aggloSomaId = accumarray(somaLUT(somaSegIds(ismem))',aggloLUT(aggloSegIds(ind(is
 
 
 files = dir(fullfile(folder,'*.nml'));
-
+usedCells = NaN(numel(somaAgglosCoord),1);
 usedWholeCellSlots = [];
 for f = 1:numel(files)
     skel = skeleton(fullfile(folder,files(f).name));  % load skeleton
@@ -40,7 +40,10 @@ for f = 1:numel(files)
     % get soma index for current skeleton
     overlapsSoma = cellfun(@(y) sum(ismember(y, cell2mat(cellfun(@(x) x(:,1:3),skel.nodes,'uni',0)),'rows')),somaAgglosCoord);
     [~,ind] = max(overlapsSoma);  
-    
+    if ~isnan(usedCells(ind))
+        error('Cell %d overlaps with skeleton of file %s but has already been used by file %s',ind,files(f).name,files(usedCells(ind)).name);
+    end
+    usedCells(ind) = f;
     nodesToDelete = find(~ismember(agglos(aggloSomaId(ind)).nodes(:,1:3),cell2mat(cellfun(@(x) x(:,1:3),skel.nodes,'uni',0)),'rows'));  % find node ind which has to be deleted by checking which one is missing in the loaded skeleton compared to the skeleton before modification
     nodesToAdd = find(~ismember(cell2mat(cellfun(@(x) x(:,1:3),skel.nodes,'uni',0)),agglos(aggloSomaId(ind)).nodes(:,1:3),'rows'));  % find node ind which has to be deleted by checking which one is missing in the loaded skeleton compared to the skeleton before modification
     
@@ -89,6 +92,9 @@ for f = 1:numel(files)
        endingSkelEdges = skelEdges(any(ismember(skelEdges,nodesToAdd),2),:);   %edges of skeletons including the last node of the original skeleton
        endingClusters = Graph.findConnectedComponents(endingSkelEdges,1,1);   % cluster each extended ending
        [~,endingSkelEdgesClusters] = cellfun(@(x) ismember(endingSkelEdges(all(ismember(endingSkelEdges,x),2),:),x),endingClusters,'uni',0);  % get the skel edges for each ending
+       
+       skelSegIds = Seg.Global.getSegIds(p,skelCoords(nodesToAdd,:));  % extract the seg Ids of these nodes that were added
+       % put this in later
        for n = 1:numel(endingClusters)
            skelSegIds = Seg.Global.getSegIds(p,skelCoords(endingClusters{n},:));  % extract the seg Ids of these nodes that were added
            
