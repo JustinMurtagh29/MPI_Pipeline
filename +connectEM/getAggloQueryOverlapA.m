@@ -11,7 +11,7 @@ function getAggloQueryOverlapA(param,state,type)
     %   type
     %     Agglo type: axons=1, dendrite=0
     
-    if vargin < 3
+    if nargin < 3
         type = 1;
     end
 
