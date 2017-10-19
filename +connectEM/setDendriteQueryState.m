@@ -19,7 +19,7 @@ function [skeletonFolders, versionSuffix, dendriteVersion,...
         skeletonFolders = cellfun(@(x)[scratchFolder x filesep], skeletonFolders, 'uni', 0);
         % filename additionals for getAggloQueryOverlapB and flightEndingOverlapRun
         versionSuffix = '1.0';
-        dendriteVersion = '04';
+        dendriteVersion = '03_v2';%'04';
        
     % Commented queries of first clean run    
     elseif strcmp(state,'1.1')
