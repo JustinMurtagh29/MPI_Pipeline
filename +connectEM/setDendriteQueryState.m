@@ -1,5 +1,5 @@
-function [skeletonFolders, versionSuffix, dendrtieVersion,...
-    dendrtieVersionNew, casesToMerge] = setDendriteQueryState(state)
+function [skeletonFolders, versionSuffix, dendriteVersion,...
+    dendriteVersionNew, casesToMerge] = setDendriteQueryState(state)
     % Written by
     %   Christian Schramm <christian.schramm@brain.mpg.de>
     
