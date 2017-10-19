@@ -1,4 +1,4 @@
-function generateDendriteEndingInputData(param,stateFile,suffix)
+function generateDendriteEndingInputDataWholeCells(param,suffix)
     % generateAxonEndingInputData(param)
     %   Generates a `endingInputData.mat` file in the pipeline directory
     %   which contains all the data necessary for the ending detection.
@@ -10,9 +10,6 @@ function generateDendriteEndingInputData(param,stateFile,suffix)
     % Parameters
     minDendriteLength = 5000; % in nm
     bboxDist = 1000; % in nm
-    if ~exist('stateFile','var')
-        stateFile = 'dendrites_03_v2_splitmerged.mat';
-    end
     if ~exist('suffix','var')
         suffix = '';
     end
@@ -26,9 +23,9 @@ function generateDendriteEndingInputData(param,stateFile,suffix)
        connectEM.loadAllSegmentationData(param);
    
     % Load state of axon agglomeration and load big indices as loaded by Kevin
-    dendrites = load(fullfile(dataDir, stateFile));
-    dendriteIds = find(dendrites.indBigDends);
-    dendrites = dendrites.dendrites;
+    dendrites = load(fullfile(dataDir, sprintf('dendrites_%s.mat',suffix)));
+    dendriteIds = find(dendrites.WholeCellId);
+    dendrites = dendrites.dendrites(dendrites.WholeCellId);
 
     % Convert to old-school agglomerates
     dendriteAgglos = arrayfun( ...
@@ -41,14 +38,12 @@ function generateDendriteEndingInputData(param,stateFile,suffix)
     % Just calculate for the larger 5um denrites since there occurs some issue with the smaller ones    
     directionality = connectEM.calculateDirectionalityOfAgglomerates( ...
         dendriteAgglos, graph, segmentMeta, borderMeta, globalSegmentPCA, options);
-    save(intermediateFile, 'directionality', '-v7.3');
-
+    
     % Save results
     out = struct;
-    out.dendrites = dendrites(dendriteIds);
+    out.dendrites = dendrites;
     out.dendriteIds = dendriteIds;
-    out.directionality = structfun( ...
-        @(x) x(dendriteIds), directionality, 'UniformOutput', false);
+    out.directionality = directionality;
     out.gitInfo = Util.gitInfo();
 
     Util.saveStruct(outFile, out);

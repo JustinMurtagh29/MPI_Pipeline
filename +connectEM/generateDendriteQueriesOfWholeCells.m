@@ -34,8 +34,8 @@ function generateDendriteQueriesOfWholeCells(param,suffix)
 
     % Load larger 5 micron agglomerates
     m = load(fullfile(dataDir, sprintf('dendrites_%s.mat',suffix)));
-    somaIDs = sort(m.dendSomaId);
-    dendrites = m.dendrites(somaIDs);
+    wholeCellIDs = sort(m.WholeCellId);
+    dendrites = m.dendrites(wholeCellIDs);
     superDendrites = dendrites;
     dendrites = arrayfun(@Agglo.fromSuperAgglo, dendrites, 'UniformOutput', false);
     display([num2str(numel(m.indBigDends)) ' dendrites in total']);
@@ -43,7 +43,7 @@ function generateDendriteQueriesOfWholeCells(param,suffix)
     
     
     wholeCellDends = false(size(m.indBigDends));
-    wholeCellDends(somaIDs) = true;
+    wholeCellDends(wholeCellIDs) = true;
     wholeCellDends = wholeCellDends(m.indBigDends);
     wholeCellDends = wholeCellDends(idxCanidateFound);
     
