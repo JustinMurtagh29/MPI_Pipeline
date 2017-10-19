@@ -34,7 +34,9 @@ somaAgglosCoord = cellfun(@(x) segmentMeta.point(:,x)',somaAgglos,'uni',0);
 % get agglo id of each whole cell
 aggloSomaId = accumarray(somaLUT(somaSegIds(ismem))',aggloLUT(aggloSegIds(ind(ismem)))',[],@mode);
 
-
+if ~exist(folder,'dir')
+    error('Folder %s is not existent',folder);
+end
 files = dir(fullfile(folder,'*.nml'));
 usedCells = NaN(numel(somaAgglosCoord),1);
 usedWholeCellSlots = [];
@@ -104,11 +106,12 @@ for f = 1:numel(files)
 %        skelSegIds = Seg.Global.getSegIds(p,skelCoords(nodesToAdd,:));  % extract the seg Ids of these nodes that were added
        % put this in later
        for n = 1:numel(endingClusters)
-           if ~any(ismember(endingSkelEdgesClusters{n}(:),agglos(aggloSomaId(ind)).nodes(:,4)))
+           
+           skelSegIds = Seg.Global.getSegIds(p,skelCoords(endingClusters{n},:));  % extract the seg Ids of these nodes that were added
+           if ~any(ismember(skelSegIds(endingSkelEdgesClusters{n}(:)),agglos(aggloSomaId(ind)).nodes(:,4)))
                warning('Skel %s contained an ending which could not be processed, because it seemed to be part of a merged agglo which had been split away now.',skel.filename)
                continue
            end
-           skelSegIds = Seg.Global.getSegIds(p,skelCoords(endingClusters{n},:));  % extract the seg Ids of these nodes that were added
            
            indToAdd = setdiff(aggloLUT(setdiff(skelSegIds,0)),[0,aggloSomaId(ind)]); % get the index of the superagglo(s) to add
            if isempty(indToAdd)
