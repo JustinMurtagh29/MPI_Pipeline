@@ -1,20 +1,27 @@
-% This script loads chiasmata detection results and performs a simple
+function evaluateChiasmataDetection(aggloState,chiasmId,outputDir)
+% This function loads chiasmata detection results and performs a simple
 % quantitative analysis. These numbers should complement the impression
 % gained from looking at random super-agglomerates (or parts thereof) with
 % their detected chiasmata
+% INPUT
+% aggloState    string with the name of the aggloState that was used for
+%               chiasmata detection
+% chiasmId      string with id of the chiasmata detection run (datestring)
+% outputDir     string with path to folder which will be created to safe
+%               example nmls and results in
 %
 % Written by
-%   Alessandro Motta <alessandro.motta@brain.mpg.de>
+%   Alessandro Motta <alessandro.motta@brain.mpg.de> / Marcel Beining
 
 % configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-aggloState = 'dendrites_03_v2';
+% aggloState = 'dendrites_03_v2';
 aggloFile = fullfile(rootDir, 'aggloState', [aggloState '.mat']);
 
-chiasmId = '20171019T155102';
+% chiasmId = '20171019T155102';
 chiasmDir = '/tmpscratch/kboerg/chiasmata';
 % chiasmataX20171017T044832_0
-outputDir = '/tmpscratch/mbeining/chiasma_03_v2';
+% outputDir = '/tmpscratch/mbeining/chiasma_03_v2';
 
 %% load parameter (for skeleton)
 param = fullfile(rootDir, 'allParameter.mat');
