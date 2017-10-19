@@ -1,8 +1,8 @@
 function exportAggloOverlapToAmira( ...
         param, agglos, skelToAgglos, outDir, varargin)
     % exportAggloOverlapToAmira(param, agglos, skelToAgglos, outDir, ...)
-    % Exports all agglomerates which with a given ground truth skeleton to
-    % PLY files for Amira.
+    %   Exports all agglomerates which with a given ground truth skeleton
+    %   to PLY files for Amira.
     %
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
