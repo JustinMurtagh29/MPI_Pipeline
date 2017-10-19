@@ -34,7 +34,8 @@ function generateDendriteQueriesOfWholeCells(param,suffix)
 
     % Load larger 5 micron agglomerates
     m = load(fullfile(dataDir, sprintf('dendrites_%s.mat',suffix)));
-    wholeCellIDs = sort(m.WholeCellId);
+%     wholeCellIDs = sort(m.WholeCellId);
+    wholeCellIDs = m.WholeCellId;
     dendrites = m.dendrites(wholeCellIDs);
     superDendrites = dendrites;
     dendrites = arrayfun(@Agglo.fromSuperAgglo, dendrites, 'UniformOutput', false);
@@ -42,18 +43,18 @@ function generateDendriteQueriesOfWholeCells(param,suffix)
     display([num2str(sum(m.indBigDends)) ' larger 5um']);
     
     
-    wholeCellDends = false(size(m.indBigDends));
-    wholeCellDends(wholeCellIDs) = true;
-    wholeCellDends = wholeCellDends(m.indBigDends);
-    wholeCellDends = wholeCellDends(idxCanidateFound);
-    
-    borderClusters = borderClusters(wholeCellDends);
-    borderPositions = borderPositions(wholeCellDends);
-    borderIds = borderIds(wholeCellDends);
-    directionality = structfun( ...
-        @(x) x(idxCanidateFound), directionality, 'UniformOutput', false);
-    directionality = structfun( ...
-        @(x) x(wholeCellDends), directionality, 'UniformOutput', false);
+%     wholeCellDends = false(size(m.indBigDends));
+%     wholeCellDends(wholeCellIDs) = true;
+%     wholeCellDends = wholeCellDends(m.indBigDends);
+%     wholeCellDends = wholeCellDends(idxCanidateFound);
+%     
+%     borderClusters = borderClusters(wholeCellDends);
+%     borderPositions = borderPositions(wholeCellDends);
+%     borderIds = borderIds(wholeCellDends);
+%     directionality = structfun( ...
+%         @(x) x(idxCanidateFound), directionality, 'UniformOutput', false);
+%     directionality = structfun( ...
+%         @(x) x(wholeCellDends), directionality, 'UniformOutput', false);
     
     % Determine endings which are not redundant(already attached by flight path)
     attachedEndings = [];
@@ -61,7 +62,7 @@ function generateDendriteQueriesOfWholeCells(param,suffix)
     % Find indices of ending candidates in directionality lists (scores,
     % pca...) and exclude redundant endings
     idxUse = idxAll(idxCanidateFound);
-    idxUse = idxUse(wholeCellDends);
+%     idxUse = idxUse(wholeCellDends);
     counter = 1;
     idxCluster = [];
     for j=1:length(borderClusters)
@@ -156,16 +157,16 @@ function generateDendriteQueriesOfWholeCells(param,suffix)
 
     borderEdges = graph.edges(~isnan(graph.borderIdx), :);
     
-    outputFolder = fullfile(dataDir, 'wholeCellDendriteQueries/');
+    outputFolder = fullfile(dataDir, 'wholeCellDendriteQueries_2/');
     if ~exist(outputFolder, 'dir')
         mkdir(outputFolder)
     end
     
     superDendrites = superDendrites(~redundant);
     superDendrites = superDendrites(~outside);
-
+    IDs = find(~outside);
     
-    for i=1:length(superDendrites)
+    for i=1:length(IDs)
         treeNames = {};
         currentDendrite = i;
         theseBorderEdges =  borderEdges(thisBorderIdx{i},:);
@@ -176,9 +177,8 @@ function generateDendriteQueriesOfWholeCells(param,suffix)
         superDendrites(i).comments = repmat({''},size(superDendrites(i).nodes,1),1);
         superDendrites(i).comments(idxComments) = repmat({'ending'},sum(idxComments),1);
         
-        connectEM.generateSkeletonFromAggloNew(superDendrites(i), {sprintf('wholeCellAgglo_%02d',i)} , outputFolder, [],[],sprintf('WholeCell%s_%02d.nml',suffix,i));
+        connectEM.generateSkeletonFromAggloNew(superDendrites(i), {sprintf('wholeCellAgglo_%02d',i)} , outputFolder, [],[],sprintf('WholeCell%s_%02d.nml',suffix,IDs(i)));
 
-        
     end
 
 end
