@@ -1,10 +1,26 @@
-function getAggloQueryOverlapA(param,state)
+function getAggloQueryOverlapA(param,state,type)
     % Written by
     %   Manuel Berning <manuel.berning@brain.mpg.de>
     %   Christian Schramm <christian.schramm@brain.mpg.de>
+    
+    % Input parameters:
+    %   param
+    %     Parameter structure of pipeline run
+    %   state
+    %     StateID of current run
+    %   type
+    %     Agglo type: axons=1, dendrite=0
+    
+    if vargin < 3
+        type = 1;
+    end
 
     % Set current state of queries
-    [skeletonFolders, suffix] = connectEM.setQueryState(state);    
+    if type ==1
+        [skeletonFolders, suffix] = connectEM.setQueryState(state);    
+    else
+        [skeletonFolders, suffix] = connectEM.setDendriteQueryState(state);
+    end
 
     % Lookup segment ids of nodes+neighbours of nmls in all folders defined above
     [ff.segIds, ff.neighbours, ff.filenames, ff.nodes, ff.startNode, ff.comments, ff.errors] = connectEM.lookupNmlMulti(param, skeletonFolders, false);
@@ -27,7 +43,11 @@ function getAggloQueryOverlapA(param,state)
     out.gitInfo = Util.gitInfo();
 
     % Save results and deprive writing permission
-    outFile = fullfile(param.saveFolder, 'aggloState', strcat('axonFlightPaths',suffix,'.mat'));
+    if type ==1
+        outFile = fullfile(param.saveFolder, 'aggloState', strcat('axonFlightPaths',suffix,'.mat')); 
+    else
+        outFile = fullfile(param.saveFolder, 'aggloState', strcat('dendriteFlightPaths',suffix,'.mat'));
+    end
     Util.saveStruct(outFile, out);
     system(['chmod -w ' outFile])
 

@@ -1,4 +1,4 @@
-function getAggloQueryOverlapB(param,state)
+function getDendriteQueryOverlapB(param,state)
     % Written by
     %   Manuel Berning <manuel.berning@brain.mpg.de>
     %   Christian Schramm <christian.schramm@brain.mpg.de>
@@ -7,16 +7,16 @@ function getAggloQueryOverlapB(param,state)
     dataDir = fullfile(param.saveFolder, 'aggloState');
     
     % State of query generation
-    [~, suffixFlightPaths, suffixOverlaps] = connectEM.setQueryState(state);    
+    [~, suffixFlightPaths, suffixOverlaps] = connectEM.setDendriteQueryState(state);    
 
     % Load flight paths
-    m = load(fullfile(dataDir, strcat('axonFlightPaths',suffixFlightPaths,'.mat')), 'ff');
+    m = load(fullfile(dataDir, strcat('dendriteFlightPaths',suffixFlightPaths,'.mat')), 'ff');
     ff = m.ff;
 
     % Load axon agglomerates
-    m = load(fullfile(dataDir, 'axons_04.mat'));
-    axons = m.axons(m.indBigAxons);
-    axons = arrayfun(@Agglo.fromSuperAgglo, axons, 'UniformOutput', false);
+    m = load(fullfile(dataDir, sprintf('dendrites_%s.mat',suffix)));
+    dendrites = m.dendrites(m.indBigDends);
+    dendrites = arrayfun(@Agglo.fromSuperAgglo, dendrites, 'UniformOutput', false);
     clear m;
 
     % Get flight paths without comment but with start node
@@ -29,7 +29,7 @@ function getAggloQueryOverlapB(param,state)
     [uniqueSegments, neighboursStartNode, ~, ~] = cellfun(@connectEM.queryAnalysis, ...
             ff.segIds, ff.neighbours, ff.nodes', ff.startNode', 'uni', 0);
     % Determine all overlaps of agglomerations with given queries
-    [~, queryOverlap] = connectEM.queryAgglomerationOverlap(axons, segmentsLeftover, uniqueSegments, neighboursStartNode);
+    [~, queryOverlap] = connectEM.queryAgglomerationOverlap(dendrites, segmentsLeftover, uniqueSegments, neighboursStartNode);
     % Make decision(s), here evidence/occurence threshold is applied
     % Always one (or none if evidence below 14, 1/2 node) start eqClass
     startAgglo = arrayfun(@(x)x.eqClasses(x.occurences > 13), queryOverlap.start, 'uni', 0);
@@ -69,11 +69,11 @@ function getAggloQueryOverlapB(param,state)
     results.gitInfo = Util.gitInfo();
 
     % Save results and deprive writing permission
-    saveFile = fullfile(dataDir, strcat('axonQueryOverlaps',suffixOverlaps,'.mat'));
+    saveFile = fullfile(dataDir, strcat('dendriteQueryOverlaps',suffixOverlaps,'.mat'));
     save(saveFile, 'results', 'queryOverlap', 'idxNoClearStart', 'idxNoClearEnd');
     system(['chmod -w ' saveFile])
     
-    saveFile = fullfile(dataDir, strcat('axonPostQueryAnalysisState',suffixOverlaps,'.mat'));
+    saveFile = fullfile(dataDir, strcat('dendritePostQueryAnalysisState',suffixOverlaps,'.mat'));
     save(saveFile);
     system(['chmod -w ' saveFile])
 
