@@ -1,14 +1,12 @@
-function [dendrites,dendritesLUT] = applyWholeCellCorrections(dendrites,somaAgglos,p,folder,onlySplit,axons)
+function [dendrites,dendritesLUT] = applyAggloCorrections(dendrites,p,folder,mode,axons)
 % this function applied the changes (merges/splits) made in the nml files located in
 % "folder" to all whole cell superagglos
 %
 % INPUT
 % dendrites    agglos in the superagglo format
-% somaAgglos   agglos in the old format containing the segIds belonging to
-%              each soma
 % p            parameter structure from the pipeline
 % folder       path to the folder containing the nml files with the changes
-% onlySplit    boolean: only apply splits, not merges (DEFAULT 0)
+% mode         0: applySplitsAndMerges; 1: only apply splits; 2: only write out agglos as skeletons that would be added by this step (to inspect for mergers) (DEFAULT 0)
 % axons        agglos in the superagglo format to add axonic stuff to whole
 %              cells
 %
@@ -19,8 +17,8 @@ function [dendrites,dendritesLUT] = applyWholeCellCorrections(dendrites,somaAggl
 %
 % by Marcel Beining <marcel.beining@brain.mpg.de>
 
-if ~exist('onlySplit','var') || isempty(onlySplit)
-    onlySplit = 0;
+if ~exist('mode','var') || isempty(mode)
+    mode = 0;
 end
 if exist('axons','var') && ~isempty(axons)
     axons = rmfield(axons,'endings');
@@ -29,75 +27,49 @@ if exist('axons','var') && ~isempty(axons)
 end
 
 
-segmentMeta = load(fullfile(p.saveFolder, 'segmentMeta.mat'),'point');
-
 dendriteSegIds = cell2mat(arrayfun(@(x) x.nodes(:,4),dendrites,'uni',0));
 dendritesLUT(dendriteSegIds)  = repelem(1:numel(dendrites),arrayfun(@(x) numel(x.nodes(:,4)),dendrites));
-somaAgglosCoord = cellfun(@(x) segmentMeta.point(:,x)',somaAgglos,'uni',0);
-somaSegIds = cell2mat(somaAgglos);
-somaLUT(somaSegIds) = repelem(1:numel(somaAgglos),cellfun(@numel,somaAgglos));
-somaAgglosCoord = cellfun(@(x) segmentMeta.point(:,x)',somaAgglos,'uni',0);
+dendriteCoord = cell2mat(arrayfun(@(x) x.nodes(:,1:3),dendrites,'uni',0));
 
-% check which segId of soma is found in which agglo
-[ismem,ind] = ismember(somaSegIds,dendriteSegIds);
-% get agglo id of each whole cell
-aggloSomaId = accumarray(somaLUT(somaSegIds(ismem))',dendritesLUT(dendriteSegIds(ind(ismem)))',[],@mode);
 
 if ~exist(folder,'dir')
     error('Folder %s is not existent',folder);
 end
 files = dir(fullfile(folder,'*.nml'));
-usedCells = NaN(numel(somaAgglosCoord),1);
+% usedCells = NaN(numel(somaAgglosCoord),1);
+usedCells = NaN(numel(dendrites),1);
 usedWholeCellSlots = [];
 for f = 1:numel(files)
     skel = skeleton(fullfile(folder,files(f).name));  % load skeleton
     skel = skel.deleteTrees(cellfun(@numel,skel.nodes)/4==1); % delete single node trees
     % get soma index for current skeleton
-    overlapsSoma = cellfun(@(y) sum(ismember(y, cell2mat(cellfun(@(x) x(:,1:3),skel.nodes,'uni',0)),'rows')),somaAgglosCoord);
-    [~,ind] = max(overlapsSoma);
+    overlapsAgglo = cellfun(@(y) sum(ismember(y, cell2mat(cellfun(@(x) x(:,1:3),skel.nodes,'uni',0)),'rows')),dendriteCoord);
+    [~,ind] = max(overlapsAgglo);
     if ~isnan(usedCells(ind))
         error('Cell %d overlaps with skeleton of file %s but has already been used by file %s',ind,files(f).name,files(usedCells(ind)).name);
     end
     usedCells(ind) = f;
-    nodesToDelete = find(~ismember(dendrites(aggloSomaId(ind)).nodes(:,1:3),cell2mat(cellfun(@(x) x(:,1:3),skel.nodes,'uni',0)),'rows'));  % find node ind which has to be deleted by checking which one is missing in the loaded skeleton compared to the skeleton before modification
-    if ~onlySplit
-        nodesToAdd = find(~ismember(cell2mat(cellfun(@(x) x(:,1:3),skel.nodes,'uni',0)),dendrites(aggloSomaId(ind)).nodes(:,1:3),'rows'));  % find node ind which has to be deleted by checking which one is missing in the loaded skeleton compared to the skeleton before modification
+    nodesToDelete = find(~ismember(dendrites(ind).nodes(:,1:3),cell2mat(cellfun(@(x) x(:,1:3),skel.nodes,'uni',0)),'rows'));  % find node ind which has to be deleted by checking which one is missing in the loaded skeleton compared to the skeleton before modification
+    if  any(mode == [0 2])
+        nodesToAdd = find(~ismember(cell2mat(cellfun(@(x) x(:,1:3),skel.nodes,'uni',0)),dendrites(ind).nodes(:,1:3),'rows'));  % find node ind which has to be deleted by checking which one is missing in the loaded skeleton compared to the skeleton before modification
     else
         nodesToAdd = [];
     end
     % correct mergers
     if ~isempty(nodesToDelete)
-        splitAgglo = Superagglos.removeSegIdsFromAgglos(dendrites(aggloSomaId(ind)),dendrites(aggloSomaId(ind)).nodes(nodesToDelete,4)); % get the splitted agglos when node is deleted
-        overlapped = 0;
-        segIdsToDelete = dendrites(aggloSomaId(ind)).nodes(nodesToDelete,4);
-        overlapsSomaAll = false(numel(splitAgglo),1);
-        for n = 1:numel(somaAgglos) % go through all soma Agglos because one skeleton might have had several somata in it
-            overlapsSoma = arrayfun(@(x) sum(ismember(somaAgglos{n},x.nodes(:,4))),splitAgglo)/numel(somaAgglos{n}) > 0.2;  % check which of the splitted agglos overlaps the soma by more than 20%
-            if any(overlapsSoma)
-                %                 skel2 = Superagglos.toSkel(splitAgglo(overlapsSoma));
-                %                 subplot(1,2,2);skel2.plot;axis equal
-                % this block solves the problem of a dendrite agglo with 2
-                % or more merged somata in it by putting it at the back of
-                % the superagglos
-                if ismember(aggloSomaId(n),usedWholeCellSlots)
-                    dendrites(end+1).nodes = [0 0 0 0];
-                    aggloSomaId(n) = numel(dendrites);
-                end
-                dendrites(aggloSomaId(n)) = splitAgglo(overlapsSoma);  % replace whole cell with correctly splitted version
-                dendritesLUT(splitAgglo(overlapsSoma).nodes(:,4)) = repelem(aggloSomaId(n),size(splitAgglo(overlapsSoma).nodes,1));
-                usedWholeCellSlots = cat(1,usedWholeCellSlots,aggloSomaId(n));
-                overlapped = 1;
-                overlapsSomaAll = overlapsSomaAll | overlapsSoma; % remember all split agglos that overlapped
-            end
-        end
-        if overlapped
+        splitAgglo = Superagglos.removeSegIdsFromAgglos(dendrites(ind),dendrites(ind).nodes(nodesToDelete,4)); % get the splitted agglos when node is deleted
+        segIdsToDelete = dendrites(ind).nodes(nodesToDelete,4);
+      
+        dendrites(ind) = splitAgglo(1);  % replace this agglo with one of the correctly splitted version
+        dendritesLUT(splitAgglo(1).nodes(:,4)) = repelem(ind,size(splitAgglo(1).nodes,1));
+
+        if numel(splitAgglo) > 1
             % update  LUT
-            dendritesLUT(cell2mat(arrayfun(@(x) x.nodes(:,4),splitAgglo(~overlapsSomaAll),'uni',0))) = repelem((1:sum(~overlapsSomaAll))+numel(dendrites),arrayfun(@(x) size(x.nodes,1),splitAgglo(~overlapsSomaAll)));
-            dendrites(end+1:end+sum(~overlapsSomaAll)) = splitAgglo(~overlapsSomaAll);  % add the splitted stuff to end of agglo class
-            
+            dendritesLUT(cell2mat(arrayfun(@(x) x.nodes(:,4),splitAgglo(2:end),'uni',0))) = repelem((1:sum(~overlapsIndAll))+numel(dendrites),arrayfun(@(x) size(x.nodes,1),splitAgglo(2:end)));
+            dendrites(end+1:end+numel(splitAgglo)-1) = splitAgglo(2:end);  % add the splitted stuff to end of agglo class
             dendritesLUT(segIdsToDelete) = 0;  % deleted segIds will not be there anymore in the agglo class
         else
-            warning('Did not find any soma overlapping the split agglos (that should belong to soma %d) by more than 20%!',ind)
+            warning('Deleting the nodes from the skeleton %s did not split the agglo!',skel(f).filename)
         end
     end
     
@@ -114,15 +86,16 @@ for f = 1:numel(files)
         [~,endingSkelEdgesClusters] = cellfun(@(x) ismember(endingSkelEdges(all(ismember(endingSkelEdges,x),2),:),x),endingClusters,'uni',0);  % get the skel edges for each ending
         
         skelSegIds = Seg.Global.getSegIds(p,skelCoords(endingSkelEdges(:),:));  % extract the seg Ids of these nodes that were added
-        % put this in later
+        
+        indToAddAxons = [];
+        indToAddDendrites = [];
         for n = 1:numel(endingClusters)
             [~,segIdInd] = ismember(endingClusters{n},endingSkelEdges(:));
             theseSkelSegIds = skelSegIds(segIdInd);
-            if ~any(ismember(theseSkelSegIds(endingSkelEdgesClusters{n}(:)),dendrites(aggloSomaId(ind)).nodes(:,4)))
+            if ~any(ismember(theseSkelSegIds(endingSkelEdgesClusters{n}(:)),dendrites(ind).nodes(:,4)))
                 warning('Skel %s contained an ending which could not be processed, because it seemed to be part of a merged agglo which had been split away now.',skel.filename)
                 continue
             end
-            
             
             hasAxonComment = cellfun(@(x) ~isempty(strfind(x,'axon')),comments(ismember(nodeIdx,endingClusters{n})));
             
@@ -136,9 +109,14 @@ for f = 1:numel(files)
                     warning('Skel %s contained an axon marked ending which could not be processed, because the tracing did not reach a segId belonging to an axon superagglo',skel.filename)
                     continue
                 end
+                
+                if mode == 2
+                   indToAddAxons = cat(1,indToAddAxons,indToAdd);
+                   continue 
+                end
                 % find nodes at segIds that are not part of the whole cell or
                 % the superagglos to add and delete those
-                nodesToDelete = sort(find(~ismember(theseSkelSegIds,cell2mat(arrayfun(@(x) x.nodes(:,4),cat(1,dendrites(aggloSomaId(ind)),axons(indToAdd)),'uni',0)))),'descend');
+                nodesToDelete = sort(find(~ismember(theseSkelSegIds,cell2mat(arrayfun(@(x) x.nodes(:,4),cat(1,dendrites(ind),axons(indToAdd)),'uni',0)))),'descend');
                 theseSkelSegIds(nodesToDelete) = [];
                 for d = 1:numel(nodesToDelete)
                     %find neighbors
@@ -152,22 +130,27 @@ for f = 1:numel(files)
                 if size(segIdEdges,2)~=2 % fix stupid 1 value pair problem
                     segIdEdges = segIdEdges';
                 end
-                dendrites(aggloSomaId(ind)) = Superagglos.applyEquivalences({1:numel(indToAdd)+1},cat(1,dendrites(aggloSomaId(ind)),axons(indToAdd)),segIdEdges);
+                dendrites(ind) = Superagglos.applyEquivalences({1:numel(indToAdd)+1},cat(1,dendrites(ind),axons(indToAdd)),segIdEdges);
                 
-                dendritesLUT(cell2mat(arrayfun(@(x) x.nodes(~isnan(x.nodes(:,4)),4),axons(indToAdd),'uni',0))) = aggloSomaId(ind); % update LUT
+                dendritesLUT(cell2mat(arrayfun(@(x) x.nodes(~isnan(x.nodes(:,4)),4),axons(indToAdd),'uni',0))) = ind; % update LUT
                 % remove agglo which has been added and update LUT
                 axonsLUT = connectEM.changem(axonsLUT,(0:numel(axons))-cumsum(accumarray(indToAdd',1,[numel(axons)+1,1]))',0:numel(axons));
                 axons(indToAdd) = [];
                 
             else                
-                indToAdd = setdiff(dendritesLUT(setdiff(theseSkelSegIds,0)),[0,aggloSomaId(ind)]); % get the index of the superagglo(s) to add
+                indToAdd = setdiff(dendritesLUT(setdiff(theseSkelSegIds,0)),[0,ind]); % get the index of the superagglo(s) to add
                 if isempty(indToAdd)
                     warning('Skel %s contained an ending which could not be processed, because the tracing did not reach a segId not already belonging to the whole cell agglo or the segIDs were not part of the dendrite class',skel.filename)
                     continue
                 end
+                
+                if mode == 2
+                   indToAddDendrites = cat(1,indToAddDendrites,indToAdd);
+                   continue 
+                end
                 % find nodes at segIds that are not part of the whole cell or
                 % the superagglos to add and delete those
-                nodesToDelete = sort(find(~ismember(theseSkelSegIds,cell2mat(arrayfun(@(x) x.nodes(:,4),dendrites([aggloSomaId(ind),indToAdd]),'uni',0)))),'descend');
+                nodesToDelete = sort(find(~ismember(theseSkelSegIds,cell2mat(arrayfun(@(x) x.nodes(:,4),dendrites([ind,indToAdd]),'uni',0)))),'descend');
                 theseSkelSegIds(nodesToDelete) = [];
                 for d = 1:numel(nodesToDelete)
                     %find neighbors
@@ -181,17 +164,23 @@ for f = 1:numel(files)
                 if size(segIdEdges,2)~=2 % fix stupid 1 value pair problem
                     segIdEdges = segIdEdges';
                 end
-                dendrites(aggloSomaId(ind)) = Superagglos.applyEquivalences({1:numel(indToAdd)+1},dendrites([aggloSomaId(ind),indToAdd]),segIdEdges);
+                dendrites(ind) = Superagglos.applyEquivalences({1:numel(indToAdd)+1},dendrites([ind,indToAdd]),segIdEdges);
                 
-                %            skel2 = Superagglos.toSkel(agglos(aggloSomaId(ind)));
+                %            skel2 = Superagglos.toSkel(agglos(ind));
                 %            subplot(1,2,2);hold all;skel2.plot;axis equal
-                dendritesLUT(cell2mat(arrayfun(@(x) x.nodes(:,4),dendrites(indToAdd),'uni',0))) = aggloSomaId(ind); % update LUT
+                dendritesLUT(cell2mat(arrayfun(@(x) x.nodes(:,4),dendrites(indToAdd),'uni',0))) = ind; % update LUT
                 % remove agglo which has been added and update LUT
                 dendritesLUT = connectEM.changem(dendritesLUT,(0:numel(dendrites))-cumsum(accumarray(indToAdd',1,[numel(dendrites)+1,1]))',0:numel(dendrites));
                 dendrites(indToAdd) = [];
                 % update aggloSomaId
                 aggloSomaId =  aggloSomaId - sum(bsxfun(@ge,aggloSomaId,indToAdd),2);
             end
+        end
+        if mode == 2
+            % write out all axons and skeletons that would be added this
+            % turn
+            mkdir(fullfile(folder,'checkBeforeAdd'))
+            connectEM.generateSkeletonFromAggloNew(cat(1,dendrites(indToAddDendrites),axons(indToAddAxons)),{sprintf('AggloToBeAdded_%02d',numel(cat(1,indToAddDendrites,indToAddAxons)))} , fullfile(folder,'checkBeforeAdd'), [],[],sprintf('checkBeforeAdd_%02d.nml',f));
         end
     end
 end

@@ -22,6 +22,9 @@ end
 if ~isempty(strfind(aggloFile,'dendrites'))
     agglos = load(fullfile(aggloFolder,[aggloFile,'.mat']),'dendrites');
     agglos = agglos.dendrites;
+elseif ~isempty(strfind(aggloFile,'wholeCells'))
+    agglos = load(fullfile(aggloFolder,[aggloFile,'.mat']),'wholeCells');
+    agglos = agglos.wholeCells;
 else
     agglos = load(fullfile(aggloFolder,[aggloFile,'.mat']),'axons');
     agglos = agglos.axons;
@@ -58,7 +61,7 @@ somaLUT(somaSegIds) = repelem(1:numel(somaAgglos),cellfun(@numel,somaAgglos));
 
 aggloSegIds = cell2mat(arrayfun(@(x) x.nodes(:,4),agglos,'uni',0));
 aggloLUT = zeros(1,max(aggloSegIds));
-aggloLUT(aggloSegIds)  = repelem(1:numel(agglos),arrayfun(@(x) numel(x.nodes(:,4)),agglos));
+aggloLUT(aggloSegIds(~isnan(aggloSegIds)))  = repelem(1:numel(agglos),arrayfun(@(x) numel(x.nodes(~isnan(x.nodes(:,4)),4)),agglos));
 
 
 switch show
