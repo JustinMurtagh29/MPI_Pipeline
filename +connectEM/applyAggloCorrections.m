@@ -17,7 +17,7 @@ function [dendrites,dendritesLUT] = applyAggloCorrections(dendrites,p,folder,mod
 %
 % by Marcel Beining <marcel.beining@brain.mpg.de>
 
-if ~exist('mode','var') || isempty(modus)
+if ~exist('modus','var') || isempty(modus)
     modus = 0;
 end
 if exist('axons','var') && ~isempty(axons)
@@ -29,7 +29,10 @@ end
 
 dendriteSegIds = cell2mat(arrayfun(@(x) x.nodes(:,4),dendrites,'uni',0));
 dendritesLUT(dendriteSegIds)  = repelem(1:numel(dendrites),arrayfun(@(x) numel(x.nodes(:,4)),dendrites));
-
+dendriteCoord = cell2mat(arrayfun(@(x) x.nodes(:,1:3),dendrites,'uni',0));
+numDend = arrayfun(@(x) size(x.nodes,1),dendrites);
+dendLabel = repelem(1:numel(dendrites),numDend);
+        
 if ~exist(folder,'dir')
     error('Folder %s is not existent',folder);
 end
@@ -58,10 +61,13 @@ for f = 1:numel(files)
     end
     usedCells(ind) = f;
     if  modus ~= 2
+        % refresh if there were splits done
         dendriteCoord = cell2mat(arrayfun(@(x) x.nodes(:,1:3),dendrites,'uni',0));
         numDend = arrayfun(@(x) size(x.nodes,1),dendrites);
         dendLabel = repelem(1:numel(dendrites),numDend);
         nodesToDelete = find(~ismember(dendrites(ind).nodes(:,1:3),skelCoords,'rows'));  % find node ind which has to be deleted by checking which one is missing in the loaded skeleton compared to the skeleton before modification
+    else
+        nodesToDelete = [];
     end
     if  any(modus == [0 2])
         nodesToAdd = find(~ismember(skelCoords,dendrites(ind).nodes(:,1:3),'rows'));  % find node ind which has to be deleted by checking which one is missing in the loaded skeleton compared to the skeleton before modification
