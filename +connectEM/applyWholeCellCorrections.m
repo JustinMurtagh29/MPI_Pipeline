@@ -123,7 +123,7 @@ for f = 1:numel(files)
             end
             
             
-            hasAxonComment = cellfun(@(x) ~isempty(strfind(x,'axon')),comments(ismember(endingClusters{n},nodeIdx)));
+            hasAxonComment = cellfun(@(x) ~isempty(strfind(x,'axon')),comments(ismember(nodeIdx,endingClusters{n})));
             if ~isempty(hasAxonComment) && any(hasAxonComment)
                 indToAdd = setdiff(axonsLUT(setdiff(theseSkelSegIds,0)),0); % get the index of the superagglo(s) to add
                
