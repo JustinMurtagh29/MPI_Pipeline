@@ -125,15 +125,15 @@ for f = 1:numel(files)
                 end
                 % find nodes at segIds that are not part of the whole cell or
                 % the superagglos to add and delete those
-                nodesToDelete = sort(find(~ismember(theseSkelSegIds,cell2mat(arrayfun(@(x) x.nodes(:,4),cat(1,dendrites(ind),axons(indToAdd)),'uni',0)))),'descend');
-                theseSkelSegIds(nodesToDelete) = [];
-                for d = 1:numel(nodesToDelete)
+                endingNodesToDelete = sort(find(~ismember(theseSkelSegIds,cell2mat(arrayfun(@(x) x.nodes(:,4),cat(1,dendrites(ind),axons(indToAdd)),'uni',0)))),'descend');
+                theseSkelSegIds(endingNodesToDelete) = [];
+                for d = 1:numel(endingNodesToDelete)
                     %find neighbors
-                    neighborIdx = setdiff(endingSkelEdgesClusters{n}(any(endingSkelEdgesClusters{n} == nodesToDelete(d),2),:),nodesToDelete(d));
-                    endingSkelEdgesClusters{n} = unique(cat(1,endingSkelEdgesClusters{n}(~any(endingSkelEdgesClusters{n}==nodesToDelete(d),2),:),combnk(neighborIdx,2)),'rows'); % add edges bridging the deleted node
+                    neighborIdx = setdiff(endingSkelEdgesClusters{n}(any(endingSkelEdgesClusters{n} == endingNodesToDelete(d),2),:),endingNodesToDelete(d));
+                    endingSkelEdgesClusters{n} = unique(cat(1,endingSkelEdgesClusters{n}(~any(endingSkelEdgesClusters{n}==endingNodesToDelete(d),2),:),combnk(neighborIdx,2)),'rows'); % add edges bridging the deleted node
                     % delete node and reduce edge indices above this node idx by 1
-                    endingClusters{n}(nodesToDelete(d)) = [];
-                    endingSkelEdgesClusters{n}(endingSkelEdgesClusters{n}>nodesToDelete(d)) = endingSkelEdgesClusters{n}(endingSkelEdgesClusters{n}>nodesToDelete(d)) - 1;
+                    endingClusters{n}(endingNodesToDelete(d)) = [];
+                    endingSkelEdgesClusters{n}(endingSkelEdgesClusters{n}>endingNodesToDelete(d)) = endingSkelEdgesClusters{n}(endingSkelEdgesClusters{n}>endingNodesToDelete(d)) - 1;
                 end
                 segIdEdges = theseSkelSegIds(endingSkelEdgesClusters{n});  % get segId edge vector of skeleton
                 if size(segIdEdges,2)~=2 % fix stupid 1 value pair problem
@@ -159,15 +159,15 @@ for f = 1:numel(files)
                 end
                 % find nodes at segIds that are not part of the whole cell or
                 % the superagglos to add and delete those
-                nodesToDelete = sort(find(~ismember(theseSkelSegIds,cell2mat(arrayfun(@(x) x.nodes(:,4),dendrites([ind,indToAdd]),'uni',0)))),'descend');
-                theseSkelSegIds(nodesToDelete) = [];
-                for d = 1:numel(nodesToDelete)
+                endingNodesToDelete = sort(find(~ismember(theseSkelSegIds,cell2mat(arrayfun(@(x) x.nodes(:,4),dendrites([ind,indToAdd]),'uni',0)))),'descend');
+                theseSkelSegIds(endingNodesToDelete) = [];
+                for d = 1:numel(endingNodesToDelete)
                     %find neighbors
-                    neighborIdx = setdiff(endingSkelEdgesClusters{n}(any(endingSkelEdgesClusters{n} == nodesToDelete(d),2),:),nodesToDelete(d));
-                    endingSkelEdgesClusters{n} = unique(cat(1,endingSkelEdgesClusters{n}(~any(endingSkelEdgesClusters{n}==nodesToDelete(d),2),:),combnk(neighborIdx,2)),'rows'); % add edges bridging the deleted node
+                    neighborIdx = setdiff(endingSkelEdgesClusters{n}(any(endingSkelEdgesClusters{n} == endingNodesToDelete(d),2),:),endingNodesToDelete(d));
+                    endingSkelEdgesClusters{n} = unique(cat(1,endingSkelEdgesClusters{n}(~any(endingSkelEdgesClusters{n}==endingNodesToDelete(d),2),:),combnk(neighborIdx,2)),'rows'); % add edges bridging the deleted node
                     % delete node and reduce edge indices above this node idx by 1
-                    endingClusters{n}(nodesToDelete(d)) = [];
-                    endingSkelEdgesClusters{n}(endingSkelEdgesClusters{n}>nodesToDelete(d)) = endingSkelEdgesClusters{n}(endingSkelEdgesClusters{n}>nodesToDelete(d)) - 1;
+                    endingClusters{n}(endingNodesToDelete(d)) = [];
+                    endingSkelEdgesClusters{n}(endingSkelEdgesClusters{n}>endingNodesToDelete(d)) = endingSkelEdgesClusters{n}(endingSkelEdgesClusters{n}>endingNodesToDelete(d)) - 1;
                 end
                 segIdEdges = theseSkelSegIds(endingSkelEdgesClusters{n});  % get segId edge vector of skeleton
                 if size(segIdEdges,2)~=2 % fix stupid 1 value pair problem
@@ -181,8 +181,6 @@ for f = 1:numel(files)
                 % remove agglo which has been added and update LUT
                 dendritesLUT = connectEM.changem(dendritesLUT,(0:numel(dendrites))-cumsum(accumarray(indToAdd',1,[numel(dendrites)+1,1]))',0:numel(dendrites));
                 dendrites(indToAdd) = [];
-                % update aggloSomaId
-                aggloSomaId =  aggloSomaId - sum(bsxfun(@ge,aggloSomaId,indToAdd),2);
             end
         end
         if modus == 2
