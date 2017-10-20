@@ -42,16 +42,23 @@ usedWholeCellSlots = [];
 for f = 1:numel(files)
     skel = skeleton(fullfile(folder,files(f).name));  % load skeleton
     skel = skel.deleteTrees(cellfun(@numel,skel.nodes)/4==1); % delete single node trees
+    skelCoords = cell2mat(cellfun(@(x) x(:,1:3),skel.nodes,'uni',0));  % putting all skel nodes together
     % get soma index for current skeleton
-    overlapsAgglo = cellfun(@(y) sum(ismember(y, cell2mat(cellfun(@(x) x(:,1:3),skel.nodes,'uni',0)),'rows')),dendriteCoord);
-    [~,ind] = max(overlapsAgglo);
+    overlapsAgglo = cellfun(@(y) sum(ismember(y, skelCoords,'rows')),dendriteCoord);
+    [maxOV,ind] = max(overlapsAgglo);
+    % avoid using a wrong dendrite/axons agglo because it overlaps only a
+    % little
+    if maxOV/size(skelCoords,1) < 0.5
+        warning('Found overlap of skeleton %s with an agglo is less than 50%..skipping..',skel(f).filename);
+        continue
+    end
     if ~isnan(usedCells(ind))
         error('Cell %d overlaps with skeleton of file %s but has already been used by file %s',ind,files(f).name,files(usedCells(ind)).name);
     end
     usedCells(ind) = f;
-    nodesToDelete = find(~ismember(dendrites(ind).nodes(:,1:3),cell2mat(cellfun(@(x) x(:,1:3),skel.nodes,'uni',0)),'rows'));  % find node ind which has to be deleted by checking which one is missing in the loaded skeleton compared to the skeleton before modification
+    nodesToDelete = find(~ismember(dendrites(ind).nodes(:,1:3),skelCoords,'rows'));  % find node ind which has to be deleted by checking which one is missing in the loaded skeleton compared to the skeleton before modification
     if  any(mode == [0 2])
-        nodesToAdd = find(~ismember(cell2mat(cellfun(@(x) x(:,1:3),skel.nodes,'uni',0)),dendrites(ind).nodes(:,1:3),'rows'));  % find node ind which has to be deleted by checking which one is missing in the loaded skeleton compared to the skeleton before modification
+        nodesToAdd = find(~ismember(skelCoords,dendrites(ind).nodes(:,1:3),'rows'));  % find node ind which has to be deleted by checking which one is missing in the loaded skeleton compared to the skeleton before modification
     else
         nodesToAdd = [];
     end
@@ -76,7 +83,7 @@ for f = 1:numel(files)
     % correct splits
     if ~isempty(nodesToAdd)
         [comments,treeIdx,nodeIdx] = skel.getAllComments;
-        skelCoords = cell2mat(cellfun(@(x) x(:,1:3),skel.nodes,'uni',0));  % putting all skel nodes together
+        
         skelNumNodes = cellfun(@(x) size(x,1),skel.nodes);
         cumSkelNumNodes = [0;cumsum(skelNumNodes)];
         skelEdges = cell2mat(arrayfun(@(x) skel.edges{x}+sum(skelNumNodes(1:x-1)),(1:numel(skel.nodes))','uni',0));% putting all edges together (inceasing index for each skel
