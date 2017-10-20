@@ -21,6 +21,7 @@ if ~exist('onlySplit','var') || isempty(onlySplit)
     onlySplit = 0;
 end
 if exist('axons','var') && ~isempty(axons)
+    axons = rmfield(axons,'endings');
     axonSegIds = cell2mat(arrayfun(@(x) x.nodes(:,4),axons,'uni',0));
     axonsLUT(axonSegIds(~isnan(axonSegIds)))  = repelem(1:numel(axons),arrayfun(@(x) numel(x.nodes(~isnan(x.nodes(:,4)),4)),axons));
 end
@@ -107,7 +108,7 @@ for f = 1:numel(files)
         skelEdges = cell2mat(arrayfun(@(x) skel.edges{x}+sum(skelNumNodes(1:x-1)),(1:numel(skel.nodes))','uni',0));% putting all edges together (inceasing index for each skel
         nodeIdx = nodeIdx + cumSkelNumNodes(treeIdx);
         endingSkelEdges = skelEdges(any(ismember(skelEdges,nodesToAdd),2),:);   %edges of skeletons including the last node of the original skeleton
-        [endingClusters,skelSegIdLabel] = Graph.findConnectedComponents(endingSkelEdges,1,1);   % cluster each extended ending
+        [endingClusters,~] = Graph.findConnectedComponents(endingSkelEdges,1,1);   % cluster each extended ending
         [~,endingSkelEdgesClusters] = cellfun(@(x) ismember(endingSkelEdges(all(ismember(endingSkelEdges,x),2),:),x),endingClusters,'uni',0);  % get the skel edges for each ending
         
         skelSegIds = Seg.Global.getSegIds(p,skelCoords(endingSkelEdges(:),:));  % extract the seg Ids of these nodes that were added
@@ -115,7 +116,7 @@ for f = 1:numel(files)
         for n = 1:numel(endingClusters)
             [~,segIdInd] = ismember(endingClusters{n},endingSkelEdges(:));
             theseSkelSegIds = skelSegIds(segIdInd);
-            skelSegIds = Seg.Global.getSegIds(p,skelCoords(endingClusters{n},:));  % extract the seg Ids of these nodes that were added
+            testskelSegIds = Seg.Global.getSegIds(p,skelCoords(endingClusters{n},:));  % extract the seg Ids of these nodes that were added
             if ~any(ismember(theseSkelSegIds(endingSkelEdgesClusters{n}(:)),dendrites(aggloSomaId(ind)).nodes(:,4)))
                 warning('Skel %s contained an ending which could not be processed, because it seemed to be part of a merged agglo which had been split away now.',skel.filename)
                 continue
