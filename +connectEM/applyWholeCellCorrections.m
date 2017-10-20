@@ -22,7 +22,7 @@ if ~exist('onlySplit','var') || isempty(onlySplit)
 end
 if exist('axons','var') && ~isempty(axons)
     axonSegIds = cell2mat(arrayfun(@(x) x.nodes(:,4),axons,'uni',0));
-    axonsLUT(axonSegIds)  = repelem(1:numel(axons),arrayfun(@(x) numel(x.nodes(:,4)),axons));
+    axonsLUT(axonSegIds(~isnan(axonSegIds)))  = repelem(1:numel(axons),arrayfun(@(x) numel(x.nodes(~isnan(x.nodes(:,4)),4)),axons));
 end
 
 
