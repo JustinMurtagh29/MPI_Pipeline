@@ -149,7 +149,7 @@ for f = 1:numel(files)
                 end
                 dendrites(aggloSomaId(ind)) = Superagglos.applyEquivalences({1:numel(indToAdd)+1},cat(1,dendrites(aggloSomaId(ind)),axons(indToAdd)),segIdEdges);
                 
-                dendritesLUT(cell2mat(arrayfun(@(x) x.nodes(:,4),axons(indToAdd),'uni',0))) = aggloSomaId(ind); % update LUT
+                dendritesLUT(cell2mat(arrayfun(@(x) x.nodes(~isnan(x.nodes(:,4)),4),axons(indToAdd),'uni',0))) = aggloSomaId(ind); % update LUT
                 % remove agglo which has been added and update LUT
                 axonsLUT = connectEM.changem(axonsLUT,(0:numel(axons))-cumsum(accumarray(indToAdd',1,[numel(axons)+1,1]))',0:numel(axons));
                 axons(indToAdd) = [];
