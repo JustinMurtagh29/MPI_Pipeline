@@ -247,7 +247,7 @@ if ~exist(fullfile(outputFolder,'dendrites_05.mat'),'file') || overwrite
     correctionFolder = 'WholeCellCorrections_04';
     fprintf('Folder with correction nmls for state dendrites_04 is %s\n',fullfile(outputFolder,correctionFolder));
 %     [dendrites,dendriteLUT] = connectEM.applyWholeCellCorrections(dendrites,somaAgglos,p,fullfile(outputFolder,correctionFolder),axons);
-    dendrites = connectEM.applyAggloCorrections(dendrites,p,fullfile(outputFolder,correctionFolder),2,axons);
+    connectEM.applyAggloCorrections(dendrites,p,fullfile(outputFolder,correctionFolder),2,axons);
     
     % split the stuff to be added now
     dendrites = connectEM.applyAggloCorrections(dendrites,p,fullfile(outputFolder,correctionFolder,'checkBeforeAdd'),1);

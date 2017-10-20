@@ -1,4 +1,4 @@
-function [dendrites,dendritesLUT] = applyAggloCorrections(dendrites,p,folder,mode,axons)
+function [dendrites,dendritesLUT] = applyAggloCorrections(dendrites,p,folder,modus,axons)
 % this function applied the changes (merges/splits) made in the nml files located in
 % "folder" to all whole cell superagglos
 %
@@ -17,8 +17,8 @@ function [dendrites,dendritesLUT] = applyAggloCorrections(dendrites,p,folder,mod
 %
 % by Marcel Beining <marcel.beining@brain.mpg.de>
 
-if ~exist('mode','var') || isempty(mode)
-    mode = 0;
+if ~exist('mode','var') || isempty(modus)
+    modus = 0;
 end
 if exist('axons','var') && ~isempty(axons)
     axons = rmfield(axons,'endings');
@@ -30,25 +30,27 @@ end
 dendriteSegIds = cell2mat(arrayfun(@(x) x.nodes(:,4),dendrites,'uni',0));
 dendritesLUT(dendriteSegIds)  = repelem(1:numel(dendrites),arrayfun(@(x) numel(x.nodes(:,4)),dendrites));
 dendriteCoord = cell2mat(arrayfun(@(x) x.nodes(:,1:3),dendrites,'uni',0));
-
-
+numDend = arrayfun(@(x) size(x.nodes,1),dendrites);
+dendLabel = repelem(1:numel(dendrites),numDend);
 if ~exist(folder,'dir')
     error('Folder %s is not existent',folder);
 end
 files = dir(fullfile(folder,'*.nml'));
 % usedCells = NaN(numel(somaAgglosCoord),1);
 usedCells = NaN(numel(dendrites),1);
-usedWholeCellSlots = [];
+
 for f = 1:numel(files)
     skel = skeleton(fullfile(folder,files(f).name));  % load skeleton
     skel = skel.deleteTrees(cellfun(@numel,skel.nodes)/4==1); % delete single node trees
     skelCoords = cell2mat(cellfun(@(x) x(:,1:3),skel.nodes,'uni',0));  % putting all skel nodes together
     % get soma index for current skeleton
-    overlapsAgglo = cellfun(@(y) sum(ismember(y, skelCoords,'rows')),dendriteCoord);
-    [maxOV,ind] = max(overlapsAgglo);
+    [~,aggloOverlapsSkel] = ismember(skelCoords,dendriteCoord,'rows');
+    aggloOverlapsSkel = setdiff(aggloOverlapsSkel,0);
+    ind = mode(dendLabel(aggloOverlapsSkel));
+    
     % avoid using a wrong dendrite/axons agglo because it overlaps only a
     % little
-    if maxOV/size(skelCoords,1) < 0.5
+    if sum(dendLabel(aggloOverlapsSkel)==ind)/size(skelCoords,1) < 0.5
         warning('Found overlap of skeleton %s with an agglo is less than 50%..skipping..',skel(f).filename);
         continue
     end
@@ -57,7 +59,7 @@ for f = 1:numel(files)
     end
     usedCells(ind) = f;
     nodesToDelete = find(~ismember(dendrites(ind).nodes(:,1:3),skelCoords,'rows'));  % find node ind which has to be deleted by checking which one is missing in the loaded skeleton compared to the skeleton before modification
-    if  any(mode == [0 2])
+    if  any(modus == [0 2])
         nodesToAdd = find(~ismember(skelCoords,dendrites(ind).nodes(:,1:3),'rows'));  % find node ind which has to be deleted by checking which one is missing in the loaded skeleton compared to the skeleton before modification
     else
         nodesToAdd = [];
@@ -117,7 +119,7 @@ for f = 1:numel(files)
                     continue
                 end
                 
-                if mode == 2
+                if modus == 2
                    indToAddAxons = cat(1,indToAddAxons,indToAdd);
                    continue 
                 end
@@ -151,7 +153,7 @@ for f = 1:numel(files)
                     continue
                 end
                 
-                if mode == 2
+                if modus == 2
                    indToAddDendrites = cat(1,indToAddDendrites,indToAdd);
                    continue 
                 end
@@ -183,7 +185,7 @@ for f = 1:numel(files)
                 aggloSomaId =  aggloSomaId - sum(bsxfun(@ge,aggloSomaId,indToAdd),2);
             end
         end
-        if mode == 2
+        if modus == 2
             % write out all axons and skeletons that would be added this
             % turn
             mkdir(fullfile(folder,'checkBeforeAdd'))
