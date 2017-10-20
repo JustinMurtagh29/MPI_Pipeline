@@ -113,15 +113,16 @@ for f = 1:numel(files)
         %        skelSegIds = Seg.Global.getSegIds(p,skelCoords(nodesToAdd,:));  % extract the seg Ids of these nodes that were added
         % put this in later
         for n = 1:numel(endingClusters)
+            
+            skelSegIds = Seg.Global.getSegIds(p,skelCoords(endingClusters{n},:));  % extract the seg Ids of these nodes that were added
             if ~any(ismember(skelSegIds(endingSkelEdgesClusters{n}(:)),dendrites(aggloSomaId(ind)).nodes(:,4)))
                 warning('Skel %s contained an ending which could not be processed, because it seemed to be part of a merged agglo which had been split away now.',skel.filename)
                 continue
             end
             
-            skelSegIds = Seg.Global.getSegIds(p,skelCoords(endingClusters{n},:));  % extract the seg Ids of these nodes that were added
             
-            hasAxonComment = cellfun(@(x) ~isempty(strfind(x,'axon')),comments(endingClusters{n}));
-            if any(hasAxonComment)
+            hasAxonComment = cellfun(@(x) ~isempty(strfind(x,'axon')),comments(ismember(endingClusters{n},nodeIdx)));
+            if ~isempty(hasAxonComment) && any(hasAxonComment)
                 indToAdd = setdiff(axonsLUT(setdiff(skelSegIds,0)),0); % get the index of the superagglo(s) to add
                
                 if isempty(indToAdd)
