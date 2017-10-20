@@ -15,27 +15,62 @@ curDir = fullfile( ...
     p.saveFolder, 'chiasmataSplitting', ...
     '20171009T193744-kmb-on-axons-6c');
 outputDir = fullfile(curDir, 'outputs');
-curData = load(fullfile( ...
-    curDir, '20171018T104038_input-data.mat'));
 
-queries = table;
-queries.axonId = curData.queries(:, 1);
-queries.chiasmaId = curData.queries(:, 2);
-queries.exitId = curData.queries(:, 3);
-queries.exitNodeId = curData.queries(:, 8);
-queries.seedPos = curData.queries(:, 4:6);
-queries.centerNodeId = curData.queries(:, 7);
-queries.taskId = curData.taskIds;
-flights = curData.ff;
+% List with input files **in decreasing order of dominance**. Add new
+% requery rounds to the top of this list.
+dataFiles = { ...
+    'requeries/20171020T132537_input-data.mat', ...
+    '20171018T104038_input-data.mat'};
+dataFiles = fullfile(curDir, dataFiles);
+clear curDir;
 
-clear curDir curData;
+%% load data
+dataFileCount = numel(dataFiles);
+queries = cell(dataFileCount, 1);
+flights = cell(dataFileCount, 1);
+
+for curFileIdx = 1:numel(dataFiles)
+    curDataFile = dataFiles{curFileIdx};
+    curData = load(curDataFile);
+    
+    if istable(curData.queries)
+        % requeries
+        curQueries = curData.queries(:, { ...
+            'axonId', 'chiasmaId', 'exitId', ...
+            'exitNodeId', 'seedPos', 'centerNodeId'});
+        curQueries.taskId = curData.taskIds;
+        curFlights = curData.ff;
+    else
+        % original queries
+        curQueries = table;
+        curQueries.axonId = curData.queries(:, 1);
+        curQueries.chiasmaId = curData.queries(:, 2);
+        curQueries.exitId = curData.queries(:, 3);
+        curQueries.exitNodeId = curData.queries(:, 8);
+        curQueries.seedPos = curData.queries(:, 4:6);
+        curQueries.centerNodeId = curData.queries(:, 7);
+        curQueries.taskId = curData.taskIds;
+        curFlights = curData.ff;
+    end
+    
+    queries{curFileIdx} = curQueries;
+    flights{curFileIdx} = curFlights;
+    clear curData;
+end
+
+queries = cat(1, queries{:});
+flights = Util.concatStructs('last', flights{:});
 
 fprintf('# handed out queries: %d\n', size(queries, 1));
 fprintf('# queries answered: %d\n', numel(flights.segIds));
 
 %% cleaning up input data
-% Sort queries to make processing easier
-queries = sortrows(queries, {'axonId', 'chiasmaId', 'exitId'});
+% Remove duplicate queries (e.g., due to requerying)
+% This also sorts the queries to make processing easier.
+[~, uniRows] = unique(queries(:, ...
+    {'axonId', 'chiasmaId', 'exitId'}), 'rows');
+
+queries = queries(uniRows, :);
 flights = structfun(@(x) x(:), flights, 'UniformOutput', false);
 
 % Assign flight paths to queries
