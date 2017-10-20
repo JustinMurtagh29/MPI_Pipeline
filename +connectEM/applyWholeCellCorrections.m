@@ -105,17 +105,18 @@ for f = 1:numel(files)
         skelNumNodes = cellfun(@(x) size(x,1),skel.nodes);
         cumSkelNumNodes = cumsum(skelNumNodes);
         skelEdges = cell2mat(arrayfun(@(x) skel.edges{x}+sum(skelNumNodes(1:x-1)),(1:numel(skel.nodes))','uni',0));% putting all edges together (inceasing index for each skel
-        nodeIdx = nodeIdx + cumSkelNumNodes(treeIdx);
+        nodeIdx = nodeIdx + cumSkelNumNodes(treeIdx-1);
         endingSkelEdges = skelEdges(any(ismember(skelEdges,nodesToAdd),2),:);   %edges of skeletons including the last node of the original skeleton
-        endingClusters = Graph.findConnectedComponents(endingSkelEdges,1,1);   % cluster each extended ending
+        [endingClusters,skelSegIdLabel] = Graph.findConnectedComponents(endingSkelEdges,1,1);   % cluster each extended ending
         [~,endingSkelEdgesClusters] = cellfun(@(x) ismember(endingSkelEdges(all(ismember(endingSkelEdges,x),2),:),x),endingClusters,'uni',0);  % get the skel edges for each ending
         
-        %        skelSegIds = Seg.Global.getSegIds(p,skelCoords(nodesToAdd,:));  % extract the seg Ids of these nodes that were added
+        skelSegIds = Seg.Global.getSegIds(p,skelCoords(endingSkelEdges(:),:));  % extract the seg Ids of these nodes that were added
         % put this in later
         for n = 1:numel(endingClusters)
-            
+            [~,segIdInd] = ismember(endingClusters{n},endingSkelEdges(:));
+            theseSkelSegIds = skelSegIds(segIdInd);
             skelSegIds = Seg.Global.getSegIds(p,skelCoords(endingClusters{n},:));  % extract the seg Ids of these nodes that were added
-            if ~any(ismember(skelSegIds(endingSkelEdgesClusters{n}(:)),dendrites(aggloSomaId(ind)).nodes(:,4)))
+            if ~any(ismember(theseSkelSegIds(endingSkelEdgesClusters{n}(:)),dendrites(aggloSomaId(ind)).nodes(:,4)))
                 warning('Skel %s contained an ending which could not be processed, because it seemed to be part of a merged agglo which had been split away now.',skel.filename)
                 continue
             end
@@ -123,7 +124,7 @@ for f = 1:numel(files)
             
             hasAxonComment = cellfun(@(x) ~isempty(strfind(x,'axon')),comments(ismember(endingClusters{n},nodeIdx)));
             if ~isempty(hasAxonComment) && any(hasAxonComment)
-                indToAdd = setdiff(axonsLUT(setdiff(skelSegIds,0)),0); % get the index of the superagglo(s) to add
+                indToAdd = setdiff(axonsLUT(setdiff(theseSkelSegIds,0)),0); % get the index of the superagglo(s) to add
                
                 if isempty(indToAdd)
                     warning('Skel %s contained an axon marked ending which could not be processed, because the tracing did not reach a segId belonging to an axon superagglo',skel.filename)
@@ -131,8 +132,8 @@ for f = 1:numel(files)
                 end
                 % find nodes at segIds that are not part of the whole cell or
                 % the superagglos to add and delete those
-                nodesToDelete = sort(find(~ismember(skelSegIds,cell2mat(arrayfun(@(x) x.nodes(:,4),cat(1,dendrites(aggloSomaId(ind)),axons(indToAdd)),'uni',0)))),'descend');
-                skelSegIds(nodesToDelete) = [];
+                nodesToDelete = sort(find(~ismember(theseSkelSegIds,cell2mat(arrayfun(@(x) x.nodes(:,4),cat(1,dendrites(aggloSomaId(ind)),axons(indToAdd)),'uni',0)))),'descend');
+                theseSkelSegIds(nodesToDelete) = [];
                 for d = 1:numel(nodesToDelete)
                     %find neighbors
                     neighborIdx = setdiff(endingSkelEdgesClusters{n}(any(endingSkelEdgesClusters{n} == nodesToDelete(d),2),:),nodesToDelete(d));
@@ -141,7 +142,7 @@ for f = 1:numel(files)
                     endingClusters{n}(nodesToDelete(d)) = [];
                     endingSkelEdgesClusters{n}(endingSkelEdgesClusters{n}>nodesToDelete(d)) = endingSkelEdgesClusters{n}(endingSkelEdgesClusters{n}>nodesToDelete(d)) - 1;
                 end
-                segIdEdges = skelSegIds(endingSkelEdgesClusters{n});  % get segId edge vector of skeleton
+                segIdEdges = theseSkelSegIds(endingSkelEdgesClusters{n});  % get segId edge vector of skeleton
                 if size(segIdEdges,2)~=2 % fix stupid 1 value pair problem
                     segIdEdges = segIdEdges';
                 end
@@ -153,15 +154,15 @@ for f = 1:numel(files)
                 axons(indToAdd) = [];
                 
             else                
-                indToAdd = setdiff(dendritesLUT(setdiff(skelSegIds,0)),[0,aggloSomaId(ind)]); % get the index of the superagglo(s) to add
+                indToAdd = setdiff(dendritesLUT(setdiff(theseSkelSegIds,0)),[0,aggloSomaId(ind)]); % get the index of the superagglo(s) to add
                 if isempty(indToAdd)
                     warning('Skel %s contained an ending which could not be processed, because the tracing did not reach a segId not already belonging to the whole cell agglo or the segIDs were not part of the dendrite class',skel.filename)
                     continue
                 end
                 % find nodes at segIds that are not part of the whole cell or
                 % the superagglos to add and delete those
-                nodesToDelete = sort(find(~ismember(skelSegIds,cell2mat(arrayfun(@(x) x.nodes(:,4),dendrites([aggloSomaId(ind),indToAdd]),'uni',0)))),'descend');
-                skelSegIds(nodesToDelete) = [];
+                nodesToDelete = sort(find(~ismember(theseSkelSegIds,cell2mat(arrayfun(@(x) x.nodes(:,4),dendrites([aggloSomaId(ind),indToAdd]),'uni',0)))),'descend');
+                theseSkelSegIds(nodesToDelete) = [];
                 for d = 1:numel(nodesToDelete)
                     %find neighbors
                     neighborIdx = setdiff(endingSkelEdgesClusters{n}(any(endingSkelEdgesClusters{n} == nodesToDelete(d),2),:),nodesToDelete(d));
@@ -170,7 +171,7 @@ for f = 1:numel(files)
                     endingClusters{n}(nodesToDelete(d)) = [];
                     endingSkelEdgesClusters{n}(endingSkelEdgesClusters{n}>nodesToDelete(d)) = endingSkelEdgesClusters{n}(endingSkelEdgesClusters{n}>nodesToDelete(d)) - 1;
                 end
-                segIdEdges = skelSegIds(endingSkelEdgesClusters{n});  % get segId edge vector of skeleton
+                segIdEdges = theseSkelSegIds(endingSkelEdgesClusters{n});  % get segId edge vector of skeleton
                 if size(segIdEdges,2)~=2 % fix stupid 1 value pair problem
                     segIdEdges = segIdEdges';
                 end
