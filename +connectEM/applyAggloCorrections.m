@@ -133,7 +133,7 @@ for f = 1:numel(files)
                 end
                 
                 if modus == 2
-                   indToAddAxons = cat(1,indToAddAxons,indToAdd);
+                   indToAddAxons = cat(2,indToAddAxons,indToAdd);
                    continue 
                 end
                 % find nodes at segIds that are not part of the whole cell or
@@ -167,7 +167,7 @@ for f = 1:numel(files)
                 end
                 
                 if modus == 2
-                   indToAddDendrites = cat(1,indToAddDendrites,indToAdd);
+                   indToAddDendrites = cat(2,indToAddDendrites,indToAdd);
                    continue 
                 end
                 % find nodes at segIds that are not part of the whole cell or
