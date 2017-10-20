@@ -20,6 +20,9 @@ function [dendrites,dendritesLUT] = applyAggloCorrections(dendrites,p,folder,mod
 if ~exist('modus','var') || isempty(modus)
     modus = 0;
 end
+if modus == 2
+    mkdir(fullfile(folder,'checkBeforeAdd'))
+end
 if exist('axons','var') && ~isempty(axons)
     axons = rmfield(axons,'endings');
     axonSegIds = cell2mat(arrayfun(@(x) x.nodes(:,4),axons,'uni',0));
@@ -196,8 +199,7 @@ for f = 1:numel(files)
         if modus == 2
             % write out all axons and skeletons that would be added this
             % turn
-            mkdir(fullfile(folder,'checkBeforeAdd'))
-            connectEM.generateSkeletonFromAggloNew(cat(1,dendrites(indToAddDendrites),axons(indToAddAxons)),{sprintf('AggloToBeAdded_%02d',numel(cat(1,indToAddDendrites,indToAddAxons)))} , fullfile(folder,'checkBeforeAdd'), [],[],sprintf('checkBeforeAdd_%02d.nml',f));
+            connectEM.generateSkeletonFromAggloNew(cat(1,dendrites(indToAddDendrites),axons(indToAddAxons)),arrayfun(@(x) sprintf('AggloToBeAdded_%02d',x),1:numel(cat(2,indToAddDendrites,indToAddAxons)),'uni',0) , fullfile(folder,'checkBeforeAdd'), [],[],sprintf('checkBeforeAdd_%02d.nml',f));
         end
     end
 end
