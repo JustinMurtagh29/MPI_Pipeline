@@ -141,12 +141,12 @@ for f = 1:numel(files)
                 if modus == 2
                    indToAddAxons = cat(2,indToAddAxons,indToAdd);
                    for i = 1:numel(indToAdd)
-                       [~,indComment] = ismember(theseSkelSegIds,cell2mat(arrayfun(@(x) x.nodes(:,4),axons(indToAdd),'uni',0)));
+                       [~,indComment] = ismember(theseSkelSegIds,axons(indToAdd(i)).nodes(:,4));
                        indComment = setdiff(indComment,0);
-                       if isempty(axons(indToAdd).comments)
-                           axons(indToAdd).comments = repmat({''},size(axons(indToAdd),1),1);
+                       if isempty(axons(indToAdd(i)).comments)
+                           axons(indToAdd(i)).comments = repmat({''},size(axons(indToAdd(i)),1),1);
                        end
-                       axons(indToAdd).comments(indComment) = repmat({'attached segments'},numel(indComment),1);
+                       axons(indToAdd(i)).comments(indComment) = repmat({'attached segments'},numel(indComment),1);
                    end
                    continue 
                 end
@@ -183,12 +183,12 @@ for f = 1:numel(files)
                 if modus == 2
                    indToAddDendrites = cat(2,indToAddDendrites,indToAdd);
                    for i = 1:numel(indToAdd)
-                       [~,indComment] = ismember(theseSkelSegIds,cell2mat(arrayfun(@(x) x.nodes(:,4),dendrites(indToAdd),'uni',0)));
+                       [~,indComment] = ismember(theseSkelSegIds,dendrites(indToAdd(i)).nodes(:,4));
                        indComment = setdiff(indComment,0);
-                       if isempty(dendrites(indToAdd).comments)
-                           dendrites(indToAdd).comments = repmat({''},size(dendrites(indToAdd),1),1);
+                       if isempty(dendrites(indToAdd(i)).comments)
+                           dendrites(indToAdd(i)).comments = repmat({''},size(dendrites(indToAdd(i)),1),1);
                        end
-                       dendrites(indToAdd).comments(indComment) = repmat({'attached segments'},numel(indComment),1);
+                       dendrites(indToAdd(i)).comments(indComment) = repmat({'attached segments'},numel(indComment),1);
                    end
                    continue 
                 end
