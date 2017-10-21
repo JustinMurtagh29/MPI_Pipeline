@@ -144,7 +144,7 @@ for f = 1:numel(files)
                        [~,indComment] = ismember(theseSkelSegIds,axons(indToAdd(i)).nodes(:,4));
                        indComment = setdiff(indComment,0);
                        if isempty(axons(indToAdd(i)).comments)
-                           axons(indToAdd(i)).comments = repmat({''},size(axons(indToAdd(i)),1),1);
+                           axons(indToAdd(i)).comments = repmat({''},size(axons(indToAdd(i)).nodes,1),1);
                        end
                        axons(indToAdd(i)).comments(indComment) = repmat({'attached segments'},numel(indComment),1);
                    end
@@ -186,7 +186,7 @@ for f = 1:numel(files)
                        [~,indComment] = ismember(theseSkelSegIds,dendrites(indToAdd(i)).nodes(:,4));
                        indComment = setdiff(indComment,0);
                        if isempty(dendrites(indToAdd(i)).comments)
-                           dendrites(indToAdd(i)).comments = repmat({''},size(dendrites(indToAdd(i)),1),1);
+                           dendrites(indToAdd(i)).comments = repmat({''},size(dendrites(indToAdd(i)).nodes,1),1);
                        end
                        dendrites(indToAdd(i)).comments(indComment) = repmat({'attached segments'},numel(indComment),1);
                    end
