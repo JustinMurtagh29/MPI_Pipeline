@@ -7,7 +7,8 @@ rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 dataDir = fullfile( ...
     rootDir, 'chiasmataSplitting', ...
     '20171009T193744-kmb-on-axons-6c');
-outputDir = fullfile(dataDir, 'requeries');
+outputDir = fullfile( ...
+    dataDir, 'requeries', 'raw-data');
 data = load(fullfile( ...
     dataDir, '20171018T205736_input-data.mat'));
 
@@ -19,7 +20,8 @@ queries.exitNodeId = data.queries(:, 8);
 queries.seedPos = data.queries(:, 4:6);
 queries.centerNodeId = data.queries(:, 7);
 queries.taskId = data.taskIds;
-taskDef = data.taskDef;
+queries.row = reshape( ...
+    1:size(queries, 1), [], 1);
 flights = data.ff;
 
 %% find invalid tasks
@@ -39,9 +41,7 @@ queries.flightComment = flights.comments(queries.flightId);
 maskEmpty = cellfun(@isempty, queries.flightNodes);
 maskComment = ~cellfun(@isempty, queries.flightComment);
 mask = maskEmpty | maskComment;
-
 queries = queries(mask, :);
-taskDef = taskDef(mask, :);
 
 fprintf('# queries without nodes: %d\n', sum(maskEmpty));
 fprintf('# queries with comment: %d\n', sum(maskComment));
@@ -52,8 +52,8 @@ if ~exist(outputDir, 'dir'); mkdir(outputDir); end
 
 out = struct;
 out.gitInfo = Util.gitInfo();
-out.queries = queries;
-out.taskDef = taskDef;
+out.queries = data.queries(queries.row, :);
+out.taskDef = data.taskDef(queries.row, :);
 
 saveFile = sprintf('%s_data.mat', curDateStr);
 Util.saveStruct(fullfile(outputDir, saveFile), out);
@@ -69,4 +69,4 @@ taskParam.project = 'queriesMHchiasma';
 
 taskDefFile = sprintf('%s_flightTasks.txt', curDateStr);
 connectEM.exportTaskDefinitions( ...
-    taskParam, taskDef, fullfile(outputDir, taskDefFile));
+    taskParam, out.taskDef, fullfile(outputDir, taskDefFile));
