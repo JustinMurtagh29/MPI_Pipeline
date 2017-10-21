@@ -22,6 +22,12 @@ if ~exist('modus','var') || isempty(modus)
 end
 if modus == 2
     mkdir(fullfile(folder,'checkBeforeAdd'))
+    if ~isfield(dendrites,'comments')
+        dendrites(1).comments = [];
+    end
+    if exist('axons','var') && ~isempty(axons) && ~isfield(axons,'comments')
+        axons(1).comments = [];
+    end
 end
 if exist('axons','var') && ~isempty(axons)
     axons = rmfield(axons,'endings');
@@ -134,6 +140,14 @@ for f = 1:numel(files)
                 
                 if modus == 2
                    indToAddAxons = cat(2,indToAddAxons,indToAdd);
+                   for i = 1:numel(indToAdd)
+                       [~,indComment] = ismember(theseSkelSegIds,axons(indToAdd).nodes(:,4));
+                       indComment = setdiff(indComment,0);
+                       if isempty(axons(indToAdd).comments)
+                           axons(indToAdd).comments = repmat({''},size(axons(indToAdd),1),1);
+                       end
+                       axons(indToAdd).comments(indComment) = repmat({'attached segments'},numel(indComment),1);
+                   end
                    continue 
                 end
                 % find nodes at segIds that are not part of the whole cell or
@@ -168,6 +182,14 @@ for f = 1:numel(files)
                 
                 if modus == 2
                    indToAddDendrites = cat(2,indToAddDendrites,indToAdd);
+                   for i = 1:numel(indToAdd)
+                       [~,indComment] = ismember(theseSkelSegIds,dendrites(indToAdd).nodes(:,4));
+                       indComment = setdiff(indComment,0);
+                       if isempty(dendrites(indToAdd).comments)
+                           dendrites(indToAdd).comments = repmat({''},size(dendrites(indToAdd),1),1);
+                       end
+                       dendrites(indToAdd).comments(indComment) = repmat({'attached segments'},numel(indComment),1);
+                   end
                    continue 
                 end
                 % find nodes at segIds that are not part of the whole cell or
