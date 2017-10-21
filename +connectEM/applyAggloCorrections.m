@@ -141,7 +141,7 @@ for f = 1:numel(files)
                 if modus == 2
                    indToAddAxons = cat(2,indToAddAxons,indToAdd);
                    for i = 1:numel(indToAdd)
-                       [~,indComment] = ismember(theseSkelSegIds,axons(indToAdd).nodes(:,4));
+                       [~,indComment] = ismember(theseSkelSegIds,cell2mat(arrayfun(@(x) x.nodes(:,4),axons(indToAdd),'uni',0)));
                        indComment = setdiff(indComment,0);
                        if isempty(axons(indToAdd).comments)
                            axons(indToAdd).comments = repmat({''},size(axons(indToAdd),1),1);
@@ -183,7 +183,7 @@ for f = 1:numel(files)
                 if modus == 2
                    indToAddDendrites = cat(2,indToAddDendrites,indToAdd);
                    for i = 1:numel(indToAdd)
-                       [~,indComment] = ismember(theseSkelSegIds,dendrites(indToAdd).nodes(:,4));
+                       [~,indComment] = ismember(theseSkelSegIds,cell2mat(arrayfun(@(x) x.nodes(:,4),dendrites(indToAdd),'uni',0)));
                        indComment = setdiff(indComment,0);
                        if isempty(dendrites(indToAdd).comments)
                            dendrites(indToAdd).comments = repmat({''},size(dendrites(indToAdd),1),1);
