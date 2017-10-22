@@ -1,6 +1,6 @@
 load(fullfile('/gaba/u/mberning/results/pipeline/20170217_ROI', 'allParameter.mat'));
 graph = load([p.saveFolder 'graphNew.mat'], 'prob', 'edges', 'borderIdx');
-meta = load(fullfile(p.saveFolder, 'segmentMeta.mat'), 'segIds', 'point');
+meta = load(fullfile(p.saveFolder, 'segmentMeta.mat'), 'segIds', 'point', 'voxelCount');
 load('/gaba/u/mberning/results/pipeline/20170217_ROI/soma/NucleiCoordinates.mat','rp');
 gb = load([p.saveFolder 'globalBorder.mat'], 'borderCoM', 'borderSize');
 
