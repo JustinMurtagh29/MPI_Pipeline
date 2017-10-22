@@ -89,7 +89,7 @@ for f = 1:numel(files)
         segIdsToDelete = dendrites(ind).nodes(nodesToDelete,4);
       
         dendrites(ind) = splitAgglo(1);  % replace this agglo with one of the correctly splitted version
-        dendritesLUT(splitAgglo(1).nodes(~isnan(splitAgglo(1).nodes(:,4)),4)) = repelem(ind,sum(~isnan(splitAgglo(1).nodes(:,1))));
+        dendritesLUT(splitAgglo(1).nodes(~isnan(splitAgglo(1).nodes(:,4)),4)) = repelem(ind,sum(~isnan(splitAgglo(1).nodes(:,4))));
 
         if numel(splitAgglo) > 1
             % update  LUT
