@@ -31,12 +31,12 @@ if modus == 2
 end
 if exist('axons','var') && ~isempty(axons)
     axons = rmfield(axons,'endings');
-    axonSegIds = cell2mat(arrayfun(@(x) x.nodes(:,4),axons,'uni',0));
-    axonsLUT(axonSegIds(~isnan(axonSegIds)))  = repelem(1:numel(axons),arrayfun(@(x) numel(x.nodes(~isnan(x.nodes(:,4)),4)),axons));
+    axonSegIds = cell2mat(arrayfun(@(x) x.nodes(~isnan(x.nodes(:,4)),4),axons,'uni',0));
+    axonsLUT(axonSegIds(axonSegIds))  = repelem(1:numel(axons),arrayfun(@(x) numel(x.nodes(:,4)),axons));
 end
 
 
-dendriteSegIds = cell2mat(arrayfun(@(x) x.nodes(:,4),dendrites,'uni',0));
+dendriteSegIds = cell2mat(arrayfun(@(x) x.nodes(~isnan(x.nodes(:,4),4),dendrites,'uni',0));
 dendritesLUT(dendriteSegIds)  = repelem(1:numel(dendrites),arrayfun(@(x) numel(x.nodes(:,4)),dendrites));
 dendriteCoord = cell2mat(arrayfun(@(x) x.nodes(:,1:3),dendrites,'uni',0));
 numDend = arrayfun(@(x) size(x.nodes,1),dendrites);
