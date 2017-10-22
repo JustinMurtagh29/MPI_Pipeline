@@ -9,16 +9,15 @@ cumNumNodes = [0;cumsum(numNodes)];
 edges = cell2mat(arrayfun(@(x) superagglos(x).edges+cumNumNodes(x),(1:numel(superagglos))','uni',0));% putting all edges together (inceasing index for each superagglo
 
 % segIDedges = cell2mat(arrayfun(@(x) reshape(x.nodes(x.edges,4),[],2),superagglos,'uni',0));
-idsToDelete = find(~ismember(nodes(:,4),ids));
-nodes = nodes(idsToDelete,:);
-edges = edges(all(~ismember(edges,idsToDelete),2),:);
+idsToKeep = find(~ismember(nodes(:,4),ids));
+edges = edges(all(ismember(edges,idsToKeep),2),:);
 
 % nodeLUT(nodes(:,4)) = 1:size(nodes,1);
 % segIDedges = segIDedges(all(~ismember(segIDedges,ids),2),:);
 
 % generate selfEdges of all superagglo segments
 % selfEdges = repmat(nodes(:,4),1,2);
-selfEdges = repmat((1:size(nodes,1))',1,2);
+selfEdges = repmat(idsToKeep,1,2);
 
 % [equivalenceClass, aggloLUT] = Graph.findConnectedComponents(cat(1,selfEdges,segIDedges),0,1);
 [equivalenceClass, aggloLUT] = Graph.findConnectedComponents(cat(1,selfEdges,edges),0,1);
@@ -50,7 +49,7 @@ newedges(~singleSegAgglos) = mat2cell(edges,histc(saggloLUT,unique(saggloLUT)));
 newedges(singleSegAgglos) = {zeros(0,2)}; % give empty edges correct dimension
 
 %  create node cell array including segID information
-newnodes = cellfun(@(x) nodes(nodeLUT(x),:),equivalenceClass,'uni',0)';
+newnodes = cellfun(@(x) nodes(x,:),equivalenceClass,'uni',0)';
 
 % tranform the global node ids in the edge vector to local node ids
 [~, newedges] = cellfun(@(x,y) ismember(x,y(:,4)),newedges,newnodes,'uni',0);
