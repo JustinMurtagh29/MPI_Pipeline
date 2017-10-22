@@ -62,7 +62,7 @@ for f = 1:numel(files)
     % avoid using a wrong dendrite/axons agglo because it overlaps only a
     % little
     if sum(dendLabel(aggloOverlapsSkel)==ind)/size(skelCoords,1) < 0.5
-        warning('Found overlap of skeleton %s with an agglo is less than 50%..skipping..',skel(f).filename);
+        warning('Found overlap of skeleton %s with an agglo is less than 50%..skipping..',skel.filename);
         continue
     end
     if ~isnan(usedCells(ind))
@@ -97,7 +97,7 @@ for f = 1:numel(files)
             dendrites(end+1:end+numel(splitAgglo)-1) = splitAgglo(2:end);  % add the splitted stuff to end of agglo class
             dendritesLUT(segIdsToDelete) = 0;  % deleted segIds will not be there anymore in the agglo class
         else
-            warning('Deleting the nodes from the skeleton %s did not split the agglo!',skel(f).filename)
+            warning('Deleting the nodes from the skeleton %s did not split the agglo!',skel.filename)
         end
     end
     

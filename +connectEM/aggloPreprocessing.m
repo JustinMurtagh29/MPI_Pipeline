@@ -250,8 +250,8 @@ if ~exist(fullfile(outputFolder,'dendrites_05.mat'),'file') || overwrite
     connectEM.applyAggloCorrections(dendrites,p,fullfile(outputFolder,correctionFolder),2,axons);
     
     % split the stuff to be added now
-    dendrites = connectEM.applyAggloCorrections(dendrites,p,fullfile(outputFolder,correctionFolder,'checkBeforeAdd'),1);
-    [axons,axonLUT] = connectEM.applyAggloCorrections(axons,p,fullfile(outputFolder,correctionFolder,'checkBeforeAdd'),1);
+    dendrites = connectEM.applyAggloCorrections(dendrites,p,fullfile(outputFolder,correctionFolder,'checkedBeforeAdd'),1);
+    [axons,axonLUT] = connectEM.applyAggloCorrections(axons,p,fullfile(outputFolder,correctionFolder,'checkedBeforeAdd'),1);
     
     [dendrites,dendriteLUT] = connectEM.applyAggloCorrections(dendrites,p,fullfile(outputFolder,correctionFolder),0,axons);
     
