@@ -3,7 +3,11 @@ function [newSuperagglos] = removeSegIdsFromAgglos(superagglos,ids )
 % component afterswards to ensure internode connectivity in each superagglo
 
 nodes = cell2mat(arrayfun(@(x) x.nodes,superagglos,'uni',0));
-
+fNames = setdiff(fieldnames(superagglos),{'nodes','edges'});
+tmpstrct = cell(numel(fNames),1);
+for f = 1:numel(fNames)
+    tmpstrct{f} = cat(1,superagglos.(fNames));
+end
 numNodes = arrayfun(@(x) size(x.nodes,1),superagglos);
 cumNumNodes = [0;cumsum(numNodes)];
 edges = cell2mat(arrayfun(@(x) superagglos(x).edges+cumNumNodes(x),(1:numel(superagglos))','uni',0));% putting all edges together (inceasing index for each superagglo
@@ -50,10 +54,12 @@ newedges(singleSegAgglos) = {zeros(0,2)}; % give empty edges correct dimension
 
 %  create node cell array including segID information
 newnodes = cellfun(@(x) nodes(x,:),equivalenceClass,'uni',0)';
-
+for f = 1:numel(fNames)
+    tmpstrct{f} = cellfun(@(x) tmpstrct{f}(x,:),equivalenceClass,'uni',0)';
+end
 % tranform the global node ids in the edge vector to local node ids
 [~, newedges] = cellfun(@(x,y) ismember(x,y(:,4)),newedges,newnodes,'uni',0);
 
-newSuperagglos = cell2struct([newedges;newnodes],{'edges','nodes'},1);
+newSuperagglos = cell2struct([newedges;newnodes;tmpstrct{:}],[{'edges'},{'nodes'},fNames'],1);
 end
 
