@@ -89,11 +89,11 @@ for f = 1:numel(files)
         segIdsToDelete = dendrites(ind).nodes(nodesToDelete,4);
       
         dendrites(ind) = splitAgglo(1);  % replace this agglo with one of the correctly splitted version
-        dendritesLUT(splitAgglo(1).nodes(:,4)) = repelem(ind,size(splitAgglo(1).nodes,1));
+        dendritesLUT(splitAgglo(1).nodes(~usnan(splitAgglo(1).nodes(:,4)),4)) = repelem(ind,size(splitAgglo(1).nodes,1));
 
         if numel(splitAgglo) > 1
             % update  LUT
-            dendritesLUT(cell2mat(arrayfun(@(x) x.nodes(:,4),splitAgglo(2:end),'uni',0))) = repelem((1:sum(~overlapsIndAll))+numel(dendrites),arrayfun(@(x) size(x.nodes,1),splitAgglo(2:end)));
+            dendritesLUT(cell2mat(arrayfun(@(x) x.nodes(~usnan(x.nodes(:,4)),4),splitAgglo(2:end),'uni',0))) = repelem((1:sum(~overlapsIndAll))+numel(dendrites),arrayfun(@(x) sum(~isnan(x.nodes(:,4))),splitAgglo(2:end)));
             dendrites(end+1:end+numel(splitAgglo)-1) = splitAgglo(2:end);  % add the splitted stuff to end of agglo class
             dendritesLUT(segIdsToDelete) = 0;  % deleted segIds will not be there anymore in the agglo class
         else
@@ -212,7 +212,7 @@ for f = 1:numel(files)
                 
                 %            skel2 = Superagglos.toSkel(agglos(ind));
                 %            subplot(1,2,2);hold all;skel2.plot;axis equal
-                dendritesLUT(cell2mat(arrayfun(@(x) x.nodes(:,4),dendrites(indToAdd),'uni',0))) = ind; % update LUT
+                dendritesLUT(cell2mat(arrayfun(@(x) x.nodes(~isnan(x.nodes(:,4)),4),dendrites(indToAdd),'uni',0))) = ind; % update LUT
                 % remove agglo which has been added and update LUT
                 dendritesLUT = connectEM.changem(dendritesLUT,(0:numel(dendrites))-cumsum(accumarray(indToAdd',1,[numel(dendrites)+1,1]))',0:numel(dendrites));
                 dendrites(indToAdd) = [];
