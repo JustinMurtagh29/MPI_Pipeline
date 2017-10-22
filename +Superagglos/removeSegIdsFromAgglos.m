@@ -6,7 +6,7 @@ nodes = cell2mat(arrayfun(@(x) x.nodes,superagglos,'uni',0));
 fNames = setdiff(fieldnames(superagglos),{'nodes','edges'});
 tmpstrct = cell(numel(fNames),1);
 for f = 1:numel(fNames)
-    tmpstrct{f} = cat(1,superagglos.(fNames));
+    tmpstrct{f} = cat(1,superagglos.(fNames{f}));
 end
 numNodes = arrayfun(@(x) size(x.nodes,1),superagglos);
 cumNumNodes = [0;cumsum(numNodes)];
@@ -55,7 +55,9 @@ newedges(singleSegAgglos) = {zeros(0,2)}; % give empty edges correct dimension
 %  create node cell array including segID information
 newnodes = cellfun(@(x) nodes(x,:),equivalenceClass,'uni',0)';
 for f = 1:numel(fNames)
-    tmpstrct{f} = cellfun(@(x) tmpstrct{f}(x,:),equivalenceClass,'uni',0)';
+    if size(tmpstrct{f},1) == size(nodes,1) % apply same sorting to all other field names if their size was the same as the number of nodes, else leave the same
+        tmpstrct{f} = cellfun(@(x) tmpstrct{f}(x,:),equivalenceClass,'uni',0)';
+    end
 end
 % tranform the global node ids in the edge vector to local node ids
 [~, newedges] = cellfun(@(x,y) ismember(x,y(:,4)),newedges,newnodes,'uni',0);
