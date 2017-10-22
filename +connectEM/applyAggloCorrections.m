@@ -107,7 +107,7 @@ for f = 1:numel(files)
         
         skelNumNodes = cellfun(@(x) size(x,1),skel.nodes);
         cumSkelNumNodes = [0;cumsum(skelNumNodes)];
-        skelEdges = cell2mat(arrayfun(@(x) skel.edges{x}+sum(skelNumNodes(1:x-1)),(1:numel(skel.nodes))','uni',0));% putting all edges together (inceasing index for each skel
+        skelEdges = cell2mat(arrayfun(@(x) skel.edges{x}+cumSkelNumNodes(x),(1:numel(skel.nodes))','uni',0));% putting all edges together (inceasing index for each skel
         nodeIdx = nodeIdx + cumSkelNumNodes(treeIdx);
         endingSkelEdges = skelEdges(any(ismember(skelEdges,nodesToAdd),2),:);   %edges of skeletons including the last node of the original skeleton
         [endingClusters,~] = Graph.findConnectedComponents(endingSkelEdges,1,1);   % cluster each extended ending
