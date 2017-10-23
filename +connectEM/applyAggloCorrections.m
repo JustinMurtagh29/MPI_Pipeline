@@ -88,7 +88,7 @@ for f = 1:numel(files)
     end
     % correct mergers
     if ~isempty(nodesToDelete)
-        splitAgglo = Superagglos.removeSegIdsFromAgglos(dendrites(ind),dendrites(ind).nodes(nodesToDelete,4)); % get the splitted agglos when node is deleted
+        splitAgglo = Superagglos.removeNodesFromAgglo(dendrites(ind),nodesToDelete); % get the splitted agglos when node is deleted
         segIdsToDelete = dendrites(ind).nodes(nodesToDelete,4);
       
         dendrites(ind) = splitAgglo(1);  % replace this agglo with one of the correctly splitted version
