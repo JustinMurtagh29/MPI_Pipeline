@@ -116,13 +116,13 @@ for f = 1:numel(files)
         [endingClusters,~] = Graph.findConnectedComponents(endingSkelEdges,1,1);   % cluster each extended ending
         [~,endingSkelEdgesClusters] = cellfun(@(x) ismember(endingSkelEdges(all(ismember(endingSkelEdges,x),2),:),x),endingClusters,'uni',0);  % get the skel edges for each ending
         
-        skelSegIds = Seg.Global.getSegIds(p,skelCoords(endingSkelEdges(:),:));  % extract the seg Ids of these nodes that were added
+%         skelSegIds = Seg.Global.getSegIds(p,skelCoords(endingSkelEdges(:),:));  % extract the seg Ids of these nodes that were added
         
         indToAddAxons = [];
         indToAddDendrites = [];
         for n = 1:numel(endingClusters)
-            [~,segIdInd] = ismember(endingClusters{n},endingSkelEdges(:));
-            theseSkelSegIds = skelSegIds(segIdInd);
+%             [~,segIdInd] = ismember(endingClusters{n},endingSkelEdges(:));
+            theseSkelSegIds = skelSegIds(endingClusters{n});
             if ~any(ismember(theseSkelSegIds(endingSkelEdgesClusters{n}(:)),dendrites(ind).nodes(:,4)))
                 warning('Skel %s contained an ending which could not be processed, because it seemed to be part of a merged agglo which had been split away now.',skel.filename)
                 continue
