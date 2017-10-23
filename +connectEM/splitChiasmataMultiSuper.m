@@ -179,8 +179,11 @@ chiasmaPartitionStr = cellfun( ...
 
 partitionEval = table;
 partitionEval.partition = uniPartitions;
-partitionEval.count = accumarray(uniPartitionIds, 1);
+partitionEval.total = accumarray(uniPartitionIds, 1);
 partitionEval.valid = accumarray(uniPartitionIds, chiasma.valid);
+partitionEval.invalid = partitionEval.total - partitionEval.valid;
+partitionEval = partitionEval(:, ...
+    {'partition', 'valid', 'invalid', 'total'});
 
 fprintf('Evaluation of chiasmata partitioning:\n\n');
 disp(partitionEval);
