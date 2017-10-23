@@ -4,6 +4,7 @@ overwrite = 0;
 load('/gaba/u/mberning/results/pipeline/20170217_ROI/allParameterWithSynapses.mat');
 disp('Parameters loaded');
 outputFolder = fullfile(p.saveFolder, 'aggloState');
+info = Util.runInfo(); % added by BS
 
 if ~exist('graph','var') || ~all(isfield(graph,{'edges','prob','borderIdx'}))
     graph = load(fullfile(p.saveFolder, 'graphNew.mat'),'edges','prob','borderIdx');
@@ -54,7 +55,7 @@ if ~exist(fullfile(outputFolder,'dendrites_01.mat'),'file') || overwrite
     edgesGTall = [thisGrid.dendriteEdges; thisGrid.garbageEdges(all(ismember(thisGrid.garbageEdges,cell2mat(thisGrid.dendritesNew)),2),:)];
     % remove all duplicates from hot edge list
     edgesGTall = unique(sort(edgesGTall,2),'rows');
-    save(fullfile(outputFolder,'dendritesEdgesGTall.mat'), 'edgesGTall');
+    save(fullfile(outputFolder,'dendritesEdgesGTall.mat'), 'edgesGTall','info');
     
     % add the single segments
     singleSegDendrites = (double(setdiff(segmentMeta.segIds(segmentMeta.dendriteProb > 0.3),cell2mat(thisGrid.dendritesNew))));
@@ -74,7 +75,7 @@ if ~exist(fullfile(outputFolder,'dendrites_01.mat'),'file') || overwrite
     indSingleSeg = true(numel(dendrites),1);
     indSingleSeg(1:end-numel(singleSegDendrites)) = false;
     clear thisGrid edgesGTall dendritesNoMyelin edgesFiltered dendVec;
-    save(fullfile(outputFolder,'dendrites_01.mat'),'dendrites','indSingleSeg');
+    save(fullfile(outputFolder,'dendrites_01.mat'),'dendrites','indSingleSeg','info');
 else
     load(fullfile(outputFolder,'dendrites_01.mat'),'dendrites');
 end
@@ -87,7 +88,7 @@ if ~exist(fullfile(outputFolder,'axons_01.mat'),'file') || overwrite
     load('/tmpscratch/mberning/edgesGTall.mat', 'edgesGTall');
     % remove all duplicates from hot edge list
     edgesGTall = unique(sort(edgesGTall,2),'rows');
-    save(fullfile(outputFolder,'axonsEdgesGTall.mat'), 'edgesGTall');
+    save(fullfile(outputFolder,'axonsEdgesGTall.mat'), 'edgesGTall','info');
     % throw out all myelinated segments that might have been added in
     %garbage collection etc
     axonsNoMyelin = cellfun(@(x) x(heuristics.myelinScore(x) <= 0.5),axonsNew,'uni',0);
@@ -98,7 +99,7 @@ if ~exist(fullfile(outputFolder,'axons_01.mat'),'file') || overwrite
     axons = Graph.findConnectedComponents(cat(1,edgesFiltered,repmat(axVec,1,2)),0,1);
     axons = Superagglos.transformAggloOldNewRepr(axons, edgesGTall, segmentMeta,1);
     clear axonsNew edgesGTall axonsNoMyelin axVec edgesFiltered;
-    save(fullfile(outputFolder,'axons_01.mat'),'axons');
+    save(fullfile(outputFolder,'axons_01.mat'),'axons','info');
 else
     load(fullfile(outputFolder,'axons_01.mat'),'axons');
 end
@@ -107,14 +108,14 @@ disp('State 01 superagglos loaded/generated')
 %% execute corresponding edges
 if ~exist(fullfile(outputFolder,'axons_02.mat'),'file') || overwrite
     axons = connectEM.executeEdges(axons,corrEdges,segmentMeta);
-    save(fullfile(outputFolder,'axons_02.mat'),'axons');
+    save(fullfile(outputFolder,'axons_02.mat'),'axons','info');
 else
     load(fullfile(outputFolder,'axons_02.mat'),'axons');
 end
 if ~exist(fullfile(outputFolder,'dendrites_02.mat'),'file') || overwrite
     dendrites = connectEM.executeEdges(dendrites,corrEdges,segmentMeta);
     indSingleSeg = arrayfun(@(x) size(x.nodes,1),dendrites)==1;
-    save(fullfile(outputFolder,'dendrites_02.mat'),'dendrites','indSingleSeg');
+    save(fullfile(outputFolder,'dendrites_02.mat'),'dendrites','indSingleSeg','info');
 else
     load(fullfile(outputFolder,'dendrites_02.mat'),'dendrites','indSingleSeg');
 end
@@ -175,8 +176,8 @@ if ~exist(fullfile(outputFolder,'axons_03.mat'),'file') || ~exist(fullfile(outpu
     [ myelinAxon ] = connectEM.calculateSurfaceMyelinScore( axons, graph, borderMeta, heuristics );  % calculate myelin score for the axon class
     [ myelinDend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
     
-    save(fullfile(outputFolder,'axons_03.mat'),'axons','myelinAxon','indBigAxons');
-    save(fullfile(outputFolder,'dendrites_03_v2.mat'),'dendrites','myelinDend','indBigDends');
+    save(fullfile(outputFolder,'axons_03.mat'),'axons','myelinAxon','indBigAxons','info');
+    save(fullfile(outputFolder,'dendrites_03_v2.mat'),'dendrites','myelinDend','indBigDends','info');
 else
     load(fullfile(outputFolder,'axons_03.mat'),'axons','myelinAxon','indBigAxons');
     load(fullfile(outputFolder,'dendrites_03_v2.mat'),'dendrites','myelinDend','indBigDends');
@@ -210,7 +211,7 @@ if ~exist(fullfile(outputFolder,'dendrites_03_v2_splitmerged.mat'),'file') || ov
  
     indBigDends = Agglo.isMaxBorderToBorderDistAbove(p, 5000, Superagglos.transformAggloNewOldRepr(dendrites));
     [ myelinDend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
-    save(fullfile(outputFolder,'dendrites_03_v2_splitmerged.mat'),'dendrites','WholeCellId','myelinDend','indBigDends');
+    save(fullfile(outputFolder,'dendrites_03_v2_splitmerged.mat'),'dendrites','WholeCellId','myelinDend','indBigDends','info');
 else
     clear dendrites myelinDend indBigDends
     load(fullfile(outputFolder,'dendrites_03_v2_splitmerged.mat'),'dendrites','WholeCellId')%,'myelinDend','indBigDends');
@@ -232,7 +233,7 @@ if ~exist(fullfile(outputFolder,'dendrites_04.mat'),'file') || overwrite
  
     indBigDends = Agglo.isMaxBorderToBorderDistAbove(p, 5000, Superagglos.transformAggloNewOldRepr(dendrites));
     [ myelinDend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
-    save(fullfile(outputFolder,'dendrites_04.mat'),'dendrites','WholeCellId','myelinDend','indBigDends');
+    save(fullfile(outputFolder,'dendrites_04.mat'),'dendrites','WholeCellId','myelinDend','indBigDends','info');
 else
     clear dendrites myelinDend indBigDends
     load(fullfile(outputFolder,'dendrites_04.mat'))
@@ -267,7 +268,7 @@ if ~exist(fullfile(outputFolder,'dendrites_05.mat'),'file') || overwrite
     
     indBigDends = Agglo.isMaxBorderToBorderDistAbove(p, 5000, Superagglos.transformAggloNewOldRepr(dendrites));
     [ myelinDend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
-    save(fullfile(outputFolder,'dendrites_05.mat'),'dendrites','WholeCellId','myelinDend','indBigDends');
+    save(fullfile(outputFolder,'dendrites_05.mat'),'dendrites','WholeCellId','myelinDend','indBigDends','info');
     
 else
     clear dendrites myelinDend indBigDends

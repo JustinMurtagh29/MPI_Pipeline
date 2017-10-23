@@ -1,5 +1,6 @@
 function aggloAutoView(aggloFile,show,skelOutput)
-% 
+% info = Util.runInfo(); % added by BS
+
 if ~exist('show','var') || isempty(show)
     show = 'wc';
 end

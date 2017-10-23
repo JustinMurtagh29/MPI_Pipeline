@@ -99,10 +99,10 @@ for f = 1:numel(files)
             % update  LUT
             dendritesLUT(cell2mat(arrayfun(@(x) x.nodes(~isnan(x.nodes(:,4)),4),splitAgglo(2:end),'uni',0))) = repelem((1:numel(splitAgglo)-1)+numel(dendrites),arrayfun(@(x) sum(~isnan(x.nodes(:,4))),splitAgglo(2:end)));
             dendrites(end+1:end+numel(splitAgglo)-1) = splitAgglo(2:end);  % add the splitted stuff to end of agglo class
-            dendritesLUT(segIdsToDelete) = 0;  % deleted segIds will not be there anymore in the agglo class
         else
             warning('Deleting the nodes from the skeleton %s did not split the agglo!',skel.filename)
         end
+        dendritesLUT(segIdsToDelete) = 0;  % deleted segIds will not be there anymore in the agglo class
     end
     
     % correct splits
@@ -174,7 +174,7 @@ for f = 1:numel(files)
                 
                 dendritesLUT(cell2mat(arrayfun(@(x) x.nodes(~isnan(x.nodes(:,4)),4),axons(indToAdd),'uni',0))) = ind; % update LUT
                 % remove agglo which has been added and update LUT
-                axonsLUT = connectEM.changem(axonsLUT,(0:numel(axons))-cumsum(accumarray(indToAdd',1,[numel(axons)+1,1]))',0:numel(axons));
+                axonsLUT = connectEM.changem(axonsLUT,(0:numel(axons))- [0, cumsum(accumarray(indToAdd',1,[numel(axons),1]))'],0:numel(axons));
                 axons(indToAdd) = [];
                 
             else                
@@ -218,7 +218,7 @@ for f = 1:numel(files)
                 %            subplot(1,2,2);hold all;skel2.plot;axis equal
                 dendritesLUT(cell2mat(arrayfun(@(x) x.nodes(~isnan(x.nodes(:,4)),4),dendrites(indToAdd),'uni',0))) = ind; % update LUT
                 % remove agglo which has been added and update LUT
-                dendritesLUT = connectEM.changem(dendritesLUT,(0:numel(dendrites))-cumsum(accumarray(indToAdd',1,[numel(dendrites)+1,1]))',0:numel(dendrites));
+                dendritesLUT = connectEM.changem(dendritesLUT,(0:numel(dendrites))-[0, cumsum(accumarray(indToAdd',1,[numel(dendrites),1]))'],0:numel(dendrites));
                 dendrites(indToAdd) = [];
             end
         end
