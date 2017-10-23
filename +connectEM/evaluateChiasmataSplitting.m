@@ -1,9 +1,16 @@
 % Written by
 %   Alessandro Motta <alessandro.motta@brain.mpg.de>
 
-resultsFile = '/gaba/u/mberning/results/pipeline/20170217_ROI/chiasmataSplitting/20171009T193744-kmb-on-axons-6c/outputs/20171018T110637_results.mat';
+rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
+resultsFile = fullfile(rootDir, 'chiasmataSplitting/20171009T193744-kmb-on-axons-6c/outputs/20171023T115300_results.mat');
 outputDir = '/home/amotta/Desktop/chiasmata-splitting';
+
+param = load(fullfile(rootDir, 'allParameter.mat'), 'p');
+param = param.p;
+
 data = load(resultsFile);
+
+mkdir(outputDir);
 
 %% Show fraction solved per size
 clearvars -except outputDir data;
@@ -23,8 +30,6 @@ clearvars -except outputDir data;
 
 nrExits = 4;
 solved = false;
-
-mkdir(outputDir);
 
 prefix = {'unsolved', 'solved'};
 prefix = sprintf('%d-fold__%s', nrExits, prefix{1 + solved});
@@ -100,4 +105,43 @@ for row = 1:size(t, 1)
     
     skel = Skeleton.setParams4Pipeline(skel, data.p);
     skel.write(skelFile);
+end
+
+%% Compare size of largest agglomerates (in nodes)
+clearvars -except outputDir param data;
+
+buildAggloSizes = @(axons) sort(arrayfun( ...
+    @(a) size(a.nodes, 1), axons), 'descend');
+aggloSizesNew = buildAggloSizes(data.axons);
+aggloSizesOld = buildAggloSizes(data.oldAxons.axons);
+
+largestAggloSizes = table;
+largestAggloSizes.before = aggloSizesOld(1:20);
+largestAggloSizes.after = aggloSizesNew(1:20);
+
+fprintf('\n');
+fprintf('Largest agglomerates (in nodes) before / after chiasma splitting:\n\n');
+disp(largestAggloSizes);
+
+%% Export largest remaining agglomerates (in nodes)
+clearvars -except outputDir param data;
+
+agglos = data.axons;
+aggloSizes = arrayfun(@(a) size(a.nodes, 1), agglos);
+
+[~, sortIds] = sort(aggloSizes, 'descend');
+agglos = agglos(sortIds);
+
+for curIdx = 1:10
+    curAggloId = sortIds(curIdx);
+    curAgglo = agglos(curIdx);
+    
+    skel = skeleton();
+    skel = skel.addTree( ...
+        sprintf('Agglomerate #%d', curAggloId), ...
+        curAgglo.nodes, curAgglo.edges);
+    skel = Skeleton.setParams4Pipeline(skel, param);
+    
+    skelFile = sprintf('largest-%d__axon-%d.nml', curIdx, curAggloId);
+    skel.write(fullfile(outputDir, skelFile));
 end

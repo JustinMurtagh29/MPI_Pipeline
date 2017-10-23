@@ -1,23 +1,19 @@
-function [newSuperagglos] = removeSegIdsFromAgglos(superagglos,ids )
+function [newSuperagglo] = removeNodesFromAgglo(superagglo,nodeIds )
 % removes a set of segment IDs from all superagglos and performs connected
 % component afterswards to ensure internode connectivity in each superagglo
 
-nodes = cell2mat(arrayfun(@(x) x.nodes,superagglos,'uni',0));
-fNames = setdiff(fieldnames(superagglos),{'nodes','edges'});
+nodes = cell2mat(arrayfun(@(x) x.nodes,superagglo,'uni',0));
+fNames = setdiff(fieldnames(superagglo),{'nodes','edges'});
 tmpstrct = cell(numel(fNames),1);
 for f = 1:numel(fNames)
-    tmpstrct{f} = cat(1,superagglos.(fNames{f}));
+    tmpstrct{f} = cat(1,superagglo.(fNames{f}));
 end
-numNodes = arrayfun(@(x) size(x.nodes,1),superagglos);
+numNodes = arrayfun(@(x) size(x.nodes,1),superagglo);
 cumNumNodes = [0;cumsum(numNodes)];
-edges = cell2mat(arrayfun(@(x) superagglos(x).edges+cumNumNodes(x),(1:numel(superagglos))','uni',0));% putting all edges together (inceasing index for each superagglo
+edges = cell2mat(arrayfun(@(x) superagglo(x).edges+cumNumNodes(x),(1:numel(superagglo))','uni',0));% putting all edges together (inceasing index for each superagglo
 
-% segIDedges = cell2mat(arrayfun(@(x) reshape(x.nodes(x.edges,4),[],2),superagglos,'uni',0));
-idsToKeep = find(~ismember(nodes(:,4),ids));
+idsToKeep = setdiff((1:size(nodes,1))',nodeIds);
 edges = edges(all(ismember(edges,idsToKeep),2),:);
-
-% nodeLUT(nodes(:,4)) = 1:size(nodes,1);
-% segIDedges = segIDedges(all(~ismember(segIDedges,ids),2),:);
 
 % generate selfEdges of all superagglo segments
 % selfEdges = repmat(nodes(:,4),1,2);
@@ -26,7 +22,7 @@ selfEdges = repmat(idsToKeep,1,2);
 % [equivalenceClass, aggloLUT] = Graph.findConnectedComponents(cat(1,selfEdges,segIDedges),0,1);
 [equivalenceClass, aggloLUT] = Graph.findConnectedComponents(cat(1,selfEdges,edges),0,1);
 if isempty(equivalenceClass)
-    newSuperagglos = struct('edges',[],'nodes',[]);
+    newSuperagglo = struct('edges',[],'nodes',[]);
     return
 end
 % create boolean which equivalence classes contain single edges
@@ -46,7 +42,7 @@ edgesLUT = aggloLUT(edges(:,1));
 edges = edges(sIdx,:);
 
 % transform the edges into cell
-newedges = cell(numel(superagglos),1);
+newedges = cell(numel(superagglo),1);
 % Treat agglomerates containing single segment separately
 % newedges(~singleSegAgglos) = mat2cell(segIDedges,histc(saggloLUT,unique(saggloLUT)));
 newedges(~singleSegAgglos) = mat2cell(edges,histc(saggloLUT,unique(saggloLUT)));
@@ -57,11 +53,13 @@ newnodes = cellfun(@(x) nodes(x,:),equivalenceClass,'uni',0)';
 for f = 1:numel(fNames)
     if size(tmpstrct{f},1) == size(nodes,1) % apply same sorting to all other field names if their size was the same as the number of nodes, else leave the same
         tmpstrct{f} = cellfun(@(x) tmpstrct{f}(x,:),equivalenceClass,'uni',0)';
+    else
+        tmpstrct{f} = repmat(tmpstrct(f),1,numel(equivalenceClass));
     end
 end
 % tranform the global node ids in the edge vector to local node ids
 [~, newedges] = cellfun(@(x,y) ismember(x,y(:,4)),newedges,newnodes,'uni',0);
 
-newSuperagglos = cell2struct([newedges;newnodes;tmpstrct(:)],[{'edges'},{'nodes'},fNames'],1);
+newSuperagglo = cell2struct([newedges;newnodes;tmpstrct{:}],[{'edges'},{'nodes'},fNames'],1);
 end
 

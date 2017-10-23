@@ -1,14 +1,63 @@
+%% script to run soma agglomeration
+% Author: Robin Hesse
+% Modified by: Benedikt Staffler <benedikt.staffler@brain.mpg.de>
+
+info = Util.runInfo(false);
+doNucleiDetection = false;
+ver = '02';
+
+outputFolder = sprintf(['/gaba/u/mberning/results/pipeline/' ...
+    '20170217_ROI/soma_BS/']);
+
+if ~exist(outputFolder, 'dir')
+    mkdir(outputfolder)
+end
+
+% cross check if file already exists
+if exist(fullfile(outputFolder, sprintf('cells_%s.mat', ver)), 'file')
+    warning(['Found files associated with version %s. Results of this ' ...
+        'run will not be stored automatically.'], ver);
+end
+
+%% nuclei detection (just as a reference; wasn't run like this)
+% requires the repo nuclear_pores on the path
+
+if doNucleiDetection
+
+    % nuclei coordinates and bbox
+    rp = NuclearPores.mag4NucleiDetection();
+    outFile = ['/gaba/u/mberning/results/pipeline/20170217_ROI/soma/' ...
+        'NucleiCoordinates.mat'];
+    if ~exist(outFile, 'file')
+        save(outFile,'rp');
+    end
+    
+    % nuclei mag1 masks (output files need to be copied to
+    % /gaba/u/mberning/results/pipeline/20170217_ROI/soma/Nuclei/
+    MouseROI2017.detectNucleiinBoxes2();
+    
+end
+
+
+%% load svg data
+
 load(fullfile('/gaba/u/mberning/results/pipeline/20170217_ROI', 'allParameter.mat'));
 graph = load([p.saveFolder 'graphNew.mat'], 'prob', 'edges', 'borderIdx');
-meta = load(fullfile(p.saveFolder, 'segmentMeta.mat'), 'segIds', 'point');
-load('/gaba/u/mberning/results/pipeline/20170217_ROI/soma/NucleiCoordinates.mat','rp');
+meta = load(fullfile(p.saveFolder, 'segmentMeta.mat'), 'segIds', 'point', 'voxelCount');
+m = load('/gaba/u/mberning/results/pipeline/20170217_ROI/soma/NucleiCoordinates.mat','rp');
+rp = m.rp;
 gb = load([p.saveFolder 'globalBorder.mat'], 'borderCoM', 'borderSize');
 
-%%choose somaIds
+
+%% select somata
+
+% choose somaIds
 somaIDs = linspace(1,125,125);
 %remove glia etc.
 somaIDs([6,8,19,21,23,27,28,36,38,41,44,51,57,61,82,87,90,92,95,98,100,104,108,110,117,124]) = [];
 somaIDs(61) = []; %makes problems %is actually not even a neuron id75
+
+%% soma agglo runs
 
 cells1 = Soma.getSomaNodesPar(p, graph, meta, rp, gb, 0.98, 1500, somaIDs);
 
@@ -20,9 +69,17 @@ cells2 = Soma.getSomaNodesPar(p, graph, meta, rp, gb, 0.99, 2000, somaIDs);
 somaIDs = [29,33,39,55,83,85,97,99,101,113,119];
 cells3 = Soma.getSomaNodesPar(p, graph, meta, rp, gb, 0.995, 2250, somaIDs);
 
-save('/tmpscratch/rhesse/soma/results/cells1.mat','cells1')
-save('/tmpscratch/rhesse/soma/results/cells2.mat','cells2')
-save('/tmpscratch/rhesse/soma/results/cells3.mat','cells3')
+%% save the automated results
+
+outFile = fullfile(outputFolder, sprintf('cells_%s.mat', ver));
+if ~exist(outFile, 'file')
+    Util.log('Storing automated agglomeration results at %s.', outFile)
+    save(outFile, 'cells1', 'cells2', 'cells3', 'info')
+else
+    Util.log('File %s already exists and will not be overwritten.');
+end
+
+%% manual & heuristic corrections
 
 %take corrections from run 2&3
 somas = cells1;
@@ -41,7 +98,6 @@ somas(74,:) = cells3(8,:);
 somas(75,:) = [];
 somas(83,:) = [];
 somas(87,:) = [];
-
 
 %solve special soma
 %merges into blood vessel
@@ -64,8 +120,14 @@ somas{94,1} = nodes;
 somas{94,2} = name;
 somas{94,3} = segIds;
 
-save('/tmpscratch/rhesse/soma/results/somas.mat','somas');
-save('/gaba/u/mberning/results/pipeline/20170217_ROI/aggloState/somas.mat','somas');
+outFile = fullfile(outputFolder, sprintf('somas_%s.mat', ver));
+if ~exist(outFile, 'file')
+    Util.log('Storing automated agglomeration results at %s.', outFile)
+    save(outFile, 'somas', 'info');
+else
+    Util.log('File %s already exists and will not be overwritten.');
+end
+
 
 %add somas that merge into another soma
 somas(95,:) = cells1(22,:);
@@ -74,5 +136,11 @@ somas(97,:) = cells1(69,:);
 somas(98,:) = cells1(88,:);
 somas(99,:) = cells1(93,:);
 
-save('/tmpscratch/rhesse/soma/results/somas_with_merged_somas.mat','somas');
-save('/gaba/u/mberning/results/pipeline/20170217_ROI/aggloState/somas_with_merged_somas.mat','somas');
+outFile = fullfile(outputFolder, ...
+    sprintf('somas_with_merged_somas_%s.mat', ver));
+if ~exist(outFile, 'file')
+    Util.log('Storing automated agglomeration results at %s.', outFile)
+    save(outFile, 'somas', 'info');
+else
+    Util.log('File %s already exists and will not be overwritten.');
+end

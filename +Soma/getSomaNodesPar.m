@@ -1,4 +1,4 @@
-function cells = getSomaNodes( p, graph, meta, rp, gb, probThreshold, sizeThreshold, somaIDs )
+function cells = getSomaNodesPar( p, graph, meta, rp, gb, probThreshold, sizeThreshold, somaIDs )
 %GETSOMANODESPAR getSomaNodes in parallel
 % INPUT     p, graph, meta, rp, gb: connectomics stuff 
 %               default data that is used.
