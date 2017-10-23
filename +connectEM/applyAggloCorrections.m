@@ -54,8 +54,9 @@ for f = 1:numel(files)
     skel = skeleton(fullfile(folder,files(f).name));  % load skeleton
     skel = skel.deleteTrees(cellfun(@numel,skel.nodes)/4==1); % delete single node trees
     skelCoords = cell2mat(cellfun(@(x) x(:,1:3),skel.nodes,'uni',0));  % putting all skel nodes together
+    warning('OFF','auxiliaryMethods:readKnossosCube')
     skelSegIds = Seg.Global.getSegIds(p,skelCoords);  % extract the seg Ids of all skel nodes
-    
+    warning('ON','auxiliaryMethods:readKnossosCube')
     % get soma index for current skeleton
 %     [~,aggloOverlapsSkel] = ismember(skelCoords,dendriteCoord,'rows');
     [~,aggloOverlapsSkel] = ismember(skelSegIds,dendriteSegIds,'rows');
@@ -65,7 +66,7 @@ for f = 1:numel(files)
     % avoid using a wrong dendrite/axons agglo because it overlaps only a
     % little
     if sum(dendritesLUT(dendriteSegIds(aggloOverlapsSkel))==ind)/size(skelCoords,1) < 0.5
-        warning('Found overlap of skeleton %s with an agglo is less than 50%..skipping..',skel.filename);
+        warning('Found overlap of skeleton %s with an agglo is less than 50%%..skipping..',skel.filename);
         continue
     end
     if ~isnan(usedCells(ind))
