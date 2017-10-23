@@ -1,13 +1,15 @@
 % orig state to be used
 % ---------------------
-origStatePath = '/home/zecevicm/Desktop/connectomics_git/L4_apicalDendrites/getClassificationOfComponents/dendrites_02.mat';
+outDir = '/tmpscratch/sahilloo/L4/forIso/';
+%origStatePath = '/home/zecevicm/Desktop/connectomics_git/L4_apicalDendrites/getClassificationOfComponents/dendrites_02.mat';
+origStatePath = '/gaba/u/mberning/results/pipeline/20170217_ROI/aggloState/dendrites_02.mat';
 load(origStatePath);
 agglos = Superagglos.transformAggloNewOldRepr(dendrites);
 
 % get soma to cut out
 % -------------------
 % load somas from Robin
-load('/mnt/gaba/gaba/u/rhesse/forBenedikt/somasNoClosedHoles.mat');
+load('/gaba/u/rhesse/forBenedikt/somasNoClosedHoles.mat');
 somaAgglos = somas(:,3);
 % ones he probably excluded?
 % get this out at some point probably
@@ -29,7 +31,7 @@ intersectingInd = find(vertcat(h{:}) == 1);
 % cut out soma to get all components
 % ----------------------------------
 % load segment meta first
-metaPath = '/mnt/gaba/gaba/u/mberning/results/pipeline/20170217_ROI/segmentMeta.mat';
+metaPath = '/gaba/u/mberning/results/pipeline/20170217_ROI/segmentMeta.mat';
 sM = load(metaPath);
 componentState = {};
 for i=1:length(intersectingInd)
@@ -51,7 +53,8 @@ for i=1:length(intersectingInd)
 end
 
 % save state
-save('/home/zecevicm/Desktop/connectomics_git/L4_apicalDendrites/20170912_componenState_test.mat', 'componentState');
+%save('/home/zecevicm/Desktop/connectomics_git/L4_apicalDendrites/20170912_componenState_test.mat', 'componentState');
+save(fullfile(outDir,'componentState_test.mat'),'componentState');
 
 %% write 
 
@@ -59,7 +62,7 @@ agglosToWrite = componentState; %vertcat(agglos(aggloInd), somaAgglos(78), cut);
 
 tic;
 distthr = 3000;  % maximum distance between nodes that can be connected
-connectEM.generateSkeletonFromNodes('/home/zecevicm/Desktop/connectomics_git/L4_apicalDendrites/20170912_componenState_test.nml',...
+connectEM.generateSkeletonFromNodes(fullfile(outDir,'componenState_test.nml'),...
     cellfun(@(x) sM.point(:,x)', agglosToWrite,'uni',0), ...
     arrayfun(@(x) strcat('skelNod_',num2str(x,'%.2i')), 1:numel(agglosToWrite),'uni',0),[],[],[],distthr); 
 fprintf('created %d skeletons from filtered agglos.\n', length(agglosToWrite)); toc;

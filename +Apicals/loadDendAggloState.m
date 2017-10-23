@@ -23,21 +23,18 @@ if exist('indBigDends','var')
     agglosNew = data.dendrites(data.indBigDends); 
     indBigDends = data.indBigDends;
 
-<<<<<<< HEAD
     % generate all agglo representation for following code
-    agglos = connectEM.transformAggloNewOldRepr(agglosNew);
-    agglos_all = connectEM.transformAggloNewOldRepr(agglosNew_all);
+    agglos = Superagglos.transformAggloNewOldRepr(agglosNew);
+    agglos_all = Superagglos.transformAggloNewOldRepr(agglosNew_all);
 else
     indBigDends = NaN;
     agglosNew = agglosNew_all;
-    agglos = connectEM.transformAggloNewOldRepr(agglosNew_all);
+    agglos = Superagglos.transformAggloNewOldRepr(agglosNew_all);
     agglos_all = agglos;
 end
-=======
 % generate all agglo representation for following code
 agglos = Superagglos.transformAggloNewOldRepr(agglosNew);
 agglos_all = Superagglos.transformAggloNewOldRepr(agglosNew_all);
->>>>>>> cd5baf8448c1ab8eb91287ace82a1fd3b3399f0e
 
 % all lengths (number of seg ids) of the agglos
 l = cellfun(@length, agglos);

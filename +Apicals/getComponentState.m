@@ -8,12 +8,13 @@
 % orig state to be used
 % ---------------------
 tic;
-origStatePath = '/home/zecevicm/Desktop/connectomics_git/L4_apicalDendrites/getClassificationOfComponents/dendrites_02.mat';
+%origStatePath = '/home/zecevicm/Desktop/connectomics_git/L4_apicalDendrites/getClassificationOfComponents/dendrites_02.mat';
+origStatePath = '/gaba/u/mberning/results/pipeline/20170217_ROI/aggloState/dendrites_02.mat';
 load(origStatePath);
 agglosNew = dendrites;
 %clear dendrites;
-agglos = connectEM.transformAggloNewOldRepr(dendrites);
-metaPath = '/mnt/gaba/gaba/u/mberning/results/pipeline/20170217_ROI/segmentMeta.mat';
+agglos = Superagglos.transformAggloNewOldRepr(dendrites);
+metaPath = '/gaba/u/mberning/results/pipeline/20170217_ROI/segmentMeta.mat';
 sM = load(metaPath);
 disp('finished loading state.'); toc;
 
@@ -21,7 +22,7 @@ disp('finished loading state.'); toc;
 % -------------------
 tic;
 % load somas from Robin
-load('/mnt/gaba/gaba/u/mberning/results/pipeline/20170217_ROI/aggloState/somas.mat');
+load('/gaba/u/mberning/results/pipeline/20170217_ROI/aggloState/somas.mat');
 somaAgglos = somas(:,3);
 clear somas;
 
@@ -46,7 +47,7 @@ disp('finished collecting soma intersections.'); toc;
 
 % load graph neighbours
 tic;
-load('/mnt/gaba/gaba/u/mberning/results/pipeline/20170217_ROI/graphNew.mat','neighbours');
+load('/gaba/u/mberning/results/pipeline/20170217_ROI/graphNew.mat','neighbours');
 disp('finished loading graph neighbours.'); toc;
 
 %check for 204269, 204873,205721 - 89 and 204815,204881,204898 - 80
@@ -58,27 +59,24 @@ end
 
 agglosToWrite = {agglos{204269},agglos{204873},agglos{205721},somaAgglos{89},...
     unique(cat(1,somaAgglos{n},cat(2,neighbours{somaAgglos{n}})'))};
-writePath = '/home/zecevicm/Desktop/connectomics_git/L4_apicalDendrites/20170912_somaNewTry_agglo26.nml';
+%writePath = '/home/zecevicm/Desktop/connectomics_git/L4_apicalDendrites/20170912_somaNewTry_agglo26.nml';
+writePath = fullfile(config.outDir,'somaNewTry_agglo26.nml');
 distthr = 3000;
-%Apicals.writeAgglos( agglosToWrite, sM, writePath);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          ', distthr );
+%Apicals.writeAgglos( agglosToWrite, sM, writePath);
 tic;
 connectEM.generateSkeletonFromNodes(writePath,...
     cellfun(@(x) sM.point(:,x)', agglosToWrite,'uni',0), ...
     arrayfun(@(x) strcat('skelNod_',num2str(x,'%.2i')), 1:numel(agglosToWrite),'uni',0),[],[],[],distthr); 
 fprintf('created %d skeletons from filtered agglos.\n', length(agglosToWrite)); toc;
-
-
-
 % mask out the intersecting ones because they will be
 % there as components in new state
 maskRest = ~vertcat(h{:});
-
 
 % cut out soma to get all components
 % ----------------------------------
 tic;
 % load segment meta first
-metaPath = '/mnt/gaba/gaba/u/mberning/results/pipeline/20170217_ROI/segmentMeta.mat';
+metaPath = '/gaba/u/mberning/results/pipeline/20170217_ROI/segmentMeta.mat';
 sM = load(metaPath);
 componentState = {};
 for i=1:length(intersectingInd)
