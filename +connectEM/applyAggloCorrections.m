@@ -96,7 +96,7 @@ for f = 1:numel(files)
 
         if numel(splitAgglo) > 1
             % update  LUT
-            dendritesLUT(cell2mat(arrayfun(@(x) x.nodes(~usnan(x.nodes(:,4)),4),splitAgglo(2:end),'uni',0))) = repelem((1:sum(~overlapsIndAll))+numel(dendrites),arrayfun(@(x) sum(~isnan(x.nodes(:,4))),splitAgglo(2:end)));
+            dendritesLUT(cell2mat(arrayfun(@(x) x.nodes(~isnan(x.nodes(:,4)),4),splitAgglo(2:end),'uni',0))) = repelem((1:numel(splitAgglo)-1)+numel(dendrites),arrayfun(@(x) sum(~isnan(x.nodes(:,4))),splitAgglo(2:end)));
             dendrites(end+1:end+numel(splitAgglo)-1) = splitAgglo(2:end);  % add the splitted stuff to end of agglo class
             dendritesLUT(segIdsToDelete) = 0;  % deleted segIds will not be there anymore in the agglo class
         else
