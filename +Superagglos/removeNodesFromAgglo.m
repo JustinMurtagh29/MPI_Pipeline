@@ -12,7 +12,7 @@ numNodes = arrayfun(@(x) size(x.nodes,1),superagglo);
 cumNumNodes = [0;cumsum(numNodes)];
 edges = cell2mat(arrayfun(@(x) superagglo(x).edges+cumNumNodes(x),(1:numel(superagglo))','uni',0));% putting all edges together (inceasing index for each superagglo
 
-idsToKeep = setdiff(1:numel(nodes),nodeIds);
+idsToKeep = setdiff((1:numel(nodes))',nodeIds);
 edges = edges(all(ismember(edges,idsToKeep),2),:);
 
 % generate selfEdges of all superagglo segments
