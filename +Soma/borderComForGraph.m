@@ -15,7 +15,7 @@ borderIdx(isnan(borderIdx)) = size(borderCom, 1) + 1;
 
 if ~exist('repC', 'var') || isempty(repC)
     repC = [NaN, NaN, NaN];
-elseif length(repC) == 1;
+elseif length(repC) == 1
     repC = repmat(repC, 1, 3);
 end
 repC = repC(:)';
