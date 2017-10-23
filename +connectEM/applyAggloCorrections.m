@@ -65,7 +65,7 @@ for f = 1:numel(files)
     
     % avoid using a wrong dendrite/axons agglo because it overlaps only a
     % little
-    if sum(dendritesLUT(dendriteSegIds(aggloOverlapsSkel))==ind)/size(skelCoords,1) < 0.5
+    if sum(ismember(skelCoords,dendrites(ind).nodes(:,1:3),'rows'))/size(skelCoords,1) < 0.5
         warning('Found overlap of skeleton %s with an agglo is less than 50%%..skipping..',skel.filename);
         continue
     end
