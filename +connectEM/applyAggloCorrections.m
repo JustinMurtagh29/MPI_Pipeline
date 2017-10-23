@@ -32,7 +32,7 @@ end
 if exist('axons','var') && ~isempty(axons)
     axons = rmfield(axons,'endings');
     axonSegIds = cell2mat(arrayfun(@(x) x.nodes(~isnan(x.nodes(:,4)),4),axons,'uni',0));
-    axonsLUT(axonSegIds(axonSegIds))  = repelem(1:numel(axons),arrayfun(@(x) numel(x.nodes(~isnan(x.nodes(:,4)),4)),axons));
+    axonsLUT(axonSegIds)  = repelem(1:numel(axons),arrayfun(@(x) numel(x.nodes(~isnan(x.nodes(:,4)),4)),axons));
 end
 
 
