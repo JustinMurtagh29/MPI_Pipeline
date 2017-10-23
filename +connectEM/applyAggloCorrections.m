@@ -220,6 +220,7 @@ for f = 1:numel(files)
                 % remove agglo which has been added and update LUT
                 dendritesLUT = connectEM.changem(dendritesLUT,(0:numel(dendrites))-[0, cumsum(accumarray(indToAdd',1,[numel(dendrites),1]))'],0:numel(dendrites));
                 dendrites(indToAdd) = [];
+                ind = ind - sum(indToAdd <= ind); % update index to agglomerate
             end
         end
         if modus == 2
