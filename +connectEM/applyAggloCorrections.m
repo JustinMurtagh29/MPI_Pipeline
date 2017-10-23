@@ -38,9 +38,9 @@ end
 
 dendriteSegIds = cell2mat(arrayfun(@(x) x.nodes(~isnan(x.nodes(:,4)),4),dendrites,'uni',0));
 dendritesLUT(dendriteSegIds)  = repelem(1:numel(dendrites),arrayfun(@(x) numel(x.nodes(~isnan(x.nodes(:,4)),4)),dendrites));
-dendriteCoord = cell2mat(arrayfun(@(x) x.nodes(:,1:3),dendrites,'uni',0));
-numDend = arrayfun(@(x) size(x.nodes,1),dendrites);
-dendLabel = repelem(1:numel(dendrites),numDend);
+% dendriteCoord = cell2mat(arrayfun(@(x) x.nodes(:,1:3),dendrites,'uni',0));
+% numDend = arrayfun(@(x) size(x.nodes,1),dendrites);
+% dendLabel = repelem(1:numel(dendrites),numDend);
         
 if ~exist(folder,'dir')
     error('Folder %s is not existent',folder);
@@ -54,14 +54,17 @@ for f = 1:numel(files)
     skel = skeleton(fullfile(folder,files(f).name));  % load skeleton
     skel = skel.deleteTrees(cellfun(@numel,skel.nodes)/4==1); % delete single node trees
     skelCoords = cell2mat(cellfun(@(x) x(:,1:3),skel.nodes,'uni',0));  % putting all skel nodes together
+    skelSegIds = Seg.Global.getSegIds(p,skelCoords);  % extract the seg Ids of all skel nodes
+    
     % get soma index for current skeleton
-    [~,aggloOverlapsSkel] = ismember(skelCoords,dendriteCoord,'rows');
+%     [~,aggloOverlapsSkel] = ismember(skelCoords,dendriteCoord,'rows');
+    [~,aggloOverlapsSkel] = ismember(skelSegIds,dendriteSegIds,'rows');
     aggloOverlapsSkel = setdiff(aggloOverlapsSkel,0);
-    ind = mode(dendLabel(aggloOverlapsSkel));
+    ind = mode(dendritesLUT(dendriteSegIds(aggloOverlapsSkel)));
     
     % avoid using a wrong dendrite/axons agglo because it overlaps only a
     % little
-    if sum(dendLabel(aggloOverlapsSkel)==ind)/size(skelCoords,1) < 0.5
+    if sum(dendritesLUT(dendriteSegIds(aggloOverlapsSkel))==ind)/size(skelCoords,1) < 0.5
         warning('Found overlap of skeleton %s with an agglo is less than 50%..skipping..',skel.filename);
         continue
     end
@@ -71,9 +74,9 @@ for f = 1:numel(files)
     usedCells(ind) = f;
     if  modus ~= 2
         % refresh if there were splits done
-        dendriteCoord = cell2mat(arrayfun(@(x) x.nodes(:,1:3),dendrites,'uni',0));
-        numDend = arrayfun(@(x) size(x.nodes,1),dendrites);
-        dendLabel = repelem(1:numel(dendrites),numDend);
+%         dendriteCoord = cell2mat(arrayfun(@(x) x.nodes(:,1:3),dendrites,'uni',0));
+%         numDend = arrayfun(@(x) size(x.nodes,1),dendrites);
+%         dendLabel = repelem(1:numel(dendrites),numDend);
         nodesToDelete = find(~ismember(dendrites(ind).nodes(:,1:3),skelCoords,'rows'));  % find node ind which has to be deleted by checking which one is missing in the loaded skeleton compared to the skeleton before modification
     else
         nodesToDelete = [];
