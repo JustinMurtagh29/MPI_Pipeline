@@ -19,6 +19,11 @@ dendFile = fullfile(rootDir, 'aggloState/dendrites_03_v2_splitmerged.mat');
 param = load(fullfile(rootDir, 'allParameter.mat'), 'p');
 param = param.p;
 
+% use WKW segmentation
+param.seg = struct;
+param.seg.root = '/tmpscratch/amotta/l4/2012-09-28_ex145_07x2_ROI2017/segmentation/1';
+param.seg.backend = 'wkwrap';
+
 axons = load(axonFile);
 axonIds = find(axons.indBigAxons);
 axons = axons.axons(axonIds);
