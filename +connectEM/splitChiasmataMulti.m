@@ -109,7 +109,7 @@ function [newAgglos, summary] = ...
            [~, minIdx] = min(pdist2(trSeedScaled, trNodesScaled));
            
             if ~(isempty(trNodesScaled) || minIdx == 1)
-                warning('Fist node does not coincide with seed');
+                warning('First node does not coincide with seed');
             end
             
             trDist = diff(trNodesScaled, 1, 1);
