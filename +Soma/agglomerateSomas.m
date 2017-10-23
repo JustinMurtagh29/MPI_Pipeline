@@ -41,6 +41,7 @@ end
 
 %% load svg data
 
+Util.log('Loading SVG data.');
 load(fullfile('/gaba/u/mberning/results/pipeline/20170217_ROI', 'allParameter.mat'));
 graph = load([p.saveFolder 'graphNew.mat'], 'prob', 'edges', 'borderIdx');
 meta = load(fullfile(p.saveFolder, 'segmentMeta.mat'), 'segIds', 'point', 'voxelCount');
@@ -59,6 +60,7 @@ somaIDs(61) = []; %makes problems %is actually not even a neuron id75
 
 %% soma agglo runs
 
+Util.log('Starting soma agglomeration.');
 cells1 = Soma.getSomaNodesPar(p, graph, meta, rp, gb, 0.98, 1500, somaIDs);
 
 %second run
