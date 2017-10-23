@@ -7,7 +7,7 @@ doNucleiDetection = false;
 ver = '02';
 
 outputFolder = sprintf(['/gaba/u/mberning/results/pipeline/' ...
-    '20170217_ROI/soma_BS/'], ver);
+    '20170217_ROI/soma_BS/']);
 
 if ~exist(outputFolder, 'dir')
     mkdir(outputfolder)
@@ -74,7 +74,7 @@ cells3 = Soma.getSomaNodesPar(p, graph, meta, rp, gb, 0.995, 2250, somaIDs);
 outFile = fullfile(outputFolder, sprintf('cells_%s.mat', ver));
 if ~exist(outFile, 'file')
     Util.log('Storing automated agglomeration results at %s.', outFile)
-    save(outFile, 'cells1', 'cells2', 'cells3')
+    save(outFile, 'cells1', 'cells2', 'cells3', 'info')
 else
     Util.log('File %s already exists and will not be overwritten.');
 end
@@ -123,7 +123,7 @@ somas{94,3} = segIds;
 outFile = fullfile(outputFolder, sprintf('somas_%s.mat', ver));
 if ~exist(outFile, 'file')
     Util.log('Storing automated agglomeration results at %s.', outFile)
-    save(outFile,'somas');
+    save(outFile, 'somas', 'info');
 else
     Util.log('File %s already exists and will not be overwritten.');
 end
@@ -140,7 +140,7 @@ outFile = fullfile(outputFolder, ...
     sprintf('somas_with_merged_somas_%s.mat', ver));
 if ~exist(outFile, 'file')
     Util.log('Storing automated agglomeration results at %s.', outFile)
-    save(outFile, 'somas');
+    save(outFile, 'somas', 'info');
 else
     Util.log('File %s already exists and will not be overwritten.');
 end
