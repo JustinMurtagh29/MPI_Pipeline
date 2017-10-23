@@ -107,7 +107,10 @@ function [newAgglos, summary] = ...
             % NOTE(amotta): Make sure nodes are correctly sorted
             trSeedScaled = tr.seedPos .* p.voxelSize;
            [~, minIdx] = min(pdist2(trSeedScaled, trNodesScaled));
-            assert(isempty(trNodesScaled) || minIdx == 1);
+           
+            if ~(isempty(trNodesScaled) || minIdx == 1)
+                warning('Fist node does not coincide with seed');
+            end
             
             trDist = diff(trNodesScaled, 1, 1);
             trDist = sqrt(sum(trDist .* trDist, 2));
