@@ -90,7 +90,7 @@ for f = 1:numel(files)
     if ~isempty(nodesToDelete)
         splitAgglo = Superagglos.removeNodesFromAgglo(dendrites(ind),nodesToDelete); % get the splitted agglos when node is deleted
         segIdsToDelete = dendrites(ind).nodes(nodesToDelete,4);
-      
+        segIdsToDelete = segIdsToDelete(~isnan(segIdsToDelete));
         dendrites(ind) = splitAgglo(1);  % replace this agglo with one of the correctly splitted version
         dendritesLUT(splitAgglo(1).nodes(~isnan(splitAgglo(1).nodes(:,4)),4)) = repelem(ind,sum(~isnan(splitAgglo(1).nodes(:,4))));
 
