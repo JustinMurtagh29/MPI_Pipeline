@@ -49,15 +49,17 @@ newedges(~singleSegAgglos) = mat2cell(edges,histc(saggloLUT,unique(saggloLUT)));
 newedges(singleSegAgglos) = {zeros(0,2)}; % give empty edges correct dimension
 
 %  create node cell array including segID information
-newnodes = cellfun(@(x) nodes(x,:),equivsalenceClass,'uni',0)';
+newnodes = cellfun(@(x) nodes(x,:),equivalenceClass,'uni',0)';
 for f = 1:numel(fNames)
     if size(tmpstrct{f},1) == size(nodes,1) % apply same sorting to all other field names if their size was the same as the number of nodes, else leave the same
         tmpstrct{f} = cellfun(@(x) tmpstrct{f}(x,:),equivalenceClass,'uni',0)';
+    else
+        tmpstrct{f} = repmat(tmpstrct(f),1,numel(equivalenceClass));
     end
 end
 % tranform the global node ids in the edge vector to local node ids
 [~, newedges] = cellfun(@(x,y) ismember(x,y(:,4)),newedges,newnodes,'uni',0);
 
-newSuperagglo = cell2struct([newedges;newnodes;tmpstrct(:)],[{'edges'},{'nodes'},fNames'],1);
+newSuperagglo = cell2struct([newedges;newnodes;tmpstrct{:}],[{'edges'},{'nodes'},fNames'],1);
 end
 
