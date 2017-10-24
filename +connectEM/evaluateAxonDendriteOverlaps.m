@@ -59,7 +59,7 @@ axonFlights.dendId = dendLUT(1 + axonFlights.segId);
 axonFlights(~axonFlights.dendId, :) = [];
 
 [dendOverlap, ~, dendEvidence] = unique( ...
-    axonFlights(:, {'aggloId', 'dendId'}), 'rows');
+    axonFlights(:, {'aggloId', 'flightId', 'dendId'}), 'rows');
 dendOverlap.evidence = accumarray(dendEvidence, 1);
 
 % discard overlaps below evidence threshold
@@ -69,3 +69,40 @@ dendOverlap(dendOverlap.evidence < minEvidence, :) = [];
 % assign to axon with largest evidence
 [~, uniRows] = unique(dendOverlap.dendId, 'stable');
 dendOverlap = dendOverlap(uniRows, :);
+
+%%
+fprintf('\n');
+fprintf('# axons: %d\n', numel(axons));
+fprintf('# dendrites: %d\n', numel(dends));
+
+fprintf('\n');
+fprintf('Node evidence threshold: %d\n', minEvidence);
+fprintf('# dendrites with axon overlap: %d\n', size(dendOverlap, 1));
+
+%% export examples
+outputDir = '/home/amotta/Desktop/nmls';
+mkdir(outputDir);
+
+rng(0);
+rows = randperm(size(dendOverlap, 1));
+rows = reshape(rows(1:10), 1, []);
+
+for curRow = rows
+    curAxonId = dendOverlap.aggloId(curRow);
+    curAxon = axons(curAxonId);
+    
+    curDendId = dendOverlap.dendId(curRow);
+    curDend = dends(curDendId);
+    
+    skel = skeleton();
+    skel = skel.addTree( ...
+        sprintf('Axon #%d', curAxonId), ...
+        curAxon.nodes(:, 1:3), curAxon.edges);
+    skel = skel.addTree( ...
+        sprintf('Dendrite #%d', curDendId), ...
+        curDend.nodes(:, 1:3), curDend.edges);
+    
+    skel = Skeleton.setParams4Pipeline(skel, param);
+    skel.write(fullfile(outputDir, ...
+        sprintf('axon-dendrite-overlap-%d.nml', curRow)));
+end
