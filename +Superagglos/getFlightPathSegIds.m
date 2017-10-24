@@ -63,7 +63,7 @@ function flights = getFlightPathSegIds(param, sagglos, nhood)
     
     %% convert into table
     nodeCoord = flights(:, (end - 2):end);
-    flights = flights(:, 1:(end - 2));
+    flights = flights(:, 1:(end - 3));
     
     flights = array2table( ...
         flights, 'VariableNames', ...
