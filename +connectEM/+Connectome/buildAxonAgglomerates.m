@@ -59,7 +59,7 @@ axonAgglos = cellfun( ...
 
 %% save result
 out = struct;
-out.axonIds = axonIds;
+out.axonIds = axonLargeIds;
 out.axonAgglos = axonAgglos;
 out.runInfo = info;
 
