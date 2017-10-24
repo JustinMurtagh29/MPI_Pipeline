@@ -67,7 +67,7 @@ clear nucleus somaSeg
    
 %% if no seed was found fill in dummy stuff, so parallel function doesn't break
 if size(nucleusSegIds,1) == 0
-    segIds = Nan;
+    segIds = nan;
     center = bsxfun(@plus,4.* rp(somaID).Centroid, mag1bbox(:,1)');
     nodes = center;
     name = sprintf('soma%d_%.2f_%d_Agglo', somaID, probT, sizeT);
