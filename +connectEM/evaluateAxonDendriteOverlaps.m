@@ -12,7 +12,7 @@
 clear();
 
 % configuration
-minEvidence = 54;
+minEvidence = 10 * 27;
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 axonFile = fullfile(rootDir, 'chiasmataSplitting/20171009T193744-kmb-on-axons-6c/outputs/20171023T115300_results.mat');
 dendFile = fullfile(rootDir, 'aggloState/dendrites_03_v2_splitmerged.mat');
@@ -88,12 +88,10 @@ mkdir(outputDir);
 rows = 1:10;
 %}
 
-%{
 % random examples
 rng(0);
 rows = randperm(size(dendOverlap, 1));
 rows = reshape(rows(1:10), 1, []);
-%}
 
 for curRow = rows
     curAxonId = dendOverlap.aggloId(curRow);
