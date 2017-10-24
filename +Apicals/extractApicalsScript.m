@@ -33,7 +33,7 @@ xlabel('physical path length'); ylabel('count');
 % (two steps) filter using PCA (variance explained) and main axis alignment
 varThr = 0.98;
 spThr = 0.95;
-[ filteredAgglos, filteredPoints, sps, rInd_3 ] = ...
+[ filteredAgglos, filteredPoints, meanFPC, sps, rInd_3 ] = ...
                                         Apicals.filterMainAxis( filteredAgglos, filteredPoints, varThr, spThr, rInd_2 );
 % plot: histogram for distribution of distances (meanFPC from observed)
 h = histogram(sps);

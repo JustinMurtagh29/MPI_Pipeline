@@ -9,23 +9,28 @@
 
 % load outgrown soma removed state
 % --------------------
-load('/home/zecevicm/Desktop/connectomics_git/L4_apicalDendrites/getClassificationOfComponents/20170913_agglosNewFormatAfterSomaDeletion.mat');
+
+% load parameter
+load('/gaba/u/mberning/results/pipeline/20170217_ROI/allParameterWithSynapses.mat');
+
+load('/tmpscratch/zecevicm/L4/Apicals/20170913_agglosNewFormatAfterSomaDeletion.mat');
 % convert to old format
-agglosSomaCut = connectEM.transformAggloNewOldRepr(newAgglos);
+agglosSomaCut = Superagglos.transformAggloNewOldRepr(newAgglos);
+dendLens = Superagglos.calculateTotalPathLength(newAgglos,p.raw.voxelSize);
+dendLens = dendLens./1E3;
+
 clear newAgglos;
 % get meta info (points)
-metaPath = '/mnt/gaba/gaba/u/mberning/results/pipeline/20170217_ROI/segmentMeta.mat';
+metaPath = '/gaba/u/mberning/results/pipeline/20170217_ROI/segmentMeta.mat';
 sM = load(metaPath);
 pointsSomaCut = cellfun(@(x) sM.point(:,x)',agglosSomaCut,'uni',0);
-% load parameter
-load('/mnt/gaba/gaba/u/mberning/results/pipeline/20170217_ROI/allParameterWithSynapses.mat');
 
 % apply directionality
 % ----------------------------------------
 % load meta information from apicals script on original file
 % agglos (all original agglos), rInd_x (indices after each filter),
 % meanFPC (mean first pc, directionality)
-load('/home/zecevicm/Desktop/connectomics_git/L4_apicalDendrites/getClassificationOfComponents/20170919_apicalsFromDend02_Meta.mat');
+%load('/home/zecevicm/Desktop/connectomics_git/L4_apicalDendrites/getClassificationOfComponents/20170919_apicalsFromDend02_Meta.mat');
 
 %% filter using directionality (var explained & mean FPC deviation)
 
@@ -53,6 +58,13 @@ meanFPCSomaCut = mean(pcaMain, 2);
 % create new list of indices for all of somacut and then filter 
 rIndSomaCut = 1:numel(agglosSomaCut);
 rIndSC_1 = rIndSomaCut(varExpFirst >= varThr);
+
+% for now fix
+meanFPC = [0.9546,-0.0005,0.0217]';
+%origStatePath = '/gaba/u/mberning/results/pipeline/20170217_ROI/aggloState/dendrites_02.mat';                                           
+%load(origStatePath);
+%agglos = Superagglos.transformAggloNewOldRepr(dendrites);
+agglos = agglosSomaCut;
 
 % filter that don't align with main axis
 % use scalar product (angle)
@@ -114,10 +126,10 @@ disp('---------------------------------------');
 %% get spine head counts and lengths
 
 % spine head attachment
-spineHeads = load('/home/zecevicm/Desktop/connectomics_git/L4_apicalDendrites/getClassificationOfComponents/20170919_spineheahOutgrownSomaCut.mat');
+spineHeads = load('/tmpscratch/zecevicm/L4/Apicals/20170919_spineheahOutgrownSomaCut.mat');
 % path lengths in nm
-dendLens = load('/home/zecevicm/Desktop/connectomics_git/L4_apicalDendrites/getClassificationOfComponents/20170919_pathlengthsOutgrownSomaCut.mat');
-dendLens = dendLens.lens / 1E3; % in um
+%dendLens = load('/tmpscratch/zecevicm/L4/Apicals/20170919_pathlengthsOutgrownSomaCut.mat');
+%dendLens = dendLens.lens / 1E3; % in um
 
 % get spine head counts
 [ shCounts ] = Apicals.collectSHcounts( agglosSomaCut, spineHeads );
@@ -147,7 +159,8 @@ title(['Spine Head density for ' num2str(length(rIndSC_5)) ' agglos filtered']);
 indices = rIndSC_5;
 
 agglosToWrite =  agglosSomaCut(indices);
-writePath = '/home/zecevicm/Desktop/connectomics_git/L4_apicalDendrites/20170922_candidatesAIS_174withSHD<015_withMeta.nml';
+%writePath = '/home/zecevicm/Desktop/connectomics_git/L4_apicalDendrites/20170922_candidatesAIS_174withSHD<015_withMeta.nml';
+writePath = '/tmpscratch/sahilloo/L4/candidatesAIS_174withSHD<015_withMeta.nml';
 distthr = 3000;
 
 tic;
