@@ -83,9 +83,17 @@ fprintf('# dendrites with axon overlap: %d\n', size(dendOverlap, 1));
 outputDir = '/home/amotta/Desktop/nmls';
 mkdir(outputDir);
 
+%{
+% top ten
+rows = 1:10;
+%}
+
+%{
+% random examples
 rng(0);
 rows = randperm(size(dendOverlap, 1));
 rows = reshape(rows(1:10), 1, []);
+%}
 
 for curRow = rows
     curAxonId = dendOverlap.aggloId(curRow);
