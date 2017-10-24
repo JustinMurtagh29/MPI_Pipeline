@@ -89,7 +89,7 @@ rows = 1:10;
 %}
 
 % random examples
-rng(0);
+rng(1);
 rows = randperm(size(dendOverlap, 1));
 rows = reshape(rows(1:10), 1, []);
 
