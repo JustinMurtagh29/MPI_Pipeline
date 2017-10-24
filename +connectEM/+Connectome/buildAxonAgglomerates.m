@@ -33,7 +33,7 @@ axonFlights(~axonFlights.smallAxonId, :) = [];
 
 % pool evidence over agglomerates
 [axonOverlap, ~, axonEvidence] = unique( ...
-    axonFlights(:, {'axonId', 'smallAxonId'}), 'rows');
+    axonFlights(:, {'axonId', 'flightId', 'smallAxonId'}), 'rows');
 axonOverlap.evidence = accumarray(axonEvidence, 1);
 
 % discard overlaps below evidence threshold
@@ -41,7 +41,7 @@ axonOverlap = sortrows(axonOverlap, 'evidence', 'descend');
 axonOverlap(axonOverlap.evidence < minEvidence, :) = [];
 
 % assign to axon with largest evidence
-[~, uniRows] = unique(axonOverlap(:, {'axonId', 'smallAxonId'}), 'rows');
+[~, uniRows] = unique(axonOverlap.smallAxonId, 'stable');
 axonOverlap = axonOverlap(uniRows, :);
 
 % build final agglomerates
@@ -50,7 +50,7 @@ axonAgglosLarge = axons.axons(axonLargeIds);
 axonAgglosLarge = Superagglos.getSegIds(axonAgglosLarge);
 
 pickedUpAgglos = accumarray( ...
-    axonOverlap.axonId, (1:size(axonOverlap, 1))', size(axonAgglosLarge), ...
+    axonOverlap.axonId, axonOverlap.smallAxonId, size(axonAgglosLarge), ...
     @(r) {cat(1, axonAgglosSmall{r})}, {zeros(0, 1)});
 
 axonAgglos = cellfun( ...
