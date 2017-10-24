@@ -9,8 +9,10 @@
 %
 % Written by
 %   Alessandro Motta <alessandro.motta@brain.mpg.de>
+clear();
 
-clear;
+% configuration
+minEvidence = 54;
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 axonFile = fullfile(rootDir, 'chiasmataSplitting/20171009T193744-kmb-on-axons-6c/outputs/20171023T115300_results.mat');
 dendFile = fullfile(rootDir, 'aggloState/dendrites_03_v2_splitmerged.mat');
@@ -42,7 +44,7 @@ if exist(axonFlightFile, 'file')
 else
     axonFlights = ...
         Superagglos.getFlightPathSegIds(param, axons, 3);
-    Util.save(axonFlightFile, axonFlights);
+    Util.saveStruct(axonFlightFile, struct('axonFlights', axonFlights));
 end
 
 %% check overlap with dendrites
@@ -54,8 +56,16 @@ dendLUT = cat(1, 0, dendLUT(:));
 
 %% accumulate evidence
 axonFlights.dendId = dendLUT(1 + axonFlights.segId);
+axonFlights(~axonFlights.dendId, :) = [];
 
-[axonDendOverlap, ~, axonDendCount] = unique( ...
-    axonFlights(:, {'axonId', 'flightId', 'dendId'}), 'rows');
-axonDendOverlap.evidence = accumarray(axonDendCount, 1);
-axonDendOverlap(~axonDendOverlap.dendId, :) = [];
+[dendOverlap, ~, dendEvidence] = unique( ...
+    axonFlights(:, {'aggloId', 'dendId'}), 'rows');
+dendOverlap.evidence = accumarray(dendEvidence, 1);
+
+% discard overlaps below evidence threshold
+dendOverlap = sortrows(dendOverlap, 'evidence', 'descend');
+dendOverlap(dendOverlap.evidence < minEvidence, :) = [];
+
+% assign to axon with largest evidence
+[~, uniRows] = unique(dendOverlap.dendId, 'stable');
+dendOverlap = dendOverlap(uniRows, :);
