@@ -3,7 +3,7 @@ function flights = getFlightPathSegIds(param, sagglos, nhood)
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     
     if ~exist('nhood', 'var') || isempty(nhood)
-        nhood = 3;
+        nhood = 1;
     else
         assert(mod(nhood, 2) == 1);
     end
