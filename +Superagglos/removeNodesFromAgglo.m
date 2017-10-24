@@ -42,7 +42,7 @@ edgesLUT = aggloLUT(edges(:,1));
 edges = edges(sIdx,:);
 
 % transform the edges into cell
-newedges = cell(numel(equivalenceClass),1);
+newedges = cell(1,numel(equivalenceClass));
 % Treat agglomerates containing single segment separately
 % newedges(~singleSegAgglos) = mat2cell(segIDedges,histc(saggloLUT,unique(saggloLUT)));
 newedges(~singleSegAgglos) = mat2cell(edges,histc(saggloLUT,unique(saggloLUT)));
@@ -58,7 +58,7 @@ for f = 1:numel(fNames)
     end
 end
 % tranform the global node ids in the edge vector to local node ids
-[~, newedges] = cellfun(@(x,y) ismember(x,y),newedges,equivalenceClass,'uni',0);
+[~, newedges] = cellfun(@(x,y) ismember(x,y),newedges,equivalenceClass','uni',0);
 
 newSuperagglo = cell2struct([newedges;newnodes;tmpstrct{:}],[{'edges'},{'nodes'},fNames'],1);
 end
