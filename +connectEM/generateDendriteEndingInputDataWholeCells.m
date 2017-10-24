@@ -15,21 +15,22 @@ function generateDendriteEndingInputDataWholeCells(param,suffix)
     end
     % Directory with input / output data
     dataDir = fullfile(param.saveFolder, 'aggloState');
-    intermediateFile = fullfile(dataDir, sprintf('dendriteDirectionality_%s.mat',suffix));
-    outFile = fullfile(dataDir, sprintf('dendriteEndingInputData_%s.mat',suffix));
+    intermediateFile = fullfile(dataDir, sprintf('wholeCellsDirectionality_%s.mat',suffix));
+    outFile = fullfile(dataDir, sprintf('wholeCellsEndingInputData_%s.mat',suffix));
 
     % Load data
    [graph, segmentMeta, borderMeta, globalSegmentPCA] = ...
        connectEM.loadAllSegmentationData(param);
    
     % Load state of axon agglomeration and load big indices as loaded by Kevin
-    dendrites = load(fullfile(dataDir, sprintf('dendrites_%s.mat',suffix)));
-    dendriteIds = find(dendrites.WholeCellId);
-    dendrites = dendrites.dendrites(dendrites.WholeCellId);
-
+    wholeCells = load(fullfile(dataDir, sprintf('wholeCells_%s.mat',suffix)));
+%     dendriteIds = find(dendrites.WholeCellId);
+%     dendrites = dendrites.dendrites(dendrites.WholeCellId);
+    wholeCells = wholeCells.wholeCells;
+    
     % Convert to old-school agglomerates
-    dendriteAgglos = arrayfun( ...
-        @Agglo.fromSuperAgglo, dendrites, 'UniformOutput', false);
+    wholeCellAgglos = arrayfun( ...
+        @Agglo.fromSuperAgglo, wholeCells, 'UniformOutput', false);
 
     % Calculate dendrite directionality
     options = struct;
@@ -37,12 +38,12 @@ function generateDendriteEndingInputDataWholeCells(param,suffix)
     options.bboxDist = bboxDist;
     % Just calculate for the larger 5um denrites since there occurs some issue with the smaller ones    
     directionality = connectEM.calculateDirectionalityOfAgglomerates( ...
-        dendriteAgglos, graph, segmentMeta, borderMeta, globalSegmentPCA, options);
+        wholeCellAgglos, graph, segmentMeta, borderMeta, globalSegmentPCA, options);
     
     % Save results
     out = struct;
     out.dendrites = dendrites;
-    out.dendriteIds = dendriteIds;
+%     out.dendriteIds = dendriteIds;
     out.directionality = directionality;
     out.gitInfo = Util.gitInfo();
 

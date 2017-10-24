@@ -58,7 +58,7 @@ function getDendriteQueryOverlapB(param,state)
     edgesCC = sort(edgesCC, 2);
     eqClassCC = Graph.findConnectedComponents(edgesCC, true, true);
     sizeEqClassCC = sort(cellfun(@numel, eqClassCC), 'descend');
-    eqClassCCfull = [eqClassCC; num2cell(setdiff(1 : length(axons), cell2mat(eqClassCC)))'];
+    eqClassCCfull = [eqClassCC; num2cell(setdiff(1 : length(dendrites), cell2mat(eqClassCC)))'];
     display(sizeEqClassCC(1:10));
 
     results = struct;

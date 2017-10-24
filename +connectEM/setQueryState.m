@@ -235,6 +235,18 @@ function [skeletonFolders, flightPathsSuffix, versionSuffix, axonVersion,...
         axonVersionNew = '06_c';
         casesToMerge = [1:4, 6, 8:14];
         
+    %% After chiasmata splitting merge in a E3a cases    
+    elseif strcmp(state,'7.1')
+        % source folders for flight paths
+        skeletonFolders = {};
+        % filename for flight paths in getAggloQueryOverlapA
+        flightPathsSuffix = [];
+        % filename additionals for getAggloQueryOverlapB and flightEndingOverlapRun
+        versionSuffix = '_5.0'; 
+        axonVersion = 4;
+        axonVersionNew = '05_a';
+        casesToMerge = [1:6,8];
+        
     else
         error('Unknown state ''%s''', state);
     end

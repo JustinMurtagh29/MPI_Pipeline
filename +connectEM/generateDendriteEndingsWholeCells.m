@@ -15,10 +15,10 @@ function generateDendriteEndingsWholeCells(param,suffix)
     dataDir = fullfile(param.saveFolder, 'aggloState');
 
     % load directionality information
-    endingInput = fullfile(dataDir, sprintf('dendriteEndingInputData_%s.mat',suffix));
-    endingInput = load(endingInput, 'dendriteIds', 'directionality');
+    endingInput = fullfile(dataDir, sprintf('wholeCellsEndingInputData_%s.mat',suffix));
+    endingInput = load(endingInput, 'directionality');
     directionality = endingInput.directionality;
-    dendriteIds = endingInput.dendriteIds;
+%     dendriteIds = endingInput.dendriteIds;
 
     % load border CoMs
     borderCoM = fullfile(param.saveFolder, 'globalBorder.mat');
@@ -39,7 +39,7 @@ function generateDendriteEndingsWholeCells(param,suffix)
     % Keep only those agglomerates with at least one ending candidate
     nrCanidates = cellfun(@numel, idxAll);
     dendriteMask = nrCanidates > 0;
-    dendriteIds = dendriteIds(dendriteMask);
+%     dendriteIds = dendriteIds(dendriteMask);
 
     display([num2str(numel(dendriteMask)) ' agglomerates > 5 micron in total']);
     display([num2str(100 - (sum(dendriteMask)./numel(dendriteMask))*100, '%.2f') '% of > 5 micron agglomerates have not a single ending']);
@@ -63,18 +63,18 @@ function generateDendriteEndingsWholeCells(param,suffix)
 
     % save all results for convenience in query generation
     gitInfo = Util.gitInfo();
-    save(fullfile(dataDir, sprintf('dendriteEndingsAllData_%s.mat',suffix)));
+    save(fullfile(dataDir, sprintf('wholeCellsEndingsAllData_%s.mat',suffix)));
 
     % save result
     out = struct;
-    out.dendriteIds = dendriteIds;
+%     out.dendriteIds = dendriteIds;
     out.dendriteMask = dendriteMask;
     out.borderIds = borderIds;
     out.borderPositions = borderPositions;
     out.borderClusters = borderClusters;
     out.gitInfo = Util.gitInfo();
 
-    Util.saveStruct(fullfile(dataDir, sprintf('dendriteEndings_%s.mat',suffix)), out);
+    Util.saveStruct(fullfile(dataDir, sprintf('wholeCellsEndings_%s.mat',suffix)), out);
 end
 
 function clusterIds = clusterBorders(param, options, borderCoM)

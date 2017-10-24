@@ -13,7 +13,7 @@ function generateDendriteQueriesOfWholeCells(param,suffix)
        connectEM.loadAllSegmentationData(param);
    
     % Load data from ending generation
-    endingData = fullfile(dataDir, sprintf('dendriteEndingsAllData_%s.mat',suffix));
+    endingData = fullfile(dataDir, sprintf('wholeCellsEndingsAllData_%s.mat',suffix));
     endingData = load(endingData);
     % Extract some variables
     idxAll = endingData.idxAll;
@@ -22,10 +22,10 @@ function generateDendriteQueriesOfWholeCells(param,suffix)
     borderClusters = endingData.borderClusters ;
 
     % Load directionality information
-    directionality = fullfile(dataDir, sprintf('dendriteEndingInputData_%s.mat',suffix));
+    directionality = fullfile(dataDir, sprintf('wholeCellsEndingInputData_%s.mat',suffix));
     directionality = load(directionality, 'directionality');
     directionality = directionality.directionality;
-
+    
     % Load border CoMs
 %     borderCoM = fullfile(param.saveFolder, 'globalBorder.mat');
 %     borderCoM = load(borderCoM, 'borderCoM');
@@ -33,12 +33,12 @@ function generateDendriteQueriesOfWholeCells(param,suffix)
     borderPositions = cellfun(@(x) borderCoM(x,:), directionality.borderIdx(idxCanidateFound),'uni',0);
 
     % Load larger 5 micron agglomerates
-    m = load(fullfile(dataDir, sprintf('dendrites_%s.mat',suffix)));
+    m = load(fullfile(dataDir, sprintf('wholeCells_%s.mat',suffix)));
 %     wholeCellIDs = sort(m.WholeCellId);
-    wholeCellIDs = m.WholeCellId;
-    dendrites = m.dendrites(wholeCellIDs);
-    superDendrites = dendrites;
-    dendrites = arrayfun(@Agglo.fromSuperAgglo, dendrites, 'UniformOutput', false);
+%     wholeCellIDs = m.WholeCellId;
+    wholeCells = m.wholeCells;
+    superDendrites = wholeCells;
+    wholeCells = arrayfun(@Agglo.fromSuperAgglo, wholeCells, 'UniformOutput', false);
     display([num2str(numel(m.indBigDends)) ' dendrites in total']);
     display([num2str(sum(m.indBigDends)) ' larger 5um']);
     
@@ -122,8 +122,8 @@ function generateDendriteQueriesOfWholeCells(param,suffix)
     
     % Write out scores and pca, apply all masks
     outside = cellfun('isempty',candidateUse);
-    dendrites = dendrites(~redundant);
-    dendrites = dendrites(~outside);
+    wholeCells = wholeCells(~redundant);
+    wholeCells = wholeCells(~outside);
 
     pcaFound = directionality.pca;
     pcaFound = pcaFound(~redundant);
@@ -157,7 +157,7 @@ function generateDendriteQueriesOfWholeCells(param,suffix)
 
     borderEdges = graph.edges(~isnan(graph.borderIdx), :);
     
-    outputFolder = fullfile(dataDir, 'wholeCellDendriteQueries_2/');
+    outputFolder = fullfile(dataDir, 'wholeCellDendriteQueries_5/');
     if ~exist(outputFolder, 'dir')
         mkdir(outputFolder)
     end
@@ -166,19 +166,44 @@ function generateDendriteQueriesOfWholeCells(param,suffix)
     superDendrites = superDendrites(~outside);
     IDs = find(~outside);
     
+    parameters.experiment.name='2012-09-28_ex145_07x2_ROI2017_dendrites_20171018';
+    parameters.scale.x = '11.24';
+    parameters.scale.y = '11.24';
+    parameters.scale.z = '28';
+    parameters.offset.x = '0';
+    parameters.offset.y = '0';
+    parameters.offset.z = '0';
+    
     for i=1:length(IDs)
-        treeNames = {};
-        currentDendrite = i;
         theseBorderEdges =  borderEdges(thisBorderIdx{i},:);
-        aggloEndingSegIds = theseBorderEdges(ismember(theseBorderEdges,dendrites{i}));
+        aggloEndingSegIds = theseBorderEdges(ismember(theseBorderEdges,wholeCells{i}));
         
+        % Filtering of endings with a neighboring flight path or mistakenly
+        % detected because of missing segment.
+%         segLocation = find(ismember(superDendrites(i).nodes(:,4),aggloEndingSegIds));
+        % Edges of superagglo in SegIDs
+        segEdges = zeros(size(superDendrites(i).edges));
+        segEdges(:,1) = superDendrites(i).nodes(superDendrites(i).edges(:,1),4);
+        segEdges(:,2) = superDendrites(i).nodes(superDendrites(i).edges(:,2),4);
+        % Neighbouring edges of ending segments
+        [segLocRow,~] = arrayfun(@(x)find(ismember(segEdges,x)),aggloEndingSegIds,'uni',0);
+        neighbours = cellfun(@(x)unique(segEdges(x,:)),segLocRow,'uni',0);
+        for j=1:length(aggloEndingSegIds)
+            neighbours{j}(neighbours{j} == aggloEndingSegIds(j)) = [];
+        end
+        % All surrounded segments of ending segment.
+        allNeighbours = arrayfun(@(x)graph.neighbours(x),aggloEndingSegIds);
+        surroundingCheck = cellfun(@(x,y)ismember(x,y),neighbours,allNeighbours,'uni',0);
         
-         idxComments = ismember(superDendrites(i).nodes(:,4),aggloEndingSegIds);
+        flightPathCheck = cellfun(@(x)any(isnan(x)),neighbours);
+        skippedSegmentCheck = cellfun(@(x)any(x==0),surroundingCheck);
+        aggloEndingSegIds(flightPathCheck|skippedSegmentCheck) = [];
+        
+        idxComments = ismember(superDendrites(i).nodes(:,4),aggloEndingSegIds);
         superDendrites(i).comments = repmat({''},size(superDendrites(i).nodes,1),1);
         superDendrites(i).comments(idxComments) = repmat({'ending'},sum(idxComments),1);
-        
-        connectEM.generateSkeletonFromAggloNew(superDendrites(i), {sprintf('wholeCellAgglo_%02d',i)} , outputFolder, [],[],sprintf('WholeCell%s_%02d.nml',suffix,IDs(i)));
 
+        connectEM.generateSkeletonFromAggloNew(superDendrites(i), {sprintf('wholeCellAgglo_%02d',i)} , outputFolder, [],parameters,sprintf('WholeCell%s_%02d.nml',suffix,IDs(i)));
     end
 
 end
