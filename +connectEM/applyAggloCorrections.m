@@ -60,8 +60,7 @@ for f = 1:numel(files)
     % get soma index for current skeleton
 %     [~,aggloOverlapsSkel] = ismember(skelCoords,dendriteCoord,'rows');
     [~,aggloOverlapsSkel] = ismember(skelSegIds,dendriteSegIds,'rows');
-    aggloOverlapsSkel = setdiff(aggloOverlapsSkel,0);
-    ind = mode(dendritesLUT(dendriteSegIds(aggloOverlapsSkel)));
+    ind = mode(dendritesLUT(dendriteSegIds(nonzeros(aggloOverlapsSkel))));
     
     % avoid using a wrong dendrite/axons agglo because it overlaps only a
     % little
@@ -135,7 +134,7 @@ for f = 1:numel(files)
             if ~isempty(hasTrueEndingComment) && any(hasTrueEndingComment)
                 continue
             elseif ~isempty(hasAxonComment) && any(hasAxonComment)
-                indToAdd = setdiff(axonsLUT(setdiff(theseSkelSegIds,0)),0); % get the index of the superagglo(s) to add
+                indToAdd = nonzeros(axonsLUT(nonzeros(theseSkelSegIds))); % get the index of the superagglo(s) to add
                
                 if isempty(indToAdd)
                     warning('Skel %s contained an axon marked ending which could not be processed, because the tracing did not reach a segId belonging to an axon superagglo',skel.filename)
@@ -146,7 +145,7 @@ for f = 1:numel(files)
                    indToAddAxons = cat(2,indToAddAxons,indToAdd);
                    for i = 1:numel(indToAdd)
                        [~,indComment] = ismember(theseSkelSegIds,axons(indToAdd(i)).nodes(:,4));
-                       indComment = setdiff(indComment,0);
+                       indComment = nonzeros(indComment);
                        if isempty(axons(indToAdd(i)).comments)
                            axons(indToAdd(i)).comments = repmat({''},size(axons(indToAdd(i)).nodes,1),1);
                        end
@@ -178,7 +177,7 @@ for f = 1:numel(files)
                 axons(indToAdd) = [];
                 
             else                
-                indToAdd = setdiff(dendritesLUT(setdiff(theseSkelSegIds,0)),[0,ind]); % get the index of the superagglo(s) to add
+                indToAdd = setdiff(dendritesLUT(nonzeros(theseSkelSegIds)),[0,ind]); % get the index of the superagglo(s) to add
                 if isempty(indToAdd)
                     warning('Skel %s contained an ending which could not be processed, because the tracing did not reach a segId not already belonging to the whole cell agglo or the segIDs were not part of the dendrite class',skel.filename)
                     continue
@@ -188,7 +187,7 @@ for f = 1:numel(files)
                    indToAddDendrites = cat(2,indToAddDendrites,indToAdd);
                    for i = 1:numel(indToAdd)
                        [~,indComment] = ismember(theseSkelSegIds,dendrites(indToAdd(i)).nodes(:,4));
-                       indComment = setdiff(indComment,0);
+                       indComment = nonzeros(indComment);
                        if isempty(dendrites(indToAdd(i)).comments)
                            dendrites(indToAdd(i)).comments = repmat({''},size(dendrites(indToAdd(i)).nodes,1),1);
                        end
@@ -226,7 +225,9 @@ for f = 1:numel(files)
         if modus == 2
             % write out all axons and skeletons that would be added this
             % turn
-            connectEM.generateSkeletonFromAggloNew(cat(1,dendrites(indToAddDendrites),axons(indToAddAxons)),arrayfun(@(x) sprintf('AggloToBeAdded_%02d',x),1:numel(cat(2,indToAddDendrites,indToAddAxons)),'uni',0) , fullfile(folder,'checkBeforeAdd'), [],[],sprintf('checkBeforeAdd_%02d.nml',f));
+            if any([~isempty(indToAddDendrites) ~isempty(indToAddAxons)])
+                connectEM.generateSkeletonFromAggloNew(cat(1,dendrites(indToAddDendrites),axons(indToAddAxons)),arrayfun(@(x) sprintf('AggloToBeAdded_%02d',x),1:numel(cat(2,indToAddDendrites,indToAddAxons)),'uni',0) , fullfile(folder,'checkBeforeAdd'), [],[],sprintf('checkBeforeAdd_%02d.nml',f));
+            end
         end
     end
 end
