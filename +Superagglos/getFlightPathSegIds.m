@@ -62,14 +62,14 @@ function flights = getFlightPathSegIds(param, sagglos, nhood)
     end
     
     %% convert into table
+    nodeCoord = flights(:, (end - 2):end);
+    flights = flights(:, 1:(end - 2));
+    
     flights = array2table( ...
         flights, 'VariableNames', ...
-       {'aggloId', 'nodeId', 'flightId', 'posX', 'posY', 'posZ'});
-    flights.coord = table2array( ...
-        flights(:, {'posX', 'posY', 'posZ'}));
-    flights(:, {'posX', 'posY', 'posZ'}) = [];
+       {'aggloId', 'nodeId', 'flightId'});
 
     %% look up segment IDs
     flights.segId = Seg.Global.getSegIds( ...
-        param, flights.coord, [1024, 1024, 1024]);
+        param, nodeCoord, [1024, 1024, 1024]);
 end
