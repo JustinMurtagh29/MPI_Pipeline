@@ -1,4 +1,4 @@
-function generateDendriteQueriesOfWholeCells(param,suffix,graphInput,round)
+function generateDendriteQueriesOfWholeCells(param,suffix,graphInput,runID)
     % Written by
     %   Manuel Berning <manuel.berning@brain.mpg.de>
     %   Christian Schramm <christian.schramm@brain.mpg.de>
@@ -124,7 +124,7 @@ function generateDendriteQueriesOfWholeCells(param,suffix,graphInput,round)
 
     borderEdges = graph.edges(~isnan(graph.borderIdx), :);
     
-    outputFolder = fullfile(dataDir, strcat('wholeCellDendriteQueries/wholeCellDendriteQueries_',num2str(round),'/'));
+    outputFolder = fullfile(dataDir, strcat('wholeCellDendriteQueries/wholeCellDendriteQueries_',num2str(runID),'/'));
     if ~exist(outputFolder, 'dir')
         mkdir(outputFolder)
     end
