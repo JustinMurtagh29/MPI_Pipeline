@@ -33,17 +33,17 @@ function generateDendriteEndingsWholeCells(param,suffix)
 
     % Keep only those agglomerates with at least one ending candidate
     nrCanidates = cellfun(@numel, idxAll);
-    dendriteMask = nrCanidates > 0;
+    candidateMask = nrCanidates > 0;
 
-    display([num2str(numel(dendriteMask)) ' agglomerates > 5 micron in total']);
-    display([num2str(100 - (sum(dendriteMask)./numel(dendriteMask))*100, '%.2f') '% of > 5 micron agglomerates have not a single ending']);
-    display([num2str(numel(dendriteMask) - sum(dendriteMask)) ' in total']);
+    display([num2str(numel(candidateMask)) ' agglomerates > 5 micron in total']);
+    display([num2str(100 - (sum(candidateMask)./numel(candidateMask))*100, '%.2f') '% of > 5 micron agglomerates have not a single ending']);
+    display([num2str(numel(candidateMask) - sum(candidateMask)) ' in total']);
 
     % clustering on left candidates
     borderIds = cellfun( ...
         @(x, y) x(y), ...
-        directionality.borderIdx(dendriteMask), ...
-        idxAll(dendriteMask), 'UniformOutput', false);
+        directionality.borderIdx(candidateMask), ...
+        idxAll(candidateMask), 'UniformOutput', false);
     borderPositions = cellfun( ...
         @(x) borderCoM(x, :), borderIds, 'UniformOutput', false);
     borderClusters = cellfun( ...
@@ -61,7 +61,7 @@ function generateDendriteEndingsWholeCells(param,suffix)
 
     % save result
     out = struct;
-    out.dendriteMask = dendriteMask;
+    out.candidateMask = candidateMask;
     out.borderIds = borderIds;
     out.borderPositions = borderPositions;
     out.borderClusters = borderClusters;

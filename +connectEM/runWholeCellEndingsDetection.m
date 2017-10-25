@@ -8,7 +8,9 @@ graphInput.graph = graph;
 graphInput.segmentMeta = segmentMeta;
 graphInput.borderMeta = borderMeta;
 graphInput.globalSegmentPCA = globalSegmentPCA;
-   
-generateDendriteEndingInputDataWholeCells(param,suffix,graphInput)
-generateDendriteEndingInputDataWholeCells(param,suffix,graphInput)
-generateDendriteEndingInputDataWholeCells(param,suffix,graphInput)
+
+suffix = '02'
+
+connectEM.generateDendriteEndingInputDataWholeCells(param,suffix,graphInput)
+connectEM.generateDendriteEndingInputDataWholeCells(param,suffix,graphInput)
+connectEM.generateDendriteEndingInputDataWholeCells(param,suffix,graphInput)

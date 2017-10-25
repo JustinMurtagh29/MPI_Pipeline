@@ -19,7 +19,7 @@ function generateDendriteQueriesOfWholeCells(param,suffix,graphInput)
     endingData = load(endingData);
     % Extract some variables
     idxAll = endingData.idxAll;
-    idxCanidateFound = endingData.dendriteMask;
+    idxCanidateFound = endingData.candidateMask;
     borderIds = endingData.borderIds;
     borderClusters = endingData.borderClusters ;
 
@@ -123,7 +123,7 @@ function generateDendriteQueriesOfWholeCells(param,suffix,graphInput)
 
     borderEdges = graph.edges(~isnan(graph.borderIdx), :);
     
-    outputFolder = fullfile(dataDir, 'wholeCellDendriteQueries_6/');
+    outputFolder = fullfile(dataDir, 'wholeCellDendriteQueries/wholeCellDendriteQueries_7/');
     if ~exist(outputFolder, 'dir')
         mkdir(outputFolder)
     end

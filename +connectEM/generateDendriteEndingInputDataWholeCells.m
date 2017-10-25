@@ -48,7 +48,7 @@ function generateDendriteEndingInputDataWholeCells(param,suffix,graphInput)
     
     % Save results
     out = struct;
-    out.dendrites = dendrites;
+    out.wholeCells = wholeCells;
     out.directionality = directionality;
     out.gitInfo = Util.gitInfo();
 
