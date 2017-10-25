@@ -44,7 +44,7 @@ else   % new representation, more complicated as edges have to be established
     newAgglos = cell2struct([newedges';newnodes'],{'edges','nodes'},1);
     % remove duplicate nodes from the agglos (would be a nightmare before)
     [~,nodesToKeep] = arrayfun(@(x) unique(x.nodes,'rows'),newAgglos,'uni',0);
-    newAgglos = Superagglos.removeNodesFromAgglo(newAgglos,arrayfun(@(x) setdiff(1:size(newAgglos(x).nodes,1),nodesToKeep(x)),1:numel(newAgglos),'uni',0) );
+    newAgglos = Superagglos.removeNodesFromAgglo(newAgglos,arrayfun(@(x) setdiff(1:size(newAgglos(x).nodes,1),nodesToKeep{x}),1:numel(newAgglos),'uni',0) );
     
 
 end
