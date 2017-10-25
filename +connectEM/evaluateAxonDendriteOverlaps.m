@@ -57,6 +57,11 @@ else
     Util.saveStruct(axonFlightFile, struct('axonFlights', axonFlights));
 end
 
+%% determine nodes per flight path
+[uniFlights, ~, flightNodeCount] = unique( ...
+    axonFlights(:, {'aggloId', 'flightId'}), 'rows');
+uniFlights.nodes = accumarray(flightNodeCount, 1);
+
 %% accumulate evidence
 axonFlights.dendId = dendLUT(1 + axonFlights.segId);
 axonFlights(~axonFlights.dendId, :) = [];
@@ -75,10 +80,18 @@ dendOverlap.dendFrac = ...
  ./ dendVols(dendOverlap.dendId);
 
 % discard overlaps below evidence threshold
-dendOverlap = sortrows(dendOverlap, 'evidence', 'descend');
 dendOverlap(dendOverlap.evidence < minEvidence, :) = [];
 
+[~, rows] = ismember( ...
+    dendOverlap(:, {'aggloId', 'flightId'}), ...
+    uniFlights(:, {'aggloId', 'flightId'}), 'rows');
+dendOverlap.flightNodes = uniFlights.nodes(rows);
+dendOverlap.flightFrac = ...
+    dendOverlap.evidence ...
+ ./ dendOverlap.flightNodes;
+
 % assign to axon with largest evidence
+dendOverlap = sortrows(dendOverlap, 'evidence', 'descend');
 [~, uniRows] = unique(dendOverlap.dendId, 'stable');
 dendOverlap = dendOverlap(uniRows, :);
 
