@@ -132,7 +132,7 @@ for f = 1:numel(files)
             if ~isempty(hasTrueEndingComment) && any(hasTrueEndingComment)
                 continue
             else %~isempty(hasAxonComment) && any(hasAxonComment)
-                indToAddAxons = nonzeros(axonsLUT(nonzeros(theseSkelSegIds))); % get the index of the superagglo(s) to add
+                indToAddAxons = unique(nonzeros(axonsLUT(nonzeros(theseSkelSegIds))))'; % get the index of the superagglo(s) to add
                 indToAddDendrites = setdiff(dendritesLUT(nonzeros(theseSkelSegIds)),[0,ind]); % get the index of the superagglo(s) to add
                 if all([isempty(indToAddDendrites) isempty(indToAddAxons)])
                     warning('Skel %s contained an ending which could not be processed, because the tracing did not reach a segId not already belonging to the whole cell agglo or the segIDs were not part of the dendrite/axon class',skel.filename)
