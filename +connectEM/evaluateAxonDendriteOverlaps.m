@@ -50,11 +50,13 @@ axonFlightFile = fullfile(axonDir, sprintf('%s-flights.mat', axonName));
 
 if exist(axonFlightFile, 'file')
     disp('Loading flights from cache...');
-    load(axonFlightFile, 'axonFlights');
+    load(axonFlightFile);
 else
-    axonFlights = ...
+   [axonFlights, axonFlightsMeta] = ...
         Superagglos.getFlightPathSegIds(param, axons, 3);
-    Util.saveStruct(axonFlightFile, struct('axonFlights', axonFlights));
+    Util.saveStruct(axonFlightFile, struct( ...
+        'axonFlights', axonFlights, ...
+        'axonFlightsMeta', axonFlightsMeta));
 end
 
 %% determine nodes per flight path
