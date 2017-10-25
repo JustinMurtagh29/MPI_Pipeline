@@ -45,10 +45,10 @@ end
 if exist('filename','var') && ~isempty(filename)
     allSkel.write(fullfile(outputFolder,filename), [], 1)
 end
-mappingFile = fullfile(outputFolder, [treeNames{1} '.txt']);
-script = WK.makeMappingScript(maxSegId, Superagglos.transformAggloNewOldRepr(agglo), false);
-fileHandle = fopen(mappingFile, 'w');
-fwrite(fileHandle, script);
-fclose(fileHandle);
+% mappingFile = fullfile(outputFolder, [treeNames{1} '.txt']);
+% script = WK.makeMappingScript(maxSegId, Superagglos.transformAggloNewOldRepr(agglo), false);
+% fileHandle = fopen(mappingFile, 'w');
+% fwrite(fileHandle, script);
+% fclose(fileHandle);
 
 end

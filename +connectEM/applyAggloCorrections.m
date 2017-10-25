@@ -6,7 +6,7 @@ function [dendrites,dendritesLUT] = applyAggloCorrections(dendrites,p,folder,mod
 % dendrites    agglos in the superagglo format
 % p            parameter structure from the pipeline
 % folder       path to the folder containing the nml files with the changes
-% mode         0: applySplitsAndMerges; 1: only apply splits; 2: only write out agglos as skeletons that would be added by this step (to inspect for mergers) (DEFAULT 0)
+% modus        0: applySplitsAndMerges; 1: only apply splits; 2: only write out agglos as skeletons that would be added by this step (to inspect for mergers) (DEFAULT 0)
 % axons        agglos in the superagglo format to add axonic stuff to whole
 %              cells
 %
@@ -171,7 +171,9 @@ for f = 1:numel(files)
                 end
                 dendrites(ind) = Superagglos.applyEquivalences({1:numel(indToAdd)+1},cat(1,dendrites(ind),axons(indToAdd)),segIdEdges);
                 
-                dendritesLUT(cell2mat(arrayfun(@(x) x.nodes(~isnan(x.nodes(:,4)),4),axons(indToAdd),'uni',0))) = ind; % update LUT
+
+                
+                 dendritesLUT(cell2mat(arrayfun(@(x) x.nodes(~isnan(x.nodes(:,4)),4),axons(indToAdd),'uni',0))) = ind; % update LUT
                 % remove agglo which has been added and update LUT
                 axonsLUT = connectEM.changem(axonsLUT,(0:numel(axons))- [0, cumsum(accumarray(indToAdd',1,[numel(axons),1]))'],0:numel(axons));
                 axons(indToAdd) = [];
@@ -225,8 +227,15 @@ for f = 1:numel(files)
         if modus == 2
             % write out all axons and skeletons that would be added this
             % turn
-            if any([~isempty(indToAddDendrites) ~isempty(indToAddAxons)])
-                connectEM.generateSkeletonFromAggloNew(cat(1,dendrites(indToAddDendrites),axons(indToAddAxons)),arrayfun(@(x) sprintf('AggloToBeAdded_%02d',x),1:numel(cat(2,indToAddDendrites,indToAddAxons)),'uni',0) , fullfile(folder,'checkBeforeAdd'), [],[],sprintf('checkBeforeAdd_%02d.nml',f));
+            if ~isempty(indToAddAxons)
+                for i = 1:numel(indToAddAxons)
+                    connectEM.generateSkeletonFromAggloNew(axons(indToAddAxons(i)),{sprintf('AxonsToBeAdded_%d',indToAddAxons(i))} , fullfile(folder,'checkBeforeAdd'), [],[],sprintf('AxonsToBeAdded_%d.nml',indToAddAxons(i)));
+                end
+            end
+            if ~isempty(indToAddDendrites)
+                for i = 1:numel(indToAddDendrites)
+                    connectEM.generateSkeletonFromAggloNew(dendrites(indToAddDendrites(i)),{sprintf('DendritesToBeAdded_%d',indToAddDendrites(i))} , fullfile(folder,'checkBeforeAdd'), [],[],sprintf('DendritesToBeAdded_%d.nml',indToAddDendrites(i)));
+                end
             end
         end
     end
