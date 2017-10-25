@@ -21,6 +21,9 @@ dendFile = fullfile(rootDir, 'aggloState/dendrites_03_v2_splitmerged.mat');
 param = load(fullfile(rootDir, 'allParameter.mat'), 'p');
 param = param.p;
 
+maxSegId = Seg.Global.getMaxSegId(param);
+segSizes = Seg.Global.getSegToSizeMap(param);
+
 axons = load(axonFile);
 axonIds = find(axons.indBigAxons);
 axons = axons.axons(axonIds);
@@ -28,6 +31,13 @@ axons = axons.axons(axonIds);
 dends = load(dendFile);
 dendIds = find(dends.indBigDends);
 dends = dends.dendrites(dendIds);
+
+%% prepare for dendrite overlap
+dendSegIds = Superagglos.getSegIds(dends);
+dendVols = cellfun(@(ids) max([0; sum(segSizes(ids))]), dendSegIds);
+
+dendLUT = Agglo.buildLUT(maxSegId, dendSegIds);
+dendLUT = cat(1, 0, dendLUT(:));
 
 %% use WKW segmentation
 param.seg = struct;
@@ -47,13 +57,6 @@ else
     Util.saveStruct(axonFlightFile, struct('axonFlights', axonFlights));
 end
 
-%% check overlap with dendrites
-maxSegId = Seg.Global.getMaxSegId(param);
-dendSegIds = Superagglos.getSegIds(dends);
-
-dendLUT = Agglo.buildLUT(maxSegId, dendSegIds);
-dendLUT = cat(1, 0, dendLUT(:));
-
 %% accumulate evidence
 axonFlights.dendId = dendLUT(1 + axonFlights.segId);
 axonFlights(~axonFlights.dendId, :) = [];
@@ -61,6 +64,15 @@ axonFlights(~axonFlights.dendId, :) = [];
 [dendOverlap, ~, dendEvidence] = unique( ...
     axonFlights(:, {'aggloId', 'flightId', 'dendId'}), 'rows');
 dendOverlap.evidence = accumarray(dendEvidence, 1);
+
+% determine volume fraction of dendrite agglomerate which can be
+% "explained" the the axonal flight path passing through it
+dendOverlap.dendVol = accumarray( ...
+    dendEvidence, axonFlights.segId, [], ...
+    @(ids) sum(segSizes(unique(ids))));
+dendOverlap.dendFrac = ...
+    dendOverlap.dendVol ...
+ ./ dendVols(dendOverlap.dendId);
 
 % discard overlaps below evidence threshold
 dendOverlap = sortrows(dendOverlap, 'evidence', 'descend');
