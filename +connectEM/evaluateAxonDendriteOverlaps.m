@@ -118,6 +118,16 @@ rng(1);
 rows = randperm(size(dendOverlap, 1));
 rows = reshape(rows(1:10), 1, []);
 
+%{
+% good agreement between flight path and dendrite
+rng(0);
+rows = find( ...
+    dendOverlap.flightFrac > 0.8 ...
+  & dendOverlap.dendFrac > 0.8);
+rows = rows(randperm(numel(rows)));
+rows = reshape(rows(1:10), 1, []);
+%}
+
 for curRow = rows
     curAxonId = dendOverlap.aggloId(curRow);
     curAxon = axons(curAxonId);
