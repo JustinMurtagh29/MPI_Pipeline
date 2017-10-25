@@ -1,4 +1,5 @@
-function flights = getFlightPathSegIds(param, sagglos, nhood)
+function [flights, flightsMeta] = ...
+        getFlightPathSegIds(param, sagglos, nhood)
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     
@@ -10,31 +11,56 @@ function flights = getFlightPathSegIds(param, sagglos, nhood)
     
     %% reconstruct flights
     aggloCount = numel(sagglos);
-    flights = cell(aggloCount, 1);
-    flights(:) = {zeros(0, 6)};
+    flights = repelem({zeros(0, 6)}, aggloCount, 1);
+    flightsMeta = repelem({zeros(0, 3)}, aggloCount, 1);
 
     for curIdx = 1:aggloCount
-        curSagglos = sagglos(curIdx);
+        curSagglo = sagglos(curIdx);
+        curNodeCount = size(curSagglo.nodes, 1);
 
         % work around empty edges
-        curSagglos.edges = reshape(curSagglos.edges, [], 2);
+        curSagglo.edges = reshape(curSagglo.edges, [], 2);
+        
+        % separate flight paths from agglomerates
+        curFlightNodes = find(isnan(curSagglo.nodes(:, 4)));
+        curInterEdges = ismember(curSagglo.edges, curFlightNodes);
+        curInterEdges = xor(curInterEdges(:, 1), curInterEdges(:, 2));
+        
+        curIntraEdges = curSagglo.edges(~curInterEdges, :);
+        curInterEdges = curSagglo.edges( curInterEdges, :);
 
-        % extract flight nodes and edges
-        curNodeIds = find(isnan(curSagglos.nodes(:, 4)));
-       [~, curEdges] = ismember(curSagglos.edges, curNodeIds);
-        curEdges = curEdges(all(curEdges, 2), :);
-        curEdges = sort(curEdges, 2);
-
-        % group into paths
+        % build agglomerates
         curAdj = sparse( ...
-            curEdges(:, 2), curEdges(:, 1), ...
-            true, numel(curNodeIds), numel(curNodeIds));
+            curIntraEdges(:, 2), curIntraEdges(:, 1), ...
+            true, curNodeCount, curNodeCount);
        [~, curLUT] = graphconncomp(curAdj, 'Directed', false);
-
+        assert(all(curLUT > 0));
+        
+        % extract
+        % * nodes for each flight path
+        % * number of attachments per flight
+        curInterEdges = curLUT(curInterEdges);
+        curInterEdges = sort(curInterEdges, 2);
+        curInterEdges = unique(curInterEdges, 'rows');
+        
+       [curFlightComps, ~, curLUT] = unique(curLUT(curFlightNodes));
+       [~, curFlightAttachments] = ismember(curInterEdges, curFlightComps);
+        curFlightAttachments = accumarray( ...
+            max(curFlightAttachments, [], 2), ...
+            1, [numel(curFlightComps), 1], [], 0);
+        
         flights{curIdx} = horzcat( ...
-           repelem(curIdx, numel(curNodeIds), 1), curNodeIds(:), ...
-           curLUT(:), curSagglos.nodes(curNodeIds, 1:3));
+            repelem(curIdx, numel(curFlightNodes), 1), curFlightNodes(:), ...
+            curLUT(:), curSagglo.nodes(curFlightNodes, 1:3));
+        flightsMeta{curIdx} = horzcat( ...
+            repelem(curIdx, numel(curFlightComps), 1), ...
+            reshape(1:numel(curFlightComps), [], 1), ...
+            reshape(curFlightAttachments, [], 1));
     end
+    
+    flightsMeta = array2table( ...
+        cell2mat(flightsMeta), 'VariableNames', ...
+       {'aggloId', 'flightId', 'numAttachments'});
 
     flights = cell2mat(flights);
     flights = transpose(flights);
