@@ -4,7 +4,6 @@ function generateDendriteEndingsWholeCells(param,suffix)
     %   Christian Schramm <christian.schramm@brain.mpg.de>
 
     options = struct;
-%     options.latentScore = 0.5;
     options.segDirScore = 0.8;
     options.distanceCutoff = 800; % in nm
 
@@ -18,7 +17,6 @@ function generateDendriteEndingsWholeCells(param,suffix)
     endingInput = fullfile(dataDir, sprintf('wholeCellsEndingInputData_%s.mat',suffix));
     endingInput = load(endingInput, 'directionality');
     directionality = endingInput.directionality;
-%     dendriteIds = endingInput.dendriteIds;
 
     % load border CoMs
     borderCoM = fullfile(param.saveFolder, 'globalBorder.mat');
@@ -26,9 +24,6 @@ function generateDendriteEndingsWholeCells(param,suffix)
     borderCoM = borderCoM.borderCoM;
 
     % Find all borders for valid endings
-%     idxDirectional = cellfun( ...
-%         @(x) x(:, 1) > options.latentScore, ...
-%         directionality.latent, 'UniformOutput', false);
     idxEnding = cellfun( ...
         @(x) abs(x) > options.segDirScore, ...
         directionality.scores, 'UniformOutput', false);
@@ -39,7 +34,6 @@ function generateDendriteEndingsWholeCells(param,suffix)
     % Keep only those agglomerates with at least one ending candidate
     nrCanidates = cellfun(@numel, idxAll);
     dendriteMask = nrCanidates > 0;
-%     dendriteIds = dendriteIds(dendriteMask);
 
     display([num2str(numel(dendriteMask)) ' agglomerates > 5 micron in total']);
     display([num2str(100 - (sum(dendriteMask)./numel(dendriteMask))*100, '%.2f') '% of > 5 micron agglomerates have not a single ending']);
@@ -67,7 +61,6 @@ function generateDendriteEndingsWholeCells(param,suffix)
 
     % save result
     out = struct;
-%     out.dendriteIds = dendriteIds;
     out.dendriteMask = dendriteMask;
     out.borderIds = borderIds;
     out.borderPositions = borderPositions;

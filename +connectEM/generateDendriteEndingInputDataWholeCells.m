@@ -1,4 +1,4 @@
-function generateDendriteEndingInputDataWholeCells(param,suffix)
+function generateDendriteEndingInputDataWholeCells(param,suffix,graphInput)
     % generateAxonEndingInputData(param)
     %   Generates a `endingInputData.mat` file in the pipeline directory
     %   which contains all the data necessary for the ending detection.
@@ -8,24 +8,30 @@ function generateDendriteEndingInputDataWholeCells(param,suffix)
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
 
     % Parameters
-    minDendriteLength = 5000; % in nm
     bboxDist = 1000; % in nm
     if ~exist('suffix','var')
         suffix = '';
     end
+    
+    if nargin < 3
+        [graph, segmentMeta, borderMeta, globalSegmentPCA] = ...
+            connectEM.loadAllSegmentationData(param);
+    end
+       
     % Directory with input / output data
     dataDir = fullfile(param.saveFolder, 'aggloState');
     intermediateFile = fullfile(dataDir, sprintf('wholeCellsDirectionality_%s.mat',suffix));
     outFile = fullfile(dataDir, sprintf('wholeCellsEndingInputData_%s.mat',suffix));
 
     % Load data
-   [graph, segmentMeta, borderMeta, globalSegmentPCA] = ...
-       connectEM.loadAllSegmentationData(param);
+    graph = graphInput.graph;
+    segmentMeta = graphInput.segmentMeta;
+    borderMeta = graphInput.borderMeta;
+    globalSegmentPCA = graphInput.globalSegmentPCA;
+   
    
     % Load state of axon agglomeration and load big indices as loaded by Kevin
     wholeCells = load(fullfile(dataDir, sprintf('wholeCells_%s.mat',suffix)));
-%     dendriteIds = find(dendrites.WholeCellId);
-%     dendrites = dendrites.dendrites(dendrites.WholeCellId);
     wholeCells = wholeCells.wholeCells;
     
     % Convert to old-school agglomerates
@@ -43,7 +49,6 @@ function generateDendriteEndingInputDataWholeCells(param,suffix)
     % Save results
     out = struct;
     out.dendrites = dendrites;
-%     out.dendriteIds = dendriteIds;
     out.directionality = directionality;
     out.gitInfo = Util.gitInfo();
 
