@@ -59,6 +59,19 @@ else
         'axonFlightsMeta', axonFlightsMeta));
 end
 
+%% only consider doubly attached flights
+validFlights = axonFlightsMeta( ...
+    axonFlightsMeta.numAttachments > 1, :);
+validMask = ismember( ...
+    axonFlights(:, {'aggloId', 'flightId'}), ...
+    validFlights(:, {'aggloId', 'flightId'}), 'rows');
+
+fprintf('\n');
+fprintf('# flight paths: %d\n', numel(validMask));
+fprintf('# non-dangling flight paths: %d\n', sum(validMask));
+
+axonFlights = axonFlights(validMask, :);
+
 %% determine nodes per flight path
 [uniFlights, ~, flightNodeCount] = unique( ...
     axonFlights(:, {'aggloId', 'flightId'}), 'rows');
