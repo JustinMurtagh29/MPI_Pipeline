@@ -56,6 +56,7 @@ gb = load([p.saveFolder 'globalBorder.mat'], 'borderCoM', 'borderSize');
 somaIDs = linspace(1,125,125);
 %remove glia etc.
 somaIDs([6,8,19,21,23,27,28,36,38,41,44,51,57,61,82,87,90,92,95,98,100,104,108,110,117,124]) = [];
+% somaIDs([5,6,8,19,21,23,27,28,36,38,39,41,44,51,57,61,82,87,90,92,95,98,99,100,104,108,110,117,124]) = [];
 somaIDs(61) = []; %makes problems %is actually not even a neuron id75
 
 %% soma agglo runs
@@ -65,10 +66,12 @@ cells1 = Soma.getSomaNodesPar(p, graph, meta, rp, gb, 0.98, 1500, somaIDs);
 
 %second run
 somaIDs = [5,29,33,34,39,53,55,65,83,85,97,99,101,113,119];
+% somaIDs = [34,53,55,65,85,101];
 cells2 = Soma.getSomaNodesPar(p, graph, meta, rp, gb, 0.99, 2000, somaIDs);
 
 %third run
 somaIDs = [29,33,39,55,83,85,97,99,101,113,119];
+% somaIDs = [55,85,101];
 cells3 = Soma.getSomaNodesPar(p, graph, meta, rp, gb, 0.995, 2250, somaIDs);
 
 %% save the automated results
