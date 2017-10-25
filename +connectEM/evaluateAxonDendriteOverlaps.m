@@ -97,7 +97,9 @@ outputDir = '/home/amotta/Desktop/nmls';
 mkdir(outputDir);
 
 rng(0);
-rows = find(dendOverlap.explainedFrac > 0.9);
+rows = find(...
+    dendOverlap.explainedFrac < 0.9 ...
+  & dendOverlap.explainedFrac > 0.5);
 rows = rows(randperm(numel(rows)));
 rows = reshape(rows, 1, []);
 
