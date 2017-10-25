@@ -58,7 +58,7 @@ if doChecks
     % Check that segments still belong to the same equivalence class
     assert(all(arrayfun(@(x)isempty(setxor(aggloOld{x},aggloNew(x).nodes(:,4))), 1:numel(aggloOld))));
     
-    % Check that there are no edge duplets in any agglo
+    % Check that there are no edge or node duplets in any agglo
     assert(all(arrayfun(@(x) size(reshape(x.nodes(x.edges,4),[],2),1)==size(unique(sort(reshape(x.nodes(x.edges,4),[],2),2),'rows'),1),aggloNew(~idxSingleSegment))))
 end
 end
