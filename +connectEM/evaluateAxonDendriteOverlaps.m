@@ -71,93 +71,49 @@ axonFlights = axonFlights(ismember( ...
     axonFlights(:, {'aggloId', 'flightId'}), ...
     validFlights(:, {'aggloId', 'flightId'}), 'rows'), :);
 
-%% determine nodes per flight path
-[uniFlights, ~, flightNodeCount] = unique( ...
-    axonFlights(:, {'aggloId', 'flightId'}), 'rows');
-uniFlights.nodes = accumarray(flightNodeCount, 1);
+%% build axon agglomerates from flight path + pickup
+axonFlightAgglos = accumarray( ...
+    axonFlights.aggloId, axonFlights.segId, [numel(axonIds), 1], ...
+    @(ids) {setdiff(ids, 0)}, {zeros(0, 1)});
 
-%% accumulate evidence
-axonFlights.dendId = dendLUT(1 + axonFlights.segId);
-axonFlights(~axonFlights.dendId, :) = [];
+axonAgglos = Superagglos.getSegIds(axons);
+axonAgglos = cellfun( ...
+    @vertcat, axonAgglos, axonFlightAgglos, ...
+    'UniformOutput', false);
 
-[dendOverlap, ~, dendEvidence] = unique( ...
-    axonFlights(:, {'aggloId', 'flightId', 'dendId'}), 'rows');
-dendOverlap.evidence = accumarray(dendEvidence, 1);
+axonLUT = Agglo.buildLUT(maxSegId, axonAgglos);
 
-% determine volume fraction of dendrite agglomerate which can be
-% "explained" the the axonal flight path passing through it
-dendOverlap.dendVol = accumarray( ...
-    dendEvidence, axonFlights.segId, [], ...
-    @(ids) sum(segSizes(unique(ids))));
-dendOverlap.dendFrac = ...
-    dendOverlap.dendVol ...
- ./ dendVols(dendOverlap.dendId);
+%% find dendrites largely explained by dendrites
+dendOverlap = table;
+dendOverlap.dendVol = dendVols;
+dendOverlap.explainedVol = cellfun(@(ids) sum(...
+    double(axonLUT(ids) > 0) .* segSizes(ids)), dendSegIds);
+dendOverlap.explainedFrac = ...
+    dendOverlap.explainedVol ...
+ ./ dendOverlap.dendVol;
 
-% discard overlaps below evidence threshold
-dendOverlap(dendOverlap.evidence < minEvidence, :) = [];
-
-[~, rows] = ismember( ...
-    dendOverlap(:, {'aggloId', 'flightId'}), ...
-    uniFlights(:, {'aggloId', 'flightId'}), 'rows');
-dendOverlap.flightNodes = uniFlights.nodes(rows);
-dendOverlap.flightFrac = ...
-    dendOverlap.evidence ...
- ./ dendOverlap.flightNodes;
-
-% assign to axon with largest evidence
-dendOverlap = sortrows(dendOverlap, 'evidence', 'descend');
-[~, uniRows] = unique(dendOverlap.dendId, 'stable');
-dendOverlap = dendOverlap(uniRows, :);
-
-%%
-fprintf('\n');
-fprintf('# axons: %d\n', numel(axons));
-fprintf('# dendrites: %d\n', numel(dends));
-
-fprintf('\n');
-fprintf('Node evidence threshold: %d\n', minEvidence);
-fprintf('# dendrites with axon overlap: %d\n', size(dendOverlap, 1));
-
-%% export examples
+%% export examples to webKNOSSOS
 outputDir = '/home/amotta/Desktop/nmls';
 mkdir(outputDir);
 
-%{
-% top ten
-rows = 1:10;
-%}
-
-% random examples
-rng(1);
-rows = randperm(size(dendOverlap, 1));
-rows = reshape(rows(1:10), 1, []);
-
-%{
-% good agreement between flight path and dendrite
 rng(0);
-rows = find( ...
-    dendOverlap.flightFrac > 0.8 ...
-  & dendOverlap.dendFrac > 0.8);
+rows = find(dendOverlap.explainedFrac > 0.9);
 rows = rows(randperm(numel(rows)));
-rows = reshape(rows(1:10), 1, []);
-%}
+rows = reshape(rows, 1, []);
 
-for curRow = rows
-    curAxonId = dendOverlap.aggloId(curRow);
+for curRow = rows(1:10)
+    curDend = dends(curRow);
+    curDendSegIds = dendSegIds{curRow};
+    
+    curAxonId = axonLUT(curDendSegIds);
+    curAxonId = mode(curAxonId(curAxonId ~= 0));
     curAxon = axons(curAxonId);
     
-    curDendId = dendOverlap.dendId(curRow);
-    curDend = dends(curDendId);
-    
     skel = skeleton();
-    skel = skel.addTree( ...
-        sprintf('Axon #%d', curAxonId), ...
-        curAxon.nodes(:, 1:3), curAxon.edges);
-    skel = skel.addTree( ...
-        sprintf('Dendrite #%d', curDendId), ...
-        curDend.nodes(:, 1:3), curDend.edges);
-    
+    skel = skel.addTree('Axon', curAxon.nodes(:, 1:3), curAxon.edges);
+    skel = skel.addTree('Dendrite', curDend.nodes(:, 1:3), curDend.edges);
     skel = Skeleton.setParams4Pipeline(skel, param);
+    
     skel.write(fullfile(outputDir, ...
         sprintf('axon-dendrite-overlap-%d.nml', curRow)));
 end
