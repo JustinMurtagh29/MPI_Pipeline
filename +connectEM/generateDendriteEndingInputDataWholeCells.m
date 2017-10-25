@@ -13,23 +13,22 @@ function generateDendriteEndingInputDataWholeCells(param,suffix,graphInput)
         suffix = '';
     end
     
+    % Load data
     if nargin < 3
         [graph, segmentMeta, borderMeta, globalSegmentPCA] = ...
             connectEM.loadAllSegmentationData(param);
-    end
+    else
+        graph = graphInput.graph;
+        segmentMeta = graphInput.segmentMeta;
+        borderMeta = graphInput.borderMeta;
+        globalSegmentPCA = graphInput.globalSegmentPCA;
+   end
        
     % Directory with input / output data
     dataDir = fullfile(param.saveFolder, 'aggloState');
     intermediateFile = fullfile(dataDir, sprintf('wholeCellsDirectionality_%s.mat',suffix));
     outFile = fullfile(dataDir, sprintf('wholeCellsEndingInputData_%s.mat',suffix));
 
-    % Load data
-    graph = graphInput.graph;
-    segmentMeta = graphInput.segmentMeta;
-    borderMeta = graphInput.borderMeta;
-    globalSegmentPCA = graphInput.globalSegmentPCA;
-   
-   
     % Load state of axon agglomeration and load big indices as loaded by Kevin
     wholeCells = load(fullfile(dataDir, sprintf('wholeCells_%s.mat',suffix)));
     wholeCells = wholeCells.wholeCells;

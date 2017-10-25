@@ -1,4 +1,4 @@
-function generateDendriteQueriesOfWholeCells(param,suffix,graphInput)
+function generateDendriteQueriesOfWholeCells(param,suffix,graphInput,round)
     % Written by
     %   Manuel Berning <manuel.berning@brain.mpg.de>
     %   Christian Schramm <christian.schramm@brain.mpg.de>
@@ -12,6 +12,9 @@ function generateDendriteQueriesOfWholeCells(param,suffix,graphInput)
     if nargin < 3
         [graph, ~, borderMeta, ~] = ...
             connectEM.loadAllSegmentationData(param);
+    else
+        graph = graphInput.graph;
+        borderMeta = graphInput.borderMeta;
     end
    
     % Load data from ending generation
@@ -37,8 +40,6 @@ function generateDendriteQueriesOfWholeCells(param,suffix,graphInput)
     wholeCells = m.wholeCells;
     superDendrites = wholeCells;
     wholeCells = arrayfun(@Agglo.fromSuperAgglo, wholeCells, 'UniformOutput', false);
-    display([num2str(numel(m.indBigDends)) ' dendrites in total']);
-    display([num2str(sum(m.indBigDends)) ' larger 5um']);
     
     % Find indices of ending candidates in directionality lists (scores,
     % pca...)
@@ -123,7 +124,7 @@ function generateDendriteQueriesOfWholeCells(param,suffix,graphInput)
 
     borderEdges = graph.edges(~isnan(graph.borderIdx), :);
     
-    outputFolder = fullfile(dataDir, 'wholeCellDendriteQueries/wholeCellDendriteQueries_7/');
+    outputFolder = fullfile(dataDir, strcat('wholeCellDendriteQueries/wholeCellDendriteQueries_',num2str(round),'/'));
     if ~exist(outputFolder, 'dir')
         mkdir(outputFolder)
     end
