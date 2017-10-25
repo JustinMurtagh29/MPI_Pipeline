@@ -46,11 +46,7 @@ aggloNew = cell2struct([edges';nodes'],{'edges','nodes'},1);
 if doChecks
     % Perform some sanity checks
     idxSingleSegment = numSegs == 1;
-    
-    % Check that each agglo is own CC
-    assert(all(arrayfun(@(x)numel(Graph.findConnectedComponents(x.edges)), ...
-        aggloNew(~idxSingleSegment)) == 1));
-    
+      
     % Check that all nodes are connected
     assert(all(arrayfun(@(x)isempty(setxor(1:size(x.nodes,1),x.edges(:))), ...
         aggloNew(~idxSingleSegment))));

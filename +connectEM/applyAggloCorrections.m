@@ -117,9 +117,8 @@ for f = 1:numel(files)
         [~,endingSkelEdgesClusters] = cellfun(@(x) ismember(endingSkelEdges(all(ismember(endingSkelEdges,x),2),:),x),endingClusters,'uni',0);  % get the skel edges for each ending
         
 %         skelSegIds = Seg.Global.getSegIds(p,skelCoords(endingSkelEdges(:),:));  % extract the seg Ids of these nodes that were added
-        
-        indToAddAxons = [];
-        indToAddDendrites = [];
+        indToAddAxonsAll = [];
+        indToAddDendritesAll = [];
         for n = 1:numel(endingClusters)
 %             [~,segIdInd] = ismember(endingClusters{n},endingSkelEdges(:));
             theseSkelSegIds = skelSegIds(endingClusters{n});
@@ -128,78 +127,43 @@ for f = 1:numel(files)
                 continue
             end
             
-            hasAxonComment = cellfun(@(x) ~isempty(strfind(x,'axon')),comments(ismember(nodeIdx,endingClusters{n})));
-            
+            %hasAxonComment = cellfun(@(x) ~isempty(strfind(x,'axon')),comments(ismember(nodeIdx,endingClusters{n})));
             hasTrueEndingComment = cellfun(@(x) ~isempty(strfind(x,'true ending')),comments(ismember(nodeIdx,endingClusters{n})));
             if ~isempty(hasTrueEndingComment) && any(hasTrueEndingComment)
                 continue
-            elseif ~isempty(hasAxonComment) && any(hasAxonComment)
-                indToAdd = nonzeros(axonsLUT(nonzeros(theseSkelSegIds))); % get the index of the superagglo(s) to add
-               
-                if isempty(indToAdd)
-                    warning('Skel %s contained an axon marked ending which could not be processed, because the tracing did not reach a segId belonging to an axon superagglo',skel.filename)
+            else %~isempty(hasAxonComment) && any(hasAxonComment)
+                indToAddAxons = nonzeros(axonsLUT(nonzeros(theseSkelSegIds))); % get the index of the superagglo(s) to add
+                indToAddDendrites = setdiff(dendritesLUT(nonzeros(theseSkelSegIds)),[0,ind]); % get the index of the superagglo(s) to add
+                if all([isempty(indToAddDendrites) isempty(indToAddAxons)])
+                    warning('Skel %s contained an ending which could not be processed, because the tracing did not reach a segId not already belonging to the whole cell agglo or the segIDs were not part of the dendrite/axon class',skel.filename)
                     continue
                 end
-                
-                if modus == 2
-                   indToAddAxons = cat(2,indToAddAxons,indToAdd);
-                   for i = 1:numel(indToAdd)
-                       [~,indComment] = ismember(theseSkelSegIds,axons(indToAdd(i)).nodes(:,4));
-                       indComment = nonzeros(indComment);
-                       if isempty(axons(indToAdd(i)).comments)
-                           axons(indToAdd(i)).comments = repmat({''},size(axons(indToAdd(i)).nodes,1),1);
-                       end
-                       axons(indToAdd(i)).comments(indComment) = repmat({'attached segments'},numel(indComment),1);
-                   end
-                   continue 
-                end
-                % find nodes at segIds that are not part of the whole cell or
-                % the superagglos to add and delete those
-                endingNodesToDelete = sort(find(~ismember(theseSkelSegIds,cell2mat(arrayfun(@(x) x.nodes(:,4),cat(1,dendrites(ind),axons(indToAdd)),'uni',0)))),'descend');
-                theseSkelSegIds(endingNodesToDelete) = [];
-                for d = 1:numel(endingNodesToDelete)
-                    %find neighbors
-                    neighborIdx = setdiff(endingSkelEdgesClusters{n}(any(endingSkelEdgesClusters{n} == endingNodesToDelete(d),2),:),endingNodesToDelete(d));
-                    endingSkelEdgesClusters{n} = unique(cat(1,endingSkelEdgesClusters{n}(~any(endingSkelEdgesClusters{n}==endingNodesToDelete(d),2),:),combnk(neighborIdx,2)),'rows'); % add edges bridging the deleted node
-                    % delete node and reduce edge indices above this node idx by 1
-                    endingClusters{n}(endingNodesToDelete(d)) = [];
-                    endingSkelEdgesClusters{n}(endingSkelEdgesClusters{n}>endingNodesToDelete(d)) = endingSkelEdgesClusters{n}(endingSkelEdgesClusters{n}>endingNodesToDelete(d)) - 1;
-                end
-                segIdEdges = theseSkelSegIds(endingSkelEdgesClusters{n});  % get segId edge vector of skeleton
-                if size(segIdEdges,2)~=2 % fix stupid 1 value pair problem
-                    segIdEdges = segIdEdges';
-                end
-                dendrites(ind) = Superagglos.applyEquivalences({1:numel(indToAdd)+1},cat(1,dendrites(ind),axons(indToAdd)),segIdEdges);
-                
 
-                
-                 dendritesLUT(cell2mat(arrayfun(@(x) x.nodes(~isnan(x.nodes(:,4)),4),axons(indToAdd),'uni',0))) = ind; % update LUT
-                % remove agglo which has been added and update LUT
-                axonsLUT = connectEM.changem(axonsLUT,(0:numel(axons))- [0, cumsum(accumarray(indToAdd',1,[numel(axons),1]))'],0:numel(axons));
-                axons(indToAdd) = [];
-                
-            else                
-                indToAdd = setdiff(dendritesLUT(nonzeros(theseSkelSegIds)),[0,ind]); % get the index of the superagglo(s) to add
-                if isempty(indToAdd)
-                    warning('Skel %s contained an ending which could not be processed, because the tracing did not reach a segId not already belonging to the whole cell agglo or the segIDs were not part of the dendrite class',skel.filename)
+                if modus == 2
+                    indToAddAxonsAll = cat(2,indToAddAxonsAll,indToAddAxons);
+                    for i = 1:numel(indToAddAxons)
+                        [~,indComment] = ismember(theseSkelSegIds,axons(indToAddAxons(i)).nodes(:,4));
+                        indComment = nonzeros(indComment);
+                        if isempty(axons(indToAddAxons(i)).comments)
+                            axons(indToAddAxons(i)).comments = repmat({''},size(axons(indToAddAxons(i)).nodes,1),1);
+                        end
+                        axons(indToAddAxons(i)).comments(indComment) = repmat({'attached segments'},numel(indComment),1);
+                    end
+                    indToAddDendritesAll = cat(2,indToAddDendritesAll,indToAddDendrites);
+                    for i = 1:numel(indToAddDendrites)
+                        [~,indComment] = ismember(theseSkelSegIds,dendrites(indToAddDendrites(i)).nodes(:,4));
+                        indComment = nonzeros(indComment);
+                        if isempty(dendrites(indToAddDendrites(i)).comments)
+                            dendrites(indToAddDendrites(i)).comments = repmat({''},size(dendrites(indToAddDendrites(i)).nodes,1),1);
+                        end
+                        dendrites(indToAddDendrites(i)).comments(indComment) = repmat({'attached segments'},numel(indComment),1);
+                    end
                     continue
                 end
-                
-                if modus == 2
-                   indToAddDendrites = cat(2,indToAddDendrites,indToAdd);
-                   for i = 1:numel(indToAdd)
-                       [~,indComment] = ismember(theseSkelSegIds,dendrites(indToAdd(i)).nodes(:,4));
-                       indComment = nonzeros(indComment);
-                       if isempty(dendrites(indToAdd(i)).comments)
-                           dendrites(indToAdd(i)).comments = repmat({''},size(dendrites(indToAdd(i)).nodes,1),1);
-                       end
-                       dendrites(indToAdd(i)).comments(indComment) = repmat({'attached segments'},numel(indComment),1);
-                   end
-                   continue 
-                end
+
                 % find nodes at segIds that are not part of the whole cell or
                 % the superagglos to add and delete those
-                endingNodesToDelete = sort(find(~ismember(theseSkelSegIds,cell2mat(arrayfun(@(x) x.nodes(:,4),dendrites([ind,indToAdd]),'uni',0)))),'descend');
+                endingNodesToDelete = sort(find(~ismember(theseSkelSegIds,cell2mat(arrayfun(@(x) x.nodes(:,4),cat(1,dendrites([ind,indToAddDendrites]),axons(indToAddAxons)),'uni',0)))),'descend');
                 theseSkelSegIds(endingNodesToDelete) = [];
                 for d = 1:numel(endingNodesToDelete)
                     %find neighbors
@@ -209,32 +173,34 @@ for f = 1:numel(files)
                     endingClusters{n}(endingNodesToDelete(d)) = [];
                     endingSkelEdgesClusters{n}(endingSkelEdgesClusters{n}>endingNodesToDelete(d)) = endingSkelEdgesClusters{n}(endingSkelEdgesClusters{n}>endingNodesToDelete(d)) - 1;
                 end
+
                 segIdEdges = theseSkelSegIds(endingSkelEdgesClusters{n});  % get segId edge vector of skeleton
                 if size(segIdEdges,2)~=2 % fix stupid 1 value pair problem
                     segIdEdges = segIdEdges';
                 end
-                dendrites(ind) = Superagglos.applyEquivalences({1:numel(indToAdd)+1},dendrites([ind,indToAdd]),segIdEdges);
+                dendrites(ind) = Superagglos.applyEquivalences({1:numel(indToAddAxons)+numel(indToAddDendrites)+1},cat(1,dendrites([ind,indToAddDendrites]),axons(indToAddAxons)),segIdEdges);
                 
-                %            skel2 = Superagglos.toSkel(agglos(ind));
-                %            subplot(1,2,2);hold all;skel2.plot;axis equal
-                dendritesLUT(cell2mat(arrayfun(@(x) x.nodes(~isnan(x.nodes(:,4)),4),dendrites(indToAdd),'uni',0))) = ind; % update LUT
-                % remove agglo which has been added and update LUT
-                dendritesLUT = connectEM.changem(dendritesLUT,(0:numel(dendrites))-[0, cumsum(accumarray(indToAdd',1,[numel(dendrites),1]))'],0:numel(dendrites));
-                dendrites(indToAdd) = [];
-                ind = ind - sum(indToAdd <= ind); % update index to agglomerate
+                dendritesLUT(cell2mat(arrayfun(@(x) x.nodes(~isnan(x.nodes(:,4)),4),axons(indToAddAxons),'uni',0))) = ind; % update LUT
+                dendritesLUT(cell2mat(arrayfun(@(x) x.nodes(~isnan(x.nodes(:,4)),4),dendrites(indToAddDendrites),'uni',0))) = ind; % update LUT
+                 % remove agglo which has been added and update LUT
+                axonsLUT = connectEM.changem(axonsLUT,(0:numel(axons))- [0, cumsum(accumarray(indToAddAxons',1,[numel(axons),1]))'],0:numel(axons));
+                axons(indToAddAxons) = [];
+                dendritesLUT = connectEM.changem(dendritesLUT,(0:numel(dendrites))-[0, cumsum(accumarray(indToAddDendrites',1,[numel(dendrites),1]))'],0:numel(dendrites));
+                dendrites(indToAddDendrites) = [];
+                ind = ind - sum(indToAddDendrites <= ind); % update index to agglomerate
             end
         end
         if modus == 2
             % write out all axons and skeletons that would be added this
             % turn
-            if ~isempty(indToAddAxons)
-                for i = 1:numel(indToAddAxons)
-                    connectEM.generateSkeletonFromAggloNew(axons(indToAddAxons(i)),{sprintf('AxonsToBeAdded_%d',indToAddAxons(i))} , fullfile(folder,'checkBeforeAdd'), [],[],sprintf('AxonsToBeAdded_%d.nml',indToAddAxons(i)));
+            if ~isempty(indToAddAxonsAll)
+                for i = 1:numel(indToAddAxonsAll)
+                    connectEM.generateSkeletonFromAggloNew(axons(indToAddAxonsAll(i)),{sprintf('AxonsToBeAdded_%d',indToAddAxonsAll(i))} , fullfile(folder,'checkBeforeAdd'), [],[],sprintf('AxonsToBeAdded_%d.nml',indToAddAxonsAll(i)));
                 end
             end
-            if ~isempty(indToAddDendrites)
-                for i = 1:numel(indToAddDendrites)
-                    connectEM.generateSkeletonFromAggloNew(dendrites(indToAddDendrites(i)),{sprintf('DendritesToBeAdded_%d',indToAddDendrites(i))} , fullfile(folder,'checkBeforeAdd'), [],[],sprintf('DendritesToBeAdded_%d.nml',indToAddDendrites(i)));
+            if ~isempty(indToAddDendritesAll)
+                for i = 1:numel(indToAddDendritesAll)
+                    connectEM.generateSkeletonFromAggloNew(dendrites(indToAddDendritesAll(i)),{sprintf('DendritesToBeAdded_%d',indToAddDendritesAll(i))} , fullfile(folder,'checkBeforeAdd'), [],[],sprintf('DendritesToBeAdded_%d.nml',indToAddDendritesAll(i)));
                 end
             end
         end
