@@ -7,10 +7,10 @@ for i=1:length(superAgglos)
     nodes = superAgglos(i).nodes(:,1:3);
     edges = minimalSpanningTree(nodes);
     distances = [];
-    for j=1:length(edges)
+    for j=1:size(edges,1)
         distances(j,1) = pdist(bsxfun(@times,[nodes(edges(j,1),:);nodes(edges(j,2),:)], [11.24 11.24 28]));
     end
-    aggloLength(i,1) = sum(distances)
+    aggloLength(i,1) = sum(distances);
 end
 
 if ~exist(dataDir)
