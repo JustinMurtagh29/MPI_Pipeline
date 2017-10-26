@@ -4,7 +4,7 @@ dataDir = fullfile(param.saveFolder, 'aggloState/axonPathLength');
 superAgglos = superAgglos(batchBoundaries(i):batchBoundaries(i+1)-1);
 
 for i=1:length(superAgglos)
-    nodes = superAgglos(i).nodes;
+    nodes = superAgglos(i).nodes(:,1:3);
     edges = minimalSpanningTree(nodes);
     distances = [];
     for j=1:length(edges)
