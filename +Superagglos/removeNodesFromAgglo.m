@@ -5,6 +5,7 @@ function [newSuperagglos] = removeNodesFromAgglo(superagglos,nodeIds )
 if ~ iscell(nodeIds)
     nodeIds = {nodeIds};
 end
+newSuperagglos = superagglos([]);
 for n = 1:numel(superagglos)
     nodes = cell2mat(arrayfun(@(x) x.nodes,superagglos(n),'uni',0));
     fNames = setdiff(fieldnames(superagglos(n)),{'nodes','edges'});
@@ -18,7 +19,7 @@ for n = 1:numel(superagglos)
         idsToKeep = setdiff((1:size(nodes,1))',nodeIds{n});
     end
     if isempty(idsToKeep)
-        newSuperagglos(n) = superagglos([]);
+%         newSuperagglos(n) = superagglos([]);
         continue
     end
     edges = superagglos(n).edges(all(ismember(superagglos(n).edges,idsToKeep),2),:);
@@ -30,8 +31,8 @@ for n = 1:numel(superagglos)
     % [equivalenceClass, aggloLUT] = Graph.findConnectedComponents(cat(1,selfEdges,segIDedges),0,1);
     [equivalenceClass, aggloLUT] = Graph.findConnectedComponents(cat(1,selfEdges,edges),0,1);
     if isempty(equivalenceClass)
-        newSuperagglos = struct('edges',[],'nodes',[]);
-        return
+%         newSuperagglos = struct('edges',[],'nodes',[]);
+        continue
     end
     % create boolean which equivalence classes contain single edges
     singleSegAgglos = true(numel(equivalenceClass),1);
@@ -68,7 +69,7 @@ for n = 1:numel(superagglos)
     % tranform the global node ids in the edge vector to local node ids
     [~, newedges] = cellfun(@(x,y) ismember(x,y),newedges,equivalenceClass','uni',0);
     
-    newSuperagglos(n) = cell2struct([newedges;newnodes;tmpstrct{:}],[{'edges'},{'nodes'},fNames'],1);
+    newSuperagglos = cat(1,newSuperagglos,cell2struct([newedges;newnodes;tmpstrct{:}],[{'edges'},{'nodes'},fNames'],1));
 end
 end
 
