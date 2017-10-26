@@ -153,5 +153,9 @@ centerSomas = zeros(size(theseSomaCoordinates,1),1);
 for s = 1:size(theseSomaCoordinates,1)
     [~,centerSomas(s)] = min(pdist2(theseSomaCoordinates(s,:),somaCOMs));
 end
-assert(numel(unique(centerSomas))==size(theseSomaCoordinates,1))
+if (numel(unique(centerSomas))~=size(theseSomaCoordinates,1))
+    [~,ind] = unique(centerSomas);
+    warning('Caution! %d soma coordinates from the KAMIN list were part from the same soma agglo!Duplicates are removed!',numel(centerSomas)-numel(ind))
+    centerSomas = centerSomas(sort(ind));
+end
 somas = somas(centerSomas,3);

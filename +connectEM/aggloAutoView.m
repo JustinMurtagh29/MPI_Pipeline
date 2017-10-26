@@ -136,9 +136,7 @@ switch show
             end
         end
         
-    case {'singles','dendrites','dends'}
-        
-        
+    case {'singles','dendrites','dends'}        
         %% find and plot the 50 pseudo random agglos
         [~,ind] = ismember(segIdsForRandDend,aggloSegIds);
         randDends = NaN(numel(segIdsForRandDend),1);
@@ -177,4 +175,6 @@ switch show
                 close(fig);
             end
         end
+    otherwise
+        error('not done yet')
 end
