@@ -1,4 +1,5 @@
-function [ nodes, name, segIds ] = getSomaNodes( p, graph, meta, rp, gb, probT, sizeT, somaID )
+function [ nodes, name, segIds ] = getSomaNodes( p, graph, meta, rp, ...
+    gb, probT, sizeT, somaID )
 %GETSOMANODES Agglomerate soma using Christians nuclei and Manuels list
 % INPUT     p, graph, meta, rp, gb: connectomics stuff 
 %               default data that is used.

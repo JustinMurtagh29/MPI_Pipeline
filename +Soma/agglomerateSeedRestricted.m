@@ -1,5 +1,6 @@
 function [ids, cEdges] = agglomerateSeedRestricted( seedIds, seedC, ...
-    edges, point, borderSize, borderIdx, mergeP, tp, ts, borderCom, r, voxelSize )
+    edges, point, borderSize, borderIdx, mergeP, tp, ts, borderCom, r, ...
+    voxelSize )
 %AGGLOMERATESEEDRESTRICTED Agglomerate around a seed id restricted to a
 %given distance.
 % INPUT seedIds: [Nx1]
