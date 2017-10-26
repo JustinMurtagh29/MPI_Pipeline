@@ -1,4 +1,4 @@
-function generateDendriteQueries_CS(param,suffix)
+function generateDendriteQueries_CS(param,suffix,queryRun)
     % Written by
     %   Manuel Berning <manuel.berning@brain.mpg.de>
     %   Christian Schramm <christian.schramm@brain.mpg.de>
@@ -139,7 +139,7 @@ function generateDendriteQueries_CS(param,suffix)
         end
     end
 
-    outputFolder = fullfile(dataDir, 'dendriteQueries_2/');
+    outputFolder = fullfile(dataDir, strcat('dendriteQueries_',num2str(queryRun)));
     if ~exist(outputFolder, 'dir')
         mkdir(outputFolder)
     end

@@ -9,13 +9,16 @@
 %
 % Written by
 %   Alessandro Motta <alessandro.motta@brain.mpg.de>
-clear();
+
+clear;
+info = Util.gitInfo();
 
 % configuration
-minEvidence = 10 * 27;
+minExplainedFrac = 0.9;
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 axonFile = fullfile(rootDir, 'chiasmataSplitting/20171009T193744-kmb-on-axons-6c/outputs/20171023T115300_results.mat');
-dendFile = fullfile(rootDir, 'aggloState/dendrites_03_v2_splitmerged.mat');
+dendFile = fullfile(rootDir, 'aggloState/dendrites_03_v2.mat');
+outFile = fullfile(rootDir, 'aggloState/dendrites_flight_01.mat');
 
 %% load input data
 param = load(fullfile(rootDir, 'allParameter.mat'), 'p');
@@ -28,9 +31,9 @@ axons = load(axonFile);
 axonIds = find(axons.indBigAxons);
 axons = axons.axons(axonIds);
 
-dends = load(dendFile);
-dendIds = find(dends.indBigDends);
-dends = dends.dendrites(dendIds);
+dendData = load(dendFile);
+dendIds = find(dendData.indBigDends);
+dends = dendData.dendrites(dendIds);
 
 %% prepare for dendrite overlap
 dendSegIds = Superagglos.getSegIds(dends);
@@ -78,8 +81,8 @@ axonFlightAgglos = accumarray( ...
 
 axonAgglos = Superagglos.getSegIds(axons);
 axonAgglos = cellfun( ...
-    @vertcat, axonAgglos, axonFlightAgglos, ...
-    'UniformOutput', false);
+    @(one, two) unique(vertcat(one, two)), ...
+    axonAgglos, axonFlightAgglos, 'UniformOutput', false);
 
 axonLUT = Agglo.buildLUT(maxSegId, axonAgglos);
 
@@ -93,6 +96,7 @@ dendOverlap.explainedFrac = ...
  ./ dendOverlap.dendVol;
 
 %% export examples to webKNOSSOS
+%{
 outputDir = '/home/amotta/Desktop/nmls';
 mkdir(outputDir);
 
@@ -119,3 +123,27 @@ for curRow = rows(1:10)
     skel.write(fullfile(outputDir, ...
         sprintf('axon-dendrite-overlap-%d.nml', curRow)));
 end
+%}
+
+%% evaluation
+dendMask = dendOverlap.explainedFrac > minExplainedFrac;
+dendOverlapIds = dendIds(dendMask);
+
+fprintf('\n');
+fprintf('# dendrite agglomerates: %d\n', numel(dendMask));
+fprintf('# dendrite agglomerates explained by axon: %d\n', sum(dendMask));
+fprintf('⇒ removing these\n');
+
+%% building output
+% keep all agglos except marked ones
+keepMask = true(size(dendData.dendrites));
+keepMask(dendOverlapIds) = false;
+
+out = struct;
+out.dendrites = dendData.dendrites(keepMask);
+out.indBigDends = dendData.indBigDends(keepMask);
+out.myelinDend = dendData.myelinDend(keepMask);
+
+out.info = info;
+Util.saveStruct(outFile, out);
+system(sprintf('chmod a-w "%s"', outFile));
