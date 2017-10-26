@@ -1,4 +1,4 @@
-function generateDendriteQueries_CS(param,suffix,queryRun)
+function generateDendriteQueries_CS(param,suffix,stateFile,queryRun)
     % Written by
     %   Manuel Berning <manuel.berning@brain.mpg.de>
     %   Christian Schramm <christian.schramm@brain.mpg.de>
@@ -6,7 +6,10 @@ function generateDendriteQueries_CS(param,suffix,queryRun)
     if ~exist('suffix','var')
         suffix = '';
     end
-
+    if ~exist('stateFile','var')
+        stateFile = 'dendrites_03_v2_splitmerged.mat';
+    end
+    
     dataDir = fullfile(param.saveFolder, 'aggloState');
 
     % Load data from ending generation
@@ -30,7 +33,7 @@ function generateDendriteQueries_CS(param,suffix,queryRun)
     borderPositions = cellfun(@(x) borderCoM(x,:), directionality.borderIdx(idxCanidateFound),'uni',0);
 
     % Load larger 5 micron agglomerates
-    m = load(fullfile(dataDir, 'dendrites_03_v2_splitmerged.mat'));
+    m = load(fullfile(dataDir, stateFile));
     dendrites = m.dendrites(m.indBigDends);
     dendrites = arrayfun(@Agglo.fromSuperAgglo, dendrites, 'UniformOutput', false);
     display([num2str(numel(m.indBigDends)) ' dendrites in total']);
