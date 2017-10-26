@@ -38,35 +38,32 @@ bbox = bsxfun(@plus,[zeros(3,1), bbox'],offset');
 smallbbox = bsxfun(@plus,[zeros(3,1), smallbbox'],offset'+2000);
 
 
-% % code for random dendrite ids created with the April version
-% load(fullfile(aggloFolder,[dendritesApril.mat']),'dendrites','indBigDends');
-% numSeg = arrayfun(@(x) size(x.nodes,1),bigD);
-% bigD = dendrites(indBigDends & numSeg>50);
-% s = RandStream('mt19937ar','Seed',0);
-% bigD = bigD(randperm(s,numel(bigD),50));
-% segIdsForRandDend = arrayfun(@(x) x.nodes(1,4),bigD);
-% save(fullfile(aggloFolder,'randDendIds50.mat'),'segIdsForRandDend')
-load(fullfile(aggloFolder,'randDendIds50.mat'),'segIdsForRandDend')
-
-% load somata including merged somata
-somaAgglos = connectEM.getCenterSomaAgglos(fullfile(aggloFolder,'somas_with_merged_somas.mat'));
-somaSegIds = cell2mat(somaAgglos);
-% remove duplicate segIds
-[~,ic] = unique(somaSegIds);
-duplicates = somaSegIds(setdiff(1:numel(somaSegIds),ic));
-% somaDuplicateIds = cellfun(@(x) any(intersect(x,duplicates)),somaAgglos);
-somaAgglos = cellfun(@(x) setdiff(x,duplicates),somaAgglos,'uni',0);
-somaSegIds = cell2mat(somaAgglos);
-
-somaLUT(somaSegIds) = repelem(1:numel(somaAgglos),cellfun(@numel,somaAgglos));
-
 aggloSegIds = cell2mat(arrayfun(@(x) x.nodes(:,4),agglos,'uni',0));
 aggloLUT = zeros(1,max(aggloSegIds));
 aggloLUT(aggloSegIds(~isnan(aggloSegIds)))  = repelem(1:numel(agglos),arrayfun(@(x) numel(x.nodes(~isnan(x.nodes(:,4)),4)),agglos));
 
 
 switch show
-    case {'cells','wc'}
+    case {'cells','wc','wc_center','wc_border','wc_all'}
+        % load somata including merged somata
+        switch show
+            case 'wc_border'
+                somaAgglos = connectEM.getSomaAgglos(fullfile(aggloFolder,'somas_with_merged_somas.mat'),'border');
+            case {'wc','wc_center'}
+                somaAgglos = connectEM.getSomaAgglos(fullfile(aggloFolder,'somas_with_merged_somas.mat'),'center');
+            case 'wc_all'
+                somaAgglos = connectEM.getSomaAgglos(fullfile(aggloFolder,'somas_with_merged_somas.mat'),'all');
+        end
+        somaSegIds = cell2mat(somaAgglos);
+        % remove duplicate segIds
+        [~,ic] = unique(somaSegIds);
+        duplicates = somaSegIds(setdiff(1:numel(somaSegIds),ic));
+        % somaDuplicateIds = cellfun(@(x) any(intersect(x,duplicates)),somaAgglos);
+        somaAgglos = cellfun(@(x) setdiff(x,duplicates),somaAgglos,'uni',0);
+        somaSegIds = cell2mat(somaAgglos);
+        
+        somaLUT(somaSegIds) = repelem(1:numel(somaAgglos),cellfun(@numel,somaAgglos));
+        
         
         % check which segId of soma is found in which dendrite agglo
         [ismem,ind] = ismember(somaSegIds,aggloSegIds);
@@ -136,7 +133,16 @@ switch show
             end
         end
         
-    case {'singles','dendrites','dends'}        
+    case {'singles','dendrites','dends'}
+        % % code for random dendrite ids created with the April version
+        % load(fullfile(aggloFolder,[dendritesApril.mat']),'dendrites','indBigDends');
+        % numSeg = arrayfun(@(x) size(x.nodes,1),bigD);
+        % bigD = dendrites(indBigDends & numSeg>50);
+        % s = RandStream('mt19937ar','Seed',0);
+        % bigD = bigD(randperm(s,numel(bigD),50));
+        % segIdsForRandDend = arrayfun(@(x) x.nodes(1,4),bigD);
+        % save(fullfile(aggloFolder,'randDendIds50.mat'),'segIdsForRandDend')
+        load(fullfile(aggloFolder,'randDendIds50.mat'),'segIdsForRandDend')
         %% find and plot the 50 pseudo random agglos
         [~,ind] = ismember(segIdsForRandDend,aggloSegIds);
         randDends = NaN(numel(segIdsForRandDend),1);
