@@ -22,8 +22,8 @@ else   % new representation, more complicated as edges have to be established
     if any(cellfun(@(x) numel(x)~=numel(unique(x)),equivalencesClass1))
         error('It seems some of the equivalence classes contain more than one reference to the same agglo. Please make sure that all Agglos contain each segment ID only once before running this function, e.g. with connectEM.removeDuplSegIdsInAgglo.')
     end
-    numSegsAgglos = cellfun(@(x) size(x,1),{agglos.nodes})';
-    numEdgesAgglos = cellfun(@numel,{agglos.edges})/2;
+%     numSegsAgglos = cellfun(@(x) size(x,1),{agglos.nodes})';
+%     numEdgesAgglos = cellfun(@numel,{agglos.edges})/2;
     % remove duplicate nodes from the agglos
     newnodes = cellfun(@(x) unique(cat(1,agglos(x).nodes),'rows'),equivalencesClass1,'uni',0);
     % concatenate the edges of different agglos by adding number of
@@ -31,7 +31,7 @@ else   % new representation, more complicated as edges have to be established
 %     newedges = cellfun(@(x) cat(1,agglos(x).edges) + repmat(reshape(repelem(cumsum(cat(1,0,numSegsAgglos(x(1:end-1),:))),numEdgesAgglos(x)),sum(numEdgesAgglos(x)),1),1,2),equivalencesClass1,'uni',0);
     % transform agglo edges in segId edges in order to correctly connect
     % the remaining nodes after duplicate removal
-    newedges = cellfun(@(x) unique(cell2mat(arrayfun(@(y) reshape(agglos(y).nodes(agglos(y).edges,4),[],2),x,'uni',0)'),'rows'),equivalencesClass1,'uni',0);
+    newedges = cellfun(@(x) unique(cell2mat(arrayfun(@(y) reshape(agglos(y).nodes(agglos(y).edges(all(~isnan(agglos(y).edges)&agglos(y).edges~=0,2),:),4),[],2),x,'uni',0)'),'rows'),equivalencesClass1,'uni',0);
     [~,newedges] = arrayfun(@(x) ismember(newedges{x},newnodes{x}(:,4)),(1:numel(newnodes))','uni',0);
     if exist('segIds','var')
         % these are normal edges with seg ID
