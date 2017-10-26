@@ -8,11 +8,15 @@ axons = m.axons(m.indBigAxons);
 batchBoundaries = round(linspace(1, numel(axons)+1, 101));
 
 for i=1:length(batchBoundaries)-1
-    superAgglos{i,1} = {param,i,axons(batchBoundaries(i):batchBoundaries(i+1)-1)};
+    superAgglos{i,1} = {i};
 end
 
+sharedInputs = {param,axons,batchBoundaries};
+sharedInputsLocation = 2:4;
 cluster = Cluster.getCluster('-p -300','-tc 20','-l h_vmem=64G','-l s_rt=3:28:00','-l h_rt=3:29:00');
-job = Cluster.startJob(@connectEM.getAxonPathLength, folders, 'cluster', cluster)
+job = Cluster.startJob(@connectEM.getAxonPathLength, superAgglos, 'name', 'pathLength', 'cluster', cluster, ...
+    'sharedInputs', sharedInputs, 'sharedInputsLocation', sharedInputsLocation)
+
 %%
 %----------------------------------------------------------------
 
