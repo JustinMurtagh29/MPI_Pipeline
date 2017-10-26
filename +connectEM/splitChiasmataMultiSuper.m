@@ -1,4 +1,3 @@
-
 % Written by
 %   Alessandro Motta <alessandro.motta@brain.mpg.de>
 clear;
