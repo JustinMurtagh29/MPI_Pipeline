@@ -146,4 +146,4 @@ out.myelinDend = dendData.myelinDend(keepMask);
 
 out.info = info;
 Util.saveStruct(outFile, out);
-system(sprintf('chmod a-w "%d"', outFile));
+system(sprintf('chmod a-w "%s"', outFile));
