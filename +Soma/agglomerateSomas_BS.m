@@ -52,7 +52,7 @@ gb = load(p.svg.borderMetaFile, 'borderCoM', 'borderSize');
 
 %% select somata
 
-thisFolder = mfilename('fullpath');
+thisFolder = fileparts(mfilename('fullpath'));
 somaList = fullfile(thisFolder, 'somaDoc_BS.xlsx');
 numNuclei = 125;
 
