@@ -142,7 +142,7 @@ function generateDendriteQueries_CS(param,suffix,stateFile,queryRun)
         end
     end
 
-    outputFolder = fullfile(dataDir, strcat('dendriteQueries_',num2str(queryRun)));
+    outputFolder = fullfile(dataDir, strcat('dendriteQueries_',num2str(queryRun),'/'));
     if ~exist(outputFolder, 'dir')
         mkdir(outputFolder)
     end
