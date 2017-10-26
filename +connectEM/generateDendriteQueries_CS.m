@@ -10,7 +10,7 @@ function generateDendriteQueries_CS(param,suffix,queryRun)
     dataDir = fullfile(param.saveFolder, 'aggloState');
 
     % Load data from ending generation
-    endingData = fullfile(dataDir, sprintf('dendriteEndingsAllData%s.mat',suffix));
+    endingData = fullfile(dataDir, sprintf('dendriteEndingsAllData_%s.mat',suffix));
     endingData = load(endingData);
     % Extract some variables
     idxAll = endingData.idxAll;
@@ -19,7 +19,7 @@ function generateDendriteQueries_CS(param,suffix,queryRun)
     borderClusters = endingData.borderClusters ;
 
     % Load directionality information
-    directionality = fullfile(dataDir, sprintf('dendriteEndingInputData%s.mat',suffix));
+    directionality = fullfile(dataDir, sprintf('dendriteEndingInputData_%s.mat',suffix));
     directionality = load(directionality, 'directionality');
     directionality = directionality.directionality;
 

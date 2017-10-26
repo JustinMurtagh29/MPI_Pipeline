@@ -19,58 +19,22 @@ job = Cluster.startJob(@connectEM.getAxonPathLength, batchID, 'name', 'pathLengt
 
 %%
 %----------------------------------------------------------------
-
-elements = dir('E:\Data_CS\Datensaetze\AxonEnding\PathLength\');
-elements = elements(3:end-1);
-Distance = 0;
-for i=1:length(elements)
-    load(strcat(elements(i).folder,'\',elements(i).name))
-    Distance = Distance + sum(Distances);
+aggloLengths=[];
+totalPathLength = 0;
+for i=1:100
+    load(fullfile(param.saveFolder, strcat('aggloState/axonPathLength/batch',num2str(i),'.mat')))
+    totalPathLength = totalPathLength + sum(aggloLength);
+    aggloLengths = cat(1,aggloLengths,aggloLength);
 end
 
-probability =[];
-for i=1:length(elements)
-    load(strcat(elements(i).folder,'\',elements(i).name))
-    probability = [probability; Distances/Distance];
+probabilities = aggloLengths./totalPathLength;
+
+IDs = [1:length(probabilities)]';
+randomIDs = datasample(IDs,50,'Replace',false,'Weights',probabilities);
+
+folder = fullfile(param.saveFolder, 'aggloState/axonPathLength/randomExamples');
+for i=1:length(randomIDs)
+    randomAgglo = axons(randomIDs(i));
+
+    connectEM.generateSkeletonFromAggloNew(randomAgglo, {strcat('Axon',num2str(randomIDs(i)),'PathLength_',num2str(aggloLengths(randomIDs(i))))} , folder, [],[],strcat('randomAxon',num2str(randomIDs(i)),'.nml'));
 end
-
-IDs = [1:length(probability)]';
-randomIDs = datasample(IDs,20,'Replace',false,'Weights',probability);
-
-skelDir(randomIDs);
-%%
-%----------------------------------------------------------------
-%{
-function getAxonPathLength(batchID)
-
-batch_folder = ls(strcat('/tmpscratch/kboerg/visX19/visX19_',int2str(batchID),'/*/result.mat'));
-batch_folder = strsplit(batch_folder)';
-
-for i=1:size(batch_folder,1)
-    load(batch_folder{i,1})
-    edges = minimalSpanningTree(output.nodes);
-    clear distances
-    for j=1:length(edges)
-        distances(j,1) = pdist([output.nodes(edges(j,1),:);output.nodes(edges(j,2),:)]);
-    end
-    Distances(i,1) = sum(distances);
-end
-
-directory = strcat('/tmpscratch/scchr/AxonEndings/PathLength/,'int2str(batchID),'.mat');
-if ~exist(directory)
-    mkdir(directory)
-end
-save(directory, 'Distances')
-
-
-function edges = minimalSpanningTree(com)
-    if size(com,1) < 2
-        edges = [];
-    else
-        % Minimal spanning tree
-        adj = squareform(pdist(bsxfun(@times, com, [11.24 11.24 28])));
-        tree = graphminspantree(sparse(adj), 'Method', 'Kruskal');
-        [edges(:,1), edges(:,2)] = find(tree);
-    end
-end
-%}
