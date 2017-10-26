@@ -24,11 +24,15 @@ else   % new representation, more complicated as edges have to be established
     end
     numSegsAgglos = cellfun(@(x) size(x,1),{agglos.nodes})';
     numEdgesAgglos = cellfun(@numel,{agglos.edges})/2;
-    
-    newnodes = cellfun(@(x) cat(1,agglos(x).nodes),equivalencesClass1,'uni',0);
+    % remove duplicate nodes from the agglos
+    newnodes = cellfun(@(x) unique(cat(1,agglos(x).nodes),'rows'),equivalencesClass1,'uni',0);
     % concatenate the edges of different agglos by adding number of
     % nodes of agglo 1:n to the edge indices of agglo n+1
-    newedges = cellfun(@(x) cat(1,agglos(x).edges) + repmat(reshape(repelem(cumsum(cat(1,0,numSegsAgglos(x(1:end-1),:))),numEdgesAgglos(x)),sum(numEdgesAgglos(x)),1),1,2),equivalencesClass1,'uni',0);
+%     newedges = cellfun(@(x) cat(1,agglos(x).edges) + repmat(reshape(repelem(cumsum(cat(1,0,numSegsAgglos(x(1:end-1),:))),numEdgesAgglos(x)),sum(numEdgesAgglos(x)),1),1,2),equivalencesClass1,'uni',0);
+    % transform agglo edges in segId edges in order to correctly connect
+    % the remaining nodes after duplicate removal
+    newedges = cellfun(@(x) unique(cell2mat(arrayfun(@(y) reshape(agglos(y).nodes(agglos(y).edges,4),[],2),x,'uni',0)'),'rows'),equivalencesClass1,'uni',0);
+    [~,newedges] = arrayfun(@(x) ismember(newedges{x},newnodes{x}(:,4)),(1:numel(newnodes))','uni',0);
     if exist('segIds','var')
         % these are normal edges with seg ID
         % create a lookup of which segmentId is found in which agglo
@@ -42,9 +46,6 @@ else   % new representation, more complicated as edges have to be established
         newedges = cellfun(@(x,y) unique(cat(1,x,sort(y(all(y,2),:),2)),'rows'),newedges,idx,'uni',0);
     end
     newAgglos = cell2struct([newedges';newnodes'],{'edges','nodes'},1);
-    % remove duplicate nodes from the agglos (would be a nightmare before)
-    [~,nodesToKeep] = arrayfun(@(x) unique(x.nodes,'rows'),newAgglos,'uni',0);
-    newAgglos = Superagglos.removeNodesFromAgglo(newAgglos,arrayfun(@(x) setdiff(1:size(newAgglos(x).nodes,1),nodesToKeep{x}),1:numel(newAgglos),'uni',0) );
     
 
 end
