@@ -1,7 +1,7 @@
-function getAxonPathLength(i,param,superAgglos,batchBoundaries)
+function getAxonPathLength(ID,param,superAgglos,batchBoundaries)
 
 dataDir = fullfile(param.saveFolder, 'aggloState/axonPathLength/');
-superAgglos = superAgglos(batchBoundaries(i):batchBoundaries(i+1)-1);
+superAgglos = superAgglos(batchBoundaries(ID):batchBoundaries(ID+1)-1);
 
 for i=1:length(superAgglos)
     nodes = superAgglos(i).nodes(:,1:3);
@@ -16,7 +16,7 @@ end
 if ~exist(dataDir)
     mkdir(dataDir)
 end
-directory = strcat(dataDir,'batch',int2str(i),'.mat');
+directory = strcat(dataDir,'batch',int2str(ID),'.mat');
 save(directory, 'aggloLength')
 end
 
