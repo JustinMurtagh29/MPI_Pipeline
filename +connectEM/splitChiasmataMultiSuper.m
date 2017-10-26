@@ -1,30 +1,35 @@
 % Written by
 %   Alessandro Motta <alessandro.motta@brain.mpg.de>
-
 clear;
+
+%% configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-load(fullfile(rootDir, 'allParameter.mat'), 'p');
-
-oldAxons = load(fullfile( ...
-    p.saveFolder, 'aggloState', 'axons_06_c.mat'));
-
-bigAxonIds = find(oldAxons.indBigAxons(:));
-axons = oldAxons.axons(bigAxonIds);
+axonFile = fullfile(rootDir, 'aggloState', 'axons_06_c.mat');
 
 curDir = fullfile( ...
-    p.saveFolder, 'chiasmataSplitting', ...
+    rootDir, 'chiasmataSplitting', ...
     '20171009T193744-kmb-on-axons-6c');
 outputDir = fullfile(curDir, 'outputs');
 
-% List with input files **in decreasing order of dominance**. Add new
-% requery rounds to the top of this list.
+% List with input files **in decreasing order of dominance**.
+% Add new requery rounds to the top of this list.
 dataFiles = { ...
-    'requeries/20171023T102000_input-data.mat', ...
+    'requeries/20171023T102000_input-data.mat';
     '20171018T104038_input-data.mat'};
 dataFiles = fullfile(curDir, dataFiles);
 clear curDir;
 
+% run info (with above variables)
+info = Util.runInfo();
+
 %% load data
+load(fullfile(rootDir, 'allParameter.mat'), 'p');
+
+oldAxons = load(axonFile);
+bigAxonIds = find(oldAxons.indBigAxons(:));
+axons = oldAxons.axons(bigAxonIds);
+
+%% load queries / flights
 dataFileCount = numel(dataFiles);
 queries = cell(dataFileCount, 1);
 flights = cell(dataFileCount, 1);
@@ -194,9 +199,10 @@ disp(partitionEval);
 oldAxons.indBigAxons = oldAxons.indBigAxons(:);
 
 out = struct;
+out.info = info;
+
 out.p = p;
 out.oldAxons = oldAxons;
-out.gitInfo = Util.gitInfo();
 
 out.summary = summaries;
 out.summaryIds = bigAxonIds(uniAxonIds);
