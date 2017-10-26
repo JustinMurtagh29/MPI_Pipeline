@@ -80,8 +80,8 @@ function [newAgglos, summary] = ...
         summary.nrNonExits(chiIdx) = sum(~isExit);
         summary.nrExits(chiIdx) = nrExits;
         summary.tracings{chiIdx} = struct;
-        summary.tracings{chiIdx}.nodes = ...
-            chiTracings.flightNodes;
+        summary.tracings{chiIdx}.taskIds = chiTracings.taskId;
+        summary.tracings{chiIdx}.nodes = chiTracings.flightNodes;
         summary.tracings{chiIdx}.overlaps = cell(nrExits, 1);
         summary.tracings{chiIdx}.overlapNodes = nan(nrExits, 1);
         summary.tracings{chiIdx}.execute = false(nrExits, 1);
