@@ -194,6 +194,15 @@ partitionEval = partitionEval(:, ...
 fprintf('Evaluation of chiasmata partitioning:\n\n');
 disp(partitionEval);
 
+%% evaluate solved chiasmata
+chiEval = table;
+chiEval.split = cat(1, summaries.split);
+chiEval.solved = cat(1, summaries.solved);
+
+fprintf('# chiasmata answered: %d\n', size(chiEval, 1));
+fprintf('# chiasmata marked for splitting: %d\n', sum(chiEval.split));
+fprintf('# chiasmata actually solved: %d\n', sum(chiEval.solved));
+
 %%
 % NOTE(amotta): Add `endings` field to old agglomerates
 [oldAxons.axons.endings] = deal([]);
