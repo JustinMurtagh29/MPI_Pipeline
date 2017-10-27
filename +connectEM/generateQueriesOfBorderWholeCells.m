@@ -30,10 +30,12 @@ function generateQueriesOfBorderWholeCells(param,suffix,graphInput,runID)
     directionality = fullfile(dataDir, sprintf('borderWholeCellsEndingInputData_%s.mat',suffix));
     directionality = load(directionality, 'directionality');
     directionality = directionality.directionality;
-    
+    directionality = structfun( ...
+        @(x) x(idxCanidateFound), directionality, 'UniformOutput', false);
+
     % Load border CoMs
     borderCoM = borderMeta.borderCoM;
-    borderPositions = cellfun(@(x) borderCoM(x,:), directionality.borderIdx(idxCanidateFound),'uni',0);
+    borderPositions = cellfun(@(x) borderCoM(x,:), directionality.borderIdx,'uni',0);
 
     % Load larger 5 micron agglomerates
     m = load(fullfile(dataDir, 'dendrites_08.mat'));
