@@ -26,13 +26,18 @@ function summary = splitChiasmataMultiLogic(summary)
             % * all 2-2 partitions (valid and invalid)
             % * all valid partitions (except fully connected)
             splitChiasma = true;
+            chiasmaIsSolved = false;
             executeTracings = selectTracings(overlaps);
         else
             splitChiasma = false;
+            
+            % valid fully connected chiasmata are solved
+            chiasmaIsSolved = isValid && (numel(partition) == 1);
             executeTracings = false(nrExits, 1);
         end
         
         summary.split(chiIdx) = splitChiasma;
+        summary.solved(chiIdx) = chiasmaIsSolved;
         summary.tracings{chiIdx}.execute = executeTracings;
         summary.tracings{chiIdx}.partition = partition;
         summary.tracings{chiIdx}.partitionIsValid = isValid;
