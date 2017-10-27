@@ -67,22 +67,31 @@ gliaIds = find(~cellfun(@isnan, gliaIds));
 somaIDs(gliaIds) = [];
 
 
+%% discard edges into myelin/vessel
+
+m = load(p.svg.heuristicFile, 'vesselScore', 'myelinScore');
+excludeId = find(m.vesselScore > 0.5 | m.myelinScore > 0.5);
+graph.prob(any(ismember(graph.edges, excludeId), 2)) = 0;
+
+
 %% soma agglo runs
 
 Util.log('Starting soma agglomeration.');
 somaAgglos = Soma.getSomaNodesPar(p, graph, meta, rp, gb, 0.98, 1500, somaIDs);
 somaAgglos = somaAgglos(:,[3 2]);
 
-%% remove blood vessels & myelin
-% (should maybe excluded in agglo procedure directly)
 
-m = load(p.svg.heuristicFile, 'vesselScore', 'myelinScore');
-isVessel = m.vesselScore > 0.5;
-isMyelin = m.myelinScore > 0.5;
-toExclude = isVessel | isMyelin;
-idx = cellfun(@(x)any(isnan(x(:))), somaAgglos(:,1));
-somaAgglos(~idx,1) = cellfun(@(x)x(~toExclude(x)), somaAgglos(~idx,1), ...
-    'uni', 0);
+%% remove blood vessels & myelin
+% % (should maybe excluded in agglo procedure directly)
+% 
+% m = load(p.svg.heuristicFile, 'vesselScore', 'myelinScore');
+% isVessel = m.vesselScore > 0.5;
+% isMyelin = m.myelinScore > 0.5;
+% toExclude = isVessel | isMyelin;
+% idx = cellfun(@(x)any(isnan(x(:))), somaAgglos(:,1));
+% somaAgglos(~idx,1) = cellfun(@(x)x(~toExclude(x)), somaAgglos(~idx,1), ...
+%     'uni', 0);
+
 
 %% save the automated results
 
