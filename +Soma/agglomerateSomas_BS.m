@@ -80,7 +80,9 @@ m = load(p.svg.heuristicFile, 'vesselScore', 'myelinScore');
 isVessel = m.vesselScore > 0.5;
 isMyelin = m.myelinScore > 0.5;
 toExclude = isVessel | isMyelin;
-somaAgglos(:,1) = cellfun(@(x)x(~toExclude(x)), somaAgglos(:,1), 'uni', 0);
+idx = cellfun(@(x)any(isnan(x(:))), somaAgglos(:,1));
+somaAgglos(~idx,1) = cellfun(@(x)x(~toExclude(x)), somaAgglos(~idx,1), ...
+    'uni', 0);
 
 %% save the automated results
 
