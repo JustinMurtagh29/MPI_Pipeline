@@ -77,8 +77,13 @@ graph.prob(any(ismember(graph.edges, excludeId), 2)) = 0;
 %% soma agglo runs
 
 Util.log('Starting soma agglomeration.');
-somaAgglos = Soma.getSomaNodesPar(p, graph, meta, rp, gb, 0.98, 1500, somaIDs);
+somaAgglos = Soma.getSomaNodesPar(p, graph, meta, rp, gb, 0.98, 1500, ...
+    somaIDs);
 somaAgglos = somaAgglos(:,[3 2]);
+somaAgglos2 = Soma.getSomaNodesPar(p, graph, meta, rp, gb, 0.98, 2000, ...
+    somaIDs);
+somaAgglos3 = Soma.getSomaNodesPar(p, graph, meta, rp, gb, 0.99, 2000, ...
+    somaIDs);
 
 
 %% remove blood vessels & myelin
