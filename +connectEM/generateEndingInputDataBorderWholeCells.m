@@ -47,7 +47,7 @@ function generateEndingInputDataBorderWholeCells(param,suffix,graphInput)
     
     % Save results
     out = struct;
-    out.wholeCells = wholeCells;
+    out.borderWholeCells = borderWholeCells;
     out.directionality = directionality;
     out.gitInfo = Util.gitInfo();
 

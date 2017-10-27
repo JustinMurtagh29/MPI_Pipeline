@@ -11,6 +11,8 @@ graphInput.globalSegmentPCA = globalSegmentPCA;
 
 suffix = '03'
 
+connectEM.generateEndingInputDataBorderWholeCells(param,suffix,graphInput)
+
 connectEM.generateDendriteEndingInputDataWholeCells(param,suffix,graphInput)
 connectEM.generateDendriteEndingsWholeCells(param,suffix)
 connectEM.generateDendriteQueriesOfWholeCells(param,suffix,graphInput,8)
