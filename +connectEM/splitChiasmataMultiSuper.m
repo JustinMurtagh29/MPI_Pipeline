@@ -14,6 +14,7 @@ outputDir = fullfile(curDir, 'outputs');
 % List with input files **in decreasing order of dominance**.
 % Add new requery rounds to the top of this list.
 dataFiles = { ...
+    'requeries/20171027T102403_input-data.mat';
     'requeries/20171023T102000_input-data.mat';
     '20171018T205736_input-data.mat'};
 dataFiles = fullfile(curDir, dataFiles);
