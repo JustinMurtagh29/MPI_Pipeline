@@ -57,7 +57,8 @@ function generateQueriesOfBorderWholeCells(param,suffix,graphInput,runID)
 
     % Write out absolut values of seg direction scores
     SegDirScores = cellfun(@(x)abs(x),directionality.scores,'uni',0);
-    
+    SegDirScores = SegDirScores(idxCanidateFound);
+
     % Dataset border conditions
     options.border = [3000; -3000];
     borderNm = repmat(options.border, 1, 3);
