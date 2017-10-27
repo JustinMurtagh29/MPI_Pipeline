@@ -5,14 +5,14 @@
     batchFolder = '/gaba/u/mberning/results/pipeline/20170217_ROI/aggloState/dendriteQueries_3/';
 
     % Define constant task parameters
-    dataSet = '2012-09-28_ex145_07x2_20171017_DendQueries';
+    dataSet = '2012-09-28_ex145_07x2_ROI2017_dendrites_20171027';
     taskTypeId = '5936fb14760000e30a906635';
     experienceDomain = 'focus_flight';
     minExperience = 1;
     % Positions and rotations loaded in script below
     instances = 1;
     team = 'Tracing crew';
-    project = 'CS_MB_dendriteEndingQueries_20171017';
+    project = 'CS_MB_dendriteEndingQueries_20171027';
     scriptId = '591c8d496e000012577043a3';
 
     % Where to write results

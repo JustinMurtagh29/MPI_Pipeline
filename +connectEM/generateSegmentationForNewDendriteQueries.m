@@ -2,13 +2,13 @@ function generateSegmentationForNewDendriteQueries(param)
 
     % Define where to load and store results
     dataDir = fullfile(param.saveFolder, 'aggloState');
-    segDir = '/tmpscratch/scchr/20171017_segmentationForDendriteQueries';
+    segDir = '/tmpscratch/scchr/20171027_segmentationForDendriteQueries';
 
     % Load segmentMeta
     [~, segmentMeta] = connectEM.loadAllSegmentationData(param);
 
     % Load larger 5 micron agglomerates
-    m = load(fullfile(dataDir, 'dendrites_03_v2_splitmerged.mat'));
+    m = load(fullfile(dataDir, 'dendrites_flight_01.mat'));
     dendrites = m.dendrites(m.indBigDends);
     dendrites = arrayfun(@Agglo.fromSuperAgglo, dendrites, 'UniformOutput', false);
     mapping = connectEM.createLookup(segmentMeta, dendrites);
