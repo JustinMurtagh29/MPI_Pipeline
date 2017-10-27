@@ -40,6 +40,23 @@ bbox = bsxfun(@plus,bsxfun(@plus,4.*bboxM4Cropped,[-1, 2]),  mag1bbox(:,1));
 m = load(strcat(['/gaba/u/mberning/results/pipeline/20170217_ROI/' ...
     'soma/Nuclei/Nucleus'], int2str(somaID), '.mat'));
 nucleus = m.nucleus;
+if isfield(m, 'bbox') % load bbox from file if exists
+    bbox = m.bbox;
+else
+    % fix of bbox from nuclear_pores/+MouseROI2016/ProcessSingleNucleus2.m
+    raw = readKnossosRoi(p.raw.root, p.raw.prefix, bbox);
+    if min(min(min(raw))) == 0
+        boxsize = size(raw)';
+        mask = raw==0;
+        maskrp = regionprops(permute(~mask, [2 1 3]));
+        maskbox = [ceil(maskrp.BoundingBox(1:3))', ...
+            floor(maskrp.BoundingBox(1:3) + maskrp.BoundingBox(4:6))'];
+        bbox(:,1) = bsxfun(@plus, ...
+            bsxfun(@plus, bbox(:,1), maskbox(:,1)), -1);
+        bbox(:,2) = bsxfun(@plus, bbox(:,2), -(boxsize - maskbox(:,2)));
+    end
+    clear raw mask maskrp maskbox boxsize
+end
     
 % % NOTE (BS): Why separate file? Delete if possible.
 % m = load('/gaba/u/mberning/results/pipeline/20170217_ROI/soma/manuNucleiMapping.mat', 'mapping');
@@ -48,6 +65,9 @@ nucleus = m.nucleus;
 %% get all the seed ids from nuclei and mapping
 
 somaSeg = Seg.IO.loadSeg(p, bbox);
+
+% this caused some bugs so assert it
+assert(all(size(somaSeg) == size(nucleus)));
 
 % get nucleus seg ids with at least 50% overlap with nucleus
 nucleusSegIds = tabulate([0; somaSeg(nucleus)]); % add 0 just to make sure

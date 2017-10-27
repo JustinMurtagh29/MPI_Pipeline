@@ -36,6 +36,24 @@ if doNucleiDetection
     % /gaba/u/mberning/results/pipeline/20170217_ROI/soma/Nuclei/
     MouseROI2017.detectNucleiinBoxes2();
     
+    % bboxes for nuclei (bugfix for wrong bbox in agglomeration)
+    p = Gaba.getSegParameters('ex145_ROI2017');
+    m = load(fullfile(p.saveFolder, 'soma', 'NucleiCoordinates.mat'), 'rp');
+    rp = m.rp;
+    bboxes = Soma.nucleiBbox(rp, p);
+    nucMaskFolder = '/gaba/u/mberning/results/pipeline/20170217_ROI/soma/Nuclei/';
+    for i = 1:length(rp)
+        filepath = fullfile(nucMaskFolder, sprintf('Nucleus%d.mat', i));
+        m = load(filepath);
+        if all((diff(bboxes{i}, [], 2) + 1) == size(m.nucleus)')
+            m.bbox = bboxes{i};
+            save(filepath, '-struct', 'm');
+            clear m
+        else
+            warning('Nucleus %d bbox does not the the mask.', i);
+        end
+    end
+    
 end
 
 
@@ -77,13 +95,13 @@ graph.prob(any(ismember(graph.edges, excludeId), 2)) = 0;
 %% soma agglo runs
 
 Util.log('Starting soma agglomeration.');
-somaAgglos = Soma.getSomaNodesPar(p, graph, meta, rp, gb, 0.98, 1500, ...
+somaAgglos = Soma.getSomaNodesPar(p, graph, meta, rp, gb, 0.98, 2000, ...
     somaIDs);
 somaAgglos = somaAgglos(:,[3 2]);
-somaAgglos2 = Soma.getSomaNodesPar(p, graph, meta, rp, gb, 0.98, 2000, ...
-    somaIDs);
-somaAgglos3 = Soma.getSomaNodesPar(p, graph, meta, rp, gb, 0.99, 2000, ...
-    somaIDs);
+% somaAgglos2 = Soma.getSomaNodesPar(p, graph, meta, rp, gb, 0.98, 2000, ...
+%     somaIDs);
+% somaAgglos3 = Soma.getSomaNodesPar(p, graph, meta, rp, gb, 0.99, 2000, ...
+%     somaIDs);
 
 
 %% remove blood vessels & myelin
