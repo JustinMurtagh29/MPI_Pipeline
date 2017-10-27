@@ -132,6 +132,7 @@ function generateQueriesOfBorderWholeCells(param,suffix,graphInput,runID)
         mkdir(outputFolder)
     end
     
+    superDendrites = superDendrites(idxCanidateFound);
     superDendrites = superDendrites(~outside);
     IDs = find(~outside);
     
@@ -147,10 +148,10 @@ function generateQueriesOfBorderWholeCells(param,suffix,graphInput,runID)
         theseBorderEdges =  borderEdges(thisBorderIdx{i},:);
         aggloEndingSegIds = theseBorderEdges(ismember(theseBorderEdges,wholeCells{i}));
         
-        if isempty(aggloEndingSegIds)
-            display(strcat(num2str(IDs(i)),' has edge Problem'))
-            continue
-        end
+%         if isempty(aggloEndingSegIds)
+%             display(strcat(num2str(IDs(i)),' has edge Problem'))
+%             continue
+%         end
         % Filtering of endings with a neighboring flight path or mistakenly
         % detected because of missing segment.
         % Edges of superagglo in SegIDs
