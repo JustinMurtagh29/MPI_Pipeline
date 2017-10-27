@@ -36,7 +36,7 @@ function generateQueriesOfBorderWholeCells(param,suffix,graphInput,runID)
     borderPositions = cellfun(@(x) borderCoM(x,:), directionality.borderIdx(idxCanidateFound),'uni',0);
 
     % Load larger 5 micron agglomerates
-    m = load(fullfile(dataDir, sprintf('wholeCells_%s.mat',suffix)));
+    m = load(fullfile(dataDir, 'dendrites_08.mat'));
     borderWholeCells = m.dendrites(m.BorderWholeCellId);
     superDendrites = borderWholeCells;
     wholeCells = arrayfun(@Agglo.fromSuperAgglo, borderWholeCells, 'UniformOutput', false);
