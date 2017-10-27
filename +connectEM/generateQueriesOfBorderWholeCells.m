@@ -95,6 +95,7 @@ function generateQueriesOfBorderWholeCells(param,suffix,graphInput,runID)
     
     % Write out scores and pca, apply all masks
     outside = cellfun('isempty',candidateUse);
+    wholeCells = wholeCells(idxCanidateFound);
     wholeCells = wholeCells(~outside);
 
     pcaFound = directionality.pca;
