@@ -1,4 +1,4 @@
-function generateQueriesOfBorderWholeCells(param,suffix,graphInput,runID)
+function generateQueriesOfBorderWholeCells(param,suffix,dendState,runID,graphInput)
     % Written by
     %   Manuel Berning <manuel.berning@brain.mpg.de>
     %   Christian Schramm <christian.schramm@brain.mpg.de>
@@ -9,7 +9,7 @@ function generateQueriesOfBorderWholeCells(param,suffix,graphInput,runID)
 
     dataDir = fullfile(param.saveFolder, 'aggloState');
 
-    if nargin < 3
+    if nargin < 5
         [graph, ~, borderMeta, ~] = ...
             connectEM.loadAllSegmentationData(param);
     else
@@ -38,7 +38,7 @@ function generateQueriesOfBorderWholeCells(param,suffix,graphInput,runID)
     borderPositions = cellfun(@(x) borderCoM(x,:), directionality.borderIdx,'uni',0);
 
     % Load larger 5 micron agglomerates
-    m = load(fullfile(dataDir, 'dendrites_08.mat'));
+    m = load(fullfile(dataDir, strcat('dendrites_',num2str(dendState),'.mat'));
     borderWholeCells = m.dendrites(m.BorderWholeCellId);
     superDendrites = borderWholeCells;
     wholeCells = arrayfun(@Agglo.fromSuperAgglo, borderWholeCells, 'UniformOutput', false);
@@ -127,7 +127,7 @@ function generateQueriesOfBorderWholeCells(param,suffix,graphInput,runID)
 
     borderEdges = graph.edges(~isnan(graph.borderIdx), :);
     
-    outputFolder = fullfile(dataDir, strcat('borderWholeCellDendriteQueries/wholeCellDendriteQueries_',num2str(runID),'/'));
+    outputFolder = fullfile(dataDir, strcat('WholeCellCorrections_',num2str(runID, '%.2i'),'/'));
     if ~exist(outputFolder, 'dir')
         mkdir(outputFolder)
     end
@@ -148,10 +148,6 @@ function generateQueriesOfBorderWholeCells(param,suffix,graphInput,runID)
         theseBorderEdges =  borderEdges(thisBorderIdx{i},:);
         aggloEndingSegIds = theseBorderEdges(ismember(theseBorderEdges,wholeCells{i}));
         
-%         if isempty(aggloEndingSegIds)
-%             display(strcat(num2str(IDs(i)),' has edge Problem'))
-%             continue
-%         end
         % Filtering of endings with a neighboring flight path or mistakenly
         % detected because of missing segment.
         % Edges of superagglo in SegIDs

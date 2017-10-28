@@ -1,4 +1,4 @@
-function generateEndingInputDataBorderWholeCells(param,suffix,graphInput)
+function generateEndingInputDataBorderWholeCells(param,suffix,dendState,graphInput)
     % generateAxonEndingInputData(param)
     %   Generates a `endingInputData.mat` file in the pipeline directory
     %   which contains all the data necessary for the ending detection.
@@ -14,7 +14,7 @@ function generateEndingInputDataBorderWholeCells(param,suffix,graphInput)
     end
     
     % Load data
-    if nargin < 3
+    if nargin < 4
         [graph, segmentMeta, borderMeta, globalSegmentPCA] = ...
             connectEM.loadAllSegmentationData(param);
     else
@@ -30,7 +30,7 @@ function generateEndingInputDataBorderWholeCells(param,suffix,graphInput)
     outFile = fullfile(dataDir, sprintf('borderWholeCellsEndingInputData_%s.mat',suffix));
 
     % Load state of axon agglomeration and load big indices as loaded by Kevin
-    m = load(fullfile(dataDir, 'dendrites_08.mat'));
+    m = load(fullfile(dataDir, strcat('dendrites_',num2str(dendState),'.mat'));
     borderWholeCells = m.dendrites(m.BorderWholeCellId);
     
     % Convert to old-school agglomerates
