@@ -9,7 +9,8 @@ graphInput.segmentMeta = segmentMeta;
 graphInput.borderMeta = borderMeta;
 graphInput.globalSegmentPCA = globalSegmentPCA;
 
-suffix = '03'
+suffix = '02'
+state = 9
 
 connectEM.generateEndingInputDataBorderWholeCells(param,suffix,graphInput)
 connectEM.generateEndingsBorderWholeCells(param,suffix)

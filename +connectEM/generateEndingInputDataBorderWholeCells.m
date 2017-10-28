@@ -30,7 +30,7 @@ function generateEndingInputDataBorderWholeCells(param,suffix,dendState,graphInp
     outFile = fullfile(dataDir, sprintf('borderWholeCellsEndingInputData_%s.mat',suffix));
 
     % Load state of axon agglomeration and load big indices as loaded by Kevin
-    m = load(fullfile(dataDir, strcat('dendrites_',num2str(dendState),'.mat'));
+    m = load(fullfile(dataDir, strcat('dendrites_',dendState,'.mat'));
     borderWholeCells = m.dendrites(m.BorderWholeCellId);
     
     % Convert to old-school agglomerates
