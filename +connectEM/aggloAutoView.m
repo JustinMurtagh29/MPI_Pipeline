@@ -38,10 +38,7 @@ bbox = bsxfun(@plus,[zeros(3,1), bbox'],offset');
 smallbbox = bsxfun(@plus,[zeros(3,1), smallbbox'],offset'+2000);
 
 
-aggloSegIds = cell2mat(arrayfun(@(x) x.nodes(:,4),agglos,'uni',0));
-aggloLUT = zeros(1,max(aggloSegIds));
-aggloLUT(aggloSegIds(~isnan(aggloSegIds)))  = repelem(1:numel(agglos),arrayfun(@(x) numel(x.nodes(~isnan(x.nodes(:,4)),4)),agglos));
-
+[aggloLUT,aggloSegIds] = Superagglos.buildLUT(agglos);
 
 switch show
     case {'cells','wc','wc_center','wc_border','wc_all'}
@@ -63,7 +60,6 @@ switch show
         somaSegIds = cell2mat(somaAgglos);
         
         somaLUT(somaSegIds) = repelem(1:numel(somaAgglos),cellfun(@numel,somaAgglos));
-        
         
         % check which segId of soma is found in which dendrite agglo
         [ismem,ind] = ismember(somaSegIds,aggloSegIds);
@@ -106,7 +102,7 @@ switch show
                         agglos(aggloSomaId(n)).comments(idxComments) = repmat({'ending'},sum(idxComments),1);
                     end
                 end
-                skel = connectEM.generateSkeletonFromAggloNew(agglos(aggloSomaId(n)), {sprintf('SomaAgglo_%02d',n)} , outputFolder, max(aggloSegIds),[],sprintf('SomaAgglo_%s_%02d.nml',aggloFile,n));
+                skel = connectEM.generateSkeletonFromAggloNew(agglos(aggloSomaId(n)), {sprintf('SomaAgglo_%02d_aggloId_%d',n,aggloSomaId(n))} , outputFolder, max(aggloSegIds),[],sprintf('SomaAgglo_%s_aggloId_%d_somaId_%02d.nml',aggloFile,aggloSomaId(n),n));
             else
                 skel = Superagglos.toSkel(agglos(aggloSomaId(n)));
             end
