@@ -131,6 +131,8 @@ for f = 1:numel(files)
             else %~isempty(hasAxonComment) && any(hasAxonComment)
                 indToAddAxons = unique(nonzeros(axonsLUT(nonzeros(theseSkelSegIds))))'; % get the index of the superagglo(s) to add
                 indToAddDendrites = setdiff(dendritesLUT(nonzeros(theseSkelSegIds)),[0,ind]); % get the index of the superagglo(s) to add
+                indToAddAxons = indToAddAxons(:);
+                indToAddDendrites = indToAddDendrites(:);
                 if all([isempty(indToAddDendrites) isempty(indToAddAxons)])
                     warning('Skel %s contained an ending which could not be processed, because the tracing did not reach a segId not already belonging to the whole cell agglo or the segIDs were not part of the dendrite/axon class',skel.filename)
                     continue
@@ -180,9 +182,9 @@ for f = 1:numel(files)
                 dendritesLUT(cell2mat(arrayfun(@(x) x.nodes(~isnan(x.nodes(:,4)),4),axons(indToAddAxons),'uni',0))) = ind; % update LUT
                 dendritesLUT(cell2mat(arrayfun(@(x) x.nodes(~isnan(x.nodes(:,4)),4),dendrites(indToAddDendrites),'uni',0))) = ind; % update LUT
                  % remove agglo which has been added and update LUT
-                axonsLUT = connectEM.changem(axonsLUT,(0:numel(axons))- [0, cumsum(accumarray(indToAddAxons',1,[numel(axons),1]))'],0:numel(axons));
+                axonsLUT = connectEM.changem(axonsLUT,(0:numel(axons))- [0, cumsum(accumarray(indToAddAxons,1,[numel(axons),1]))'],0:numel(axons));
                 axons(indToAddAxons) = [];
-                dendritesLUT = connectEM.changem(dendritesLUT,(0:numel(dendrites))-[0, cumsum(accumarray(indToAddDendrites',1,[numel(dendrites),1]))'],0:numel(dendrites));
+                dendritesLUT = connectEM.changem(dendritesLUT,(0:numel(dendrites))-[0, cumsum(accumarray(indToAddDendrites,1,[numel(dendrites),1]))'],0:numel(dendrites));
                 dendrites(indToAddDendrites) = [];
                 ind = ind - sum(indToAddDendrites <= ind); % update index to agglomerate
             end
