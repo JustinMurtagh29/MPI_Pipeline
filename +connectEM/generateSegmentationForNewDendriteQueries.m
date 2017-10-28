@@ -2,7 +2,7 @@ function generateSegmentationForNewDendriteQueries(param)
 
     % Define where to load and store results
     dataDir = fullfile(param.saveFolder, 'aggloState');
-    segDir = '/tmpscratch/scchr/20171027_segmentationForDendriteQueries';
+    segDir = '/tmpscratch/amotta/20171028_segmentationForDendriteQueries';
 
     % Load segmentMeta
     [~, segmentMeta] = connectEM.loadAllSegmentationData(param);
