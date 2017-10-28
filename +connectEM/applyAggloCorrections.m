@@ -160,7 +160,7 @@ for f = 1:numel(files)
 
                 % find nodes at segIds that are not part of the whole cell or
                 % the superagglos to add and delete those
-                endingNodesToDelete = sort(find(~ismember(theseSkelSegIds,cell2mat(arrayfun(@(x) x.nodes(:,4),cat(1,dendrites([ind,indToAddDendrites]),axons(indToAddAxons)),'uni',0)))),'descend');
+                endingNodesToDelete = sort(find(~ismember(theseSkelSegIds,cell2mat(arrayfun(@(x) x.nodes(:,4),cat(1,dendrites([ind;indToAddDendrites]),axons(indToAddAxons)),'uni',0)))),'descend');
                 theseSkelSegIds(endingNodesToDelete) = [];
                 for d = 1:numel(endingNodesToDelete)
                     %find neighbors
