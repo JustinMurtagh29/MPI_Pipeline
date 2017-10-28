@@ -14,7 +14,7 @@ state = '09'
 
 connectEM.generateEndingInputDataBorderWholeCells(param,suffix,state,graphInput)
 connectEM.generateEndingsBorderWholeCells(param,suffix)
-connectEM.generateQueriesOfBorderWholeCells(param,suffix,state,graphInput,2)
+connectEM.generateQueriesOfBorderWholeCells(param,suffix,state,9,graphInput)
 
 connectEM.generateDendriteEndingInputDataWholeCells(param,suffix,graphInput)
 connectEM.generateDendriteEndingsWholeCells(param,suffix)

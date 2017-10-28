@@ -151,6 +151,8 @@ function generateQueriesOfBorderWholeCells(param,suffix,dendState,runID,graphInp
         % Filtering of endings with a neighboring flight path or mistakenly
         % detected because of missing segment.
         % Edges of superagglo in SegIDs
+        [zeroEdges,~] = find(superDendrites(i).edges == 0);
+        superDendrites(i).edges(zeroEdges,:) = [];
         segEdges = zeros(size(superDendrites(i).edges));
         segEdges(:,1) = superDendrites(i).nodes(superDendrites(i).edges(:,1),4);
         segEdges(:,2) = superDendrites(i).nodes(superDendrites(i).edges(:,2),4);
