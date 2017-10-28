@@ -13,6 +13,10 @@ outFile = '/home/amotta/Desktop/connectomeAugmented.mat';
 synData = load(synapseFile);
 data = load(connectomeFile);
 
+%% add number of synapses per edge
+data.connectome.synCount = cellfun( ...
+    @numel, data.connectome.synIdx);
+
 %% per axon statistics
 data.axonMeta = table;
 data.axonMeta.id = reshape(1:numel(data.axons), [], 1);
