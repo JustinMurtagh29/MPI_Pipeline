@@ -175,7 +175,7 @@ for f = 1:numel(files)
                 if size(segIdEdges,2)~=2 % fix stupid 1 value pair problem
                     segIdEdges = segIdEdges';
                 end
-                dendrites(ind) = Superagglos.applyEquivalences({1:numel(indToAddAxons)+numel(indToAddDendrites)+1},cat(1,dendrites([ind,indToAddDendrites]),axons(indToAddAxons)),segIdEdges);
+                dendrites(ind) = Superagglos.applyEquivalences({1:numel(indToAddAxons)+numel(indToAddDendrites)+1},cat(1,dendrites([ind;indToAddDendrites]),axons(indToAddAxons)),segIdEdges);
                 
                 dendritesLUT(cell2mat(arrayfun(@(x) x.nodes(~isnan(x.nodes(:,4)),4),axons(indToAddAxons),'uni',0))) = ind; % update LUT
                 dendritesLUT(cell2mat(arrayfun(@(x) x.nodes(~isnan(x.nodes(:,4)),4),dendrites(indToAddDendrites),'uni',0))) = ind; % update LUT
