@@ -2,7 +2,7 @@ function [output, queryIdx] = detectChiasmataPostSingleNodeLabel( ...
         edges, isIntersection, nrExits, nodes, p, nodesV, prob,outputFolder)
     
     [cc, centerOfCC] = ...
-        connectEM.detectChiasmataNodesCluster(nodes, isIntersection);
+        connectEM.detectChiasmataNodesCluster(p, nodes, isIntersection);
     
     % Find out where to query for each CC
     queryIdx = cell(length(cc),1);

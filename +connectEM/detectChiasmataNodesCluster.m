@@ -1,5 +1,5 @@
 function [cc, centerOfCC] = ...
-        detectChiasmataNodesCluster(nodes, isIntersection)
+        detectChiasmataNodesCluster(p, nodes, isIntersection)
     if sum(isIntersection) > 1
         N = sum(isIntersection);
         if N > 10000
