@@ -4,7 +4,7 @@ function [nrExits, pos, dir, queryIdx] = ...
             nodes, edges, prob, p, nodeIdx);
     C = Graph.findConnectedComponents(thisEdges, false);
     C = C(cellfun(@(idx) max(pdist2( ...
-        thisNodes(idx, :), nodes(nodeIdx, :))) > p.minDistNode, C));
+        thisNodes(idx, :), nodes(nodeIdx, :))) > 2000, C));
     nrExits = numel(C);
     
     %% do query generation, if desired
@@ -20,7 +20,7 @@ function [nrExits, pos, dir, queryIdx] = ...
         nodesMask2 = find(ismember(nodes, thisNodes(C{idx}, :), 'rows'));
         transitioningEdge = find(any(ismember(edges,nodesMask2),2)& ... %one node of the edge should be a member of nodesMask2
             any(~ismember(edges,nodesMask),2)& ... %the other shouldn't be a member of nodesMask or nodesMask2 (which is a subset of nodesMask)
-            all(ismember(edges,find(pdist2(nodes,nodes(nodeIdx,:))<(p.sphereRadiusOuter))),2),1); % and we don't want an edge from the outer cutting
+            all(ismember(edges,find(pdist2(nodes,nodes(nodeIdx,:))<9000)),2),1); % and we don't want an edge from the outer cutting
         descale = @(x)bsxfun(@times, x, 1./p.voxelSize);
         queryTemp=intersect(edges(transitioningEdge,:), nodesMask2);
         pos(idx, :) = descale(nodes(queryTemp,:));

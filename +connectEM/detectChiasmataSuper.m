@@ -1,14 +1,11 @@
-function detectChiasmataSuper(startidx, p, useSphereClustering, visualization)
+function detectChiasmataSuper(startidx, p, useSphereClustering)
     if nargin < 3
         useSphereClustering = false;
     end
     
     agglos = load(p.inputFile);
-    if isfield(agglos,'axons')
-        agglos = agglos.axons(agglos.indBigAxons);
-    else
-        agglos = agglos.dendrites(agglos.indBigDends);
-    end
+    agglos.axons = agglos.axons(agglos.indBigAxons);
+
     % set version number
     numstr = p.chiasmataVersion;
     
@@ -19,7 +16,7 @@ function detectChiasmataSuper(startidx, p, useSphereClustering, visualization)
         detectFunc = @connectEM.detectChiasmata;
     end
     
-    for idx = startidx : 500 : length(agglos)
+    for idx = startidx : 500 : length(agglos.axons)
         outputFolder = fullfile( ...
             '/tmpscratch/kboerg/chiasmata', ...
             sprintf('chiasmataX%s_%d', numstr, floor(idx / 100)), ...
@@ -27,7 +24,7 @@ function detectChiasmataSuper(startidx, p, useSphereClustering, visualization)
         mkdir(outputFolder);
         
         detectFunc( ...
-            p, agglos(idx).nodes(:, 1:3), ...
-            agglos(idx).edges, visualization, outputFolder);
+            p, agglos.axons(idx).nodes(:, 1:3), ...
+            agglos.axons(idx).edges, false, outputFolder);
     end
 end
