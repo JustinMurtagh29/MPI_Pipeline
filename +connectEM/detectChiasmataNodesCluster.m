@@ -6,7 +6,7 @@ function [cc, centerOfCC] = ...
             distances = pdist(nodes(isIntersection,:));
             connections = [];
             for idx = 1 : 100
-                connections = [connections, find(distances(idx:100:end)<2000)];
+                connections = [connections, find(distances(idx:100:end)<p.clusterSize)];
             end
             clear distances
             connections = sort(connections);
@@ -30,7 +30,7 @@ function [cc, centerOfCC] = ...
             [cccount,ccpre] =graphconncomp(sparse(leftside, rightside,ones(1,length(connections)),N,N),'Directed',false);
         else
             % NOTE(amotta): Group chiasmatic nodes with less than 2 µm distance
-            [cccount,ccpre] =graphconncomp(sparse(squareform(pdist(nodes(isIntersection,:)))<2000));
+            [cccount,ccpre] =graphconncomp(sparse(squareform(pdist(nodes(isIntersection,:)))<p.clusterSize));
         end
         lookup = find(isIntersection);
         cc = arrayfun(@(x){lookup(ccpre==x)},1:cccount);

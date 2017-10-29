@@ -4,7 +4,7 @@ function [nrExits, pos, dir, queryIdx] = ...
             nodes, edges, prob, p, nodeIdx);
     C = Graph.findConnectedComponents(thisEdges, false);
     C = C(cellfun(@(idx) max(pdist2( ...
-        thisNodes(idx, :), nodes(nodeIdx, :))) > 2000, C));
+        thisNodes(idx, :), nodes(nodeIdx, :))) > p.minNodeDist, C));
     nrExits = numel(C);
     
     %% do query generation, if desired
