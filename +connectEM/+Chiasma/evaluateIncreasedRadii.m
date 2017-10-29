@@ -5,6 +5,7 @@ clear;
 %% configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 axonFile = fullfile(rootDir, 'aggloState', 'axons_08_a.mat');
+outputDir = '/home/amotta/Desktop/chiasma-detection';
 
 % Some parameter for algorithm
 %{
@@ -35,6 +36,8 @@ axonIds = find(axons.indBigAxons);
 axons = axons.axons(axonIds);
 
 %% add chiasma parameters
+chiParam.voxelSize = param.raw.voxelSize;
+
 chiParam = cat(2, fieldnames(chiParam), struct2cell(chiParam));
 chiParam = reshape(transpose(chiParam), 1, []);
 
@@ -43,9 +46,25 @@ param = Util.modifyStruct(param, chiParam{:});
 %% find chiasmata with mergers
 %{
 % find christians "huge merger" axons
+segIds = [452950; 302436];
 axonLUT = Agglo.buildLUT(maxSegId, Superagglos.getSegIds(axons));
 theseAxonIds = axonLUT(segIds);
 %}
 
-theseAxonIds = [1872; 3352];
-theseAxons = axons(theseAxonIds);
+theseAxonIds = [1872, 3352];
+theseChiasmata = cell(numel(theseAxonIds), 1);
+
+for curIdx = 1:numel(theseAxonIds)
+    curAxonId = theseAxonIds(curIdx);
+    curAxon = axons(curIdx);
+    
+    theseChiasmata{curIdx} = connectEM.detectChiasmata( ...
+        param, curAxon.nodes(:, 1:3), curAxon.edges, false, []);
+    curSkel = connectEM.Chiasma.buildSkeletonFromDetection( ...
+        curAxon, theseChiasmata{curIdx});
+    curSkel = Skeleton.setParams4Pipeline(curSkel, param);
+    
+    curSkelFile = sprintf('axon-%d.nml', curAxonId);
+    curSkel.write(fullfile(outputDir, curSkelFile));
+    
+end
