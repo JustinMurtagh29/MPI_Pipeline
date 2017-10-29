@@ -56,7 +56,7 @@ theseChiasmata = cell(numel(theseAxonIds), 1);
 
 for curIdx = 1:numel(theseAxonIds)
     curAxonId = theseAxonIds(curIdx);
-    curAxon = axons(curIdx);
+    curAxon = axons(curAxonId);
     
     theseChiasmata{curIdx} = connectEM.detectChiasmata( ...
         param, curAxon.nodes(:, 1:3), curAxon.edges, false, []);
