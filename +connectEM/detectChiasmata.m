@@ -10,10 +10,6 @@ end
 % Make sure edges are unique
 [edges, ~, idxE] = unique(edges, 'rows');
 
-% Some parameter for algorithm
-p.sphereRadiusOuter = 10000; % in nm
-p.sphereRadiusInner = 1000; % in nm
-p.voxelSize = [11.24 11.24 28];
 nodes=bsxfun(@times,nodesV,p.voxelSize);
 % for each node ("marching sphere" approach to merger detection)
 isIntersection = false(size(nodes,1),1);
