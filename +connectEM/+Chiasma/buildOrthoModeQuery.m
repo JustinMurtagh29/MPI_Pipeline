@@ -1,4 +1,4 @@
-function skel = buildOrthoModeQueryFromDetection(param, agglo, nodeIdx)
+function skel = buildOrthoModeQuery(param, agglo, nodeIdx)
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     
@@ -27,6 +27,7 @@ function skel = buildOrthoModeQueryFromDetection(param, agglo, nodeIdx)
     
     % build skeleton
     skel = skeleton();
+    cutExitNodeIds = nan(cutCompCount, 1);
     
     for curIdx = 1:cutCompCount
         curNodeIds = cutComps{curIdx};
@@ -42,15 +43,28 @@ function skel = buildOrthoModeQueryFromDetection(param, agglo, nodeIdx)
         % get color
         curColor = cutColors(curIdx, :);
         
-       [~, curCommentIdx] = min(pdist2( ...
+       [~, curExitNodeId] = min(pdist2( ...
            agglo.nodesNm(curNodeIds, :), centerNodeNm));
+        cutExitNodeIds(curIdx) = curExitNodeId;
+       
         curComments = repelem({''}, numel(curNodeIds), 1);
-        curComments{curCommentIdx} = sprintf('Exit %d', curIdx);
+        curComments{curExitNodeId} = sprintf('Exit %d', curIdx);
         
         skel = skel.addTree( ...
             sprintf('Branch %d', curIdx), ...
             curNodes, curEdges, curColor, [], curComments);
     end
     
+    % set dataset
     skel = Skeleton.setParams4Pipeline(skel, param);
+    
+    % set viewing positions
+    skel.parameters.editPosition = struct( ...
+        'x', skel.nodes{1}(cutExitNodeIds(1), 1), ...
+        'y', skel.nodes{1}(cutExitNodeIds(1), 2), ...
+        'z', skel.nodes{1}(cutExitNodeIds(1), 3));
+    skel.parameters.zoomLevel.zoom = 0.53;
+    
+    % set active node
+    skel.parameters.activeNode.id = cutExitNodeIds(1);
 end
