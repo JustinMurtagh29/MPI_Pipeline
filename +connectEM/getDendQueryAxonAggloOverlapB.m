@@ -23,6 +23,11 @@ function getDendQueryAxonAggloOverlapB(param)
     ff = structfun(@(x)x(cellfun(@isempty, ff.comments)), ff, 'uni', 0);
     ff = structfun(@(x)x(~cellfun(@isempty, ff.startNode)), ff, 'uni', 0);
 
+    m = load(fullfile(dataDir, 'dendritePostQueryAnalysisState_1.0.mat'));
+    idxNoClearEnd = m.idxNoClearEnd;
+    clear m
+    ff = structfun(@(x)x(idxNoClearEnd), ff, 'uni', 0);
+ 
     segmentsLeftover = [];
 
     % Calculate overlap of all queries with segments
@@ -41,16 +46,7 @@ function getDendQueryAxonAggloOverlapB(param)
     display([num2str(sum(idxNoClearAttachment)./numel(idxNoClearAttachment)*100, '%.2f') '% of remaining queries have no clear attachment']);
     display([num2str(sum(idxNoClearAttachment)) ' in total']);
     display([num2str(numel(cat(2, endAgglo{idxGood}))) ' attachments made by ' num2str(sum(idxGood)) ' queries']);
-    % Find CC of eqClasses to be joined including single eqClasses with or
-    % without dangling query
-    edgesCC = cellfun(@(x,y)combnk([x y], 2), startAgglo(idxGood), endAgglo(idxGood), 'uni', 0);
-    edgesCC = cat(1,edgesCC{:});
-    edgesCC = sort(edgesCC, 2);
-    eqClassCC = Graph.findConnectedComponents(edgesCC, true, true);
-    sizeEqClassCC = sort(cellfun(@numel, eqClassCC), 'descend');
-    eqClassCCfull = [eqClassCC; num2cell(setdiff(1 : length(axons), cell2mat(eqClassCC)))'];
-    display(sizeEqClassCC(1:10));
-
+    
     results = struct;
     results.endAgglo = endAgglo;
     results.ff = ff;
@@ -62,9 +58,6 @@ function getDendQueryAxonAggloOverlapB(param)
     save(saveFile, 'results', 'queryOverlap', 'idxNoClearStart', 'idxNoClearEnd');
     system(['chmod -w ' saveFile])
     
-    saveFile = fullfile(dataDir, strcat('axonDendritePostQueryAnalysisState_',suffix,'.mat'));
-    save(saveFile);
-    system(['chmod -w ' saveFile])
-
+    
 end
 
