@@ -65,15 +65,15 @@ switch show
         [ismem,ind] = ismember(somaSegIds,aggloSegIds);
         
         % create list with soma id in first row and dendrite id in second row
-        dendOfSoma = unique([somaLUT(somaSegIds(ismem))',aggloLUT(aggloSegIds(ind(ismem)))'],'rows');
+        dendOfSoma = unique([somaLUT(somaSegIds(ismem))',aggloLUT(aggloSegIds(ind(ismem)))],'rows');
         
         % get each dend id which contains most of the seg ids of each soma
-        aggloSomaId = accumarray(somaLUT(somaSegIds(ismem))',aggloLUT(aggloSegIds(ind(ismem)))',[],@mode);
+        aggloSomaId = accumarray(somaLUT(somaSegIds(ismem))',aggloLUT(aggloSegIds(ind(ismem))),[],@mode);
         
         
         % check if dendrite overlaps with more than one soma!
         [ismem,ind] = ismember(aggloSegIds,somaSegIds);
-        dendOfSoma2 = unique([somaLUT(somaSegIds(ind(ismem)))',aggloLUT(aggloSegIds(ismem))'],'rows');
+        dendOfSoma2 = unique([somaLUT(somaSegIds(ind(ismem)))',aggloLUT(aggloSegIds(ismem))],'rows');
         
         overlapMatrix = false(numel(somaAgglos),numel(agglos));
         ind = sub2ind(size(overlapMatrix),cat(1,dendOfSoma(:,1),dendOfSoma2(:,1)),cat(1,dendOfSoma(:,2),dendOfSoma2(:,2)));

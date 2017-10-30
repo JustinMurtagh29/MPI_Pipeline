@@ -139,7 +139,7 @@ for f = 1:numel(files)
                 end
 
                 if modus == 2
-                    indToAddAxonsAll = cat(2,indToAddAxonsAll,indToAddAxons);
+                    indToAddAxonsAll = cat(1,indToAddAxonsAll,indToAddAxons);
                     for i = 1:numel(indToAddAxons)
                         [~,indComment] = ismember(theseSkelSegIds,axons(indToAddAxons(i)).nodes(:,4));
                         indComment = nonzeros(indComment);
@@ -148,7 +148,7 @@ for f = 1:numel(files)
                         end
                         axons(indToAddAxons(i)).comments(indComment) = repmat({'attached segments'},numel(indComment),1);
                     end
-                    indToAddDendritesAll = cat(2,indToAddDendritesAll,indToAddDendrites);
+                    indToAddDendritesAll = cat(1,indToAddDendritesAll,indToAddDendrites);
                     for i = 1:numel(indToAddDendrites)
                         [~,indComment] = ismember(theseSkelSegIds,dendrites(indToAddDendrites(i)).nodes(:,4));
                         indComment = nonzeros(indComment);
