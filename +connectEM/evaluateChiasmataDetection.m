@@ -1,27 +1,19 @@
-function evaluateChiasmataDetection(aggloState,chiasmId,outputDir)
-% This function loads chiasmata detection results and performs a simple
+% This script loads chiasmata detection results and performs a simple
 % quantitative analysis. These numbers should complement the impression
 % gained from looking at random super-agglomerates (or parts thereof) with
 % their detected chiasmata
-% INPUT
-% aggloState    string with the name of the aggloState that was used for
-%               chiasmata detection
-% chiasmId      string with id of the chiasmata detection run (datestring)
-% outputDir     string with path to folder which will be created to safe
-%               example nmls and results in
-%
+% 
 % Written by
-%   Alessandro Motta <alessandro.motta@brain.mpg.de> / Marcel Beining
+%   Alessandro Motta <alessandro.motta@brain.mpg.de>
 
 % configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-% aggloState = 'dendrites_03_v2';
-aggloFile = fullfile(rootDir, 'aggloState', [aggloState '.mat']);
+axonFile = fullfile(rootDir, 'aggloState', 'axons_06_c.mat');
 
-% chiasmId = '20171019T155102';
+chiasmId = '20171005T162727';
 chiasmDir = '/tmpscratch/kboerg/chiasmata';
-% chiasmataX20171017T044832_0
-% outputDir = '/tmpscratch/mbeining/chiasma_03_v2';
+
+outputDir = '/home/amotta/Desktop';
 
 %% load parameter (for skeleton)
 param = fullfile(rootDir, 'allParameter.mat');
@@ -29,12 +21,8 @@ param = load(param);
 param = param.p;
 
 %% load all super-agglomerates
-agglos = load(aggloFile);
-if ~isempty(strfind(aggloFile,'axons'))
-    agglos = agglos.axons(agglos.indBigAxons);
-else
-    agglos = agglos.dendrites(agglos.indBigDends);
-end
+agglos = load(axonFile);
+agglos = agglos.axons(agglos.indBigAxons);
 aggloCount = numel(agglos);
 
 %% load all chiasmata results
@@ -55,9 +43,7 @@ end
 toc;
 
 %% start couting...
-clearvars -except param outputDir chiasmata chiasmId aggloState;
-mkdir(outputDir);
-save(fullfile(outputDir,sprintf('chiasmata_%s_%s.mat',chiasmId,aggloState)))
+clearvars -except param outputDir chiasmata;
 
 % count number of nodes
 nodeCount = cellfun(@(s) size(s.nodes, 1), chiasmata);
@@ -96,7 +82,8 @@ temp.nrExits = (4:max(chiasmaNrExits))';
 temp.nrChiasmata = arrayfun(@(c) sum(chiasmaNrExits == c), temp.nrExits);
 fprintf('\n'); disp(temp);
 
-%% write out largest chiasmata and random chiasmata
+%% write out largest chiasmata
+mkdir(outputDir);
 [descVals, descIds] = sort(chiasmaSizes, 'descend');
 
 % discard chiasmata with more than 500 nodes
@@ -106,54 +93,42 @@ descVals(descVals > 500) = [];
 
 % go back
 invLUT = cat(1, 0, cumsum(chiasmaCounts));
-randIdx = randperm(numel(descIds),10);
+
 for curIdx = 1:10
-    for n = 1:2
-        switch n
-            case 1
-                curChiasmaIdx = descIds(curIdx);
-            case 2
-                curChiasmaIdx = descIds(randIdx(curIdx));
-        end
-        % convert back to indices
-        curAggloIdx = find(invLUT >= curChiasmaIdx, 1) - 1;
-        curChiasmaIdx = curChiasmaIdx - invLUT(curAggloIdx);
+    curChiasmaIdx = descIds(curIdx);
+    
+    % convert back to indives
+    curAggloIdx = find(invLUT >= curChiasmaIdx, 1) - 1;
+    curChiasmaIdx = curChiasmaIdx - invLUT(curAggloIdx);
+    
+    curAgglo = chiasmata{curAggloIdx};
+    curNodeIds = curAgglo.ccNodeIdx{curChiasmaIdx};
+    assert(numel(curNodeIds) == descVals(curIdx));
+    
+    % build skeleton
+    curName = sprintf( ...
+        'Superagglo_%d__Chiasma_%d', curAggloIdx, curChiasmaIdx);
+    curFileName = fullfile(outputDir, strcat(lower(curName), '.nml'));
+    
+    skel = skeleton();
+    skel = skel.addTree(curName, curAgglo.nodes, curAgglo.edges);
+    skel = skel.addBranchpoint(curNodeIds);
+    
+    % show queries
+    curPositions = curAgglo.position{curChiasmaIdx};
+    curDirections = curAgglo.direction{curChiasmaIdx};
+    
+    for curQueryIdx = 1:size(curPositions, 1)
+        curStartPos = curPositions(curQueryIdx, :);
+        curEndPos = curStartPos - curDirections(curQueryIdx, :);
         
-        curChiasma = chiasmata{curAggloIdx};
-        curNodeIds = curChiasma.ccNodeIdx{curChiasmaIdx};
-        if n == 1
-            assert(numel(curNodeIds) == descVals(curIdx));
-             curName = sprintf( ...
-            'Superagglo_Largest_%d__Chiasma_%d', curAggloIdx, curChiasmaIdx);
-        else
-            assert(numel(curNodeIds) == descVals(randIdx(curIdx)));
-            curName = sprintf( ...
-            'Superagglo_Rand_%d__Chiasma_%d', curAggloIdx, curChiasmaIdx);
-        end
-        % build skeleton
-        
-        curFileName = fullfile(outputDir, strcat(lower(curName), '.nml'));
-        
-        skel = skeleton();
-        skel = skel.addTree(curName, curChiasma.nodes, curChiasma.edges);
-        skel = skel.addBranchpoint(curNodeIds);
-        
-        % show queries
-        curPositions = curChiasma.position{curChiasmaIdx};
-        curDirections = curChiasma.direction{curChiasmaIdx};
-        
-        for curQueryIdx = 1:size(curPositions, 1)
-            curStartPos = curPositions(curQueryIdx, :);
-            curEndPos = curStartPos - curDirections(curQueryIdx, :);
-            
-            skel = skel.addTree( ...
-                sprintf( ...
+        skel = skel.addTree( ...
+            sprintf( ...
                 'Chiasma_%d__Query_%d', ...
                 curChiasmaIdx, curQueryIdx), ...
-                cat(1, curStartPos, curEndPos));
-        end
-        
-        skel = Skeleton.setParams4Pipeline(skel, param);
-        skel.write(curFileName);
+            cat(1, curStartPos, curEndPos));
     end
+    
+    skel = Skeleton.setParams4Pipeline(skel, param);
+    skel.write(curFileName);
 end
