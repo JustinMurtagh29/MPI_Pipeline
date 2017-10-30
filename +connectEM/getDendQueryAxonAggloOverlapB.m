@@ -52,7 +52,6 @@ function getDendQueryAxonAggloOverlapB(param)
     display(sizeEqClassCC(1:10));
 
     results = struct;
-    results.startAgglo = startAgglo;
     results.endAgglo = endAgglo;
     results.ff = ff;
     results.idxGood = idxGood;
