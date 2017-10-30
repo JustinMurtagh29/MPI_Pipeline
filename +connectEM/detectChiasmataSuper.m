@@ -3,7 +3,7 @@ function detectChiasmataSuper(startidx, p, useSphereClustering)
         useSphereClustering = false;
     end
     
-    agglos = load(p.inputFile);
+    agglos = load(p.inputFile, 'axons', 'indBigAxons');
     agglos.axons = agglos.axons(agglos.indBigAxons);
 
     % set version number
