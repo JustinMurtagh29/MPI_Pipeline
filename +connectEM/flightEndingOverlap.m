@@ -25,9 +25,15 @@ function flightEndings = flightEndingOverlap( ...
     %   superAgglos
     %     Super-agglomerates to which the flight queries attach
     %
+    %   type
+    %     type of agglos (axon(1) or dendrite(else))
+    %
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
 
+    if nargin < 7
+        type = 1;
+    end
     assert(numel(flightNodes) == numel(flightAgglos));    
     maxSegId = Seg.Global.getMaxSegId(param);
     voxelSize = param.raw.voxelSize;

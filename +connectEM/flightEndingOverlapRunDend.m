@@ -33,7 +33,7 @@ function flightEndingOverlapRunDend(param,state)
 
     %% run main function
     doIt = @(ids) connectEM.flightEndingOverlap( ...
-            param, origAgglos, endings, flightNodes, ids, superAgglos);
+            param, origAgglos, endings, flightNodes, ids, superAgglos, 0);
 
     out = struct;
     out.startEndingOverlaps = doIt(flightResults.startAgglo);
