@@ -10,7 +10,7 @@ function getDendQueryAxonAggloOverlapB(param)
     
     suffix = '1.0';
     % Load flight paths
-    m = load(fullfile(dataDir, strcat('dendriteFlightPaths',suffix,'.mat')), 'ff');
+    m = load(fullfile(dataDir, strcat('dendriteFlightPaths_',suffix,'.mat')), 'ff');
     ff = m.ff;
 
     % Load axon agglomerates
@@ -69,11 +69,11 @@ function getDendQueryAxonAggloOverlapB(param)
     results.gitInfo = Util.gitInfo();
 
     % Save results and deprive writing permission
-    saveFile = fullfile(dataDir, strcat('axonDendriteQueryOverlaps',suffix,'.mat'));
+    saveFile = fullfile(dataDir, strcat('axonDendriteQueryOverlaps_',suffix,'.mat'));
     save(saveFile, 'results', 'queryOverlap', 'idxNoClearStart', 'idxNoClearEnd');
     system(['chmod -w ' saveFile])
     
-    saveFile = fullfile(dataDir, strcat('axonDendritePostQueryAnalysisState',suffix,'.mat'));
+    saveFile = fullfile(dataDir, strcat('axonDendritePostQueryAnalysisState_',suffix,'.mat'));
     save(saveFile);
     system(['chmod -w ' saveFile])
 
