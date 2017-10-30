@@ -14,13 +14,6 @@ function [newAgglos, summary] = ...
     cutoffDistNm = 300; % only consider exits within X nm of flight path
     cutoffTracingNm = 1000; % ignore the first X nm of flight path
     
-    % Set default for `solvedChiasma`
-    nodeCount = size(agglo.nodes, 1);
-    
-    if ~isfield(agglo, 'solvedChiasma')
-        agglo.solvedChiasma = false(nodeCount, 1);
-    end
-    
     % Group queries into chiasmata
    [~, chiasmata, queries.uniChiasmaId] = unique(queries.chiasmaId);
     chiasmata = queries(chiasmata, {'chiasmaId', 'centerNodeId'});
@@ -35,6 +28,7 @@ function [newAgglos, summary] = ...
     newEndings = [];
     nodesToDelete = cell(chiasmaCount, 1);
     edgesToDelete = cell(chiasmaCount, 1);
+    nodeCount = size(agglo.nodes, 1);
     
     nodesToAdd = zeros(0, 4);
     edgesToAdd = zeros(0, 2);

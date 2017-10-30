@@ -25,9 +25,24 @@ info = Util.runInfo();
 
 %% load data
 load(fullfile(rootDir, 'allParameter.mat'), 'p');
-
 oldAxons = load(axonFile);
-bigAxonIds = find(oldAxons.indBigAxons(:));
+
+% set default value for `endings`
+if ~isfield(oldAxons.axons, 'endings')
+   [oldAxons.axons.endings] = deal([]);
+end
+
+% set default value for `solvedChiasma`
+if ~isfield(oldAxons.axons, 'solvedChiasma')
+    solvedChiasma = arrayfun( ...
+        @(a) false(size(a.nodes, 1), 1), ...
+        oldAxons.axons, 'UniformOutput', false);
+   [oldAxons.axons.solvedChiasma] = deal(solvedChiasma{:});
+    clear solvedChiasma;
+end
+
+oldAxons.indBigAxons = oldAxons.indBigAxons(:);
+bigAxonIds = find(oldAxons.indBigAxons);
 axons = oldAxons.axons(bigAxonIds);
 
 %% load queries / flights
@@ -204,10 +219,6 @@ fprintf('# chiasmata marked for splitting: %d\n', sum(chiEval.split));
 fprintf('# chiasmata actually solved: %d\n', sum(chiEval.solved));
 
 %%
-% NOTE(amotta): Add `endings` field to old agglomerates
-[oldAxons.axons.endings] = deal([]);
-oldAxons.indBigAxons = oldAxons.indBigAxons(:);
-
 out = struct;
 out.info = info;
 
