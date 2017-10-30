@@ -7,10 +7,10 @@ function getDendriteQueryOverlapB(param,state)
     dataDir = fullfile(param.saveFolder, 'aggloState');
     
     % State of query generation
-    [~, suffixFlightPaths, suffixDendrites] = connectEM.setDendriteQueryState(state);    
+    [~, suffixVersion, suffixDendrites] = connectEM.setDendriteQueryState(state);    
 
     % Load flight paths
-    m = load(fullfile(dataDir, strcat('dendriteFlightPaths',suffixFlightPaths,'.mat')), 'ff');
+    m = load(fullfile(dataDir, strcat('dendriteFlightPaths_',suffixVersion,'.mat')), 'ff');
     ff = m.ff;
 
     % Load axon agglomerates
@@ -36,7 +36,7 @@ function getDendriteQueryOverlapB(param,state)
     % Exclude all queries that do not have a clear starting point
     idxNoClearStart = cellfun('isempty', startAgglo);
     % Multiple ends (all above 53vx evidence, corresponds to 2 full nodes)
-    endAgglo = arrayfun(@(x)x.eqClasses(x.occurences > 53), queryOverlap.ends, 'uni', 0);
+    endAgglo = arrayfun(@(x)x.eqClasses(x.occurences > 107), queryOverlap.ends, 'uni', 0);
     % Exclude startAgglo from endAgglo (as we do not want to count self-attachment)
     endAgglo = cellfun(@(x,y)setdiff(x,y), endAgglo, startAgglo, 'uni', 0);
     % Exclude all queries that do not have (at least one) clear end
@@ -69,11 +69,11 @@ function getDendriteQueryOverlapB(param,state)
     results.gitInfo = Util.gitInfo();
 
     % Save results and deprive writing permission
-    saveFile = fullfile(dataDir, strcat('dendriteQueryOverlaps',suffixOverlaps,'.mat'));
+    saveFile = fullfile(dataDir, strcat('dendriteQueryOverlaps_',suffixVersion,'.mat'));
     save(saveFile, 'results', 'queryOverlap', 'idxNoClearStart', 'idxNoClearEnd');
     system(['chmod -w ' saveFile])
     
-    saveFile = fullfile(dataDir, strcat('dendritePostQueryAnalysisState',suffixOverlaps,'.mat'));
+    saveFile = fullfile(dataDir, strcat('dendritePostQueryAnalysisState_',suffixVersion,'.mat'));
     save(saveFile);
     system(['chmod -w ' saveFile])
 
