@@ -46,13 +46,17 @@ param = Util.modifyStruct(param, chiParam{:});
 %% find chiasmata with mergers
 %{
 % find christians "huge merger" axons
-segIds = [452950; 302436];
+segIds = [452950; 302436; 9508405];
 axonLUT = Agglo.buildLUT(maxSegId, Superagglos.getSegIds(axons));
 theseAxonIds = axonLUT(segIds);
 %}
 
-theseAxonIds = [1872, 3352];
+theseAxonIds = [1872, 3352, 3174];
 theseChiasmata = cell(numel(theseAxonIds), 1);
+
+if ~exist(outputDir, 'dir')
+    mkdir(outputDir);
+end
 
 for curIdx = 1:numel(theseAxonIds)
     curAxonId = theseAxonIds(curIdx);
@@ -66,5 +70,4 @@ for curIdx = 1:numel(theseAxonIds)
     
     curSkelFile = sprintf('axon-%d.nml', curAxonId);
     curSkel.write(fullfile(outputDir, curSkelFile));
-    
 end
