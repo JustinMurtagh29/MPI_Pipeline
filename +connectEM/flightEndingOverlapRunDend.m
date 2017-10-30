@@ -3,7 +3,7 @@ function flightEndingOverlapRunDend(param,state)
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
 
     %% Set current state of queries
-    [~, suffix, dendriteVersion] = connectEM.setQueryState(state);    
+    [~, suffix, dendriteVersion] = connectEM.setDendriteQueryState(state);    
 
     %% load all the input data
 
