@@ -55,7 +55,7 @@ function getDendQueryAxonAggloOverlapB(param)
 
     % Save results and deprive writing permission
     saveFile = fullfile(dataDir, strcat('axonDendriteQueryOverlaps_',suffix,'.mat'));
-    save(saveFile, 'results', 'queryOverlap', 'idxNoClearStart', 'idxNoClearEnd');
+    save(saveFile, 'results', 'queryOverlap', 'idxNoClearAttachment');
     system(['chmod -w ' saveFile])
     
     
