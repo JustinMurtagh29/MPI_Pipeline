@@ -4,7 +4,7 @@ clear
 
 %% configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-axonFile = fullfile(rootDir, 'aggloState', 'axons_08_a.mat');
+axonFile = fullfile(rootDir, 'aggloState', 'axons_08_b.mat');
 chiasmaFile = '/mnt/mpibr/data/Personal/mottaa/L4/2017-10-30-Chiasmata-Detection-On-Axons-8a/chiasmata.mat';
 outputDir = '/home/amotta/Desktop/ortho-chiasma-queries';
 
@@ -49,6 +49,12 @@ skelData.axonId = repelem( ...
     (1:numel(nodeIds))', cellfun(@numel, nodeIds));
 skelData.nodeId = cell2mat(nodeIds(:));
 clear nodeIds;
+
+% skip solved chiasmata
+skelData.solved = arrayfun( ...
+    @(aIdx, nIdx) axons(aIdx).solvedChiasma(nIdx), ...
+    skelData.axonId, skelData.nodeId);
+skelData(skelData.solved, :) = [];
 
 %%
 rng(0);
