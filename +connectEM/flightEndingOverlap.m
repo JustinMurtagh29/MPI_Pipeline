@@ -1,5 +1,5 @@
 function flightEndings = flightEndingOverlap( ...
-        param, origAgglos, endings, flightNodes, flightAgglos, superAgglos)
+        param, origAgglos, endings, flightNodes, flightAgglos, superAgglos, type)
     % flightEndingOverlap
     % 
     % Inputs
@@ -44,7 +44,7 @@ function flightEndings = flightEndingOverlap( ...
     % group endings
     aggloOrigIds = cellfun( ...
         @(ids) {setdiff(origAggloLUT(ids), 0)}, agglos);
-    aggloEndings = buildAggloEndings(voxelSize, endings, aggloOrigIds);
+    aggloEndings = buildAggloEndings(voxelSize, endings, aggloOrigIds, type);
     
     %% do the magic
     flightEndings = cell(numel(flightNodes), 1);
@@ -94,14 +94,21 @@ function flightEndings = flightEndingOverlap( ...
     end
 end
 
-function aggloEndings = buildAggloEndings(voxelSize, endings, aggloOrigIds)
+function aggloEndings = buildAggloEndings(voxelSize, endings, aggloOrigIds, type)
     %% group endings within original agglomerates
-    origAggloCount = numel(endings.axonMask);
+    
+    if type
+        origAggloCount = numel(endings.axonMask);
+        aggloIds = endings.axonIds;
+    else
+        origAggloCount = numel(endings.dendriteMask);
+        aggloIds = endings.dendriteIds;
+    end
     origAggloEndings = cell(origAggloCount, 2);
     
     curEndingOff = 0;
-    for curIdx = 1:numel(endings.axonIds)
-        curAggloId = endings.axonIds(curIdx);
+    for curIdx = 1:numel(aggloIds)
+        curAggloId = aggloIds(curIdx);
         curClusterIds = endings.borderClusters{curIdx};
         
         % convert borders to nm space
