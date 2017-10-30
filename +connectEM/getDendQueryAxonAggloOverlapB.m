@@ -31,25 +31,15 @@ function getDendQueryAxonAggloOverlapB(param)
     % Determine all overlaps of agglomerations with given queries
     [~, queryOverlap] = connectEM.queryAgglomerationOverlap(axons, segmentsLeftover, uniqueSegments, neighboursStartNode);
     % Make decision(s), here evidence/occurence threshold is applied
-    % Always one (or none if evidence below 14, 1/2 node) start eqClass
-    startAgglo = arrayfun(@(x)x.eqClasses(x.occurences > 13), queryOverlap.start, 'uni', 0);
-    % Exclude all queries that do not have a clear starting point
-    idxNoClearStart = cellfun('isempty', startAgglo);
     % Multiple ends (all above 53vx evidence, corresponds to 2 full nodes)
     endAgglo = arrayfun(@(x)x.eqClasses(x.occurences > 53), queryOverlap.ends, 'uni', 0);
-    % Exclude startAgglo from endAgglo (as we do not want to count self-attachment)
-    endAgglo = cellfun(@(x,y)setdiff(x,y), endAgglo, startAgglo, 'uni', 0);
     % Exclude all queries that do not have (at least one) clear end
-    idxNoClearEnd = cellfun('isempty', endAgglo);
+    idxNoClearAttachment = cellfun('isempty', endAgglo);
     % 18.5% of queries excluded overall due to missing start or end (or both)
-    idxGood = ~(idxNoClearStart | idxNoClearEnd);
+    idxGood = ~idxNoClearAttachment;
     % Display some statistics
-    display([num2str(sum(idxNoClearStart)./numel(idxNoClearStart)*100, '%.2f') '% of remaining queries have no clear start']);
-    display([num2str(sum(idxNoClearStart)) ' in total']);
-    display([num2str(sum(idxNoClearEnd)./numel(idxNoClearEnd)*100, '%.2f') '% of remaining queries have no clear end']);
-    display([num2str(sum(idxNoClearEnd)) ' in total']);
-    display([num2str(sum(idxGood)./numel(idxGood)*100, '%.2f') '% of remaining queries have clear start and ending']);
-    display([num2str(sum(idxGood)) ' in total']);
+    display([num2str(sum(idxNoClearAttachment)./numel(idxNoClearAttachment)*100, '%.2f') '% of remaining queries have no clear attachment']);
+    display([num2str(sum(idxNoClearAttachment)) ' in total']);
     display([num2str(numel(cat(2, endAgglo{idxGood}))) ' attachments made by ' num2str(sum(idxGood)) ' queries']);
     % Find CC of eqClasses to be joined including single eqClasses with or
     % without dangling query

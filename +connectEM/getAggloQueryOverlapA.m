@@ -44,9 +44,9 @@ function getAggloQueryOverlapA(param,state,type)
 
     % Save results and deprive writing permission
     if type ==1
-        outFile = fullfile(param.saveFolder, 'aggloState', strcat('axonFlightPaths',suffix,'.mat')); 
+        outFile = fullfile(param.saveFolder, 'aggloState', strcat('axonFlightPaths_',suffix,'.mat')); 
     else
-        outFile = fullfile(param.saveFolder, 'aggloState', strcat('dendriteFlightPaths',suffix,'.mat'));
+        outFile = fullfile(param.saveFolder, 'aggloState', strcat('dendriteFlightPaths_',suffix,'.mat'));
     end
     Util.saveStruct(outFile, out);
     system(['chmod -w ' outFile])
