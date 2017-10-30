@@ -14,6 +14,13 @@ function [newAgglos, summary] = ...
     cutoffDistNm = 300; % only consider exits within X nm of flight path
     cutoffTracingNm = 1000; % ignore the first X nm of flight path
     
+    % Set default for `solvedChiasma`
+    nodeCount = size(agglo.nodes, 1);
+    
+    if ~isfield(agglo, 'solvedChiasma')
+        agglo.solvedChiasma = false(nodeCount, 1);
+    end
+    
     % Group queries into chiasmata
    [~, chiasmata, queries.uniChiasmaId] = unique(queries.chiasmaId);
     chiasmata = queries(chiasmata, {'chiasmaId', 'centerNodeId'});
@@ -28,7 +35,6 @@ function [newAgglos, summary] = ...
     newEndings = [];
     nodesToDelete = cell(chiasmaCount, 1);
     edgesToDelete = cell(chiasmaCount, 1);
-    nodeCount = size(agglo.nodes, 1);
     
     nodesToAdd = zeros(0, 4);
     edgesToAdd = zeros(0, 2);
@@ -237,6 +243,9 @@ function [newAgglos, summary] = ...
         summary.solved(chiIdx) = true;
     end
     
+    % mark center nodes of solved chiasmata as solved
+    agglo.solvedChiasma(summary.centerIdx(summary.solved)) = true;
+    
     % NOTE(amotta): Make sure that none of the nodes involved in edges is
     % being removed by one of the other chiasmata.
     assert(~any(ismember(edgesToAdd(:), nodesToDelete)));
@@ -246,6 +255,11 @@ function [newAgglos, summary] = ...
     newNodes = cat(1, agglo.nodes, nodesToAdd);
     nodesToKeep = setdiff(1:size(newNodes, 1), nodesToDelete);
     newNodes = newNodes(nodesToKeep, :);
+    
+    % build new solved chiasma
+    newSolvedChiasma = cat(1, ...
+        agglo.solvedChiasma, false(size(nodesToAdd, 1), 1));
+    newSolvedChiasma = newSolvedChiasma(nodesToKeep);
     
     % renumber node IDs in `newEndings`
    [~, newEndings] = ismember(newEndings, nodesToKeep);
@@ -270,15 +284,18 @@ function [newAgglos, summary] = ...
     for curIdx = 1:newAggloCount
         curNodeIds = newNodeComps{curIdx};
         curNodes = newNodes(curNodeIds, :);
+        curSolvedChiasma = newSolvedChiasma(curNodeIds);
         curEndings = find(ismember(curNodeIds, newEndings));
         
         curEdges = newEdges(newEdgeComps == curIdx, :);
         [~, curEdges] = ismember(curEdges, curNodeIds);
         assert(all(curEdges(:)));
         
+        
         newAgglos(curIdx).nodes = curNodes;
         newAgglos(curIdx).edges = curEdges;
         newAgglos(curIdx).endings = curEndings;
+        newAgglos(curIdx).solvedChiasma = curSolvedChiasma;
     end
     
     newAgglos = reshape(newAgglos, [], 1);
