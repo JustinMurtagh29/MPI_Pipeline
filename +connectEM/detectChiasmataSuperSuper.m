@@ -1,4 +1,5 @@
-function job = detectChiasmataSuperSuper(p, inputFile, useSphereClustering)
+function job = detectChiasmataSuperSuper( ...
+    p, inputFile, outputDir, useSphereClustering)
 
 if ~exist('useSphereClustering', 'var')
     % set to true for alternate approach of clustering on sphere
@@ -13,6 +14,7 @@ inputCell = cellfun(@(x){x}, num2cell(1 : 500), 'uni', 0);
 
 % set id for detected chiasmata
 p.inputFile = inputFile;
+p.outputDir = outputDir;
 p.chiasmataVersion = datestr(now, 30);
 
 % Some parameter for algorithm
