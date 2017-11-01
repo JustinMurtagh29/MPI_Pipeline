@@ -91,7 +91,7 @@ for n = 1:numel(superagglos)
     % tranform the global node ids in the edge vector to local node ids
     [~, newedges] = cellfun(@(x,y) ismember(x,y),newedges,equivalenceClass','uni',0);
     
-    newSuperagglos = cat(1,newSuperagglos,cell2struct([newedges;newnodes;tmpstrct{:}],[{'edges'},{'nodes'},fNames'],1));
+    newSuperagglos = cat(1,newSuperagglos,cell2struct(cat(1,newedges,newnodes,tmpstrct{:}),[{'edges'},{'nodes'},fNames'],1));
 end
 end
 
