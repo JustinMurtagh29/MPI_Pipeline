@@ -1,59 +1,40 @@
-function [newSuperagglos] = removeNodesFromAgglo(superagglos,nodeIds,noCC )
+function [newSuperagglos] = removeEdgesFromAgglo(superagglos,edgeIds,noCC )
 % removes sets of node indices from superagglos and performs connected
 % component afterswards to ensure internode connectivity in each superagglo
 if ~exist('noCC','var') || isempty(noCC)
     noCC = 0;
 end
 
-if ~ iscell(nodeIds)
-    nodeIds = {nodeIds};
+if ~ iscell(edgeIds)
+    edgeIds = {edgeIds};
 end
 newSuperagglos = superagglos([]);
 for n = 1:numel(superagglos)
-    nodes = cell2mat(arrayfun(@(x) x.nodes,superagglos(n),'uni',0));
+%     nodes = cell2mat(arrayfun(@(x) x.nodes,superagglos(n),'uni',0));
+    nodes = superagglos(n).nodes;
     fNames = setdiff(fieldnames(superagglos(n)),{'nodes','edges'});
     tmpstrct = cell(numel(fNames),1);
     for f = 1:numel(fNames)
         tmpstrct{f} = cat(1,superagglos(n).(fNames{f}));
     end   
-    if islogical(nodeIds{n})
-        toKeep = ~nodeIds{n};
+    if islogical(edgeIds{n})
+        toKeep = ~edgeIds{n};
     else
-        toKeep = true(size(nodes,1),1);
-        toKeep(nodeIds{n}) = false;
+        toKeep = true(size(superagglos(n).edges,1),1);
+        toKeep(edgeIds{n}) = false;
     end
-    idsToKeep = find(toKeep);
-    idsToDelete = find(~toKeep);
-    if isempty(idsToKeep)
-%         newSuperagglos(n) = superagglos([]);
-        continue
-    end
-    edges = superagglos(n).edges(all(ismember(superagglos(n).edges,idsToKeep),2),:);
-    
+  
     if noCC
-        numNodes = arrayfun(@(x) size(x.nodes,1),superagglos);
-        cumNumNodes = [0;cumsum(numNodes);sum(numNodes)];
-        aggloLUT = repelem((1:numel(superagglos))',numNodes)';
-        newnodes = arrayfun(@(x) nodes(aggloLUT==x & toKeep,:) ,1:numel(superagglos),'uni',0);
-        for f = 1:numel(fNames)
-            if size(tmpstrct{f},1) == size(nodes,1) % apply same sorting to all other field names if their size was the same as the number of nodes, else leave the same
-                tmpstrct{f} = arrayfun(@(x) tmpstrct{f}(aggloLUT==x & toKeep,:,:),1:numel(superagglos),'uni',0)';
-            end
-        end
-        newedges = arrayfun(@(x) edges(all(edges > cumNumNodes(x) & edges <= cumNumNodes(x+1) ,2),:) ,1:numel(superagglos),'uni',0);
-        newedges = cellfun(@(x) x - [sum(bsxfun(@ge,x(:,1),idsToDelete'),2),sum(bsxfun(@ge,x(:,2),idsToDelete'),2)],newedges,'uni',0);
-        newSuperagglos = cat(1,newSuperagglos,cell2struct([newedges;newnodes;tmpstrct(:)],[{'edges'},{'nodes'},fNames'],1));
+        newSuperagglos(n) = superagglos(n);
+        newSuperagglos(n).edges = superagglos(n).edges(toKeep,:);
         continue
     end
-
+    edges = superagglos(n).edges(toKeep,:);
     % generate selfEdges of all superagglo segments
-    % selfEdges = repmat(nodes(:,4),1,2);
-    selfEdges = repmat(idsToKeep,1,2);
+    selfEdges = repmat(unique(edges(:)),1,2);
     
-    % [equivalenceClass, aggloLUT] = Graph.findConnectedComponents(cat(1,selfEdges,segIDedges),0,1);
     [equivalenceClass, aggloLUT] = Graph.findConnectedComponents(cat(1,selfEdges,edges),0,1);
     if isempty(equivalenceClass)
-%         newSuperagglos = struct('edges',[],'nodes',[]);
         continue
     end
     % create boolean which equivalence classes contain single edges
