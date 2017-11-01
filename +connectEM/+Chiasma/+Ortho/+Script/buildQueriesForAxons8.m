@@ -60,16 +60,17 @@ skelData(skelData.solved, :) = [];
 %% build NMLs
 rng(0);
 randIds = randperm(size(skelData, 1));
-queries = struct([]);
+taskDefs = struct([]);
 
-nmlDir = fullfile(outputDir, 'nml');
+nmlDir = sprintf('%s_queries', curDateStr);
+nmlDir = fullfile(outputDir, nmlDir);
 if ~exist(nmlDir, 'dir'); mkdir(nmlDir); end
 
 for curIdx = 1:numel(randIds)
     curRow = randIds(curIdx);
     
     curSkelData = skelData(curRow, :);
-   [curSkel, curQuery] = connectEM.Chiasma.Ortho.buildQuery( ...
+   [curSkel, curTaskDef] = connectEM.Chiasma.Ortho.buildQuery( ...
         param, axons(curSkelData.axonId), curSkelData.nodeId);
     
     curSkelFile = sprintf( ...
@@ -77,22 +78,22 @@ for curIdx = 1:numel(randIds)
         curSkelData.axonId, curSkelData.nodeId);
     curSkel.write(fullfile(nmlDir, curSkelFile));
     
-    curQuery.axonId = curSkelData.axonId;
-    curQuery.skelFile = curSkelFile;
+    curTaskDef.axonId = curSkelData.axonId;
+    curTaskDef.skelFile = curSkelFile;
     
-    if curIdx == 1; queries = curQuery; end
-    queries(curIdx) = curQuery;
+    if curIdx == 1; taskDefs = curTaskDef; end
+    taskDefs(curIdx) = curTaskDef;
 end
 
-queries = orderfields(queries);
-queries = reshape(queries, [], 1);
+taskDefs = orderfields(taskDefs);
+taskDefs = reshape(taskDefs, [], 1);
 
 %% save query data
 out = struct;
 out.info = info;
-out.queries = queries;
+out.taskDefs = taskDefs;
 
-outFile = sprintf('%s_queries.mat', curDateStr);
+outFile = sprintf('%s_tasks.mat', curDateStr);
 outFile = fullfile(outputDir, outFile);
 
 Util.saveStruct(outFile, out);

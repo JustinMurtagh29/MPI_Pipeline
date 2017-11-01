@@ -1,4 +1,4 @@
-function [skel, query] = buildQuery(param, agglo, nodeIdx)
+function [skel, taskDef] = buildQuery(param, agglo, nodeIdx)
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     
@@ -74,7 +74,7 @@ function [skel, query] = buildQuery(param, agglo, nodeIdx)
     skel.parameters.activeNode.id = activeNodeId;
     
     % build `query`
-    query = struct;
-    query.centerNodeId = nodeIdx;
-    query.exitNodeIds = cutExitNodeIds;
+    taskDef = struct;
+    taskDef.centerNodeId = nodeIdx;
+    taskDef.exitNodeIds = cutExitNodeIds;
 end
