@@ -1,9 +1,22 @@
 function [exits, otherComments] = parseQuery(nmlPath)
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
-    nml = slurpNml(nmlPath);
-    nodes = NML.buildNodeTable(nml);
-    comments = NML.buildCommentTable(nml);
+    
+    try
+        nml = slurpNml(nmlPath);
+        nodes = NML.buildNodeTable(nml);
+        comments = NML.buildCommentTable(nml);
+    catch e
+       warning('Invalid NML file %s.', nmlPath);
+       
+       nodes = table;
+       nodes.id = zeros(0, 1);
+       nodes.treeId = zeros(0, 1);
+       
+       comments = table;
+       comments.node = zeros(0, 1);
+       comments.comment = cell(0, 1);
+    end
     
     % find tree for each comment
    [~, comments.treeId] = ismember(comments.node, nodes.id);
