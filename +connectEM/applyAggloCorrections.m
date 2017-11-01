@@ -30,7 +30,7 @@ if modus == 2
     end
 end
 if exist('axons','var') && ~isempty(axons)
-    axons = rmfield(axons,'endings');
+    axons = rmfield(axons,setdiff(fieldnames(axons),{'nodes','edges','comments'}));
     [axonsLUT] = Superagglos.buildLUT(axons);
 end
 
