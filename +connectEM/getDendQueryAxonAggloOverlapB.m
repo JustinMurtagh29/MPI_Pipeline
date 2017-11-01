@@ -53,7 +53,7 @@ function getDendQueryAxonAggloOverlapB(param)
     idxGood = ~idxNoClearAttachment;
     % Display some statistics
     display([num2str(sum(~idxNoClearAxonAttachment)./numel(idxNoClearAxonAttachment)*100, '%.2f') '% of remaining queries have axon attachment']);
-    display([num2str(sum(~idxNoClearAttachment)) ' in total']);
+    display([num2str(sum(~idxNoClearAxonAttachment)) ' in total']);
     display([num2str(sum(idxNoClearDendriteAttachment)./numel(idxNoClearDendriteAttachment)*100, '%.2f') '% of remaining queries have no start attachment at dendrite']);
     display([num2str(sum(idxNoClearDendriteAttachment)) ' in total']);
     
