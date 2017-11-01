@@ -73,13 +73,13 @@ for curIdx = 1:numel(randIds)
    [curSkel, curTaskDef] = connectEM.Chiasma.Ortho.buildQuery( ...
         param, axons(curSkelData.axonId), curSkelData.nodeId);
     
-    curSkelFile = sprintf( ...
+    curNmlFile = sprintf( ...
         '%d_axon-%d_node-%d.nml', curIdx, ...
         curSkelData.axonId, curSkelData.nodeId);
-    curSkel.write(fullfile(nmlDir, curSkelFile));
+    curSkel.write(fullfile(nmlDir, curNmlFile));
     
     curTaskDef.axonId = curSkelData.axonId;
-    curTaskDef.skelFile = curSkelFile;
+    curTaskDef.nmlFile = curNmlFile;
     
     if curIdx == 1; taskDefs = curTaskDef; end
     taskDefs(curIdx) = curTaskDef;
