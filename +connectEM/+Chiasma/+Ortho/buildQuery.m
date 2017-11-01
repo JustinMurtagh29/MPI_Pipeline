@@ -1,4 +1,4 @@
-function skel = buildOrthoModeQuery(param, agglo, nodeIdx)
+function skel = buildQuery(param, agglo, nodeIdx)
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     
