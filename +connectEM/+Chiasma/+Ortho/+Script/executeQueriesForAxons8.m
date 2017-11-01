@@ -15,16 +15,24 @@ info = Util.runInfo();
 
 %% load tasks and task definitions
 tasks = load(taskFile);
+
+% load axons
 axonFile = tasks.info.param.axonFile;
+axons  = load(axonFile, 'axons', 'indBigAxons');
+
+% restrict to large axons
+axonIds = find(axons.indBigAxons(:));
+axons = axons.axons(axonIds);
+
+% get parameters for chiasma splitting
 chiParam = tasks.info.param.chiParam;
+chiParam.sphereRadiusOuter = inf;
+
+% get task definitions
 tasks = struct2table(tasks.taskDefs);
 
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
-
-axons  = load(axonFile, 'axons', 'indBigAxons');
-axonIds = find(axons.indBigAxons(:));
-axons = axons.axons(axonIds);
 
 tasksIds = connectEM.Chiasma.Ortho.loadTaskIds(taskIdFile);
 
@@ -62,7 +70,8 @@ queries(:, {'id', 'taskId'}) = [];
 clear taskRow;
 
 %% statistics
-commentMask = ~cellfun(@isempty, queries.comments);
+commentMask = ~cellfun( ...
+    @isempty, queries.comments);
 missingExitMask = ~cellfun( ...
     @(a, b) size(a, 1) == size(b, 1), ...
     queries.exits, queries.exitNodeIds);
@@ -76,4 +85,16 @@ fprintf('⇒ Removing these queries...\n');
 queries(commentMask | missingExitMask, :) = [];
 clear commentMask missingExitMask;
 
+% sort by axon
+queries = sortrows(queries, 'axonId');
+
 %% apply results
+uniAxonIds = unique(queries.axonId);
+
+for curIdx = 2:numel(uniAxonIds)
+    curAxonId = uniAxonIds(curIdx);
+    curMask = queries.axonId == curAxonId;
+    
+    curAxons = connectEM.Chiasma.Ortho.splitWithQueries( ...
+        param, chiParam, axons(curAxonId), queries(curMask, :));
+end
