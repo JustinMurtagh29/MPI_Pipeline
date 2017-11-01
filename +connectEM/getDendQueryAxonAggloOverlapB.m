@@ -32,6 +32,7 @@ function getDendQueryAxonAggloOverlapB(param)
     idxNoClearEnd = m.idxNoClearEnd;
     clear m
     ff = structfun(@(x)x(idxNoClearEnd), ff, 'uni', 0);
+    dendrites = dendrites(idxNoClearEnd);
  
     segmentsLeftover = [];
 
@@ -67,7 +68,7 @@ function getDendQueryAxonAggloOverlapB(param)
     % Save results and deprive writing permission
     saveFile = fullfile(dataDir, strcat('axonDendriteQueryOverlaps_',suffix,'.mat'));
     save(saveFile, 'results', 'queryOverlap', 'idxNoClearAxonAttachment','idxNoClearDendriteAttachment');
-    system(['chmod -w ' saveFile])
+    system(['chmod -w ' saveFile]);
     
     
 end
