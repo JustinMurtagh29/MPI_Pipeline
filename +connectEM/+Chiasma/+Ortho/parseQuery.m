@@ -6,7 +6,7 @@ function [exits, otherComments] = parseQuery(nmlPath)
         nml = slurpNml(nmlPath);
         nodes = NML.buildNodeTable(nml);
         comments = NML.buildCommentTable(nml);
-    catch e
+    catch
        warning('Invalid NML file %s.', nmlPath);
        
        nodes = table;
