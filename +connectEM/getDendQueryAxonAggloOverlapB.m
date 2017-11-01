@@ -50,7 +50,7 @@ function getDendQueryAxonAggloOverlapB(param)
     idxNoClearAxonAttachment = cellfun('isempty', endAxon);
     idxNoClearDendriteAttachment = cellfun('isempty', startDendrite);
     % 18.5% of queries excluded overall due to missing start or end (or both)
-    idxGood = ~idxNoClearAttachment;
+    idxGood = ~idxNoClearAxonAttachment;
     % Display some statistics
     display([num2str(sum(~idxNoClearAxonAttachment)./numel(idxNoClearAxonAttachment)*100, '%.2f') '% of remaining queries have axon attachment']);
     display([num2str(sum(~idxNoClearAxonAttachment)) ' in total']);

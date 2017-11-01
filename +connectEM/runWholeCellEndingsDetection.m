@@ -9,12 +9,12 @@ graphInput.segmentMeta = segmentMeta;
 graphInput.borderMeta = borderMeta;
 graphInput.globalSegmentPCA = globalSegmentPCA;
 
-suffix = '03'
-state = '10'
+suffix = '04'
+state = '11'
 
 connectEM.generateEndingInputDataBorderWholeCells(param,suffix,state,graphInput)
 connectEM.generateEndingsBorderWholeCells(param,suffix)
-connectEM.generateQueriesOfBorderWholeCells(param,suffix,state,10,graphInput)
+connectEM.generateQueriesOfBorderWholeCells(param,suffix,state,11,graphInput)
 
 connectEM.generateDendriteEndingInputDataWholeCells(param,suffix,graphInput)
 connectEM.generateDendriteEndingsWholeCells(param,suffix)
