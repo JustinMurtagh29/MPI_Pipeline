@@ -32,8 +32,7 @@ function getDendQueryAxonAggloOverlapB(param)
     idxNoClearEnd = m.idxNoClearEnd;
     clear m
     ff = structfun(@(x)x(idxNoClearEnd), ff, 'uni', 0);
-    dendrites = dendrites(idxNoClearEnd);
- 
+    
     segmentsLeftover = [];
 
     % Calculate overlap of all queries with segments
