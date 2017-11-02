@@ -40,6 +40,7 @@ function [skeletonFolders, versionSuffix, dendriteVersion,...
         % filename additionals for getAggloQueryOverlapB and flightEndingOverlapRun
         versionSuffix = '2.0';
         dendriteVersion = 'flight_01';
+        dendriteVersionNew = 'flight_02';
        
     % Commented queries of first clean run    
     elseif strcmp(state,'2.1')
