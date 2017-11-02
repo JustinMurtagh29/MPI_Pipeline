@@ -71,15 +71,15 @@ for curIdx = 1:flightCount
     curSegIds = 1 + horzcat( ...
         flights.segIds{curIdx}, ...
         flights.neighbours{curIdx});
-    curAxonIds = axonLUT(curSegIds);
+    curEndId = axonLUT(curSegIds);
     
     % find start agglo (> 1/2 node evidence)
-   [curStartAxon, ~, curStartEvidence] = unique(curAxonIds(1, :));
+   [curStartAxon, ~, curStartEvidence] = unique(curEndId(1, :));
     curStartAxon = curStartAxon(accumarray(curStartEvidence(:), 1) > 13);
     curStartAxon = setdiff(curStartAxon, 0);
     
     % find end agglos
-   [curEndAxons, ~, curEndEvidence] = unique(curAxonIds(:));
+   [curEndAxons, ~, curEndEvidence] = unique(curEndId(:));
     curEndAxons = curEndAxons(accumarray( ...
         curEndEvidence(:), 1) >= minNodeEvidence);
     curEndAxons = setdiff(curEndAxons, cat(1, 0, curStartAxon(:)));
@@ -126,3 +126,93 @@ adjMat = sparse( ...
 
 axonComps = reshape(axonComps, [], 1);
 flights.axonComp = axonComps(flights.overlaps(:, 1));
+
+%% patch in flight paths
+for curComp = 1:axonCompCount
+    curAxons = (axonComps == curComp);
+    curAxons = axons(curAxons);
+    
+    if numel(curAxons) < 2
+        curAxon = axons;
+        continue;
+    end
+    
+    curAxon = struct;
+    curAxon.nodes = cat(1, curAxons.nodes);
+    
+    curSegLUT = zeros(maxSegId, 1);
+    curNodeIds = find(not(isnan(curAxon.nodes(:, 4))));
+    curSegLUT(curAxon.nodes(curNodeIds, 4)) = curNodeIds;
+    
+    % determine node offset
+    curNodeOff = arrayfun(@(a) size(a.nodes, 1), curAxons);
+    curNodeOff = cumsum(cat(1, 0, curNodeOff(1:(end - 1))));
+    
+    curAxon.edges = cell2mat(arrayfun(@(ax, off) ...
+        ax.edges + off, curAxons, curNodeOff, 'UniformOutput', false));
+    curAxon.endings = cell2mat(arrayfun(@(ax, off) ...
+        ax.endings + off, curAxons, curNodeOff, 'UniformOutput', false));
+    
+    % patch in flight paths
+    curFlightIds = find(flights.axonComp == curComp);
+    curFlightIds = reshape(curFlightIds, 1, []);
+    
+    curFlightNodes = cell(numel(curFlightIds), 1);
+    curFlightEdges = cell(numel(curFlightIds), 1);
+    curNodeOff = size(curAxon.nodes, 1);
+    
+    for curIdx = 1:numel(curFlightIds)
+        curId = curFlightIds(curIdx);
+        
+        curSegIds = cat(2, ...
+            flights.segIds{curId}, ...
+            flights.neighbours{curId});
+        curSegIds = transpose(curSegIds);
+        
+        curEndId = axonLUT(1 + curSegIds);
+        curOverlaps = flights.overlaps(curId, :);
+        
+        % find flight path stretch to extract
+        curStartMask = any(curEndId == curOverlaps(1), 1);
+        curEndMask = any(curEndId == curOverlaps(2), 1);
+        
+        curEndIdx = 1 + find(curEndMask(2:end), 1, 'first');
+        curStartIdx = max(find(curStartMask(1:(curEndIdx - 1)))); %#ok
+        
+        curStartNodeId = find( ...
+            curEndId(:, curStartIdx) == curOverlaps(1), 1);
+        curStartNodeId = curSegIds(curStartNodeId, curStartIdx);
+        curStartNodeId = curSegLUT(curStartNodeId);
+        
+        curEndNodeId = find( ...
+            curEndId(:, curEndIdx) == curOverlaps(2), 1);
+        curEndNodeId = curSegIds(curEndNodeId, curEndIdx);
+        curEndNodeId = curSegLUT(curEndNodeId);
+        
+        % path in flight nodes
+        curNodesToAdd = flights.nodes{curId};
+        curNodesToAdd(:, 4) = nan;
+        
+        % truncate flights
+        curNodesToAdd = curNodesToAdd( ...
+            (curStartIdx + 1):(curEndIdx - 1), :);
+        
+        % collect new edges
+        curNodeCount = size(curNodesToAdd, 1);
+        curEdgesToAdd = zeros((curNodeCount - 1) + 2, 2);
+        curEdgesToAdd((1 + 1):end, 1) = 1:curNodeCount;
+        curEdgesToAdd(1:(end - 1), 2) = 1:curNodeCount;
+        
+        curEdgesToAdd = curEdgesToAdd + curNodeOff;
+        curNodeOff = curNodeOff + curNodeCount;
+        
+        curEdgesToAdd(1) = curStartNodeId;
+        curEdgesToAdd(end) = curEndNodeId;
+        
+        curFlightNodes{curIdx} = curNodesToAdd;
+        curFlightEdges{curIdx} = curEdgesToAdd;
+    end
+    
+    curAxon.nodes = cat(1, curAxon.nodes, cell2mat(curFlightNodes));
+    curAxon.edges = cat(1, curAxon.edges, cell2mat(curFlightEdges));
+end
