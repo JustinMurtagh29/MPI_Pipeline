@@ -42,8 +42,6 @@ function newAgglos = splitWithQueries(param, chiParam, agglo, queries)
         % drop tiny components
         isExit = cellfun(@(idx) max(pdist2( ...
             nodes(idx, :), curCenterNm)) > param.minNodeDist, comps);
-      
-        nrExits = sum(isExit);
         nonExitNodeIds = nodeIds(cell2mat(comps(~isExit)));
         
         % collect deleted nodes and edges
