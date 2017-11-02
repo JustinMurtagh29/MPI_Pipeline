@@ -3,9 +3,12 @@
 clear;
 
 %% configuration
-inputVersion = '20171101T173904';
-inputDir = '/home/amotta/Desktop/ortho-chiasma-queries';
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
+
+inputVersion = '20171101T173904';
+inputDir = fullfile( ...
+    rootDir, 'chiasmataSplitting', ...
+    '20171031T000000-ortho-mode-on-axons-8');
 
 taskFile = fullfile(inputDir, sprintf('%s_tasks.mat', inputVersion));
 taskIdFile = fullfile(inputDir, sprintf('%s_taskIds.txt', inputVersion));
