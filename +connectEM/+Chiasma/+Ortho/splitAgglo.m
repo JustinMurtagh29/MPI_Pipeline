@@ -1,4 +1,4 @@
-function newAgglos = splitWithQueries(param, chiParam, agglo, queries)
+function newAgglos = splitAgglo(param, chiParam, agglo, queries)
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     
