@@ -102,7 +102,7 @@ queries = sortrows(queries, 'axonId');
 %% apply results
 uniAxonIds = unique(queries.axonId);
 
-for curIdx = 2:numel(uniAxonIds)
+for curIdx = 1:numel(uniAxonIds)
     curAxonId = uniAxonIds(curIdx);
     curMask = queries.axonId == curAxonId;
     
