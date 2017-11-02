@@ -32,7 +32,7 @@ function [skeletonFolders, versionSuffix, dendriteVersion,...
         dendriteVersion = 'flight_01';
           
     % Second run
-    if strcmp(state,'2.0') 
+    elseif strcmp(state,'2.0') 
         % source folders for flight paths
         scratchFolder = '/u/scchr/aggloState/dendQueryAnswers/';
         skeletonFolders = {'L4_dendrite_queries_27_10_2017' 'L4_dendrite_queries_01_11_2017'};
