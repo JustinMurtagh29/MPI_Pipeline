@@ -18,9 +18,12 @@ function createNewDendriteSuperagglos(param, state)
     % Load linkages
     flightPaths = load(fullfile(dataDir, strcat('dendritePostQueryAnalysisState_',suffix,'.mat')),'edgesCC','eqClassCCfull','startAgglo','endAgglo','ff');
     
-    m = load(fullfile(dataDir, strcat('dendritePostQueryAnalysisState_',suffix,'.mat')),'idxNoClearEnd');
+    m = load(fullfile(dataDir, strcat('dendritePostQueryAnalysisState_',suffix,'.mat')),'idxNoClearEnd','idxNoClearStart');
     idxNoClearEnd = m.idxNoClearEnd;
+    idxNoClearStart = m.idxNoClearStart;
+    idxNoClearStart = find(idxNoClearStart);
     idxNoClearEnd = find(idxNoClearEnd);
+    
     clear m
     
     m = load(fullfile(dataDir, strcat('axonDendriteQueryOverlaps_',suffix,'.mat')),'idxNoClearAxonAttachment');
@@ -28,6 +31,7 @@ function createNewDendriteSuperagglos(param, state)
     clear m
 
     excludedFlights = idxNoClearEnd(~idxNoClearAxonAttachment);
+    excludedFlights = cat(1,excludedFlights,idxNoClearStart);
 %     endings = load(fullfile(dataDir, 'dendriteEndings.mat'));
 %     endingOverlap = load(fullfile(dataDir, strcat('dendriteEndingOverlaps',suffix,'.mat')));
 %     [linkages, idxMultipleHits] = cellfun(@connectEM.edgeCreator, endingOverlap.startEndingOverlaps, endingOverlap.endEndingOverlaps, 'uni', 0);
