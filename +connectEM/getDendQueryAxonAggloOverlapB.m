@@ -1,4 +1,4 @@
-function getDendQueryAxonAggloOverlapB(param)
+function getDendQueryAxonAggloOverlapB(param,suffix)
     % Written by
     %   Manuel Berning <manuel.berning@brain.mpg.de>
     %   Christian Schramm <christian.schramm@brain.mpg.de>
@@ -8,13 +8,12 @@ function getDendQueryAxonAggloOverlapB(param)
     
     % State of query generation
     
-    suffix = '1.0';
     % Load flight paths
     m = load(fullfile(dataDir, strcat('dendriteFlightPaths_',suffix,'.mat')), 'ff');
     ff = m.ff;
 
     % Load axon agglomerates
-    m = load(fullfile(dataDir, 'axons_08_a.mat'));
+    m = load(fullfile(dataDir, 'axons_09_a.mat'));
     axons = m.axons(m.indBigAxons);
     axons = arrayfun(@Agglo.fromSuperAgglo, axons, 'UniformOutput', false);
     clear m;
@@ -28,7 +27,7 @@ function getDendQueryAxonAggloOverlapB(param)
     ff = structfun(@(x)x(cellfun(@isempty, ff.comments)), ff, 'uni', 0);
     ff = structfun(@(x)x(~cellfun(@isempty, ff.startNode)), ff, 'uni', 0);
 
-    m = load(fullfile(dataDir, 'dendritePostQueryAnalysisState_1.0.mat'));
+    m = load(fullfile(dataDir, strcat('dendritePostQueryAnalysisState_',suffix,'.mat'));
     idxNoClearEnd = m.idxNoClearEnd;
     clear m
     ff = structfun(@(x)x(idxNoClearEnd), ff, 'uni', 0);
