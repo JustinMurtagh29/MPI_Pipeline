@@ -58,8 +58,7 @@ function out = split(param, chiParam, oldAxons, tasks, taskIds, queries)
 
     %% build output
     out = struct;
-    out.info = info;
-
+    
     out.axons = cat(1, axonsSplit{:});
     out.parentIds = repelem( ...
         axonIds(uniAxonIds), cellfun(@numel, axonsSplit));

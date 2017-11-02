@@ -28,9 +28,11 @@ chiParam.sphereRadiusOuter = inf;
 % get task definitions
 tasks = struct2table(tasks.taskDefs);
 
+% load pipeline parameters
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 
+% load task IDs and queries
 taskIds = connectEM.Chiasma.Ortho.loadTaskIds(taskIdFile);
 queries = connectEM.Chiasma.Ortho.loadQueries(nmlDir);
 
@@ -39,8 +41,12 @@ out = connectEM.Chiasma.Ortho.split( ...
     param, chiParam, oldAxons, tasks, taskIds, queries);
 
 %% save output
+out.info = info;
+
+if ~exist(outputDir, 'dir')
+    mkdir(outputDir)
+end
+
 outFile = sprintf('%s_results.mat', datestr(now, 30));
 outFile = fullfile(outputDir, outFile);
-
-mkdir(outputDir);
 Util.saveStruct(outFile, out);
