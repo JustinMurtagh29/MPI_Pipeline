@@ -1,4 +1,4 @@
-function nBoutons = getSynapseClusters(p,agglos,show)
+function [nBoutons,meanSynPerBouton] = getSynapseClusters(p,agglos,show)
 % p = Gaba.getSegParameters('ex145_ROI2017');
 % [graph, segmentMeta, borderMeta] = Seg.IO.loadGraph(p, false);
 if ~exist('show','var') || isempty(show)
@@ -9,6 +9,7 @@ load(fullfile(p.saveFolder,'connectomeState','SynapseAgglos_v2.mat'),'synapses')
  
 presynSegIds = cellfun(@(x) x(1),synapses.presynId); % only one presyn id necessary
 nBoutons = NaN(numel(agglos),1);
+meanSynPerBouton = nBoutons;
 for s = 1:numel(agglos)
     [~,ind] = ismember(presynSegIds,agglos(s).nodes(:,4));
     presynSegCoords = bsxfun(@times,agglos(s).nodes(ind(ind~=0),1:3),[11.24,11.24,28]);
@@ -19,6 +20,7 @@ for s = 1:numel(agglos)
         synClusters = 1;
     end
     nBoutons(s) = max(synClusters);
+    meanSynPerBouton(s) = mean(histc(synClusters,1:nBoutons(s)));
     if show
         figure; hold all
         skel = Superagglos.toSkel(agglos(s));
