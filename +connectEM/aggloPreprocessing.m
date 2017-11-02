@@ -400,7 +400,10 @@ if ~exist(fullfile(outputFolder,'dendrites_09.mat'),'file') || overwrite
     
     [dendrites,dendriteLUT] = connectEM.applyAggloCorrections(cat(1,wholeCells,dendrites),p,fullfile(outputFolder,correctionFolder),0,axons);
 
-        
+    dendriteSegIds = find(dendriteLUT);
+    [ismem,ind] = ismember(somaSegIds,dendriteSegIds);
+    % get each dend id which contains most of the seg ids of each soma
+    BorderWholeCellId = accumarray(somaLUT(somaSegIds(ismem))',dendriteLUT(dendriteSegIds(ind(ismem)))',[],@mode);       
   
     indBigDends = Agglo.isMaxBorderToBorderDistAbove(p, 5000, Superagglos.transformAggloNewOldRepr(dendrites));
     [ myelinDend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
@@ -410,6 +413,132 @@ else
     load(fullfile(outputFolder,'dendrites_09.mat'))
 end
 
+%% 
+if ~exist(fullfile(outputFolder,'dendrites_10.mat'),'file') || overwrite
+    load(fullfile(outputFolder,'axons_07_b.mat'),'axons')
+    
+    % here was christians ending detection done on dendrites_08 + manual
+    % correction of nmls   
+    
+    correctionFolder = 'WholeCellCorrections_09';
+    fprintf('Folder with correction nmls for state dendrites_09 is %s\n',fullfile(outputFolder,correctionFolder));
+    
+    % write out the stuff to be added for checking
+    connectEM.applyAggloCorrections(dendrites,p,fullfile(outputFolder,correctionFolder),2,axons);
+    
+    % split the stuff to be added now (dendrites had no checks necessary)
+    [axons,axonLUT] = connectEM.applyAggloCorrections(axons,p,fullfile(outputFolder,correctionFolder,'checkedBeforeAdd'),1);
+    
+    
+    [dendrites,dendriteLUT] = connectEM.applyAggloCorrections(cat(1,wholeCells,dendrites),p,fullfile(outputFolder,correctionFolder),0,axons);
+
+    dendriteSegIds = find(dendriteLUT);
+    [ismem,ind] = ismember(somaSegIds,dendriteSegIds);
+    % get each dend id which contains most of the seg ids of each soma
+    BorderWholeCellId = accumarray(somaLUT(somaSegIds(ismem))',dendriteLUT(dendriteSegIds(ind(ismem)))',[],@mode);       
+  
+    indBigDends = Agglo.isMaxBorderToBorderDistAbove(p, 5000, Superagglos.transformAggloNewOldRepr(dendrites));
+    [ myelinDend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
+    save(fullfile(outputFolder,'dendrites_10.mat'),'dendrites','BorderWholeCellId','myelinDend','indBigDends')%,'info');
+else
+    clear dendrites myelinDend indBigDends
+    load(fullfile(outputFolder,'dendrites_10.mat'))
+end
+
+
+%% 
+if ~exist(fullfile(outputFolder,'dendrites_11.mat'),'file') || overwrite
+    load(fullfile(outputFolder,'axons_07_b.mat'),'axons')
+    
+    % here was christians ending detection done on dendrites_08 + manual
+    % correction of nmls   
+    
+    correctionFolder = 'WholeCellCorrections_10';
+    fprintf('Folder with correction nmls for state dendrites_10 is %s\n',fullfile(outputFolder,correctionFolder));
+    
+    % write out the stuff to be added for checking
+    connectEM.applyAggloCorrections(dendrites,p,fullfile(outputFolder,correctionFolder),2,axons);
+    
+    % split the stuff to be added now (dendrites had no checks necessary)
+    [axons,axonLUT] = connectEM.applyAggloCorrections(axons,p,fullfile(outputFolder,correctionFolder,'checkedBeforeAdd'),1);
+    
+    
+    [dendrites,dendriteLUT] = connectEM.applyAggloCorrections(cat(1,wholeCells,dendrites),p,fullfile(outputFolder,correctionFolder),0,axons);
+
+    dendriteSegIds = find(dendriteLUT);
+    [ismem,ind] = ismember(somaSegIds,dendriteSegIds);
+    % get each dend id which contains most of the seg ids of each soma
+    BorderWholeCellId = accumarray(somaLUT(somaSegIds(ismem))',dendriteLUT(dendriteSegIds(ind(ismem)))',[],@mode);       
+  
+    indBigDends = Agglo.isMaxBorderToBorderDistAbove(p, 5000, Superagglos.transformAggloNewOldRepr(dendrites));
+    [ myelinDend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
+    save(fullfile(outputFolder,'dendrites_11.mat'),'dendrites','BorderWholeCellId','myelinDend','indBigDends')%,'info');
+else
+    clear dendrites myelinDend indBigDends
+    load(fullfile(outputFolder,'dendrites_11.mat'))
+end
+
+%% 
+if ~exist(fullfile(outputFolder,'dendrites_12.mat'),'file') || overwrite
+    load(fullfile(outputFolder,'axons_08_b.mat'),'axons')
+    
+    % here was christians ending detection done on dendrites_08 + manual
+    % correction of nmls   
+    
+    correctionFolder = 'WholeCellCorrections_11';
+    fprintf('Folder with correction nmls for state dendrites_11 is %s\n',fullfile(outputFolder,correctionFolder));
+    
+    % write out the stuff to be added for checking
+    connectEM.applyAggloCorrections(dendrites,p,fullfile(outputFolder,correctionFolder),2,axons);
+    
+    % split the stuff to be added now (dendrites had no checks necessary)
+    [axons,axonLUT] = connectEM.applyAggloCorrections(axons,p,fullfile(outputFolder,correctionFolder,'checkedBeforeAdd'),1);
+    
+    
+    [dendrites,dendriteLUT] = connectEM.applyAggloCorrections(cat(1,wholeCells,dendrites),p,fullfile(outputFolder,correctionFolder),0,axons);
+
+    dendriteSegIds = find(dendriteLUT);
+    [ismem,ind] = ismember(somaSegIds,dendriteSegIds);
+    % get each dend id which contains most of the seg ids of each soma
+    BorderWholeCellId = accumarray(somaLUT(somaSegIds(ismem))',dendriteLUT(dendriteSegIds(ind(ismem)))',[],@mode);       
+  
+    indBigDends = Agglo.isMaxBorderToBorderDistAbove(p, 5000, Superagglos.transformAggloNewOldRepr(dendrites));
+    [ myelinDend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
+    save(fullfile(outputFolder,'dendrites_12.mat'),'dendrites','BorderWholeCellId','myelinDend','indBigDends')%,'info');
+else
+    clear dendrites myelinDend indBigDends
+    load(fullfile(outputFolder,'dendrites_12.mat'))
+end
+
+%% 
+if ~exist(fullfile(outputFolder,'wholeCells_04.mat'),'file') || overwrite
+    load(fullfile(outputFolder,'axons_08_b.mat'),'axons')
+    
+    % the corrections are based on checking border whole cells in
+    % dendrites_12 for remaining mergers/missing ends
+    correctionFolder = 'WholeCellCorrections_13';
+    fprintf('Folder with correction nmls for state dendrites_13 is %s\n',fullfile(outputFolder,correctionFolder));
+    
+    [dendrites,dendriteLUT] = connectEM.applyAggloCorrections(cat(1,wholeCells,dendrites),p,fullfile(outputFolder,correctionFolder),0,axons);
+
+    dendriteSegIds = find(dendriteLUT);
+    [ismem,ind] = ismember(somaSegIds,dendriteSegIds);
+    % get each dend id which contains most of the seg ids of each soma
+    BorderWholeCellId = accumarray(somaLUT(somaSegIds(ismem))',dendriteLUT(dendriteSegIds(ind(ismem)))',[],@mode);       
+
+    load(fullfile(outputFolder,'wholeCells_03.mat'),'wholeCells');
+    wholeCells = cat(1,wholeCells,dendrites(BorderWholeCellId));
+    dendrites = dendrites(setdiff(1:numel(dendrites),BorderWholeCellId));
+    
+    save(fullfile(outputFolder,'wholeCells_04.mat'),'wholeCells');
+    
+    indBigDends = Agglo.isMaxBorderToBorderDistAbove(p, 5000, Superagglos.transformAggloNewOldRepr(dendrites));
+    [ myelinDend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
+    save(fullfile(outputFolder,'dendrites_13.mat'),'dendrites','myelinDend','indBigDends')%,'info');
+else
+    load(fullfile(outputFolder,'wholeCells_04.mat'))
+    load(fullfile(outputFolder,'dendrites_13.mat'))
+end
 % %% add spines to all agglos
 % if ~exist(fullfile(outputFolder,'wholeCells_04.mat'),'file') || overwrite
 %     % this function is in Alessandro's repo

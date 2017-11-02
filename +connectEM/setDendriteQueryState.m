@@ -11,7 +11,7 @@ function [skeletonFolders, versionSuffix, dendriteVersion,...
     % - flightEndingOverlapRun
 
     
-    % First 'clean' run
+    % First run
     if strcmp(state,'1.0') 
         % source folders for flight paths
         scratchFolder = '/u/scchr/aggloState/dendQueryAnswers/';
@@ -31,7 +31,26 @@ function [skeletonFolders, versionSuffix, dendriteVersion,...
         versionSuffix = '_1.1';
         dendriteVersion = 'flight_01';
           
-
+    % Second run
+    elseif strcmp(state,'2.0') 
+        % source folders for flight paths
+        scratchFolder = '/u/scchr/aggloState/dendQueryAnswers/';
+        skeletonFolders = {'L4_dendrite_queries_27_10_2017' 'L4_dendrite_queries_01_11_2017'};
+        skeletonFolders = cellfun(@(x)[scratchFolder x filesep], skeletonFolders, 'uni', 0);
+        % filename additionals for getAggloQueryOverlapB and flightEndingOverlapRun
+        versionSuffix = '2.0';
+        dendriteVersion = 'flight_01';
+       
+    % Commented queries of first clean run    
+    elseif strcmp(state,'2.1')
+        % source folders for flight paths
+        scratchFolder = '/u/scchr/aggloState/dendQueryAnswers/';
+        skeletonFolders = {'L4_dendrite_queries_01_11_2017'};
+        skeletonFolders = cellfun(@(x)[scratchFolder x filesep], skeletonFolders, 'uni', 0);
+        % filename additionals for getAggloQueryOverlapB and flightEndingOverlapRun
+        versionSuffix = '_1.1';
+        dendriteVersion = 'flight_01';
+      
         
     else
         error('Unknown state ''%s''', state);
