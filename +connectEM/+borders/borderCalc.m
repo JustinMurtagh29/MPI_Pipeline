@@ -36,11 +36,5 @@ for idx2 = 1 : prod(ceil(size(seg2)./[32,32,16]))
         findings{idx2} = [];
     end
 end
-findings = reshape(findings,ceil(size(seg2)./[32,32,16]));
-
-for i_x = 1 : size(findings,1)
-    for i_y = 1 : size(findings,2)
-        for i_z = 1 : size(findings,3)
-            targetAll(i_x,i_y,i_z)=sum(sum(ismember(findings{i_x,i_y,i_z}(:,1:2),).*repmat(globalD{i_x,i_y,i_z}(:,3),1,2)));
 save(['/tmpscratch/kboerg/borders2/borders_' num2str(idx)],'findings');
 
