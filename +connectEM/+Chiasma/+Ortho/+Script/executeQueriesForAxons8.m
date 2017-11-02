@@ -10,19 +10,20 @@ rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 taskFile = fullfile(inputDir, sprintf('%s_tasks.mat', inputVersion));
 taskIdFile = fullfile(inputDir, sprintf('%s_taskIds.txt', inputVersion));
 nmlDir = fullfile(inputDir, sprintf('%s_answeredQueries', inputVersion));
+outputDir = fullfile(inputDir, 'outputs');
 
 info = Util.runInfo();
 
 %% load tasks and task definitions
 tasks = load(taskFile);
 
-% load axons
+% load "old" axons
 axonFile = tasks.info.param.axonFile;
-axons  = load(axonFile, 'axons', 'indBigAxons');
+oldAxons  = load(axonFile, 'axons', 'indBigAxons');
 
 % restrict to large axons
-axonIds = find(axons.indBigAxons(:));
-axons = axons.axons(axonIds);
+axonIds = find(oldAxons.indBigAxons(:));
+axons = oldAxons.axons(axonIds);
 
 % get parameters for chiasma splitting
 chiParam = tasks.info.param.chiParam;
@@ -101,11 +102,36 @@ queries = sortrows(queries, 'axonId');
 
 %% apply results
 uniAxonIds = unique(queries.axonId);
+uniAxonCount = numel(uniAxonIds);
+axonsSplit = cell(uniAxonCount, 1);
 
-for curIdx = 1:numel(uniAxonIds)
+for curIdx = 1:uniAxonCount
     curAxonId = uniAxonIds(curIdx);
     curMask = queries.axonId == curAxonId;
     
-    curAxons = connectEM.Chiasma.Ortho.splitWithQueries( ...
+    axonsSplit{curIdx} = connectEM.Chiasma.Ortho.splitWithQueries( ...
         param, chiParam, axons(curAxonId), queries(curMask, :));
 end
+
+%% build output
+out = struct;
+out.info = info;
+
+out.axons = cat(1, axonsSplit{:});
+out.parentIds = repelem(axonIds(uniAxonIds), cellfun(@numel, axonsSplit));
+otherAxons = setdiff((1:numel(oldAxons.axons))', out.parentIds);
+
+% add small agglomerates
+out.axons = cat(1, out.axons, oldAxons.axons(otherAxons));
+out.parentIds = cat(1, out.parentIds, otherAxons);
+
+% build `indBigAxons` mask
+out.indBigAxons = oldAxons.indBigAxons(out.parentIds);
+
+if ~exist(outputDir, 'dir')
+    mkdir(outputDir);
+end
+
+outFile = sprintf('%s_results.mat', datestr(now, 30));
+outFile = fullfile(outputDir, outFile);
+Util.saveStruct(outFile, out);
