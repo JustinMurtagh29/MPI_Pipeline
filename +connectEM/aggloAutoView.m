@@ -48,7 +48,7 @@ switch show
                 somaAgglos = connectEM.getSomaAgglos(fullfile(aggloFolder,'somas_with_merged_somas.mat'),'border');
             case {'wc','wc_center'}
                 somaAgglos = connectEM.getSomaAgglos(fullfile(aggloFolder,'somas_with_merged_somas.mat'),'center');
-            case 'wc_all'
+            case {'wc_all','cells'}
                 somaAgglos = connectEM.getSomaAgglos(fullfile(aggloFolder,'somas_with_merged_somas.mat'),'all');
         end
         somaSegIds = cell2mat(somaAgglos);
