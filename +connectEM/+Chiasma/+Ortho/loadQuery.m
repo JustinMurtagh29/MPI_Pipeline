@@ -1,4 +1,4 @@
-function [exits, valid] = parseQuery(nmlPath)
+function [exits, valid] = loadQuery(nmlPath)
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     
