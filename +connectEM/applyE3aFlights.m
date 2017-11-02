@@ -36,6 +36,10 @@ axons = data.axons(axonIds);
 
 data = load(flightFile, 'flightPaths');
 flights = data.flightPaths.ff;
+
+flights = structfun( ...
+    @(vals) reshape(vals, [], 1), ...
+    flights, 'UniformOutput', false);
 flights.id = reshape(1:numel(flights.filenames), [], 1);
 
 data = load(caseFile, 'endingCaseDistinctions', 'flightsOfEndingCases');
@@ -96,5 +100,29 @@ fprintf('# flights with clear start and end: %d\n', sum(bothOkay));
 flights = structfun( ...
     @(vals) vals(bothOkay), ...
     flights, 'UniformOutput', false);
+flights.overlaps = flightOverlaps(bothOkay, :);
+flights.overlaps = cell2mat(flights.overlaps);
 
-%%
+%% remove redundant flights
+axonCount = numel(axons);
+
+adjEdges = flights.overlaps;
+adjEdges = sort(adjEdges, 2);
+
+% avoid duplicate edges
+[~, uniRows] = unique(adjEdges, 'rows');
+
+adjEdges = adjEdges(uniRows, :);
+flights = structfun( ...
+    @(vals) vals(uniRows, :), ...
+    flights, 'UniformOutput', false);
+
+%% grouping agglomerates
+adjMat = sparse( ...
+    adjEdges(:, 2), adjEdges(:, 1), ...
+    true, numel(axons), numel(axons));
+[axonCompCount, axonComps] = ...
+    graphconncomp(adjMat, 'Directed', false);
+
+axonComps = reshape(axonComps, [], 1);
+flights.axonComp = axonComps(flights.overlaps(:, 1));
