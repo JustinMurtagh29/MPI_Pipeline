@@ -5,6 +5,8 @@ end
 if ~exist('method','var') || isempty(method)
     method = 'thin';
 end
+superagglos = rmfield(superagglos,setdiff(fieldnames(superagglos),{'nodes','edges'})); % remove all fields except nodes/edges
+
 somaAgglos = connectEM.getSomaAgglos(fullfile(p.saveFolder,'aggloState','somas_with_merged_somas.mat'),'all');
 
 sizeInnerBBox = 2000;  % in nm. size of bbox..
