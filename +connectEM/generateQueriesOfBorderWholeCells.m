@@ -131,7 +131,8 @@ function generateQueriesOfBorderWholeCells(param,suffix,dendState,runID,graphInp
     if ~exist(outputFolder, 'dir')
         mkdir(outputFolder)
     end
-    
+    system(['chmod g+rwx ' outputFolder])
+
     superDendrites = superDendrites(idxCanidateFound);
     superDendrites = superDendrites(~outside);
     IDs = find(~outside);
@@ -179,6 +180,7 @@ function generateQueriesOfBorderWholeCells(param,suffix,dendState,runID,graphInp
         end
         
         connectEM.generateSkeletonFromAggloNew(superDendrites(i), {sprintf('wholeCellAgglo_%02d',i)} , outputFolder, [],parameters,sprintf('WholeCell%s_%02d.nml',suffix,IDs(i)));
+        system(['chmod g+rwx ' fullfile(outputFolder,sprintf('WholeCell%s_%02d.nml',suffix,IDs(i)))])
     end
 
 end

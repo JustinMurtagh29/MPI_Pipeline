@@ -1,20 +1,40 @@
-function [newSuperagglos] = removeSegIdsFromAgglos(superagglos,ids )
-% removes a set of segment IDs from all superagglos and performs connected
-% component afterswards to ensure internode connectivity in each superagglo
-
+function [newSuperagglos] = removeSegIdsFromAgglos(superagglos,ids, noCC )
+% removes a set of segment IDs from all superagglos and, if noCC flag is not true performs connected
+% component afterwards to ensure internode connectivity in each superagglo
+if ~exist('noCC','var') || isempty(noCC)
+    noCC = 0;
+end
 nodes = cell2mat(arrayfun(@(x) x.nodes,superagglos,'uni',0));
+toKeep = (~ismember(nodes(:,4),ids));
+idsToKeep = find(toKeep);
+idsToDelete = find(~toKeep);
+numNodes = arrayfun(@(x) size(x.nodes,1),superagglos);
+cumNumNodes = [0;cumsum(numNodes);sum(numNodes)];
+edges = cell2mat(arrayfun(@(x) superagglos(x).edges+cumNumNodes(x),(1:numel(superagglos))','uni',0));% putting all edges together (inceasing index for each superagglo
+edges = edges(all(ismember(edges,idsToKeep),2),:);
+
 fNames = setdiff(fieldnames(superagglos),{'nodes','edges'});
 tmpstrct = cell(numel(fNames),1);
 for f = 1:numel(fNames)
     tmpstrct{f} = cat(1,superagglos.(fNames{f}));
 end
-numNodes = arrayfun(@(x) size(x.nodes,1),superagglos);
-cumNumNodes = [0;cumsum(numNodes)];
-edges = cell2mat(arrayfun(@(x) superagglos(x).edges+cumNumNodes(x),(1:numel(superagglos))','uni',0));% putting all edges together (inceasing index for each superagglo
 
-% segIDedges = cell2mat(arrayfun(@(x) reshape(x.nodes(x.edges,4),[],2),superagglos,'uni',0));
-idsToKeep = find(~ismember(nodes(:,4),ids));
-edges = edges(all(ismember(edges,idsToKeep),2),:);
+if noCC
+    aggloLUT = repelem((1:numel(superagglos))',numNodes)';
+    newnodes = arrayfun(@(x) nodes(aggloLUT==x & toKeep,:) ,1:numel(superagglos),'uni',0);
+    for f = 1:numel(fNames)
+        if size(tmpstrct{f},1) == size(nodes,1) % apply same sorting to all other field names if their size was the same as the number of nodes, else leave the same
+            tmpstrct{f} = arrayfun(@(x) tmpstrct{f}(aggloLUT==x & toKeep,:,:),1:numel(superagglos),'uni',0)';
+        end
+    end
+    newedges = arrayfun(@(x) edges(all(edges > cumNumNodes(x) & edges <= cumNumNodes(x+1) ,2),:) ,1:numel(superagglos),'uni',0);
+    newedges = cellfun(@(x) x - [sum(bsxfun(@ge,x(:,1),idsToDelete'),2),sum(bsxfun(@ge,x(:,2),idsToDelete'),2)],newedges,'uni',0);
+    newSuperagglos = cell2struct([newedges;newnodes;tmpstrct(:)],[{'edges'},{'nodes'},fNames'],1);
+    return
+end
+
+
+
 
 % nodeLUT(nodes(:,4)) = 1:size(nodes,1);
 % segIDedges = segIDedges(all(~ismember(segIDedges,ids),2),:);

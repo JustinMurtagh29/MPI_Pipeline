@@ -18,6 +18,11 @@ function getDendQueryAxonAggloOverlapB(param)
     axons = m.axons(m.indBigAxons);
     axons = arrayfun(@Agglo.fromSuperAgglo, axons, 'UniformOutput', false);
     clear m;
+    m = load(fullfile(dataDir, 'dendrites_flight_01.mat'));
+    dendrites = m.dendrites(m.indBigDends);
+    dendrites = arrayfun(@Agglo.fromSuperAgglo, dendrites, 'UniformOutput', false);
+    clear m;
+
 
     % Get flight paths without comment but with start node
     ff = structfun(@(x)x(cellfun(@isempty, ff.comments)), ff, 'uni', 0);
@@ -27,7 +32,7 @@ function getDendQueryAxonAggloOverlapB(param)
     idxNoClearEnd = m.idxNoClearEnd;
     clear m
     ff = structfun(@(x)x(idxNoClearEnd), ff, 'uni', 0);
- 
+    
     segmentsLeftover = [];
 
     % Calculate overlap of all queries with segments
@@ -35,28 +40,34 @@ function getDendQueryAxonAggloOverlapB(param)
             ff.segIds, ff.neighbours, ff.nodes', ff.startNode', 'uni', 0);
     % Determine all overlaps of agglomerations with given queries
     [~, queryOverlap] = connectEM.queryAgglomerationOverlap(axons, segmentsLeftover, uniqueSegments, neighboursStartNode);
+    [~, queryOverlapDendrites] = connectEM.queryAgglomerationOverlap(dendrites, segmentsLeftover, uniqueSegments, neighboursStartNode);
     % Make decision(s), here evidence/occurence threshold is applied
     % Multiple ends (all above 53vx evidence, corresponds to 2 full nodes)
-    endAgglo = arrayfun(@(x)x.eqClasses(x.occurences > 53), queryOverlap.ends, 'uni', 0);
+    endAxon = arrayfun(@(x)x.eqClasses(x.occurences > 53), queryOverlap.ends, 'uni', 0);
+    % Check dendrite attachments at start
+    startDendrite = arrayfun(@(x)x.eqClasses(x.occurences > 13), queryOverlapDendrites.start, 'uni', 0);
     % Exclude all queries that do not have (at least one) clear end
-    idxNoClearAttachment = cellfun('isempty', endAgglo);
+    idxNoClearAxonAttachment = cellfun('isempty', endAxon);
+    idxNoClearDendriteAttachment = cellfun('isempty', startDendrite);
     % 18.5% of queries excluded overall due to missing start or end (or both)
-    idxGood = ~idxNoClearAttachment;
+    idxGood = ~idxNoClearAxonAttachment;
     % Display some statistics
-    display([num2str(sum(idxNoClearAttachment)./numel(idxNoClearAttachment)*100, '%.2f') '% of remaining queries have no clear attachment']);
-    display([num2str(sum(idxNoClearAttachment)) ' in total']);
-    display([num2str(numel(cat(2, endAgglo{idxGood}))) ' attachments made by ' num2str(sum(idxGood)) ' queries']);
+    display([num2str(sum(~idxNoClearAxonAttachment)./numel(idxNoClearAxonAttachment)*100, '%.2f') '% of remaining queries have axon attachment']);
+    display([num2str(sum(~idxNoClearAxonAttachment)) ' in total']);
+    display([num2str(sum(idxNoClearDendriteAttachment)./numel(idxNoClearDendriteAttachment)*100, '%.2f') '% of remaining queries have no start attachment at dendrite']);
+    display([num2str(sum(idxNoClearDendriteAttachment)) ' in total']);
     
     results = struct;
-    results.endAgglo = endAgglo;
+    results.endAxon = endAxon;
+    results.startDendrite = startDendrite;
     results.ff = ff;
     results.idxGood = idxGood;
     results.gitInfo = Util.gitInfo();
 
     % Save results and deprive writing permission
     saveFile = fullfile(dataDir, strcat('axonDendriteQueryOverlaps_',suffix,'.mat'));
-    save(saveFile, 'results', 'queryOverlap', 'idxNoClearAttachment');
-    system(['chmod -w ' saveFile])
+    save(saveFile, 'results', 'queryOverlap', 'idxNoClearAxonAttachment','idxNoClearDendriteAttachment');
+    system(['chmod -w ' saveFile]);
     
     
 end
