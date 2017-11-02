@@ -19,6 +19,10 @@ for s = 1:numel(superagglos)
     
     % cut out soma
     aggloWOsoma = Superagglos.removeSegIdsFromAgglos(superagglos(s),cell2mat(somaAgglos),1);
+    if size(aggloWOsoma.nodes,1) == 0
+        nBPs(s) = 0;
+        continue
+    end
     BPcoords = zeros(0,3);
     switch method
         case 'sphere'
@@ -49,9 +53,9 @@ for s = 1:numel(superagglos)
             nBPs(s) = nBPs(s) + numel(BPClusters);
             
             BPcoords = bsxfun(@times,BPcoords,[11.24,11.24,28]);
-            
-            fprintf('Cutting out approach found %d BPs in superagglos(s) %d.\n',nBPs(s),s);
-            
+            if show
+                fprintf('Cutting out approach found %d BPs in superagglos(s) %d.\n',nBPs(s),s);
+            end
         case 'thin'
             %% other approach: thin out skeleton
             initialNumCCs = numel(Graph.findConnectedComponents(cat(1,aggloWOsoma.edges,repmat(unique(aggloWOsoma.edges(:)),1,2)),0,1));
@@ -94,8 +98,9 @@ for s = 1:numel(superagglos)
                 BPcoords = cat(1,BPcoords,bsxfun(@times,aggloWOsoma(a).nodes(BPs,1:3),[11.24,11.24,28]));
                 nBPs(s) = nBPs(s)+numel(BPs);
             end
-            
-            fprintf('Thinning out approach found %d BPs in superagglo %d.\n',nBPs(s),s);
+            if show
+                fprintf('Thinning out approach found %d BPs in superagglo %d.\n',nBPs(s),s);
+            end
         otherwise
             error('Method unknown');
     end
