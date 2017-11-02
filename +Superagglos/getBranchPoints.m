@@ -86,7 +86,7 @@ for s = 1:numel(superagglos)
             BPcoords = zeros(0,3);
             for a = 1:numel(aggloWOsoma)
                 BPcands = find(histc(aggloWOsoma(a).edges(:),1:size(aggloWOsoma(a).nodes,1)) > 2);
-                BPs = BPcands(arrayfun(@(x) sum(Superagglos.calculateTotalPathLength(Superagglos.removeNodesFromAgglo(aggloWOsoma(a),x)) > 500,[11.24,11.24,28])> 2 ,BPcands));
+                BPs = BPcands(arrayfun(@(x) sum(Superagglos.calculateTotalPathLength(Superagglos.removeNodesFromAgglo(aggloWOsoma(a),x),[11.24,11.24,28]) > 500)> 2 ,BPcands));
                 
                 %     aggloWOsoma = Superagglos.removeSegIdsFromAgglos(aggloWOsoma,cell2mat(somaAgglos));
                 %     BPcoords = cell2mat(arrayfun(@(x) x.nodes(histc(x.edges(:),1:size(x.nodes,1)) > 2,1:3),aggloWOsoma,'uni',0)); % find putative branch points
