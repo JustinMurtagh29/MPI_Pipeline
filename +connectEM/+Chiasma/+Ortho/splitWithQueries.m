@@ -72,46 +72,11 @@ function newAgglos = splitWithQueries(param, chiParam, agglo, queries)
     chiasmaValid = ~cellfun(@(e) any( ...
         ismember(e(:), cell2mat(nodesToDelete))), edgesToAdd);
     
+    nodesToAdd = zeros(0, 4);
     nodesToDelete = cell2mat(nodesToDelete(chiasmaValid));
     edgesToDelete = cell2mat(edgesToDelete(chiasmaValid));
     edgesToAdd = cell2mat(edgesToAdd(chiasmaValid));
     
-    % TODO(amotta):
-    % Most of the code below was copied in from splitChiasmataMulti and
-    % should be factored out into a reusable function!
-    nodesToKeep = setdiff(1:size(agglo.nodes, 1), nodesToDelete);
-    newNodes = agglo.nodes(nodesToKeep, :);
-    
-    newEdges = cat(1, agglo.edges, edgesToAdd);
-    newEdges(edgesToDelete, :) = [];
-   [~, newEdges] = ismember(newEdges, nodesToKeep);
-    assert(all(newEdges(:)));
-   
-    newNodeComps = Graph.findConnectedComponents(newEdges);
-    newNodeComps = cat(1, newNodeComps, num2cell(reshape( ...
-        setdiff(size(newNodes, 1), cell2mat(newNodeComps)), [], 1)));
-    
-    newNodeLUT = Agglo.buildLUT(size(newNodes, 1), newNodeComps);
-    newEdgeComps = newNodeLUT(newEdges(:, 1));
-    
-    newAggloCount = numel(newNodeComps);
-    newAgglos = struct;
-    
-    for curIdx = 1:newAggloCount
-        curNodeIds = newNodeComps{curIdx};
-        curNodes = newNodes(curNodeIds, :);
-        % curSolvedChiasma = newSolvedChiasma(curNodeIds);
-        % curEndings = find(ismember(curNodeIds, newEndings));
-        
-        curEdges = newEdges(newEdgeComps == curIdx, :);
-        [~, curEdges] = ismember(curEdges, curNodeIds);
-        assert(all(curEdges(:)));
-        
-        newAgglos(curIdx).nodes = curNodes;
-        newAgglos(curIdx).edges = curEdges;
-        % newAgglos(curIdx).endings = curEndings;
-        % newAgglos(curIdx).solvedChiasma = curSolvedChiasma;
-    end
-    
-    newAgglos = reshape(newAgglos, [], 1);
+    newAgglos = Superagglos.patch( ...
+        agglo, nodesToAdd, nodesToDelete, edgesToAdd, edgesToDelete);
 end
