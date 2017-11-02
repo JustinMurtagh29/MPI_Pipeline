@@ -8,7 +8,7 @@ function out = split(param, chiParam, oldAxons, tasks, taskIds, queries)
 
     %% replace `nmlFile` by `taskId`
     [~, tasks.id] = ismember(tasks.nmlFile, taskIds.nmlFile);
-    tasks.id = tasksIds.id(tasks.id);
+    tasks.id = taskIds.id(tasks.id);
 
     tasks.nmlFile = [];
     tasks = circshift(tasks, 1, 2);
