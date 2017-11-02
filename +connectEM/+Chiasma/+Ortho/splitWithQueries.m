@@ -57,11 +57,6 @@ function newAgglos = splitWithQueries(param, chiParam, agglo, queries)
         %% build new edges
         curGrouping = curChi.exits{1};
         curExitNodeIds = curChi.exitNodeIds{1};
-     
-        % sanity check
-        if ~(isequal(curGrouping.id, transpose(1:nrExits)))
-            keyboard
-        end
         
         % build edges to add
         curEdgesToAdd = accumarray( ...
