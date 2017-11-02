@@ -27,7 +27,7 @@ function getDendQueryAxonAggloOverlapB(param,suffix)
     ff = structfun(@(x)x(cellfun(@isempty, ff.comments)), ff, 'uni', 0);
     ff = structfun(@(x)x(~cellfun(@isempty, ff.startNode)), ff, 'uni', 0);
 
-    m = load(fullfile(dataDir, strcat('dendritePostQueryAnalysisState_',suffix,'.mat'));
+    m = load(fullfile(dataDir, strcat('dendritePostQueryAnalysisState_',suffix,'.mat')));
     idxNoClearEnd = m.idxNoClearEnd;
     clear m
     ff = structfun(@(x)x(idxNoClearEnd), ff, 'uni', 0);
