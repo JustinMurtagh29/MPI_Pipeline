@@ -21,10 +21,6 @@ tasks = load(taskFile);
 axonFile = tasks.info.param.axonFile;
 oldAxons  = load(axonFile, 'axons', 'indBigAxons');
 
-% restrict to large axons
-axonIds = find(oldAxons.indBigAxons(:));
-axons = oldAxons.axons(axonIds);
-
 % get parameters for chiasma splitting
 chiParam = tasks.info.param.chiParam;
 chiParam.sphereRadiusOuter = inf;
@@ -35,103 +31,16 @@ tasks = struct2table(tasks.taskDefs);
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 
-tasksIds = connectEM.Chiasma.Ortho.loadTaskIds(taskIdFile);
+taskIds = connectEM.Chiasma.Ortho.loadTaskIds(taskIdFile);
+queries = connectEM.Chiasma.Ortho.loadQueries(nmlDir);
 
-%% replace `nmlFile` by `taskId`
-[~, tasks.id] = ismember(tasks.nmlFile, tasksIds.nmlFile);
-tasks.id = tasksIds.id(tasks.id);
+%% split chiasmata
+out = connectEM.Chiasma.Ortho.split( ...
+    param, chiParam, oldAxons, tasks, taskIds, queries);
 
-tasks.nmlFile = [];
-tasks = circshift(tasks, 1, 2);
-
-%% find NML files
-nmlFiles = NML.findFiles(nmlDir);
-nmlFiles = reshape(nmlFiles, [], 1);
-
-queries = table;
-queries.nmlFile = fullfile(nmlDir, nmlFiles);
-
-% parse NML files
-[queries.exits, queries.valid] = cellfun( ...
-    @connectEM.Chiasma.Ortho.parseQuery, ...
-    queries.nmlFile, 'UniformOutput', false);
-
-queriesValid = cat(1, queries.valid{:});
-queriesValid = struct2table(queriesValid);
-
-queries.valid = [];
-queries = cat(2, queries, queriesValid);
-clear queriesValid;
-
-%% add task data to queries
-% extract task IDs
-queryData = cellfun( ...
-    @(s) strsplit(s, '__'), ...
-    nmlFiles, 'UniformOutput', false);
-queryData = cat(1, queryData{:});
-queries.taskId = queryData(:, 2);
-clear queryData;
-
-[~, taskRow] = ismember(queries.taskId, tasks.id);
-queries = cat(2, queries, tasks(taskRow, :));
-queries(:, {'id', 'taskId'}) = [];
-clear taskRow;
-
-%% statistics
-treeMask = queries.nrInvalidTrees > 0;
-commentMask = queries.nrInvalidComments > 0;
-exitMismatchMask = cellfun( ...
-    @(a, b) size(a, 1) ~= size(b, 1), ...
-    queries.exits, queries.exitNodeIds);
-
-fprintf('\n');
-fprintf('# queries answered: %d\n', size(queries, 1));
-fprintf('# queries with invalid tree: %d\n', sum(treeMask));
-fprintf('# queries with invalid comment: %d\n', sum(commentMask));
-fprintf('# queries with invalid exits: %d\n', sum(exitMismatchMask));
-
-fprintf('⇒ Removing these queries...\n');
-queries(treeMask | commentMask | exitMismatchMask, :) = [];
-clear commentMask missingExitMask;
-
-fprintf('\n');
-fprintf('# queries left: %d\n', size(queries, 1));
-
-% sort by axon
-queries = sortrows(queries, 'axonId');
-
-%% apply results
-uniAxonIds = unique(queries.axonId);
-uniAxonCount = numel(uniAxonIds);
-axonsSplit = cell(uniAxonCount, 1);
-
-for curIdx = 1:uniAxonCount
-    curAxonId = uniAxonIds(curIdx);
-    curMask = queries.axonId == curAxonId;
-    
-    axonsSplit{curIdx} = connectEM.Chiasma.Ortho.splitWithQueries( ...
-        param, chiParam, axons(curAxonId), queries(curMask, :));
-end
-
-%% build output
-out = struct;
-out.info = info;
-
-out.axons = cat(1, axonsSplit{:});
-out.parentIds = repelem(axonIds(uniAxonIds), cellfun(@numel, axonsSplit));
-otherAxons = setdiff((1:numel(oldAxons.axons))', out.parentIds);
-
-% add small agglomerates
-out.axons = cat(1, out.axons, oldAxons.axons(otherAxons));
-out.parentIds = cat(1, out.parentIds, otherAxons);
-
-% build `indBigAxons` mask
-out.indBigAxons = oldAxons.indBigAxons(out.parentIds);
-
-if ~exist(outputDir, 'dir')
-    mkdir(outputDir);
-end
-
+%% save output
 outFile = sprintf('%s_results.mat', datestr(now, 30));
 outFile = fullfile(outputDir, outFile);
+
+mkdir(outputDir);
 Util.saveStruct(outFile, out);
