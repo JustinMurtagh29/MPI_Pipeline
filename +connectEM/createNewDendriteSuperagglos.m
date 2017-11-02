@@ -49,8 +49,7 @@ function createNewDendriteSuperagglos(param, state)
     assert(size(linkagesAgglos, 1) == numel(flightPaths.endAgglo));
     assert(size(linkagesAgglos, 1) == numel(flightPaths.ff.segIds));
     assert(~any(diff(structfun(@numel, flightPaths.ff))));
-    assert(max(executedFlightPaths) < size(linkagesAgglos, 1));
-
+    
     % Eliminate dublicates
     [~, positionUniques] = unique(sort(linkagesAgglos,2), 'rows');
     duplicates = true(size(linkagesAgglos,1),1);
