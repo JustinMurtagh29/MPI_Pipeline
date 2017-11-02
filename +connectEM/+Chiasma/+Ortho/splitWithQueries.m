@@ -32,6 +32,22 @@ function newAgglos = splitWithQueries(param, chiParam, agglo, queries)
         
         curNodeId = curChi.centerNodeId;
         curCenterNm = agglo.nodesNm(curNodeId, :);
+        
+        %% check if anything to do
+        curGrouping = curChi.exits{1};
+        curExitNodeIds = curChi.exitNodeIds{1};
+        
+        % check if fully connected
+        if max(curGrouping.groupId) == 1
+            % no modifications needed
+            nodesToDelete{curChiIdx} = zeros(0, 1);
+            edgesToDelete{curChiIdx} = zeros(0, 1);
+            edgesToAdd{curChiIdx} = zeros(0, 2);
+            
+            % mark chiasma as solved
+            agglo.solvedChiasma(curNodeId) = true;
+            continue;
+        end
 
         %% cut out sphere
        [nodes, edges, ~, nodeIds] = ...
@@ -53,9 +69,6 @@ function newAgglos = splitWithQueries(param, chiParam, agglo, queries)
          | ~ismember(agglo.edges, nodeIds(edges), 'rows'));
         
         %% build new edges
-        curGrouping = curChi.exits{1};
-        curExitNodeIds = curChi.exitNodeIds{1};
-        
         % build edges to add
         curEdgesToAdd = accumarray( ...
             curGrouping.groupId, curExitNodeIds, [], ...
