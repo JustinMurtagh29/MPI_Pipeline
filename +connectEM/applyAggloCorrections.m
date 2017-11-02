@@ -49,6 +49,8 @@ usedCells = NaN(numel(dendrites),1);
 for f = 1:numel(files)
 
     skel = skeleton(fullfile(folder,files(f).name));  % load skeleton
+    skel.edges = cellfun(@(x) x(~any(x==0,2),:),skel.edges,'uni',0);
+
     skel = skel.deleteTrees(cellfun(@numel,skel.nodes)/4==1); % delete single node trees
     skelCoords = cell2mat(cellfun(@(x) x(:,1:3),skel.nodes,'uni',0));  % putting all skel nodes together
     warning('OFF','auxiliaryMethods:readKnossosCube')
