@@ -1,4 +1,4 @@
-function skel = buildOrthoModeQuery(param, agglo, nodeIdx)
+function [skel, taskDef] = buildQuery(param, agglo, nodeIdx)
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     
@@ -27,6 +27,7 @@ function skel = buildOrthoModeQuery(param, agglo, nodeIdx)
     
     % build skeleton
     skel = skeleton();
+    activeNodeId = nan;
     cutExitNodeIds = nan(cutCompCount, 1);
     
     for curIdx = 1:cutCompCount
@@ -40,12 +41,16 @@ function skel = buildOrthoModeQuery(param, agglo, nodeIdx)
         curNodeIds = cutNodeIds(curNodeIds);
         curNodes = agglo.nodes(curNodeIds, 1:3);
         
-        % get color
-        curColor = cutColors(curIdx, :);
-        
+        % find exit node
        [~, curExitNodeId] = min(pdist2( ...
            agglo.nodesNm(curNodeIds, :), centerNodeNm));
-        cutExitNodeIds(curIdx) = curExitNodeId;
+        
+        % retain exit nodes and mark active node
+        cutExitNodeIds(curIdx) = curNodeIds(curExitNodeId);
+        if curIdx == 1; activeNodeId = curExitNodeId; end
+        
+        % get color
+        curColor = cutColors(curIdx, :);
        
         curComments = repelem({''}, numel(curNodeIds), 1);
         curComments{curExitNodeId} = sprintf('Exit %d', curIdx);
@@ -60,11 +65,16 @@ function skel = buildOrthoModeQuery(param, agglo, nodeIdx)
     
     % set viewing positions
     skel.parameters.editPosition = struct( ...
-        'x', skel.nodes{1}(cutExitNodeIds(1), 1), ...
-        'y', skel.nodes{1}(cutExitNodeIds(1), 2), ...
-        'z', skel.nodes{1}(cutExitNodeIds(1), 3));
+        'x', agglo.nodes(cutExitNodeIds(1), 1), ...
+        'y', agglo.nodes(cutExitNodeIds(1), 2), ...
+        'z', agglo.nodes(cutExitNodeIds(1), 3));
     skel.parameters.zoomLevel.zoom = 0.53;
     
     % set active node
-    skel.parameters.activeNode.id = cutExitNodeIds(1);
+    skel.parameters.activeNode.id = activeNodeId;
+    
+    % build `query`
+    taskDef = struct;
+    taskDef.centerNodeId = nodeIdx;
+    taskDef.exitNodeIds = cutExitNodeIds;
 end

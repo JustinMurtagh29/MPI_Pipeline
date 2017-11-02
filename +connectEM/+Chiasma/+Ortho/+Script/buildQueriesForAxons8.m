@@ -15,6 +15,7 @@ chiParam.sphereRadiusInner = 1000; % in nm
 chiParam.minNodeDist = 2000; % in nm
 chiParam.clusterSize = 2000; % in nm
 
+curDateStr = datestr(now, 30);
 info = Util.runInfo();
 
 %% load data
@@ -56,23 +57,44 @@ skelData.solved = arrayfun( ...
     skelData.axonId, skelData.nodeId);
 skelData(skelData.solved, :) = [];
 
-%%
+%% build NMLs
 rng(0);
 randIds = randperm(size(skelData, 1));
+taskDefs = struct([]);
 
-if ~exist(outputDir, 'dir')
-    mkdir(outputDir);
-end
+nmlDir = sprintf('%s_queries', curDateStr);
+nmlDir = fullfile(outputDir, nmlDir);
+if ~exist(nmlDir, 'dir'); mkdir(nmlDir); end
 
 for curIdx = 1:numel(randIds)
     curRow = randIds(curIdx);
     
     curSkelData = skelData(curRow, :);
-    curSkel = connectEM.Chiasma.Ortho.buildQuery( ...
+   [curSkel, curTaskDef] = connectEM.Chiasma.Ortho.buildQuery( ...
         param, axons(curSkelData.axonId), curSkelData.nodeId);
     
-    curSkelFile = sprintf( ...
+    curNmlFile = sprintf( ...
         '%d_axon-%d_node-%d.nml', curIdx, ...
         curSkelData.axonId, curSkelData.nodeId);
-    curSkel.write(fullfile(outputDir, curSkelFile));
+    curSkel.write(fullfile(nmlDir, curNmlFile));
+    
+    curTaskDef.axonId = curSkelData.axonId;
+    curTaskDef.nmlFile = curNmlFile;
+    
+    if curIdx == 1; taskDefs = curTaskDef; end
+    taskDefs(curIdx) = curTaskDef;
 end
+
+taskDefs = orderfields(taskDefs);
+taskDefs = reshape(taskDefs, [], 1);
+
+%% save query data
+out = struct;
+out.info = info;
+out.taskDefs = taskDefs;
+
+outFile = sprintf('%s_tasks.mat', curDateStr);
+outFile = fullfile(outputDir, outFile);
+
+Util.saveStruct(outFile, out);
+system(sprintf('chmod a-w "%s"', outFile));
