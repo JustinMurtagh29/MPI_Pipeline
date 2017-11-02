@@ -51,9 +51,16 @@ queries = table;
 queries.nmlFile = fullfile(nmlDir, nmlFiles);
 
 % parse NML files
-[queries.exits, queries.comments] = cellfun( ...
+[queries.exits, queries.valid] = cellfun( ...
     @connectEM.Chiasma.Ortho.parseQuery, ...
     queries.nmlFile, 'UniformOutput', false);
+
+queriesValid = cat(1, queries.valid{:});
+queriesValid = struct2table(queriesValid);
+
+queries.valid = [];
+queries = cat(2, queries, queriesValid);
+clear queriesValid;
 
 %% add task data to queries
 % extract task IDs
@@ -70,20 +77,24 @@ queries(:, {'id', 'taskId'}) = [];
 clear taskRow;
 
 %% statistics
-commentMask = ~cellfun( ...
-    @isempty, queries.comments);
-missingExitMask = ~cellfun( ...
+treeMask = queries.nrInvalidTrees > 0;
+commentMask = queries.nrInvalidComments > 0;
+exitMismatchMask = ~cellfun( ...
     @(a, b) size(a, 1) == size(b, 1), ...
     queries.exits, queries.exitNodeIds);
 
 fprintf('\n');
 fprintf('# queries answered: %d\n', size(queries, 1));
-fprintf('# queries with comment: %d\n', sum(commentMask));
-fprintf('# queries with missing exits: %d\n', sum(missingExitMask));
+fprintf('# queries with invalid tree: %d\n', sum(treeMask));
+fprintf('# queries with invalid comment: %d\n', sum(commentMask));
+fprintf('# queries with invalid exits: %d\n', sum(exitMismatchMask));
 
 fprintf('⇒ Removing these queries...\n');
-queries(commentMask | missingExitMask, :) = [];
+queries(treeMask | commentMask | exitMismatchMask, :) = [];
 clear commentMask missingExitMask;
+
+fprintf('\n');
+fprintf('# queries left: %d\n', size(queries, 1));
 
 % sort by axon
 queries = sortrows(queries, 'axonId');
