@@ -1,51 +1,90 @@
 load('/gaba/u/mberning/results/pipeline/20170217_ROI/allParameterWithSynapses.mat');
 connectome = load('/gaba/u/mberning/results/pipeline/20170217_ROI/connectomeState/connectome.mat');
-for idx = 1 : 11*17*13
-    idx
-    results{idx} = load(['/tmpscratch/kboerg/borders3/borders_' num2str(idx)]);
-    [X,Y,Z] = ind2sub([11,17,13],idx);
-    fR = reshape(results{idx}.findings,ceil((diff(p.local(idx).bboxSmall,[],2)'+1)./[32,32,16]));
-    fR2 = reshape(results{idx}.areaM,ceil((diff(p.local(idx).bboxSmall,[],2)'+1)./[32,32,16]));
-    globalD( ...
-    (X-1)*16+1:(X-1)*16+size(fR,1), ...
-    (Y-1)*16+1:(Y-1)*16+size(fR,2), ...
-    (Z-1)*16+1:(Z-1)*16+size(fR,3)) = fR;
-    globalD2( ...
-    (X-1)*16+1:(X-1)*16+size(fR,1), ...
-    (Y-1)*16+1:(Y-1)*16+size(fR,2), ...
-    (Z-1)*16+1:(Z-1)*16+size(fR,3)) = fR2;
+
+% TODO(amotta): Pass in as argument
+blockSize = [32, 32, 16];
+
+cubeCount = size(p.local);
+boxSize = 1 + diff(p.bbox, 1, 2)';
+tileSize = reshape(p.tileSize, 1, []);
+
+blockCount = ceil(boxSize ./ blockSize);
+blocksPerCube = ceil(tileSize ./ blockSize);
+
+globalFindings = cell(blockCount);
+globalAreaM = cell(blockCount);
+
+for curCubeIdx = 1:prod(cubeCount)
+    disp(curCubeIdx);
+    
+    curCubeSize = diff(p.local(curCubeIdx).bboxSmall, 1, 2);
+    curCubeSize = 1 + reshape(curCubeSize, 1, []);
+    
+    % load pre-computed per-cube surface data
+    curResults = load(['/tmpscratch/kboerg/borders3/borders_' num2str(curCubeIdx)]);
+    
+    curFindings = curResults.findings;
+    curAreaM = curResults.areaM;
+    
+    off = nan(1, 3);
+   [off(1), off(2), off(3)] = ind2sub(cubeCount, curCubeIdx);
+    off = (off - 1) .* blocksPerCube + 1;
+    
+    globalFindings( ...
+        off(1):(off(1) + size(curFindings, 1) - 1), ...
+        off(2):(off(2) + size(curFindings, 2) - 1), ...
+        off(3):(off(3) + size(curFindings, 3) - 1)) = curFindings;
+    globalAreaM( ...
+        off(1):(off(1) + size(curAreaM, 1) - 1), ...
+        off(2):(off(2) + size(curAreaM, 2) - 1), ...
+        off(3):(off(3) + size(curAreaM, 3) - 1)) = curAreaM;
 end
 
-axonid = -28;
+axonId = -28;
+globalAxon = zeros(blockCount);
+targetAll = zeros(blockCount);
+targetSmooth = zeros(blockCount);
+targetAD = zeros(blockCount);
 
-for i_x = 1 : size(globalD,1)
-    i_x
-    for i_y = 1 : size(globalD,2)
-        for i_z = 1 : size(globalD,3)
-            globalAxon(i_x,i_y,i_z) = 0;
-            if ~isempty(globalD{i_x,i_y,i_z})
-                globalAxon(i_x,i_y,i_z)=sum(globalD{i_x,i_y,i_z}(any(ismember(globalD{i_x,i_y,i_z}(:,1:2),axonid),2),3));
-                targetAll(i_x,i_y,i_z)=sum(sum((globalD{i_x,i_y,i_z}(:,1:2)>0).*repmat(globalD2{i_x,i_y,i_z},1,2)));
-                targetSmooth(i_x,i_y,i_z)=sum(sum(ismember(globalD{i_x,i_y,i_z}(:,1:2),double(connectome.idxAD)).*repmat(globalD2{i_x,i_y,i_z},1,2)));
-                targetAD(i_x,i_y,i_z)=sum(sum(ismember(globalD{i_x,i_y,i_z}(:,1:2),double(connectome.idxSD)).*repmat(globalD2{i_x,i_y,i_z},1,2)));
-            end
+idsSmooth = double(connectome.idxSD);
+idsAD = double(connectome.idxAD);
+
+for curX = 1:blockCount(1)
+    disp(curX)
+    for curY = 1:blockCount(2)
+        for curZ = 1:blockCount(3)
+            
+            curFindings = globalFindings{curX,curY,curZ};
+            curAreas = globalAreaM{curX,curY,curZ};
+            curEdges = curFindings(:, 1:2);
+            
+            globalAxon(curX, curY, curZ) = ...
+                sum(curFindings(any(ismember(curEdges, axonId), 2), 3));
+            targetAll(curX, curY, curZ) =  ...
+                sum(sum(curEdges > 0 & ~isinf(curEdges), 2) .* curAreas);
+            targetSmooth(curX, curY, curZ) = ...
+                sum(sum(ismember(curEdges, idsSmooth), 2) .* curAreas);
+            targetAD(curX, curY, curZ) = ...
+                sum(sum(ismember(curEdges, idsAD), 2) .* curAreas);
         end
     end
 end
-% no imresize3 on cluster MATLAB 
+
+% no imresize3 on cluster MATLAB
+% NOTE(amotta): 
 assert(p.raw.voxelSize(1) == p.raw.voxelSize(2));
 sG = size(globalAxon);
 sGS = round(sG .* [1,1, p.raw.voxelSize(3) / (2 * p.raw.voxelSize(2))]);
 globalAxonStretch = zeros(sGS);
 
-for i_x = 1 : sG(1)
-    globalAxonStretch(i_x,:,:) = permute(imresize(squeeze(globalAxon(i_x,:, :)), sGS(2:3)),[3, 1, 2]);
+for curX = 1 : sG(1)
+    globalAxonStretch(curX,:,:) = permute(imresize(squeeze(globalAxon(curX,:, :)), sGS(2:3)),[3, 1, 2]);
 end
 
 distanceT_Stretch = bwdist(globalAxonStretch>0);
 distanceT = zeros(sG);
-for i_x = 1 : sGS(1)
-    distanceT(i_x, :, :) = permute(imresize(squeeze(distanceT_Stretch(i_x,:,:)), sG(2:3)),[3, 1, 2]);
+for curX = 1 : sGS(1)
+    distanceT(curX, :, :) = permute(imresize(squeeze(distanceT_Stretch(curX,:,:)), sG(2:3)),[3, 1, 2]);
 end
 
 for i_dist = 0 : 60
