@@ -81,7 +81,6 @@ function createNewDendriteSuperagglos(param, state)
     out.gitInfo = Util.gitInfo();
     
     out.eqClasses = eqClasses;
-    out.flightGroups = flightGroups;
     
     out.dendrites = cat(1, dendritesNew, agglos.dendrites(~agglos.indBigDends));
     out.indBigDends = false(length(out.dendrites),1);
