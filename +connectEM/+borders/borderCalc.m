@@ -49,8 +49,8 @@ blkIdx = sub2ind( ...
     ceil(Y / blockSize(2)), ...
     ceil(Z / blockSize(3)));
 
-findings = cell(prod(blockCount), 1);
-areaM = cell(prod(blockCount), 1);
+findings = cell(blockCount);
+areaM = cell(blockCount);
 
 for curBlkIdx = 1:prod(blockCount)
     curBlkMask = (blkIdx == curBlkIdx);
