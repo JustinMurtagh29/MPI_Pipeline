@@ -1,0 +1,351 @@
+<?xml version="1.0"?>
+<things>
+	<parameters>
+		<experiment name="2012-09-28_ex145_07x2_ROI2017_oxalis" description=""/>
+		<scale x="11.24" y="11.24" z="28.0"/>
+		<offset x="0" y="0" z="0"/>
+		<time ms="1493043784732"/>
+		<editPosition x="1745" y="4578" z="1803"/>
+		<zoomLevel zoom="0.44098742629487364"/>
+	</parameters>
+	<thing id="4" name="explorative_2017-04-24_Kevin_Local_Boergens_04" color.r="1" color.g="0" color.b="0" color.a="1">
+		<nodes>
+			<node id="1118" radius="112.399994" x="23" y="3084" z="1825" inVp="0" inMag="0" rotX="1493042979906.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1119" radius="112.399994" x="71" y="3122" z="1812" inVp="0" inMag="0" rotX="1493042991722.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1120" radius="112.399994" x="98" y="3142" z="1812" inVp="1" inMag="0" rotX="1493043012811.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1121" radius="112.399994" x="139" y="3186" z="1813" inVp="1" inMag="0" rotX="1493043072348.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1122" radius="112.399994" x="212" y="3206" z="1802" inVp="1" inMag="0" rotX="1493043075394.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1123" radius="112.399994" x="243" y="3189" z="1797" inVp="1" inMag="0" rotX="1493043077925.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1124" radius="112.399994" x="302" y="3169" z="1795" inVp="1" inMag="0" rotX="1493043082843.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1125" radius="112.399994" x="331" y="3174" z="1814" inVp="1" inMag="0" rotX="1493043085100.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1126" radius="112.399994" x="364" y="3167" z="1818" inVp="1" inMag="0" rotX="1493043087880.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1127" radius="112.399994" x="388" y="3165" z="1820" inVp="1" inMag="0" rotX="1493043090248.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1128" radius="112.399994" x="441" y="3157" z="1824" inVp="1" inMag="0" rotX="1493043094258.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1129" radius="112.399994" x="488" y="3183" z="1821" inVp="1" inMag="0" rotX="1493043099688.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1130" radius="112.399994" x="540" y="3191" z="1812" inVp="1" inMag="0" rotX="1493043103686.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1131" radius="112.399994" x="603" y="3196" z="1806" inVp="1" inMag="0" rotX="1493043107547.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1132" radius="112.399994" x="634" y="3211" z="1796" inVp="1" inMag="0" rotX="1493043110323.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1133" radius="112.399994" x="634" y="3182" z="1801" inVp="1" inMag="0" rotX="1493043112794.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1134" radius="112.399994" x="654" y="3167" z="1806" inVp="1" inMag="0" rotX="1493043123111.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1135" radius="112.399994" x="681" y="3260" z="1799" inVp="2" inMag="0" rotX="1493043132711.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1136" radius="112.399994" x="700" y="3269" z="1806" inVp="0" inMag="0" rotX="1493043135374.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1137" radius="112.399994" x="727" y="3282" z="1814" inVp="0" inMag="0" rotX="1493043144393.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1138" radius="112.399994" x="754" y="3292" z="1821" inVp="1" inMag="0" rotX="1493043148523.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1139" radius="112.399994" x="786" y="3306" z="1825" inVp="1" inMag="0" rotX="1493043150791.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1140" radius="112.399994" x="818" y="3318" z="1815" inVp="1" inMag="0" rotX="1493043152636.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1141" radius="112.399994" x="856" y="3360" z="1811" inVp="1" inMag="0" rotX="1493043154596.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1142" radius="112.399994" x="896" y="3390" z="1812" inVp="2" inMag="0" rotX="1493043163501.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1143" radius="112.399994" x="926" y="3383" z="1810" inVp="0" inMag="0" rotX="1493043167213.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1144" radius="112.399994" x="1010" y="3371" z="1808" inVp="1" inMag="0" rotX="1493043171361.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1145" radius="112.399994" x="1042" y="3363" z="1819" inVp="1" inMag="0" rotX="1493043175082.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1146" radius="112.399994" x="1074" y="3344" z="1824" inVp="1" inMag="0" rotX="1493043183003.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1147" radius="112.399994" x="1130" y="3338" z="1822" inVp="1" inMag="0" rotX="1493043187224.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1148" radius="112.399994" x="1179" y="3335" z="1823" inVp="1" inMag="0" rotX="1493043190320.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1149" radius="112.399994" x="1217" y="3325" z="1829" inVp="1" inMag="0" rotX="1493043193427.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1150" radius="112.399994" x="1237" y="3325" z="1823" inVp="1" inMag="0" rotX="1493043199606.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1151" radius="112.399994" x="1231" y="3297" z="1815" inVp="0" inMag="0" rotX="1493043217805.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1152" radius="112.399994" x="1259" y="3241" z="1813" inVp="0" inMag="0" rotX="1493043224576.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1153" radius="112.399994" x="1267" y="3349" z="1821" inVp="1" inMag="0" rotX="1493043231971.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1154" radius="112.399994" x="1304" y="3385" z="1834" inVp="1" inMag="0" rotX="1493043234920.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1155" radius="112.399994" x="1332" y="3395" z="1836" inVp="1" inMag="0" rotX="1493043238121.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1156" radius="112.399994" x="1397" y="3399" z="1821" inVp="1" inMag="0" rotX="1493043241320.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1157" radius="112.399994" x="1431" y="3428" z="1812" inVp="1" inMag="0" rotX="1493043244133.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1158" radius="112.399994" x="1468" y="3451" z="1806" inVp="1" inMag="0" rotX="1493043246986.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1159" radius="112.399994" x="1500" y="3471" z="1812" inVp="1" inMag="0" rotX="1493043249556.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1160" radius="112.399994" x="1533" y="3506" z="1818" inVp="1" inMag="0" rotX="1493043257926.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1161" radius="112.399994" x="1551" y="3523" z="1821" inVp="1" inMag="0" rotX="1493043260260.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1162" radius="112.399994" x="1584" y="3564" z="1822" inVp="1" inMag="0" rotX="1493043263150.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1163" radius="112.399994" x="1630" y="3590" z="1822" inVp="1" inMag="0" rotX="1493043269397.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1164" radius="112.399994" x="1726" y="3612" z="1822" inVp="1" inMag="0" rotX="1493043274911.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1165" radius="112.399994" x="1809" y="3593" z="1827" inVp="1" inMag="0" rotX="1493043284553.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1166" radius="112.399994" x="1860" y="3603" z="1849" inVp="1" inMag="0" rotX="1493043287597.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1167" radius="112.399994" x="1885" y="3598" z="1864" inVp="1" inMag="0" rotX="1493043290156.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1168" radius="112.399994" x="1912" y="3602" z="1875" inVp="1" inMag="0" rotX="1493043297466.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1169" radius="112.399994" x="1936" y="3642" z="1894" inVp="0" inMag="0" rotX="1493043303505.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1170" radius="112.399994" x="1953" y="3679" z="1899" inVp="0" inMag="0" rotX="1493043307626.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1171" radius="112.399994" x="1989" y="3728" z="1902" inVp="0" inMag="0" rotX="1493043320933.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1172" radius="112.399994" x="2044" y="3736" z="1903" inVp="1" inMag="0" rotX="1493043327749.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1173" radius="112.399994" x="2076" y="3765" z="1904" inVp="1" inMag="0" rotX="1493043330425.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1174" radius="112.399994" x="2107" y="3806" z="1904" inVp="1" inMag="0" rotX="1493043332571.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1175" radius="112.399994" x="2154" y="3832" z="1904" inVp="1" inMag="0" rotX="1493043339019.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1176" radius="112.399994" x="2209" y="3834" z="1903" inVp="1" inMag="0" rotX="1493043342759.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1177" radius="112.399994" x="2267" y="3860" z="1911" inVp="1" inMag="0" rotX="1493043345213.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1178" radius="112.399994" x="2292" y="3877" z="1910" inVp="1" inMag="0" rotX="1493043353531.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1179" radius="112.399994" x="2315" y="3936" z="1917" inVp="1" inMag="0" rotX="1493043356490.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1180" radius="112.399994" x="2334" y="3977" z="1924" inVp="2" inMag="0" rotX="1493043361484.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1181" radius="112.399994" x="2344" y="4007" z="1930" inVp="2" inMag="0" rotX="1493043363528.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1182" radius="112.399994" x="2374" y="4059" z="1934" inVp="2" inMag="0" rotX="1493043366004.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1183" radius="112.399994" x="2395" y="4093" z="1944" inVp="2" inMag="0" rotX="1493043370935.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1184" radius="112.399994" x="2426" y="4124" z="1955" inVp="2" inMag="0" rotX="1493043373734.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1185" radius="112.399994" x="2462" y="4152" z="1951" inVp="2" inMag="0" rotX="1493043376377.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1186" radius="112.399994" x="2509" y="4187" z="1947" inVp="2" inMag="0" rotX="1493043387636.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1187" radius="112.399994" x="2566" y="4208" z="1942" inVp="2" inMag="0" rotX="1493043394931.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1188" radius="112.399994" x="2593" y="4226" z="1938" inVp="2" inMag="0" rotX="1493043397591.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1189" radius="112.399994" x="2630" y="4248" z="1942" inVp="1" inMag="0" rotX="1493043401251.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1190" radius="112.399994" x="2662" y="4264" z="1951" inVp="1" inMag="0" rotX="1493043404893.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1191" radius="112.399994" x="2699" y="4274" z="1958" inVp="1" inMag="0" rotX="1493043407496.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1192" radius="112.399994" x="2735" y="4286" z="1961" inVp="1" inMag="0" rotX="1493043410897.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1193" radius="112.399994" x="2887" y="4338" z="1968" inVp="1" inMag="0" rotX="1493043425449.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1194" radius="112.399994" x="2961" y="4378" z="1972" inVp="1" inMag="0" rotX="1493043429038.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1195" radius="112.399994" x="3010" y="4404" z="1970" inVp="1" inMag="0" rotX="1493043431974.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1196" radius="112.399994" x="3048" y="4434" z="1986" inVp="1" inMag="0" rotX="1493043435145.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1197" radius="112.399994" x="3082" y="4448" z="2002" inVp="1" inMag="0" rotX="1493043438077.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1198" radius="112.399994" x="3127" y="4467" z="2018" inVp="1" inMag="0" rotX="1493043441599.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1199" radius="112.399994" x="3156" y="4495" z="2025" inVp="1" inMag="0" rotX="1493043443981.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1200" radius="112.399994" x="3187" y="4528" z="2022" inVp="1" inMag="0" rotX="1493043446604.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1201" radius="112.399994" x="3227" y="4565" z="2030" inVp="1" inMag="0" rotX="1493043449864.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1202" radius="112.399994" x="3245" y="4599" z="2052" inVp="0" inMag="0" rotX="1493043466964.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1203" radius="112.399994" x="3261" y="4621" z="2058" inVp="2" inMag="0" rotX="1493043473282.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1204" radius="112.399994" x="3293" y="4646" z="2065" inVp="2" inMag="0" rotX="1493043475944.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1205" radius="112.399994" x="3322" y="4705" z="2072" inVp="2" inMag="0" rotX="1493043479537.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1206" radius="112.399994" x="3348" y="4716" z="2079" inVp="1" inMag="0" rotX="1493043483028.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1207" radius="112.399994" x="3375" y="4740" z="2087" inVp="1" inMag="0" rotX="1493043489882.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1208" radius="112.399994" x="3403" y="4766" z="2096" inVp="1" inMag="0" rotX="1493043492552.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1209" radius="112.399994" x="3455" y="4812" z="2105" inVp="1" inMag="0" rotX="1493043495876.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1210" radius="112.399994" x="3469" y="4843" z="2107" inVp="2" inMag="0" rotX="1493043505346.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1211" radius="112.399994" x="3466" y="4895" z="2101" inVp="2" inMag="0" rotX="1493043507937.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1212" radius="112.399994" x="3468" y="4944" z="2100" inVp="2" inMag="0" rotX="1493043510254.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1213" radius="112.399994" x="3448" y="4994" z="2087" inVp="2" inMag="0" rotX="1493043514608.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1214" radius="112.399994" x="3486" y="5024" z="2068" inVp="2" inMag="0" rotX="1493043524640.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1215" radius="112.399994" x="3543" y="5051" z="2054" inVp="2" inMag="0" rotX="1493043527035.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1216" radius="112.399994" x="3576" y="5062" z="2047" inVp="1" inMag="0" rotX="1493043532065.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1217" radius="112.399994" x="3624" y="5081" z="2040" inVp="1" inMag="0" rotX="1493043534975.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1218" radius="112.399994" x="3662" y="5114" z="2047" inVp="1" inMag="0" rotX="1493043537612.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1219" radius="112.399994" x="3724" y="5154" z="2056" inVp="1" inMag="0" rotX="1493043542290.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1220" radius="112.399994" x="3770" y="5178" z="2067" inVp="1" inMag="0" rotX="1493043545741.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1221" radius="112.399994" x="3800" y="5196" z="2073" inVp="1" inMag="0" rotX="1493043548118.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1222" radius="112.399994" x="3831" y="5204" z="2089" inVp="1" inMag="0" rotX="1493043550023.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1223" radius="112.399994" x="3853" y="5211" z="2102" inVp="1" inMag="0" rotX="1493043551997.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1224" radius="112.399994" x="3888" y="5224" z="2113" inVp="1" inMag="0" rotX="1493043554889.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1225" radius="112.399994" x="3930" y="5246" z="2134" inVp="1" inMag="0" rotX="1493043557773.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1226" radius="112.399994" x="3934" y="5262" z="2151" inVp="0" inMag="0" rotX="1493043560263.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1227" radius="112.399994" x="3957" y="5290" z="2172" inVp="0" inMag="0" rotX="1493043562547.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1228" radius="112.399994" x="3977" y="5337" z="2195" inVp="0" inMag="0" rotX="1493043564843.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1229" radius="112.399994" x="3988" y="5364" z="2209" inVp="0" inMag="0" rotX="1493043569199.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1230" radius="112.399994" x="4027" y="5389" z="2217" inVp="0" inMag="0" rotX="1493043573013.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1231" radius="112.399994" x="4067" y="5418" z="2209" inVp="0" inMag="0" rotX="1493043578152.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1232" radius="112.399994" x="4100" y="5433" z="2211" inVp="1" inMag="0" rotX="1493043580868.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1233" radius="112.399994" x="4133" y="5446" z="2219" inVp="1" inMag="0" rotX="1493043583368.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1234" radius="112.399994" x="4163" y="5460" z="2234" inVp="1" inMag="0" rotX="1493043585682.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1235" radius="112.399994" x="4188" y="5491" z="2240" inVp="1" inMag="0" rotX="1493043588394.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1236" radius="112.399994" x="4208" y="5510" z="2240" inVp="1" inMag="0" rotX="1493043591051.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1237" radius="112.399994" x="4239" y="5539" z="2245" inVp="1" inMag="0" rotX="1493043598162.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1238" radius="112.399994" x="4279" y="5606" z="2245" inVp="1" inMag="0" rotX="1493043608484.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1239" radius="112.399994" x="4284" y="5622" z="2245" inVp="2" inMag="0" rotX="1493043612972.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1240" radius="112.399994" x="4288" y="5650" z="2243" inVp="2" inMag="0" rotX="1493043615168.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1241" radius="112.399994" x="4291" y="5665" z="2244" inVp="2" inMag="0" rotX="1493043617492.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1242" radius="112.399994" x="4294" y="5694" z="2246" inVp="2" inMag="0" rotX="1493043619670.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1243" radius="112.399994" x="4306" y="5726" z="2253" inVp="2" inMag="0" rotX="1493043622293.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1244" radius="112.399994" x="4326" y="5742" z="2262" inVp="0" inMag="0" rotX="1493043625373.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1245" radius="112.399994" x="4358" y="5747" z="2262" inVp="1" inMag="0" rotX="1493043628217.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1246" radius="112.399994" x="4403" y="5764" z="2259" inVp="1" inMag="0" rotX="1493043631043.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1247" radius="112.399994" x="4446" y="5770" z="2253" inVp="1" inMag="0" rotX="1493043637350.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1248" radius="112.399994" x="4510" y="5773" z="2255" inVp="1" inMag="0" rotX="1493043640363.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1249" radius="112.399994" x="4555" y="5791" z="2248" inVp="1" inMag="0" rotX="1493043643009.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1250" radius="112.399994" x="4590" y="5809" z="2240" inVp="1" inMag="0" rotX="1493043645828.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1251" radius="112.399994" x="4625" y="5847" z="2229" inVp="1" inMag="0" rotX="1493043647969.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1252" radius="112.399994" x="4647" y="5859" z="2228" inVp="1" inMag="0" rotX="1493043650667.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1253" radius="112.399994" x="4696" y="5858" z="2235" inVp="1" inMag="0" rotX="1493043652878.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1254" radius="112.399994" x="4748" y="5872" z="2240" inVp="1" inMag="0" rotX="1493043655754.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1255" radius="112.399994" x="4789" y="5913" z="2239" inVp="1" inMag="0" rotX="1493043660102.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1256" radius="112.399994" x="4818" y="5951" z="2236" inVp="1" inMag="0" rotX="1493043661992.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1257" radius="112.399994" x="4852" y="5984" z="2228" inVp="1" inMag="0" rotX="1493043664351.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1258" radius="112.399994" x="4890" y="6013" z="2218" inVp="1" inMag="0" rotX="1493043666758.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1259" radius="112.399994" x="4941" y="6047" z="2216" inVp="1" inMag="0" rotX="1493043669154.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1260" radius="112.399994" x="4985" y="6083" z="2221" inVp="1" inMag="0" rotX="1493043671428.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1261" radius="112.399994" x="5010" y="6126" z="2221" inVp="1" inMag="0" rotX="1493043676206.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1262" radius="112.399994" x="5025" y="6155" z="2220" inVp="2" inMag="0" rotX="1493043680518.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1263" radius="112.399994" x="5030" y="6200" z="2216" inVp="2" inMag="0" rotX="1493043683063.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1264" radius="112.399994" x="5064" y="6248" z="2214" inVp="2" inMag="0" rotX="1493043686562.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1265" radius="112.399994" x="5102" y="6262" z="2217" inVp="2" inMag="0" rotX="1493043690652.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1266" radius="112.399994" x="5136" y="6268" z="2221" inVp="1" inMag="0" rotX="1493043693941.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1267" radius="112.399994" x="5172" y="6270" z="2238" inVp="1" inMag="0" rotX="1493043696874.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1268" radius="112.399994" x="5196" y="6276" z="2251" inVp="1" inMag="0" rotX="1493043699356.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1269" radius="112.399994" x="5234" y="6293" z="2266" inVp="1" inMag="0" rotX="1493043705187.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1270" radius="112.399994" x="5271" y="6312" z="2278" inVp="1" inMag="0" rotX="1493043708460.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1271" radius="112.399994" x="5297" y="6336" z="2277" inVp="2" inMag="0" rotX="1493043715446.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1272" radius="112.399994" x="5306" y="6378" z="2275" inVp="2" inMag="0" rotX="1493043718706.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1273" radius="112.399994" x="5322" y="6417" z="2273" inVp="2" inMag="0" rotX="1493043721126.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1274" radius="112.399994" x="5360" y="6461" z="2266" inVp="2" inMag="0" rotX="1493043723931.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1275" radius="112.399994" x="5387" y="6495" z="2264" inVp="2" inMag="0" rotX="1493043726513.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1276" radius="112.399994" x="5417" y="6531" z="2263" inVp="2" inMag="0" rotX="1493043729396.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1277" radius="112.399994" x="5450" y="6573" z="2258" inVp="2" inMag="0" rotX="1493043732005.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1278" radius="112.399994" x="5481" y="6611" z="2256" inVp="2" inMag="0" rotX="1493043735055.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1279" radius="112.399994" x="5516" y="6648" z="2248" inVp="2" inMag="0" rotX="1493043738116.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1280" radius="112.399994" x="5548" y="6667" z="2242" inVp="0" inMag="0" rotX="1493043740628.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1281" radius="112.399994" x="5563" y="6677" z="2237" inVp="1" inMag="0" rotX="1493043745478.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1282" radius="112.399994" x="5580" y="6686" z="2236" inVp="1" inMag="0" rotX="1493043747574.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1283" radius="112.399994" x="5602" y="6692" z="2239" inVp="1" inMag="0" rotX="1493043749553.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+			<node id="1284" radius="112.399994" x="5633" y="6699" z="2240" inVp="1" inMag="0" rotX="1493043751285.000000" rotY="0.000000" rotZ="0.000000" time="0"/>
+		</nodes>
+		<edges>
+			<edge source="1189" target="1190"/>
+			<edge source="1182" target="1183"/>
+			<edge source="1138" target="1139"/>
+			<edge source="1211" target="1212"/>
+			<edge source="1248" target="1249"/>
+			<edge source="1212" target="1213"/>
+			<edge source="1281" target="1282"/>
+			<edge source="1146" target="1147"/>
+			<edge source="1137" target="1138"/>
+			<edge source="1118" target="1119"/>
+			<edge source="1225" target="1226"/>
+			<edge source="1224" target="1225"/>
+			<edge source="1190" target="1191"/>
+			<edge source="1165" target="1166"/>
+			<edge source="1226" target="1227"/>
+			<edge source="1143" target="1144"/>
+			<edge source="1198" target="1199"/>
+			<edge source="1127" target="1128"/>
+			<edge source="1181" target="1182"/>
+			<edge source="1155" target="1156"/>
+			<edge source="1227" target="1228"/>
+			<edge source="1141" target="1142"/>
+			<edge source="1174" target="1175"/>
+			<edge source="1274" target="1275"/>
+			<edge source="1178" target="1179"/>
+			<edge source="1188" target="1189"/>
+			<edge source="1280" target="1281"/>
+			<edge source="1139" target="1140"/>
+			<edge source="1157" target="1158"/>
+			<edge source="1219" target="1220"/>
+			<edge source="1130" target="1131"/>
+			<edge source="1179" target="1180"/>
+			<edge source="1242" target="1243"/>
+			<edge source="1158" target="1159"/>
+			<edge source="1135" target="1136"/>
+			<edge source="1252" target="1253"/>
+			<edge source="1194" target="1195"/>
+			<edge source="1236" target="1237"/>
+			<edge source="1186" target="1187"/>
+			<edge source="1132" target="1133"/>
+			<edge source="1150" target="1151"/>
+			<edge source="1204" target="1205"/>
+			<edge source="1128" target="1129"/>
+			<edge source="1251" target="1252"/>
+			<edge source="1238" target="1239"/>
+			<edge source="1239" target="1240"/>
+			<edge source="1169" target="1170"/>
+			<edge source="1270" target="1271"/>
+			<edge source="1257" target="1258"/>
+			<edge source="1176" target="1177"/>
+			<edge source="1156" target="1157"/>
+			<edge source="1123" target="1124"/>
+			<edge source="1243" target="1244"/>
+			<edge source="1151" target="1152"/>
+			<edge source="1136" target="1137"/>
+			<edge source="1206" target="1207"/>
+			<edge source="1147" target="1148"/>
+			<edge source="1201" target="1202"/>
+			<edge source="1200" target="1201"/>
+			<edge source="1163" target="1164"/>
+			<edge source="1268" target="1269"/>
+			<edge source="1149" target="1150"/>
+			<edge source="1160" target="1161"/>
+			<edge source="1245" target="1246"/>
+			<edge source="1193" target="1194"/>
+			<edge source="1263" target="1264"/>
+			<edge source="1260" target="1261"/>
+			<edge source="1208" target="1209"/>
+			<edge source="1161" target="1162"/>
+			<edge source="1276" target="1277"/>
+			<edge source="1259" target="1260"/>
+			<edge source="1234" target="1235"/>
+			<edge source="1275" target="1276"/>
+			<edge source="1167" target="1168"/>
+			<edge source="1187" target="1188"/>
+			<edge source="1231" target="1232"/>
+			<edge source="1235" target="1236"/>
+			<edge source="1153" target="1154"/>
+			<edge source="1217" target="1218"/>
+			<edge source="1203" target="1204"/>
+			<edge source="1261" target="1262"/>
+			<edge source="1221" target="1222"/>
+			<edge source="1159" target="1160"/>
+			<edge source="1131" target="1132"/>
+			<edge source="1233" target="1234"/>
+			<edge source="1162" target="1163"/>
+			<edge source="1142" target="1143"/>
+			<edge source="1177" target="1178"/>
+			<edge source="1195" target="1196"/>
+			<edge source="1197" target="1198"/>
+			<edge source="1240" target="1241"/>
+			<edge source="1278" target="1279"/>
+			<edge source="1207" target="1208"/>
+			<edge source="1145" target="1146"/>
+			<edge source="1256" target="1257"/>
+			<edge source="1175" target="1176"/>
+			<edge source="1249" target="1250"/>
+			<edge source="1210" target="1211"/>
+			<edge source="1192" target="1193"/>
+			<edge source="1202" target="1203"/>
+			<edge source="1283" target="1284"/>
+			<edge source="1228" target="1229"/>
+			<edge source="1209" target="1210"/>
+			<edge source="1254" target="1255"/>
+			<edge source="1213" target="1214"/>
+			<edge source="1154" target="1155"/>
+			<edge source="1126" target="1127"/>
+			<edge source="1269" target="1270"/>
+			<edge source="1241" target="1242"/>
+			<edge source="1171" target="1172"/>
+			<edge source="1129" target="1130"/>
+			<edge source="1173" target="1174"/>
+			<edge source="1223" target="1224"/>
+			<edge source="1277" target="1278"/>
+			<edge source="1267" target="1268"/>
+			<edge source="1272" target="1273"/>
+			<edge source="1253" target="1254"/>
+			<edge source="1250" target="1251"/>
+			<edge source="1264" target="1265"/>
+			<edge source="1184" target="1185"/>
+			<edge source="1215" target="1216"/>
+			<edge source="1140" target="1141"/>
+			<edge source="1170" target="1171"/>
+			<edge source="1144" target="1145"/>
+			<edge source="1125" target="1126"/>
+			<edge source="1166" target="1167"/>
+			<edge source="1122" target="1123"/>
+			<edge source="1262" target="1263"/>
+			<edge source="1222" target="1223"/>
+			<edge source="1205" target="1206"/>
+			<edge source="1124" target="1125"/>
+			<edge source="1119" target="1120"/>
+			<edge source="1172" target="1173"/>
+			<edge source="1282" target="1283"/>
+			<edge source="1247" target="1248"/>
+			<edge source="1246" target="1247"/>
+			<edge source="1133" target="1134"/>
+			<edge source="1232" target="1233"/>
+			<edge source="1168" target="1169"/>
+			<edge source="1199" target="1200"/>
+			<edge source="1150" target="1153"/>
+			<edge source="1266" target="1267"/>
+			<edge source="1244" target="1245"/>
+			<edge source="1191" target="1192"/>
+			<edge source="1185" target="1186"/>
+			<edge source="1271" target="1272"/>
+			<edge source="1258" target="1259"/>
+			<edge source="1214" target="1215"/>
+			<edge source="1183" target="1184"/>
+			<edge source="1132" target="1135"/>
+			<edge source="1148" target="1149"/>
+			<edge source="1265" target="1266"/>
+			<edge source="1120" target="1121"/>
+			<edge source="1230" target="1231"/>
+			<edge source="1180" target="1181"/>
+			<edge source="1216" target="1217"/>
+			<edge source="1164" target="1165"/>
+			<edge source="1218" target="1219"/>
+			<edge source="1196" target="1197"/>
+			<edge source="1121" target="1122"/>
+			<edge source="1220" target="1221"/>
+			<edge source="1273" target="1274"/>
+			<edge source="1255" target="1256"/>
+			<edge source="1279" target="1280"/>
+			<edge source="1237" target="1238"/>
+			<edge source="1229" target="1230"/>
+		</edges>
+	</thing>
+	<comments> </comments>
+</things>
