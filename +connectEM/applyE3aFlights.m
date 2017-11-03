@@ -17,7 +17,7 @@ minNodeEvidence = 2 * 27;
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 workingDir = fullfile(rootDir, 'aggloState');
 
-axonFile = fullfile(workingDir, 'axons_08_a.mat');
+axonFile = fullfile(workingDir, 'axons_10_a.mat');
 flightFile = fullfile(workingDir, 'caseDistinctions_6.0.mat');
 caseFile = fullfile(workingDir, 'attachedEndings_6.0.mat');
 
