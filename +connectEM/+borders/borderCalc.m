@@ -57,7 +57,7 @@ for curBlkIdx = 1:prod(blockCount)
     curEdges = edges(curBlkMask, :);
     
     if isempty(curEdges)
-        findings{curBlkIdx} = zeros(0, 2);
+        findings{curBlkIdx} = zeros(0, 3);
         areaM{curBlkIdx} = zeros(0, 1);
         continue;
     end
