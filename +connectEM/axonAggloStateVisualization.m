@@ -63,7 +63,7 @@ function axonAggloStateVisualization()
     tic;
     segmentMeta = load(fullfile(param.saveFolder, 'segmentMeta.mat'), 'point');
     [skelToAgglos, segIds] = L4.Agglo.aggloSkelOverlap(skel, param, fullAxonAgglos);
-    ovSkel = L4.Agglo.skelOverlapGallery(cacheDir, skel, fullAxonAgglos, skelToAgglos, minSegmentOverlap, segmentMeta.point');
+    ovSkels = connectEM.skelOverlapGallery(cacheDir, skel, fullAxonAgglos, skelToAgglos, minSegmentOverlap, segmentMeta.point');
     for i = 1:length(ovSkels)
         ovSkels{i}.write(fullfile(cacheDir, ['gtSkel' num2str(i, '%.2i') '.nml']));
     end
