@@ -33,7 +33,7 @@ clear segTemp
 
 % find edges and borders
 % TODO(amotta): Cube borders are not properly handled yet.
-[edges, ind] = connectEM.borders.codeBenedikt(seg, );
+[edges, ind] = connectEM.borders.codeBenedikt(seg);
 
 corrSegId = max(seg(:)) + 1;
 seg = padarray(seg, [1, 1, 1], corrSegId);
@@ -80,5 +80,5 @@ for curBlkIdx = 1:prod(blockCount)
         curVxIds, curEdges, seg, p.raw.voxelSize, true);
 end
 
-save(['/tmpscratch/kboerg/borders3/borders_' num2str(idx)],'findings','areaM');
+save(['/tmpscratch/kboerg/borders4/borders_' num2str(idx)],'findings','areaM');
 end
