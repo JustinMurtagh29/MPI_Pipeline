@@ -53,9 +53,8 @@ for curX = 1:blockCount(1)
     disp(curX)
     for curY = 1:blockCount(2)
         for curZ = 1:blockCount(3)
-            
-            curFindings = globalFindings{curX,curY,curZ};
-            curAreas = globalAreaM{curX,curY,curZ};
+            curFindings = globalFindings{curX, curY, curZ};
+            curAreas = globalAreaM{curX, curY, curZ};
             curEdges = curFindings(:, 1:2);
             
             globalAxon(curX, curY, curZ) = ...
