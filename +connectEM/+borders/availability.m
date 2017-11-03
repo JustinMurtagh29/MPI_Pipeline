@@ -27,13 +27,27 @@ for i_x = 1 : size(globalD,1)
                 globalAxon(i_x,i_y,i_z)=sum(globalD{i_x,i_y,i_z}(any(ismember(globalD{i_x,i_y,i_z}(:,1:2),axonid),2),3));
                 targetAll(i_x,i_y,i_z)=sum(sum((globalD{i_x,i_y,i_z}(:,1:2)>0).*repmat(globalD2{i_x,i_y,i_z},1,2)));
                 targetSmooth(i_x,i_y,i_z)=sum(sum(ismember(globalD{i_x,i_y,i_z}(:,1:2),double(connectome.idxAD)).*repmat(globalD2{i_x,i_y,i_z},1,2)));
-                targetAD(i_x,i_y,i_z)=sum(sum(ismember(globalD{i_x,i_y,i_z}(:,1:2),double(connectome.idxSmooth)).*repmat(globalD2{i_x,i_y,i_z},1,2)));
+                targetAD(i_x,i_y,i_z)=sum(sum(ismember(globalD{i_x,i_y,i_z}(:,1:2),double(connectome.idxSD)).*repmat(globalD2{i_x,i_y,i_z},1,2)));
             end
         end
     end
 end
+% no imresize3 on cluster MATLAB 
+assert(p.raw.voxelSize(1) == p.raw.voxelSize(2));
+sG = size(globalAxon);
+sGS = round(sG .* [1,1, p.raw.voxelSize(3) / (2 * p.raw.voxelSize(2))]);
+globalAxonStretch = zeros(sGS);
 
-distanceT = bwdist(globalAxon>0);
+for i_x = 1 : sG(1)
+    globalAxonStretch(i_x,:,:) = permute(imresize(squeeze(globalAxon(i_x,:, :)), sGS(2:3)),[3, 1, 2]);
+end
+
+distanceT_Stretch = bwdist(globalAxonStretch>0);
+distanceT = zeros(sG);
+for i_x = 1 : sGS(1)
+    distanceT(i_x, :, :) = permute(imresize(squeeze(distanceT_Stretch(i_x,:,:)), sG(2:3)),[3, 1, 2]);
+end
+
 for i_dist = 0 : 60
     selector = @(x)sum(sum(sum(x(distanceT>=i_dist&distanceT<i_dist+1))));
     graph_AD(i_dist+1) = selector(targetAD)/selector(targetAll);
