@@ -128,12 +128,16 @@ axonComps = reshape(axonComps, [], 1);
 flights.axonComp = axonComps(flights.overlaps(:, 1));
 
 %% patch in flight paths
+out = struct;
+out.info = info;
+out.axons = axons([]);
+
 for curComp = 1:axonCompCount
     curAxons = (axonComps == curComp);
     curAxons = axons(curAxons);
     
-    if numel(curAxons) < 2
-        curAxon = axons;
+    if numel(curAxons) == 1
+        out.axons(curComp) = curAxon;
         continue;
     end
     
@@ -206,6 +210,7 @@ for curComp = 1:axonCompCount
         curEdgesToAdd = curEdgesToAdd + curNodeOff;
         curNodeOff = curNodeOff + curNodeCount;
         
+        % connect to super-agglomerates
         curEdgesToAdd(1) = curStartNodeId;
         curEdgesToAdd(end) = curEndNodeId;
         
@@ -222,4 +227,12 @@ for curComp = 1:axonCompCount
         curAxon.edges(:, 2), curAxon.edges(:, 1), ...
         true, size(curAxon.nodes, 1),size(curAxon.nodes, 1));
     assert(graphconncomp(curAdj, 'Directed', false) == 1);
+    
+    out.axons(curComp) = curAxon;
 end
+
+otherAxonIds = setdiff(1:numel(allAxons), axonIds);
+out.axons = cat(1, out.axons(:), allAxons(otherAxonIds));
+
+out.indBigAxons = false(size(out.axons));
+out.indBigAxons(1:axonCompCount) = true;
