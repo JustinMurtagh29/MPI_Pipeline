@@ -14,5 +14,5 @@ if ~exist(output, 'dir')
     mkdir(output)
 end
     
-job = detectChiasmataSuperSuper( ...
-    p, input, output);
+job = connectEM.detectChiasmataSuperSuper( ...
+    param, input, output);
