@@ -18,9 +18,6 @@ p.outputDir = outputDir;
 p.chiasmataVersion = datestr(now, 30);
 
 % Some parameter for algorithm
-p.sphereRadiusOuter = 7000; % in nm
-p.sphereRadiusInner = 2000; % in nm
-p.minNodeDist = 2000; % in nm
 p.clusterSize = 2000; % in nm
 p.voxelSize = p.raw.voxelSize;
 

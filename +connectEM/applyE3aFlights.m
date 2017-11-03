@@ -17,7 +17,7 @@ minNodeEvidence = 2 * 27;
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 workingDir = fullfile(rootDir, 'aggloState');
 
-axonFile = fullfile(workingDir, 'axons_08_a.mat');
+axonFile = fullfile(workingDir, 'axons_10_a.mat');
 flightFile = fullfile(workingDir, 'caseDistinctions_6.0.mat');
 caseFile = fullfile(workingDir, 'attachedEndings_6.0.mat');
 
@@ -128,12 +128,16 @@ axonComps = reshape(axonComps, [], 1);
 flights.axonComp = axonComps(flights.overlaps(:, 1));
 
 %% patch in flight paths
+out = struct;
+out.info = info;
+out.axons = axons([]);
+
 for curComp = 1:axonCompCount
     curAxons = (axonComps == curComp);
     curAxons = axons(curAxons);
     
-    if numel(curAxons) < 2
-        curAxon = axons;
+    if numel(curAxons) == 1
+        out.axons(curComp) = curAxon;
         continue;
     end
     
@@ -206,6 +210,7 @@ for curComp = 1:axonCompCount
         curEdgesToAdd = curEdgesToAdd + curNodeOff;
         curNodeOff = curNodeOff + curNodeCount;
         
+        % connect to super-agglomerates
         curEdgesToAdd(1) = curStartNodeId;
         curEdgesToAdd(end) = curEndNodeId;
         
@@ -215,4 +220,25 @@ for curComp = 1:axonCompCount
     
     curAxon.nodes = cat(1, curAxon.nodes, cell2mat(curFlightNodes));
     curAxon.edges = cat(1, curAxon.edges, cell2mat(curFlightEdges));
+    curAxon.edges = sort(curAxon.edges, 2);
+    
+    curFlightNodeCount = sum(cellfun( ...
+        @(n) size(n, 1), curFlightNodes));
+    curAxon.solvedChiasma = cat( ...
+        1, curAxons.solvedChiasma, ...
+        false(curFlightNodeCount, 1));
+    
+    % sanity check
+    curAdj = sparse( ...
+        curAxon.edges(:, 2), curAxon.edges(:, 1), ...
+        true, size(curAxon.nodes, 1),size(curAxon.nodes, 1));
+    assert(graphconncomp(curAdj, 'Directed', false) == 1);
+    
+    out.axons(curComp) = curAxon;
 end
+
+otherAxonIds = setdiff(1:numel(allAxons), axonIds);
+out.axons = cat(1, out.axons(:), allAxons(otherAxonIds));
+
+out.indBigAxons = false(size(out.axons));
+out.indBigAxons(1:axonCompCount) = true;

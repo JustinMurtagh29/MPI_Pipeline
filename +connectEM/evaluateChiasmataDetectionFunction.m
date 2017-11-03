@@ -1,4 +1,4 @@
-function evaluateChiasmataDetectionFunction(aggloState,chiasmId,outputDir)
+function evaluateChiasmataDetectionFunction(aggloState,chiasmId,chiasmDir,outputDir)
 % This function loads chiasmata detection results and performs a simple
 % quantitative analysis. These numbers should complement the impression
 % gained from looking at random super-agglomerates (or parts thereof) with
@@ -20,7 +20,7 @@ aggloFile = fullfile(rootDir, 'aggloState', [aggloState '.mat']);
 
 % chiasmId = '20171019T155102';
 % chiasmDir = '/tmpscratch/kboerg/chiasmata';
-chiasmDir = fullfile(rootDir, '/aggloState/chiasmata/dendrites/round1/');
+% chiasmDir = fullfile(rootDir, '/aggloState/chiasmata/dendrites/round1/');
 % chiasmataX20171017T044832_0
 % outputDir = '/tmpscratch/mbeining/chiasma_03_v2';
 
