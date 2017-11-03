@@ -21,19 +21,19 @@ generalLookup(axonLookup ~= 0) = -axonLookup(axonLookup ~= 0);
 seg = loadSegDataGlobal(p.seg, p.local(idx).bboxSmall);
 blockCount = ceil(size(seg) ./ blockSize);
 
-% Segments which are not part of either the axon or dendrite agglomerates
-% should not be counted as border voxels (despite being mapped to zero in
-% the lines below).
-segExclude = seg > 0;
-segExclude(segExclude) = ~generalLookup(seg(segExclude));
 
 % apply equivalence class mapping
 seg = double(seg);
+segTemp = seg;
 seg(seg ~= 0) = generalLookup(seg(seg ~= 0));
+
+% set segmentation voxels that are not part of the dendrites and agglos (glia mostly) to an unused nonzero number
+seg(seg == 0 & segTemp ~= 0) = Inf;
+clear segTemp
 
 % find edges and borders
 % TODO(amotta): Cube borders are not properly handled yet.
-[edges, ind] = connectEM.borders.codeBenedikt(seg, segExclude);
+[edges, ind] = connectEM.borders.codeBenedikt(seg, );
 
 corrSegId = max(seg(:)) + 1;
 seg = padarray(seg, [1, 1, 1], corrSegId);
