@@ -61,6 +61,11 @@ for curX = 1:blockCount(1)
                 sum(curFindings(any(ismember(curEdges, axonId), 2), 3));
             targetAll(curX, curY, curZ) =  ...
                 sum(sum(curEdges > 0 & ~isinf(curEdges), 2) .* curAreas);
+            
+            % NOTE(amotta): If we can guarantee that target classes are
+            % pairwise disjoint (which they should be), the following can
+            % be achieved with a single call to `ismember`, which leads to
+            % a significant speed-up.
             targetSmooth(curX, curY, curZ) = ...
                 sum(sum(ismember(curEdges, idsSmooth), 2) .* curAreas);
             targetAD(curX, curY, curZ) = ...
@@ -70,7 +75,6 @@ for curX = 1:blockCount(1)
 end
 
 % no imresize3 on cluster MATLAB
-% NOTE(amotta): 
 assert(p.raw.voxelSize(1) == p.raw.voxelSize(2));
 sG = size(globalAxon);
 sGS = round(sG .* [1,1, p.raw.voxelSize(3) / (2 * p.raw.voxelSize(2))]);
