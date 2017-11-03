@@ -85,11 +85,12 @@ function superagglos_new = mergeSuperagglosBasedOnFlightPath( ...
             cut(end) = [];
             ind = find(cut);
             ind_before = [ind-1 N]; ind_before(ind_before < 1) = 1;
-            ind_after = [1 ind+1]; ind_after(ind_after > N) = N;
+            ind_after = [1 ind]; ind_after(ind_after > N) = N;
             occurences = arrayfun(@(x,y) occurences(x:y), ind_after, ind_before, 'uni', 0);
             classOrigin = arrayfun(@(x,y) classOrigin(x:y), ind_after, ind_before, 'uni', 0);
 
-            occurences = cellfun(@assignValues,occurences,'uni',0);
+            occurences = cellfun(@(x,y)assignValues(x,y),occurences,occurences,'uni',0);
+            classOrigin = cellfun(@(x,y)assignValues(x,y),classOrigin,occurences,'uni',0);
             
             nodesBeingAttached = cellfun(@(x)find(x),occurences,'uni',0);
             nodesClasses = cellfun(@(x,y)x(y),classOrigin,nodesBeingAttached,'uni',0);
@@ -148,6 +149,6 @@ function superagglos_new = mergeSuperagglosBasedOnFlightPath( ...
     end
 end
 
-function input = assignValues(input)
-    input(input < 14) = 0;
+function input1 = assignValues(input1,input2)
+    input1(input2 < 14) = 0;
 end

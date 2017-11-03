@@ -54,15 +54,15 @@ function createNewDendriteSuperagglos(param, state)
     assert(size(linkagesAgglos, 1) == numel(flightPaths.ff.segIds));
     assert(~any(diff(structfun(@numel, flightPaths.ff))));
     
-    % Eliminate dublicates
-%     [~, positionUniques] = unique(sort(linkagesAgglos,2), 'rows');
-%     duplicates = true(size(linkagesAgglos,1),1);
-%     duplicates(positionUniques) = 0;
-%     
-%     % NOTE(amotta): Dimensions agree!
-%     flightPaths.startAgglo(duplicates,:) = [];
-%     flightPaths.endAgglo(duplicates,:) = [];
-%     flightPaths.ff = structfun(@(x)x(~duplicates), flightPaths.ff, 'uni', 0);
+    % Eliminate duplicates
+    [~, positionUniques] = unique(sort(linkagesAgglos,2), 'rows');
+    duplicates = true(size(linkagesAgglos,1),1);
+    duplicates(positionUniques) = 0;
+    
+    % NOTE(amotta): Dimensions agree!
+    flightPaths.startAgglo(duplicates,:) = [];
+    flightPaths.endAgglo(duplicates,:) = [];
+    flightPaths.ff = structfun(@(x)x(~duplicates), flightPaths.ff, 'uni', 0);
     
     dendritesNew = connectEM.mergeSuperagglosBasedOnFlightPath( ...
         superAgglos, flightPaths.eqClassCCfull, flightPaths.startAgglo, ...
