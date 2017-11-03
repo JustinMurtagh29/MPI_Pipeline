@@ -6,7 +6,7 @@ function outSkels = SkelOverlap(inputDir,superagglos,outputDir,p)
 % INPUT
 % inputDir      string with path to nml files which are used
 % superagglos   agglos in the superagglo format which are searched through
-% outputDir     (optional) string with path where skeletons should be written to
+% outputDir     (optional) string with path where skeletons (GT and superagglos) should be written to
 % p             (optional) parameter struct of the pipeline run. If not
 %               defined, the L4 20170217_ROI pipeline run is used
 %
@@ -48,5 +48,6 @@ for f = 1:numel(files)
     outSkels = outSkels.addTreeFromSkel(skelSuperagglo);
     if exist('outputDir','var') && ~isempty(outputDir)
         skelSuperagglo.write(fullfile(outputDir,strrep(files(f).name,'.nml',sprintf('_Superagglo_%d.nml',ind)) ));
+        skel.write(fullfile(outputDir,files(f).name ));
     end
 end
