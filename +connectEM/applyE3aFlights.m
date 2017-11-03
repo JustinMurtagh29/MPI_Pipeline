@@ -215,4 +215,11 @@ for curComp = 1:axonCompCount
     
     curAxon.nodes = cat(1, curAxon.nodes, cell2mat(curFlightNodes));
     curAxon.edges = cat(1, curAxon.edges, cell2mat(curFlightEdges));
+    curAxon.edges = sort(curAxon.edges, 2);
+    
+    % sanity check
+    curAdj = sparse( ...
+        curAxon.edges(:, 2), curAxon.edges(:, 1), ...
+        true, size(curAxon.nodes, 1),size(curAxon.nodes, 1));
+    assert(graphconncomp(curAdj, 'Directed', false) == 1);
 end
