@@ -37,7 +37,8 @@ function superagglos_new = mergeSuperagglosBasedOnFlightPath( ...
     for i=1:length(eqClassCCfull)
         % Concatenate superagglos of this equivalence class
         classLength = cell2mat(arrayfun(@(x)size(superagglos(x).nodes,1),eqClassCCfull{i},'uni',0));
-        classLookup = repelem([1:length(classLength)]',classLength);
+%         classLookup = repelem([1:length(classLength)]',classLength);
+        classLookup = repelem(eqClassCCfull{i},classLength);
         superagglos_new(i,1).nodes = cat(1, superagglos(eqClassCCfull{i}).nodes);
         
         % collect and renumber edges
@@ -55,6 +56,8 @@ function superagglos_new = mergeSuperagglosBasedOnFlightPath( ...
             newNodes = cat(1, ff.nodes{queryIdx});
             newNodes(:,4) = NaN(size(newNodes,1),1);
             
+            queryIndices = find(queryIdx);
+            flightAgglos = arrayfun(@(x)cat(1,[startAgglo{x};endAgglo{x}]),queryIndices,'uni',0);
             % reconstruct flight path edges using MST
             edgeCell = cellfun(@(n) ...
                 Graph.getMST(bsxfun(@times, n(:, 1:3), voxelSize)), ...
@@ -78,6 +81,7 @@ function superagglos_new = mergeSuperagglosBasedOnFlightPath( ...
             classOrigin = max(classOrigin')';
             classes = unique(classOrigin(classOrigin~=0));
             occurences = sum(idxNewNodes,2);
+            
 
             cut = zeros(size(occurences))';
             N = numel(occurences);
@@ -89,13 +93,17 @@ function superagglos_new = mergeSuperagglosBasedOnFlightPath( ...
             occurences = arrayfun(@(x,y) occurences(x:y), ind_after, ind_before, 'uni', 0);
             classOrigin = arrayfun(@(x,y) classOrigin(x:y), ind_after, ind_before, 'uni', 0);
 
-            occurences = cellfun(@(x,y)assignValues(x,y),occurences,occurences,'uni',0);
-            classOrigin = cellfun(@(x,y)assignValues(x,y),classOrigin,occurences,'uni',0);
+            occurences = cellfun(@(x,y)assignValues(x,y,1),occurences,occurences,'uni',0);
+            classOrigin = cellfun(@(x,y)assignValues(x,y,1),classOrigin,occurences,'uni',0);
             
+            % Eliminate evidences of not attached agglomerates
+            eliminateClasses = cellfun(@(x,y)~ismember(x,y),classOrigin',flightAgglos,'uni',0);
+            classOrigin = cellfun(@(x,y)assignValues(x,y),classOrigin,eliminateClasses','uni',0);
+
             nodesBeingAttached = cellfun(@(x)find(x),occurences,'uni',0);
             nodesClasses = cellfun(@(x,y)x(y),classOrigin,nodesBeingAttached,'uni',0);
             classes = cellfun(@(x)unique(x(x~=0)),classOrigin,'uni',0);
-            
+
             borderNodeIdx = cell(size(occurences));
             for j=1:length(occurences)
                 if numel(classes{j})==1
@@ -113,8 +121,10 @@ function superagglos_new = mergeSuperagglosBasedOnFlightPath( ...
                     borderNodes = nodesBeingAttached{j}(borderNodes);
                     borderNodeIdx{j} = zeros(size(occurences{j}));
                     borderNodeIdx{j}(borderNodes) = 1;
-                else
+                elseif numel(classes{j})==0
                     disp('Warning: Not a single node has enough node evidence!')
+                else
+                    disp('Warning: One flight has enough node evidence to different end agglos!')
                 end
             end
             
@@ -149,6 +159,13 @@ function superagglos_new = mergeSuperagglosBasedOnFlightPath( ...
     end
 end
 
-function input1 = assignValues(input1,input2)
-    input1(input2 < 14) = 0;
+function input1 = assignValues(input1,input2,condition)
+    if nargin < 3
+        condition = false;
+    end
+    if condition
+        input1(input2 < 14) = 0;
+    else
+        input1(input2) = 0;
+    end
 end
