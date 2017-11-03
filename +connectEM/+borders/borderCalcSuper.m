@@ -1,4 +1,4 @@
-mkdir('/tmpscratch/kboerg/borders2/')
+mkdir('/tmpscratch/kboerg/borders3/')
 functionH = @connectEM.borders.borderCalc;
 inputCell = cellfun(@(x){x}, num2cell(1:(11*17*13)), 'uni', 0);
 cluster = Cluster.getCluster( ...

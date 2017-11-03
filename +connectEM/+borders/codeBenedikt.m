@@ -20,10 +20,13 @@ end
 nInd = bsxfun(@plus, ind', vec');
 seg(padarray(false(size(seg) - 2),[1, 1, 1],1)) = 0; % set boundary to zero
 nSegId = seg(nInd);  % get segment IDs of neighbors
+nSegId(nSegId==0) = -Inf;
 nSegId = sort(nSegId,1); % sort segment IDs along 1st dim
 
 %get neighbors for wall voxels
+
 lSegId = [false(1,size(nSegId,2)); diff(nSegId,1,1)>0];
+nSegId(nSegId==-Inf) = 0;
 numNeighbors = sum(lSegId,1);
 toKeep = (numNeighbors == 2)';
 toExtend = (numNeighbors > 2)';
