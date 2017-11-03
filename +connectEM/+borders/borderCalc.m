@@ -17,9 +17,9 @@ dendriteLookup = Agglo.buildLUT(maxSegId, dendrites);
 generalLookup = dendriteLookup;
 generalLookup(axonLookup ~= 0) = -axonLookup(axonLookup ~= 0);
 
-% set segmentation voxels that are not part of the dendrites and agglos
-% (most likely glia) to infinity
-generalLookup(~generalLookup) = inf;
+% put non-neural segment IDs in a separate class
+nonNeuralSegId = 1 + max(generalLookup(:));
+generalLookup(~generalLookup) = nonNeuralSegId;
 
 % load segmentation and convert do double
 seg = loadSegDataGlobal(p.seg, p.local(idx).bboxSmall);
@@ -66,8 +66,6 @@ for curBlkIdx = 1:prod(blockCount)
    [curEdges, ~, curEdgeId] = unique(curEdges, 'rows');
     curVxCount = accumarray(curEdgeId, 1);
     
-    findings{curBlkIdx} = [curEdges, curVxCount];
-    
     % calculate physical area
     curVxIds = ind(curBlkMask);
     curVxIds = arrayfun( ...
@@ -76,6 +74,10 @@ for curBlkIdx = 1:prod(blockCount)
     
     areaM{curBlkIdx} = Seg.Local.physicalBorderArea2( ...
         curVxIds, curEdges, seg, p.raw.voxelSize, true);
+    
+    % set non-neural segment ID to infinity
+    curEdges(curEdges(:) == nonNeuralSegId) = inf;
+    findings{curBlkIdx} = [curEdges, curVxCount];
 end
 
 save(['/tmpscratch/kboerg/borders4/borders_' num2str(idx)],'findings','areaM');
