@@ -73,6 +73,8 @@ function createNewDendriteSuperagglos(param, state)
         numel(Graph.findConnectedComponents(x.edges)) == 1, ...
         dendritesNew(arrayfun(@(x) size(x.nodes, 1), dendritesNew) > 1))));
 
+    eqClasses = eqClassCCfull;
+    
     out = struct;
     out.param = param;
     out.state = state;
@@ -81,9 +83,9 @@ function createNewDendriteSuperagglos(param, state)
     out.eqClasses = eqClasses;
     out.flightGroups = flightGroups;
     
-    out.axons = cat(1, dendritesNew, agglos.dendrites(~agglos.indBigDends));
-    out.indBigDends = false(length(out.axons),1);
-    out.indBigDends(1:numel(axonsNew), 1) = true;
+    out.dendrites = cat(1, dendritesNew, agglos.dendrites(~agglos.indBigDends));
+    out.indBigDends = false(length(out.dendrites),1);
+    out.indBigDends(1:numel(dendritesNew), 1) = true;
 
     % Save super agglos and deprive writing permission
     saveFile = fullfile(dataDir, sprintf('dendrites_%s.mat', dendriteVersionNew));
