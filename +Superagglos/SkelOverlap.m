@@ -45,6 +45,7 @@ for f = 1:numel(files)
     
     % transform found superagglo to skeleton and write it to file
     skelSuperagglo = Superagglos.toSkel(superagglos(ind));
+    skelSuperagglo.names{1} = strcat(skel.names{1},'_Superagglo');
     outSkels = outSkels.addTreeFromSkel(skelSuperagglo);
     if exist('outputDir','var') && ~isempty(outputDir)
         skelSuperagglo.write(fullfile(outputDir,strrep(files(f).name,'.nml',sprintf('_Superagglo_%d.nml',ind)) ));
