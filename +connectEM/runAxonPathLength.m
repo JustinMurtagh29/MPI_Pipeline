@@ -47,7 +47,7 @@ end
 param = load('/gaba/u/mberning/results/pipeline/20170217_ROI/allParameterWithSynapses.mat');
 param = param.p;
 dataDir = fullfile(param.saveFolder, 'aggloState');
-m = load(fullfile(dataDir,'dendrites_07.mat'));
+m = load(fullfile(dataDir,'dendrites_flight_02.mat'));
 dendrites = m.dendrites(m.indBigDends);
 
 batchBoundaries = round(linspace(1, numel(dendrites)+1, 101));
@@ -56,7 +56,7 @@ for i=1:length(batchBoundaries)-1
     batchID{i,1} = {i};
 end
 
-dataDir = fullfile(param.saveFolder, 'aggloState/dendritePathLength/');
+dataDir = fullfile(param.saveFolder, 'aggloState/dendritePathLength/dendrites_flight_02/');
 if ~exist(dataDir)
     mkdir(dataDir)
 end

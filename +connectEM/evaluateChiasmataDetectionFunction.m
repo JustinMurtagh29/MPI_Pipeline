@@ -19,7 +19,8 @@ rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 aggloFile = fullfile(rootDir, 'aggloState', [aggloState '.mat']);
 
 % chiasmId = '20171019T155102';
-chiasmDir = '/tmpscratch/kboerg/chiasmata';
+% chiasmDir = '/tmpscratch/kboerg/chiasmata';
+chiasmDir = fullfile(rootDir, '/aggloState/chiasmata/dendrites/round1/');
 % chiasmataX20171017T044832_0
 % outputDir = '/tmpscratch/mbeining/chiasma_03_v2';
 
@@ -44,8 +45,10 @@ tic;
 for curIdx = 1:aggloCount
     curFile = fullfile( ...
         chiasmDir, ...
-        sprintf('chiasmataX%s_%d', chiasmId, floor(curIdx / 100)), ...
-        sprintf('visX%s_%d', chiasmId, curIdx), 'result.mat');
+        sprintf('chiasmataX20171103T150231%s_%d', chiasmId, floor(curIdx / 100)), ...
+        sprintf('visX20171103T150231%s_%d', chiasmId, curIdx), 'result.mat');
+%         sprintf('chiasmataX%s_%d', chiasmId, floor(curIdx / 100)), ...
+%         sprintf('visX%s_%d', chiasmId, curIdx), 'result.mat');
     
     curData = load(curFile);
     chiasmata{curIdx} = curData.output;
