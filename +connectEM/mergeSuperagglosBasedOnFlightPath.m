@@ -85,7 +85,7 @@ function superagglos_new = mergeSuperagglosBasedOnFlightPath( ...
             cut(end) = [];
             ind = find(cut);
             ind_before = [ind-1 N]; ind_before(ind_before < 1) = 1;
-            ind_after = [1 ind+1]; ind_after(ind_after > N) = N;
+            ind_after = [1 ind]; ind_after(ind_after > N) = N;
             occurences = arrayfun(@(x,y) occurences(x:y), ind_after, ind_before, 'uni', 0);
             classOrigin = arrayfun(@(x,y) classOrigin(x:y), ind_after, ind_before, 'uni', 0);
 
