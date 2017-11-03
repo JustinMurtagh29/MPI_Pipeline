@@ -1,11 +1,12 @@
-function outSkels = SkelOverlap(inputDir,superagglos,p)
+function outSkels = SkelOverlap(inputDir,superagglos,outputDir,p)
 % This function searches for each superagglo that overlaps the most with
 % each of the skeletons (nml files, 1 skel per file) found in inputDir and
-% writes them in the same folder as skeletons.
+% (if outputDir given) writes them in the same folder as skeletons.
 %
 % INPUT
 % inputDir      string with path to nml files which are used
 % superagglos   agglos in the superagglo format which are searched through
+% outputDir     (optional) string with path where skeletons should be written to
 % p             (optional) parameter struct of the pipeline run. If not
 %               defined, the L4 20170217_ROI pipeline run is used
 %
@@ -22,6 +23,9 @@ end
 
 if ~exist(inputDir,'dir')
     error('Folder %s is not existent',inputDir);
+end
+if exist('outputDir','var') && ~isempty(outputDir) && ~exist(outputDir,'dir')
+    mkdir(outputDir);
 end
 files = dir(fullfile(inputDir,'*.nml'));
 
@@ -42,5 +46,7 @@ for f = 1:numel(files)
     % transform found superagglo to skeleton and write it to file
     skelSuperagglo = Superagglos.toSkel(superagglos(ind));
     outSkels = outSkels.addTreeFromSkel(skelSuperagglo);
-    skelSuperagglo.write(fullfile(inputDir,strrep(files(f).name,'.nml',sprintf('_Superagglo_%d.nml',ind)) ));
+    if exist('outputDir','var') && ~isempty(outputDir)
+        skelSuperagglo.write(fullfile(outputDir,strrep(files(f).name,'.nml',sprintf('_Superagglo_%d.nml',ind)) ));
+    end
 end
