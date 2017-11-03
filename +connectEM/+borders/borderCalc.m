@@ -17,19 +17,17 @@ dendriteLookup = Agglo.buildLUT(maxSegId, dendrites);
 generalLookup = dendriteLookup;
 generalLookup(axonLookup ~= 0) = -axonLookup(axonLookup ~= 0);
 
+% set segmentation voxels that are not part of the dendrites and agglos
+% (most likely glia) to infinity
+generalLookup(~generalLookup) = inf;
+
 % load segmentation and convert do double
 seg = loadSegDataGlobal(p.seg, p.local(idx).bboxSmall);
 blockCount = ceil(size(seg) ./ blockSize);
 
-
 % apply equivalence class mapping
 seg = double(seg);
-segTemp = seg;
 seg(seg ~= 0) = generalLookup(seg(seg ~= 0));
-
-% set segmentation voxels that are not part of the dendrites and agglos (glia mostly) to an unused nonzero number
-seg(seg == 0 & segTemp ~= 0) = Inf;
-clear segTemp
 
 % find edges and borders
 % TODO(amotta): Cube borders are not properly handled yet.
