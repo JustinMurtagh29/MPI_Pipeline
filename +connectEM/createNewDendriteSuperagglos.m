@@ -73,7 +73,7 @@ function createNewDendriteSuperagglos(param, state)
         numel(Graph.findConnectedComponents(x.edges)) == 1, ...
         dendritesNew(arrayfun(@(x) size(x.nodes, 1), dendritesNew) > 1))));
 
-    eqClasses = eqClassCCfull;
+    eqClasses = flightPaths.eqClassCCfull;
     
     out = struct;
     out.param = param;
