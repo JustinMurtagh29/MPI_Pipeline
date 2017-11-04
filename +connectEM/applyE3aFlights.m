@@ -13,6 +13,7 @@ clear;
 
 %% configuration
 minNodeEvidence = 2 * 27;
+maxNumFlights = inf;
 
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 workingDir = fullfile(rootDir, 'aggloState');
@@ -115,6 +116,20 @@ adjEdges = sort(adjEdges, 2);
 adjEdges = adjEdges(uniRows, :);
 flights = structfun( ...
     @(vals) vals(uniRows, :), ...
+    flights, 'UniformOutput', false);
+
+%% execute only a subset of flights
+rng(0);
+
+flightCount = numel(flights.filenames);
+randIds = randperm(flightCount);
+
+execNumFlights = min(flightCount, maxNumFlights);
+randIds = randIds(1:execNumFlights);
+randIds = reshape(randIds, [], 1);
+
+flights = structfun( ...
+    @(vals) vals(randIds, :), ...
     flights, 'UniformOutput', false);
 
 %% grouping agglomerates
