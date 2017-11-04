@@ -1,12 +1,15 @@
-function job = detectChiasmataSuperSuper(p, chiParam, agglos, outputDir)
+function [job, runId] = ...
+        detectChiasmataSuperSuper(p, chiParam, agglos, outputDir)
     %for a clean version of findCCaccordingToGraph
     addpath('/gaba/u/kboerg/code/manuelCode/games');
     functionH = @connectEM.detectChiasmataSuper;
     inputCell = cellfun(@(x){x}, num2cell(1 : 500), 'uni', 0);
-
+    
     % set id for detected chiasmata
+    runId = datestr(now, 30);
+    chiParam.runId = runId;
+    
     chiParam.outputDir = outputDir;
-    chiParam.version = datestr(now, 30);
     p.voxelSize = p.raw.voxelSize;
 
     cluster = Cluster.getCluster( ...

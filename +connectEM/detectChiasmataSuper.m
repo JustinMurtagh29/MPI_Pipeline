@@ -1,6 +1,6 @@
 function detectChiasmataSuper(p, chiParam, agglos, startIdx)
     % set version number
-    version = chiParam.version;
+    runId = chiParam.runId;
     outputDir = chiParam.outputDir;
     
     % decide which function to use
@@ -21,8 +21,8 @@ function detectChiasmataSuper(p, chiParam, agglos, startIdx)
     for curIdx = startIdx:500:numel(agglos)
         curOutputDir = fullfile( ...
             outputDir, ...
-            sprintf('chiasmataX%s_%d', version, floor(curIdx / 100)), ...
-            sprintf('visX%s_%d/', version, curIdx));
+            sprintf('chiasmataX%s_%d', runId, floor(curIdx / 100)), ...
+            sprintf('visX%s_%d/', runId, curIdx));
         mkdir(curOutputDir);
         
         detectFunc( ...
