@@ -38,7 +38,7 @@ function output = generateQueriesFromChiasmata( ...
         chiasmata = chiasmata.output;
         
         for i = 1:numel(chiasmata.position)
-            if agglos.solvedChiasma(chiasmata.ccCenterIdx(i))
+            if agglos(aggloIdx).solvedChiasma(chiasmata.ccCenterIdx(i))
                 % chiasma already solved → nothing to do here
                 continue;
             end
