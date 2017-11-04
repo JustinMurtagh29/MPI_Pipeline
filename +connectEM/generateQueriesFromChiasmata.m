@@ -9,9 +9,10 @@ function output = generateQueriesFromChiasmata( ...
     curDateStr = datestr(clock, 30);
     
     % load axon agglomerates
-    aggloIds = load(aggloFile, 'indBigAxons');
-    aggloIds = find(aggloIds.indBigAxons);
+    agglos = load(aggloFile, 'axons', 'indBigAxons');
+    aggloIds = find(agglos.indBigAxons);
     aggloIds = reshape(aggloIds, 1, []);
+    agglos = agglos.axons;
     
     output = [];
     taskDef = table;
@@ -20,17 +21,18 @@ function output = generateQueriesFromChiasmata( ...
     taskDef.bbox = zeros(0, 6);
     
     for aggloIdx = aggloIds
-        temp = load(fullfile( ...
+        chiasmata = load(fullfile( ...
             chiasmaDir, ...
             sprintf('chiasmataX%s_%d', chiasmaId, floor(aggloIdx / 100)), ...
             sprintf('visX%s_%d', chiasmaId, aggloIdx), ...
             'result.mat'));
+        chiasmata = chiasmata.output;
         
-        for i = 1:numel(temp.output.position)
+        for i = 1:numel(chiasmata.position)
             % sanity check
-            assert(size(temp.output.direction{i}, 1) ...
-                == temp.output.nrExits(temp.output.ccCenterIdx(i)));
-            curNrExits = size(temp.output.direction{i}, 1);
+            assert(size(chiasmata.direction{i}, 1) ...
+                == chiasmata.nrExits(chiasmata.ccCenterIdx(i)));
+            curNrExits = size(chiasmata.direction{i}, 1);
             
             if curNrExits < 4
                 curNrQueries = 0;
@@ -41,25 +43,25 @@ function output = generateQueriesFromChiasmata( ...
             for j = 1:curNrQueries
                 extend = round(4000 ./ voxelSize);
                 dd = sqrt(sum((voxelSize ...
-                    .* temp.output.direction{i}(j,:)) .^ 2));
+                    .* chiasmata.direction{i}(j,:)) .^ 2));
                 if dd > 2000
                     extend = round(2 * dd ./ voxelSize);
                 end
                 
                 % determine size of bounding box
-                minPos = temp.output.position{i}(j, :) - extend;
+                minPos = chiasmata.position{i}(j, :) - extend;
                 sizeBbox = 2*extend;
                 
                 % determine Euler angles
                 [phi, theta, psi] = calculateEulerAngles( ...
-                    -temp.output.direction{i}(j, :), voxelSize);
+                    -chiasmata.direction{i}(j, :), voxelSize);
                 output(end+1, :) = [ ...
                     aggloIdx, i, j, ...
-                    temp.output.position{i}(j, :), ...
-                    temp.output.ccCenterIdx(i), ...
-                    temp.output.queryIdx{i}(j)]; %#ok
+                    chiasmata.position{i}(j, :), ...
+                    chiasmata.ccCenterIdx(i), ...
+                    chiasmata.queryIdx{i}(j)]; %#ok
                 taskDef(end + 1, {'position', 'rotation', 'bbox'}) = { ...
-                    temp.output.position{i}(j, :) - 1, ...
+                    chiasmata.position{i}(j, :) - 1, ...
                    [phi, theta, psi], [minPos, sizeBbox]}; %#ok
             end
         end
