@@ -12,7 +12,7 @@ function detectChiasmataSuper(p, chiParam, agglos, startIdx)
     end
     
     % add chiasmata detection parameters to `p`
-    chiParam = rmfield(chiParam, {'version', 'outputDir'});
+    chiParam = rmfield(chiParam, {'runId', 'outputDir'});
     chiParam = cat(2, fieldnames(chiParam), struct2cell(chiParam));
     chiParam = transpose(chiParam);
     
