@@ -108,13 +108,10 @@ flights.overlaps = cell2mat(flights.overlaps);
 %% remove redundant flights
 axonCount = numel(axons);
 
-adjEdges = flights.overlaps;
-adjEdges = sort(adjEdges, 2);
-
 % avoid duplicate edges
-[~, uniRows] = unique(adjEdges, 'rows');
+uniRows = sort(flights.overlaps, 2);
+[~, uniRows] = unique(uniRows, 'rows');
 
-adjEdges = adjEdges(uniRows, :);
 flights = structfun( ...
     @(vals) vals(uniRows, :), ...
     flights, 'UniformOutput', false);
@@ -137,6 +134,9 @@ fprintf('\n');
 fprintf('# flights selected for execution: %d\n', execNumFlights);
 
 %% grouping agglomerates
+adjEdges = flights.overlaps;
+adjEdges = sort(adjEdges, 2);
+
 adjMat = sparse( ...
     adjEdges(:, 2), adjEdges(:, 1), ...
     true, numel(axons), numel(axons));
