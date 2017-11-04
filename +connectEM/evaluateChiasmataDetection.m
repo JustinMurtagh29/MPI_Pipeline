@@ -8,10 +8,10 @@
 
 % configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-axonFile = fullfile(rootDir, 'aggloState', 'axons_06_c.mat');
+axonFile = fullfile(rootDir, 'aggloState', 'axons_10_a.mat');
 
-chiasmId = '20171005T162727';
-chiasmDir = '/tmpscratch/kboerg/chiasmata';
+chiasmId = '20171104T131021';
+chiasmDir = '/tmpscratch/amotta/l4/chiasma-detection';
 
 outputDir = '/home/amotta/Desktop';
 
@@ -43,7 +43,7 @@ end
 toc;
 
 %% start couting...
-clearvars -except param outputDir chiasmata;
+clearvars -except param agglos outputDir chiasmata;
 
 % count number of nodes
 nodeCount = cellfun(@(s) size(s.nodes, 1), chiasmata);
@@ -53,10 +53,20 @@ chiasmaNodeFracs = chiasmaNodeCounts ./ nodeCount;
 chiasmaCounts = cellfun(@(s) numel(s.ccCenterIdx), chiasmata);
 chiasmaTotalCount = sum(chiasmaCounts);
 
+% TODO(amotta): Use table instead
 chiasmaSizes = cell2mat(cellfun(@(s) ...
     cellfun(@numel, s.ccNodeIdx(:)), chiasmata, 'Uni', false));
 chiasmaNrExits = cell2mat(cellfun(@(c) ...
     cellfun(@(p) size(p, 1), c.position), chiasmata, 'Uni', false));
+
+if isfield(agglos, 'solvedChiasma')
+    chiasmaSolved = cell2mat(arrayfun(@(c, a) arrayfun( ...
+        @(idx) double(a.solvedChiasma(idx)), c{1}.ccCenterIdx(:)), ...
+        chiasmata, agglos, 'Uni', false));
+    chiasmaSolved = logical(chiasmaSolved);
+else
+    chiasmaSolved = false(size(chiasmaNrExits));
+end
 
 chiasmaAggloMask = chiasmaCounts > 0;
 chiasmaAggloFrac = mean(chiasmaAggloMask);
@@ -79,7 +89,10 @@ fprintf('%s\n', strjoin(arrayfun(@num2str, temp(1:10), 'Uni', false), ', '));
 
 temp = table;
 temp.nrExits = (4:max(chiasmaNrExits))';
-temp.nrChiasmata = arrayfun(@(c) sum(chiasmaNrExits == c), temp.nrExits);
+temp.nrChiasmata = arrayfun(@(c) ...
+    sum(chiasmaNrExits == c), temp.nrExits);
+temp.nrMarkedSolved = arrayfun(@(c) ...
+    sum(chiasmaSolved(chiasmaNrExits == c)), temp.nrExits);
 fprintf('\n'); disp(temp);
 
 %% write out largest chiasmata
