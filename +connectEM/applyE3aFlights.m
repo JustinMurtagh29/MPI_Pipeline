@@ -94,6 +94,7 @@ startOkay = (cellfun(@numel, flightOverlaps(:, 1)) == 1);
 endOkay = (cellfun(@numel, flightOverlaps(:, 2)) == 1);
 bothOkay = startOkay & endOkay;
 
+fprintf('\n');
 fprintf('# flights with clear start: %d\n', sum(startOkay));
 fprintf('# flights with clear end: %d\n', sum(endOkay));
 fprintf('# flights with clear start and end: %d\n', sum(bothOkay));
@@ -257,3 +258,16 @@ out.axons = cat(1, out.axons(:), allAxons(otherAxonIds));
 
 out.indBigAxons = false(size(out.axons));
 out.indBigAxons(1:axonCompCount) = true;
+
+%% evaluation
+axonStats = table;
+axonStats.axonId = reshape(1:numel(out.axons), [], 1);
+axonStats.nrNodes = arrayfun(@(a) size(a.nodes, 1), out.axons);
+axonStats.nrSegments = arrayfun( ...
+    @(a) sum(not(isnan(a.nodes(:, 4)))), out.axons);
+axonStats.nrFlights = accumarray( ...
+    flights.axonComp, 1, size(out.axons), @sum, 0);
+axonStats = sortrows(axonStats, 'nrSegments', 'descend');
+
+fprintf('Largest axons:\n\n');
+disp(axonStats(1:20, :));
