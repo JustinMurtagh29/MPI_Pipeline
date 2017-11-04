@@ -1,4 +1,4 @@
-function skel = buildSkeletonFromDetection(agglo, chiasmata)
+function skel = buildSkeleton(agglo, chiasmata)
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     chiasmaCount = numel(chiasmata.ccCenterIdx);
