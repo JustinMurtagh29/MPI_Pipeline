@@ -13,7 +13,7 @@ clear;
 
 %% configuration
 minNodeEvidence = 2 * 27;
-maxNumFlights = inf;
+maxNumFlights = 10000;
 
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 workingDir = fullfile(rootDir, 'aggloState');
