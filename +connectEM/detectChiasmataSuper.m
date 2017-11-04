@@ -1,33 +1,24 @@
-function detectChiasmataSuper(startidx, p, useSphereClustering, type)
-    if nargin < 3
-        useSphereClustering = false;
-    end
-    % Note: For Dendrites set type to true.
-    if nargin < 4
-        type = false;
-    end
-    
-    if type
-        agglos = load(p.inputFile, 'axons', 'indBigAxons');
-        agglos = agglos.axons(agglos.indBigAxons);
-    else
-        agglos = load(p.inputFile, 'dendrites', 'indBigDends');
-        agglos = agglos.dendrites(agglos.indBigDends);
-    end
-
+function detectChiasmataSuper(p, chiParam, agglos, startIdx)
     % set version number
-    numstr = p.chiasmataVersion;
+    numstr = chiParam.version;
     
     % decide which function to use
-    if useSphereClustering
+    if isfield(chiParam, 'useSphereClustering') && ...
+            chiParam.useSphereClustering
         detectFunc = @connectEM.detectChiasmataSphereClustering;
     else
         detectFunc = @connectEM.detectChiasmata;
     end
     
-    for idx = startidx : 500 : length(agglos)
+    % add chiasmata detection parameters to `p`
+    chiParam = cat(2, fieldnames(chiParam), struct2cell(chiParam));
+    chiParam = transpose(chiParam);
+    
+    p = Util.modifyStruct(p, chiParam{:});
+    
+    for idx = startIdx:500:numel(agglos)
         outputFolder = fullfile( ...
-            p.outputDir, ...
+            chiParam.outputDir, ...
             sprintf('chiasmataX%s_%d', numstr, floor(idx / 100)), ...
             sprintf('visX%s_%d/', numstr, idx));
         mkdir(outputFolder);
