@@ -9,7 +9,9 @@ function output = generateQueriesFromChiasmata( ...
     curDateStr = datestr(clock, 30);
     
     % load axon agglomerates
-    agglos = load(aggloFile, 'axons', 'indBigAxons');
+    aggloIds = load(aggloFile, 'indBigAxons');
+    aggloIds = find(aggloIds.indBigAxons);
+    aggloIds = reshape(aggloIds, 1, []);
     
     output = [];
     taskDef = table;
@@ -17,7 +19,7 @@ function output = generateQueriesFromChiasmata( ...
     taskDef.rotation = zeros(0, 3);
     taskDef.bbox = zeros(0, 6);
     
-    for aggloIdx = find(agglos.indBigAxons)'
+    for aggloIdx = aggloIds
         temp = load(fullfile( ...
             chiasmaDir, ...
             sprintf('chiasmataX%s_%d', chiasmaId, floor(aggloIdx / 100)), ...
