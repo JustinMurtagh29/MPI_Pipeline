@@ -40,6 +40,9 @@ chiasmata = connectEM.Chiasma.Detect.collectResults( ...
     tempOutputDir, runId, numel(agglos));
 fprintf('done!\n');
 
+%% evaluation
+connectEM.Chiasma.Detect.evaluate(chiasmata, agglos);
+
 %% building output
 out = struct;
 out.info = info;
