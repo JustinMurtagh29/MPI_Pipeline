@@ -1,6 +1,7 @@
 function detectChiasmataSuper(p, chiParam, agglos, startIdx)
     % set version number
-    numstr = chiParam.version;
+    version = chiParam.version;
+    outputDir = chiParam.outputDir;
     
     % decide which function to use
     if isfield(chiParam, 'useSphereClustering') && ...
@@ -11,20 +12,21 @@ function detectChiasmataSuper(p, chiParam, agglos, startIdx)
     end
     
     % add chiasmata detection parameters to `p`
+    chiParam = rmfield(chiParam, {'version', 'outputDir'});
     chiParam = cat(2, fieldnames(chiParam), struct2cell(chiParam));
     chiParam = transpose(chiParam);
     
     p = Util.modifyStruct(p, chiParam{:});
     
-    for idx = startIdx:500:numel(agglos)
-        outputFolder = fullfile( ...
-            chiParam.outputDir, ...
-            sprintf('chiasmataX%s_%d', numstr, floor(idx / 100)), ...
-            sprintf('visX%s_%d/', numstr, idx));
-        mkdir(outputFolder);
+    for curIdx = startIdx:500:numel(agglos)
+        curOutputDir = fullfile( ...
+            outputDir, ...
+            sprintf('chiasmataX%s_%d', version, floor(curIdx / 100)), ...
+            sprintf('visX%s_%d/', version, curIdx));
+        mkdir(curOutputDir);
         
         detectFunc( ...
-            p, agglos(idx).nodes(:, 1:3), ...
-            agglos(idx).edges, false, outputFolder);
+            p, agglos(curIdx).nodes(:, 1:3), ...
+            agglos(curIdx).edges, false, curOutputDir);
     end
 end
