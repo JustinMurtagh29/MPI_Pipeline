@@ -27,7 +27,7 @@ agglos = load(axonFile, 'axons', 'indBigAxons');
 agglos = agglos.axons(agglos.indBigAxons);
 
 %% run chiasma detection
-[job, runId] = connectEM.detectChiasmata( ...
+[job, runId] = connectEM.detectChiasmataSuperSuper( ...
     param, chiasmaParam, agglos, tempOutputDir);
 fprintf('Running chiasma detection %s... ', runId);
 
