@@ -14,6 +14,15 @@ function output = generateQueriesFromChiasmata( ...
     aggloIds = reshape(aggloIds, 1, []);
     agglos = agglos.axons;
     
+    % set default values for `chiasmaSolved`
+    if ~isfield(agglos, 'solvedChiasma')
+        solvedChiasma = arrayfun(@(a) ...
+            false(size(a.nodes, 1), 1), ...
+            agglos, 'UniformOutput', false);
+       [agglos.solvedChiasma] = deal(solvedChiasma{:});
+        clear solvedChiasma;
+    end
+    
     output = [];
     taskDef = table;
     taskDef.position = zeros(0, 3);
@@ -29,6 +38,11 @@ function output = generateQueriesFromChiasmata( ...
         chiasmata = chiasmata.output;
         
         for i = 1:numel(chiasmata.position)
+            if agglos.solvedChiasma(chiasmata.ccCenterIdx(i))
+                % chiasma already solved → nothing to do here
+                continue;
+            end
+            
             % sanity check
             assert(size(chiasmata.direction{i}, 1) ...
                 == chiasmata.nrExits(chiasmata.ccCenterIdx(i)));
