@@ -32,7 +32,7 @@ files = dir(fullfile(inputDir,'*.nml'));
 outSkels = skeleton();
 for f = 1:numel(files)
     skel = skeleton(fullfile(inputDir,files(f).name));  % load skeleton
-    skelCoords = cell2mat(cellfun(@(x) x(:,1:3),skel.nodes,'uni',0));  % putting all skel nodes together
+    skelCoords = cell2mat(cellfun(@(x) x(all(x>0,2),1:3),skel.nodes,'uni',0));  % putting all skel nodes together (which have xyz larger than 0)
     warning('OFF','auxiliaryMethods:readKnossosCube')
     skelSegIds = unique(Seg.Global.getSegIds(p,skelCoords));  % extract the seg Ids of all skel nodes but use each segId only once
     warning('ON','auxiliaryMethods:readKnossosCube')
