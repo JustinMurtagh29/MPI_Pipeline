@@ -13,6 +13,7 @@ clear;
 
 %% configuration
 minNodeEvidence = 2 * 27;
+maxNumFlights = 10000;
 
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 workingDir = fullfile(rootDir, 'aggloState');
@@ -93,6 +94,7 @@ startOkay = (cellfun(@numel, flightOverlaps(:, 1)) == 1);
 endOkay = (cellfun(@numel, flightOverlaps(:, 2)) == 1);
 bothOkay = startOkay & endOkay;
 
+fprintf('\n');
 fprintf('# flights with clear start: %d\n', sum(startOkay));
 fprintf('# flights with clear end: %d\n', sum(endOkay));
 fprintf('# flights with clear start and end: %d\n', sum(bothOkay));
@@ -106,18 +108,35 @@ flights.overlaps = cell2mat(flights.overlaps);
 %% remove redundant flights
 axonCount = numel(axons);
 
-adjEdges = flights.overlaps;
-adjEdges = sort(adjEdges, 2);
-
 % avoid duplicate edges
-[~, uniRows] = unique(adjEdges, 'rows');
+uniRows = sort(flights.overlaps, 2);
+[~, uniRows] = unique(uniRows, 'rows');
 
-adjEdges = adjEdges(uniRows, :);
 flights = structfun( ...
     @(vals) vals(uniRows, :), ...
     flights, 'UniformOutput', false);
 
+%% execute only a subset of flights
+rng(0);
+
+flightCount = numel(flights.filenames);
+execNumFlights = min(flightCount, maxNumFlights);
+
+randIds = randperm(flightCount);
+randIds = randIds(1:execNumFlights);
+randIds = reshape(randIds, [], 1);
+
+flights = structfun( ...
+    @(vals) vals(randIds, :), ...
+    flights, 'UniformOutput', false);
+
+fprintf('\n');
+fprintf('# flights selected for execution: %d\n', execNumFlights);
+
 %% grouping agglomerates
+adjEdges = flights.overlaps;
+adjEdges = sort(adjEdges, 2);
+
 adjMat = sparse( ...
     adjEdges(:, 2), adjEdges(:, 1), ...
     true, numel(axons), numel(axons));
@@ -242,3 +261,17 @@ out.axons = cat(1, out.axons(:), allAxons(otherAxonIds));
 
 out.indBigAxons = false(size(out.axons));
 out.indBigAxons(1:axonCompCount) = true;
+
+%% evaluation
+axonStats = table;
+axonStats.axonId = reshape(1:numel(out.axons), [], 1);
+axonStats.nrNodes = arrayfun(@(a) size(a.nodes, 1), out.axons);
+axonStats.nrSegments = arrayfun( ...
+    @(a) sum(not(isnan(a.nodes(:, 4)))), out.axons);
+axonStats.nrFlights = accumarray( ...
+    flights.axonComp, 1, size(out.axons), @sum, 0);
+axonStats = sortrows(axonStats, 'nrSegments', 'descend');
+
+fprintf('\n');
+fprintf('Largest axons:\n\n');
+disp(axonStats(1:20, :));
