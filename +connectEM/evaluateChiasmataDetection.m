@@ -26,74 +26,10 @@ agglos = agglos.axons(agglos.indBigAxons);
 aggloCount = numel(agglos);
 
 %% load all chiasmata results
-chiasmata = cell(aggloCount, 1);
-
-tic;
-for curIdx = 1:aggloCount
-    curFile = fullfile( ...
-        chiasmDir, ...
-        sprintf('chiasmataX%s_%d', chiasmId, floor(curIdx / 100)), ...
-        sprintf('visX%s_%d', chiasmId, curIdx), 'result.mat');
-    
-    curData = load(curFile);
-    chiasmata{curIdx} = curData.output;
-    
-    if ~mod(curIdx, 500); fprintf('%d done\n', curIdx); end
-end
-toc;
-
-%% start couting...
-clearvars -except param agglos outputDir chiasmata;
-
-% count number of nodes
-nodeCount = cellfun(@(s) size(s.nodes, 1), chiasmata);
-chiasmaNodeCounts = cellfun(@(s) sum(s.isIntersection), chiasmata);
-chiasmaNodeFracs = chiasmaNodeCounts ./ nodeCount;
-
-chiasmaCounts = cellfun(@(s) numel(s.ccCenterIdx), chiasmata);
-chiasmaTotalCount = sum(chiasmaCounts);
-
-% TODO(amotta): Use table instead
-chiasmaSizes = cell2mat(cellfun(@(s) ...
-    cellfun(@numel, s.ccNodeIdx(:)), chiasmata, 'Uni', false));
-chiasmaNrExits = cell2mat(cellfun(@(c) ...
-    cellfun(@(p) size(p, 1), c.position), chiasmata, 'Uni', false));
-
-if isfield(agglos, 'solvedChiasma')
-    chiasmaSolved = cell2mat(arrayfun(@(c, a) arrayfun( ...
-        @(idx) double(a.solvedChiasma(idx)), c{1}.ccCenterIdx(:)), ...
-        chiasmata, agglos, 'Uni', false));
-    chiasmaSolved = logical(chiasmaSolved);
-else
-    chiasmaSolved = false(size(chiasmaNrExits));
-end
-
-chiasmaAggloMask = chiasmaCounts > 0;
-chiasmaAggloFrac = mean(chiasmaAggloMask);
-chiasmaAggloTotal = sum(chiasmaAggloMask);
-
-%% report
-fprintf('\nTotal number of chiasmata: %d\n', chiasmaTotalCount);
-
-temp = sort(chiasmaCounts, 'descend');
-fprintf('\nLargest number of chiasmata per agglomerate:\n');
-fprintf('%s\n', strjoin(arrayfun(@num2str, temp(1:10), 'Uni', false), ', '));
-
-temp = sort(chiasmaSizes, 'descend');
-fprintf('\nLargest chiasmata (in number of nodes):\n');
-fprintf('%s\n', strjoin(arrayfun(@num2str, temp(1:10), 'Uni', false), ', '));
-
-temp = sort(chiasmaNodeCounts, 'descend');
-fprintf('\nLargest number of chiasma nodes per agglomerate:\n');
-fprintf('%s\n', strjoin(arrayfun(@num2str, temp(1:10), 'Uni', false), ', '));
-
-temp = table;
-temp.nrExits = (4:max(chiasmaNrExits))';
-temp.nrChiasmata = arrayfun(@(c) ...
-    sum(chiasmaNrExits == c), temp.nrExits);
-temp.nrMarkedSolved = arrayfun(@(c) ...
-    sum(chiasmaSolved(chiasmaNrExits == c)), temp.nrExits);
-fprintf('\n'); disp(temp);
+chiasmata = ...
+    connectEM.Chiasma.Detect.collectResults( ...
+        chiasmDir, chiasmId, aggloCount);
+connectEM.Chiasma.Detect.evaluate(chiasmata, agglos);
 
 %% write out largest chiasmata
 mkdir(outputDir);
