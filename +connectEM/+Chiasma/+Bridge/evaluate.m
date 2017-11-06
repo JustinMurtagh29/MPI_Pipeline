@@ -42,6 +42,6 @@ for curIdx = 1:size(chiasma, 1)
     curChiasmata = chiasmata{chiasma.axonId(curIdx)};
     curChiasmaId = chiasma.chiasmaId(curIdx);
     
-    connectEM.Chiasma.Bridge.findBridges( ...
+   [isBridge, edges] = connectEM.Chiasma.Bridge.findBridges( ...
         param, chiasmaParam, curAxon, curChiasmata, curChiasmaId);
 end

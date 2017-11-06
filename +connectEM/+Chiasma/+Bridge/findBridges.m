@@ -1,4 +1,5 @@
-function findBridges(param, chiasmaParam, axon, chiasmata, chiasmaId)
+function [isBridge, edges] = findBridges( ...
+        param, chiasmaParam, axon, chiasmata, chiasmaId)
     nodeId = chiasmata.ccCenterIdx(chiasmaId);
     exitNodeIds = chiasmata.queryIdx{chiasmaId};
     
@@ -16,12 +17,15 @@ function findBridges(param, chiasmaParam, axon, chiasmata, chiasmaId)
     axon.edges(~all(axon.edges, 2), :) = [];
     
    [~, exitNodeIds] = ismember(exitNodeIds, nodeIds);
-    exitNodeIds = sort(reshape(exitNodeIds, 1, 4));
+    exitNodeIds = reshape(exitNodeIds, 1, 4);
     assert(all(exitNodeIds));
     
     %% find bridges
     edges = axon.edges;
     assert(issorted(edges, 2));
+    
+    edgeCount = size(edges, 1);
+    isBridge = false(edgeCount, 3);
     
     adjMat = sparse( ...
         edges(:, 2), edges(:, 1), ...
@@ -30,7 +34,7 @@ function findBridges(param, chiasmaParam, axon, chiasmata, chiasmaId)
     clear adjMat;
     
     % search for bridges
-    for curEdgeId = 1:size(edges, 1)
+    for curEdgeId = 1:edgeCount
         curEdges = edges;
         curEdges(curEdgeId, :) = [];
         
@@ -39,9 +43,8 @@ function findBridges(param, chiasmaParam, axon, chiasmata, chiasmaId)
             true, nodeCount, nodeCount);
         [~, curComps] = graphconncomp(curAdjMat, 'Directed', false);
         
-        % check for 2-2 partition
-        for curIdB = exitNodeIds(2:end)
-            curIdsAB = horzcat(exitNodeIds(1), curIdB);
+        for curIdxB = 2:4
+            curIdsAB = sort(exitNodeIds([1, curIdxB]));
             curIdsCD = setdiff(exitNodeIds, curIdsAB);
 
             curCompAB = unique(curComps(curIdsAB));
@@ -50,11 +53,12 @@ function findBridges(param, chiasmaParam, axon, chiasmata, chiasmaId)
             curCompCD = unique(curComps(curIdsCD));
             if ~isscalar(curCompCD); continue; end
             
-            if curCompAB ~= curCompCD
-                fprintf('Found bridge:\n');
-                fprintf('(%d, %d) and (%d, %d)\n', curIdsAB, curIdsCD);
-                fprintf('Edge: (%d, %d)\n', edges(curEdgeId, :));
-            end
+            % check for 2-2 partition
+            if curCompAB == curCompCD; continue; end
+            isBridge(curEdgeId, curIdxB - 1) = true;
         end
     end
+    
+    % globalize edges
+    edges = nodeIds(edges);
 end
