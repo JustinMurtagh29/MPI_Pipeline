@@ -87,6 +87,10 @@ for s = 1:numel(superagglos)
                 end
             end
             aggloWOsoma = Superagglos.removeNodesFromAgglo(aggloWOsoma,setdiff(1:size(aggloWOsoma.nodes,1),aggloWOsoma.edges(:)),1); % remove all nodes that are not connected anymore
+            if isempty(aggloWOsoma)   % BP can not exist with only 2 nodes or less
+                nBPs(s) = 0;
+                continue
+            end
             aggloWOsoma = Superagglos.removeNodesFromAgglo(aggloWOsoma,histc(aggloWOsoma.edges(:),1:size(aggloWOsoma.nodes,1)) == 1); % remove all endings. This of course also shortens the aggloWOsoma bit but should remove most of the untrue endings
             BPcoords = zeros(0,3);
             for a = 1:numel(aggloWOsoma)
