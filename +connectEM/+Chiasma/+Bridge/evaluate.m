@@ -26,11 +26,18 @@ axonIds = find(axons.indBigAxons);
 axons = axons.axons(axonIds);
 
 %% select examples
-chiasma = [
-    19453, 1;
-    158, 2];
-chiasma = array2table( ...
-    chiasma, 'VariableNames', {'axonId', 'chiasmaId'});
+chiasma = table;
+chiasma.axonId = repelem((1:numel(chiasmata))', ...
+    cellfun(@(c) numel(c.ccCenterIdx), chiasmata));
+chiasma.chiasmaId = cell2mat(cellfun(@(c) ...
+    (1:numel(c.ccCenterIdx))', chiasmata, 'UniformOutput', false));
+
+% restrict to 4-fold chiasmata
+chiasma.nrExits = arrayfun(@(a, c) ...
+    chiasmata{a}.nrExits(chiasmata{a}.ccCenterIdx(c)), ...
+    chiasma.axonId, chiasma.chiasmaId);
+chiasma(chiasma.nrExits ~= 4, :) = [];
+chiasma.nrExits = [];
 
 chiasmaCount = size(chiasma, 1);
 
