@@ -1,29 +1,29 @@
 function findBridges(param, chiasmaParam, axon, chiasmata, chiasmaId)
-    curNodeId = chiasmata.ccCenterIdx(chiasmaId);
-    curExitNodeIds = chiasmata.queryIdx{chiasmaId};
+    nodeId = chiasmata.ccCenterIdx(chiasmaId);
+    exitNodeIds = chiasmata.queryIdx{chiasmaId};
     
-   [~, curInnerNodeIds] = connectEM.Chiasma.restrictToSphere( ...
-       param, axon, curNodeId, chiasmaParam.sphereRadiusInner);
+   [~, innerNodeIds] = connectEM.Chiasma.restrictToSphere( ...
+       param, axon, nodeId, chiasmaParam.sphereRadiusInner);
     
     % add immediate neighbours as well
-    curNodeIds = any(ismember(axon.edges, curInnerNodeIds), 2);
-    curNodeIds = unique(axon.edges(curNodeIds, :));
-    curNodeCount = numel(curNodeIds);
+    nodeIds = any(ismember(axon.edges, innerNodeIds), 2);
+    nodeIds = unique(axon.edges(nodeIds, :));
+    nodeCount = numel(nodeIds);
     
     % restrict
-    axon.nodes = axon.nodes(curNodeIds, :);
-   [~, axon.edges] = ismember(axon.edges, curNodeIds);
+    axon.nodes = axon.nodes(nodeIds, :);
+   [~, axon.edges] = ismember(axon.edges, nodeIds);
     axon.edges(~all(axon.edges, 2), :) = [];
     
-   [~, curExitNodeIds] = ismember(curExitNodeIds, curNodeIds);
-    curExitNodeIds = sort(reshape(curExitNodeIds, 1, 4));
-    assert(all(curExitNodeIds));
+   [~, exitNodeIds] = ismember(exitNodeIds, nodeIds);
+    exitNodeIds = sort(reshape(exitNodeIds, 1, 4));
+    assert(all(exitNodeIds));
     
     %%
-    curIdA = curExitNodeIds(1);
-    for curIdB = curExitNodeIds(2:end)
+    curIdA = exitNodeIds(1);
+    for curIdB = exitNodeIds(2:end)
         curIdsAB = horzcat(curIdA, curIdB);
-        curIdsCD = setdiff(curExitNodeIds, curIdsAB);
+        curIdsCD = setdiff(exitNodeIds, curIdsAB);
         
         % add loops
         curEdges = axon.edges;
@@ -32,7 +32,7 @@ function findBridges(param, chiasmaParam, axon, chiasmata, chiasmaId)
         
         curAdj = sparse( ...
             curEdges(:, 2), curEdges(:, 1), ...
-            true, curNodeCount, curNodeCount);
+            true, nodeCount, nodeCount);
         assert(graphconncomp(curAdj, 'Directed', false) == 1);
 
         % search for loops
@@ -43,7 +43,7 @@ function findBridges(param, chiasmaParam, axon, chiasmata, chiasmaId)
         
             curAdj = sparse( ...
                 curAdj(:, 2), curAdj(:, 1), ...
-                true, curNodeCount, curNodeCount);
+                true, nodeCount, nodeCount);
            [~, curComps] = graphconncomp(curAdj, 'Directed', false);
            
             curCompAB = unique(curComps(curIdsAB));
