@@ -68,10 +68,10 @@ for s = 1:numel(superagglos)
             vipEdgeCounter = 0;
             while 1
                 % remove last edge from edge list and check if aggloWOsoma does not fall
-                % appart
+                % apart
                 edges = aggloWOsoma.edges(1:end-1,:);
                 equivalenceClass = Graph.findConnectedComponents(cat(1,edges,repmat(unique(aggloWOsoma.edges(:)),1,2)),0,1);
-                if size(edges,1) <= vipEdgeCounter;
+                if size(edges,1) <= vipEdgeCounter
                     break
                 end
                 % check if agglo did not split or if it split but the only one
