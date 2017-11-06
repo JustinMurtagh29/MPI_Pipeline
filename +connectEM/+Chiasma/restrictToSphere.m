@@ -3,10 +3,8 @@ function [postAgglo, preNodeIds, preNodeDistNmSq] = ...
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     
-    if ~isfield(agglo, 'nodesNm')
-        voxelSize = param.raw.voxelSize;
-        agglo.nodesNm = agglo.nodes(:, 1:3) .* voxelSize;
-    end
+    voxelSize = param.raw.voxelSize;
+    agglo.nodesNm = agglo.nodes(:, 1:3) .* voxelSize;
     
     % restrict spatially
     nodePosNm = agglo.nodesNm(nodeIdx, :);
