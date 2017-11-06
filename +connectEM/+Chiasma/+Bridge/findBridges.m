@@ -1,5 +1,7 @@
 function [isBridge, edges] = findBridges( ...
         param, chiasmaParam, axon, chiasmata, chiasmaId)
+    % Written by
+    %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     nodeId = chiasmata.ccCenterIdx(chiasmaId);
     exitNodeIds = chiasmata.queryIdx{chiasmaId};
     
