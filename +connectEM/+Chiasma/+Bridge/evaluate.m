@@ -38,71 +38,10 @@ paramForChiasma = transpose(horzcat( ...
 paramForChiasma = Util.modifyStruct(param, paramForChiasma{:});
 
 for curIdx = 1:size(chiasma, 1)
-    curAxonId = chiasma.axonId(curIdx);
+    curAxon = axons(chiasma.axonId(curIdx));
+    curChiasmata = chiasmata{chiasma.axonId(curIdx)};
     curChiasmaId = chiasma.chiasmaId(curIdx);
     
-    curAxon = axons(curAxonId);
-    curChiasmata = chiasmata{curAxonId};
-    
-    curNodeId = curChiasmata.ccCenterIdx(curChiasmaId);
-    curExitNodeIds = curChiasmata.queryIdx{curChiasmaId};
-    
-   [~, curInnerNodeIds] = ...
-        connectEM.Chiasma.restrictToSphere( ...
-            param, curAxon, curNodeId, chiasmaParam.sphereRadiusInner);
-    
-    % add immediate neighbours as well
-    curNodeIds = any(ismember(curAxon.edges, curInnerNodeIds), 2);
-    curNodeIds = unique(curAxon.edges(curNodeIds, :));
-    curNodeCount = numel(curNodeIds);
-    
-    % restrict
-    curAxon.nodes = curAxon.nodes(curNodeIds, :);
-   [~, curAxon.edges] = ismember(curAxon.edges, curNodeIds);
-    curAxon.edges(~all(curAxon.edges, 2), :) = [];
-    
-   [~, curExitNodeIds] = ismember(curExitNodeIds, curNodeIds);
-    curExitNodeIds = sort(reshape(curExitNodeIds, 1, 4));
-    assert(all(curExitNodeIds));
-    
-    %%
-    curIdA = curExitNodeIds(1);
-    for curIdB = curExitNodeIds(2:end)
-        curIdsAB = horzcat(curIdA, curIdB);
-        curIdsCD = setdiff(curExitNodeIds, curIdsAB);
-        
-        % add loops
-        curEdges = curAxon.edges;
-        curEdges = cat(1, curEdges, [curIdA, curIdB; curIdsCD]);
-        assert(issorted(curEdges, 2));
-        
-        curAdj = sparse( ...
-            curEdges(:, 2), curEdges(:, 1), ...
-            true, curNodeCount, curNodeCount);
-        assert(graphconncomp(curAdj, 'Directed', false) == 1);
-
-        % search for loops
-        for curEdgeId = 1:size(curEdges, 1)
-            curAdj = curEdges;
-            curAdj(curEdgeId, :) = [];
-            assert(issorted(curAdj, 2));
-        
-            curAdj = sparse( ...
-                curAdj(:, 2), curAdj(:, 1), ...
-                true, curNodeCount, curNodeCount);
-           [~, curComps] = graphconncomp(curAdj, 'Directed', false);
-           
-            curCompAB = unique(curComps(curIdsAB));
-            curCompCD = unique(curComps(curIdsCD));
-            
-            assert(isscalar(curCompAB));
-            assert(isscalar(curCompCD));
-            
-            if curCompAB ~= curCompCD
-                fprintf('\nFound bridge:\n');
-                fprintf('(%d, %d) and (%d, %d)\n', curIdsAB, curIdsCD);
-                fprintf('Edge: (%d, %d)\n', curEdges(curEdgeId, :));
-            end
-        end
-    end
+    connectEM.Chiasma.Bridge.findBridges( ...
+        param, chiasmaParam, curAxon, curChiasmata, curChiasmaId);
 end
