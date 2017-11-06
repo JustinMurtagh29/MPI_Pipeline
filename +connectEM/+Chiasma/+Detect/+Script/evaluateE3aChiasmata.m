@@ -24,13 +24,26 @@ axons = load(axonFile);
 axonIds = find(axons.indBigAxons);
 axons = axons.axons(axonIds);
 
-%% select random chiasmata
+%% select chiasmata
 chiasma = table;
 chiasma.axonId = repelem((1:numel(chiasmata))', ...
     cellfun(@(c) numel(c.ccCenterIdx), chiasmata));
 chiasma.chiasmaId = cell2mat(cellfun(@(c) ...
     (1:numel(c.ccCenterIdx))', chiasmata, 'UniformOutput', false));
 
+% restrict to 4-fold chiasmata
+chiasma.nrExits = arrayfun(@(a, c) ...
+    chiasmata{a}.nrExits(chiasmata{a}.ccCenterIdx(c)), ...
+    chiasma.axonId, chiasma.chiasmaId);
+chiasma(chiasma.nrExits ~= 4, :) = [];
+chiasma.nrExits = [];
+
+% remove solved chiasmata
+chiasma.isSolved = arrayfun(@(a, c) ...
+    axons(a).solvedChiasma(chiasmata{a}.ccCenterIdx(c)), ...
+    chiasma.axonId, chiasma.chiasmaId);
+chiasma(chiasma.isSolved, :) = [];
+chiasma.isSolved = [];
 
 %% export axons
 rng(0);
