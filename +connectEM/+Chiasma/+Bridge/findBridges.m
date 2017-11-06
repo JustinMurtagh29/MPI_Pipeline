@@ -5,8 +5,16 @@ function [isBridge, edges] = findBridges( ...
     nodeId = chiasmata.ccCenterIdx(chiasmaId);
     exitNodeIds = chiasmata.queryIdx{chiasmaId};
     
+    % restrict to outer sphere
+   [axon, nodeIds] = connectEM.Chiasma.restrictToSphere( ...
+       param, axon, nodeId, chiasmaParam.sphereRadiusOuter);
+   
+    nodeId = find(nodeIds == nodeId);
+   [~, exitNodeIds] = ismember(exitNodeIds, nodeIds);
+   
+    % find nodes which are cut out
    [~, innerNodeIds] = connectEM.Chiasma.restrictToSphere( ...
-       param, axon, nodeId, chiasmaParam.sphereRadiusInner);
+       param, axon, nodeId, chiasmaParam.sphereRadiusInner); %#ok
     
     % add immediate neighbours as well
     nodeIds = any(ismember(axon.edges, innerNodeIds), 2);

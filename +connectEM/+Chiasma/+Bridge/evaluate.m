@@ -51,16 +51,20 @@ results.nrPartitions = nan(chiasmaCount, 1);
 results.nrBridges = nan(chiasmaCount, 1);
 
 tic
-for curIdx = 1:size(chiasma, 1)
+for curIdx = 10
     curAxon = axons(chiasma.axonId(curIdx));
     curChiasmata = chiasmata{chiasma.axonId(curIdx)};
     curChiasmaId = chiasma.chiasmaId(curIdx);
     
-   [isBridge, edges] = connectEM.Chiasma.Bridge.findBridges( ...
-        param, chiasmaParam, curAxon, curChiasmata, curChiasmaId);
-    
-    results.nrPartitions(curIdx) = sum(any(isBridge, 1));
-    results.nrBridges(curIdx) = sum(isBridge(:));
+    try
+       [isBridge, edges] = connectEM.Chiasma.Bridge.findBridges( ...
+            param, chiasmaParam, curAxon, curChiasmata, curChiasmaId);
+
+        results.nrPartitions(curIdx) = sum(any(isBridge, 1));
+        results.nrBridges(curIdx) = sum(isBridge(:));
+    catch
+        warning('FIX ME!');
+    end
 end
 toc
 
