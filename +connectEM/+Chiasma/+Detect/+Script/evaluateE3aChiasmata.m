@@ -53,15 +53,15 @@ if ~exist(outputDir, 'dir')
     mkdir(outputDir);
 end
 
-for curIdx = 1:20
-    curChiasma = chiasma(randIds(curIdx), :);
+for curIdx = 1:100
+    curAxonId = chiasma.axonId(randIds(curIdx));
+    curChiasmaId = chiasma.chiasmaId(randIds(curIdx));
     
     curSkel = connectEM.Chiasma.Detect.buildSkeleton( ...
-        axons(curChiasma.axonId), chiasmata{curChiasma.axonId});
+        axons(curAxonId), chiasmata{curAxonId}, curChiasmaId);
     curSkel = Skeleton.setParams4Pipeline(curSkel, param);
     
     curSkelFile = sprintf( ...
-        '%03d_axon-%d_chiasma-%d.nml', ...
-        curIdx, curChiasma.axonId, curChiasma.chiasmaId);
+        '%03d_axon-%d_chiasma-%d.nml', curIdx, curAxonId, curChiasmaId);
     curSkel.write(fullfile(outputDir, curSkelFile));
 end
