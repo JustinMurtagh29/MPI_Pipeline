@@ -1,13 +1,19 @@
-function skel = buildSkeleton(agglo, chiasmata)
+function skel = buildSkeleton(agglo, chiasmata, chiasmaIds)
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
+    
     chiasmaCount = numel(chiasmata.ccCenterIdx);
-    nodeCount = size(agglo.nodes, 1);
+    
+    if ~exist('chiasmaIds', 'var') || isempty(chiasmaIds)
+        % by default, show all chiasmata
+        chiasmaIds = 1:chiasmaCount;
+    end
     
     % build comments
+    nodeCount = size(agglo.nodes, 1);
     comments = repelem({''}, nodeCount, 1);
     
-    for chiIdx = 1:chiasmaCount
+    for chiIdx = reshape(chiasmaIds, 1, [])
         comments{chiasmata.ccCenterIdx(chiIdx)} = ...
             sprintf('Chiasma %d', chiIdx);
         
