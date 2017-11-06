@@ -28,7 +28,8 @@ if noCC
         end
     end
     newedges = arrayfun(@(x) edges(all(edges > cumNumNodes(x) & edges <= cumNumNodes(x+1) ,2),:) ,1:numel(superagglos),'uni',0);
-    newedges = cellfun(@(x) x - [sum(bsxfun(@ge,x(:,1),idsToDelete'),2),sum(bsxfun(@ge,x(:,2),idsToDelete'),2)],newedges,'uni',0);
+    emptyEdges = cellfun(@isempty,newedges);
+    newedges(~emptyEdges) = cellfun(@(x) x - [sum(bsxfun(@ge,x(:,1),idsToDelete'),2),sum(bsxfun(@ge,x(:,2),idsToDelete'),2)],newedges(~emptyEdges),'uni',0);
     newSuperagglos = cell2struct([newedges;newnodes;tmpstrct(:)],[{'edges'},{'nodes'},fNames'],1);
     return
 end
