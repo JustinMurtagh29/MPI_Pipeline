@@ -14,12 +14,13 @@ innerbbox = [(-sizeInnerBBox/2 ./ p.raw.voxelSize);(sizeInnerBBox/2 ./ p.raw.vox
 sizeOuterBBox = 10000;  % in nm. size of bbox..
 outerbbox = [(-sizeOuterBBox/2 ./ p.raw.voxelSize);(sizeOuterBBox/2 ./ p.raw.voxelSize)]';
 nBPs = zeros(numel(superagglos),1);
+tic
 for s = 1:numel(superagglos)
     superagglos(s) = Superagglos.removeDuplicates(superagglos(s));
     
     % cut out soma
     aggloWOsoma = Superagglos.removeSegIdsFromAgglos(superagglos(s),cell2mat(somaAgglos),1);
-    if size(aggloWOsoma.nodes,1) == 0
+    if size(aggloWOsoma.nodes,1) <= 2   % BP can not exist with only 2 nodes or less
         nBPs(s) = 0;
         continue
     end
@@ -114,5 +115,6 @@ for s = 1:numel(superagglos)
 %         scatter3(aggloWOsoma.nodes(aggloWOsoma.edges(end,:),1)*11.24,aggloWOsoma.nodes(aggloWOsoma.edges(end,:),2)*11.24,aggloWOsoma.nodes(aggloWOsoma.edges(end,:),3)*28,150,'r','o','filled')
         scatter3(BPcoords(:,1),BPcoords(:,2),BPcoords(:,3),150,'r','o','filled')
     end
+    Util.progressBar(s,numel(superagglos));
 end
 
