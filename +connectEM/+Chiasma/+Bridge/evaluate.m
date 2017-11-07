@@ -9,7 +9,8 @@ chiasmataFile = fullfile( ...
     '20171104T181213-on-axons-10a-plus-10kE3a', ...
     '20171104T184018_chiasmata.mat');
 
-outputDir = '/home/amotta/Desktop/random-chiasmata';
+outputDir = '/home/amotta/Desktop/random-bridges';
+debug = true;
 
 %% load data
 param = load(fullfile(rootDir, 'allParameter.mat'));
@@ -39,6 +40,7 @@ chiasma.nrExits = arrayfun(@(a, c) ...
 chiasma(chiasma.nrExits ~= 4, :) = [];
 chiasma.nrExits = [];
 
+% shuffle order
 chiasmaCount = size(chiasma, 1);
 
 %%
@@ -50,10 +52,16 @@ results = table;
 results.nrPartitions = nan(chiasmaCount, 1);
 results.nrBridges = nan(chiasmaCount, 1);
 
+if ~exist(outputDir, 'dir')
+    mkdir(outputDir);
+end
+
 tic
-for curIdx = 10
-    curAxon = axons(chiasma.axonId(curIdx));
-    curChiasmata = chiasmata{chiasma.axonId(curIdx)};
+for curIdx = 1:chiasmaCount
+    curAxonId = chiasma.axonId(curIdx);
+    curAxon = axons(curAxonId);
+    
+    curChiasmata = chiasmata{curAxonId};
     curChiasmaId = chiasma.chiasmaId(curIdx);
     
     try
@@ -64,7 +72,39 @@ for curIdx = 10
         results.nrBridges(curIdx) = sum(isBridge(:));
     catch
         warning('FIX ME!');
+        continue;
     end
+    
+    % run the rest only in debug mode
+    if ~exist('debug', 'var') || ~debug; continue; end
+    
+    % restrict debugging to most interesting cases
+    if results.nrPartitions(curIdx) ~= 1; continue; end
+    
+    curComments = repmat({''}, size(curAxon.nodes, 1), 1);
+    curComments{curChiasmata.ccCenterIdx(curChiasmaId)} = 'Chiasma';
+    curComments(curChiasmata.queryIdx{curChiasmaId}) = {'Chiasma exit'};
+    
+    curSkel = skeleton();
+    curSkel = curSkel.addTree( ...
+        sprintf('Axon %d', curAxonId), curAxon.nodes(:, 1:3), ...
+        curAxon.edges, [], [], curComments);
+    
+    curBridgeColor = [0, 1, 0, 1];
+    curBridges = edges(any(isBridge, 2), :);
+    
+    for curBridgeIdx = 1:size(curBridges, 1)
+        curNodes = curBridges(curBridgeIdx, :);
+        curNodes = curAxon.nodes(curNodes, 1:3);
+        
+        curSkel = curSkel.addTree( ...
+            sprintf('Bridge %d', curBridgeIdx), ...
+            curNodes, [1, 2], curBridgeColor);
+    end
+    
+    curSkel = Skeleton.setParams4Pipeline(curSkel, param);
+    curSkel.write(fullfile(outputDir, sprintf( ...
+        'axon-%d-chiasma-%d.nml', curAxonId, curChiasmaId)));
 end
 toc
 
