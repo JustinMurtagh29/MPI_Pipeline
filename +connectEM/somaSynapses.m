@@ -33,9 +33,35 @@ for idx = numSomas1:numSomas
     % load soma region
     load(['thiscube5_' num2str(idx)],'thiscube5');
     % get the position of all edges as defined in somasynapseEdgeIdx
-    posx = cellfun(@(x){ceil(double(borders.borderCoM(graph.borderIdx(x(1)),:))./[32,32,16])},somasynapsesEdgeIdx);
-    % find out whether they are in the soma region
+    posx = cellfun(@(x){ceil(double(borders.borderCoM(graph.borderIdx(x(1)),:))./[32,32,16])},somasynapsesEdgeIdx{idx});
+%     find out whether they are in the soma region
     goodsynapses{idx} = cellfun(@(x)thiscube5(x(1),x(2),x(3)),posx);
     %document
     connectEM.generateSkeletonFromAgglo([ones(sum(goodsynapses{idx})-1,1), (2:sum(goodsynapses{idx}))'],cell2mat(cellfun(@(x){double(borders.borderCoM(graph.borderIdx(x(1)),:))},somasynapsesEdgeIdx{idx}(goodsynapses{idx}))),{1:sum(goodsynapses{idx})},{num2str(idx)},'tata',sum(goodsynapses{idx}));
+end
+
+% added by BS: get synapses for each soma
+p = Gaba.getSegParameters('ex145_ROI2017');
+[graph, ~, borderMeta] = Seg.IO.loadGraph(p, false);
+maxSomaId = max(cellfun(@max, somaAgglos.somaAgglos(:,1)));
+postsynSomaLUT = L4.Agglo.buildLUT(synapses.synapses.postsynId, maxSomaId);
+somaSynIdx = cellfun(@(x)setdiff(postsynSomaLUT(x), 0), ...
+    somaAgglos.somaAgglos(:,1), 'uni', 0);
+
+synScoresT.synT = -1;
+synScoresT.otherSynT = 1.5;
+toDiscard = cell(numSomas, 1);
+for i = 1:numSomas
+    [~, toDiscard{i}] = L4.Soma.somaSynapsePostProcessing( ...
+        synapses.synapses, synapses.boutons, somaSynIdx{i}, ...
+        synapses.isSpineSyn, graph.synScores, synScoresT );
+end
+somaSynIdx = cellfun(@(x,y)x(~y), somaSynIdx, toDiscard, 'uni', 0);
+somaSynEdgeIdx = cellfun(@(x)cell2mat(synapses.synapses.edgeIdx(x)), ...
+    somaSynIdx, 'uni', 0);
+for idx = 1:numSomas
+    posx = arrayfun(@(x){ceil(double(borders.borderCoM(graph.borderIdx(x),:))./[32,32,16])},somaSynEdgeIdx{idx});
+    load(['thiscube5_' num2str(idx)],'thiscube5');
+    goodsynapses{idx} = cellfun(@(x)thiscube5(x(1),x(2),x(3)),posx);
+    skel = L4.Agglo.agglo2Nml(somaSynEdgeIdx{idx}(goodsynapses{idx}), borderMeta.borderCoM);
 end
