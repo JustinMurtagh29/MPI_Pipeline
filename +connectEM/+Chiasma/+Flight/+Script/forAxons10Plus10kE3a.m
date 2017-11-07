@@ -9,14 +9,14 @@ runId = datestr(now, 30);
 
 %% configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-chiasmataFile = fullfile( ...
-    rootDir, 'chiasmataSplitting', ...
-    '20171104T181213-on-axons-10a-plus-10kE3a', ...
-    '20171104T184018_chiasmata.mat');
 
-outputDir = '/home/amotta/Desktop';
-webKnossosTaskFile = sprintf('%s_flightTasks.txt', runId);
-webKnossosTaskFile = fullfile(outputDir, webKnossosTaskFile);
+chiasmaDir = fullfile( ...
+    rootDir, 'chiasmataSplitting', ...
+    '20171104T181213-on-axons-10a-plus-10kE3a');
+
+chiasmataFile = fullfile(chiasmaDir, '20171104T184018_chiasmata.mat');
+outputDir = fullfile(chiasmaDir, 'taskGeneration');
+clear workingDir;
 
 info = Util.runInfo();
 
@@ -39,13 +39,16 @@ overlaps = cellfun(@(c) cellfun(@(q) ...
 
 %% find exits to query
 exits = selectExits(axons, chiasmata, overlaps);
-taskDefs = generateTasks(param, chiasmata, exits, webKnossosTaskFile);
+
+taskDefFile = fullfile(outputDir, sprintf('%s_flightTasks.txt', runId));
+taskDefs = generateTasks(param, chiasmata, exits, taskDefFile);
 
 %% build output
 out = struct;
 out.info = info;
 out.exits = exits;
 out.taskDefs = taskDefs;
+out.taskDefFile = taskDefFile;
 
 outFile = sprintf('%s_taskGeneration.mat', runId);
 Util.saveStruct(fullfile(outputDir, outFile), out);
