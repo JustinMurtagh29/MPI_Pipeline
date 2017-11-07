@@ -23,8 +23,11 @@ tic
 for s = 1:numel(superagglos)
     thisagglo = Superagglos.removeDuplicates(superagglos(s));
     if useCluster
+%         if rem(s,500)==0
         % cut out soma
         aggloWOsoma{s} = Superagglos.removeSegIdsFromAgglos(thisagglo,cell2mat(somaAgglos),1);
+        
+%         end
     else
         nBPs(s) = getBranchPoint(Superagglos.removeSegIdsFromAgglos(thisagglo,cell2mat(somaAgglos),1),method,show,innerbbox,outerbbox);
         Util.progressBar(s,numel(superagglos));
@@ -39,7 +42,7 @@ job = Cluster.startJob( ...
     @getBranchPoint, aggloWOsoma, ...
     'sharedInputs', {method,show,innerbbox,outerbbox}, ...
     'sharedInputsLocation', 2:5, ...
-    'cluster', cluster,'name','branchpoints');
+    'cluster', cluster,'name','branchpoints','taskGroupSize',50);
 Cluster.waitForJob(job);
 nBPs = fetchOutputs(job);
 nBPs = cell2mat(nBPs);
