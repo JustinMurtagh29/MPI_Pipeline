@@ -1,6 +1,11 @@
-function exportTaskDefinitions(param, taskDef, outFile)
+function fullTaskDef = exportTaskDefinitions(param, taskDef, outFile)
+    % fullTaskDef = exportTaskDefinitions(param, taskDef, outFile)
+    %   Completes the flight task definitions in `taskDef` with the default
+    %   values in `param`, and writes the result to `outFile`.
+    %
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
+    
     fullTaskDef = taskDef;
     fullTaskDef.dataSet(:) = {param.dataSet};
     fullTaskDef.taskTypeId(:) = {param.taskTypeId};
@@ -16,6 +21,8 @@ function exportTaskDefinitions(param, taskDef, outFile)
         'position', 'rotation', 'instances', 'team', 'bbox', 'project'};
     fullTaskDef = fullTaskDef(:, columnOrder);
     
-    % write CSV file
-    writetable(fullTaskDef, outFile, 'WriteVariableNames', false);
+    if exist('outFile', 'var') && ~isempty(outFile)
+        % write results to CSV file, if file path is specified
+        writetable(fullTaskDef, outFile, 'WriteVariableNames', false);
+    end
 end
