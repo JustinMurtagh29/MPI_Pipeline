@@ -4,7 +4,7 @@ clear;
 
 %% configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-axonFile = fullfile(rootDir, 'aggloState', 'axons_10_a_plus_10kE3a.mat');
+axonFile = fullfile(rootDir, 'aggloState', 'axons_10_a_plus_10kE3a_b.mat');
 
 outputDir = fullfile( ...
     rootDir, 'chiasmataSplitting', ...
