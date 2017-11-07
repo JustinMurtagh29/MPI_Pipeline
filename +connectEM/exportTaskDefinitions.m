@@ -21,7 +21,7 @@ function fullTaskDef = exportTaskDefinitions(param, taskDef, outFile)
         'position', 'rotation', 'instances', 'team', 'bbox', 'project'};
     fullTaskDef = fullTaskDef(:, columnOrder);
     
-    if exits('outFile', 'var') && ~isempty(outFile)
+    if exist('outFile', 'var') && ~isempty(outFile)
         % write results to CSV file, if file path is specified
         writetable(fullTaskDef, outFile, 'WriteVariableNames', false);
     end
