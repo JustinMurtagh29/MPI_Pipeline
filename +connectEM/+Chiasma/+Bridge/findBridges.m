@@ -6,11 +6,11 @@ function [isBridge, edges] = findBridges( ...
     exitNodeIds = chiasmata.queryIdx{chiasmaId};
     
     % restrict to outer sphere
-   [axon, nodeIds] = connectEM.Chiasma.restrictToSphere( ...
+   [axon, outerNodeIds] = connectEM.Chiasma.restrictToSphere( ...
        param, axon, nodeId, chiasmaParam.sphereRadiusOuter);
    
-    nodeId = find(nodeIds == nodeId);
-   [~, exitNodeIds] = ismember(exitNodeIds, nodeIds);
+    nodeId = find(outerNodeIds == nodeId);
+   [~, exitNodeIds] = ismember(exitNodeIds, outerNodeIds);
    
     % find nodes which are cut out
    [~, innerNodeIds] = connectEM.Chiasma.restrictToSphere( ...
@@ -26,7 +26,7 @@ function [isBridge, edges] = findBridges( ...
    [~, axon.edges] = ismember(axon.edges, nodeIds);
     axon.edges(~all(axon.edges, 2), :) = [];
     
-   [~, exitNodeIds] = ismember(exitNodeIds, nodeIds);
+   [~, exitNodeIds] = ismember(exitNodeIds, outerNodeIds(nodeIds));
     exitNodeIds = reshape(exitNodeIds, 1, 4);
     assert(all(exitNodeIds));
     
@@ -70,5 +70,5 @@ function [isBridge, edges] = findBridges( ...
     end
     
     % globalize edges
-    edges = nodeIds(edges);
+    edges = outerNodeIds(nodeIds(edges));
 end
