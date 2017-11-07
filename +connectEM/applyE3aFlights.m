@@ -156,7 +156,7 @@ for curComp = 1:axonCompCount
     curAxons = axons(curAxons);
     
     if numel(curAxons) == 1
-        out.axons(curComp) = curAxon;
+        out.axons(curComp) = curAxons;
         continue;
     end
     
