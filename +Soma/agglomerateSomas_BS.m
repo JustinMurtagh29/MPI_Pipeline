@@ -4,7 +4,7 @@
 
 info = Util.runInfo(false);
 doNucleiDetection = false; %#ok<*UNRCH>
-ver = '03';
+ver = '05';
 
 outputFolder = sprintf(['/gaba/u/mberning/results/pipeline/' ...
     '20170217_ROI/soma_BS/']);
