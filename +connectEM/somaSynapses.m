@@ -18,12 +18,18 @@ graph = load('/gaba/u/mberning/results/pipeline/20170217_ROI/graphNewNew.mat','b
 lookup = repelem(1:height(synapses.synapses),cellfun(@length,synapses.synapses{:,3}));
 for idx = [1:95]
     idx
+    % get all edges that are part of a synapse
     somasynapsesEdgeIdx = synapses.synapses{lookup(ismember(cell2mat(synapses.synapses{:,3}),somaAgglos.somaAgglos{idx,1})),1};
+    % make sure that there are any
     if isempty(somasynapsesEdgeIdx)
         continue
     end
+    % load soma region
     load(['thiscube5_' num2str(idx)],'thiscube5');
+    % get the position of all edges as defined in somasynapseEdgeIdx
     posx = cellfun(@(x){ceil(double(borders.borderCoM(graph.borderIdx(x(1)),:))./[32,32,16])},somasynapsesEdgeIdx);
+    % find out whether they are in the soma region
     goodsynapses{idx} = cellfun(@(x)thiscube5(x(1),x(2),x(3)),posx);
+    %document
     connectEM.generateSkeletonFromAgglo([ones(sum(goodsynapses{idx})-1,1), (2:sum(goodsynapses{idx}))'],cell2mat(cellfun(@(x){double(borders.borderCoM(graph.borderIdx(x(1)),:))},somasynapsesEdgeIdx(goodsynapses{idx}))),{1:sum(goodsynapses{idx})},{num2str(idx)},'tata',sum(goodsynapses{idx}));
 end
