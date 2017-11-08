@@ -1,4 +1,4 @@
-function [out,clusterSizes] = getEndings(param,axonAgglos)
+function [out,nEndings] = getEndings(param,axonAgglos)
     % ending detection
     %
     % Written by
@@ -81,7 +81,8 @@ function [out,clusterSizes] = getEndings(param,axonAgglos)
     out.borderIds = borderIds;
     out.borderPositions = borderPositions;
     out.borderClusters = borderClusters;
-
+    nEndings = zeros(numel(axonAgglos),1);
+    nEndings(axonIds) = clusterSizes;
 end
 
 function clusterIds = clusterBorders(param, options, borderCoM)
