@@ -38,7 +38,6 @@ function [newAgglos, summary] = ...
     summary.centerIdx = nan(chiasmaCount, 1);
     summary.nrExits = nan(chiasmaCount, 1);
     summary.nrNonExits = nan(chiasmaCount, 1);
-    summary.nrExits = nan(chiasmaCount, 1);
     summary.solved = false(chiasmaCount, 1);
     summary.tracings = cell(chiasmaCount, 1);
     
@@ -75,10 +74,9 @@ function [newAgglos, summary] = ...
         nrExits = numel(C);
         assert(nrExits == expectedNrExits);
         
-        summary.nrExits(chiIdx) = nrExits;
         summary.centerIdx(chiIdx) = centerIdx;
-        summary.nrNonExits(chiIdx) = sum(~isExit);
         summary.nrExits(chiIdx) = nrExits;
+        summary.nrNonExits(chiIdx) = sum(~isExit);
         summary.tracings{chiIdx} = struct;
         summary.tracings{chiIdx}.taskIds = chiTracings.taskId;
         summary.tracings{chiIdx}.nodes = chiTracings.flightNodes;
