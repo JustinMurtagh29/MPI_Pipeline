@@ -1,6 +1,7 @@
 % Written by
 %   Alessandro Motta <alessandro.motta@brain.mpg.de>
 import connectEM.Chiasma.Flight.selectExits;
+import connectEM.Chiasma.Flight.shuffleExits;
 import connectEM.Chiasma.Flight.generateTasks;
 
 %%
@@ -34,6 +35,7 @@ axons = axons.axons(axonIds);
 
 %% find exits to query
 exits = selectExits(axons, chiasmata, [], inf);
+exits = shuffleExits(exits, 500);
 
 taskDefFile = fullfile(outputDir, sprintf('%s_flightTasks.txt', runId));
 taskDefs = generateTasks(param, chiasmata, exits, taskDefFile);
