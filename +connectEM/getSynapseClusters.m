@@ -1,8 +1,11 @@
-function [nBoutons,meanSynPerBouton] = getSynapseClusters(p,agglos,show)
+function [nBoutons,meanSynPerBouton] = getSynapseClusters(p,agglos,show,clusterDistance)
 % p = Gaba.getSegParameters('ex145_ROI2017');
 % [graph, segmentMeta, borderMeta] = Seg.IO.loadGraph(p, false);
 if ~exist('show','var') || isempty(show)
     show = 0;
+end
+if ~exist('clusterDistance','var') || isempty(clusterDistance)
+    clusterDistance = 1000; %nm
 end
 load(fullfile(p.saveFolder,'connectomeState','SynapseAgglos_v2.mat'),'synapses') % (erzeugt via E:\workspace\pipeline\Benedikt\+L4\+Synapses\+Scripts\synapseDetection.m)
 
@@ -15,7 +18,7 @@ for s = 1:numel(agglos)
     presynSegCoords = bsxfun(@times,agglos(s).nodes(ind(ind~=0),1:3),[11.24,11.24,28]);
     if size(presynSegCoords,1) > 1
         synClusters = clusterdata(presynSegCoords, ...
-            'linkage', 'single', 'criterion', 'distance', 'cutoff', 3000);
+            'linkage', 'single', 'criterion', 'distance', 'cutoff', clusterDistance);
     else
         synClusters = 1;
     end
