@@ -56,6 +56,9 @@ clear cur*;
 
 %% collect overlaps and build LUT
 chiasmaT.dynOverlaps = cat(1, overlaps{:});
+chiasmaT.dynNrQueries = cellfun( ...
+    @(o) sum(o(:, 1) > 0), chiasmaT.dynOverlaps);
+
 chiasmaT.dynLUT = cell(size(chiasmaT, 1), 1);
 chiasmaT.statLUT = cell(size(chiasmaT, 1), 1);
 
