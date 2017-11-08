@@ -4,6 +4,9 @@ function exits = selectExits(agglos, chiasmata, overlaps, maxNrQueries)
     %   (`chiasmata`) and partial answers (`overlaps`). Chiasmata marked as
     %   solved (`agglos.solvedChiasma`) are ignored.
     %
+    %   If `overlaps` is an empty array, all exits are considered for
+    %   querying. This is also the default value for `overlaps`.
+    %
     %   For each chiasma at most `maxNrQueries` are selected. By default,
     %   `maxNrQueries` is set to one. Set `maxNrQueries` to `inf` if you
     %   want to query all exits.
@@ -12,13 +15,23 @@ function exits = selectExits(agglos, chiasmata, overlaps, maxNrQueries)
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     
     assert(numel(agglos) == numel(chiasmata));
-    assert(numel(agglos) == numel(overlaps));
+    
+    %% default values
+    if ~exist('overlaps', 'var')
+        overlaps = [];
+    end
+    
+    if ~isempty(overlaps)
+        % check overlaps, if specified
+        assert(numel(agglos) == numel(overlaps));
+    end
     
     if ~exist('maxNrQueries', 'var') || isempty(maxNrQueries)
         % set default value for `maxNrQueries`
         maxNrQueries = 1;
     end
     
+    %% collected chiasmata
     chiasma = table;
     chiasma.aggloId = repelem((1:numel(chiasmata))', ...
         cellfun(@(c) numel(c.ccCenterIdx), chiasmata));
@@ -42,10 +55,15 @@ function exits = selectExits(agglos, chiasmata, overlaps, maxNrQueries)
         
         curChiasmata = chiasmata{curAggloId};
         curNrExits = numel(curChiasmata.queryIdx{curChiasmaId});
-        curOverlaps = overlaps{curAggloId}{curChiasmaId};
+        curOpenExits = 1:curNrExits;
+        
+        if ~isempty(overlaps)
+            % remove queried or reached exits
+            curOverlaps = overlaps{curAggloId}{curChiasmaId};
+            curOpenExits = setdiff(curOpenExits, curOverlaps);
+        end
         
         % select an open exits
-        curOpenExits = setdiff(1:curNrExits, curOverlaps);
         curNrQueries = min(numel(curOpenExits), maxNrQueries);
         curExits = curOpenExits(1:curNrQueries);
         
@@ -59,5 +77,4 @@ function exits = selectExits(agglos, chiasmata, overlaps, maxNrQueries)
     exits.aggloId = repelem(chiasma.aggloId, exitCounts);
     exits.chiasmaId = repelem(chiasma.chiasmaId, exitCounts);
     exits.exitId = cell2mat(chiasma.exitIds);
-    
 end
