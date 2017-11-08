@@ -35,6 +35,7 @@ function [newAgglos, summary] = ...
     
     summary = struct;
     summary.nrChiasmata = chiasmaCount;
+    summary.chiasmaId = nan(chiasmaCount, 1);
     summary.centerIdx = nan(chiasmaCount, 1);
     summary.nrExits = nan(chiasmaCount, 1);
     summary.nrNonExits = nan(chiasmaCount, 1);
@@ -45,6 +46,7 @@ function [newAgglos, summary] = ...
     p.sphereRadiusInner = 1000; % in nm
     
     for chiIdx = 1:chiasmaCount
+        chiasmaId = chiasmata.chiasmaId(chiIdx);
         centerIdx = chiasmata.centerNodeId(chiIdx);
         chiTracings = chiasmataTracings{chiIdx};
         expectedNrExits = size(chiTracings, 1);
@@ -74,6 +76,7 @@ function [newAgglos, summary] = ...
         nrExits = numel(C);
         assert(nrExits == expectedNrExits);
         
+        summary.chiasmaId(chiIdx) = chiasmaId;
         summary.centerIdx(chiIdx) = centerIdx;
         summary.nrExits(chiIdx) = nrExits;
         summary.nrNonExits(chiIdx) = sum(~isExit);
