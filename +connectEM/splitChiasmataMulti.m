@@ -14,6 +14,9 @@ function [newAgglos, summary] = ...
     cutoffDistNm = 300; % only consider exits within X nm of flight path
     cutoffTracingNm = 1000; % ignore the first X nm of flight path
     
+    axonId = unique(queries.axonId);
+    assert(isscalar(axonId));
+    
     % Group queries into chiasmata
    [~, chiasmata, queries.uniChiasmaId] = unique(queries.chiasmaId);
     chiasmata = queries(chiasmata, {'chiasmaId', 'centerNodeId'});
@@ -34,6 +37,7 @@ function [newAgglos, summary] = ...
     edgesToAdd = zeros(0, 2);
     
     summary = struct;
+    summary.axonId = axons;
     summary.nrChiasmata = chiasmaCount;
     summary.chiasmaId = nan(chiasmaCount, 1);
     summary.centerIdx = nan(chiasmaCount, 1);
