@@ -45,7 +45,7 @@ job = Cluster.startJob( ...
     'cluster', cluster,'name','branchpoints','taskGroupSize',50,'numOutputs',1);
 Cluster.waitForJob(job);
 nBPs = fetchOutputs(job);
-nBPs = cell2mat(nBPs);
+nBPs = cell2mat(cat(1,nBPs{:}));
 
 function nBPs = getBranchPoint(aggloWOsoma,method,show,innerbbox,outerbbox)
 nBPs = 0;
