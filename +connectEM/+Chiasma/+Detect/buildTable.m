@@ -17,8 +17,10 @@ function chiasma = buildTable(chiasmata, agglos)
     %% optional fields, which require `agglos`
     if ~exist('agglos', 'var') || isempty(agglos); return; end
     
-    % mark solved chiasmata
-    chiasma.isSolved = arrayfun(@(a, c) ...
-        agglos(a).solvedChiasma(chiasmata{a}.ccCenterIdx(c)), ...
-        chiasma.aggloId, chiasma.chiasmaId);
+    if isfield(agglos, 'solvedChiasma')
+        % mark solved chiasmata
+        chiasma.isSolved = arrayfun(@(a, c) ...
+            agglos(a).solvedChiasma(chiasmata{a}.ccCenterIdx(c)), ...
+            chiasma.aggloId, chiasma.chiasmaId);
+    end
 end
