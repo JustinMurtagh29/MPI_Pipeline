@@ -14,6 +14,9 @@ function [newAgglos, summary] = ...
     cutoffDistNm = 300; % only consider exits within X nm of flight path
     cutoffTracingNm = 1000; % ignore the first X nm of flight path
     
+    axonId = unique(queries.axonId);
+    assert(isscalar(axonId));
+    
     % Group queries into chiasmata
    [~, chiasmata, queries.uniChiasmaId] = unique(queries.chiasmaId);
     chiasmata = queries(chiasmata, {'chiasmaId', 'centerNodeId'});
@@ -34,11 +37,12 @@ function [newAgglos, summary] = ...
     edgesToAdd = zeros(0, 2);
     
     summary = struct;
+    summary.axonId = axonId;
     summary.nrChiasmata = chiasmaCount;
+    summary.chiasmaId = nan(chiasmaCount, 1);
     summary.centerIdx = nan(chiasmaCount, 1);
     summary.nrExits = nan(chiasmaCount, 1);
     summary.nrNonExits = nan(chiasmaCount, 1);
-    summary.nrExits = nan(chiasmaCount, 1);
     summary.solved = false(chiasmaCount, 1);
     summary.tracings = cell(chiasmaCount, 1);
     
@@ -46,6 +50,7 @@ function [newAgglos, summary] = ...
     p.sphereRadiusInner = 1000; % in nm
     
     for chiIdx = 1:chiasmaCount
+        chiasmaId = chiasmata.chiasmaId(chiIdx);
         centerIdx = chiasmata.centerNodeId(chiIdx);
         chiTracings = chiasmataTracings{chiIdx};
         expectedNrExits = size(chiTracings, 1);
@@ -75,10 +80,10 @@ function [newAgglos, summary] = ...
         nrExits = numel(C);
         assert(nrExits == expectedNrExits);
         
-        summary.nrExits(chiIdx) = nrExits;
+        summary.chiasmaId(chiIdx) = chiasmaId;
         summary.centerIdx(chiIdx) = centerIdx;
-        summary.nrNonExits(chiIdx) = sum(~isExit);
         summary.nrExits(chiIdx) = nrExits;
+        summary.nrNonExits(chiIdx) = sum(~isExit);
         summary.tracings{chiIdx} = struct;
         summary.tracings{chiIdx}.taskIds = chiTracings.taskId;
         summary.tracings{chiIdx}.nodes = chiTracings.flightNodes;

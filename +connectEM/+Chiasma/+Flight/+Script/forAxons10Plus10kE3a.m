@@ -1,5 +1,6 @@
 % Written by
 %   Alessandro Motta <alessandro.motta@brain.mpg.de>
+import connectEM.Chiasma.Detect.buildTable;
 import connectEM.Chiasma.Flight.selectExits;
 import connectEM.Chiasma.Flight.shuffleExits;
 import connectEM.Chiasma.Flight.generateTasks;
@@ -34,7 +35,10 @@ axonIds = find(axons.indBigAxons);
 axons = axons.axons(axonIds);
 
 %% find exits to query
-exits = selectExits(axons, chiasmata, [], inf);
+chiasmaT = buildTable(chiasmata, axons);
+chiasmaT(chiasmaT.isSolved, :) = [];
+
+exits = selectExits(chiasmaT, [], inf);
 exits = shuffleExits(exits, 500);
 
 taskDefFile = fullfile(outputDir, sprintf('%s_flightTasks.txt', runId));
