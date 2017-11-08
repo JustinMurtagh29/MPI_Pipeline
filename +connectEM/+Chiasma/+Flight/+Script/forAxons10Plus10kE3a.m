@@ -14,7 +14,7 @@ chiasmaDir = fullfile( ...
     rootDir, 'chiasmataSplitting', ...
     '20171104T181213-on-axons-10a-plus-10kE3a');
 
-chiasmataFile = fullfile(chiasmaDir, '20171104T184018_chiasmata.mat');
+chiasmataFile = fullfile(chiasmaDir, '20171107T211304_chiasmata.mat');
 outputDir = fullfile(chiasmaDir, 'taskGeneration');
 clear workingDir;
 
