@@ -1,4 +1,4 @@
-function summaries = runFullyQueried()
+function summaries = runStaticQueries()
     % This is a modified version of `connectEM.splitChiasmataMultiSuper`
     % from commit c77836bd23ed5fa37144384da669fc4c076f9cd8.
     %

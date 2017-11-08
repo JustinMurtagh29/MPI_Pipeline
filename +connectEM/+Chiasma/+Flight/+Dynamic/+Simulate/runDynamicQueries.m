@@ -2,7 +2,7 @@
 %   Alessandro Motta <alessandro.motta@brain.mpg.de>
 
 %% run chiasma splitting on fully queried chiasmata for ground truth
-summaries = connectEM.Chiasma.Flight.Dynamic.Simulate.runFullyQueried();
+summaries = connectEM.Chiasma.Flight.Dynamic.Simulate.runStaticQueries();
 
 %% build fake chiasma table
 knownNrExits = reshape({summaries.nrExits}, [], 1);
