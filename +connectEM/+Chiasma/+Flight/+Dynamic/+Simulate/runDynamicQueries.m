@@ -51,3 +51,43 @@ while true
     
     curRoundIdx = curRoundIdx + 1;
 end
+
+clear cur*;
+
+%% collect overlaps and build LUT
+chiasmaT.dynOverlaps = cat(1, overlaps{:});
+chiasmaT.dynLUT = cell(size(chiasmaT, 1), 1);
+chiasmaT.statLUT = cell(size(chiasmaT, 1), 1);
+
+for curIdx = 1:size(chiasmaT, 1)
+    curOverlaps = chiasmaT.dynOverlaps{curIdx};
+    curNrExits = size(curOverlaps, 1);
+    
+    %% build lut
+    % This code was copied from `connectEM.splitChiasmataMultiLogic` at
+    % git commit bf36ada78e62970be738fd6ee2351e7573f63740.
+    
+    % build effective edges
+    curEdges = sort(curOverlaps, 2);
+    curEdges(~all(curEdges, 2), :) = [];
+    curEdges = unique(curEdges, 'rows');
+    curEdges = reshape(curEdges, [], 2);
+    
+    % find parition
+    curAdjMat = sparse( ...
+        curEdges(:, 2), curEdges(:, 1), ...
+        true, curNrExits, curNrExits);
+   [~, curDynLUT] = graphconncomp(curAdjMat, 'Directed', false);
+    curDynLUT = reshape(curDynLUT, [], 1);
+    
+    %% retrieve LUT from static querying
+    curAggloId = chiasmaT.aggloId(curIdx);
+    curChiasmaId = chiasmaT.chiasmaId(curIdx);
+    curStatLUT = summaries(curAggloId).tracings{curChiasmaId}.lut;
+    
+    %% collect outputs
+    chiasmaT.dynLUT{curIdx} = curDynLUT;
+    chiasmaT.statLUT{curIdx} = curStatLUT;
+end
+
+clear cur*;
