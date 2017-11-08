@@ -1,14 +1,23 @@
-function chiasma = selectExits(agglos, chiasmata, overlaps)
-    % chiasma = selectExits(agglos, chiasmata, overlaps)
+function exits = selectExits(agglos, chiasmata, overlaps, maxNrQueries)
+    % exits = selectExits(agglos, chiasmata, overlaps, maxNrQueries)
     %   Selects which exits to query next based on detected chiasmata
     %   (`chiasmata`) and partial answers (`overlaps`). Chiasmata marked as
     %   solved (`agglos.solvedChiasma`) are ignored.
+    %
+    %   For each chiasma at most `maxNrQueries` are selected. By default,
+    %   `maxNrQueries` is set to one. Set `maxNrQueries` to `inf` if you
+    %   want to query all exits.
     %
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     
     assert(numel(agglos) == numel(chiasmata));
     assert(numel(agglos) == numel(overlaps));
+    
+    if ~exist('maxNrQueries', 'var') || isempty(maxNrQueries)
+        % set default value for `maxNrQueries`
+        maxNrQueries = 1;
+    end
     
     chiasma = table;
     chiasma.aggloId = repelem((1:numel(chiasmata))', ...
@@ -25,7 +34,7 @@ function chiasma = selectExits(agglos, chiasmata, overlaps)
     
     %% find exits to query
     chiasmaCount = size(chiasma, 1);
-    chiasma.exitId  = zeros(chiasmaCount, 1);
+    chiasma.exitIds  = cell(chiasmaCount, 1);
     
     for curIdx = 1:size(chiasma, 1)
         curAggloId = chiasma.aggloId(curIdx);
@@ -35,10 +44,20 @@ function chiasma = selectExits(agglos, chiasmata, overlaps)
         curNrExits = numel(curChiasmata.queryIdx{curChiasmaId});
         curOverlaps = overlaps{curAggloId}{curChiasmaId};
         
-        % select an open ending
+        % select an open exits
         curOpenExits = setdiff(1:curNrExits, curOverlaps);
-        curExit = max(cat(1, 0, min(curOpenExits)));
+        curNrQueries = min(numel(curOpenExits), maxNrQueries);
+        curExits = curOpenExits(1:curNrQueries);
         
-        chiasma.exitId(curIdx) = curExit;
+        chiasma.exitIds{curIdx} = curExits(:);
     end
+    
+    %% build output
+    exitCounts = cellfun(@numel, chiasma.exitIds);
+    
+    exits = table;
+    exits.aggloId = repelem(chiasma.aggloId, exitCounts);
+    exits.chiasmaId = repelem(chiasma.chiasmaId, exitCounts);
+    exits.exitId = cell2mat(chiasma.exitIds);
+    
 end
