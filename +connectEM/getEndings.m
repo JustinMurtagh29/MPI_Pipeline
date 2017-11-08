@@ -1,4 +1,4 @@
-function out = getEndings(param,axonAgglos)
+function [out,clusterSizes] = getEndings(param,axonAgglos)
     % ending detection
     %
     % Written by
@@ -14,7 +14,7 @@ function out = getEndings(param,axonAgglos)
     
     options.voxelSize = param.raw.voxelSize;
     options.bboxDist = 1000; % in nm
-    
+
     % Load data
    [graph, segmentMeta, borderMeta, globalSegmentPCA] = ...
        connectEM.loadAllSegmentationData(param);
@@ -27,8 +27,11 @@ function out = getEndings(param,axonAgglos)
     directionality = connectEM.calculateDirectionalityOfAgglomerates( ...
         axonAgglos, graph, segmentMeta, borderMeta, globalSegmentPCA, options);
 
-%     directionality = structfun( ...
-%         @(x) x(axonIds), directionality, 'UniformOutput', false);
+    % get Ids of axons which have no empty output in directionality
+    axonIds = find(~cellfun(@isempty,directionality.latent));
+    
+    directionality = structfun( ...
+        @(x) x(axonIds), directionality, 'UniformOutput', false);
 
     % load border CoMs
     borderCoM = fullfile(param.saveFolder, 'globalBorder.mat');
@@ -49,6 +52,7 @@ function out = getEndings(param,axonAgglos)
     % Keep only those agglomerates with at least one ending candidate
     nrCanidates = cellfun(@numel, idxAll);
     axonMask = nrCanidates > 0;
+    axonIds = axonIds(axonMask);
 
     display([num2str(numel(axonMask)) ' agglomerates > 5 micron in total']);
     display([num2str(100 - (sum(axonMask)./numel(axonMask))*100, '%.2f') '% of > 5 micron agglomerates have not a single ending']);
@@ -72,6 +76,7 @@ function out = getEndings(param,axonAgglos)
 
     % save result
     out = struct;
+    out.axonIds = axonIds;
     out.axonMask = axonMask;
     out.borderIds = borderIds;
     out.borderPositions = borderPositions;
