@@ -37,7 +37,7 @@ function [newAgglos, summary] = ...
     edgesToAdd = zeros(0, 2);
     
     summary = struct;
-    summary.axonId = axons;
+    summary.axonId = axonId;
     summary.nrChiasmata = chiasmaCount;
     summary.chiasmaId = nan(chiasmaCount, 1);
     summary.centerIdx = nan(chiasmaCount, 1);
