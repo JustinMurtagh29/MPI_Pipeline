@@ -122,7 +122,6 @@ function summaries = runFullyQueried()
     queries.overlaps(:) = {[]};
     summaries = cell(numel(uniAxonIds), 1);
 
-    tic
     for curAxonIdx = 1:numel(uniAxonIds)
         curAxon = axons(uniAxonIds(curAxonIdx));
         curAxon.nodesScaled = bsxfun(@times, ...
@@ -142,7 +141,6 @@ function summaries = runFullyQueried()
         summaries{curAxonIdx} = curSummary;
         queries.overlaps(curQueries.row) = curOverlaps;
     end
-    toc
 
     summaries = cat(1, summaries{:});
     queries.uniAxonId = [];
