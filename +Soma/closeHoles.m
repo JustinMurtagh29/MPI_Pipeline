@@ -60,7 +60,7 @@ function [ newSegIds, name ] = closeHoles( p, meta, rp, graph, voxelSize, somaID
             %get mask for inverse soma. Somehow normals seem to be correctly when not using the soma but the inverse. Should be fixed.
             soma = ~ismember(somaSeg, aggloSegIds);
             %this line allocates a lot of ram and is the reason for the slices
-            soma = Soma.closeGaps(soma);
+            soma = Seg.Local.closeGaps(soma);
             disp('critical part survived');
 
             soma = smooth3(soma,'box',9);
