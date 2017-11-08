@@ -32,13 +32,8 @@ axons = load(axonFile);
 axonIds = find(axons.indBigAxons);
 axons = axons.axons(axonIds);
 
-%% build empty overlaps
-overlaps = cellfun(@(c) cellfun(@(q) ...
-    zeros(numel(q), 2), c.queryIdx, 'UniformOutput', false), ...
-	chiasmata, 'UniformOutput', false);
-
 %% find exits to query
-exits = selectExits(axons, chiasmata, overlaps);
+exits = selectExits(axons, chiasmata, [], inf);
 
 taskDefFile = fullfile(outputDir, sprintf('%s_flightTasks.txt', runId));
 taskDefs = generateTasks(param, chiasmata, exits, taskDefFile);
