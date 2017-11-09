@@ -6,20 +6,23 @@ function evaluate(chiasmata, agglos)
     chiasmaNodeCounts = cellfun(@(s) sum(s.isIntersection), chiasmata);
     chiasmaCounts = cellfun(@(s) numel(s.ccCenterIdx), chiasmata);
     chiasmaTotalCount = sum(chiasmaCounts);
-
-    % TODO(amotta): Use table instead
-    chiasmaSizes = cell2mat(cellfun(@(s) ...
-        cellfun(@numel, s.ccNodeIdx(:)), chiasmata, 'Uni', false));
-    chiasmaNrExits = cell2mat(cellfun(@(c) ...
-        cellfun(@(p) size(p, 1), c.position), chiasmata, 'Uni', false));
+    
+    chiasmaT = table;
+    chiasmaT.size = cell2mat(cellfun( ...
+        @(s) cellfun(@numel, s.ccNodeIdx(:)), ...
+        chiasmata, 'UniformOutput', false));
+    chiasmaT.nrExits = cell2mat(cellfun( ...
+        @(c) cellfun(@numel, c.queryIdx(:)), ...
+        chiasmata, 'UniformOutput', false));
 
     if isfield(agglos, 'solvedChiasma')
-        chiasmaSolved = cell2mat(arrayfun(@(c, a) arrayfun( ...
-            @(idx) double(a.solvedChiasma(idx)), c{1}.ccCenterIdx(:)), ...
-            chiasmata, agglos, 'Uni', false));
-        chiasmaSolved = logical(chiasmaSolved);
+        chiasmaT.isSolved = cell2mat(arrayfun( ...
+            @(c, a) double(arrayfun( ...
+                @(idx) a.solvedChiasma(idx), c{1}.ccCenterIdx(:))), ...
+            chiasmata, agglos, 'UniformOutput', false));
+        chiasmaT.isSolved = logical(chiasmaT.isSolved);
     else
-        chiasmaSolved = false(size(chiasmaNrExits));
+        chiasmaT.isSolved = false(size(chiasmaT, 1), 1);
     end
 
     %% report
@@ -29,19 +32,17 @@ function evaluate(chiasmata, agglos)
     fprintf('\nLargest number of chiasmata per agglomerate:\n');
     fprintf('%s\n', strjoin(arrayfun(@num2str, temp(1:10), 'Uni', false), ', '));
 
-    temp = sort(chiasmaSizes, 'descend');
+    temp = sort(chiasmaT.size, 'descend');
     fprintf('\nLargest chiasmata (in number of nodes):\n');
     fprintf('%s\n', strjoin(arrayfun(@num2str, temp(1:10), 'Uni', false), ', '));
 
     temp = sort(chiasmaNodeCounts, 'descend');
     fprintf('\nLargest number of chiasma nodes per agglomerate:\n');
     fprintf('%s\n', strjoin(arrayfun(@num2str, temp(1:10), 'Uni', false), ', '));
-
+    
     temp = table;
-    temp.nrExits = (4:max(chiasmaNrExits))';
-    temp.nrChiasmata = arrayfun(@(c) ...
-        sum(chiasmaNrExits == c), temp.nrExits);
-    temp.nrMarkedSolved = arrayfun(@(c) ...
-        sum(chiasmaSolved(chiasmaNrExits == c)), temp.nrExits);
+   [temp.nrExits, ~, tempUniRows] = unique(chiasmaT.nrExits);
+    temp.nrChiasmata = accumarray(tempUniRows, 1);
+    temp.nrMarkedSolved = accumarray(tempUniRows, chiasmaT.isSolved);
     fprintf('\n'); disp(temp);
 end
