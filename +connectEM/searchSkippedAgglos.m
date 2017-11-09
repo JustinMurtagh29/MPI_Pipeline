@@ -21,13 +21,25 @@ for f = 1:numel(superagglos)
     segIdEdges = sort(segIdEdges,2);
     
     % check which segIdEdges are not part of the graph
-    ind = ~ismember(segIdEdges,graph.edges,'rows');
-    if any(ind)
+    ind = find(~ismember(segIdEdges,graph.edges,'rows'));
+    if ~isempty(ind)
+        % delete found edges and check if there is no other path between
+        % the two nodes. If this is the case it is a real occasion that
+        % should be checked
+        skel = Superagglos.toSkel(superagglos(f));
+        skel.edges{1}(ind,:) = [];
+        indReal = [];
+        for e = 1:numel(ind)
+            if isempty(skel.getShortestPath(superagglos(f).edges(ind(e),1), superagglos(f).edges(ind(e),2)))
+                indReal = cat(1,indReal,ind(e));
+            end
+        end
         % if any edge is not part of the graph there was probably one or
         % multiple agglos skipped, so make a comment there and write
         % superagglo to skelton file for check
         superagglos(f).comments = repmat({''}, size(superagglos(f).nodes,1),1);
-        superagglos(f).comments(unique(superagglos(f).edges(ind,:))) = {'skipped agglo nearby'};
+        % only take one of the two edges and add a comment there
+        superagglos(f).comments(unique(superagglos(f).edges(indReal,1))) = {'skipped agglo nearby'};
         skel = Superagglos.toSkel(superagglos(f));
         skel.write(fullfile(outputFolder,sprintf('Agglo_%02d.nml',f)))
     end
