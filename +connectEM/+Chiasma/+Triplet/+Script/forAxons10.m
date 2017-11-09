@@ -5,6 +5,9 @@ clear;
 %% configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 axonFile = fullfile(rootDir, 'aggloState', 'axons_10_a.mat');
+
+outputDir = fullfile( ...
+    rootDir, 'tripletDetection', '20171109T133421-on-axons-10a');
 tempOutputDir = '/tmpscratch/amotta/l4/chiasma-detection';
 
 chiasmaParam = struct;
@@ -45,3 +48,9 @@ out = struct;
 out.info = info;
 out.runId = runId;
 out.chiasmata = chiasmata;
+
+outFile = sprintf('%s_chiasmata.mat', runId);
+outFile = fullfile(outputDir, outFile);
+
+Util.saveStruct(outFile, out);
+system(sprintf('chmod a-w "%s"', outFile));
