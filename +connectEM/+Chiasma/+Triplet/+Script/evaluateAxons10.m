@@ -1,0 +1,54 @@
+% Written by
+%   Alessandro Motta <alessandro.motta@brain.mpg.de>
+clear;
+
+%% configuration
+rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
+outputDir = '/home/amotta/Desktop/triplets';
+
+chiasmataFile = fullfile( ...
+    rootDir, 'tripletDetection', ...
+    '20171109T133421-on-axons-10a', ...
+    '20171109T133849_chiasmata.mat');
+
+%% loading data
+param = load(fullfile(rootDir, 'allParameter.mat'), 'p');
+param = param.p;
+
+chiasmata = load(chiasmataFile);
+axonFile = chiasmata.info.param.axonFile;
+chiasmata = chiasmata.chiasmata;
+
+axons = load(axonFile, 'axons', 'indBigAxons');
+axons = axons.axons(axons.indBigAxons);
+
+%% build chiasmata table
+chiasmaT = connectEM.Chiasma.Detect.buildTable(chiasmata, axons);
+
+% look at unsolved triplets
+chiasmaT(chiasmaT.isSolved, :) = [];
+chiasmaT(chiasmaT.nrExits ~= 3, :) = [];
+
+%% export random agglomerates
+uni = table;
+[uni.aggloId, ~, uniRows] = unique(chiasmaT.aggloId);
+uni.chiasmaIds = accumarray(uniRows, chiasmaT.chiasmaId, [], @(ids) {ids});
+clear uniRows;
+
+rng(0);
+randIds = randperm(size(uni, 1));
+
+if ~exist(outputDir, 'dir')
+    mkdir(outputDir);
+end
+
+for curIdx = 1:10
+    curAggloId = uni.aggloId(curIdx);
+    
+    curSkel = connectEM.Chiasma.Detect.buildSkeleton( ...
+        axons(curAggloId), chiasmata{curAggloId}, uni.chiasmaIds{curIdx});
+    curSkel = Skeleton.setParams4Pipeline(curSkel, param);
+    
+    curFileName = sprintf('%02d_axon-%d_triplets.nml', curIdx, curAggloId);
+    curSkel.write(fullfile(outputDir, curFileName));
+end
