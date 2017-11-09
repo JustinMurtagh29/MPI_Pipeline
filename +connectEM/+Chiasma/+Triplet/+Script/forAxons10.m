@@ -5,6 +5,7 @@ clear;
 %% configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 axonFile = fullfile(rootDir, 'aggloState', 'axons_10_a.mat');
+tempOutputDir = '/tmpscratch/amotta/l4/chiasma-detection';
 
 chiasmaParam = struct;
 chiasmaParam.minNrChiasmaExits = 3;
