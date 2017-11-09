@@ -14,8 +14,13 @@ if ~exist('skel', 'var') || isempty(skel)
 end
 
 for i = 1:length(sagglos)
-    skel = skel.addTree(sprintf('Agglo%3d', i), sagglos(i).nodes(:,1:3), ...
-        sagglos(i).edges);
+    if isfield(sagglos(i),'comments')
+        skel = skel.addTree(sprintf('Agglo%3d', i), sagglos(i).nodes(:,1:3), ...
+            sagglos(i).edges,[],[],sagglos(i).comments);
+    else
+        skel = skel.addTree(sprintf('Agglo%3d', i), sagglos(i).nodes(:,1:3), ...
+            sagglos(i).edges);
+    end
 end
 
 end
