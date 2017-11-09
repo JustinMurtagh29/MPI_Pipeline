@@ -32,11 +32,11 @@ somaSynIdxAll = cellfun(@(x)setdiff(postsynSomaLUT(x), 0), ...
     somaAgglos(:,1), 'uni', 0);
 somaSynIdx = somaSynIdxAll;
 
-% soma syn coms
+% soma syn coms (use only first edge for each synapse)
 somaSynComs = cell(numSomas, 1);
 for i = 1:length(somaSynIdx)
     somaSynComs{i} = round(cell2mat( ...
-        cellfun(@(x)mean(borderMeta.borderCoM(x, :), 1), ...
+        cellfun(@(x)mean(borderMeta.borderCoM(x(1), :), 1), ...
         synapses.edgeIdx(somaSynIdx{i}), 'uni', 0)));
 end
 
@@ -75,6 +75,7 @@ somaSynComs = cellfun(@(x, idx) x(~idx, :), somaSynComs, toDiscard2, ...
 [outFolder, outFile] = fileparts(p.agglo.somaFile);
 outFile = fullfile(outFolder, [outFile '_synapses.mat']);
 if ~exist(outFile, 'file')
+    Util.log('Saving output to file %s.', outFile);
     save(outFile, 'info', 'somaSynIdxAll', 'toDiscard1', 'toDiscard2', ...
         'somaSynIdx', 'somaSynComs');
 else

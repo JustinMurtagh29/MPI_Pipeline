@@ -39,7 +39,7 @@ numSomas = length(somaAgglos);
 toDiscardSomaSegs = cell(numSomas, 1);
 toDiscardSyn = cell(numSomas, 1);
 for idx = 1 : numSomas
-    idx
+
     % morphological operations to close holes and get rid of exits
     somaMaskMag8 = ismember(segMag8, somaAgglos{idx});
     somaMaskMag8 = nlfilter3(somaMaskMag8, @max, fS);
