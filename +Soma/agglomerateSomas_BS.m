@@ -116,6 +116,18 @@ somaAgglos = somaAgglos(:,[3 2]);
 %     'uni', 0);
 
 
+%% add segments that are mostly surrounded by agglos
+
+fractT = 0.8;
+iter = 50;
+toAddSingleSegs = Soma.addSurroundedSegments(somaAgglos, ...
+    graph.edges(~isnan(graph.borderIdx)), gb.borderSize, fractT, ...
+    graph.edges(isnan(graph.borderIdx)), iter);
+
+for i = 1:length(somaAgglos)
+    somaAgglos{i} = cat(1, somaAgglos{i}(:), toAddSingleSegs{i}(:));
+end
+
 %% save the automated results
 
 outFile = fullfile(outputFolder, sprintf('somaAgglo_%s.mat', ver));
