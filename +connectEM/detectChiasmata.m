@@ -2,6 +2,12 @@ function output = detectChiasmata(p, nodesV, edges, visualize, outputFolder )
 % Detect chiasmata in skeletons based on marching sphere algorithm
 % Nodes should be in voxel, scaled here
 
+if ~isfield(p, 'minNrChiasmaExits') ...
+        || isempty(p.minNrChiasmaExits)
+    % for backward compatibility
+    p.minNrChiasmaExits = 4;
+end
+
 % Create output folder if it does not exist
 if ~isempty(outputFolder) && ~exist(outputFolder, 'dir')
     mkdir(outputFolder);
@@ -9,22 +15,17 @@ end
 
 % Scale to nm
 % Make sure edges are unique
-[edges, ~, idxE] = unique(edges, 'rows');
+nodes = bsxfun(@times, nodesV, p.voxelSize);
+edges = unique(edges, 'rows');
 
-nodes=bsxfun(@times,nodesV,p.voxelSize);
 % for each node ("marching sphere" approach to merger detection)
-isIntersection = false(size(nodes,1),1);
-nrExits = zeros(size(nodes,1),1);
+nrExits = zeros(size(nodes, 1), 1);
+
 if size(nodes, 1) < 1E6
     if ~isempty(edges)
         for i=1:size(nodes,1)
-            curNrExits = connectEM.detectChiasmataNodes( ...
-                nodes, edges, ones(size(edges,1), 1), p, i);
-            
-            if curNrExits > 3
-                isIntersection(i) = true;
-                nrExits(i) = curNrExits;
-            end
+            nrExits(i) = connectEM.detectChiasmataNodes( ...
+                nodes, edges, ones(size(edges, 1), 1), p, i);
         end
     end
 else
@@ -44,17 +45,22 @@ else
     Cluster.waitForJob(job);
     for idx = 1 : 5000
         if exist([outputFolder 'temp_' num2str(idx) '.mat'], 'file')
-            temp = load([outputFolder 'temp_' num2str(idx)],'nrExits', 'isIntersection');
+            temp = load([outputFolder 'temp_' num2str(idx)], 'nrExits');
             nrExits = temp.nrExits + nrExits;
-            isIntersection = temp.isIntersection | isIntersection;
         else
             warning(['skipped ' num2str(idx)]);
         end
     end
 end
 
+% Mark intersections
+isIntersection = (nrExits >= p.minNrChiasmaExits);
+
 % Find CC of detected intersections according to graph
-[output, queryIdx] = connectEM.detectChiasmataPostSingleNodeLabel(edges, isIntersection, nrExits, nodes, p, nodesV, ones(size(edges,1),1),outputFolder);
+[output, queryIdx] = ...
+    connectEM.detectChiasmataPostSingleNodeLabel( ...
+        edges, isIntersection, nrExits, nodes, ...
+        p, nodesV, ones(size(edges, 1), 1), outputFolder);
 
 if visualize
     % Write result to skletons for control (detection of intersections)
