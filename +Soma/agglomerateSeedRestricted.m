@@ -1,5 +1,5 @@
 function [ids, cEdges] = agglomerateSeedRestricted( seedIds, seedC, ...
-    edges, point, borderSize, borderIdx, mergeP, tp, ts, borderCom, r, ...
+    edges, segCom, borderSize, mergeP, tp, ts, borderCom, r, ...
     voxelSize )
 %AGGLOMERATESEEDRESTRICTED Agglomerate around a seed id restricted to a
 %given distance.
@@ -9,10 +9,16 @@ function [ids, cEdges] = agglomerateSeedRestricted( seedIds, seedC, ...
 %           Global coordinates of the seed id.
 %       edges: [Nx2] int
 %           Edge list.
+%       segCom: [3xN] double
+%           Global segment coms.
+%       borderSize: [Nx1] double
+%           The size for each border.
 %       mergeP: [Nx1] double
 %           Merge probability for the corresponding edges.
-%       t: double
-%           Lower probability threshold for merging.
+%       tp: double
+%           Lower probability threshold for agglomeration.
+%       ts: double
+%           Lower border size threshold for agglomeration.
 %       borderCoM: [Nx3] int/float
 %           Coms of the corresponding edges. Should have the same units as
 %           seedC.
@@ -41,23 +47,19 @@ idx = find(pdist2(borderComS, seedC) < r);
 
 edges = edges(idx, :);
 borderSize = borderSize(idx);
-borderIdx = borderIdx(idx);
 mergeP = mergeP(idx);
 
 %% remove distant cube correspondences
-edgePoints1 = zeros(size(edges,1),3);
-edgePoints1 = point(:,edges(:,1))';
-edgePoints2 = zeros(size(edges,1),3);
-edgePoints2 = point(:,edges(:,2))';
 
+edgePoints1 = segCom(:,edges(:,1))';
+edgePoints2 = segCom(:,edges(:,2))';
 edgePoints1 = bsxfun(@times, single(edgePoints1), voxelSize);
 edgePoints2 = bsxfun(@times, single(edgePoints2), voxelSize);
 
 idx = find(pdist2(edgePoints1, seedC) < r | pdist2(edgePoints2, seedC) < r );
 
-
 [ids, cEdges] = Soma.agglomerateSeed(seedIds, edges(idx, :),borderSize(idx),...
-    borderIdx(idx), mergeP(idx), tp, ts);
+	mergeP(idx), tp, ts);
 
 
 end

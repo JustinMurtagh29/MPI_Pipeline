@@ -23,16 +23,13 @@ function [ nodes, name, segIds ] = getSomaNodes( p, graph, meta, rp, ...
 mag1bbox = [128, 128, 128, 5573, 8508, 3413]; 
 mag1bbox = Util.convertWebknossosToMatlabBbox(mag1bbox);
 mag1bbox = mag1bbox + [-25 25; -25 25; -10 10];
-% Note (BS): Why is this defined?
-% mag4bbox = (mag1bbox - 1) ./4 + 1;
-% mag4bbox(:,1) = ceil(mag4bbox(:,1));
-% mag4bbox(:,2) = floor(mag4bbox(:,2));
 
 margin = [15, 15, 10]; 
 bboxM4Cropped = [round(rp(somaID).BoundingBox(1:3)) - margin; ...
     round(rp(somaID).BoundingBox(1:3) + rp(somaID).BoundingBox(4:6)) ...
     + margin]';
 bbox = bsxfun(@plus,bsxfun(@plus,4.*bboxM4Cropped,[-1, 2]),  mag1bbox(:,1));
+
 
 %% load nuclei und segId-Nuclei-Mapping
     
@@ -62,6 +59,7 @@ end
 % m = load('/gaba/u/mberning/results/pipeline/20170217_ROI/soma/manuNucleiMapping.mat', 'mapping');
 % mapping = m.mapping;
     
+
 %% get all the seed ids from nuclei and mapping
 
 somaSeg = Seg.IO.loadSeg(p, bbox);
@@ -86,6 +84,7 @@ clear nucleus somaSeg
 % nucleusSegIds = unique(somaSeg(maskInd));
 % nucleusSegIds = cat(1,nucleusSegIds, mapping{somaID});
    
+
 %% if no seed was found fill in dummy stuff, so parallel function doesn't break
 if size(nucleusSegIds,1) == 0
     segIds = nan;
@@ -94,14 +93,14 @@ if size(nucleusSegIds,1) == 0
     name = sprintf('soma%d_%.2f_%d_Agglo', somaID, probT, sizeT);
     return;
 end
+
     
 %% get all neighbors of the nuclei seg Ids as seeds
 
 somaCenterT = 8000; % maximal distance of agglos to seed point
 idx = any(ismember(graph.edges, nucleusSegIds),2);
 theseEdges = graph.edges(idx,:);
-nucleusAndNeighborSegIds = unique(reshape(...
-    theseEdges,[2*size(theseEdges,1),1]));
+nucleusAndNeighborSegIds = unique(theseEdges(:));
 center = bsxfun(@plus,4.* rp(somaID).Centroid, mag1bbox(:,1)');
 % add correspondences to borderCom and borderSize
 borderComWithCubeCorr = Soma.borderComForGraph...
@@ -110,10 +109,11 @@ borderSizeWithCubeCorr = Soma.borderSizeForGraph...
     (gb.borderSize, graph.borderIdx, sizeT+1);
 aggloSegIds = Soma.agglomerateSeedRestricted(nucleusAndNeighborSegIds,....
     center, graph.edges, meta.point, borderSizeWithCubeCorr,...
-    graph.borderIdx, graph.prob, probT, sizeT,...
+    graph.prob, probT, sizeT,...
     borderComWithCubeCorr, somaCenterT, p.raw.voxelSize);
 myEdges = graph.edges;
     
+
 %% add all sets of seg Ids that are completely surrounded by the agglo
 
 % get the connected components for all edges not having any agglo nodes
@@ -143,12 +143,14 @@ aggloSegIds = sort(cat(1, aggloSegIds, cell2mat(CCcut)));
 % end
 % aggloSegIds = CCcut{1};
 
+
 %% return
 aggloSegIds=unique(aggloSegIds);
 segIds = aggloSegIds;
 nodes = meta.point(:,aggloSegIds)';
 name = sprintf('soma%d_%.2f_%d_Agglo', somaID, probT, sizeT);
     
+
 end
 
 
