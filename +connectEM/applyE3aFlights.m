@@ -262,6 +262,12 @@ out.axons = cat(1, out.axons(:), allAxons(otherAxonIds));
 out.indBigAxons = false(size(out.axons));
 out.indBigAxons(1:axonCompCount) = true;
 
+% track into which output agglo the input agglos were merged
+out.childIds = nan(numel(allAxons), 1);
+out.childIds(axonIds) = axonComps;
+out.childIds(otherAxonIds) = axonCompCount + (1:numel(otherAxonIds));
+assert(not(any(isnan(out.childIds))));
+
 %% evaluation
 axonStats = table;
 axonStats.axonId = reshape(1:numel(out.axons), [], 1);
