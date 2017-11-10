@@ -22,12 +22,13 @@ am = sparse( ...
 
 % make symmetric
 am = am + am';
+% am(1:size(am,1)+1:numel(am)) = 1; % add self edges
+am(1,1) = true;% add self edges
 
-    
 for f = 1:numel(superagglos)
     % get and sort segId edges from current superagglo
     segIdEdges = reshape(superagglos(f).nodes(superagglos(f).edges,4),[],2);
-    segIdEdges(any(isnan(segIdEdges),2),:) = [];
+    segIdEdges(any(isnan(segIdEdges),2),:) = 1; % keep nan edges to not shift edge vector but make them a 1 1 self edge which is true in the adjacency matrix
 %     segIdEdges = sort(segIdEdges,2);
     
     % check which segIdEdges are not part of the graph

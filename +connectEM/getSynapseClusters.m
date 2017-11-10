@@ -19,6 +19,8 @@ for s = 1:numel(agglos)
     if size(presynSegCoords,1) > 1
         synClusters = clusterdata(presynSegCoords, ...
             'linkage', 'single', 'criterion', 'distance', 'cutoff', clusterDistance);
+    elseif size(presynSegCoords,1)==1
+        synClusters = 0;
     else
         synClusters = 1;
     end
