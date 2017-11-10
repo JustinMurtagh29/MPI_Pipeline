@@ -46,13 +46,15 @@ for f = 1:numel(superagglos)
                 indReal = cat(1,indReal,ind(e));
             end
         end
-        % if any edge is not part of the graph there was probably one or
-        % multiple agglos skipped, so make a comment there and write
-        % superagglo to skelton file for check
-        superagglos(f).comments = repmat({''}, size(superagglos(f).nodes,1),1);
-        % only take one of the two edges and add a comment there
-        superagglos(f).comments(unique(superagglos(f).edges(indReal,1))) = {'skipped agglo nearby'};
-        skel = Superagglos.toSkel(superagglos(f));
-        skel.write(fullfile(outputFolder,sprintf('Agglo_%02d.nml',f)))
+        if ~isempty(indReal)
+            % if any edge is not part of the graph there was probably one or
+            % multiple agglos skipped, so make a comment there and write
+            % superagglo to skelton file for check
+            superagglos(f).comments = repmat({''}, size(superagglos(f).nodes,1),1);
+            % only take one of the two edges and add a comment there
+            superagglos(f).comments(unique(superagglos(f).edges(indReal,1))) = {'skipped agglo nearby'};
+            skel = Superagglos.toSkel(superagglos(f));
+            skel.write(fullfile(outputFolder,sprintf('Agglo_%02d.nml',f)))
+        end
     end
 end
