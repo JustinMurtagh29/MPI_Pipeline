@@ -37,7 +37,7 @@ if ~exist(outputDir, 'dir')
     mkdir(outputDir);
 end
 
-for curIdx = 1:10
+for curIdx = randIds(1:20)
     curAggloId = chiasmaT.aggloId(curIdx);
     curChiasmaId = chiasmaT.chiasmaId(curIdx);
     
