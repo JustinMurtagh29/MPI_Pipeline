@@ -120,12 +120,12 @@ somaAgglos = somaAgglos(:,[3 2]);
 
 fractT = 0.8;
 iter = 50;
-toAddSingleSegs = Soma.addSurroundedSegments(somaAgglos, ...
+toAddSingleSegs = Soma.addSurroundedSegments(somaAgglos(:,1), ...
     graph.edges(~isnan(graph.borderIdx)), gb.borderSize, fractT, ...
     graph.edges(isnan(graph.borderIdx)), iter);
 
-for i = 1:length(somaAgglos)
-    somaAgglos{i} = cat(1, somaAgglos{i}(:), toAddSingleSegs{i}(:));
+for i = 1:size(somaAgglos, 1)
+    somaAgglos{i,1} = cat(1, somaAgglos{i,1}(:), toAddSingleSegs{i}(:));
 end
 
 %% save the automated results
