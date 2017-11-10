@@ -37,9 +37,10 @@ if ~exist(outputDir, 'dir')
     mkdir(outputDir);
 end
 
-for curIdx = randIds(1:20)
-    curAggloId = chiasmaT.aggloId(curIdx);
-    curChiasmaId = chiasmaT.chiasmaId(curIdx);
+for curIdx = 1:20
+    curRandId = randIds(curIdx);
+    curAggloId = chiasmaT.aggloId(curRandId);
+    curChiasmaId = chiasmaT.chiasmaId(curRandId);
     
     curSkel = connectEM.Chiasma.Detect.buildSkeleton( ...
         axons(curAggloId), chiasmata{curAggloId}, curChiasmaId);
