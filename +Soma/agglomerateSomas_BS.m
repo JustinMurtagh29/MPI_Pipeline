@@ -124,8 +124,9 @@ toAddSingleSegs = Soma.addSurroundedSegments(somaAgglos(:,1), ...
     graph.edges(~isnan(graph.borderIdx)), gb.borderSize, fractT, ...
     graph.edges(isnan(graph.borderIdx)), iter);
 
+somaAgglos2 = somaAgglos;
 for i = 1:size(somaAgglos, 1)
-    somaAgglos{i,1} = cat(1, somaAgglos{i,1}(:), toAddSingleSegs{i}(:));
+    somaAgglos2{i,1} = cat(1, somaAgglos{i,1}(:), toAddSingleSegs{i}(:));
 end
 
 %% save the automated results
@@ -133,7 +134,7 @@ end
 outFile = fullfile(outputFolder, sprintf('somaAgglo_%s.mat', ver));
 if ~exist(outFile, 'file')
     Util.log('Storing automated agglomeration results at %s.', outFile)
-    save(outFile, 'somaAgglos', 'info')
+    save(outFile, 'somaAgglos', 'somaAgglos2', 'info')
 else
     Util.log('File %s already exists and will not be overwritten.');
 end
