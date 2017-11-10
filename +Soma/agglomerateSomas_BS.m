@@ -4,7 +4,7 @@
 
 info = Util.runInfo(false);
 doNucleiDetection = false; %#ok<*UNRCH>
-ver = '05';
+ver = '06';
 
 outputFolder = sprintf(['/gaba/u/mberning/results/pipeline/' ...
     '20170217_ROI/soma_BS/']);
@@ -118,7 +118,7 @@ somaAgglos = somaAgglos(:,[3 2]);
 
 %% save the automated results
 
-outFile = fullfile(outputFolder, sprintf('cells_%s.mat', ver));
+outFile = fullfile(outputFolder, sprintf('somaAgglo_%s.mat', ver));
 if ~exist(outFile, 'file')
     Util.log('Storing automated agglomeration results at %s.', outFile)
     save(outFile, 'somaAgglos', 'info')

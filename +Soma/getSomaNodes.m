@@ -54,11 +54,7 @@ else
     end
     clear raw mask maskrp maskbox boxsize
 end
-    
-% % NOTE (BS): Why separate file? Delete if possible.
-% m = load('/gaba/u/mberning/results/pipeline/20170217_ROI/soma/manuNucleiMapping.mat', 'mapping');
-% mapping = m.mapping;
-    
+
 
 %% get all the seed ids from nuclei and mapping
 
@@ -73,16 +69,6 @@ nucleusSegIds = nucleusSegIds(2:end, 1:2);
 toKeep = nucleusSegIds(:,2) > 0.5*meta.voxelCount(nucleusSegIds(:,1));
 nucleusSegIds = nucleusSegIds(toKeep, 1);
 clear nucleus somaSeg
-
-% % NOTE (BS): Seems weird. Should be deleted. Although I can't fully
-% % reproduce what the mapping is (e.g. for somaID 93)
-% somaSeg = readKnossosRoi(p.seg.root,'2012-09-28_ex145_07x2_ROI2016_corrected_mag1', ...
-%             [bbox(1,1) bbox(1,2); bbox(2,1) bbox(2,2); bbox(3,1) bbox(3,2)], 'uint32', '', 'raw');
-% ind = find(nucleus);
-% [x,y,z] = ind2sub(size(nucleus),ind);
-% maskInd = cat(2, x, y, z);
-% nucleusSegIds = unique(somaSeg(maskInd));
-% nucleusSegIds = cat(1,nucleusSegIds, mapping{somaID});
    
 
 %% if no seed was found fill in dummy stuff, so parallel function doesn't break
@@ -111,41 +97,21 @@ aggloSegIds = Soma.agglomerateSeedRestricted(nucleusAndNeighborSegIds,....
     center, graph.edges, meta.point, borderSizeWithCubeCorr,...
     graph.prob, probT, sizeT,...
     borderComWithCubeCorr, somaCenterT, p.raw.voxelSize);
-myEdges = graph.edges;
-    
+
 
 %% add all sets of seg Ids that are completely surrounded by the agglo
 
 % get the connected components for all edges not having any agglo nodes
 % and discard the largest components (= everything outside the soma)
-surridx = any(ismember(myEdges, aggloSegIds),2);
-theseEdges = myEdges(~surridx,:);
-CCcut = Graph.findConnectedComponents(theseEdges, false, true);
+surridx = any(ismember(graph.edges, aggloSegIds),2);
+CCcut = Graph.findConnectedComponents(graph.edges(~surridx,:), false, false);
 maxsize = cellfun(@(C) size(C,1), CCcut);
 CCcut(maxsize==max(maxsize)) = [];
-aggloSegIds = sort(cat(1, aggloSegIds, cell2mat(CCcut)));
-
-%% remove not connected components
-    
-% % NOTE (BS): Why is this needed?
-% 
-% newSegIds = unique(aggloSegIds);
-% surridx = any(xor(ismember(graph.edges, newSegIds),2),2);
-% theseEdges = graph.edges(~surridx,:);
-% CCcut = Graph.findConnectedComponents(theseEdges, false, true);
-% 
-% if size(CCcut,1) > 1
-%     [maxsize] = cellfun(@(C) size(C,1), CCcut);
-%     %just to test if connected component is somatic
-%     if max(maxsize) < 10000 
-%         CCcut(maxsize~=max(maxsize)) = [];
-%     end
-% end
-% aggloSegIds = CCcut{1};
+aggloSegIds = unique(cat(1, aggloSegIds, cell2mat(CCcut))); % just to make sure
 
 
 %% return
-aggloSegIds=unique(aggloSegIds);
+
 segIds = aggloSegIds;
 nodes = meta.point(:,aggloSegIds)';
 name = sprintf('soma%d_%.2f_%d_Agglo', somaID, probT, sizeT);
