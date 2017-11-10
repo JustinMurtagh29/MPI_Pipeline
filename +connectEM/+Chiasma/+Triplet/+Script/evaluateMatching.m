@@ -11,7 +11,7 @@ chiasmataFile = fullfile( ...
     '20171109T133421-on-axons-10a', ...
     '20171109T133849_chiasmata.mat');
 
-showPlots = false;
+showPlots = true;
 
 %% loading data
 param = load(fullfile(rootDir, 'allParameter.mat'), 'p');
@@ -44,7 +44,7 @@ blockRanges = accumarray( ...
     chiasmaT.aggloId, blockRanges, [], @(rows) {rows}, {[]});
 
 for curRange = reshape(blockRanges, 1, [])
-    distMat(curRange{1}, curRange{1}) = inf;
+    distMat(curRange{1}, curRange{1}) = nan;
 end
 
 clear curRange blockRanges;
@@ -55,7 +55,7 @@ minDistUm = min(distMat, [], 1) / 1E3;
 
 figure;
 histogram(minDistUm);
-xlabel('Distance to closest triple [µm]');
+xlabel('Distance to closest triplet [µm]');
 end
 
 %% histogram over number of candidates within 2 µm
@@ -64,6 +64,7 @@ countWithinDist = sum(distMat < 2E3, 1);
 
 figure;
 histogram(countWithinDist);
+xlabel('# triplets within 2 µm');
 end
 
 %% show examples with exactly one candidate within 2 µm
