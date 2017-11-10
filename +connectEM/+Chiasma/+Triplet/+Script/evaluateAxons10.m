@@ -30,25 +30,23 @@ chiasmaT(chiasmaT.isSolved, :) = [];
 chiasmaT(chiasmaT.nrExits ~= 3, :) = [];
 
 %% export random agglomerates
-uni = table;
-[uni.aggloId, ~, uniRows] = unique(chiasmaT.aggloId);
-uni.chiasmaIds = accumarray(uniRows, chiasmaT.chiasmaId, [], @(ids) {ids});
-clear uniRows;
-
 rng(0);
-randIds = randperm(size(uni, 1));
+randIds = randperm(size(chiasmaT, 1));
 
 if ~exist(outputDir, 'dir')
     mkdir(outputDir);
 end
 
 for curIdx = 1:10
-    curAggloId = uni.aggloId(curIdx);
+    curAggloId = chiasmaT.aggloId(curIdx);
+    curChiasmaId = chiasmaT.chiasmaId(curIdx);
     
     curSkel = connectEM.Chiasma.Detect.buildSkeleton( ...
-        axons(curAggloId), chiasmata{curAggloId}, uni.chiasmaIds{curIdx});
+        axons(curAggloId), chiasmata{curAggloId}, curChiasmaId);
     curSkel = Skeleton.setParams4Pipeline(curSkel, param);
     
-    curFileName = sprintf('%02d_axon-%d_triplets.nml', curIdx, curAggloId);
+    curFileName = sprintf( ...
+        '%02d_axon-%d_chiasma-%d.nml', ...
+        curIdx, curAggloId, curChiasmaId);
     curSkel.write(fullfile(outputDir, curFileName));
 end
