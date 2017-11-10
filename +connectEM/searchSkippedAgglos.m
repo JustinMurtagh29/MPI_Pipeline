@@ -12,16 +12,28 @@ if ~exist('param','var') || isempty(param)
 end
 
 graph = load([param.saveFolder 'graphNew.mat'], 'edges');
-graph.edges = sort(graph.edges,2);
+graph.edges = unique(graph.edges,'rows');
 
+% create adjacency matrix (= LUT)
+maxSeg = double(max(graph.edges(:)));
+am = sparse( ...
+    double(graph.edges(:, 1)'), double(graph.edges(:, 2)'), ...
+    true(size(graph.edges,1),1), maxSeg, maxSeg);
+
+% make symmetric
+am = am + am';
+
+    
 for f = 1:numel(superagglos)
     % get and sort segId edges from current superagglo
     segIdEdges = reshape(superagglos(f).nodes(superagglos(f).edges,4),[],2);
-%     segIdEdges(any(isnan(segIdEdges),2),:) = [];
-    segIdEdges = sort(segIdEdges,2);
+    segIdEdges(any(isnan(segIdEdges),2),:) = [];
+%     segIdEdges = sort(segIdEdges,2);
     
     % check which segIdEdges are not part of the graph
-    ind = find(~ismember(segIdEdges,graph.edges,'rows'));
+    ind = find(am(sub2ind(size(am),segIdEdges(:,1),segIdEdges(:,2)))==0);
+
+%     ind = find(~ismember(segIdEdges,graph.edges,'rows'));
     if ~isempty(ind)
         % delete found edges and check if there is no other path between
         % the two nodes. If this is the case it is a real occasion that
