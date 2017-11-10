@@ -1,4 +1,5 @@
-function [ids, cEdges] = agglomerateSeed( seedIds, edges, borderSize, borderIdx, mergeP, tp, ts)
+function [ids, cEdges] = agglomerateSeed( seedIds, edges, borderSize, ...
+    mergeP, tp, ts)
     %AGGLOMERATESEED Agglomerate from a seed segment.
     % INPUT seedIds: [Nx1] int
     %           Segmentation ids of the starting segments.
@@ -6,8 +7,6 @@ function [ids, cEdges] = agglomerateSeed( seedIds, edges, borderSize, borderIdx,
     %           Edge list.
     %       borderSize: [Nx1] double
     %           BorderSize list.
-    %       borderIdx: [Nx1] double
-    %           BorderIdx list.
     %       mergeP: [Nx1] double
     %           Merge probability for the corresponding edges.
     %       tp: double
@@ -20,21 +19,14 @@ function [ids, cEdges] = agglomerateSeed( seedIds, edges, borderSize, borderIdx,
     %           The edges that connect the ids.
     % Author: Benedikt Staffler, modified by Robin Hesse
 
-    cEdges = edges(mergeP > tp, :);
-    cBorderIdx = borderIdx(mergeP > tp, :);
-    cBorderSize = borderSize(mergeP > tp, :);
+    toKeepEdges = mergeP > tp;
+    cEdges = edges(toKeepEdges, :);
+    cBorderSize = borderSize(toKeepEdges, :);
     cEdges = cEdges(cBorderSize > ts, :);
-    
-    disp('findConnectedComponents');
-    cc = Graph.findConnectedComponents(cEdges, false, false);
-    idx = find(cellfun(@(x)any(ismember(seedIds, x)), cc));
-    ids = cell(1,1);
-    for i=1:size(idx,1)    
-        if size(cc{idx(i)},1) > 25
-            ids{i} = cc{idx(i)}';
-        end
-    end
-    ids = cell2mat(ids)';
-    ids = unique(ids);
 
+    isSeed = false(max(cEdges(:)), 1);
+    isSeed(seedIds) = true;
+    cc = Graph.findConnectedComponents(cEdges, false, false);
+    idx = cellfun(@(x)any(isSeed(x)), cc);
+    ids = cell2mat(cc(idx));
 end
