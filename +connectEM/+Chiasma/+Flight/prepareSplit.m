@@ -9,7 +9,7 @@ function out = prepareSplit(chiasmata, taskDefs, exits, taskIds, flights)
     % sanity checks
     assert(size(taskDefs, 1) == size(exits, 1));
     assert(size(taskDefs, 1) == numel(taskIds));
-    assert(size(taskDefs, 1) == numel(flights.filenames));
+    assert(all(ismember(flights.filenamesShort, taskIds)));
     
     out = struct;
     out.taskDef = data.taskDef;
