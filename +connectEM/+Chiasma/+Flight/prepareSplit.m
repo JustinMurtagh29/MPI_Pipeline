@@ -12,9 +12,9 @@ function out = prepareSplit(chiasmata, taskDefs, exits, taskIds, flights)
     assert(all(ismember(flights.filenamesShort, taskIds)));
     
     out = struct;
-    out.taskDef = data.taskDef;
-    out.taskIds = taskIds;
     out.ff = flights;
+    out.taskDef = taskDef;
+    out.taskIds = taskIds;
     
     % build `queries` matrix
     out.queries = buildQueries(chiasmata, taskDefs, exits);
