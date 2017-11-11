@@ -41,4 +41,3 @@ ff = loadFlightPaths(param, nmlDir);
 
 % sanity checks
 assert(size(taskGenData.exits, 1) == numel(taskIds));
-assert(size(taskGenData.exits, 1) == numel(ff.filenames));
