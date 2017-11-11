@@ -8,7 +8,7 @@ function [segIds, neighbours, filenames, nodes, startNode, comments, errors] = l
     filenames = cell(1, numel(folders));
     for f=1:length(folders)
         files = dir([folders{f} '*.nml']);
-        filenames{f} = cellfun(@(x)[folders{f} x], {files(:).name}, 'uni', 0);
+        filenames{f} = cellfun(@(x) fullfile(folders{f}, x), {files(:).name}, 'uni', 0);
     end
     toc;
     
