@@ -37,6 +37,23 @@ param = param.p;
 
 %% build or load split file
 if splitFileBuild || ~exist(splitFile, 'file')
+    splitData = buildSplitData(taskGenFile, taskIdFile, nmlDir);
+    splitData.info = info;
+    
+    Util.saveStruct(splitFile, splitData);
+    clear splitData;
+end
+
+%% running chiasma splitting
+axonFile = load(splitFile, 'axonFile');
+axonFile = axonFile.axonFile;
+
+fprintf('Splitting chiasmata...\n');
+out = connectEM.splitChiasmataMultiSuper(param, axonFile, {splitFile});
+fprintf('done!\n');
+
+%% utilities
+function splitData = buildSplitData(taskGenFile, taskIdFile, nmlDir)
     % task definitions
     taskGenData = load(taskGenFile);
     taskDefs = taskGenData.taskDefs;
@@ -58,10 +75,4 @@ if splitFileBuild || ~exist(splitFile, 'file')
     splitData = connectEM.Chiasma.Flight.prepareSplit( ...
         chiasmata, taskDefs, exits, taskIds,flights);
     splitData.axonFile = axonFile;
-    splitData.info = info;
-    
-    % save
-    Util.saveStruct(splitFile, splitData);
-else
-    splitData = load(splitFile);
 end
