@@ -25,17 +25,17 @@ end
 if doNucleiDetection
 
     % nuclei coordinates and bbox
-    rp = NuclearPores.mag4NucleiDetection(); 
+    rp = NuclearPores.mag4NucleiDetection();
     outFile = ['/gaba/u/mberning/results/pipeline/20170217_ROI/soma/' ...
         'NucleiCoordinates.mat'];
     if ~exist(outFile, 'file')
         save(outFile,'rp');
     end
-    
+
     % nuclei mag1 masks (output files need to be copied to
     % /gaba/u/mberning/results/pipeline/20170217_ROI/soma/Nuclei/
     MouseROI2017.detectNucleiinBoxes2();
-    
+
     % bboxes for nuclei (bugfix for wrong bbox in agglomeration)
     p = Gaba.getSegParameters('ex145_ROI2017');
     m = load(fullfile(p.saveFolder, 'soma', 'NucleiCoordinates.mat'), 'rp');
@@ -53,7 +53,7 @@ if doNucleiDetection
             warning('Nucleus %d bbox does not the the mask.', i);
         end
     end
-    
+
 end
 
 
@@ -106,7 +106,7 @@ somaAgglos = somaAgglos(:,[3 2]);
 
 %% remove blood vessels & myelin
 % % (should maybe excluded in agglo procedure directly)
-% 
+%
 % m = load(p.svg.heuristicFile, 'vesselScore', 'myelinScore');
 % isVessel = m.vesselScore > 0.5;
 % isMyelin = m.myelinScore > 0.5;
@@ -121,8 +121,8 @@ somaAgglos = somaAgglos(:,[3 2]);
 fractT = 0.8;
 iter = 50;
 toAddSingleSegs = Soma.addSurroundedSegments(somaAgglos(:,1), ...
-    graph.edges(~isnan(graph.borderIdx)), gb.borderSize, fractT, ...
-    graph.edges(isnan(graph.borderIdx)), iter);
+    graph.edges(~isnan(graph.borderIdx), :), gb.borderSize, fractT, ...
+    graph.edges(isnan(graph.borderIdx), :), iter);
 
 somaAgglos2 = somaAgglos;
 for i = 1:size(somaAgglos, 1)
