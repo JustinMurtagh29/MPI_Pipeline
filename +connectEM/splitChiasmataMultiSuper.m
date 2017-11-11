@@ -198,8 +198,6 @@ function out = splitChiasmataMultiSuper(p, axonFile, dataFiles)
 
     %%
     out = struct;
-    out.info = info;
-
     out.p = p;
     out.oldAxons = oldAxons;
 
