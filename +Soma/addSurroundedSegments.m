@@ -47,6 +47,7 @@ end
 
 segIds = cell(length(agglos), 1);
 for i = 1:length(agglos)
+    Util.log('Processing agglo %03d/%03d.', i, length(agglos));
     for it = 1:iter
         isInAgglo = false(max(edges(:)), 1);
         isInAgglo(agglos{i}) = true;
@@ -57,6 +58,8 @@ for i = 1:length(agglos)
         segIds{i} = cat(1, segIds{i}, toAddIds);
         agglos{i} = cat(1, agglos{i}(:), segIds{i}(:));
         if isempty(toAddIds)
+            Util.log('Early stopping for agglo %d at iteration %d.', ...
+                i, it);
             break;
         end
     end
