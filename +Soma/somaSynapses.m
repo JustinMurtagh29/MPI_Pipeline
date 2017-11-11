@@ -135,7 +135,7 @@ if doPlot
     
     % histogram synapses per soma (center soma)
     figure;
-    histogram(noSyn(centerSomaIdx), 10);
+    histogram(noSyn(centerSomaIdx), 0:10:max(noSyn(centerSomaIdx))+10);
     Visualization.Figure.plotDefaultSettings();
     title('Synapses per soma histogram (center somata)')
     xlabel('Number of synapses (#)')
