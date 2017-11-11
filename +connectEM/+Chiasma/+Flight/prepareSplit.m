@@ -1,5 +1,5 @@
-function out = prepareSplit(chiasmata, taskDefs, exits, taskIds, flights)
-    % out = prepareSplit(chiasmata, taskDefs, exits, taskIds, flights)
+function out = prepareSplit(chiasmata, taskDef, exits, taskIds, flights)
+    % out = prepareSplit(chiasmata, taskDef, exits, taskIds, flights)
     %   This function builds the data structure consumed by the chiasma
     %   splitting procedure in `connectEM.splitChiasmataMultiSuper`.
     %
@@ -7,8 +7,8 @@ function out = prepareSplit(chiasmata, taskDefs, exits, taskIds, flights)
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     
     % sanity checks
-    assert(size(taskDefs, 1) == size(exits, 1));
-    assert(size(taskDefs, 1) == numel(taskIds));
+    assert(size(taskDef, 1) == size(exits, 1));
+    assert(size(taskDef, 1) == numel(taskIds));
     assert(all(ismember(flights.filenamesShort, taskIds)));
     
     out = struct;
@@ -17,16 +17,16 @@ function out = prepareSplit(chiasmata, taskDefs, exits, taskIds, flights)
     out.taskIds = taskIds;
     
     % build `queries` matrix
-    out.queries = buildQueries(chiasmata, taskDefs, exits);
+    out.queries = buildQueries(chiasmata, taskDef, exits);
 end
 
-function queries = buildQueries(chiasmata, taskDefs, exits)
-    taskCount = size(taskDefs, 1);
+function queries = buildQueries(chiasmata, taskDef, exits)
+    taskCount = size(taskDef, 1);
     queries = nan(taskCount, 1);
     
     for curIdx = 1:taskCount
         curExit = exits(curIdx, :);
-        curPosition = taskDefs.position(curIdx, :) + 1;
+        curPosition = taskDef.position(curIdx, :) + 1;
         
         curChiasmata = chiasmata{curExit.aggloId};
         curCenterNodeId = curChiasmata.ccCenterIdx(curExit.chiasmaId);
