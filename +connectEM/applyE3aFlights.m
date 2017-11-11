@@ -18,9 +18,14 @@ maxNumFlights = 10000;
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 workingDir = fullfile(rootDir, 'aggloState');
 
-axonFile = fullfile(workingDir, 'axons_10_a.mat');
+usedFlightFiles = fullfile(workingDir, {'axons_10_a_plus_10kE3a_c.mat'});
 flightFile = fullfile(workingDir, 'caseDistinctions_6.0.mat');
 caseFile = fullfile(workingDir, 'attachedEndings_6.0.mat');
+
+axonFile = fullfile( ...
+    rootDir, 'chiasmataSplitting', ...
+    '20171104T181213-on-axons-10a-plus-10kE3a', ...
+    '20171108T105021_splitAxons.mat');
 
 info = Util.runInfo();
 
@@ -59,6 +64,26 @@ flights = structfun( ...
     @(vals) vals(flightIds), ...
     flights, 'UniformOutput', false);
 clear flightIds;
+
+%% remove used flights
+usedFlightIds = cellfun( ...
+    @(f) load(f, 'usedFlightIds'), ...
+    usedFlightFiles, 'UniformOutput', false);
+usedFlightIds = Util.concatStructs('last', usedFlightIds{:});
+usedFlightIds = usedFlightIds.usedFlightIds;
+
+fprintf('\n');
+fprintf('# E3a flights already used: %d\n', numel(usedFlightIds));
+fprintf('⇒ These flights are being removed\n');
+
+keepMask = cat(1, flights.id);
+keepMask = not(ismember(keepMask, usedFlightIds));
+clear usedFlightIds;
+
+flights = structfun( ...
+    @(vals) vals(keepMask, :), ...
+    flights, 'UniformOutput', false);
+clear keepMask;
 
 %% determine overlap between flight paths and axon agglomerates
 axonAgglos = Superagglos.getSegIds(axons);
@@ -267,6 +292,9 @@ out.childIds = nan(numel(allAxons), 1);
 out.childIds(axonIds) = axonComps;
 out.childIds(otherAxonIds) = axonCompCount + (1:numel(otherAxonIds));
 assert(not(any(isnan(out.childIds))));
+
+% track which flight paths have been used
+out.usedFlightIds = cat(1, flights.id);
 
 %% evaluation
 axonStats = table;
