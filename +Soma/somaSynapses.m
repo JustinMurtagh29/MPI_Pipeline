@@ -125,6 +125,7 @@ if doPlot
     skel.write('SomaSynComs.nml');
     
     % histogram over synapses per soma
+    figure;
     noSyn = cellfun(@length, somaSynIdx);
     histogram(noSyn, 20);
     Visualization.Figure.plotDefaultSettings();
@@ -133,6 +134,7 @@ if doPlot
     ylabel('Number of somata (#)')
     
     % histogram synapses per soma (center soma)
+    figure;
     histogram(noSyn(centerSomaIdx), 10);
     Visualization.Figure.plotDefaultSettings();
     title('Synapses per soma histogram (center somata)')
