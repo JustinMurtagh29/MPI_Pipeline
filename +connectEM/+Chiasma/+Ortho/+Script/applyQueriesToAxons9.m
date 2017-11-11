@@ -36,7 +36,7 @@ param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 
 % load task IDs and queries
-taskIds = connectEM.Chiasma.Ortho.loadTaskIds(taskIdFile);
+taskIds = connectEM.Chiasma.Util.loadTaskIds(taskIdFile);
 queries = connectEM.Chiasma.Ortho.loadQueries(nmlDir);
 
 %% split chiasmata
