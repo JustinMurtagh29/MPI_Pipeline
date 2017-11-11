@@ -81,8 +81,13 @@ somaIDs = 1:numNuclei;
 [~, ~, gliaIds] = xlsread(somaList, sprintf('B2:B%d', numNuclei + 1));
 gliaIds = find(~cellfun(@isnan, gliaIds));
 
+% get somata in center
+[~, ~, centerSomaIdx] = xlsread(somaList, sprintf('C2:C%d', numNuclei + 1));
+centerSomaIdx = ~cellfun(@isnan, centerSomaIdx);
+
 %remove glia
 somaIDs(gliaIds) = [];
+centerSomaIdx(gliaIds) = [];
 
 
 %% discard edges into myelin/vessel

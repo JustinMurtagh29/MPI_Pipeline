@@ -21,6 +21,7 @@ p.seg.root = ['/gaba/wKcubes/Connectomics department/' ...
 m = load(p.agglo.somaFile);
 somaAgglos = m.somaAgglos(:,1);
 numSomas = length(somaAgglos);
+centerSomaIdx = m.centerSomaIdx;
 
 % synapses
 m = load(p.connectome.synFile);
@@ -128,6 +129,13 @@ if doPlot
     histogram(noSyn, 20);
     Visualization.Figure.plotDefaultSettings();
     title('Synapses per soma histogram')
+    xlabel('Number of synapses (#)')
+    ylabel('Number of somata (#)')
+    
+    % histogram synapses per soma (center soma)
+    histogram(noSyn(centerSomaIdx), 10);
+    Visualization.Figure.plotDefaultSettings();
+    title('Synapses per soma histogram (center somata)')
     xlabel('Number of synapses (#)')
     ylabel('Number of somata (#)')
     
