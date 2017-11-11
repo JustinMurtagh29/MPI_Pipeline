@@ -10,6 +10,10 @@ ver = 'v1';
  
 p = Gaba.getSegParameters('ex145_ROI2017');
 
+% required to switch to mag8 automatically
+p.seg.root = ['/gaba/wKcubes/Connectomics department/' ...
+    '2012-09-28_ex145_07x2_ROI2017/segmentation/1/'];
+
 % graph
 [graph, segmentMeta, borderMeta] = Seg.IO.loadGraph(p, false);
 
