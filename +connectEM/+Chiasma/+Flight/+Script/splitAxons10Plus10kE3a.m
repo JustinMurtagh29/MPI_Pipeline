@@ -29,6 +29,9 @@ splitFile = fullfile( ...
     chiasmaDir, sprintf('%s_splitData.mat', taskGenId));
 splitFileBuild = false;
 
+outFile = fullfile( ...
+    chiasmaDir, sprintf('%s_splitAxons.mat', taskGenId));
+
 info = Util.runInfo();
 
 %% loading data
@@ -50,7 +53,11 @@ axonFile = axonFile.axonFile;
 
 fprintf('Splitting chiasmata...\n');
 out = connectEM.splitChiasmataMultiSuper(param, axonFile, {splitFile});
-fprintf('done!\n');
+out.info = info;
+
+%% saving result
+Util.saveStruct(outFile, out);
+system(sprintf('chmod a-w "%s"', outFile));
 
 %% utilities
 function splitData = buildSplitData(taskGenFile, taskIdFile, nmlDir)
