@@ -51,9 +51,15 @@ for i = 1:length(agglos)
     for it = 1:iter
         isInAgglo = false(max(edges(:)), 1);
         isInAgglo(agglos{i}) = true;
-        bordOnAgglo = cellfun( ...
+        
+        % look only at neighbors of current agglo (for speed up)
+        toCheckSegs = cell2mat(nIds(isInAgglo));
+        toCheckSegs(isInAgglo(toCheckSegs)) = [];
+        
+        bordOnAgglo = zeros(length(isInAgglo), 1);
+        bordOnAgglo(toCheckSegs) = cellfun( ...
             @(x, y)sum(borderSize(x(isInAgglo(y))))/sum(borderSize(x)), ...
-            nIdx, nIds);
+            nIdx(toCheckSegs), nIds(toCheckSegs));
         toAddIds = setdiff(find(bordOnAgglo >= fracT), agglos{i});
         segIds{i} = cat(1, segIds{i}, toAddIds);
         agglos{i} = cat(1, agglos{i}(:), segIds{i}(:));
