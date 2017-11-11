@@ -117,5 +117,21 @@ if doPlot
     end
     skel = Skeleton.setParams4Dataset(skel, 'ex145_ROI2017');
     skel.write('SomaSynComs.nml');
+    
+    % histogram over synapses per soma
+    noSyn = cellfun(@length, somaSynIdx);
+    histogram(noSyn, 20);
+    Visualization.Figure.plotDefaultSettings();
+    title('Synapses per soma histogram')
+    xlabel('Number of synapses (#)')
+    ylabel('Number of somata (#)')
+    
+    % syn info table
+    noSpineSynDiscarded = cellfun(@sum, toDiscard1);
+    noExitSynDiscarded = cellfun(@sum, toDiscard2);
+    t = table(noSpineSynDiscarded, noExitSynDiscarded, noSyn, ...
+        'VariableNames', {'SpineSynDiscarded', 'ExitSynDiscarded', ...
+        'RemainingSynapsesPerSoma'});
+    tableTotal = sum(t{:,:}, 1);
 end
 
