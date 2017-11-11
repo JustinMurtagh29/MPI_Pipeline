@@ -20,7 +20,7 @@ taskGenFile = fullfile( ...
     sprintf('%s_taskGeneration.mat', taskGenId));
 taskIdFile = fullfile( ...
     chiasmaDir, 'taskAnswers', ...
-    sprintf('%s_flightTaskIDs.mat', taskGenId));
+    sprintf('%s_flightTaskIDs.txt', taskGenId));
 nmlDir = fullfile( ...
     chiasmaDir, 'taskAnswers', ...
     sprintf('%s_flightTasks', taskGenId));
@@ -32,8 +32,13 @@ param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 
 taskGenData = load(taskGenFile);
+
+% task IDs
 taskIds = loadTaskIds(taskIdFile);
+taskIds = taskIds.id;
+
 ff = loadFlightPaths(param, nmlDir);
 
 % sanity checks
 assert(size(taskGenData.exits, 1) == numel(taskIds));
+assert(size(taskGenData.exits, 1) == numel(ff.filenames));
