@@ -1,5 +1,5 @@
-function out = prepareSplit(chiasmata, taskDef, exits, taskIds, flights)
-    % out = prepareSplit(chiasmata, taskDef, exits, taskIds, flights)
+function out = buildSplitData(chiasmata, taskDef, exits, taskIds, flights)
+    % out = buildSplitData(chiasmata, taskDef, exits, taskIds, flights)
     %   This function builds the data structure consumed by the chiasma
     %   splitting procedure in `connectEM.splitChiasmataMultiSuper`.
     %

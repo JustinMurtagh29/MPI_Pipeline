@@ -1,5 +1,6 @@
 % Written by
 %   Alessandro Motta <alessandro.motta@brain.mpg.de>
+import connectEM.Chiasma.Flight.loadSplitData;
 import connectEM.Chiasma.Util.loadFlightPaths;
 import connectEM.Chiasma.Util.loadTaskIds;
 
@@ -40,7 +41,7 @@ param = param.p;
 
 %% build or load split file
 if splitFileBuild || ~exist(splitFile, 'file')
-    splitData = buildSplitData(taskGenFile, taskIdFile, nmlDir);
+    splitData = loadSplitData(taskGenFile, taskIdFile, nmlDir);
     splitData.info = info;
     
     Util.saveStruct(splitFile, splitData);
@@ -58,28 +59,3 @@ out.info = info;
 %% saving result
 Util.saveStruct(outFile, out);
 system(sprintf('chmod a-w "%s"', outFile));
-
-%% utilities
-function splitData = buildSplitData(taskGenFile, taskIdFile, nmlDir)
-    % task definitions
-    taskGenData = load(taskGenFile);
-    taskDefs = taskGenData.taskDefs;
-    exits = taskGenData.exits;
-
-    % chiasmata
-    chiasmata = load(taskGenData.info.param.chiasmataFile);
-    axonFile = chiasmata.info.param.axonFile;
-    chiasmata = chiasmata.chiasmata;
-
-    % task IDs
-    taskIds = loadTaskIds(taskIdFile);
-    taskIds = taskIds.id;
-
-    % flight paths
-    flights = loadFlightPaths(param, nmlDir);
-
-    % build split file
-    splitData = connectEM.Chiasma.Flight.prepareSplit( ...
-        chiasmata, taskDefs, exits, taskIds,flights);
-    splitData.axonFile = axonFile;
-end
