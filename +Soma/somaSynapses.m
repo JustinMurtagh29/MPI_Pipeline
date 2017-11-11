@@ -3,6 +3,7 @@
 
 info = Util.runInfo();
 doPlot = false; %#ok<*UNRCH>
+ver = 'v1';
 
 
 %% load data
@@ -73,7 +74,7 @@ somaSynComs = cellfun(@(x, idx) x(~idx, :), somaSynComs, toDiscard2, ...
 %% save results
 
 [outFolder, outFile] = fileparts(p.agglo.somaFile);
-outFile = fullfile(outFolder, [outFile '_synapses.mat']);
+outFile = fullfile(outFolder, [outFile '_synapses_' ver '.mat']);
 if ~exist(outFile, 'file')
     Util.log('Saving output to file %s.', outFile);
     save(outFile, 'info', 'somaSynIdxAll', 'toDiscard1', 'toDiscard2', ...
