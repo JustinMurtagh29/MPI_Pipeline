@@ -3,7 +3,7 @@
 
 info = Util.runInfo();
 doPlot = false; %#ok<*UNRCH>
-ver = 'v2';
+ver = 'v1';
 
 
 %% load data
