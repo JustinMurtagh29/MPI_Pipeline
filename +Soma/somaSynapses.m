@@ -27,9 +27,9 @@ isSpineSyn = m.isSpineSyn;
 %% get soma synapses
 
 maxSomaId = max(cellfun(@max, somaAgglos(:,1)));
-postsynSomaLUT = L4.Agglo.buildLUT(synapses.postsynId, maxSomaId);
-somaSynIdxAll = cellfun(@(x)setdiff(postsynSomaLUT(x), 0), ...
-    somaAgglos(:,1), 'uni', 0);
+postsynSomaLUT = L4.Agglo.buildLUT(synapses.postsynId, maxSomaId, true);
+somaSynIdxAll = cellfun(@(x)setdiff(cell2mat(postsynSomaLUT(x)), 0), ...
+    somaAgglos(:,1), 'uni', 0); % not that setdiff also makes the idx unique
 somaSynIdx = somaSynIdxAll;
 
 % soma syn coms (use only first edge for each synapse)
