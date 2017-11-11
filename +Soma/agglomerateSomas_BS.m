@@ -119,7 +119,7 @@ somaAgglos = somaAgglos(:,[3 2]);
 %% add segments that are mostly surrounded by agglos
 
 fractT = 0.8;
-iter = 50;
+iter = 10;
 toAddSingleSegs = Soma.addSurroundedSegments(somaAgglos(:,1), ...
     graph.edges(~isnan(graph.borderIdx), :), gb.borderSize, fractT, ...
     graph.edges(isnan(graph.borderIdx), :), iter);
