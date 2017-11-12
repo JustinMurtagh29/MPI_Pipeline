@@ -1,4 +1,5 @@
-function out = splitChiasmataMultiSuper(p, axonFile, dataFiles)
+function [out, openExits] = ...
+        splitChiasmataMultiSuper(p, axonFile, dataFiles)
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
 
@@ -89,6 +90,11 @@ function out = splitChiasmataMultiSuper(p, axonFile, dataFiles)
     % Assign flight paths to queries
     [~, queries.flightId] = ismember( ...
         queries.taskId, flights.filenamesShort);
+    
+    % Mark exits for which there is no valid answer
+    openExits = queries( ...
+        ~queries.flightId, {'axonId', 'chiasmaId', 'exitId'});
+    openExits.Properties.VariableNames{'axonId'} = 'aggloId';
 
     % Find chiasmata for which we have all queries answered
     [~, ~, queries.uniChiasmaId] = unique( ...
