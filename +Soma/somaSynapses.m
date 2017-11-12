@@ -18,8 +18,10 @@ p.seg.root = ['/gaba/wKcubes/Connectomics department/' ...
 [graph, segmentMeta, borderMeta] = Seg.IO.loadGraph(p, false);
 
 % somas
+p.agglo.somaFile = ['/gaba/u/mberning/results/pipeline/20170217_ROI/' ...
+    'soma_BS/somaAgglo_06.mat'];
 m = load(p.agglo.somaFile);
-somaAgglos = m.somaAgglos(:,1);
+somaAgglos = m.somaAgglos2(:,1);
 numSomas = length(somaAgglos);
 centerSomaIdx = m.centerSomaIdx;
 
@@ -37,6 +39,18 @@ postsynSomaLUT = L4.Agglo.buildLUT(synapses.postsynId, maxSomaId, true);
 somaSynIdxAll = cellfun(@(x)setdiff(cell2mat(postsynSomaLUT(x)), 0), ...
     somaAgglos(:,1), 'uni', 0); % not that setdiff also makes the idx unique
 somaSynIdx = somaSynIdxAll;
+
+% exclude synapses with presyn in soma for now (quick fix, should be done
+% in a newer synapse version at some point)
+isSomaSeg = false(max(graph.edges(:)), 1);
+isSomaSeg(cell2mat(somaAgglos)) = true;
+toDelIdx = cell(numSomas, 1);
+for i = 1:numSomas
+    toDelIdx{i} = arrayfun(@(x)any(isSomaSeg(synapses.presynId{x})), ...
+        somaSynIdx{i});
+end
+insideSomaSyn = cellfun(@(x, y)x(y), somaSynIdx, toDelIdx, 'uni', 0);
+somaSynIdx = cellfun(@(x, y)x(~y), somaSynIdx, toDelIdx, 'uni', 0);
 
 % soma syn coms (use only first edge for each synapse)
 somaSynComs = cell(numSomas, 1);
@@ -135,7 +149,7 @@ if doPlot
     
     % histogram synapses per soma (center soma)
     figure;
-    histogram(noSyn(centerSomaIdx), 10);
+    histogram(noSyn(centerSomaIdx), 0:10:max(noSyn(centerSomaIdx))+10);
     Visualization.Figure.plotDefaultSettings();
     title('Synapses per soma histogram (center somata)')
     xlabel('Number of synapses (#)')
