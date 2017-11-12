@@ -1,5 +1,5 @@
-function exits = shuffleExits(exits, batchSize)
-    % exits = shuffleExits(exits, batchSize)
+function [exits, rows] = shuffleExits(exits, batchSize)
+    % [exits, rows] = shuffleExits(exits, batchSize)
     %   Shuffles the order of the exits to be queried. 
     %
     %   An optional `batchSize` can be specified. If this parameter is set,
@@ -11,6 +11,7 @@ function exits = shuffleExits(exits, batchSize)
     
     rng(0);
     exitsIn = exits;
+    exits.row = reshape(1:size(exits, 1), [], 1);
     
     %% shuffle
     randIds = randperm(size(exits, 1));
@@ -33,6 +34,9 @@ function exits = shuffleExits(exits, batchSize)
         exits = cat(1, exits(curMask, :), exits(~curMask, :));
         uniChiasma = cat(1, uniChiasma(curMask), uniChiasma(~curMask));
     end
+    
+    rows = exits.row;
+    exits.row = [];
     
     %% sanity check
     assert(isequal(unique(exits, 'rows'), unique(exitsIn, 'rows')));
