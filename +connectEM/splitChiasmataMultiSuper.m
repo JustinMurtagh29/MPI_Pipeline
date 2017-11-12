@@ -32,7 +32,7 @@ function out = splitChiasmataMultiSuper(p, axonFile, dataFiles)
         curDataFile = dataFiles{curFileIdx};
         curData = load(curDataFile);
 
-        % original queries
+        % build query table
         curQueries = table;
         curQueries.axonId = curData.queries(:, 1);
         curQueries.chiasmaId = curData.queries(:, 2);
@@ -41,7 +41,10 @@ function out = splitChiasmataMultiSuper(p, axonFile, dataFiles)
         curQueries.seedPos = curData.queries(:, 4:6);
         curQueries.centerNodeId = curData.queries(:, 7);
         curQueries.taskId = curData.taskIds;
-        curFlights = curData.ff;
+        
+        curFlights = structfun( ...
+            @(field) reshape(field, [], 1), ...
+            curData.ff, 'UniformOutput', false);
 
         queries{curFileIdx} = curQueries;
         flights{curFileIdx} = curFlights;
@@ -49,20 +52,40 @@ function out = splitChiasmataMultiSuper(p, axonFile, dataFiles)
     end
 
     queries = cat(1, queries{:});
-    flights = Util.concatStructs('last', flights{:});
-
+    flights = Util.concatStructs(1, flights{:});
+    
+   [~, chiasmaCount] = unique( ...
+       queries(:, {'axonId', 'chiasmaId'}), 'rows');
+    fprintf('# chiasmata queried: %d\n', numel(chiasmaCount));
+    clear chiasmaCount;
+    
     fprintf('# handed out queries: %d\n', size(queries, 1));
     fprintf('# queries answered: %d\n', numel(flights.segIds));
 
-    %% cleaning up input data
+    %% cleaning up the flight paths
+    % restrict to valid flights
+    fprintf('\n');
+    invalidNodeMask = cellfun(@isempty, flights.nodes);
+    fprintf('# queries without nodes: %d\n', sum(invalidNodeMask));
+    invalidCommentMask = ~cellfun(@isempty, flights.comments);
+    fprintf('# queries with comment: %d\n', sum(invalidCommentMask));
+    fprintf('⇒ Removing the above queries ...\n');
+
+    % removing invalid flights and their chiasmata
+    validFlightMask = ~(invalidNodeMask | invalidCommentMask);
+    clear invalidNodeMask invalidCommentMask;
+    
+    flights = structfun( ...
+        @(vals) vals(validFlightMask, :), ...
+        flights, 'UniformOutput', false);
+    
+    %% cleaning up the list of chiasmata
     % Remove duplicate queries (e.g., due to requerying)
     % This also sorts the queries to make processing easier.
-    [~, uniRows] = unique(queries(:, ...
+   [~, uniRows] = unique(queries(:, ...
         {'axonId', 'chiasmaId', 'exitId'}), 'rows');
-
     queries = queries(uniRows, :);
-    flights = structfun(@(x) x(:), flights, 'UniformOutput', false);
-
+    
     % Assign flight paths to queries
     [~, queries.flightId] = ismember( ...
         queries.taskId, flights.filenamesShort);
@@ -72,6 +95,8 @@ function out = splitChiasmataMultiSuper(p, axonFile, dataFiles)
         queries(:, {'axonId', 'chiasmaId'}), 'rows');
     uniChiasmaDoneIds = find(accumarray( ...
         queries.uniChiasmaId, queries.flightId, [], @all));
+    
+    fprintf('\n');
     fprintf('# chiasmata answered: %d\n', numel(uniChiasmaDoneIds));
 
     % Limit ourselves to done chiasmata
@@ -81,32 +106,7 @@ function out = splitChiasmataMultiSuper(p, axonFile, dataFiles)
     queries.flightNodes = flights.nodes(queries.flightId);
     queries.flightSegIds = flights.segIds(queries.flightId);
     queries.flightComment = flights.comments(queries.flightId);
-
-    fprintf('\n');
-    fprintf('# queries without nodes: %d\n', ...
-        sum(cellfun(@isempty, queries.flightNodes)));
-    fprintf('# queries with comment: %d\n', ...
-        sum(~cellfun(@isempty, queries.flightComment)));
-    fprintf('⇒ Removing the above queries ...\n');
-
-    % removing invalid flights and their chiasmata
-    invalidFlightMask = ...
-        cellfun(@isempty, queries.flightNodes) ...
-     | ~cellfun(@isempty, queries.flightComment);
-
-    invalidChiasmaIds = unique(queries.uniChiasmaId(invalidFlightMask));
-    queries(ismember(queries.uniChiasmaId, invalidChiasmaIds), :) = [];
-
-    [~, ~, queries.uniChiasmaId] = unique( ...
-        queries(:, {'axonId', 'chiasmaId'}), 'rows');
-    uniChiasmaDoneIds = find(accumarray( ...
-        queries.uniChiasmaId, queries.flightId, [], @all));
-
-    fprintf('\n');
-    fprintf('# answered chiasmata left: %d\n', numel(uniChiasmaDoneIds));
-
-    % Clean-up
-    queries(:, {'flightId', 'uniChiasmaId'}) = [];
+    queries.flightId = [];
 
     %% process axons
     % Group queries by axons
