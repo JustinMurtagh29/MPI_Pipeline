@@ -16,7 +16,7 @@ chiasmaDir = fullfile( ...
     '20171104T181213-on-axons-10a-plus-10kE3a');
 
 % task specifics
-taskGenIds = {'20171113T095746'};
+taskGenIds = {'20171113T112726'; '20171113T095746'};
 taskGenDir = fullfile(chiasmaDir, 'taskGeneration');
 
 tasks = cellfun(@(id) struct( ...
