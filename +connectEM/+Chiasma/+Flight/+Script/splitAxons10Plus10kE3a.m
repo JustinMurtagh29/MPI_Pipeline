@@ -71,6 +71,7 @@ system(sprintf('chmod a-w "%s"', splitAxonsFile));
 taskGen = load(tasks(end).genFile);
 exits = taskGen.exits;
 taskDefs = taskGen.taskDefs;
+chiasmataFile = taskGen.chiasmataFile;
 clear taskGen;
 
 % find unsolved chiasmata
@@ -106,6 +107,7 @@ writetable( ...
 %% build output
 requery.info = info;
 requery.taskDefFile = requeryTaskDefFile;
+requery.chiasmataFile = chiasmataFile;
 
 requeryTaskGenFile = fullfile( ...
     taskGenDir, sprintf('%s_taskGeneration.mat', runId));
