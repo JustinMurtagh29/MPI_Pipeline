@@ -11,7 +11,8 @@ function splitData = loadSplitData(param, taskGenFile, taskIdFile, nmlDir)
     exits = taskGenData.exits;
 
     % chiasmata
-    chiasmata = load(taskGenData.info.param.chiasmataFile);
+    chiasmataFile = taskGenData.chiasmataFile;
+    chiasmata = load(chiasmataFile);
     axonFile = chiasmata.info.param.axonFile;
     chiasmata = chiasmata.chiasmata;
 
