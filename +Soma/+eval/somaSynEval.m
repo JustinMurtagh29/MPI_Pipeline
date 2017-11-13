@@ -14,6 +14,7 @@ end
 p = Gaba.getSegParameters('ex145_ROI2017');
 m = load(p.agglo.somaFile);
 somaAgglos = m.somaAgglos(m.centerSomaIdx, 1);
+centerIds = find(m.centerSomaIdx);
 
 % get 3 random soma
 n = 3;
@@ -28,7 +29,7 @@ somaSeeds = cell2mat(cellfun(@(x)round(mean(point(x, :), 1)), ...
     somaAgglos(idx), 'uni', 0));
 
 % results
-seeds = table(idx, somaSeeds, 'VariableNames', {'SomaId', 'Seed'});
+seeds = table(centerIds(idx), somaSeeds, 'VariableNames', {'SomaId', 'Seed'});
 
 outFile = fullfile(outFolder, 'SomaSynEval_seeds.mat');
 if ~exist(outFile, 'file')
