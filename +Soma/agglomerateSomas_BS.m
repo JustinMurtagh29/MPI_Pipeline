@@ -139,7 +139,8 @@ end
 outFile = fullfile(outputFolder, sprintf('somaAgglo_%s.mat', ver));
 if ~exist(outFile, 'file')
     Util.log('Storing automated agglomeration results at %s.', outFile)
-    save(outFile, 'somaAgglos', 'somaAgglos_woSurSegs', 'info')
+    save(outFile, 'somaAgglos', 'somaAgglos_woSurSegs', ...
+        'centerSomaIdx', 'info')
 else
     Util.log('File %s already exists and will not be overwritten.');
 end
