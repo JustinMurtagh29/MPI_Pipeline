@@ -17,6 +17,8 @@ function [dendrites,dendritesLUT] = applyAggloCorrections(dendrites,p,folder,mod
 %
 % by Marcel Beining <marcel.beining@brain.mpg.de>
 
+roundToBase = 4; % for datasets that are up to 10^4 pixels large
+
 if ~exist('modus','var') || isempty(modus)
     modus = 0;
 end
@@ -51,8 +53,14 @@ for f = 1:numel(files)
     skel = skeleton(fullfile(folder,files(f).name));  % load skeleton
     skel.edges = cellfun(@(x) x(~any(x==0,2),:),skel.edges,'uni',0);
 
-    skel = skel.deleteTrees(cellfun(@numel,skel.nodes)/4==1); % delete single node trees
+    skel = skel.deleteTrees(cellfun(@numel,skel.nodes)/4==0); % delete zero node trees, caution has been changed from single node on 08 nov 17
     skelCoords = cell2mat(cellfun(@(x) x(:,1:3),skel.nodes,'uni',0));  % putting all skel nodes together
+    % create node pairs from edges in all skels
+    skelCoordsCatEdges = cell2mat(cellfun(@(x,y) [catNumbers(x(y(:,1),1:3),roundToBase),catNumbers(x(y(:,2),1:3),roundToBase)],skel.nodes,skel.edges,'uni',0));  % putting all skel nodes together
+    skelCoordsCatEdges = sort(skelCoordsCatEdges,2);
+    
+    
+    
     warning('OFF','auxiliaryMethods:readKnossosCube')
     skelSegIds = Seg.Global.getSegIds(p,skelCoords);  % extract the seg Ids of all skel nodes
     warning('ON','auxiliaryMethods:readKnossosCube')
@@ -72,10 +80,11 @@ for f = 1:numel(files)
     end
     usedCells(ind) = f;
     if  modus ~= 2
-        % refresh if there were splits done
-%         dendriteCoord = cell2mat(arrayfun(@(x) x.nodes(:,1:3),dendrites,'uni',0));
-%         numDend = arrayfun(@(x) size(x.nodes,1),dendrites);
-%         dendLabel = repelem(1:numel(dendrites),numDend);
+        % create node pairs from edges of superagglo and compare to
+        % skeleton node pairs to find deleted edges
+        dendCoordsCatEdges = [catNumbers(dendrites(ind).nodes(dendrites(ind).edges(:,1),1:3),roundToBase),catNumbers(dendrites(ind).nodes(dendrites(ind).edges(:,2),1:3),roundToBase)];  % putting all skel nodes together
+        dendCoordsCatEdges = sort(dendCoordsCatEdges,2);
+        edgesToDelete = (~ismember(dendCoordsCatEdges,skelCoordsCatEdges,'rows'));  % find node ind which has to be deleted by checking which one is missing in the loaded skeleton compared to the skeleton before modification
         nodesToDelete = find(~ismember(dendrites(ind).nodes(:,1:3),skelCoords,'rows'));  % find node ind which has to be deleted by checking which one is missing in the loaded skeleton compared to the skeleton before modification
     else
         nodesToDelete = [];
@@ -85,21 +94,24 @@ for f = 1:numel(files)
     else
         nodesToAdd = [];
     end
-    % correct mergers
+    % correct mergers by splitting the superagglo after edges are removed
+    splitAgglo = Superagglos.removeEdgesFromAgglo(dendrites(ind),edgesToDelete); % get the splitted agglos when node is deleted
+%     splitAgglo = Superagglos.removeNodesFromAgglo(dendrites(ind),nodesToDelete); % get the splitted agglos when node is deleted
     if ~isempty(nodesToDelete)
-        splitAgglo = Superagglos.removeNodesFromAgglo(dendrites(ind),nodesToDelete); % get the splitted agglos when node is deleted
         segIdsToDelete = dendrites(ind).nodes(nodesToDelete,4);
         segIdsToDelete = segIdsToDelete(~isnan(segIdsToDelete));
-        dendrites(ind) = splitAgglo(1);  % replace this agglo with one of the correctly splitted version
-        dendritesLUT(splitAgglo(1).nodes(~isnan(splitAgglo(1).nodes(:,4)),4)) = repelem(ind,sum(~isnan(splitAgglo(1).nodes(:,4))));
-
-        if numel(splitAgglo) > 1
-            % update  LUT
-            dendritesLUT(cell2mat(arrayfun(@(x) x.nodes(~isnan(x.nodes(:,4)),4),splitAgglo(2:end),'uni',0))) = repelem((1:numel(splitAgglo)-1)+numel(dendrites),arrayfun(@(x) sum(~isnan(x.nodes(:,4))),splitAgglo(2:end)));
-            dendrites(end+1:end+numel(splitAgglo)-1) = splitAgglo(2:end);  % add the splitted stuff to end of agglo class
-        else
-            warning('Deleting the nodes from the skeleton %s did not split the agglo!',skel.filename)
-        end
+    end
+    dendrites(ind) = splitAgglo(1);  % replace this agglo with one of the correctly splitted version
+    dendritesLUT(splitAgglo(1).nodes(~isnan(splitAgglo(1).nodes(:,4)),4)) = repelem(ind,sum(~isnan(splitAgglo(1).nodes(:,4))));
+    
+    if numel(splitAgglo) > 1
+        % update  LUT
+        dendritesLUT(cell2mat(arrayfun(@(x) x.nodes(~isnan(x.nodes(:,4)),4),splitAgglo(2:end),'uni',0))) = repelem((1:numel(splitAgglo)-1)+numel(dendrites),arrayfun(@(x) sum(~isnan(x.nodes(:,4))),splitAgglo(2:end)));
+        dendrites(end+1:end+numel(splitAgglo)-1) = splitAgglo(2:end);  % add the splitted stuff to end of agglo class
+    elseif ~any(edgesToDelete)
+        warning('Deleting the edges from the skeleton %s did not split the agglo!',skel.filename)
+    end
+    if ~isempty(nodesToDelete)
         dendritesLUT(segIdsToDelete) = 0;  % deleted segIds will not be there anymore in the agglo class
     end
     
@@ -207,3 +219,10 @@ for f = 1:numel(files)
         end
     end
 end
+
+function out = catNumbers(b,roundToBase)
+if ~exist('roundTo','var') || isempty(roundToBase)
+    roundToBase = 0;
+end
+% concatenates numbers of a vector
+out = b*10.^(arrayfun(@(x) sum(arrayfun(@(y) max(roundToBase+1,y),ceil(log10(b(x+1:end))))),1:numel(b)))';

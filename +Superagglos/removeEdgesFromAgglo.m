@@ -1,5 +1,5 @@
 function [newSuperagglos] = removeEdgesFromAgglo(superagglos,edgeIds,noCC )
-% removes sets of node indices from superagglos and performs connected
+% removes sets of edge indices from superagglos and performs connected
 % component afterswards to ensure internode connectivity in each superagglo
 if ~exist('noCC','var') || isempty(noCC)
     noCC = 0;
