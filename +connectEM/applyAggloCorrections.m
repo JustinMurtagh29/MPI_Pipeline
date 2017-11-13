@@ -105,7 +105,7 @@ for f = 1:numel(files)
         % update  LUT
         dendritesLUT(cell2mat(arrayfun(@(x) x.nodes(~isnan(x.nodes(:,4)),4),splitAgglo(2:end),'uni',0))) = repelem((1:numel(splitAgglo)-1)+numel(dendrites),arrayfun(@(x) sum(~isnan(x.nodes(:,4))),splitAgglo(2:end)));
         dendrites(end+1:end+numel(splitAgglo)-1) = splitAgglo(2:end);  % add the splitted stuff to end of agglo class
-    elseif ~any(edgesToDelete)
+    elseif any(edgesToDelete)
         warning('Deleting the edges from the skeleton %s did not split the agglo!',skel.filename)
     end
     if ~isempty(nodesToDelete)
