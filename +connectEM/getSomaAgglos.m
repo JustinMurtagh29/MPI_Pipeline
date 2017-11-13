@@ -1,5 +1,17 @@
 function somas = getSomaAgglos(filename,type)
-% type can be center (default), border or all
+% returns the somata which overlap with the center, border or with all soma
+% locations (which were extracted from the KAMIN list)
+% INPUTS
+% filename     string with path to one of the soma agglo mat files which
+%              contains the Nx3 cell array "somas" (first column are the
+%              agglo coordinates, third column are the agglo segIDs)
+% type         string which can be center (default), border or all
+%
+% OUTPUTS
+% somas        soma agglos in the old agglo format (cell array)
+%
+% by marcel.beining@brain.mpg.de
+
 if ~exist('type','var') || isempty(type)
     type = 'center';
 end

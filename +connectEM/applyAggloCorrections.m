@@ -56,11 +56,9 @@ for f = 1:numel(files)
     skel = skel.deleteTrees(cellfun(@numel,skel.nodes)/4==0); % delete zero node trees, caution has been changed from single node on 08 nov 17
     skelCoords = cell2mat(cellfun(@(x) x(:,1:3),skel.nodes,'uni',0));  % putting all skel nodes together
     % create node pairs from edges in all skels
-    skelCoordsCatEdges = cell2mat(cellfun(@(x,y) [catNumbers(x(y(:,1),1:3),roundToBase),catNumbers(x(y(:,2),1:3),roundToBase)],skel.nodes,skel.edges,'uni',0));  % putting all skel nodes together
-    skelCoordsCatEdges = sort(skelCoordsCatEdges,2);
-    
-    
-    
+    skel = skel.deleteTrees(cellfun(@isempty,skel.edges)); % delete single or zero node skels
+    skelCoordsCatEdges = cell2mat(cellfun(@(x,y) [x(y(:,1),1:3),x(y(:,2),1:3)],skel.nodes,skel.edges,'uni',0));  % putting all skel nodes together
+
     warning('OFF','auxiliaryMethods:readKnossosCube')
     skelSegIds = Seg.Global.getSegIds(p,skelCoords);  % extract the seg Ids of all skel nodes
     warning('ON','auxiliaryMethods:readKnossosCube')
@@ -82,9 +80,8 @@ for f = 1:numel(files)
     if  modus ~= 2
         % create node pairs from edges of superagglo and compare to
         % skeleton node pairs to find deleted edges
-        dendCoordsCatEdges = [catNumbers(dendrites(ind).nodes(dendrites(ind).edges(:,1),1:3),roundToBase),catNumbers(dendrites(ind).nodes(dendrites(ind).edges(:,2),1:3),roundToBase)];  % putting all skel nodes together
-        dendCoordsCatEdges = sort(dendCoordsCatEdges,2);
-        edgesToDelete = (~ismember(dendCoordsCatEdges,skelCoordsCatEdges,'rows'));  % find node ind which has to be deleted by checking which one is missing in the loaded skeleton compared to the skeleton before modification
+        dendCoordsCatEdges = [dendrites(ind).nodes(dendrites(ind).edges(:,1),1:3),dendrites(ind).nodes(dendrites(ind).edges(:,2),1:3)];  % putting all skel nodes together
+        edgesToDelete = ~(ismember(dendCoordsCatEdges,skelCoordsCatEdges,'rows') | ismember(dendCoordsCatEdges(:,[4:6,1:3]),skelCoordsCatEdges,'rows'));  % find node ind which has to be deleted by checking which one is missing in the loaded skeleton compared to the skeleton before modification
         nodesToDelete = find(~ismember(dendrites(ind).nodes(:,1:3),skelCoords,'rows'));  % find node ind which has to be deleted by checking which one is missing in the loaded skeleton compared to the skeleton before modification
     else
         nodesToDelete = [];
@@ -219,10 +216,3 @@ for f = 1:numel(files)
         end
     end
 end
-
-function out = catNumbers(b,roundToBase)
-if ~exist('roundTo','var') || isempty(roundToBase)
-    roundToBase = 0;
-end
-% concatenates numbers of a vector
-out = b*10.^(arrayfun(@(x) sum(arrayfun(@(y) max(roundToBase+1,y),ceil(log10(b(x+1:end))))),1:numel(b)))';
