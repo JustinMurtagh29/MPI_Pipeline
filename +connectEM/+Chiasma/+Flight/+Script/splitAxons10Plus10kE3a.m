@@ -64,7 +64,6 @@ fprintf('Splitting chiasmata...\n');
 splitAxons.info = info;
 
 %% saving result
-
 Util.saveStruct(splitAxonsFile, splitAxons);
 system(sprintf('chmod a-w "%s"', splitAxonsFile));
 
