@@ -12,8 +12,8 @@ p.seg.backend = 'wkwrap';
 p.seg.root = ['/gabaghi/wKcubes_archive/2012-09-28_ex145_07x2_ROI2017/' ...
     'segmentation/1/'];
 m = load(p.agglo.somaFile);
-somaAgglos = m.somaAgglos(m.centerSomaIdx, 1);
-
+somaAgglos = m.somaAgglos(:, 1);
+centerSomaId = find(m.centerSomaIdx);
 
 %% soma synapses
 
@@ -26,7 +26,7 @@ outputFolder = '/tmpscratch/bstaffle/data/L4/somata/issfs_amira/';
 if ~exist(outputFolder, 'dir')
     mkdir(outputFolder)
 end
-save('RunInfo.mat', 'info');
+save('RunInfo.mat', 'info', 'centerSomaId');
 Util.log('Calculating isosurfaces and storing them at %s.', outputFolder);
 Visualization.exportAggloToAmira(p, somaAgglos, outputFolder, ...
     'reduce', 0.2, 'smoothSizeHalf', 4, 'smoothWidth', 8);
