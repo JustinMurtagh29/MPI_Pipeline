@@ -59,7 +59,8 @@ axonFile = axonFile.axonFile;
 
 fprintf('Splitting chiasmata...\n');
 [splitAxons, openExits] = ...
-    connectEM.splitChiasmataMultiSuper(param, axonFile, {splitDataFile});
+    connectEM.splitChiasmataMultiSuper( ...
+        param, axonFile, {tasks.splitDataFile});
 splitAxons.info = info;
 
 %% saving result
