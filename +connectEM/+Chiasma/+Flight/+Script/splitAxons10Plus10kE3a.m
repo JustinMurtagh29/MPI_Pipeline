@@ -16,26 +16,24 @@ chiasmaDir = fullfile( ...
     '20171104T181213-on-axons-10a-plus-10kE3a');
 
 % task specifics
-taskGenId = '20171108T105021';
+taskGenIds = {'20171113T112726'; '20171113T095746'};
 taskGenDir = fullfile(chiasmaDir, 'taskGeneration');
 
-taskGenFile = fullfile( ...
-    taskGenDir, ...
-    sprintf('%s_taskGeneration.mat', taskGenId));
-taskIdFile = fullfile( ...
-    chiasmaDir, 'taskAnswers', ...
-    sprintf('%s_flightTaskIDs.txt', taskGenId));
-nmlDir = fullfile( ...
-    chiasmaDir, 'taskAnswers', ...
-    sprintf('%s_flightTasks', taskGenId));
-
-splitDataFile = fullfile( ...
-    chiasmaDir, sprintf('%s_splitData.mat', taskGenId));
-splitDataFileBuild = false;
+tasks = cellfun(@(id) struct( ...
+    'genFile', fullfile( ...
+        taskGenDir, sprintf('%s_taskGeneration.mat', id)), ...
+    'idFile', fullfile( ...
+        chiasmaDir, 'taskAnswers', sprintf('%s_flightTaskIDs.txt', id)), ...
+    'nmlDir', fullfile( ...
+        chiasmaDir, 'taskAnswers', sprintf('%s_flightTasks', id)), ...
+    'splitDataFile', fullfile( ...
+        chiasmaDir, sprintf('%s_splitData.mat', id)), ...
+	'splitDataFileBuild', false), ...
+    taskGenIds);
 
 % output file
 splitAxonsFile = fullfile( ...
-    chiasmaDir, sprintf('%s_splitAxons.mat', taskGenId));
+    chiasmaDir, sprintf('%s_splitAxons.mat', taskGenIds{1}));
 
 info = Util.runInfo();
 
@@ -44,21 +42,25 @@ param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 
 %% build or load split file
-if splitDataFileBuild || ~exist(splitDataFile, 'file')
-    splitData = loadSplitData(taskGenFile, taskIdFile, nmlDir);
-    splitData.info = info;
-    
-    Util.saveStruct(splitDataFile, splitData);
-    clear splitData;
+for task = reshape(tasks, 1, [])
+    if task.splitDataFileBuild || ~exist(task.splitDataFile, 'file')
+        splitData = loadSplitData( ...
+            param, task.genFile, task.idFile, task.nmlDir);
+        splitData.info = info;
+
+        Util.saveStruct(task.splitDataFile, splitData);
+        clear splitData;
+    end
 end
 
 %% running chiasma splitting
-axonFile = load(splitDataFile, 'axonFile');
+axonFile = load(tasks(end).splitDataFile, 'axonFile');
 axonFile = axonFile.axonFile;
 
 fprintf('Splitting chiasmata...\n');
 [splitAxons, openExits] = ...
-    connectEM.splitChiasmataMultiSuper(param, axonFile, {splitDataFile});
+    connectEM.splitChiasmataMultiSuper( ...
+        param, axonFile, {tasks.splitDataFile});
 splitAxons.info = info;
 
 %% saving result
@@ -66,9 +68,10 @@ Util.saveStruct(splitAxonsFile, splitAxons);
 system(sprintf('chmod a-w "%s"', splitAxonsFile));
 
 %% requerying
-taskGen = load(taskGenFile);
+taskGen = load(tasks(end).genFile);
 exits = taskGen.exits;
 taskDefs = taskGen.taskDefs;
+chiasmataFile = taskGen.chiasmataFile;
 clear taskGen;
 
 % find unsolved chiasmata
@@ -104,6 +107,7 @@ writetable( ...
 %% build output
 requery.info = info;
 requery.taskDefFile = requeryTaskDefFile;
+requery.chiasmataFile = chiasmataFile;
 
 requeryTaskGenFile = fullfile( ...
     taskGenDir, sprintf('%s_taskGeneration.mat', runId));

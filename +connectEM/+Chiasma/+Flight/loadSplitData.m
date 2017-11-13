@@ -1,6 +1,8 @@
-function splitData = loadSplitData(taskGenFile, taskIdFile, nmlDir)
+function splitData = loadSplitData(param, taskGenFile, taskIdFile, nmlDir)
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
+    import connectEM.Chiasma.Util.loadTaskIds;
+    import connectEM.Chiasma.Util.loadFlightPaths;
     import connectEM.Chiasma.Flight.buildSplitData;
     
     % task definitions
@@ -9,7 +11,8 @@ function splitData = loadSplitData(taskGenFile, taskIdFile, nmlDir)
     exits = taskGenData.exits;
 
     % chiasmata
-    chiasmata = load(taskGenData.info.param.chiasmataFile);
+    chiasmataFile = taskGenData.chiasmataFile;
+    chiasmata = load(chiasmataFile);
     axonFile = chiasmata.info.param.axonFile;
     chiasmata = chiasmata.chiasmata;
 

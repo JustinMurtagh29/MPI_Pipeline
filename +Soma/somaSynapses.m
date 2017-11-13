@@ -21,7 +21,7 @@ p.seg.root = ['/gaba/wKcubes/Connectomics department/' ...
 p.agglo.somaFile = ['/gaba/u/mberning/results/pipeline/20170217_ROI/' ...
     'soma_BS/somaAgglo_06.mat'];
 m = load(p.agglo.somaFile);
-somaAgglos = m.somaAgglos2(:,1);
+somaAgglos = m.somaAgglos(:,1);
 numSomas = length(somaAgglos);
 centerSomaIdx = m.centerSomaIdx;
 

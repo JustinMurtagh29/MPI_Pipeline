@@ -21,11 +21,7 @@ workingDir = fullfile(rootDir, 'aggloState');
 usedFlightFiles = fullfile(workingDir, {'axons_10_a_plus_10kE3a_c.mat'});
 flightFile = fullfile(workingDir, 'caseDistinctions_6.0.mat');
 caseFile = fullfile(workingDir, 'attachedEndings_6.0.mat');
-
-axonFile = fullfile( ...
-    rootDir, 'chiasmataSplitting', ...
-    '20171104T181213-on-axons-10a-plus-10kE3a', ...
-    '20171108T105021_splitAxons.mat');
+axonFile = fullfile(workingDir, 'axons_11_a.mat');
 
 info = Util.runInfo();
 
