@@ -21,45 +21,8 @@ edges = unique(edges, 'rows');
 % for each node ("marching sphere" approach to merger detection)
 nrExits = zeros(size(nodes, 1), 1);
 
-if size(nodes, 1) < 1E6
-    if ~isempty(edges)
-        for i=1:size(nodes,1)
-            nrExits(i) = connectEM.detectChiasmataNodes( ...
-                nodes, edges, ones(size(edges, 1), 1), p, i);
-        end
-    end
-else
-    save([outputFolder 'prep']);
-    functionH = @connectEM.detectChiasmataSub;
-    inputCell = cellfun(@(x){x}, num2cell(1:5000), 'uni', 0);
-    cluster = Cluster.getCluster( ...
-        '-pe openmp 1', ...
-        '-p 0', ...
-        '-l h_vmem=24G', ...
-        '-l s_rt=23:50:00', ...
-        '-l h_rt=24:00:00');
-    job = Cluster.startJob( ...
-        functionH, inputCell, ...
-        'name', 'chiasmata1', ...
-        'sharedInputs', {outputFolder}, ...
-        'sharedInputsLocation', 2, ...
-        'cluster', cluster, ...
-        'diary', true);
-    
-    fprintf('Waiting for job %s... ', job.Name);
-    wait(job);
-    fprintf('done!\n');
-    
-    fprintf('Collecting results... ');
-    for idx = 1:5000
-        if exist([outputFolder 'temp_' num2str(idx) '.mat'], 'file')
-            temp = load([outputFolder 'temp_' num2str(idx)], 'nrExits');
-            nrExits = temp.nrExits + nrExits;
-        else
-            error('Result %d missing', idx);
-        end
-    end
-    fprintf('done!\n');
+for i = 1:size(nodes, 1)
+    nrExits(i) = connectEM.detectChiasmataNodes(p, nodes, edges, i);
 end
 
 % Mark intersections

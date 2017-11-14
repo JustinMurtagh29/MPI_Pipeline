@@ -1,11 +1,13 @@
 function [nrExits, pos, dir, queryIdx] = ...
-        detectChiasmataNodes(nodes, edges, prob, p, nodeIdx)
-    [thisNodes, thisEdges] = connectEM.detectChiasmataPruneToSphere( ...
-            nodes, edges, prob, p, nodeIdx);
-    C = Graph.findConnectedComponents(thisEdges, false);
-    C = C(cellfun(@(idx) max(pdist2( ...
-        thisNodes(idx, :), nodes(nodeIdx, :))) > p.minNodeDist, C));
+        detectChiasmataNodes(p, nodes, edges, nodeIdx)
+   [thisNodes, thisEdges, ~, thisDistSq] = ...
+        connectEM.detectChiasmataPruneToSphere(p, nodes, edges, nodeIdx);
+   [C, lut] = Graph.findConnectedComponents(thisEdges, false);
+   
+    % restrict to true exits
+    C = C(accumarray(lut(:), thisDistSq, [], @max) > (p.minNodeDist ^ 2));
     nrExits = numel(C);
+    clear lut;
     
     %% do query generation, if desired
     if nargout < 2; return; end
