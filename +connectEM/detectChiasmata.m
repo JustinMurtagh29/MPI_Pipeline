@@ -31,26 +31,35 @@ if size(nodes, 1) < 1E6
 else
     save([outputFolder 'prep']);
     functionH = @connectEM.detectChiasmataSub;
-    inputCell = cellfun(@(x){x}, num2cell(1 : 5000), 'uni', 0);
+    inputCell = cellfun(@(x){x}, num2cell(1:5000), 'uni', 0);
     cluster = Cluster.getCluster( ...
         '-pe openmp 1', ...
         '-p 0', ...
         '-l h_vmem=24G', ...
         '-l s_rt=23:50:00', ...
         '-l h_rt=24:00:00');
-    job = Cluster.startJob( functionH, inputCell, ...
+    job = Cluster.startJob( ...
+        functionH, inputCell, ...
         'name', 'chiasmata1', ...
-        'sharedInputs', {outputFolder},  'sharedInputsLocation', 2, ...
-        'cluster', cluster);
-    Cluster.waitForJob(job);
-    for idx = 1 : 5000
+        'sharedInputs', {outputFolder}, ...
+        'sharedInputsLocation', 2, ...
+        'cluster', cluster, ...
+        'diary', true);
+    
+    fprintf('Waiting for job %s... ', job.Name);
+    wait(job);
+    fprintf('done!\n');
+    
+    fprintf('Collecting results... ');
+    for idx = 1:5000
         if exist([outputFolder 'temp_' num2str(idx) '.mat'], 'file')
             temp = load([outputFolder 'temp_' num2str(idx)], 'nrExits');
             nrExits = temp.nrExits + nrExits;
         else
-            warning(['skipped ' num2str(idx)]);
+            error('Result %d missing', idx);
         end
     end
+    fprintf('done!\n');
 end
 
 % Mark intersections
@@ -93,7 +102,9 @@ if visualize
 end
 
 if ~isempty(outputFolder)
-    save(fullfile(outputFolder, 'result.mat'), 'output');
+    fprintf('Writing result... ');
+    Util.saveStruct(fullfile(outputFolder, 'result.mat'), output);
+    fprintf('done!\n');
 end
 
 end
