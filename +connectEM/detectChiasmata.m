@@ -21,36 +21,8 @@ edges = unique(edges, 'rows');
 % for each node ("marching sphere" approach to merger detection)
 nrExits = zeros(size(nodes, 1), 1);
 
-if size(nodes, 1) < 1E6
-    if ~isempty(edges)
-        for i=1:size(nodes,1)
-            nrExits(i) = connectEM.detectChiasmataNodes( ...
-                nodes, edges, ones(size(edges, 1), 1), p, i);
-        end
-    end
-else
-    save([outputFolder 'prep']);
-    functionH = @connectEM.detectChiasmataSub;
-    inputCell = cellfun(@(x){x}, num2cell(1 : 5000), 'uni', 0);
-    cluster = Cluster.getCluster( ...
-        '-pe openmp 1', ...
-        '-p 0', ...
-        '-l h_vmem=24G', ...
-        '-l s_rt=23:50:00', ...
-        '-l h_rt=24:00:00');
-    job = Cluster.startJob( functionH, inputCell, ...
-        'name', 'chiasmata1', ...
-        'sharedInputs', {outputFolder},  'sharedInputsLocation', 2, ...
-        'cluster', cluster);
-    Cluster.waitForJob(job);
-    for idx = 1 : 5000
-        if exist([outputFolder 'temp_' num2str(idx) '.mat'], 'file')
-            temp = load([outputFolder 'temp_' num2str(idx)], 'nrExits');
-            nrExits = temp.nrExits + nrExits;
-        else
-            warning(['skipped ' num2str(idx)]);
-        end
-    end
+for i = 1:size(nodes, 1)
+    nrExits(i) = connectEM.detectChiasmataNodes(p, nodes, edges, i);
 end
 
 % Mark intersections
@@ -59,8 +31,7 @@ isIntersection = (nrExits >= p.minNrChiasmaExits);
 % Find CC of detected intersections according to graph
 [output, queryIdx] = ...
     connectEM.detectChiasmataPostSingleNodeLabel( ...
-        edges, isIntersection, nrExits, nodes, ...
-        p, nodesV, ones(size(edges, 1), 1), outputFolder);
+        p, nodes, nodesV, edges, isIntersection, nrExits);
 
 if visualize
     % Write result to skletons for control (detection of intersections)
@@ -93,7 +64,9 @@ if visualize
 end
 
 if ~isempty(outputFolder)
-    save(fullfile(outputFolder, 'result.mat'), 'output');
+    fprintf('Writing result... ');
+    Util.saveStruct(fullfile(outputFolder, 'result.mat'), output);
+    fprintf('done!\n');
 end
 
 end
