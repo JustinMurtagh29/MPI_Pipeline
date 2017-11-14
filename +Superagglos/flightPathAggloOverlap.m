@@ -15,6 +15,10 @@ function ov = flightPathAggloOverlap( p, fp, agglos, nodeEv )
 % OUTPUT ov: [Nx1] cell
 %           Cell array containing the linear indices of the agglos that are
 %           overlapping with the corresponding flight path.
+%
+% NOTE Each flight path nodes currently picks up all segment ids in its 27
+%      neighborhood which all contribute to the node evidence.
+%
 % Author: Benedikt Staffler <benedikt.staffler@brain.mpg.de>
 
 if isstruct(agglos)
