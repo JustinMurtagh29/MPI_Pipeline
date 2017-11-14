@@ -47,5 +47,5 @@ aggloIds = aggloIds(1);
 tic;
 profile on;
 outputs = arrayfun(@(idx) connectEM.detectChiasmata( ...
-    p, agglos(idx).nodes(:, 1:3), agglos(idx).edges, false, []), aggloIds);
+    p, agglos(idx).nodes(:, 1:3), agglos(idx).edges, []), aggloIds);
 toc;
