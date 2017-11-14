@@ -569,7 +569,7 @@ if ~exist(fullfile(outputFolder,'wholeCells_04.mat'),'file') || overwrite
     % get each dend id which contains most of the seg ids of each soma
     wholeCellId = accumarray(somaLUT(somaSegIds(ismem))',dendriteLUT(dendriteSegIds(ind(ismem)))',[],@mode);       
 
-    wholeCells = cat(1,wholeCells,dendrites(wholeCellId));
+    wholeCells = dendrites(wholeCellId);
     dendrites = dendrites(setdiff(1:numel(dendrites),wholeCellId));
     
     save(fullfile(outputFolder,'wholeCells_05.mat'),'wholeCells');
@@ -582,6 +582,38 @@ else
     load(fullfile(outputFolder,'dendrites_14.mat'))
 end
 
+%% another round of fixing added stuff
+
+if ~exist(fullfile(outputFolder,'wholeCells_04.mat'),'file') || overwrite
+    % created nmls with connectEM.autoView('wholeCells_05','cells') and
+    % checked only the five corrected last time
+
+    load(fullfile(outputFolder,'axons_09_a.mat'),'axons')
+    
+    % the corrections are based on checking the output of
+    % connectEM.searchSkippedAgglos
+    correctionFolder = 'WholeCellCorrections_15';
+    fprintf('Folder with correction nmls for state dendrites_14 is %s\n',fullfile(outputFolder,correctionFolder));
+    
+    [dendrites,dendriteLUT] = connectEM.applyAggloCorrections(cat(1,wholeCells,dendrites),p,fullfile(outputFolder,correctionFolder),0,axons);
+
+    dendriteSegIds = find(dendriteLUT);
+    [ismem,ind] = ismember(somaSegIds,dendriteSegIds);
+    % get each dend id which contains most of the seg ids of each soma
+    wholeCellId = accumarray(somaLUT(somaSegIds(ismem))',dendriteLUT(dendriteSegIds(ind(ismem)))',[],@mode);       
+
+    wholeCells = dendrites(wholeCellId);
+    dendrites = dendrites(setdiff(1:numel(dendrites),wholeCellId));
+    
+    save(fullfile(outputFolder,'wholeCells_06.mat'),'wholeCells');
+    
+    indBigDends = Agglo.isMaxBorderToBorderDistAbove(p, 5000, Superagglos.transformAggloNewOldRepr(dendrites));
+    [ myelinDend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
+    save(fullfile(outputFolder,'dendrites_15.mat'),'dendrites','myelinDend','indBigDends')%,'info');
+else
+    load(fullfile(outputFolder,'wholeCells_06.mat'))
+    load(fullfile(outputFolder,'dendrites_15.mat'))
+end
 
 
 % %% add spines to all agglos
