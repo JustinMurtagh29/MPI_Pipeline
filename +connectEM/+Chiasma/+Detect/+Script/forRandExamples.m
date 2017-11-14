@@ -40,11 +40,12 @@ p = param;
 p = Util.modifyStruct(p, chiasmaParamKvPairs{:});
 
 %% run on
-rng(0);
-randIds = randperm(numel(agglos));
-randIds = randIds(1:25);
+nodeCount = arrayfun(@(a) size(a.nodes, 1), agglos);
+[~, aggloIds] = sort(nodeCount, 'descend');
+aggloIds = aggloIds(1);
 
 tic;
+profile on;
 outputs = arrayfun(@(idx) connectEM.detectChiasmata( ...
-    p, agglos(idx).nodes(:, 1:3), agglos(idx).edges, false, []), randIds);
+    p, agglos(idx).nodes(:, 1:3), agglos(idx).edges, false, []), aggloIds);
 toc;
