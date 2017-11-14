@@ -357,7 +357,7 @@ disp('Soma whole cell agglos loaded')
 %% 
 if ~exist(fullfile(outputFolder,'dendrites_08.mat'),'file') || overwrite
     load(fullfile(outputFolder,'axons_07_b.mat'),'axons')
-    
+    [dendriteLUT,dendriteSegIds] = Superagglos.buildLUT(dendrites);
     [ismem,ind] = ismember(somaSegIds,dendriteSegIds);
     % get each dend id which contains most of the seg ids of each soma
     BorderWholeCellId = accumarray(somaLUT(somaSegIds(ismem))',dendriteLUT(dendriteSegIds(ind(ismem)))',[],@mode);
