@@ -12,13 +12,14 @@ function skel = toSkel( sagglos, skel )
 if ~exist('skel', 'var') || isempty(skel)
     skel = Skeleton.setParams4Dataset([], 'ex145_ROI2017');
 end
-
-for i = 1:length(sagglos)
+numAgglos = numel(sagglos);
+digitsAgglos = floor(log10(numAgglos))+1;
+for i = 1:numAgglos
     if isfield(sagglos(i),'comments')
-        skel = skel.addTree(sprintf('Agglo%3d', i), sagglos(i).nodes(:,1:3), ...
+        skel = skel.addTree(sprintf(sprintf('Agglo%%0%dd',digitsAgglos), i), sagglos(i).nodes(:,1:3), ...
             sagglos(i).edges,[],[],sagglos(i).comments);
     else
-        skel = skel.addTree(sprintf('Agglo%3d', i), sagglos(i).nodes(:,1:3), ...
+        skel = skel.addTree(sprintf(sprintf('Agglo%%0%dd',digitsAgglos), i), sagglos(i).nodes(:,1:3), ...
             sagglos(i).edges);
     end
 end
