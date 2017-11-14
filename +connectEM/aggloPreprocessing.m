@@ -367,7 +367,7 @@ if ~exist(fullfile(outputFolder,'dendrites_08.mat'),'file') || overwrite
     
     correctionFolder = 'WholeCellCorrections_07';
     fprintf('Folder with correction nmls for state dendrites_07 is %s\n',fullfile(outputFolder,correctionFolder));
-    [dendrites,dendriteLUT] = connectEM.applyAggloCorrections(cat(1,wholeCells,dendrites),p,fullfile(outputFolder,correctionFolder),1);
+    [dendrites,dendriteLUT] = connectEM.applyAggloCorrections(dendrites,p,fullfile(outputFolder,correctionFolder),1);
   
     indBigDends = Agglo.isMaxBorderToBorderDistAbove(p, 5000, Superagglos.transformAggloNewOldRepr(dendrites));
     [ myelinDend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
@@ -395,7 +395,7 @@ if ~exist(fullfile(outputFolder,'dendrites_09.mat'),'file') || overwrite
     [axons,axonLUT] = connectEM.applyAggloCorrections(axons,p,fullfile(outputFolder,correctionFolder,'checkedBeforeAdd'),1);
     
     
-    [dendrites,dendriteLUT] = connectEM.applyAggloCorrections(cat(1,wholeCells,dendrites),p,fullfile(outputFolder,correctionFolder),0,axons);
+    [dendrites,dendriteLUT] = connectEM.applyAggloCorrections(dendrites,p,fullfile(outputFolder,correctionFolder),0,axons);
 
     dendriteSegIds = find(dendriteLUT);
     [ismem,ind] = ismember(somaSegIds,dendriteSegIds);
@@ -427,7 +427,7 @@ if ~exist(fullfile(outputFolder,'dendrites_10.mat'),'file') || overwrite
     [axons,axonLUT] = connectEM.applyAggloCorrections(axons,p,fullfile(outputFolder,correctionFolder,'checkedBeforeAdd'),1);
     
     
-    [dendrites,dendriteLUT] = connectEM.applyAggloCorrections(cat(1,wholeCells,dendrites),p,fullfile(outputFolder,correctionFolder),0,axons);
+    [dendrites,dendriteLUT] = connectEM.applyAggloCorrections(dendrites,p,fullfile(outputFolder,correctionFolder),0,axons);
 
     dendriteSegIds = find(dendriteLUT);
     [ismem,ind] = ismember(somaSegIds,dendriteSegIds);
@@ -460,7 +460,7 @@ if ~exist(fullfile(outputFolder,'dendrites_11.mat'),'file') || overwrite
     [axons,axonLUT] = connectEM.applyAggloCorrections(axons,p,fullfile(outputFolder,correctionFolder,'checkedBeforeAdd'),1);
     
     
-    [dendrites,dendriteLUT] = connectEM.applyAggloCorrections(cat(1,wholeCells,dendrites),p,fullfile(outputFolder,correctionFolder),0,axons);
+    [dendrites,dendriteLUT] = connectEM.applyAggloCorrections(dendrites,p,fullfile(outputFolder,correctionFolder),0,axons);
 
     dendriteSegIds = find(dendriteLUT);
     [ismem,ind] = ismember(somaSegIds,dendriteSegIds);
@@ -492,7 +492,7 @@ if ~exist(fullfile(outputFolder,'dendrites_12.mat'),'file') || overwrite
     [axons,axonLUT] = connectEM.applyAggloCorrections(axons,p,fullfile(outputFolder,correctionFolder,'checkedBeforeAdd'),1);
     
     
-    [dendrites,dendriteLUT] = connectEM.applyAggloCorrections(cat(1,wholeCells,dendrites),p,fullfile(outputFolder,correctionFolder),0,axons);
+    [dendrites,dendriteLUT] = connectEM.applyAggloCorrections(dendrites,p,fullfile(outputFolder,correctionFolder),0,axons);
 
     dendriteSegIds = find(dendriteLUT);
     [ismem,ind] = ismember(somaSegIds,dendriteSegIds);
@@ -516,7 +516,7 @@ if ~exist(fullfile(outputFolder,'wholeCells_04.mat'),'file') || overwrite
     correctionFolder = 'WholeCellCorrections_13';
     fprintf('Folder with correction nmls for state dendrites_12 is %s\n',fullfile(outputFolder,correctionFolder));
     
-    [dendrites,dendriteLUT] = connectEM.applyAggloCorrections(cat(1,wholeCells,dendrites),p,fullfile(outputFolder,correctionFolder),0,axons);
+    [dendrites,dendriteLUT] = connectEM.applyAggloCorrections(dendrites,p,fullfile(outputFolder,correctionFolder),0,axons);
 
     dendriteSegIds = find(dendriteLUT);
     [ismem,ind] = ismember(somaSegIds,dendriteSegIds);
