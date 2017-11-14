@@ -31,8 +31,7 @@ isIntersection = (nrExits >= p.minNrChiasmaExits);
 % Find CC of detected intersections according to graph
 [output, queryIdx] = ...
     connectEM.detectChiasmataPostSingleNodeLabel( ...
-        edges, isIntersection, nrExits, nodes, ...
-        p, nodesV, ones(size(edges, 1), 1), outputFolder);
+        p, nodes, nodesV, edges, isIntersection, nrExits);
 
 if visualize
     % Write result to skletons for control (detection of intersections)

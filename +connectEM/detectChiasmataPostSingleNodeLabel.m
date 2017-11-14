@@ -1,5 +1,5 @@
 function [output, queryIdx] = detectChiasmataPostSingleNodeLabel( ...
-        edges, isIntersection, nrExits, nodes, p, nodesV)
+        p, nodes, nodesV, edges, isIntersection, nrExits)
     
    [cc, centerOfCC] = ...
         connectEM.detectChiasmataNodesCluster(p, nodes, isIntersection);
