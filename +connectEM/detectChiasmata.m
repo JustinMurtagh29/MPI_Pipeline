@@ -23,10 +23,12 @@ nrExits = zeros(size(nodes, 1), 1);
 
 if size(nodes, 1) < 1E6
     if ~isempty(edges)
+        fprintf('Processing nodes... ');
         for i=1:size(nodes,1)
             nrExits(i) = connectEM.detectChiasmataNodes( ...
                 nodes, edges, ones(size(edges, 1), 1), p, i);
         end
+        fprintf('done!\n');
     end
 else
     save([outputFolder 'prep']);
@@ -38,11 +40,17 @@ else
         '-l h_vmem=24G', ...
         '-l s_rt=23:50:00', ...
         '-l h_rt=24:00:00');
+    
+    fprintf('Processing nodes on cluster... ');
     job = Cluster.startJob( functionH, inputCell, ...
         'name', 'chiasmata1', ...
         'sharedInputs', {outputFolder},  'sharedInputsLocation', 2, ...
-        'cluster', cluster);
+        'cluster', cluster, ...
+        'diary', true);
     Cluster.waitForJob(job);
+    fprintf('done!\n');
+    
+    fprintf('Collecting results... ');
     for idx = 1 : 5000
         if exist([outputFolder 'temp_' num2str(idx) '.mat'], 'file')
             temp = load([outputFolder 'temp_' num2str(idx)], 'nrExits');
@@ -51,16 +59,19 @@ else
             warning(['skipped ' num2str(idx)]);
         end
     end
+    fprintf('done!\n');
 end
 
 % Mark intersections
 isIntersection = (nrExits >= p.minNrChiasmaExits);
 
 % Find CC of detected intersections according to graph
+fprintf('Post-process single-node labels... ');
 [output, queryIdx] = ...
     connectEM.detectChiasmataPostSingleNodeLabel( ...
         edges, isIntersection, nrExits, nodes, ...
         p, nodesV, ones(size(edges, 1), 1), outputFolder);
+fprintf('done!\n');
 
 if visualize
     % Write result to skletons for control (detection of intersections)
@@ -93,7 +104,9 @@ if visualize
 end
 
 if ~isempty(outputFolder)
+    fprintf('Writing result... ');
     save(fullfile(outputFolder, 'result.mat'), 'output');
+    fprintf('done!\n');
 end
 
 end
