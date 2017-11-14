@@ -1,9 +1,7 @@
 function [job, runId] = ...
         detectChiasmataSuperSuper(p, chiParam, agglos, outputDir)
-    %for a clean version of findCCaccordingToGraph
-    addpath('/gaba/u/kboerg/code/manuelCode/games');
     functionH = @connectEM.detectChiasmataSuper;
-    inputCell = cellfun(@(x){x}, num2cell(1 : 500), 'uni', 0);
+    inputCell = arrayfun(@(i) {{i}}, 1:500);
     
     % set id for detected chiasmata
     runId = datestr(now, 30);

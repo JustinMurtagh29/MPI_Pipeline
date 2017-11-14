@@ -27,6 +27,6 @@ function detectChiasmataSuper(p, chiParam, agglos, startIdx)
         
         detectFunc( ...
             p, agglos(curIdx).nodes(:, 1:3), ...
-            agglos(curIdx).edges, false, curOutputDir);
+            agglos(curIdx).edges, curOutputDir);
     end
 end
