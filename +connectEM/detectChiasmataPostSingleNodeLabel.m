@@ -1,28 +1,29 @@
-function [output, queryIdx] = detectChiasmataPostSingleNodeLabel( ...
-        p, nodes, nodesV, edges, isIntersection, nrExits)
+function [output, queryIdx] = ...
+        detectChiasmataPostSingleNodeLabel( ...
+            p, nodes, nodesV, edges, isIntersection, nrExits)
+    % Written by
+    %   Manuel Berning <manuel.berning@brain.mpg.de>
+    %   Kevin Boergens <kevin.boergens@brain.mpg.de>
+    %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     
-   [cc, centerOfCC] = ...
-        connectEM.detectChiasmataNodesCluster(p, nodes, isIntersection);
+    % Cluster nodes
+   [clusters, centerIds] = ...
+        connectEM.Chiasma.Detect.clusterNodes( ...
+            nodes, isIntersection, p.clusterSize);
     
-    % Find out where to query for each CC
-    queryIdx = cell(length(cc),1);
-    pos = cell(length(cc),1);
-    dir = cell(length(cc),1);
-    
-    for i = 1:length(cc)
-        [~, pos{i}, dir{i}, queryIdx{i}] = ...
-            connectEM.detectChiasmataNodes( ...
-                p, nodes, edges, cc{i}(centerOfCC(i)));
-    end
+    % Generate queries
+   [~, pos, dir, queryIdx] = arrayfun(@(i) ...
+       connectEM.detectChiasmataNodes(p, nodes, edges, id), ...
+       centerIds, 'UniformOutput', false);
 
     % Create an output structure
     output.nodes = nodesV;
     output.edges = edges;
-    output.prob = [];
+    output.prob = zeros(0, 1);
     output.isIntersection = isIntersection;
     output.nrExits = nrExits;
-    output.ccNodeIdx = cc;
-    output.ccCenterIdx = cellfun(@(x,y)x(y), cc, num2cell(centerOfCC));
+    output.ccNodeIdx = clusters;
+    output.ccCenterIdx = centerIds;
     output.queryIdx = queryIdx;
     output.position = pos;
     output.direction = dir;
