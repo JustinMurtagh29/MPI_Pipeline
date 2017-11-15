@@ -30,7 +30,7 @@ function [nrExits, pos, dir, queryIdx] = ...
     % NOTE(amotta): Both ends of the query edge must be less than 9 µm from
     % the current node-of-interest.
     mask = unique(edges);
-    mask = mask(pdist(nodes(mask, :), nodes(nodeIdx, :)) < 9000);
+    mask = mask(pdist2(nodes(mask, :), nodes(nodeIdx, :)) < 9000);
     mask = all(ismember(edges, mask), 2);
     edges = edges(mask, :);
     clear mask;
