@@ -10,7 +10,7 @@ function output = detectChiasmata(p, nodesV, edges, outputFolder)
 
     % Scale to nm
     % Make sure edges are unique
-    nodes = bsxfun(@times, nodesV, p.voxelSize);
+    nodes = bsxfun(@times, nodesV, p.raw.voxelSize);
     edges = unique(edges, 'rows');
     
     if size(nodes, 1) > 1E5
