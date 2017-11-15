@@ -7,14 +7,18 @@ function [output, queryIdx] = ...
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     
     % Cluster nodes
+    fprintf('Clustering chiasmatic nodes... ');
    [clusters, centerIds] = ...
         connectEM.Chiasma.Detect.clusterNodes( ...
             nodes, isIntersection, p.clusterSize);
+    fprintf('done!\n');
     
     % Generate queries
+    fprintf('Generating queries... ');
    [~, pos, dir, queryIdx] = arrayfun(@(i) ...
        connectEM.detectChiasmataNodes(p, nodes, edges, id), ...
        centerIds, 'UniformOutput', false);
+    fprintf('done!\n');
 
     % Create an output structure
     output.nodes = nodesV;

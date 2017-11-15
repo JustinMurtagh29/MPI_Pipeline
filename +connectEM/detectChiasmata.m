@@ -8,24 +8,17 @@ function output = detectChiasmata(p, nodesV, edges, outputFolder)
         p.minNrChiasmaExits = 4;
     end
 
-    % Create output folder if it does not exist
-    if ~isempty(outputFolder) && ~exist(outputFolder, 'dir')
-        mkdir(outputFolder);
-    end
-
     % Scale to nm
     % Make sure edges are unique
     nodes = bsxfun(@times, nodesV, p.voxelSize);
     edges = unique(edges, 'rows');
-
-    % for each node ("marching sphere" approach to merger detection)
-    nrExits = zeros(size(nodes, 1), 1);
-    showProgress = @(n) fprintf( ...
-        '%d of %d nodes done\n', n, size(nodes, 1));
     
-    for i = 1:size(nodes, 1)
-        nrExits(i) = connectEM.detectChiasmataNodes(p, nodes, edges, i);
-        if ~mod(i, 1000); showProgress(i); end
+    if size(nodes, 1) > 1E5
+        % run locally
+        nrExits = forLargeAgglo(p, nodes, edges);
+    else
+        % run in parallel on cluster
+        nrExits = forSmallAgglo(p, nodes, edges);
     end
 
     % Mark intersections
@@ -37,8 +30,48 @@ function output = detectChiasmata(p, nodesV, edges, outputFolder)
             p, nodes, nodesV, edges, isIntersection, nrExits);
     
     if ~isempty(outputFolder)
+        if ~exist(outputFolder, 'dir')
+            mkdir(outputFolder);
+        end
+        
         fprintf('Writing result... ');
         Util.saveStruct(fullfile(outputFolder, 'result.mat'), output);
         fprintf('done!\n');
     end
+end
+
+function nrExits = forSmallAgglo(p, nodes, edges)
+    nrExits = forNodeIds(p, nodes, edges, 1:size(nodes, 1));
+end
+
+function nrExits = forLargeAgglo(p, nodes, edges)
+    taskCount = 500;
+    nodeCount = size(nodes, 1);
+    blockSize = ceil(nodeCount / taskCount);
+    
+    inputArgs = arrayfun(@(off) {{ ...
+        off:min(off + blockSize - 1, nodeCount)}}, ...
+        1:blockSize:nodeCount);
+    sharedArgs = {p, nodes, edges};
+    
+    cluster = Cluster.getCluster( ...
+        '-pe openmp 1', ...
+        '-l h_vmem=12G', ...
+        '-l h_rt=2:00:00');
+    
+    job = Cluster.startJob( ...
+        @forNodeIds, inputArgs, ...
+        'sharedInputs', sharedArgs, ...
+        'cluster', cluster, ...
+        'numOutputs', 1);
+    wait(job);
+    
+    nrExits = fetchOutputs(job);
+    nrExits = sum(2, cat(2, nrExits{:, 1}));
+end
+
+function nrExits = forNodeIds(p, nodes, edges, ids)
+    nrExits = zeros(size(nodes, 1), 1);
+    nrExits(ids) = arrayfun(@(i) ...
+        connectEM.detectChiasmataNodes(p, nodes, edges, i), ids);
 end
