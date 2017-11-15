@@ -26,7 +26,7 @@ outputFolder = '/tmpscratch/bstaffle/data/L4/somata/issfs_amira/';
 if ~exist(outputFolder, 'dir')
     mkdir(outputFolder)
 end
-save('RunInfo.mat', 'info', 'centerSomaId');
+save(fullfile(outputFolder, 'RunInfo.mat'), 'info', 'centerSomaId');
 Util.log('Calculating isosurfaces and storing them at %s.', outputFolder);
 Visualization.exportAggloToAmira(p, somaAgglos, outputFolder, ...
     'reduce', 0.2, 'smoothSizeHalf', 4, 'smoothWidth', 8);
