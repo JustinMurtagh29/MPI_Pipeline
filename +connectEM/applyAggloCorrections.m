@@ -17,8 +17,6 @@ function [dendrites,dendritesLUT] = applyAggloCorrections(dendrites,p,folder,mod
 %
 % by Marcel Beining <marcel.beining@brain.mpg.de>
 
-roundToBase = 4; % for datasets that are up to 10^4 pixels large
-
 if ~exist('modus','var') || isempty(modus)
     modus = 0;
 end
