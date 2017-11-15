@@ -64,6 +64,7 @@ out.info = info;
 out.exits = exits;
 out.taskDefs = taskDefs;
 out.taskDefFile = taskDefFile;
+out.chiasmataFile = chiasmataFile;
 
 outFile = sprintf('%s_taskGeneration.mat', runId);
 Util.saveStruct(fullfile(outputDir, outFile), out);
