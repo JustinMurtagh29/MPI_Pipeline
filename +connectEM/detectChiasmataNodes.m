@@ -1,12 +1,17 @@
 function [nrExits, pos, dir, queryIdx] = ...
         detectChiasmataNodes(p, nodes, edges, nodeIdx)
-   [thisNodes, thisEdges, ~, thisDist] = ...
+    % Written by
+    %   Kevin Boergens <kevin.boergens@brain.mpg.de>
+    %   Alessandro Motta <alessandro.motta@brain.mpg.de>
+   [~, thisEdges, thisNodeIds, thisDist] = ...
         connectEM.detectChiasmataPruneToSphere(p, nodes, edges, nodeIdx);
-   [C, lut] = Graph.findConnectedComponents(thisEdges, false);
+   [clusters, clusterIds] = ...
+        Graph.findConnectedComponents(thisEdges, false);
    
     % restrict to true exits
-    C = C(accumarray(lut(:), thisDist, [], @max) > p.minNodeDist);
-    nrExits = numel(C);
+    clusters = clusters(accumarray( ...
+        clusterIds(:), thisDist, [], @max) > p.minNodeDist);
+    nrExits = numel(clusters);
     clear lut;
     
     %% do query generation, if desired
@@ -16,18 +21,32 @@ function [nrExits, pos, dir, queryIdx] = ...
     dir = nan(nrExits, 3);
     queryIdx = nan(1, nrExits);
     
-    nodesMask = find(ismember(nodes, thisNodes, 'rows'));
+    % NOTE(amotta): At least one end of the query edges must reside within
+    % the remains of `detectChiasmataPruneToSphere`.
+    mask = any(ismember(edges, thisNodeIds), 2);
+    edges = edges(mask, :);
+    clear mask;
     
-    for idx = 1:numel(C)
-        nodesMask2 = find(ismember(nodes, thisNodes(C{idx}, :), 'rows'));
-        transitioningEdge = find(any(ismember(edges,nodesMask2),2)& ... %one node of the edge should be a member of nodesMask2
-            any(~ismember(edges,nodesMask),2)& ... %the other shouldn't be a member of nodesMask or nodesMask2 (which is a subset of nodesMask)
-            all(ismember(edges,find(pdist2(nodes,nodes(nodeIdx,:))<9000)),2),1); % and we don't want an edge from the outer cutting
-        descale = @(x)bsxfun(@times, x, 1./p.voxelSize);
-        queryTemp=intersect(edges(transitioningEdge,:), nodesMask2);
-        pos(idx, :) = descale(nodes(queryTemp,:));
-        dir(idx, :) = bsxfun(@minus, pos(idx, :), descale(nodes(nodeIdx,:)));
-        queryIdx(idx) = max([-1;queryTemp(:)]);
+    % NOTE(amotta): Both ends of the query edge must be less than 9 µm from
+    % the current node-of-interest.
+    mask = unique(edges);
+    mask = mask(pdist2(nodes(mask, :), nodes(nodeIdx, :)) < 9000);
+    mask = all(ismember(edges, mask), 2);
+    edges = edges(mask, :);
+    clear mask;
+    
+    descale = @(x) bsxfun(@times, x, 1 ./ p.raw.voxelSize);
+    
+    for curIdx = 1:numel(clusters)
+        curNodeIds = thisNodeIds(clusters{curIdx});
+        
+        curMask = ismember(edges, curNodeIds);
+        curMask = find(xor(curMask(:, 1), curMask(:, 2)), 1);
+        curNodeId = intersect(edges(curMask, :), curNodeIds);
+        
+        pos(curIdx, :) = descale(nodes(curNodeId,:));
+        dir(curIdx, :) = pos(curIdx, :) - descale(nodes(nodeIdx, :));
+        queryIdx(curIdx) = curNodeId;
     end
     
     % sanity checks
