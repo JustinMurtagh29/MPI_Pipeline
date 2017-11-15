@@ -1,4 +1,4 @@
-function [thisNodes, thisEdges, nodeIds, thisDistSq] = ...
+function [thisNodes, thisEdges, nodeIds, thisDist] = ...
         detectChiasmataPruneToSphere(p, nodes, edges, i)
     % Written by
     %   Kevin Boergens <kevin.boergens@brain.mpg.de>
@@ -12,12 +12,11 @@ function [thisNodes, thisEdges, nodeIds, thisDistSq] = ...
       & all(bsxfun(@le, nodes, nodes(i, :) + p.sphereRadiusOuter), 2));
 
     % Second pass, using `pdist2`
-    nodeDistSq = pdist2( ...
-        nodes(sphereNodeIds, :), nodes(i, :), 'squaredeuclidean');
-    thisMask = (nodeDistSq < (p.sphereRadiusOuter ^ 2));
+    nodeDist = pdist2(nodes(sphereNodeIds, :), nodes(i, :));
+    thisMask = (nodeDist < p.sphereRadiusOuter);
 
     sphereNodeIds = sphereNodeIds(thisMask);
-    nodeDistSq = nodeDistSq(thisMask);
+    nodeDist = nodeDist(thisMask);
     clear thisMask;
 
     % Build subgraph
@@ -28,7 +27,7 @@ function [thisNodes, thisEdges, nodeIds, thisDistSq] = ...
     assert(i > 0);
 
     %% Cut out `sphereRadiusInner`
-    thisOutMask = (nodeDistSq > (p.sphereRadiusInner ^ 2));
+    thisOutMask = (nodeDist > p.sphereRadiusInner);
 
    [~, lut] = Graph.findConnectedComponents( ...
         edges(~all(thisOutMask(edges), 2), :), false);
@@ -46,7 +45,7 @@ function [thisNodes, thisEdges, nodeIds, thisDistSq] = ...
     nodeIds = reshape(nodeIds, [], 1);
 
     thisNodes = nodes(nodeIds, :);
-    thisDistSq = nodeDistSq(nodeIds);
+    thisDist = nodeDist(nodeIds);
     thisEdges = edges(edgeMask, :);
 
     [~, thisEdges] = ismember(thisEdges, nodeIds);
