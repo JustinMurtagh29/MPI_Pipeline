@@ -24,7 +24,7 @@ aggloIds = find(agglos.indBigDends);
 agglos = agglos.dendrites(aggloIds);
 aggloCount = numel(agglos);
 
-chiasmataFile = fullfile(chiasmaDir, 'round4_chiasmata.mat');
+chiasmataFile = fullfile(chiasmaDir, 'round4_inclInfos_chiasmata.mat');
 outputDir = fullfile(chiasmaDir, 'taskGeneration');
 clear workingDir;
 
