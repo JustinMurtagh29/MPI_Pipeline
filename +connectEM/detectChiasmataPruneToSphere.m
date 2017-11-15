@@ -4,7 +4,7 @@ function [thisNodes, thisEdges, nodeIds, thisDist] = ...
     %   Kevin Boergens <kevin.boergens@brain.mpg.de>
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     assert(isscalar(i));
-
+    
     %% Restrict to `sphereRadiusOuter`
     % First pass, using bounding box
     sphereNodeIds = find( ...
@@ -28,6 +28,7 @@ function [thisNodes, thisEdges, nodeIds, thisDist] = ...
 
     %% Cut out `sphereRadiusInner`
     thisOutMask = (nodeDist > p.sphereRadiusInner);
+    thisOutMask = reshape(thisOutMask, 1, []);
 
    [~, lut] = Graph.findConnectedComponents( ...
         edges(~all(thisOutMask(edges), 2), :), false);
