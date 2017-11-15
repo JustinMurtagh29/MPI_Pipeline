@@ -2,7 +2,7 @@ function getMitoScoreAndVolume(p)
 
 % Get mito scores
 labelMap(1).root = '/tmpscratch/bstaffle/data/2012-09-28_ex145_07x2_ROI2017/SVM/cnn17_2';
-labelMap(1).backend = 'wkw';
+labelMap(1).backend = 'wkwrap';
 labelMap(1).segId = [0.5 1];
 
 inputCell = cell(numel(p.local),1);
