@@ -238,7 +238,7 @@ else
     clear dendrites myelinDend indBigDends
     load(fullfile(outputFolder,'dendrites_04.mat'))
 end
-disp('Dendrites state 04 superagglos loaded/generated')
+disp('Dendrites state 04 dendrites loaded/generated')
 %% next round of fixes
 % apply manual fixes of whole cells in dendrite class
 if ~exist(fullfile(outputFolder,'dendrites_05.mat'),'file') || overwrite
@@ -274,7 +274,7 @@ else
     load(fullfile(outputFolder,'dendrites_05.mat'))
     load(fullfile(outputFolder,'wholeCells_01.mat'));
 end
-disp('Dendrites state 05 superagglos loaded/generated')
+disp('Dendrites state 05 dendrites loaded/generated')
 
 %% 
 if ~exist(fullfile(outputFolder,'wholeCells_02.mat'),'file') || overwrite
@@ -307,7 +307,7 @@ else
     load(fullfile(outputFolder,'dendrites_06.mat'))
     load(fullfile(outputFolder,'wholeCells_02.mat'),'wholeCells');
 end
-
+disp('State 06 dendrites loaded/generated')
 %%
 if ~exist(fullfile(outputFolder,'wholeCells_03.mat'),'file') || overwrite
     
@@ -340,6 +340,7 @@ else
     load(fullfile(outputFolder,'dendrites_07.mat'))
     load(fullfile(outputFolder,'wholeCells_03.mat'),'wholeCells');
 end
+disp('State 07 dendrites loaded/generated')
 
 %% load border soma whole cell agglos
 somaAgglos = connectEM.getSomaAgglos(fullfile(outputFolder,'somas_with_merged_somas.mat'),'border');
@@ -376,6 +377,7 @@ else
     clear dendrites myelinDend indBigDends
     load(fullfile(outputFolder,'dendrites_08.mat'))
 end
+disp('State 08 dendrites loaded/generated')
 
 %% 
 if ~exist(fullfile(outputFolder,'dendrites_09.mat'),'file') || overwrite
@@ -409,6 +411,7 @@ else
     clear dendrites myelinDend indBigDends
     load(fullfile(outputFolder,'dendrites_09.mat'))
 end
+disp('State 09 dendrites loaded/generated')
 
 %% 
 if ~exist(fullfile(outputFolder,'dendrites_10.mat'),'file') || overwrite
@@ -441,6 +444,7 @@ else
     clear dendrites myelinDend indBigDends
     load(fullfile(outputFolder,'dendrites_10.mat'))
 end
+disp('State 10 dendrites loaded/generated')
 
 
 %% 
@@ -474,6 +478,7 @@ else
     clear dendrites myelinDend indBigDends
     load(fullfile(outputFolder,'dendrites_11.mat'))
 end
+disp('State 11 dendrites loaded/generated')
 
 %% 
 if ~exist(fullfile(outputFolder,'dendrites_12.mat'),'file') || overwrite
@@ -506,6 +511,7 @@ else
     clear dendrites myelinDend indBigDends
     load(fullfile(outputFolder,'dendrites_12.mat'))
 end
+disp('State 12 dendrites loaded/generated')
 
 %% 
 if ~exist(fullfile(outputFolder,'wholeCells_04.mat'),'file') || overwrite
@@ -536,6 +542,7 @@ else
     load(fullfile(outputFolder,'wholeCells_04.mat'))
     load(fullfile(outputFolder,'dendrites_13.mat'))
 end
+disp('State 13 dendrites loaded/generated')
 
 %% load all soma whole cell agglos
 somaAgglos = connectEM.getSomaAgglos(fullfile(outputFolder,'somas_with_merged_somas.mat'),'all');
@@ -552,8 +559,10 @@ disp('Soma whole cell agglos loaded')
 
 %% check manually added edges if agglos have been skipped there
 
-if ~exist(fullfile(outputFolder,'wholeCells_04.mat'),'file') || overwrite
-    connectEM.searchSkippedAgglos(wholeCells,'/tmpscratch/mbeining/checkForMissingEndings',p)
+if ~exist(fullfile(outputFolder,'wholeCells_05.mat'),'file') || overwrite
+    % this script was used to write out whole cells that mighted have
+    % skipped agglos inbetween
+%     connectEM.searchSkippedAgglos(wholeCells,'/tmpscratch/mbeining/checkForMissingEndings',p)
 
     load(fullfile(outputFolder,'axons_09_a.mat'),'axons')
     
@@ -581,10 +590,11 @@ else
     load(fullfile(outputFolder,'wholeCells_05.mat'))
     load(fullfile(outputFolder,'dendrites_14.mat'))
 end
+disp('State 14 dendrites loaded/generated')
 
 %% another round of fixing added stuff
 
-if ~exist(fullfile(outputFolder,'wholeCells_04.mat'),'file') || overwrite
+if ~exist(fullfile(outputFolder,'wholeCells_06.mat'),'file') || overwrite
     % created nmls with connectEM.autoView('wholeCells_05','cells') and
     % checked only the five corrected last time
 
@@ -614,6 +624,7 @@ else
     load(fullfile(outputFolder,'wholeCells_06.mat'))
     load(fullfile(outputFolder,'dendrites_15.mat'))
 end
+disp('State 15 dendrites loaded/generated')
 
 
 % %% add spines to all agglos
