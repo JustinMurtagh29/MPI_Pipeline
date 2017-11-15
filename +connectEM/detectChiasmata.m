@@ -23,13 +23,9 @@ function output = detectChiasmata(p, nodesV, edges, outputFolder)
     showProgress = @(n) fprintf( ...
         '%d of %d nodes done\n', n, size(nodes, 1));
     
-    tic();
     for i = 1:size(nodes, 1)
         nrExits(i) = connectEM.detectChiasmataNodes(p, nodes, edges, i);
-        if ~mod(i, 10)
-            fprintf('10 nodes in %.2f seconds\n', toc);
-            tic;
-        end
+        if ~mod(i, 1000); showProgress(i); end
     end
 
     % Mark intersections
