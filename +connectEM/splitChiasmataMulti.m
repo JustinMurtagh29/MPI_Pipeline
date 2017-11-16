@@ -1,5 +1,5 @@
 function [newAgglos, summary] = ...
-        splitChiasmataMulti(p, agglo, queries, varargin)
+        splitChiasmataMulti(p, chiParam, agglo, queries, varargin)
     % Written by
     %   Kevin Boergens <kevin.boergens@brain.mpg.de>
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
@@ -47,7 +47,7 @@ function [newAgglos, summary] = ...
     summary.tracings = cell(chiasmaCount, 1);
     
     p.voxelSize = p.raw.voxelSize;
-    p.sphereRadiusInner = 1000; % in nm
+    p.sphereRadiusInner = chiParam.sphereRadiusInner; % in nm
     
     for chiIdx = 1:chiasmaCount
         chiasmaId = chiasmata.chiasmaId(chiIdx);
@@ -56,7 +56,7 @@ function [newAgglos, summary] = ...
         expectedNrExits = size(chiTracings, 1);
         
         % NOTE(amotta): Restrict skeleton to components within shell
-        p.sphereRadiusOuter = 10000; % in nm
+        p.sphereRadiusOuter = chiParam.sphereRadiusOuter; % in nm
        [thisNodes, thisEdges, ~, thisNodeIds] = ...
             connectEM.detectChiasmataPruneToSphere( ...
             p, agglo.nodesScaled, agglo.edges, ...
