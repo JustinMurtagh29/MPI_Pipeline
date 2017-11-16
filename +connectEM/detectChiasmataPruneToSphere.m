@@ -31,11 +31,13 @@ function [thisNodes, thisEdges, nodeIds, thisDist] = ...
     thisOutMask = reshape(thisOutMask, 1, []);
 
    [~, lut] = Graph.findConnectedComponents( ...
-        edges(~all(thisOutMask(edges), 2), :), false);
+        edges(~all(thisOutMask(edges), 2), :), ...
+        false, false, size(nodes, 1));
     thisOutMask(lut ~= lut(i)) = true;
     clear lut;
 
-   [~, lut] = Graph.findConnectedComponents(edges, false);
+   [~, lut] = Graph.findConnectedComponents( ...
+        edges, false, false, size(nodes, 1));
     thisOutMask(lut ~= lut(i)) = false;
     clear lut;
 
