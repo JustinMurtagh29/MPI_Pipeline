@@ -77,7 +77,7 @@ function nrExits = forLargeAgglo(p, nodes, edges)
     wait(job);
     
     nrExits = fetchOutputs(job);
-    nrExits = sum(2, cat(2, nrExits{:, 1}));
+    nrExits = sum(cat(2, nrExits{:, 1}), 2);
 end
 
 function nrExits = forNodeIds(p, nodes, edges, ids)
