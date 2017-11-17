@@ -45,7 +45,7 @@ function output = detectChiasmata(p, nodesV, edges, outputFolder)
         end
         
         fprintf('Writing result... ');
-        Util.saveStruct(fullfile(outputFolder, 'result.mat'), output);
+        Util.save(fullfile(outputFolder, 'result.mat'), output);
         fprintf('done!\n');
     end
 end
