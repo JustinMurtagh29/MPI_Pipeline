@@ -482,6 +482,7 @@ disp('State 11 dendrites loaded/generated')
 
 %% 
 if ~exist(fullfile(outputFolder,'dendrites_12.mat'),'file') || overwrite
+    
     load(fullfile(outputFolder,'axons_08_b.mat'),'axons')
     
     % here was christians ending detection done on dendrites_08 + manual
