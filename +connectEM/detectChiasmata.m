@@ -7,6 +7,16 @@ function output = detectChiasmata(p, nodesV, edges, outputFolder)
         % for backward compatibility
         p.minNrChiasmaExits = 4;
     end
+    
+    if isempty(edges)
+        % NOTE(amotta): It's entirely possible for an agglomerate to
+        % consist of a single node and no edges. Unfortunately, somebody
+        % messed up and forgot to make sure that `edges` has two columns.
+        edges = reshape(edges, [], 2);
+    end
+    
+    assert(size(nodesV, 2) == 3);
+    assert(size(edges, 2) == 2);
 
     % Scale to nm
     % Make sure edges are unique
