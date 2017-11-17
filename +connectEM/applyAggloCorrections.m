@@ -54,8 +54,9 @@ for f = 1:numel(files)
     skel = skel.deleteTrees(cellfun(@numel,skel.nodes)/4==0); % delete zero node trees, caution has been changed from single node on 08 nov 17
     skelCoords = cell2mat(cellfun(@(x) x(:,1:3),skel.nodes,'uni',0));  % putting all skel nodes together
     % create node pairs from edges in all skels
-    skel = skel.deleteTrees(cellfun(@isempty,skel.edges)); % delete single or zero node skels
-    skelCoordsCatEdges = cell2mat(cellfun(@(x,y) [x(y(:,1),1:3),x(y(:,2),1:3)],skel.nodes,skel.edges,'uni',0));  % putting all skel nodes together
+%     skel = skel.deleteTrees(cellfun(@isempty,skel.edges)); % delete single or zero node skels
+    singleNodeSkels = cellfun(@isempty,skel.edges);
+    skelCoordsCatEdges = cell2mat(cellfun(@(x,y) [x(y(:,1),1:3),x(y(:,2),1:3)],skel.nodes(~singleNodeSkels),skel.edges(~singleNodeSkels),'uni',0));  % putting all skel nodes together
 
     warning('OFF','auxiliaryMethods:readKnossosCube')
     skelSegIds = Seg.Global.getSegIds(p,skelCoords);  % extract the seg Ids of all skel nodes
