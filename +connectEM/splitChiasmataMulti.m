@@ -78,7 +78,7 @@ function [newAgglos, summary] = ...
         % tracings to match the number of found exits.
         C = C(isExit);
         nrExits = numel(C);
-        assert(nrExits == expectedNrExits);
+%         assert(nrExits == expectedNrExits);
         
         summary.chiasmaId(chiIdx) = chiasmaId;
         summary.centerIdx(chiIdx) = centerIdx;
