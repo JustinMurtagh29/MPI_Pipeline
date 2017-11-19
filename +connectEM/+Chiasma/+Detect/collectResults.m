@@ -11,6 +11,6 @@ function chiasmata = collectResults(chiasmaDir, chiasmaId, aggloCount)
             sprintf('visX%s_%d', chiasmaId, curIdx), 'result.mat');
 
         curData = load(curFile);
-        chiasmata{curIdx} = curData.output;
+        chiasmata{curIdx} = curData;
     end
 end
