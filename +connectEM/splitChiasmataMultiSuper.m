@@ -1,8 +1,15 @@
 function [out, openExits] = ...
-        splitChiasmataMultiSuper(p, axonFile, dataFiles)
+        splitChiasmataMultiSuper(p, axonFile, dataFiles, type)
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
-
+    
+    if nargin < 4
+        type = false;
+    end
+    if type
+        oldAxons.axons = oldAxons.dendrites;
+        oldAxons.indBigAxons = oldAxons.indBigAxons;
+    end
     %% load agglomerates
     oldAxons = load(axonFile);
 
