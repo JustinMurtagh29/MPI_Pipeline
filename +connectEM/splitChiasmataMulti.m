@@ -46,7 +46,6 @@ function [newAgglos, summary] = ...
     summary.solved = false(chiasmaCount, 1);
     summary.tracings = cell(chiasmaCount, 1);
     
-    p.voxelSize = p.raw.voxelSize;
     p.sphereRadiusInner = chiParam.sphereRadiusInner; % in nm
     
     for chiIdx = 1:chiasmaCount
@@ -59,7 +58,7 @@ function [newAgglos, summary] = ...
         p.sphereRadiusOuter = chiParam.sphereRadiusOuter; % in nm
        [thisNodes, thisEdges, thisNodeIds] = ...
             connectEM.detectChiasmataPruneToSphere( ...
-            p, agglo.nodesScaled, agglo.edges, ...
+            p, agglo.nodesScaled, agglo.edges,
             centerIdx);
         
         C = Graph.findConnectedComponents(thisEdges);
@@ -93,7 +92,7 @@ function [newAgglos, summary] = ...
         
         %%
         exitNodesScaled = chiTracings.seedPos;
-        exitNodesScaled = bsxfun(@times, exitNodesScaled, p.voxelSize);
+        exitNodesScaled = bsxfun(@times, exitNodesScaled, p.raw.voxelSize);
         
         for trIdx = 1:nrExits
             tr = chiTracings(trIdx, :);
@@ -107,10 +106,10 @@ function [newAgglos, summary] = ...
             
             % NOTE(amotta): A tracing may be empty (hence the reshape)
             trNodesScaled = reshape(tr.flightNodes{1}, [], 3);
-            trNodesScaled = bsxfun(@times, trNodesScaled, p.voxelSize);
+            trNodesScaled = bsxfun(@times, trNodesScaled, p.raw.voxelSize);
             
             % NOTE(amotta): Make sure nodes are correctly sorted
-            trSeedScaled = tr.seedPos .* p.voxelSize;
+            trSeedScaled = tr.seedPos .* p.raw.voxelSize;
            [~, minIdx] = min(pdist2(trSeedScaled, trNodesScaled));
            
             if ~(isempty(trNodesScaled) || minIdx == 1)
