@@ -43,9 +43,9 @@ function makeEndingCaseDistinctions(param,state)
     
     % NOTE(amotta): The ending indices in `linkages` and `linkagesFlat` can
     % take on the following valid values:
-    % • nan ←→ no agglomerates was reached
-    % • zero ←→ exactly one agglomerate, but no endings was reached
-    % • positive integer ←→ exactly one ending was reached
+    % • nan �?→ no agglomerates was reached
+    % • zero �?→ exactly one agglomerate, but no endings was reached
+    % • positive integer �?→ exactly one ending was reached
     
     caseDistinctions = zeros(size(linkagesFlat,1),1);
     

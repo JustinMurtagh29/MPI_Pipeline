@@ -11,7 +11,7 @@ function [newAgglos, summary] = ...
     opts = Util.modifyStruct(opts, varargin{:});
     
     % configuration
-    cutoffDistNm = 300; % only consider exits within X nm of flight path
+    cutoffDistNm = 600; % only consider exits within X nm of flight path
     cutoffTracingNm = 1000; % ignore the first X nm of flight path
     
     axonId = unique(queries.axonId);

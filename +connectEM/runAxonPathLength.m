@@ -53,7 +53,7 @@ dendrites = m.dendrites(m.indBigDends);
 batchBoundaries = round(linspace(1, numel(dendrites)+1, 101));
 
 for i=1:length(batchBoundaries)-1
-    batchID{i,1} = {i};
+    batchID{i,1} = {i,param,dendrites,batchBoundaries,dataDir};
 end
 
 dataDir = fullfile(param.saveFolder, 'aggloState/dendritePathLength/dendrites_flight_02/');
@@ -64,8 +64,9 @@ end
 sharedInputs = {param,dendrites,batchBoundaries,dataDir};
 sharedInputsLocation = 2:4;
 cluster = Cluster.getCluster('-p -300','-tc 20','-l h_vmem=64G','-l s_rt=3:28:00','-l h_rt=3:29:00');
-job = Cluster.startJob(@connectEM.getAxonPathLength, batchID, 'name', 'pathLength', 'cluster', cluster, ...
-    'sharedInputs', sharedInputs, 'sharedInputsLocation', sharedInputsLocation)
+% job = Cluster.startJob(@connectEM.getAxonPathLength, batchID, 'name', 'pathLength', 'cluster', cluster, ...
+%     'sharedInputs', sharedInputs, 'sharedInputsLocation', sharedInputsLocation)
+job = Cluster.startJob(@connectEM.getAxonPathLength, batchID, 'name', 'pathLength', 'cluster', cluster)
 
 for i=1:length(batchBoundaries)-1
     connectEM.getAxonPathLength(i,param,dendrites,batchBoundaries,dataDir);
@@ -76,7 +77,7 @@ end
 aggloLengths=[];
 totalPathLength = 0;
 for i=1:100
-    load(fullfile(param.saveFolder, strcat('aggloState/dendritePathLength/batch',num2str(i),'.mat')))
+    load(fullfile(param.saveFolder, strcat('aggloState/dendritePathLength/dendrites_flight_02/batch',num2str(i),'.mat')))
     totalPathLength = totalPathLength + sum(aggloLength);
     aggloLengths = cat(1,aggloLengths,aggloLength);
 end

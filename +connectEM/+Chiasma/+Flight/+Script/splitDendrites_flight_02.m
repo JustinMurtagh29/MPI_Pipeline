@@ -25,7 +25,7 @@ tasks = cellfun(@(id) struct( ...
     'nmlDir', fullfile( ...
         chiasmaDir, 'taskAnswers', sprintf('%s_flightTasks', id)), ...
     'splitDataFile', fullfile( ...
-        chiasmaDir, sprintf('%s_splitData.mat', id)), ...
+        chiasmaDir, 'chiasmataSplitting', sprintf('%s_splitData.mat', id)), ...
 	'splitDataFileBuild', false), ...
     taskGenIds);
 
@@ -51,3 +51,62 @@ for task = reshape(tasks, 1, [])
     end
 end
 
+%% running chiasma splitting
+axonFile = load(tasks(end).splitDataFile, 'axonFile');
+axonFile = axonFile.axonFile;
+
+fprintf('Splitting chiasmata...\n');
+[splitAxons, openExits] = ...
+    connectEM.splitChiasmataMultiSuper( ...
+        param, axonFile, {tasks.splitDataFile});
+splitAxons.info = info;
+
+%% saving result
+Util.saveStruct(splitAxonsFile, splitAxons);
+system(sprintf('chmod a-w "%s"', splitAxonsFile));
+
+%% requerying
+taskGen = load(tasks(end).genFile);
+exits = taskGen.exits;
+taskDefs = taskGen.taskDefs;
+chiasmataFile = taskGen.chiasmataFile;
+clear taskGen;
+
+% find unsolved chiasmata
+unsolvedT = table;
+unsolvedT.aggloId = repelem( ...
+    cat(1, splitAxons.summary.axonId), ...
+    cat(1, splitAxons.summary.nrChiasmata));
+unsolvedT.chiasmaId = cat(1, splitAxons.summary.chiasmaId);
+
+unsolvedT.isSolved = cat(1, splitAxons.summary.solved);
+unsolvedT(unsolvedT.isSolved, :) = [];
+unsolvedT.isSolved = [];
+
+% mark tasks to requery
+requeryMask =  ...
+    ismember(exits, openExits, 'rows') | ismember( ...
+    exits(:, {'aggloId', 'chiasmaId'}), unsolvedT, 'rows');
+clear unsolvedT;
+
+requery = struct;
+requery.exits = exits(requeryMask, :);
+clear requeryMask;
+
+[requery.exits, shuffledRows] = shuffleExits(requery.exits, 500);
+requery.taskDefs = taskDefs(shuffledRows, :);
+clear shuffledRows;
+
+requeryTaskDefFile = fullfile( ...
+    taskGenDir, sprintf('%s_flightTasks.txt', runId));
+writetable( ...
+    requery.taskDefs, requeryTaskDefFile, 'WriteVariableNames', false);
+
+%% build output
+requery.info = info;
+requery.taskDefFile = requeryTaskDefFile;
+requery.chiasmataFile = chiasmataFile;
+
+requeryTaskGenFile = fullfile( ...
+    taskGenDir, sprintf('%s_taskGeneration.mat', runId));
+Util.saveStruct(requeryTaskGenFile, requery);
