@@ -11,8 +11,22 @@ function [newAgglos, summary] = ...
     opts = Util.modifyStruct(opts, varargin{:});
     
     % configuration
-    cutoffDistNm = 600; % only consider exits within X nm of flight path
+    cutoffDistNm = 300; % only consider exits within X nm of flight path
     cutoffTracingNm = 1000; % ignore the first X nm of flight path
+    cutoffExitNm = chiParam.minNodeDist; % discard exits shorter than X nm
+    
+    % override defaults
+    if isfield(chiParam, 'split')
+        if isfield(chiParam.split, 'cutoffDistNm') ...
+                && ~isempty(chiParam.split.cutoffDistNm)
+            cutoffDistNm = chiParam.split.cutoffDistNm;
+        end
+        
+        if isfield(chiParam.split, 'cutoffTracingNm') ...
+                && ~isempty(chiParam.split.cutoffTracingNm)
+            cutoffTracingNm = chiParam.split.cutoffTracingNm;
+        end
+    end
     
     axonId = unique(queries.axonId);
     assert(isscalar(axonId));
@@ -67,7 +81,7 @@ function [newAgglos, summary] = ...
         % chiasma center.
         isExit = cellfun( ...
             @(idx2) max(pdist2(thisNodes(idx2, :), ...
-            agglo.nodesScaled(centerIdx, :))) > chiParam.minNodeDist, C);
+            agglo.nodesScaled(centerIdx, :))) > cutoffExitNm, C);
         
         % NOTE(amotta): Non-exit components are dropped (for now at least)
         nonExitNodeIds = thisNodeIds(cell2mat(C(~isExit)));
