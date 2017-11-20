@@ -6,13 +6,13 @@ function [out, openExits] = ...
     if nargin < 4
         type = false;
     end
+    %% load agglomerates
+    oldAxons = load(axonFile);
     if type
         oldAxons.axons = oldAxons.dendrites;
         oldAxons.indBigAxons = oldAxons.indBigAxons;
     end
-    %% load agglomerates
-    oldAxons = load(axonFile);
-
+    
     % set default value for `endings`
     if ~isfield(oldAxons.axons, 'endings')
        [oldAxons.axons.endings] = deal([]);
