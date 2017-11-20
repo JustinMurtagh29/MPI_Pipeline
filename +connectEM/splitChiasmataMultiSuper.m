@@ -1,16 +1,25 @@
-function [out, openExits] = ...
-        splitChiasmataMultiSuper(p, chiParam, axonFile, dataFiles, type)
+function [out, openExits] = splitChiasmataMultiSuper( ...
+        p, chiParam, axonFile, dataFiles, neuriteType)
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
-    
-    if nargin < 4
-        type = false;
-    end
     %% load agglomerates
     oldAxons = load(axonFile);
-    if type
-        oldAxons.axons = oldAxons.dendrites;
-        oldAxons.indBigAxons = oldAxons.indBigDends;
+    
+    if ~exist('neuriteType', 'var')
+        neuriteType = 'axon';
+    end
+    
+    % normalize neurite type
+    neuriteType = lower(neuriteType);
+    
+    switch neuriteType
+        case 'axon'
+            % nothing to do
+        case 'dendrite'
+            oldAxons.axons = oldAxons.dendrites;
+            oldAxons.indBigAxons = oldAxons.indBigDends;
+        otherwise
+            error('Unknown neurite type "%s"', neuriteType)
     end
     
     % set default value for `endings`
@@ -227,4 +236,22 @@ function [out, openExits] = ...
 
     % build `indBigAxons` mask
     out.indBigAxons = oldAxons.indBigAxons(out.parentIds);
+    
+    switch neuriteType
+        case 'axon'
+            % nothing to do
+        case 'dendrite'
+            out = renamefield(out, 'axons', 'dendrites');
+            out = renamefield(out, 'oldAxons', 'oldDendrites');
+            out = renamefield(out, 'indBigAxons', 'indBigDends');
+        otherwise
+            error('Unknown neurite type "%s"', neuriteType)
+    end
+end
+
+function s = renamefield(s, old, new)
+    assert(~isfield(s, new));
+    
+   [s.(new)] = s.(old);
+    s = rmfield(s, old);
 end
