@@ -41,6 +41,7 @@ function [segmentOverlap, uniqueSegId,voxelCount] = getSegmentHeuristicsScore(se
             class = bwlabeln(class); % label each CC with a different color
             voxelCounts = histc(class(:),1:max(class(:))); % calculate the voxelCount of each CC
             mostOverlapSegs = accumarray(class(class~=0 & seg~=0),seg(class~=0 & seg~=0),[],@mode); % calculate which segIds overlap the most with each CC
+            
             % now treat cases were a label only lies on border and thus
             % could not be counted. first be sure that mostOverlapSegs has
             % the same size as the number of labels
@@ -51,9 +52,15 @@ function [segmentOverlap, uniqueSegId,voxelCount] = getSegmentHeuristicsScore(se
             % segment borders)
             voxelCounts(mostOverlapSegs==0) = [];
             mostOverlapSegs(mostOverlapSegs==0) = [];
+            
+            % do mean on label voxel sizes at occassions where a segId contains several labels
+            voxelCounts = accumarray(mostOverlapSegs,voxelCounts,[],@mean);
+            mostOverlapSegs = unique(mostOverlapSegs);
+            
+            
             voxelCount{i} = zeros(numel(uniqueSegId),1);
             [~,ind] = ismember(mostOverlapSegs,uniqueSegId);
-            voxelCount{i}(ind) = voxelCounts;  % associate these segIds with the voxelCount
+            voxelCount{i}(ind) = voxelCounts(mostOverlapSegs);  % associate these segIds with the voxelCount
         end
     end
 

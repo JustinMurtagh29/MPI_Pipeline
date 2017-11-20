@@ -5,7 +5,7 @@ labelMap(1).root = '/tmpscratch/bstaffle/data/2012-09-28_ex145_07x2_ROI2017/SVM/
 labelMap(1).backend = 'wkwrap';
 labelMap(1).channel = 4;
 labelMap(1).segId = [0.5 1];
-labelMap(1).function = @(x) bwareaopen(x,1000); % function that is applied to the label map after thresholdding
+labelMap(1).function = @(x) bwareaopen(x,1000); % function that is applied to the label map after thresholding
 
 
 inputCell = cell(numel(p.local),1);
