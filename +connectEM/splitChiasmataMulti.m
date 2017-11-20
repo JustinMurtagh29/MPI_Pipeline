@@ -58,8 +58,7 @@ function [newAgglos, summary] = ...
         p.sphereRadiusOuter = chiParam.sphereRadiusOuter; % in nm
        [thisNodes, thisEdges, thisNodeIds] = ...
             connectEM.detectChiasmataPruneToSphere( ...
-            p, agglo.nodesScaled, agglo.edges,
-            centerIdx);
+                p, agglo.nodesScaled, agglo.edges, centerIdx);
         
         C = Graph.findConnectedComponents(thisEdges);
         
