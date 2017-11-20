@@ -1,4 +1,4 @@
-function ov = flightPathAggloOverlap( p, fp, agglos, nodeEv )
+function ov = flightPathAggloOverlap( p, fp, agglos, nodeEv, ovMode )
 %FLIGHTPATHAGGLOOVERLAP Get the overlap of flight paths with agglos.
 % INPUT p: struct
 %           Segmentation parameter struct.
@@ -12,6 +12,14 @@ function ov = flightPathAggloOverlap( p, fp, agglos, nodeEv )
 %       nodeEv: (Optional) double
 %           Minimal required node evidence for an agglo to be picked up.
 %           (Default: 54)
+%       ovMode: (Optional) string
+%           Mode for overlap calculation
+%           'all': All segments overlapping with a flight path are added to
+%               the corresponding agglo. This can cause a segment/agglos
+%               to be overlapping with multiple flight paths.
+%               (Default)
+%           'max': Agglos are associated with the flight path with maximal
+%               node evidence.
 % OUTPUT ov: [Nx1] cell
 %           Cell array containing the linear indices of the agglos that are
 %           overlapping with the corresponding flight path.
@@ -29,6 +37,12 @@ if ~exist('nodeEv', 'var') || isempty(nodeEv)
     nodeEv = 54;
 end
 
+if ~exist('ovMode', 'var') || isempty(ovMode)
+    ovMode = 'all';
+else
+    assert(any(strcmp(ovMode, {'all', 'max'})), 'Unkown mode %s.', ovMode);
+end
+
 aggloLUT = L4.Agglo.buildLUT(agglos);
 nodes = cellfun(@(x)x(:,1:3), {fp.nodes}', 'uni', 0);
 clear fp
@@ -43,7 +57,13 @@ fpAggloIdx = cellfun(@(x)x(x > 0), fpAggloIdx, 'uni', 0);
 [c, nc] = cellfun(@Util.ucounts, fpAggloIdx, 'uni', 0);
 
 % get overlapping agglos
-ov = cellfun(@(x, y) x(y >= nodeEv), c, nc, 'uni', 0);
+switch ovMode
+    case 'all'
+        ov = cellfun(@(x, y) x(y >= nodeEv), c, nc, 'uni', 0);
+    case 'max'
+        maxOv = accumarray(cell2mat(c), cell2mat(nc));
+        ov = cellfun(@(x)x(maxOv(x) == x), c, 'uni', 0);
+end
 
 end
 
