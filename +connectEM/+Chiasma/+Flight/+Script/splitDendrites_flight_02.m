@@ -33,6 +33,8 @@ tasks = cellfun(@(id) struct( ...
 splitAxonsFile = fullfile( ...
     chiasmaDir, sprintf('%s_splitAxons.mat', taskGenIds{1}));
 
+chiParam = load('/tmpscratch/scchr/L4/chiasmata/dendrites/round4/round4_inclInfos_chiasmata.mat','info');
+chiParam = chiParam.info.param.chiasmaParam;
 info = Util.runInfo();
 
 %% loading data
@@ -58,7 +60,7 @@ axonFile = axonFile.axonFile;
 fprintf('Splitting chiasmata...\n');
 [splitAxons, openExits] = ...
     connectEM.splitChiasmataMultiSuper( ...
-        param, axonFile, {tasks.splitDataFile}, 1);
+        param, chiParam, axonFile, {tasks.splitDataFile}, 1);
 splitAxons.info = info;
 
 %% saving result
