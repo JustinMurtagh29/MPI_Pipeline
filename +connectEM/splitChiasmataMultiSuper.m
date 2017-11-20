@@ -10,7 +10,7 @@ function [out, openExits] = ...
     oldAxons = load(axonFile);
     if type
         oldAxons.axons = oldAxons.dendrites;
-        oldAxons.indBigAxons = oldAxons.indBigAxons;
+        oldAxons.indBigAxons = oldAxons.indBigDends;
     end
     
     % set default value for `endings`
