@@ -78,6 +78,7 @@ if cubeIdx(1) == 0
     group = group(2:end);
     cubeIdx = cubeIdx(2:end);
 end
+fprintf('Loading segment ids:  0%%');
 for i = 1:length(cubeIdx)
     this_bbox = Util.addBorder(p.local(cubeIdx(i)).bboxSmall, [1, 1, 1]);
     warning('off', 'all') % reading of empty cubes
@@ -86,7 +87,14 @@ for i = 1:length(cubeIdx)
     curNodes = Util.indConversion(this_bbox, nodes(group{i},:));
     curNodes = bsxfun(@plus, curNodes, [0, Util.lneigh26(size(this_bbox))]);
     ids(group{i}, :) = seg(curNodes);
+    
+    if floor(i/length(cubeIdx)*100) < 10
+        fprintf('\b\b%d%%',floor(i/length(cubeIdx)*100));
+    else
+        fprintf('\b\b\b%d%%',floor(i/length(cubeIdx)*100));
+    end
 end
+fprintf('\n');
 ids = mat2cell(ids, l, 27);
 
 end
