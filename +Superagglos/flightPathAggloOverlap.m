@@ -62,7 +62,7 @@ switch ovMode
         ov = cellfun(@(x, y) x(y >= nodeEv), c, nc, 'uni', 0);
     case 'max'
         maxOv = accumarray(cell2mat(c), cell2mat(nc));
-        ov = cellfun(@(x)x(maxOv(x) == x), c, 'uni', 0);
+        ov = cellfun(@(x, y)x(maxOv(x) == y), c, nc, 'uni', 0);
 end
 
 end
