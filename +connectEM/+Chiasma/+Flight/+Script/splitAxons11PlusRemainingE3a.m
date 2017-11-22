@@ -53,17 +53,21 @@ for task = reshape(tasks, 1, [])
     end
 end
 
-%{
 %% running chiasma splitting
 axonFile = load(tasks(end).splitDataFile, 'axonFile');
 axonFile = axonFile.axonFile;
 
+chiasmaParam = load(tasks(end).genFile, 'info');
+chiasmaParam = load(chiasmaParam.info.param.chiasmataFile, 'info');
+chiasmaParam = chiasmaParam.info.param.chiasmaParam;
+
 fprintf('Splitting chiasmata...\n');
 [splitAxons, openExits] = ...
     connectEM.splitChiasmataMultiSuper( ...
-        param, axonFile, {tasks.splitDataFile});
+        param, chiasmaParam, axonFile, {tasks.splitDataFile});
 splitAxons.info = info;
 
+%{
 %% saving result
 Util.saveStruct(splitAxonsFile, splitAxons);
 system(sprintf('chmod a-w "%s"', splitAxonsFile));
