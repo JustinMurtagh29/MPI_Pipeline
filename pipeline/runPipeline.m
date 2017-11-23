@@ -123,7 +123,10 @@ function p = runPipeline(p, startStep, endStep,runlocal)
     % see: http://biorxiv.org/content/early/2017/01/22/099994
     if startStep <= PipelineStep.SynapseDetection && ...
        endStep >= PipelineStep.SynapseDetection
-        [p, job] = SynEM.Seg.pipelineRun(p);
+        classifierPath = fullfile(fileparts(fileparts( ...
+            mfilename('fullpath'))), ...
+            '+SynEM', 'data', 'SynEMPaperClassifier.mat');
+        [p, job] = SynEM.Seg.pipelineRun(p, classifierPath);
         % Save parameter file to new
         Util.save([p.saveFolder 'allParameterWithSynapses.mat'], p);
         disp('SynEM modified parameter file. Load allParameterWithSynapses.mat for the next steps.')
