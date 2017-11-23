@@ -16,7 +16,7 @@ chiasmaDir = fullfile( ...
     '20171113T171102-on-axons-11a-plus-remaining-E3a');
 
 % task specifics
-taskGenIds = {'20171118T124838'};
+taskGenIds = {'20171122T104907'; '20171118T124838'};
 taskGenDir = fullfile(chiasmaDir, 'taskGeneration');
 
 tasks = cellfun(@(id) struct( ...
@@ -67,7 +67,6 @@ fprintf('Splitting chiasmata...\n');
         param, chiasmaParam, axonFile, {tasks.splitDataFile});
 splitAxons.info = info;
 
-%{
 %% saving result
 Util.saveStruct(splitAxonsFile, splitAxons);
 system(sprintf('chmod a-w "%s"', splitAxonsFile));
@@ -117,4 +116,3 @@ requery.chiasmataFile = chiasmataFile;
 requeryTaskGenFile = fullfile( ...
     taskGenDir, sprintf('%s_taskGeneration.mat', runId));
 Util.saveStruct(requeryTaskGenFile, requery);
-%}
