@@ -51,3 +51,18 @@ for task = reshape(tasks, 1, [])
         clear splitData;
     end
 end
+
+%% loading data for split
+axonFile = load(tasks(end).splitDataFile, 'axonFile');
+axonFile = axonFile.axonFile;
+
+chiasmaParam = load(tasks(end).genFile, 'info');
+chiasmaParam = load(chiasmaParam.info.param.chiasmataFile, 'info');
+chiasmaParam = chiasmaParam.info.param.chiasmaParam;
+
+%%
+fprintf('Splitting chiasmata...\n');
+[splitAxons, openExits] = ...
+    connectEM.splitChiasmataMultiSuper( ...
+        param, chiasmaParam, axonFile, {tasks.splitDataFile}, ...
+        'dryRun', true, 'partialAnswers', true);
