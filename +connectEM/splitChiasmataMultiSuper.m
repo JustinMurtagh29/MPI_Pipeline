@@ -123,13 +123,17 @@ function [out, openExits] = splitChiasmataMultiSuper( ...
     fprintf('\n');
     fprintf('# chiasmata fully answered: %d\n', numel(uniChiasmaDoneIds));
     
-    if ~opts.partialAnswers
-        % Limit ourselves to done chiasmata
-        queries = queries(ismember( ...
-            queries.uniChiasmaId, uniChiasmaDoneIds), :);
+    if opts.partialAnswers
+        fprintf('⇒ Limiting to partially answered chiasmata...\n');
+        queryMask = (queries.flightId > 0);
+    else
         fprintf('⇒ Limiting to fully answered chiasmata...\n');
+        queryMask = ismember(queries.uniChiasmaId, uniChiasmaDoneIds);
     end
-
+    
+    queries = queries(queryMask, :);
+    clear queryMask;
+    
     queries.flightNodes = flights.nodes(queries.flightId);
     queries.flightSegIds = flights.segIds(queries.flightId);
     queries.flightComment = flights.comments(queries.flightId);
