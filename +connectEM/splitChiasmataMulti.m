@@ -103,9 +103,9 @@ function [newAgglos, summary] = ...
         summary.tracings{chiIdx} = struct;
         summary.tracings{chiIdx}.taskIds = chiTracings.taskId;
         summary.tracings{chiIdx}.nodes = chiTracings.flightNodes;
-        summary.tracings{chiIdx}.overlaps = cell(nrExits, 1);
-        summary.tracings{chiIdx}.overlapNodes = nan(nrExits, 1);
-        summary.tracings{chiIdx}.execute = false(nrExits, 1);
+        summary.tracings{chiIdx}.overlaps = cell(chiNrTracings, 1);
+        summary.tracings{chiIdx}.overlapNodes = nan(chiNrTracings, 1);
+        summary.tracings{chiIdx}.execute = false(chiNrTracings, 1);
         
         %%
         exitNodesScaled = chiTracings.seedPos;
