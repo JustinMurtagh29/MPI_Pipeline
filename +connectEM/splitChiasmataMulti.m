@@ -8,6 +8,8 @@ function [newAgglos, summary] = ...
     opts.outputFile = [];
     opts.dryRun = false;
     opts.exportNml = false;
+    opts.partialAnswers = false;
+    
     opts = Util.modifyStruct(opts, varargin{:});
     
     % configuration
@@ -66,7 +68,7 @@ function [newAgglos, summary] = ...
         chiasmaId = chiasmata.chiasmaId(chiIdx);
         centerIdx = chiasmata.centerNodeId(chiIdx);
         chiTracings = chiasmataTracings{chiIdx};
-        expectedNrExits = size(chiTracings, 1);
+        chiNrTracings = size(chiTracings, 1);
         
         % NOTE(amotta): Restrict skeleton to components within shell
         p.sphereRadiusOuter = chiParam.sphereRadiusOuter; % in nm
@@ -86,11 +88,13 @@ function [newAgglos, summary] = ...
         % NOTE(amotta): Non-exit components are dropped (for now at least)
         nonExitNodeIds = thisNodeIds(cell2mat(C(~isExit)));
         
-        % NOTE(amotta): Since we query all endings we expect the number of
-        % tracings to match the number of found exits.
         C = C(isExit);
         nrExits = numel(C);
-        assert(nrExits == expectedNrExits);
+        
+        % NOTE(amotta): If we're restricting ourselves to fully queried
+        % chiasmata (i.e., opts.partialAnswers is false), make sure that
+        % number of tracings matches the number of found exits.
+        assert(opts.partialAnswers || nrExits == chiNrTracings);
         
         summary.chiasmaId(chiIdx) = chiasmaId;
         summary.centerIdx(chiIdx) = centerIdx;
@@ -107,9 +111,8 @@ function [newAgglos, summary] = ...
         exitNodesScaled = chiTracings.seedPos;
         exitNodesScaled = bsxfun(@times, exitNodesScaled, p.raw.voxelSize);
         
-        for trIdx = 1:nrExits
+        for trIdx = 1:chiNrTracings
             tr = chiTracings(trIdx, :);
-            assert(tr.exitId == trIdx);
             
             % NOTE(amotta): To map a query to its chiasma exit we simply
             % search for the exit which comes closest to the flight path.
