@@ -1,25 +1,27 @@
 function [out, openExits] = splitChiasmataMultiSuper( ...
-        p, chiParam, axonFile, dataFiles, neuriteType)
+        p, chiParam, axonFile, dataFiles, varargin)
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
+    
+    opts = struct;
+    opts.dryRun = false;
+    opts.neuriteType = 'axon';
+    opts.partialAnswers = false;
+
+    opts = Util.modifyStruct(opts, varargin{:});
+    opts.neuriteType = lower(opts.neuriteType);
+    
     %% load agglomerates
     oldAxons = load(axonFile);
     
-    if ~exist('neuriteType', 'var')
-        neuriteType = 'axon';
-    end
-    
-    % normalize neurite type
-    neuriteType = lower(neuriteType);
-    
-    switch neuriteType
+    switch opts.neuriteType
         case 'axon'
             % nothing to do
         case 'dendrite'
             oldAxons.axons = oldAxons.dendrites;
             oldAxons.indBigAxons = oldAxons.indBigDends;
         otherwise
-            error('Unknown neurite type "%s"', neuriteType)
+            error('Unknown neurite type "%s"', opts.neuriteType)
     end
     
     % set default value for `endings`
@@ -119,11 +121,14 @@ function [out, openExits] = splitChiasmataMultiSuper( ...
         queries.uniChiasmaId, queries.flightId, [], @all));
     
     fprintf('\n');
-    fprintf('# chiasmata answered: %d\n', numel(uniChiasmaDoneIds));
-
-    % Limit ourselves to done chiasmata
-    queries = queries(ismember( ...
-        queries.uniChiasmaId, uniChiasmaDoneIds), :);
+    fprintf('# chiasmata fully answered: %d\n', numel(uniChiasmaDoneIds));
+    
+    if ~opts.partialAnswers
+        % Limit ourselves to done chiasmata
+        queries = queries(ismember( ...
+            queries.uniChiasmaId, uniChiasmaDoneIds), :);
+        fprintf('⇒ Limiting to fully answered chiasmata...\n');
+    end
 
     queries.flightNodes = flights.nodes(queries.flightId);
     queries.flightSegIds = flights.segIds(queries.flightId);
@@ -141,6 +146,9 @@ function [out, openExits] = splitChiasmataMultiSuper( ...
 
     axonsSplit = cell(numel(uniAxonIds), 1);
     summaries = cell(numel(uniAxonIds), 1);
+    
+    splitOpts = horzcat(fieldnames(opts), struct2cell(opts));
+    splitOpts = reshape(transpose(splitOpts), 1, []);
 
     tic
     for curAxonIdx = 1:numel(uniAxonIds)
@@ -152,7 +160,7 @@ function [out, openExits] = splitChiasmataMultiSuper( ...
 
        [axonsSplit{curAxonIdx}, curSummary] = ...
             connectEM.splitChiasmataMulti( ...
-                p, chiParam, curAxon, curQueries);
+                p, chiParam, curAxon, curQueries, splitOpts{:});
 
         curOverlaps = cellfun(@(t) ...
             t.overlaps, curSummary.tracings, ...
@@ -238,7 +246,7 @@ function [out, openExits] = splitChiasmataMultiSuper( ...
     % build `indBigAxons` mask
     out.indBigAxons = oldAxons.indBigAxons(out.parentIds);
     
-    switch neuriteType
+    switch opts.neuriteType
         case 'axon'
             % nothing to do
         case 'dendrite'
@@ -246,7 +254,7 @@ function [out, openExits] = splitChiasmataMultiSuper( ...
             out = renamefield(out, 'oldAxons', 'oldDendrites');
             out = renamefield(out, 'indBigAxons', 'indBigDends');
         otherwise
-            error('Unknown neurite type "%s"', neuriteType)
+            error('Unknown neurite type "%s"', opts.neuriteType)
     end
 end
 
