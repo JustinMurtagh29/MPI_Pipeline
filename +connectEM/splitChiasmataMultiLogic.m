@@ -10,30 +10,34 @@ function summary = splitChiasmataMultiLogic(summary)
     summary.split = false(chiCount, 1);
     
     for chiIdx = 1:numel(summary.tracings)
+        nrExits = summary.nrExits(chiIdx);
         tracings = summary.tracings{chiIdx};
+        nrTracings = numel(tracings);
         
         overlaps = reshape(tracings.overlaps, 1, []);
         overlaps = transpose(cell2mat(overlaps));
-        nrExits = size(overlaps, 1);
 
         % partition chiasma
-       [~, ~, lut] = buildPartition(overlaps);
-       [partition, isValid, lut] = fixFourPartitions(overlaps, lut);
+       [~, ~, lut] = ...
+           buildPartition(nrExits, overlaps);
+       [partition, isValid, lut] = ...
+           fixFourPartitions(nrExits, overlaps, lut);
        
-        if isequal(partition, [2; 2]) || ...
-                (isValid && numel(partition) > 1)
-            % do process
+        if nrTracings == nrExits && ...
+                (isequal(partition, [2; 2]) || ...
+                (isValid && numel(partition) > 1))
+            % If fully answered, do split
             % * all 2-2 partitions (valid and invalid)
             % * all valid partitions (except fully connected)
             splitChiasma = true;
             chiasmaIsSolved = false;
-            executeTracings = selectTracings(overlaps);
+            executeTracings = selectTracings(nrExits, overlaps);
         else
             splitChiasma = false;
             
             % valid fully connected chiasmata are solved
             chiasmaIsSolved = isValid && (numel(partition) == 1);
-            executeTracings = false(nrExits, 1);
+            executeTracings = false(nrTracings, 1);
         end
         
         summary.split(chiIdx) = splitChiasma;
@@ -45,9 +49,8 @@ function summary = splitChiasmataMultiLogic(summary)
     end
 end
 
-function execute = selectTracings(overlaps)
+function execute = selectTracings(nrExits, overlaps)
     overlaps = sort(overlaps, 2);
-    nrExits = size(overlaps, 1);
     
     adjMat = overlaps;
     adjMat(~all(adjMat, 2), :) = [];
@@ -66,7 +69,7 @@ function execute = selectTracings(overlaps)
     execute(tracingIds) = true;
 end
 
-function [partition, isValid, lut] = buildPartition(overlaps)
+function [partition, isValid, lut] = buildPartition(nrExits, overlaps)
     % build effective edges
     edges = sort(overlaps, 2);
     edges(~all(edges, 2), :) = [];
@@ -74,7 +77,6 @@ function [partition, isValid, lut] = buildPartition(overlaps)
     edges = reshape(edges, [], 2);
     
     % find parition
-    nrExits = size(overlaps, 1);
     adjMat = sparse(edges(:, 2), edges(:, 1), true, nrExits, nrExits);
    [~, lut] = graphconncomp(adjMat, 'Directed', false);
     lut = reshape(lut, [], 1);
@@ -91,7 +93,8 @@ function [partition, isValid, lut] = buildPartition(overlaps)
         overlaps(:, 1), overlaps(:, 2)));
 end
 
-function [partition, isValid, lut] = fixFourPartitions(overlaps, lut)
+function [partition, isValid, lut] = ...
+        fixFourPartitions(nrExits, overlaps, lut)
     % Email excerpt from amotta to L4team@mhlab.net (16.10.2017)
     % 
     % When we have flight paths A→B, B→A, C→D, D→A, this results in a 4-
@@ -121,5 +124,5 @@ function [partition, isValid, lut] = fixFourPartitions(overlaps, lut)
     end
     
     % determine new partition
-   [partition, isValid, lut] = buildPartition(overlaps);
+   [partition, isValid, lut] = buildPartition(nrExits, overlaps);
 end

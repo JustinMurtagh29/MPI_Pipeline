@@ -170,7 +170,7 @@ function [out, openExits] = splitChiasmataMultiSuper( ...
             t.overlaps, curSummary.tracings, ...
             'UniformOutput', false);
         curOverlaps = cat(1, curOverlaps{:});
-
+        
         summaries{curAxonIdx} = curSummary;
         queries.overlaps(curQueries.row) = curOverlaps;
     end
@@ -204,7 +204,7 @@ function [out, openExits] = splitChiasmataMultiSuper( ...
 
     chiasma = cell2table( ...
         chiasma, 'VariableNames', {'partition', 'valid'});
-
+    
     makePartitionStr = @(p) strjoin( ...
         arrayfun(@num2str, p(:)', 'Uni', false), '-');
     chiasmaPartitionStr = cellfun( ...
@@ -238,17 +238,23 @@ function [out, openExits] = splitChiasmataMultiSuper( ...
 
     out.summary = summaries;
     out.summaryIds = bigAxonIds(uniAxonIds);
+    
+    if opts.dryRun
+        out.axons = out.oldAxons;
+        out.parentIds = reshape(1:numel(out.axons), [], 1);
+        out.indBigAxons = oldAxons.indBigAxons;
+    else
+        out.axons = cat(1, axonsSplit{:});
+        out.parentIds = repelem(out.summaryIds, cellfun(@numel, axonsSplit));
+        otherAxons = setdiff((1:numel(oldAxons.axons))', out.summaryIds);
 
-    out.axons = cat(1, axonsSplit{:});
-    out.parentIds = repelem(out.summaryIds, cellfun(@numel, axonsSplit));
-    otherAxons = setdiff((1:numel(oldAxons.axons))', out.summaryIds);
+        % add small agglomerates
+        out.axons = cat(1, out.axons, oldAxons.axons(otherAxons));
+        out.parentIds = cat(1, out.parentIds, otherAxons);
 
-    % add small agglomerates
-    out.axons = cat(1, out.axons, oldAxons.axons(otherAxons));
-    out.parentIds = cat(1, out.parentIds, otherAxons);
-
-    % build `indBigAxons` mask
-    out.indBigAxons = oldAxons.indBigAxons(out.parentIds);
+        % build `indBigAxons` mask
+        out.indBigAxons = oldAxons.indBigAxons(out.parentIds);
+    end
     
     switch opts.neuriteType
         case 'axon'
