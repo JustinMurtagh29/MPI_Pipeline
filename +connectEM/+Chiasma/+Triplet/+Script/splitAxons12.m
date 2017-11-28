@@ -77,3 +77,17 @@ chiasmaT(chiasmaT.isSolved, :) = [];
 
 overlaps = Triplet.buildOverlaps(chiasmata, splitAxons.summary);
 exits = Flight.selectExits(chiasmaT, overlaps, 1);
+
+taskDefFile = fullfile(outputDir, sprintf('%s_flightTasks.txt', runId));
+taskDefs = Flight.generateTasks(param, chiasmata, exits, taskDefFile);
+
+%% build output
+out = struct;
+out.info = info;
+out.exits = exits;
+out.taskDefs = taskDefs;
+out.taskDefFile = taskDefFile;
+out.chiasmataFile = chiasmataFile;
+
+outFile = sprintf('%s_taskGeneration.mat', runId);
+Util.saveStruct(fullfile(taskGenDir, outFile), out);
