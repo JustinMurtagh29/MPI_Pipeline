@@ -280,7 +280,7 @@ function [out, openExits] = splitChiasmataMultiSuper( ...
     %%
     out = struct;
     out.p = p;
-    out.oldAxons = oldAxons;
+    out.oldAxons = oldAxons.axons;
 
     out.summary = summaries;
     out.summaryIds = bigAxonIds(uniAxonIds);
