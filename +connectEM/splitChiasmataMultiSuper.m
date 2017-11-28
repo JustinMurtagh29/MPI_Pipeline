@@ -1,5 +1,5 @@
 function [out, openExits] = splitChiasmataMultiSuper( ...
-        p, chiParam, axonFile, dataFiles, varargin)
+        p, chiasmataFile, axonFile, dataFiles, varargin)
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     
@@ -11,36 +11,26 @@ function [out, openExits] = splitChiasmataMultiSuper( ...
     opts = Util.modifyStruct(opts, varargin{:});
     opts.neuriteType = lower(opts.neuriteType);
     
-    %% load agglomerates
-    oldAxons = load(axonFile);
+    %% load all chiasmata
+    chiasmata = load(chiasmataFile);
+    chiasmaParam = chiasmata.info.param.chiasmaParam;
+    chiasmata = chiasmata.chiasmata;
     
-    switch opts.neuriteType
-        case 'axon'
-            % nothing to do
-        case 'dendrite'
-            oldAxons.axons = oldAxons.dendrites;
-            oldAxons.indBigAxons = oldAxons.indBigDends;
-        otherwise
-            error('Unknown neurite type "%s"', opts.neuriteType)
-    end
+    allExits = connectEM.Chiasma.Detect.buildTable(chiasmata);
+    allExits = connectEM.Chiasma.Flight.selectExits(allExits, [], inf);
+    allExits.Properties.VariableNames{'aggloId'} = 'axonId';
     
-    % set default value for `endings`
-    if ~isfield(oldAxons.axons, 'endings')
-       [oldAxons.axons.endings] = deal([]);
-    end
-
-    % set default value for `solvedChiasma`
-    if ~isfield(oldAxons.axons, 'solvedChiasma')
-        solvedChiasma = arrayfun( ...
-            @(a) false(size(a.nodes, 1), 1), ...
-            oldAxons.axons, 'UniformOutput', false);
-       [oldAxons.axons.solvedChiasma] = deal(solvedChiasma{:});
-        clear solvedChiasma;
-    end
-
-    oldAxons.indBigAxons = oldAxons.indBigAxons(:);
-    bigAxonIds = find(oldAxons.indBigAxons);
-    axons = oldAxons.axons(bigAxonIds);
+    forAllExits = @(f) arrayfun( ...
+        @(axonId, chiasmaId, exitId) f(axonId, chiasmaId, exitId), ...
+        allExits.axonId, allExits.chiasmaId, allExits.exitId);
+    
+    allExits.exitNodeId = forAllExits( ...
+        @(a, c, e)  chiasmata{a}.queryIdx{c}(e));
+    allExits.seedPos = cell2mat(forAllExits( ...
+        @(a, c, e) {chiasmata{a}.position{c}(e, :)}));
+	allExits.centerNodeId = forAllExits( ...
+        @(a, c, ~)  chiasmata{a}.ccCenterIdx(c));
+    clear forAllExits;
 
     %% load queries / flights
     dataFileCount = numel(dataFiles);
@@ -56,9 +46,6 @@ function [out, openExits] = splitChiasmataMultiSuper( ...
         curQueries.axonId = curData.queries(:, 1);
         curQueries.chiasmaId = curData.queries(:, 2);
         curQueries.exitId = curData.queries(:, 3);
-        curQueries.exitNodeId = curData.queries(:, 8);
-        curQueries.seedPos = curData.queries(:, 4:6);
-        curQueries.centerNodeId = curData.queries(:, 7);
         curQueries.taskId = curData.taskIds;
         
         curFlights = structfun( ...
@@ -106,7 +93,7 @@ function [out, openExits] = splitChiasmataMultiSuper( ...
     queries = queries(uniRows, :);
     
     % Assign flight paths to queries
-    [~, queries.flightId] = ismember( ...
+   [~, queries.flightId] = ismember( ...
         queries.taskId, flights.filenamesShort);
     
     % Mark exits for which there is no valid answer
@@ -115,29 +102,87 @@ function [out, openExits] = splitChiasmataMultiSuper( ...
     openExits.Properties.VariableNames{'axonId'} = 'aggloId';
 
     % Find chiasmata for which we have all queries answered
-    [~, ~, queries.uniChiasmaId] = unique( ...
+   [~, ~, queries.uniChiasmaId] = unique( ...
         queries(:, {'axonId', 'chiasmaId'}), 'rows');
-    uniChiasmaDoneIds = find(accumarray( ...
-        queries.uniChiasmaId, queries.flightId, [], @all));
     
     fprintf('\n');
-    fprintf('# chiasmata fully answered: %d\n', numel(uniChiasmaDoneIds));
-    
     if opts.partialAnswers
+        uniChiasmaIds = find(accumarray( ...
+            queries.uniChiasmaId, queries.flightId, [], @any));
+        
+        fprintf('# chiasmata partially answered: %d\n', numel(uniChiasmaIds));
         fprintf('⇒ Limiting to partially answered chiasmata...\n');
-        queryMask = (queries.flightId > 0);
     else
+        uniChiasmaIds = find(accumarray( ...
+            queries.uniChiasmaId, queries.flightId, [], @all));
+        
+        fprintf('# chiasmata fully answered: %d\n', numel(uniChiasmaIds));
         fprintf('⇒ Limiting to fully answered chiasmata...\n');
-        queryMask = ismember(queries.uniChiasmaId, uniChiasmaDoneIds);
     end
     
+    queryMask = ismember(queries.uniChiasmaId, uniChiasmaIds);
     queries = queries(queryMask, :);
-    clear queryMask;
+    clear uniChiasmaIds queryMask;
     
-    queries.flightNodes = flights.nodes(queries.flightId);
-    queries.flightSegIds = flights.segIds(queries.flightId);
-    queries.flightComment = flights.comments(queries.flightId);
-    queries.flightId = [];
+    % restrict exits
+    exitMask = ismember( ...
+        allExits(:, {'axonId', 'chiasmaId'}), ...
+        queries(:, {'axonId', 'chiasmaId'}), 'rows');
+    allExits = allExits(exitMask, :);
+    clear exitMask;
+    
+    %% add queries to exits
+   [curMask, curRows] = ismember( ...
+       allExits(:, {'axonId', 'chiasmaId', 'exitId'}), ...
+       queries(:, {'axonId', 'chiasmaId', 'exitId'}), 'rows');
+    curRows = curRows(curMask);
+    
+    allExits.taskId(curMask) = queries.taskId(curRows);
+    allExits.flightId(curMask) = queries.flightId(curRows);
+    clear curMask curRows;
+    
+    %% add flights
+    curMask = allExits.flightId > 0;
+    curRows = allExits.flightId(curMask);
+    
+    allExits.flightNodes(curMask) = flights.nodes(curRows);
+    allExits.flightSegIds(curMask) = flights.segIds(curRows);
+    allExits.flightComment(curMask) = flights.comments(curRows);
+    clear curMask curRows;
+    
+    % TODO(amotta): Improve
+    queries = allExits;
+    
+    %% load agglomerates
+    oldAxons = load(axonFile);
+    
+    switch opts.neuriteType
+        case 'axon'
+            % nothing to do
+        case 'dendrite'
+            oldAxons.axons = oldAxons.dendrites;
+            oldAxons.indBigAxons = oldAxons.indBigDends;
+        otherwise
+            error('Unknown neurite type "%s"', opts.neuriteType)
+    end
+    
+    % set default value for `endings`
+    if ~isfield(oldAxons.axons, 'endings')
+       [oldAxons.axons.endings] = deal([]);
+    end
+
+    % set default value for `solvedChiasma`
+    if ~isfield(oldAxons.axons, 'solvedChiasma')
+        solvedChiasma = arrayfun( ...
+            @(a) false(size(a.nodes, 1), 1), ...
+            oldAxons.axons, 'UniformOutput', false);
+       [oldAxons.axons.solvedChiasma] = deal(solvedChiasma{:});
+        clear solvedChiasma;
+    end
+
+    oldAxons.indBigAxons = oldAxons.indBigAxons(:);
+    bigAxonIds = find(oldAxons.indBigAxons);
+    axons = oldAxons.axons(bigAxonIds);
 
     %% process axons
     % Group queries by axons
@@ -164,7 +209,7 @@ function [out, openExits] = splitChiasmataMultiSuper( ...
 
        [axonsSplit{curAxonIdx}, curSummary] = ...
             connectEM.splitChiasmataMulti( ...
-                p, chiParam, curAxon, curQueries, splitOpts{:});
+                p, chiasmaParam, curAxon, curQueries, splitOpts{:});
 
         curOverlaps = cellfun(@(t) ...
             t.overlaps, curSummary.tracings, ...
