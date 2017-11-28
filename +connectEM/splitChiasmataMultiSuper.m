@@ -185,13 +185,15 @@ function [out, openExits] = splitChiasmataMultiSuper( ...
     axons = oldAxons.axons(bigAxonIds);
 
     %% process axons
-    % Group queries by axons
-    queries.execute = false(size(queries, 1), 1);
-    queries.row = reshape(1:size(queries, 1), [], 1);
-    [uniAxonIds, ~, queries.uniAxonId] = unique(queries.axonId);
+    queries.execute(:) = false;
+    queries.overlaps(:) = cell(1, 1);
 
-    % Start applying chiasmata
-    queries.overlaps(:) = {[]};
+    % Make sure that queries are properly sorted
+    % This is required for the assignment of `overlaps` to work.
+    assert(issortedrows(queries(:, {'axonId', 'chiasmaId', 'exitId'})));
+    
+    % Find axons which need to be processed
+   [uniAxonIds, ~, queries.uniAxonId] = unique(queries.axonId);
 
     axonsSplit = cell(numel(uniAxonIds), 1);
     summaries = cell(numel(uniAxonIds), 1);
@@ -202,8 +204,8 @@ function [out, openExits] = splitChiasmataMultiSuper( ...
     tic
     for curAxonIdx = 1:numel(uniAxonIds)
         curAxon = axons(uniAxonIds(curAxonIdx));
-        curAxon.nodesScaled = bsxfun(@times, ...
-            curAxon.nodes(:, 1:3), p.raw.voxelSize);
+        curAxon.nodesScaled = bsxfun( ...
+            @times, curAxon.nodes(:, 1:3), p.raw.voxelSize);
         curQueries = queries( ...
             queries.uniAxonId == curAxonIdx, :);
 
@@ -212,12 +214,11 @@ function [out, openExits] = splitChiasmataMultiSuper( ...
                 p, chiasmaParam, curAxon, curQueries, splitOpts{:});
 
         curOverlaps = cellfun(@(t) ...
-            t.overlaps, curSummary.tracings, ...
-            'UniformOutput', false);
+            t.overlaps, curSummary.tracings, 'UniformOutput', false);
         curOverlaps = cat(1, curOverlaps{:});
         
         summaries{curAxonIdx} = curSummary;
-        queries.overlaps(curQueries.row) = curOverlaps;
+        queries.overlaps(curQueries.flightId > 0) = curOverlaps;
     end
     toc
 

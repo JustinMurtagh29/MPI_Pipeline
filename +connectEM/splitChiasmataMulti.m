@@ -68,7 +68,9 @@ function [newAgglos, summary] = ...
         chiasmaId = chiasmata.chiasmaId(chiIdx);
         centerIdx = chiasmata.centerNodeId(chiIdx);
         chiTracings = chiasmataTracings{chiIdx};
-        chiNrTracings = size(chiTracings, 1);
+        
+        chiTracingIds = find(chiTracings.flightId);
+        chiNrTracings = numel(chiTracingIds);
         
         % NOTE(amotta): Restrict skeleton to components within shell
         p.sphereRadiusOuter = chiParam.sphereRadiusOuter; % in nm
@@ -76,7 +78,8 @@ function [newAgglos, summary] = ...
             connectEM.detectChiasmataPruneToSphere( ...
                 p, agglo.nodesScaled, agglo.edges, centerIdx);
         
-        C = Graph.findConnectedComponents(thisEdges);
+        C = Graph.findConnectedComponents( ...
+            thisEdges, false, false, numel(thisNodeIds));
         
         % NOTE(amotta): For a component to be considered an exit, it must
         % contain at least one node which is more than 3 µm from the
@@ -91,18 +94,18 @@ function [newAgglos, summary] = ...
         C = C(isExit);
         nrExits = numel(C);
         
-        % NOTE(amotta): If we're restricting ourselves to fully queried
-        % chiasmata (i.e., opts.partialAnswers is false), make sure that
-        % number of tracings matches the number of found exits.
-        assert(opts.partialAnswers || nrExits == chiNrTracings);
+        expectedNrExits = size(chiTracings, 1);
+        assert(nrExits == expectedNrExits);
         
         summary.chiasmaId(chiIdx) = chiasmaId;
         summary.centerIdx(chiIdx) = centerIdx;
         summary.nrExits(chiIdx) = nrExits;
         summary.nrNonExits(chiIdx) = sum(~isExit);
         summary.tracings{chiIdx} = struct;
-        summary.tracings{chiIdx}.taskIds = chiTracings.taskId;
-        summary.tracings{chiIdx}.nodes = chiTracings.flightNodes;
+        summary.tracings{chiIdx}.taskIds = ...
+            chiTracings.taskId(chiTracingIds);
+        summary.tracings{chiIdx}.nodes = ...
+            chiTracings.flightNodes(chiTracingIds);
         summary.tracings{chiIdx}.overlaps = cell(chiNrTracings, 1);
         summary.tracings{chiIdx}.overlapNodes = nan(chiNrTracings, 1);
         summary.tracings{chiIdx}.execute = false(chiNrTracings, 1);
@@ -112,7 +115,8 @@ function [newAgglos, summary] = ...
         exitNodesScaled = bsxfun(@times, exitNodesScaled, p.raw.voxelSize);
         
         for trIdx = 1:chiNrTracings
-            tr = chiTracings(trIdx, :);
+            trId = chiTracingIds(trIdx);
+            tr = chiTracings(trId, :);
             
             % NOTE(amotta): To map a query to its chiasma exit we simply
             % search for the exit which comes closest to the flight path.
