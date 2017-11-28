@@ -1,5 +1,6 @@
 % Written by
 %   Alessandro Motta <alessandro.motta@brain.mpg.de>
+import connectEM.Chiasma.*;
 import connectEM.Chiasma.Flight.loadSplitData;
 import connectEM.Chiasma.Flight.shuffleExits;
 import connectEM.Chiasma.Util.loadFlightPaths;
@@ -59,9 +60,20 @@ axonFile = axonFile.axonFile;
 chiasmataFile = load(tasks(end).genFile, 'info');
 chiasmataFile = chiasmataFile.info.param.chiasmataFile;
 
-%%
+%% determine overlaps
 fprintf('Splitting chiasmata...\n');
 [splitAxons, openExits] = ...
     connectEM.splitChiasmataMultiSuper( ...
         param, chiasmataFile, axonFile, {tasks.splitDataFile}, ...
         'dryRun', true, 'partialAnswers', true);
+
+%% generate next query round
+chiasmata = load(chiasmataFile, 'chiasmata');
+chiasmata = chiasmata.chiasmata;
+
+chiasmaT = Detect.buildTable(chiasmata, splitAxons.axons);
+chiasmaT(chiasmaT.nrExits ~= 3, :) = [];
+chiasmaT(chiasmaT.isSolved, :) = [];
+
+overlaps = Triplet.buildOverlaps(chiasmata, splitAxons.summary);
+exits = Flight.selectExits(chiasmaT, overlaps, 1);
