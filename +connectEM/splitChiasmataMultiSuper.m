@@ -204,8 +204,8 @@ function [out, openExits] = splitChiasmataMultiSuper( ...
     tic
     for curAxonIdx = 1:numel(uniAxonIds)
         curAxon = axons(uniAxonIds(curAxonIdx));
-        curAxon.nodesScaled = bsxfun( ...
-            @times, curAxon.nodes(:, 1:3), p.raw.voxelSize);
+        curAxon.nodesScaled = bsxfun(@times, ...
+            curAxon.nodes(:, 1:3), p.raw.voxelSize);
         curQueries = queries( ...
             queries.uniAxonId == curAxonIdx, :);
 
@@ -277,30 +277,27 @@ function [out, openExits] = splitChiasmataMultiSuper( ...
     fprintf('# chiasmata marked for splitting: %d\n', sum(chiEval.split));
     fprintf('# chiasmata actually solved: %d\n', sum(chiEval.solved));
 
-    %%
+    %% build output
     out = struct;
     out.p = p;
-    out.oldAxons = oldAxons.axons;
+    out.oldAxons = oldAxons;
 
     out.summary = summaries;
     out.summaryIds = bigAxonIds(uniAxonIds);
     
-    if opts.dryRun
-        out.axons = out.oldAxons;
-        out.parentIds = reshape(1:numel(out.axons), [], 1);
-        out.indBigAxons = oldAxons.indBigAxons;
-    else
-        out.axons = cat(1, axonsSplit{:});
-        out.parentIds = repelem(out.summaryIds, cellfun(@numel, axonsSplit));
-        otherAxons = setdiff((1:numel(oldAxons.axons))', out.summaryIds);
-
-        % add small agglomerates
-        out.axons = cat(1, out.axons, oldAxons.axons(otherAxons));
-        out.parentIds = cat(1, out.parentIds, otherAxons);
-
-        % build `indBigAxons` mask
-        out.indBigAxons = oldAxons.indBigAxons(out.parentIds);
-    end
+    if opts.dryRun; return; end
+    
+    % handle split agglomerates
+    out.axons = cat(1, axonsSplit{:});
+    out.parentIds = repelem(out.summaryIds, cellfun(@numel, axonsSplit));
+    otherAxons = setdiff((1:numel(oldAxons.axons))', out.summaryIds);
+    
+    % add small agglomerates
+    out.axons = cat(1, out.axons, oldAxons.axons(otherAxons));
+    out.parentIds = cat(1, out.parentIds, otherAxons);
+    
+    % build `indBigAxons` mask
+    out.indBigAxons = oldAxons.indBigAxons(out.parentIds);
     
     switch opts.neuriteType
         case 'axon'

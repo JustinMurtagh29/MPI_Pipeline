@@ -68,7 +68,8 @@ fprintf('Splitting chiasmata...\n');
         axonFile, {tasks.splitDataFile}, ...
         'dryRun', true, 'partialAnswers', true);
 
-axons = dryRun.axons;
+axons = dryRun.oldAxons.axons;
+bigAxonIds = find(dryRun.oldAxons.indBigAxons);
 
 % fix empty edges
 newEdges = arrayfun( ...
@@ -77,7 +78,6 @@ newEdges = arrayfun( ...
 [axons.edges] = deal(newEdges{:});
 clear newEdges;
 
-bigAxonIds = find(dryRun.indBigAxons);
 bigAxons = axons(bigAxonIds);
 
 %% generate next query round
