@@ -69,7 +69,6 @@ fprintf('Splitting chiasmata...\n');
         'dryRun', true, 'partialAnswers', true);
 
 axons = dryRun.axons;
-axons = axons(dryRun.indBigAxons);
 
 % fix empty edges
 newEdges = arrayfun( ...
@@ -78,27 +77,45 @@ newEdges = arrayfun( ...
 [axons.edges] = deal(newEdges{:});
 clear newEdges;
 
+bigAxonIds = find(dryRun.indBigAxons);
+bigAxons = axons(bigAxonIds);
+
 %% generate next query round
 chiasmata = load(chiasmataFile, 'info', 'chiasmata');
 chiasmaParam = chiasmata.info.param.chiasmaParam;
 chiasmata = chiasmata.chiasmata;
 
-chiasmaT = Detect.buildTable(chiasmata, dryRun.axons);
-chiasmaT(chiasmaT.nrExits ~= 3, :) = [];
-chiasmaT(chiasmaT.isSolved, :) = [];
-
 overlaps = Triplet.buildOverlaps(chiasmata, dryRun.summary);
-exits = Flight.selectExits(chiasmaT, overlaps, 1);
 
 %% split axons
 fprintf('Splitting agglomerates... ');
 splitAxons = arrayfun(@(a, c, o) ...
     Triplet.splitAgglo(param, chiasmaParam, a, c{1}, o{1}), ...
-    axons, chiasmata, overlaps, 'UniformOutput', false);
+    bigAxons, chiasmata, overlaps, 'UniformOutput', false);
 fprintf('done!\n');
+
+out = struct;
+out.axons = cat(1, splitAxons{:});
+out.parentIds = repelem(bigAxonIds, cellfun(@numel, splitAxons));
+
+% add small agglomerates
+otherAxonIds = setdiff((1:numel(axons))', bigAxonIds);
+out.axons = cat(1, out.axons, axons(otherAxonIds));
+out.parentIds = cat(1, out.parentIds, otherAxonIds);
+
+% build `indBigAxons` mask
+out.indBigAxons = dryRun.indBigAxons(out.parentIds);
 
 %% generate next round of queries
 %{
+% restrict to unsolved triplets
+chiasmaT = Detect.buildTable(chiasmata, bigAxons);
+chiasmaT(chiasmaT.nrExits ~= 3, :) = [];
+chiasmaT(chiasmaT.isSolved, :) = [];
+
+% select exits for next query round
+exits = Flight.selectExits(chiasmaT, overlaps, 1);
+
 taskDefFile = fullfile(taskGenDir, sprintf('%s_flightTasks.txt', runId));
 taskDefs = Flight.generateTasks(param, chiasmata, exits, taskDefFile);
 
