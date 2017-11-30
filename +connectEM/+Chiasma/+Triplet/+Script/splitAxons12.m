@@ -62,22 +62,43 @@ chiasmataFile = chiasmataFile.info.param.chiasmataFile;
 
 %% determine overlaps
 fprintf('Splitting chiasmata...\n');
-[splitAxons, openExits] = ...
+[dryRun, openExits] = ...
     connectEM.splitChiasmataMultiSuper( ...
-        param, chiasmataFile, axonFile, {tasks.splitDataFile}, ...
+        param, chiasmataFile, ...
+        axonFile, {tasks.splitDataFile}, ...
         'dryRun', true, 'partialAnswers', true);
 
+axons = dryRun.axons;
+axons = axons(dryRun.indBigAxons);
+
+% fix empty edges
+newEdges = arrayfun( ...
+    @(a) reshape(a.edges, [], 2), ...
+    axons, 'UniformOutput', false);
+[axons.edges] = deal(newEdges{:});
+clear newEdges;
+
 %% generate next query round
-chiasmata = load(chiasmataFile, 'chiasmata');
+chiasmata = load(chiasmataFile, 'info', 'chiasmata');
+chiasmaParam = chiasmata.info.param.chiasmaParam;
 chiasmata = chiasmata.chiasmata;
 
-chiasmaT = Detect.buildTable(chiasmata, splitAxons.axons);
+chiasmaT = Detect.buildTable(chiasmata, dryRun.axons);
 chiasmaT(chiasmaT.nrExits ~= 3, :) = [];
 chiasmaT(chiasmaT.isSolved, :) = [];
 
-overlaps = Triplet.buildOverlaps(chiasmata, splitAxons.summary);
+overlaps = Triplet.buildOverlaps(chiasmata, dryRun.summary);
 exits = Flight.selectExits(chiasmaT, overlaps, 1);
 
+%% split axons
+fprintf('Splitting agglomerates... ');
+splitAxons = arrayfun(@(a, c, o) ...
+    Triplet.splitAgglo(param, chiasmaParam, a, c{1}, o{1}), ...
+    axons, chiasmata, overlaps, 'UniformOutput', false);
+fprintf('done!\n');
+
+%% generate next round of queries
+%{
 taskDefFile = fullfile(taskGenDir, sprintf('%s_flightTasks.txt', runId));
 taskDefs = Flight.generateTasks(param, chiasmata, exits, taskDefFile);
 
@@ -91,3 +112,4 @@ out.chiasmataFile = chiasmataFile;
 
 outFile = sprintf('%s_taskGeneration.mat', runId);
 Util.saveStruct(fullfile(taskGenDir, outFile), out);
+%}
