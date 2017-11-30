@@ -81,7 +81,7 @@ clear newEdges;
 
 bigAxons = axons(bigAxonIds);
 
-%% generate next query round
+%% do auto-completion of overlaps
 chiasmata = load(chiasmataFile, 'info', 'chiasmata');
 chiasmaParam = chiasmata.info.param.chiasmaParam;
 chiasmata = chiasmata.chiasmata;
@@ -89,6 +89,7 @@ chiasmata = chiasmata.chiasmata;
 overlaps = Triplet.buildOverlaps(chiasmata, dryRun.summary);
 
 %% split axons
+%{
 fprintf('Splitting agglomerates... ');
 splitAxons = arrayfun(@(a, c, o) ...
     Triplet.splitAgglo(param, chiasmaParam, a, c{1}, o{1}), ...
@@ -106,9 +107,9 @@ out.parentIds = cat(1, out.parentIds, otherAxonIds);
 
 % build `indBigAxons` mask
 out.indBigAxons = bigAxonMask(out.parentIds);
+%}
 
 %% generate next round of queries
-%{
 % restrict to unsolved triplets
 chiasmaT = Detect.buildTable(chiasmata, bigAxons);
 chiasmaT(chiasmaT.nrExits ~= 3, :) = [];
@@ -130,4 +131,3 @@ out.chiasmataFile = chiasmataFile;
 
 outFile = sprintf('%s_taskGeneration.mat', runId);
 Util.saveStruct(fullfile(taskGenDir, outFile), out);
-%}
