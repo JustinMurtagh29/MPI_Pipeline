@@ -69,7 +69,8 @@ fprintf('Splitting chiasmata...\n');
         'dryRun', true, 'partialAnswers', true);
 
 axons = dryRun.oldAxons.axons;
-bigAxonIds = find(dryRun.oldAxons.indBigAxons);
+bigAxonMask = dryRun.oldAxons.indBigAxons;
+bigAxonIds = find(bigAxonMask);
 
 % fix empty edges
 newEdges = arrayfun( ...
@@ -104,7 +105,7 @@ out.axons = cat(1, out.axons, axons(otherAxonIds));
 out.parentIds = cat(1, out.parentIds, otherAxonIds);
 
 % build `indBigAxons` mask
-out.indBigAxons = dryRun.indBigAxons(out.parentIds);
+out.indBigAxons = bigAxonMask(out.parentIds);
 
 %% generate next round of queries
 %{

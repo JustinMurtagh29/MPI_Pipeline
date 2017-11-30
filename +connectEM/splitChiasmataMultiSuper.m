@@ -206,19 +206,23 @@ function [out, openExits] = splitChiasmataMultiSuper( ...
         curAxon = axons(uniAxonIds(curAxonIdx));
         curAxon.nodesScaled = bsxfun(@times, ...
             curAxon.nodes(:, 1:3), p.raw.voxelSize);
-        curQueries = queries( ...
-            queries.uniAxonId == curAxonIdx, :);
-
+        
+        curRows = find(queries.uniAxonId == curAxonIdx);
+        curQueries = queries(curRows, :);
+        
+        % split axons and save summary
        [axonsSplit{curAxonIdx}, curSummary] = ...
             connectEM.splitChiasmataMulti( ...
                 p, chiasmaParam, curAxon, curQueries, splitOpts{:});
-
+        summaries{curAxonIdx} = curSummary;
+        
+        % build overlaps
         curOverlaps = cellfun(@(t) ...
             t.overlaps, curSummary.tracings, 'UniformOutput', false);
         curOverlaps = cat(1, curOverlaps{:});
         
-        summaries{curAxonIdx} = curSummary;
-        queries.overlaps(curQueries.flightId > 0) = curOverlaps;
+        curRows = curRows(curQueries.flightId > 0);
+        queries.overlaps(curRows) = curOverlaps;
     end
     toc
 
@@ -229,8 +233,8 @@ function [out, openExits] = splitChiasmataMultiSuper( ...
     numEndings = cellfun(@(o) sum(o > 0), queries.overlaps);
 
     flightEval = table;
-    flightEval.twoEndings = (numEndings == 2);
-    flightEval.tooFewEndings = (numEndings < 2);
+    flightEval.attached = (numEndings == 2);
+    flightEval.dangling = (numEndings == 1);
 
     temp = varfun(@sum, flightEval);
     temp.Properties.VariableNames = flightEval.Properties.VariableNames;
