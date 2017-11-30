@@ -12,11 +12,6 @@ function newAgglos = splitAgglo(param, chiParam, agglo, queries)
     %% split chiasmata
     agglo.nodesNm = agglo.nodes(:, 1:3) .* param.raw.voxelSize;
     
-    % generate fake edge probabilities
-    % These are not actually of any importance.
-    edgeProb = ones(size(agglo.edges, 1), 1);
-    nodeCount = size(agglo.nodes, 1);
-    
     % state
     chiCount = size(queries, 1);
     nodesToDelete = cell(chiCount, 1);
