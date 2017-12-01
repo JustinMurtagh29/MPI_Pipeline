@@ -116,7 +116,7 @@ chiasmaT(chiasmaT.nrExits ~= 3, :) = [];
 chiasmaT(chiasmaT.isSolved, :) = [];
 
 % select exits for next query round
-exits = Flight.selectExits(chiasmaT, overlaps, 1);
+exits = Flight.selectExits(chiasmaT, overlaps, inf);
 
 taskDefFile = fullfile(taskGenDir, sprintf('%s_flightTasks.txt', runId));
 taskDefs = Flight.generateTasks(param, chiasmata, exits, taskDefFile);
