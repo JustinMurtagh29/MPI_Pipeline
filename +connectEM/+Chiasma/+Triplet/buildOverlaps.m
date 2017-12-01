@@ -25,6 +25,18 @@ function overlaps = buildOverlaps(chiasmata, summary)
             curFull = zeros(3, 2);
             curFull(curOverlaps(:, 1), :) = curOverlaps;
             
+            curOpenIds = find(~curFull(:, 1));
+            curOpenIds = reshape(curOpenIds, 1, []);
+            
+            for curId = curOpenIds
+                % check if there is an incoming flight
+                curInId = find(curFull(:, 2) == curId, 1);
+                if isempty(curInId); continue; end
+                
+                % if yes, use it to fake reverse flight
+                curFull(curId, :) = cat(2, curId, curInId);
+            end
+            
             % check if there is a dangling flight
             curDangId = find(curFull(:, 1) & ~curFull(:, 2));
             assert(numel(curDangId) < 2);
@@ -34,8 +46,6 @@ function overlaps = buildOverlaps(chiasmata, summary)
                 % exit A), we known / assume that B and C must be mutually
                 % connected.
                 curOtherIds = setdiff(1:3, curDangId);
-                assert(~any(curFull(curOtherIds, 1)));
-                
                 curFull(curOtherIds, 1) = curOtherIds;
                 curFull(curOtherIds, 2) = fliplr(curOtherIds);
             end
