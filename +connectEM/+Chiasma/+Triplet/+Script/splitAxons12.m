@@ -108,6 +108,7 @@ out.parentIds = cat(1, out.parentIds, otherAxonIds);
 out.indBigAxons = bigAxonMask(out.parentIds);
 
 %% debugging
+%{
 flights = arrayfun( ...
     @(t) subsref( ...
         load(t.splitDataFile), ...
@@ -129,6 +130,7 @@ for curIdx = 1:numel(debugAxonIds)
     curSkelName = sprintf('axon-%d.nml', debugAxonIds(curIdx));
     curSkel.write(fullfile('/home/amotta/Desktop/debug', curSkelName));
 end
+%}
 
 %% generate next round of queries
 % restrict to unsolved triplets
