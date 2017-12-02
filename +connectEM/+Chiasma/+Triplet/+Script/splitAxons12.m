@@ -89,7 +89,6 @@ chiasmata = chiasmata.chiasmata;
 overlaps = Triplet.buildOverlaps(chiasmata, dryRun.summary);
 
 %% split axons
-%{
 fprintf('Splitting agglomerates... ');
 splitAxons = arrayfun(@(a, c, o) ...
     Triplet.splitAgglo(param, chiasmaParam, a, c{1}, o{1}), ...
@@ -107,10 +106,33 @@ out.parentIds = cat(1, out.parentIds, otherAxonIds);
 
 % build `indBigAxons` mask
 out.indBigAxons = bigAxonMask(out.parentIds);
-%}
+
+%% debugging
+flights = arrayfun( ...
+    @(t) subsref( ...
+        load(t.splitDataFile), ...
+        struct('type', '.', 'subs', 'ff')), ...
+    tasks, 'UniformOutput', false);
+flights = Util.concatStructs(1, flights{:});
+
+rng(0);
+debugAxonIds = cat(1, dryRun.summary.axonId);
+debugAxonIds = debugAxonIds(randperm(numel(debugAxonIds), 10));
+
+debugSkels = Triplet.debug( ...
+    bigAxons, splitAxons, dryRun.summary, flights, debugAxonIds);
+
+for curIdx = 1:numel(debugAxonIds)
+    curSkel = debugSkels{curIdx};
+    curSkel = Skeleton.setParams4Pipeline(curSkel, param);
+    
+    curSkelName = sprintf('axon-%d.nml', debugAxonIds(curIdx));
+    curSkel.write(fullfile('/home/amotta/Desktop/debug', curSkelName));
+end
 
 %% generate next round of queries
 % restrict to unsolved triplets
+%{
 chiasmaT = Detect.buildTable(chiasmata, bigAxons);
 chiasmaT(chiasmaT.nrExits ~= 3, :) = [];
 chiasmaT(chiasmaT.isSolved, :) = [];
@@ -131,3 +153,4 @@ out.chiasmataFile = chiasmataFile;
 
 outFile = sprintf('%s_taskGeneration.mat', runId);
 Util.saveStruct(fullfile(taskGenDir, outFile), out);
+%}
