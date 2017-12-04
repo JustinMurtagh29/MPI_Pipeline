@@ -20,7 +20,8 @@ function processQueryTasks(i,batchBoundaries,axons,borderPositions,directions,p,
     end
 
     % Calculate euler angles & put into old format
-    save([outputFolder 'batch' num2str(i, '%.4i') '.mat'], 'q', 'theseAxons');
+    save(fullfile(outputFolder, ['batch' num2str(i, '%.4i') '.mat']), ...
+        'q', 'theseAxons');
     display(['Batch ' num2str(i, '%.4i') ' done']);
     clear these* q phi theta psi;
 
