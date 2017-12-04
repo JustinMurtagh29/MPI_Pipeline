@@ -39,7 +39,7 @@ function overlaps = buildOverlaps(chiasmata, summary)
             
             % check if there is a dangling flight
             curDangId = find(curFull(:, 1) & ~curFull(:, 2));
-            assert(numel(curDangId) < 2);
+            curDangId = setdiff(curDangId, curFull(:, 2));
             
             if isscalar(curDangId)
                 % If there's a dangling flight path (e.g., originating from
