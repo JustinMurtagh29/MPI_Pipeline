@@ -116,6 +116,8 @@ system(sprintf('chmod a-w "%s"', splitAxonsFile));
 
 %% debugging
 %{
+rng(0);
+
 flights = arrayfun( ...
     @(t) subsref( ...
         load(t.splitDataFile), ...
@@ -123,18 +125,27 @@ flights = arrayfun( ...
     tasks, 'UniformOutput', false);
 flights = Util.concatStructs(1, flights{:});
 
-rng(0);
-debugAxonIds = cat(1, dryRun.summary.axonId);
-debugAxonIds = debugAxonIds(randperm(numel(debugAxonIds), 10));
+debugT = table;
+debugT.axonId = repelem( ...
+    cat(1, dryRun.summary.axonId), ...
+    cellfun(@numel, {dryRun.summary.chiasmaId}));
+debugT.chiasmaId = cell2mat(...
+    reshape({dryRun.summary.chiasmaId}, [], 1));
 
-debugSkels = Triplet.debug( ...
-    bigAxons, splitAxons, dryRun.summary, flights, debugAxonIds);
+% select 20 random chiasmata
+debugT = debugT(randperm(size(debugT, 1), 20), :);
 
-for curIdx = 1:numel(debugAxonIds)
+debugSkels = connectEM.Chiasma.Triplet.debug( ...
+    bigAxons, splitAxons, dryRun.summary, ...
+    flights, debugT.axonId, num2cell(debugT.chiasmaId));
+
+for curIdx = 1:size(debugT, 1)
     curSkel = debugSkels{curIdx};
     curSkel = Skeleton.setParams4Pipeline(curSkel, param);
     
-    curSkelName = sprintf('axon-%d.nml', debugAxonIds(curIdx));
+    curSkelName = sprintf( ...
+        '%d__axon-%d__chiasma-%d.nml', ...
+        curIdx, table2array(debugT(curIdx, :)));
     curSkel.write(fullfile('/home/amotta/Desktop/debug', curSkelName));
 end
 %}
