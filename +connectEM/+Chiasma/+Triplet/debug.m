@@ -1,4 +1,5 @@
-function skels = debug(origAxons, splitAxons, summary, flights, axonIds)
+function skels = debug( ...
+    origAxons, splitAxons, summary, flights, axonIds, chiasmaIds)
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     
@@ -10,12 +11,23 @@ function skels = debug(origAxons, splitAxons, summary, flights, axonIds)
     
     for curIdx = 1:numel(axonIds)
         curAxonId = axonIds(curIdx);
+        
         curSummaryIdx = axonSummaryIds(curIdx);
         curSummary = summary(curSummaryIdx);
+        
+        % select chiasmata
+        curChiasmaIds = chiasmaIds{curIdx};
+        
+        if isempty(curChiasmaIds)
+            curChiasmaIds = 1:numel(curSummary.tracings);
+        end
+        
+        curChiasmaIds = reshape(curChiasmaIds, [], 1);
 
-       [curTaskIds, curOverlaps] = cellfun( ...
-            @(t) deal(t.taskIds, cell2mat(t.overlaps')), ...
-            curSummary.tracings, 'UniformOutput', false);
+       [curTaskIds, curOverlaps] = cellfun(@(t) ...
+            deal(t.taskIds, cell2mat(transpose(t.overlaps))), ...
+            curSummary.tracings(curChiasmaIds), ...
+            'UniformOutput', false);
         curTaskIds = cat(1, curTaskIds{:});
         curOverlaps = cell2mat(curOverlaps')';
         
