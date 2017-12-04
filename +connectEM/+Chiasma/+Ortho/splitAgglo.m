@@ -12,11 +12,6 @@ function newAgglos = splitAgglo(param, chiParam, agglo, queries)
     %% split chiasmata
     agglo.nodesNm = agglo.nodes(:, 1:3) .* param.raw.voxelSize;
     
-    % generate fake edge probabilities
-    % These are not actually of any importance.
-    edgeProb = ones(size(agglo.edges, 1), 1);
-    nodeCount = size(agglo.nodes, 1);
-    
     % state
     chiCount = size(queries, 1);
     nodesToDelete = cell(chiCount, 1);
@@ -57,10 +52,11 @@ function newAgglos = splitAgglo(param, chiParam, agglo, queries)
         newEndings{curChiIdx} = curExitNodeIds(dangExits);
 
         %% cut out sphere
-       [nodes, edges, nodeIds] = ...
+       [nodes, edges, nodeIds, ~, coreNodeIds] = ...
            connectEM.detectChiasmataPruneToSphere( ...
-                agglo.nodesNm, agglo.edges, edgeProb, param, curNodeId);    
-        comps = Graph.findConnectedComponents(edges, false);
+                param, agglo.nodesNm, agglo.edges, curNodeId);
+        comps = Graph.findConnectedComponents( ...
+            edges, false, false, numel(nodeIds));
 
         % drop tiny components
         isExit = cellfun(@(idx) max(pdist2( ...
@@ -69,11 +65,9 @@ function newAgglos = splitAgglo(param, chiParam, agglo, queries)
         
         % collect deleted nodes and edges
         nodesToDelete{curChiIdx} = cat( ...
-            1, nonExitNodeIds(:), setdiff( ...
-            reshape(1:nodeCount, [], 1), nodeIds));
-        edgesToDelete{curChiIdx} = find( ...
-            any(ismember(agglo.edges, nonExitNodeIds), 2) ...
-         | ~ismember(agglo.edges, nodeIds(edges), 'rows'));
+            1, nonExitNodeIds(:), coreNodeIds);
+        edgesToDelete{curChiIdx} = find(any( ...
+            ismember(agglo.edges, nodesToDelete{curChiIdx}), 2));
         
         %% build new edges
         % build edges to add
@@ -91,10 +85,10 @@ function newAgglos = splitAgglo(param, chiParam, agglo, queries)
         e(:), cell2mat(nodesToDelete))), edgesToAdd);
     
     nodesToAdd = zeros(0, 4);
-    nodesToDelete = cell2mat(nodesToDelete(chiasmaValid));
-    edgesToDelete = cell2mat(edgesToDelete(chiasmaValid));
-    edgesToAdd = cell2mat(edgesToAdd(chiasmaValid));
-    newEndings = cell2mat(newEndings(chiasmaValid));
+    nodesToDelete = reshape(cell2mat(nodesToDelete(chiasmaValid)), [], 1);
+    edgesToDelete = reshape(cell2mat(edgesToDelete(chiasmaValid)), [], 1);
+    edgesToAdd = reshape(cell2mat(edgesToAdd(chiasmaValid)), [], 2);
+    newEndings = reshape(cell2mat(newEndings(chiasmaValid)), [], 1);
     
     % build mask for endings
     agglo.endingMask = false(size(agglo.nodes, 1), 1);

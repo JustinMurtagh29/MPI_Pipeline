@@ -1,4 +1,4 @@
-function [thisNodes, thisEdges, nodeIds, thisDist] = ...
+function [thisNodes, thisEdges, nodeIds, thisDist, coreNodeIds] = ...
         detectChiasmataPruneToSphere(p, nodes, edges, i)
     % Written by
     %   Kevin Boergens <kevin.boergens@brain.mpg.de>
@@ -29,11 +29,13 @@ function [thisNodes, thisEdges, nodeIds, thisDist] = ...
     %% Cut out `sphereRadiusInner`
     thisOutMask = (nodeDist > p.sphereRadiusInner);
     thisOutMask = reshape(thisOutMask, 1, []);
+    thisCoreMask = ~thisOutMask;
 
    [~, lut] = Graph.findConnectedComponents( ...
         edges(~all(thisOutMask(edges), 2), :), ...
         false, false, size(nodes, 1));
     thisOutMask(lut ~= lut(i)) = true;
+    thisCoreMask(lut ~= lut(i)) = false;
     clear lut;
 
    [~, lut] = Graph.findConnectedComponents( ...
@@ -55,4 +57,5 @@ function [thisNodes, thisEdges, nodeIds, thisDist] = ...
     assert(all(thisEdges(:)));
 
     nodeIds = sphereNodeIds(nodeIds);
+    coreNodeIds = sphereNodeIds(thisCoreMask);
 end
