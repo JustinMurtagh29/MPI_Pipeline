@@ -63,8 +63,8 @@ function skels = debug( ...
                 'Flight %s (%d → %d)', ...
                 curTaskId, curFlightOverlaps);
             
-            curFlightNodes = flights.nodes{curFlightId};            
-            curSkel = curSkel.addTree(curName, curFlightNodes);
+            curFlightNodes = flights.nodes{curFlightId};
+            curSkel = curSkel.addTree(curName, flip(curFlightNodes, 1));
         end
         
         skels{curIdx} = curSkel;
