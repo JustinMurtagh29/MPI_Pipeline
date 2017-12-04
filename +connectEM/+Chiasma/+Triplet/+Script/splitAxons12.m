@@ -107,6 +107,13 @@ out.parentIds = cat(1, out.parentIds, otherAxonIds);
 % build `indBigAxons` mask
 out.indBigAxons = bigAxonMask(out.parentIds);
 
+% add info
+out.info = info;
+
+%% saving result
+Util.saveStruct(splitAxonsFile, out);
+system(sprintf('chmod a-w "%s"', splitAxonsFile));
+
 %% debugging
 %{
 flights = arrayfun( ...
