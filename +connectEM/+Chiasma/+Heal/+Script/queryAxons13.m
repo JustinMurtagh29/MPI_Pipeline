@@ -6,10 +6,10 @@ runId = datestr(now, 30);
 %% configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 
-thisDir = fullfile( ...
+outputDir = fullfile( ...
     rootDir, 'chiasmaSplitHealing', ...
     '20171207T112927-healing-axons-13');
-assert(logical(exist(thisDir, 'dir')));
+assert(logical(exist(outputDir, 'dir')));
 
 % segmentation for dynamic stopping of queries
 segRoot = '/tmpscratch/amotta/l4/2017-12-07-segmentation-for-axons-13';
@@ -29,7 +29,7 @@ axonIds = find(axons.indBigAxons);
 axons = axons.axons(axonIds);
 
 %% generate task and webKNOSSOS task definitions
-taskDefFile = fullfile(thisDir, sprintf('%s_flightTasks.txt', runId));
+taskDefFile = fullfile(outputDir, sprintf('%s_flightTasks.txt', runId));
 taskDefs = connectEM.Chiasma.Heal.generateTasks(param, axons, taskDefFile);
 
 %%
