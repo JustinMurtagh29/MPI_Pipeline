@@ -24,6 +24,8 @@ function debugNewQueries(segmentMeta, agglos, q, outputFolder)
                 ' Angles: ' num2str(q.angles{i}(j,1)) ',' num2str(q.angles{i}(j,2)) ',' num2str(q.angles{i}(j,3))];
         end
     end
-    connectEM.generateSkeletonFromNodes([outputFolder datestr(clock, 30) '_skel.nml'], theseNodes, theseNames, theseComments);
+    connectEM.generateSkeletonFromNodes( ...
+        fullfile(outputFolder,[datestr(clock, 30) '_skel.nml']), ...
+        theseNodes, theseNames, theseComments);
 end
 
