@@ -4,21 +4,23 @@ function axonAggloStateVisualization()
     % 2) Determine which of these augmented superagglos overlap with any axon GT
     % 3) Write gallery of GT skeletons and overlapping superagglos
     % 4) Write same to nmls for visualization in webKnossos
-
-    % Reproducability initative
-    info = Util.gitInfo();
-
-    % Settings
+    
+    %% Settings
     nodeEvidenceNeighbourhood = 3;
     minNodeEvidence = 54;
     minSegmentOverlap = 3;
+    
     rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI/';
-    axonGtDir = '/gaba/u/mberning/repos/pipeline/+connectEM/evaluationData/new_axon_gt_ROI2017/';
-    cacheDir = '/tmpscratch/mberning/axonAggloStateVisualization/';
-    axonSuperaggloFile = fullfile(rootDir, 'aggloState/axons_10_a.mat');
-    axonFlightFile = fullfile(cacheDir, 'axonFlightPath.mat');
+    axonFile = fullfile(rootDir, 'aggloState', 'axons_13_a.mat');
+    
+    thisDir = fileparts(mfilename('fullpath'));
+    axonGtDir = fullfile(thisDir, 'evaluationData', 'new_axon_gt_ROI2017');
+    cacheDir = '/tmpscratch/amotta/l4/2017-12-08-axons-13-visualization';
+    
+   [~, axonName, axonExt] = fileparts(axonFile);
+    axonFlightFile = fullfile(cacheDir, strcat(axonName, axonExt));
 
-    % Load & modify parameter struct to use WKW segmentation
+    %% Load & modify parameter struct to use WKW segmentation
     param = load(fullfile(rootDir, 'allParameter.mat'), 'p');
     param = param.p;
     param.seg = struct;
@@ -32,14 +34,14 @@ function axonAggloStateVisualization()
     % Step 0.5: Load superagglos
     disp('Loading axon superagglos:');
     tic;
-    axons = load(axonSuperaggloFile);
+    axons = load(axonFile);
     toc;
 
     % (slightly modified from +connectEM.buildAxonAgglomerates.m)
     if exist(axonFlightFile, 'file')
         disp('Loading segment ids along flights paths from cache:');
         tic;
-        load(axonFlightFile);
+        load(axonFlightFile, 'axonFlights', 'axonFlightsMeta');
         toc;
     else
         disp('Looking up segment ids along flight paths:');
@@ -48,6 +50,7 @@ function axonAggloStateVisualization()
         Util.saveStruct(axonFlightFile, struct('axonFlights', axonFlights, 'axonFlightsMeta', axonFlightsMeta));
         toc;
     end
+    
     disp('Picking up small superagglos along flight path of large superagglos:');
     tic;
     fullAxonAgglos = pickupSmallAxonAgglomerates(param, axons, axonFlights, minNodeEvidence);
@@ -62,7 +65,7 @@ function axonAggloStateVisualization()
     disp('Writing overlap PDF and skeletons');
     tic;
     segmentMeta = load(fullfile(param.saveFolder, 'segmentMeta.mat'), 'point');
-    [skelToAgglos, segIds] = L4.Agglo.aggloSkelOverlap(skel, param, fullAxonAgglos);
+    skelToAgglos = L4.Agglo.aggloSkelOverlap(skel, param, fullAxonAgglos);
     ovSkels = connectEM.skelOverlapGallery(cacheDir, skel, fullAxonAgglos, skelToAgglos, minSegmentOverlap, segmentMeta.point');
     for i = 1:length(ovSkels)
         ovSkels{i}.write(fullfile(cacheDir, ['gtSkel' num2str(i, '%.2i') '.nml']));
@@ -76,8 +79,7 @@ function axonAgglos = pickupSmallAxonAgglomerates(param, axons, axonFlights, min
     % from +connectEM.buildAxonAgglomerates.m
 
     % small agglomerates to pick up
-    axonSmallIds = find(~axons.indBigAxons);
-    axonAgglosSmall = axons.axons(axonSmallIds);
+    axonAgglosSmall = axons.axons(~axons.indBigAxons);
     axonAgglosSmall = Superagglos.getSegIds(axonAgglosSmall);
 
     maxSegId = Seg.Global.getMaxSegId(param);
@@ -100,8 +102,7 @@ function axonAgglos = pickupSmallAxonAgglomerates(param, axons, axonFlights, min
     axonOverlap = axonOverlap(uniRows, :);
 
     % build final agglomerates
-    axonLargeIds = find(axons.indBigAxons);
-    axonAgglosLarge = axons.axons(axonLargeIds);
+    axonAgglosLarge = axons.axons(axons.indBigAxons);
     axonAgglosLarge = Superagglos.getSegIds(axonAgglosLarge);
 
     pickedUpAgglos = accumarray( ...
