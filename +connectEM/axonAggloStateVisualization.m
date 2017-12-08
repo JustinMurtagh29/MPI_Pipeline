@@ -76,6 +76,7 @@ function axonAggloStateVisualization()
     skelToAgglos = L4.Agglo.aggloSkelOverlap(skel, param, fullAxonAgglos);
     ovSkels = connectEM.skelOverlapGallery(cacheDir, skel, fullAxonAgglos, skelToAgglos, minSegmentOverlap, segmentMeta.point');
     for i = 1:length(ovSkels)
+        ovSkels{i}.parameters.experiment.name = param.experimentName;
         ovSkels{i}.write(fullfile(cacheDir, ['gtSkel' num2str(i, '%.2i') '.nml']));
     end
     toc;
