@@ -5,6 +5,14 @@ function axonAggloStateVisualization()
     % 3) Write gallery of GT skeletons and overlapping superagglos
     % 4) Write same to nmls for visualization in webKnossos
     
+    % HACK(amotta):
+    %   This function depends on code from Benedikt's repository in order
+    %   to generate the overlap skeletons and gallery. His repository used
+    %   to be a submodule of the pipeline. Since this is no longer true, we
+    %   temporarily add his repository to the search path.
+    oldPath = addpath('/gaba/u/amotta/code/benedikt');
+    cleanup = onCleanup(@() path(oldPath));
+    
     %% Settings
     nodeEvidenceNeighbourhood = 3;
     minNodeEvidence = 54;
