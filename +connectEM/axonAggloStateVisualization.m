@@ -61,20 +61,36 @@ function axonAggloStateVisualization()
     
     disp('Picking up small superagglos along flight path of large superagglos:');
     tic;
-    fullAxonAgglos = pickupSmallAxonAgglomerates(param, axons, axonFlights, minNodeEvidence);
+   [completedAgglos, pickUpIds] = ...
+        pickupSmallAxonAgglomerates( ...
+            param, axons, axonFlights, minNodeEvidence);
     toc;
 
     disp('Reading GT skeletons:');
     tic;
     gtFiles = dir(fullfile(axonGtDir, '*.nml'));
-    skel = arrayfun(@(x)skeleton(fullfile(axonGtDir, x.name)), gtFiles, 'uni', 0);
+    skel = arrayfun( ...
+        @(x) skeleton(fullfile(axonGtDir, x.name)), ...
+        gtFiles, 'UniformOutput', false);
     toc;
 
     disp('Writing overlap PDF and skeletons');
     tic;
-    segmentMeta = load(fullfile(param.saveFolder, 'segmentMeta.mat'), 'point');
-    skelToAgglos = L4.Agglo.aggloSkelOverlap(skel, param, fullAxonAgglos);
-    ovSkels = connectEM.skelOverlapGallery(cacheDir, skel, fullAxonAgglos, skelToAgglos, minSegmentOverlap, segmentMeta.point');
+    
+    % determine overlap between skeleton tracings and completed agglos
+    skelToAgglos = L4.Agglo.aggloSkelOverlap(skel, param, completedAgglos);
+    
+    % replace completed agglo ID with the IDs of all its components
+    skelToAgglos = cellfun( ...
+        @(o) horzcat( ...
+            cat(1, pickUpIds{o(:, 1)}), ...
+            repelem(o(:, 2), cellfun( ...
+                @numel, pickUpIds(o(:, 1))))), ...
+        skelToAgglos, 'UniformOutput', false);
+    
+    ovSkels = connectEM.skelOverlapGallery( ...
+        cacheDir, skel, axons.axons, skelToAgglos, minSegmentOverlap);
+    
     for i = 1:length(ovSkels)
         ovSkels{i}.parameters.experiment.name = param.experimentName;
         ovSkels{i}.write(fullfile(cacheDir, ['gtSkel' num2str(i, '%.2i') '.nml']));
@@ -83,23 +99,27 @@ function axonAggloStateVisualization()
 
 end
 
-function axonAgglos = pickupSmallAxonAgglomerates(param, axons, axonFlights, minEvidence)
+function [completedAgglos, pickUpIds] = ...
+        pickupSmallAxonAgglomerates(param, axons, axonFlights, minEvidence)
     % Add small (< 5 micron) axon agglomerates to large on if they have enough overlap
     % from +connectEM.buildAxonAgglomerates.m
-
-    % small agglomerates to pick up
-    axonAgglosSmall = axons.axons(~axons.indBigAxons);
-    axonAgglosSmall = Superagglos.getSegIds(axonAgglosSmall);
-
+    
+    largeIds = find(axon.indBigAxons(:));
+    smallIds = find(~axons.indBigAxons(:));
+    agglos = Superagglos.getSegIds(axons.axons);
+    
+    %% determine overlap
     maxSegId = Seg.Global.getMaxSegId(param);
-    axonAgglosLUT = Agglo.buildLUT(maxSegId, axonAgglosSmall);
-    axonAgglosLUT = cat(1, 0, axonAgglosLUT(:));
+    smallLUT = Agglo.buildLUT(maxSegId, agglos(smallIds));
+    smallLUT = cat(1, 0, smallLUT(:));
 
-    axonFlights.smallAxonId = axonAgglosLUT(1 + axonFlights.segId);
-    axonFlights(~axonFlights.smallAxonId, :) = [];
+    axonFlights.smallId = smallLUT(1 + axonFlights.segId);
+    axonFlights(~axonFlights.smallId, :) = [];
+    axonFlights.smallId = smallIds(axonFlights.smallId);
 
     % pool evidence over agglomerates
-    [axonOverlap, ~, axonEvidence] = unique(axonFlights(:, {'aggloId', 'flightId', 'smallAxonId'}), 'rows');
+   [axonOverlap, ~, axonEvidence] = unique( ...
+       axonFlights(:, {'aggloId', 'flightId', 'smallId'}), 'rows');
     axonOverlap.evidence = accumarray(axonEvidence, 1);
 
     % discard overlaps below evidence threshold
@@ -107,19 +127,17 @@ function axonAgglos = pickupSmallAxonAgglomerates(param, axons, axonFlights, min
     axonOverlap(axonOverlap.evidence < minEvidence, :) = [];
 
     % assign to axon with largest evidence
-    [~, uniRows] = unique(axonOverlap.smallAxonId, 'stable');
+   [~, uniRows] = unique(axonOverlap.smallId, 'stable');
     axonOverlap = axonOverlap(uniRows, :);
 
-    % build final agglomerates
-    axonAgglosLarge = axons.axons(axons.indBigAxons);
-    axonAgglosLarge = Superagglos.getSegIds(axonAgglosLarge);
-
-    pickedUpAgglos = accumarray( ...
-        axonOverlap.aggloId, axonOverlap.smallAxonId, size(axonAgglosLarge), ...
-        @(r) {cat(1, axonAgglosSmall{r})}, {zeros(0, 1)});
-
-    axonAgglos = cellfun( ...
-        @vertcat, axonAgglosLarge, pickedUpAgglos, ...
-        'UniformOutput', false);
+    %% build final agglomerates
+    pickUpIds = accumarray( ...
+        axonOverlap.aggloId, axonOverlap.smallId, ...
+       	size(largeIds), @(ids) {ids}, {zeros(0, 1)});
+    pickUpIds = arrayfun( ...
+        @vertcat, num2cell(largeIds), pickUpIds, 'UniformOutput', false);
+    
+    completedAgglos = cellfun(@(ids) ...
+        cat(1, agglos{ids}), pickUpIds, 'UniformOutput', false);
 end
 
