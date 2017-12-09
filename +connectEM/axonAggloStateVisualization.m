@@ -104,7 +104,7 @@ function [completedAgglos, pickUpIds] = ...
     % Add small (< 5 micron) axon agglomerates to large on if they have enough overlap
     % from +connectEM.buildAxonAgglomerates.m
     
-    largeIds = find(axon.indBigAxons(:));
+    largeIds = find(axons.indBigAxons(:));
     smallIds = find(~axons.indBigAxons(:));
     agglos = Superagglos.getSegIds(axons.axons);
     
