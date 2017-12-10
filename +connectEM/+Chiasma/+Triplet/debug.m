@@ -19,8 +19,12 @@ function skels = debug( ...
         curChiasmaIds = chiasmaIds{curIdx};
         
         if isempty(curChiasmaIds)
-            curChiasmaIds = 1:numel(curSummary.tracings);
+            curChiasmaIds = curSummary.chiasmaId;
         end
+        
+       [~, curChiasmaIds] = ismember( ...
+            curChiasmaIds, curSummary.chiasmaId);
+        assert(all(curChiasmaIds));
         
         curChiasmaIds = reshape(curChiasmaIds, [], 1);
 
