@@ -129,15 +129,24 @@ debugT = table;
 debugT.axonId = repelem( ...
     cat(1, dryRun.summary.axonId), ...
     cellfun(@numel, {dryRun.summary.chiasmaId}));
-debugT.chiasmaId = cell2mat(...
-    reshape({dryRun.summary.chiasmaId}, [], 1));
+debugT.chiasmaId = num2cell(cell2mat(...
+    reshape({dryRun.summary.chiasmaId}, [], 1)));
 
 % select 20 random chiasmata
 debugT = debugT(randperm(size(debugT, 1), 20), :);
 
+%{
+% debugging remaining mergers
+debugT = table;
+debugT.axonId = cat(1, dryRun.summary.axonId);
+debugT.chiasmaId = reshape({dryRun.summary.chiasmaId}, [], 1);
+debugT = debugT(ismember( ...
+    debugT.axonId, out.parentIds([20701; 6426])), :);
+%}
+
 debugSkels = connectEM.Chiasma.Triplet.debug( ...
     bigAxons, splitAxons, dryRun.summary, ...
-    flights, debugT.axonId, num2cell(debugT.chiasmaId));
+    flights, debugT.axonId, debugT.chiasmaId);
 
 for curIdx = 1:size(debugT, 1)
     curSkel = debugSkels{curIdx};
@@ -145,7 +154,7 @@ for curIdx = 1:size(debugT, 1)
     
     curSkelName = sprintf( ...
         '%d__axon-%d__chiasma-%d.nml', ...
-        curIdx, table2array(debugT(curIdx, :)));
+        curIdx, debugT.axonId(curIdx), debugT.chiasmaId{curIdx}(1));
     curSkel.write(fullfile('/home/amotta/Desktop/debug', curSkelName));
 end
 %}
