@@ -83,32 +83,15 @@ clear keepMask;
 
 %% determine overlap between flight paths and axon agglomerates
 axonAgglos = Superagglos.getSegIds(axons);
+
+flightOverlaps = ...
+    connectEM.Flight.overlapWithAgglos( ...
+        param, flights, axonAgglos, ...
+        'minStartEvidence', 13, ...
+        'minEndEvidence', 2 * 27);
+
 axonLUT = Agglo.buildLUT(maxSegId, axonAgglos);
-axonLUT = vertcat(0, axonLUT(:));
-
-flightCount = numel(flights.filenames);
-flightOverlaps = cell(flightCount, 2);
-
-for curIdx = 1:flightCount
-    curSegIds = 1 + horzcat( ...
-        flights.segIds{curIdx}, ...
-        flights.neighbours{curIdx});
-    curEndId = axonLUT(curSegIds);
-    
-    % find start agglo (> 1/2 node evidence)
-   [curStartAxon, ~, curStartEvidence] = unique(curEndId(1, :));
-    curStartAxon = curStartAxon(accumarray(curStartEvidence(:), 1) > 13);
-    curStartAxon = setdiff(curStartAxon, 0);
-    
-    % find end agglos
-   [curEndAxons, ~, curEndEvidence] = unique(curEndId(:));
-    curEndAxons = curEndAxons(accumarray( ...
-        curEndEvidence(:), 1) >= minNodeEvidence);
-    curEndAxons = setdiff(curEndAxons, cat(1, 0, curStartAxon(:)));
-    
-    flightOverlaps{curIdx, 1} = curStartAxon;
-    flightOverlaps{curIdx, 2} = curEndAxons;
-end
+axonLUT = cat(1, 0, reshape(axonLUT, [], 1));
 
 %% restrict to flights with clear overlaps
 startOkay = (cellfun(@numel, flightOverlaps(:, 1)) == 1);
