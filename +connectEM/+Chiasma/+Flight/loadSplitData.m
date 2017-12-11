@@ -25,6 +25,6 @@ function splitData = loadSplitData(param, taskGenFile, taskIdFile, nmlDir)
 
     % build split file
     splitData = buildSplitData( ...
-        chiasmata, taskDefs, exits, taskIds,flights);
+        chiasmata, taskDefs, exits, taskIds, flights);
     splitData.axonFile = axonFile;
 end
