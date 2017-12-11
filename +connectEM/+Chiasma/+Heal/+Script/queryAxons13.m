@@ -29,12 +29,17 @@ axonIds = find(axons.indBigAxons);
 axons = axons.axons(axonIds);
 
 %% generate task and webKNOSSOS task definitions
+endings = connectEM.Chiasma.Heal.buildEndings(axons);
 taskDefFile = fullfile(outputDir, sprintf('%s_flightTasks.txt', runId));
-taskDefs = connectEM.Chiasma.Heal.generateTasks(param, axons, taskDefFile);
+
+[taskDefs, endings] = ...
+    connectEM.Chiasma.Heal.generateTasks( ...
+        param, endings, axons, taskDefFile);
 
 %%
 out = struct;
 out.info = info;
+out.endings = endings;
 out.taskDefs = taskDefs;
 out.taskDefFile = taskDefFile;
 

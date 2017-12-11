@@ -1,9 +1,11 @@
-function taskDef = generateTasks(param, axons, outputFile)
+function [taskDef, endings] = ...
+        generateTasks(param, endings, axons, outputFile)
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     
     % build task definitions
-    taskDef = connectEM.Chiasma.Heal.buildTaskDefs(param, axons);
+   [taskDef, endings] = ...
+       connectEM.Chiasma.Heal.buildTaskDefs(param, endings, axons);
     
     %% set bounding box
     boxOff = param.bbox(:, 1)';

@@ -1,13 +1,12 @@
-function taskDef = buildTaskDefs(param, axons)
-    taskDef = table;
-    taskDef.axonId = repelem( ...
-        reshape(1:numel(axons), [], 1), ...
-        arrayfun(@(a) numel(a.endings), axons));
-    taskDef.nodeId = cat(1, axons.endings);
-    
-    numEndings = size(taskDef, 1);
+function [taskDef, endings] = buildTaskDefs(param, endings, axons)
+    % Written by
+    %   Alessandro Motta <alessandro.motta@brain.mpg.de>
+	taskDef = table;
+
+    numEndings = size(endings, 1);
     taskDef.position = nan(numEndings, 3);
     taskDef.direction = nan(numEndings, 3);
+    taskDef.rotation = nan(numEndings, 3);
     
     for curIdx = 1:numEndings
        [taskDef.position(curIdx, :), ...
@@ -15,11 +14,12 @@ function taskDef = buildTaskDefs(param, axons)
         taskDef.rotation(curIdx, :)] = ...
             forEnding( ...
                 param.raw.voxelSize, ...
-                axons(taskDef.axonId(curIdx)), ...
-                taskDef.nodeId(curIdx));
+                axons(endings.aggloId(curIdx)), ...
+                endings.nodeId(curIdx));
     end
     
     % remove cases without direction
+    endings(~any(taskDef.direction, 2), :) = [];
     taskDef(~any(taskDef.direction, 2), :) = [];
 end
 
