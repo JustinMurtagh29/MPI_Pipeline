@@ -38,5 +38,10 @@ for task = reshape(tasks, 1, [])
         data = connectEM.Chiasma.Heal.loadData( ...
             param, task.genFile, task.idFile, task.nmlDir);
         data.info = info;
+        
+        Util.saveStruct(task.flightDataFile, data);
+        clear data;
     end
 end
+
+%%
