@@ -5,6 +5,7 @@ runId = datestr(now, 30);
 
 %% configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
+axonFile = fullfile(rootDir, 'aggloState', 'axons_13_a.mat');
 
 outputDir = fullfile( ...
     rootDir, 'chiasmaSplitHealing', ...
@@ -22,9 +23,7 @@ param = load(paramFile, 'p');
 param = param.p;
 
 %% loading axons
-axonFile = fullfile(rootDir, 'aggloState', 'axons_13_a.mat');
 axons = load(axonFile, 'axons', 'indBigAxons');
-
 axonIds = find(axons.indBigAxons);
 axons = axons.axons(axonIds);
 
