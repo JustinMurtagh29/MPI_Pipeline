@@ -1,4 +1,4 @@
-function ff = loadFlightPaths(p, nmlDirs)
+function ff = loadFromDirs(p, nmlDirs)
     % Written by
     %   Kevin Boergens <kevin.boergens@brain.mpg.de>
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>

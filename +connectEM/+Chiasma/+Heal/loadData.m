@@ -3,7 +3,7 @@ function data = loadData(param, taskGenFile, taskIdFile, nmlDir)
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     taskGenData = load(taskGenFile);
     taskIds = connectEM.Chiasma.Util.loadTaskIds(taskIdFile);
-    flights = connectEM.Chiasma.Util.loadFlightPaths(param, nmlDir);
+    flights = connectEM.Flight.loadFromDirs(param, nmlDir);
     
     data = struct;
     data.axonFile = taskGenData.info.param.axonFile;
