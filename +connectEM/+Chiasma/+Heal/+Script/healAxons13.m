@@ -5,6 +5,7 @@ runId = datestr(now, 30);
 
 %% configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
+debugDir = '/home/amotta/Desktop/debug';
 
 taskGenDir = fullfile( ...
     rootDir, 'chiasmaSplitHealing', ...
@@ -88,6 +89,39 @@ numOverlaps = cellfun(@numel, flights.overlaps(:, 2));
 fprintf('%5.1f %% of flights have no overlap \n', 100 * mean(~numOverlaps));
 fprintf('%5.1f %% of flights have too many overlaps \n', 100 * mean(numOverlaps > 1));
 
+%% debugging
+if debugDir
+    rng(0);
+    mkdir(debugDir);
+    
+    % select random dangling flights
+    dangIds = find(~numOverlaps);
+    dangIds = dangIds(randperm(numel(dangIds), 20));
+    
+    for curIdx = 1:numel(dangIds)
+        curId = dangIds(curIdx);
+        
+        curFlightNodes = flights.nodes{curId};
+        curTaskId = flights.filenamesShort{curId};
+        
+        curAxonId = strcmpi(queries.taskId, curTaskId);
+        curAxonId = queries.aggloId(curAxonId);
+        curAxon = axons(curAxonId);
+        
+        % build skeleton
+        curSkel = skeleton();
+        curSkel = curSkel.addTree( ...
+            'Axon', curAxon.nodes(:, 1:3), curAxon.edges);
+        curSkel = curSkel.addTree('Flight', curFlightNodes);
+        
+        curSkel = Skeleton.setParams4Pipeline(curSkel, param);
+        
+        curSkelName = sprintf('%d_flight-%s.nml', curIdx, curTaskId);
+        curSkel.write(fullfile(debugDir, curSkelName));
+    end
+end
+
+%%
 flights = structfun( ...
     @(f) f(numOverlaps == 1, :), ...
     flights, 'UniformOutput', false);
