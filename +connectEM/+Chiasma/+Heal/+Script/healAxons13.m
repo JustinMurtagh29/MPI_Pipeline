@@ -79,11 +79,32 @@ flights.overlaps = ...
     
 %% remove invalid flights
 % remove flights with comments
-flights = connectEM.Flight.dropIfCommented(flights);
-
-% remove flights with no or multiple attachments
-mask = cellfun(@numel, flights.overlaps(:, 2)) == 1;
-flights = structfun(@(f) f(mask, :), flights, 'UniformOutput', false);
+[flights, mask] = connectEM.Flight.dropIfCommented(flights);
+fprintf('%5.1f %% of flights are commented\n', 100 * mean(~mask));
 clear mask;
 
+% remove flights with no or multiple attachments
+numOverlaps = cellfun(@numel, flights.overlaps(:, 2));
+fprintf('%5.1f %% of flights have no overlap \n', 100 * mean(~numOverlaps));
+fprintf('%5.1f %% of flights have too many overlaps \n', 100 * mean(numOverlaps > 1));
+
+flights = structfun( ...
+    @(f) f(numOverlaps == 1, :), ...
+    flights, 'UniformOutput', false);
+clear numOverlaps;
+
 flights.overlaps = cell2mat(flights.overlaps(:, 2));
+
+%% assign start agglomerate
+[~, queryIdx] = ismember(flights.filenamesShort, queries.taskId);
+flights.overlaps = cat(2, queries.aggloId(queryIdx), flights.overlaps);
+flights.seedNodeIds = queries.nodeId(queryIdx);
+clear queryIdx;
+
+% remove duplicate connetions
+[~, uniRows] = unique(sort(flights.overlaps, 2), 'rows');
+flights = structfun(@(f) f(uniRows, :), flights, 'UniformOutput', false);
+clear uniRows;
+
+%% apply
+% out = connectEM.Flight.patchIntoAgglos(param, axons, flights);
