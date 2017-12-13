@@ -77,7 +77,13 @@ flights.overlaps = ...
     connectEM.Flight.overlapWithAgglos( ...
         param, flights, Superagglos.getSegIds(axons), ...
         'minStartEvidence', 13, 'minEndEvidence', 2 * 27);
-    
+
+% override seed agglomerate
+[~, queryIdx] = ismember(flights.filenamesShort, queries.taskId);
+flights.overlaps(:, 1) = num2cell(queries.aggloId(queryIdx));
+flights.seedNodeIds = queries.nodeId(queryIdx);
+clear queryIdx;
+
 %% remove invalid flights
 % remove flights with comments
 [flights, mask] = connectEM.Flight.dropIfCommented(flights);
@@ -97,25 +103,32 @@ if debugDir
     % select random dangling flights
     dangIds = find(~numOverlaps);
     dangIds = dangIds(randperm(numel(dangIds), 20));
+    axonNames = {'Seed axon', 'Reached axon'};
     
     for curIdx = 1:numel(dangIds)
         curId = dangIds(curIdx);
+        curSkel = skeleton();
+        
+        curTaskId = flights.filenamesShort{curId};
+        curFlightName = sprintf('Flight (%s)', curTaskId);
         
         curFlightNodes = flights.nodes{curId};
-        curTaskId = flights.filenamesShort{curId};
+        curSkel = curSkel.addTree(curFlightName, curFlightNodes);
+
+        curAxonIds = cell2mat(flights.overlaps(curId, :)');
+        curAxons = axons(curAxonIds);
         
-        curAxonId = strcmpi(queries.taskId, curTaskId);
-        curAxonId = queries.aggloId(curAxonId);
-        curAxon = axons(curAxonId);
-        
-        % build skeleton
-        curSkel = skeleton();
-        curSkel = curSkel.addTree( ...
-            'Axon', curAxon.nodes(:, 1:3), curAxon.edges);
-        curSkel = curSkel.addTree('Flight', curFlightNodes);
+        for curAxonIdx = 1:numel(curAxonIds)
+            curAxonId = curAxonIds(curAxonIdx);
+            curAxonName = axonNames{min(curAxonIdx, 2)};
+            curAxonName = sprintf('%s (%d)', curAxonName, curAxonId);
+            
+            curAxon = curAxons(curAxonIdx);
+            curSkel = curSkel.addTree( ...
+                curAxonName, curAxon.nodes(:, 1:3), curAxon.edges);
+        end
         
         curSkel = Skeleton.setParams4Pipeline(curSkel, param);
-        
         curSkelName = sprintf('%d_flight-%s.nml', curIdx, curTaskId);
         curSkel.write(fullfile(debugDir, curSkelName));
     end
@@ -130,11 +143,6 @@ clear numOverlaps;
 flights.overlaps = cell2mat(flights.overlaps(:, 2));
 
 %% assign start agglomerate
-[~, queryIdx] = ismember(flights.filenamesShort, queries.taskId);
-flights.overlaps = cat(2, queries.aggloId(queryIdx), flights.overlaps);
-flights.seedNodeIds = queries.nodeId(queryIdx);
-clear queryIdx;
-
 % remove duplicate connetions
 [~, uniRows] = unique(sort(flights.overlaps, 2), 'rows');
 flights = structfun(@(f) f(uniRows, :), flights, 'UniformOutput', false);
