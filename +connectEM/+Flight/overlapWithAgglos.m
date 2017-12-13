@@ -37,7 +37,7 @@ function overlaps = overlapWithAgglos(param, flights, agglos, varargin)
             curEndEvidence >= config.minEndEvidence);
         curEndAgglos = setdiff(curEndAgglos, union(0, curStartAgglos));
 
-        overlaps{curIdx, 1} = curStartAgglos;
-        overlaps{curIdx, 2} = curEndAgglos;
+        overlaps{curIdx, 1} = curStartAgglos(:);
+        overlaps{curIdx, 2} = curEndAgglos(:);
     end
 end
