@@ -101,7 +101,7 @@ if debugDir
     mkdir(debugDir);
     
     % select random dangling flights
-    dangIds = find(~numOverlaps);
+    dangIds = find(numOverlaps == 1);
     dangIds = dangIds(randperm(numel(dangIds), 20));
     axonNames = {'Seed axon', 'Reached axon'};
     
