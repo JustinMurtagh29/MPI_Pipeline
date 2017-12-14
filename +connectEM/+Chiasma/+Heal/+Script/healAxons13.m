@@ -4,8 +4,9 @@ clear;
 runId = datestr(now, 30);
 
 %% configuration
+debugDir = ''; % set path to generate debug NMLs
+generateRequeries = true; % set to true to generate requeries
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-debugDir = '';
 
 taskGenDir = fullfile( ...
     rootDir, 'chiasmaSplitHealing', ...
@@ -32,6 +33,15 @@ info = Util.runInfo();
 paramFile = fullfile(rootDir, 'allParameter.mat');
 param = load(paramFile, 'p');
 param = param.p;
+
+%% load axons
+axonFile = tasks(end).flightDataFile;
+axonFile = load(axonFile, 'axonFile');
+axonFile = axonFile.axonFile;
+
+axons = load(axonFile, 'axons', 'indBigAxons');
+axonIds = find(axons.indBigAxons);
+axons = axons.axons(axonIds);
 
 %% build data file, if necessary
 queries = cell(size(tasks));
@@ -63,26 +73,13 @@ end
 queries = cat(1, queries{:});
 flights = Util.concatStructs(1, flights{:});
 
-%% load axons
-axonFile = tasks(end).flightDataFile;
-axonFile = load(axonFile, 'axonFile');
-axonFile = axonFile.axonFile;
+%% try to find flight for each query
+fprintf('# queries handed out: %d\n', size(queries, 1));
+[~, uniRows] = unique(queries(:, {'aggloId', 'nodeId'}), 'rows', 'stable');
 
-axons = load(axonFile, 'axons', 'indBigAxons');
-axonIds = find(axons.indBigAxons);
-axons = axons.axons(axonIds);
-
-%% determine overlap with axons
-flights.overlaps = ...
-    connectEM.Flight.overlapWithAgglos( ...
-        param, flights, Superagglos.getSegIds(axons), ...
-        'minStartEvidence', 13, 'minEndEvidence', 2 * 27);
-
-% override seed agglomerate
-[~, queryIdx] = ismember(flights.filenamesShort, queries.taskId);
-flights.overlaps(:, 1) = num2cell(queries.aggloId(queryIdx));
-flights.seedNodeIds = queries.nodeId(queryIdx);
-clear queryIdx;
+fprintf('# endings queried: %d\n', numel(uniRows));
+queries = queries(uniRows, :);
+clear uniRows;
 
 %% remove invalid flights
 % remove flights with comments
@@ -90,13 +87,19 @@ clear queryIdx;
 fprintf('%5.1f %% of flights are commented\n', 100 * mean(~mask));
 clear mask;
 
+%% determine overlap with axons
+flights.overlaps = ...
+    connectEM.Flight.overlapWithAgglos( ...
+        param, flights, Superagglos.getSegIds(axons), ...
+        'minStartEvidence', 13, 'minEndEvidence', 2 * 27);
+
 % remove flights with no or multiple attachments
 numOverlaps = cellfun(@numel, flights.overlaps(:, 2));
 fprintf('%5.1f %% of flights have no overlap \n', 100 * mean(~numOverlaps));
 fprintf('%5.1f %% of flights have too many overlaps \n', 100 * mean(numOverlaps > 1));
 
 %% debugging
-if debugDir
+if logical(debugDir)
     rng(0);
     mkdir(debugDir);
     
@@ -134,19 +137,35 @@ if debugDir
     end
 end
 
-%%
+%% filter flights
 flights = structfun( ...
-    @(f) f(numOverlaps == 1, :), ...
+    @(f) f(numOverlaps < 2, :), ...
     flights, 'UniformOutput', false);
 clear numOverlaps;
 
-flights.overlaps = cell2mat(flights.overlaps);
+[~, queries.flightId] = ismember(queries.taskId, flights.filenamesShort);
+fprintf('# endings answered: %d\n', sum(logical(queries.flightId)));
 
-%% assign start agglomerate
-% remove duplicate connetions
-[~, uniRows] = unique(sort(flights.overlaps, 2), 'rows');
-flights = structfun(@(f) f(uniRows, :), flights, 'UniformOutput', false);
-clear uniRows;
+%% generate requeries
+if generateRequeries
+    endings = queries(~queries.flightId, {'aggloId', 'nodeId'});
+    
+    taskDefFile = sprintf('%s_flightTasks.txt', runId);
+    taskDefFile = fullfile(taskGenDir, taskDefFile);
+
+   [taskDefs, endings] = ...
+        connectEM.Chiasma.Heal.generateTasks( ...
+            param, endings, axons, taskDefFile);
+        
+	out = struct;
+    out.info = info;
+    out.endings = endings;
+    out.taskDefs = taskDefs;
+    out.taskDefFile = taskDefFile;
+
+    outFile = sprintf('%s_taskGeneration.mat', runId);
+    Util.saveStruct(fullfile(taskGenDir, outFile), out);
+end
 
 %% apply
 % out = connectEM.Flight.patchIntoAgglos(param, axons, flights);
