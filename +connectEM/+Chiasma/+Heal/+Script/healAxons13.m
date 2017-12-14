@@ -5,7 +5,7 @@ runId = datestr(now, 30);
 
 %% configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-debugDir = '/home/amotta/Desktop/debug';
+debugDir = '';
 
 taskGenDir = fullfile( ...
     rootDir, 'chiasmaSplitHealing', ...
@@ -140,7 +140,7 @@ flights = structfun( ...
     flights, 'UniformOutput', false);
 clear numOverlaps;
 
-flights.overlaps = cell2mat(flights.overlaps(:, 2));
+flights.overlaps = cell2mat(flights.overlaps);
 
 %% assign start agglomerate
 % remove duplicate connetions
