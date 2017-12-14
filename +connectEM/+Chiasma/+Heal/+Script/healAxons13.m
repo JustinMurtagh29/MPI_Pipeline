@@ -5,7 +5,7 @@ runId = datestr(now, 30);
 
 %% configuration
 debugDir = ''; % set path to generate debug NMLs
-generateRequeries = true; % set to true to generate requeries
+generateRequeries = false; % set to true to generate requeries
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 
 taskGenDir = fullfile( ...
@@ -40,8 +40,10 @@ axonFile = load(axonFile, 'axonFile');
 axonFile = axonFile.axonFile;
 
 axons = load(axonFile, 'axons', 'indBigAxons');
-axonIds = find(axons.indBigAxons);
-axons = axons.axons(axonIds);
+axonIdsBig = find(axons.indBigAxons);
+
+allAxons = axons.axons;
+axons = axons.axons(axonIdsBig);
 
 %% build data file, if necessary
 queries = cell(size(tasks));
@@ -146,6 +148,19 @@ clear numOverlaps;
 [~, queries.flightId] = ismember(queries.taskId, flights.filenamesShort);
 fprintf('# endings answered: %d\n', sum(logical(queries.flightId)));
 
+% fill in seed agglo and node
+[~, queryIdx] = ismember(flights.filenamesShort, queries.taskId);
+flights.overlaps(:, 1) = num2cell(queries.aggloId(queryIdx));
+flights.seedNodeIds = queries.nodeId(queryIdx);
+clear queryIdx;
+
+% fill in zero for dangling flights
+mask = cellfun(@isempty, flights.overlaps(:, 2));
+flights.overlaps(mask, 2) = {0};
+clear mask;
+
+flights.overlaps = cell2mat(flights.overlaps);
+
 %% generate requeries
 if generateRequeries
     endings = queries(~queries.flightId, {'aggloId', 'nodeId'});
@@ -168,4 +183,25 @@ if generateRequeries
 end
 
 %% apply
-% out = connectEM.Flight.patchIntoAgglos(param, axons, flights);
+% TODO(amotta): remove
+mask = flights.overlaps(:, 2) ~= 0;
+flights = structfun(@(f) f(mask, :), flights, 'UniformOutput', false);
+clear mask;
+
+% self-attachment is forbidden
+mask = diff(flights.overlaps, 1, 2) ~= 0;
+flights = structfun(@(f) f(mask, :), flights, 'UniformOutput', false);
+clear mask;
+
+% drop duplicate
+[~, uniIds] = unique(sort(flights.overlaps, 2), 'rows');
+flights = structfun(@(f) f(uniIds, :), flights, 'UniformOutput', false);
+clear uniIds;
+
+%%
+flights.overlaps = axonIdsBig(flights.overlaps);
+
+%% patching flights into agglomerates
+tic; fprintf('Patching flights into agglomerates... ');
+out = connectEM.Flight.patchIntoAgglos(param, allAxons, flights);
+fprintf('done!\n'); toc;
