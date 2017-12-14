@@ -1,9 +1,19 @@
-function out = patchIntoAgglos(param, axons, flights)
+function out = patchIntoAgglos(param, agglos, flights)
+    % out = patchIntoAgglos(param, agglos, flights)
+    %   Patches a set of flight paths (`flights`) into super-agglomerates
+    %   (`agglos`).
+    %
+    %   The `flights` structure must contain a `overlaps` field with a Nx2
+    %   matrix indicating the connected agglos. If the entry in the second
+    %   column is zero, the corresponding flight is thought to be dangling.
+    %
+    % Written by
+    %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     maxSegId = Seg.Global.getMaxSegId(param);
     
-    axonAgglos = Superagglos.getSegIds(axons);
-    axonLUT = Agglo.buildLUT(maxSegId, axonAgglos);
-    axonLUT = cat(1, 0, reshape(axonLUT, [], 1));
+    aggloLUT = Superagglos.getSegIds(agglos);
+    aggloLUT = Agglo.buildLUT(maxSegId, aggloLUT);
+    aggloLUT = cat(1, 0, reshape(aggloLUT, [], 1));
     
     %% grouping agglomerates
     adjEdges = flights.overlaps;
@@ -11,51 +21,58 @@ function out = patchIntoAgglos(param, axons, flights)
 
     adjMat = sparse( ...
         adjEdges(:, 2), adjEdges(:, 1), ...
-        true, numel(axons), numel(axons));
-   [axonCompCount, axonComps] = ...
-        graphconncomp(adjMat, 'Directed', false);
+        true, numel(agglos), numel(agglos));
+   [~, aggloComps] = graphconncomp(adjMat, 'Directed', false);
 
-    axonComps = reshape(axonComps, [], 1);
-    flights.axonComp = axonComps(flights.overlaps(:, 1));
+    aggloComps = reshape(aggloComps, [], 1);
+    flights.aggloComp = aggloComps(flights.overlaps(:, 1));
+    
+    %% handle unchanged agglomerates
+    changedComps = unique(aggloComps(setdiff(flights.overlaps, 0)));
+    unchangedAggloIds = setdiff(1:numel(agglos), flights.overlaps);
+    unchangedComps = aggloComps(unchangedAggloIds);
+    
+    out = struct;
+    out.agglos = agglos([]);
+    out.agglos(unchangedComps) = agglos(unchangedAggloIds);
 
     %% patch in flight paths
-    out = struct;
-    out.axons = axons([]);
-
-    for curComp = 1:axonCompCount
-        curAxonIds = find(axonComps == curComp);
-        curAxons = axons(curAxonIds);
-
-        if numel(curAxons) == 1
-            out.axons(curComp) = curAxons;
+    for curComp = reshape(changedComps, 1, [])
+        curAggloIds = find(aggloComps == curComp);
+        curAgglos = agglos(curAggloIds);
+        
+        % fast path
+        % TODO(amotta): Remove for dangling flights
+        if isscalar(curAgglos)
+            out.agglos(curComp) = curAgglos;
             continue;
         end
-
-        curAxon = struct;
-        curAxon.nodes = cat(1, curAxons.nodes);
-
+        
+        curAgglo = struct;
+        curAgglo.nodes = cat(1, curAgglos.nodes);
+        
         curSegLUT = zeros(maxSegId, 1);
-        curNodeIds = find(not(isnan(curAxon.nodes(:, 4))));
-        curSegLUT(curAxon.nodes(curNodeIds, 4)) = curNodeIds;
+        curNodeIds = find(not(isnan(curAgglo.nodes(:, 4))));
+        curSegLUT(curAgglo.nodes(curNodeIds, 4)) = curNodeIds;
 
         % determine node offset
-        curNodeOff = arrayfun(@(a) size(a.nodes, 1), curAxons);
+        curNodeOff = arrayfun(@(a) size(a.nodes, 1), curAgglos);
         curNodeOff = cumsum(cat(1, 0, curNodeOff(1:(end - 1))));
 
-        curAxon.edges = cell2mat(arrayfun( ...
-            @(ax, off) ax.edges + off, ...
-            curAxons, curNodeOff, 'UniformOutput', false));
-        curAxon.endings = cell2mat(arrayfun( ...
-            @(ax, off) ax.endings + off, ...
-            curAxons, curNodeOff, 'UniformOutput', false));
+        curAgglo.edges = cell2mat(arrayfun( ...
+            @(ag, off) ag.edges + off, ...
+            curAgglos, curNodeOff, 'UniformOutput', false));
+        curAgglo.endings = cell2mat(arrayfun( ...
+            @(ag, off) ag.endings + off, ...
+            curAgglos, curNodeOff, 'UniformOutput', false));
 
         % patch in flight paths
-        curFlightIds = find(flights.axonComp == curComp);
+        curFlightIds = find(flights.aggloComp == curComp);
         curFlightIds = reshape(curFlightIds, 1, []);
 
         curFlightNodes = cell(numel(curFlightIds), 1);
         curFlightEdges = cell(numel(curFlightIds), 1);
-        curAddNodeOff = size(curAxon.nodes, 1);
+        curAddNodeOff = size(curAgglo.nodes, 1);
 
         for curIdx = 1:numel(curFlightIds)
             curId = curFlightIds(curIdx);
@@ -65,7 +82,7 @@ function out = patchIntoAgglos(param, axons, flights)
                 flights.neighbours{curId});
             curSegIds = transpose(curSegIds);
 
-            curEndId = axonLUT(1 + curSegIds);
+            curEndId = aggloLUT(1 + curSegIds);
             curOverlaps = flights.overlaps(curId, :);
 
             % find flight path stretch to extract
@@ -86,7 +103,7 @@ function out = patchIntoAgglos(param, axons, flights)
                 curStartIdx = 0;
                 
                 % user explicitly passed in ID of seed node
-                curStartNodeId = curNodeOff(curAxonIds == curOverlaps(1));
+                curStartNodeId = curNodeOff(curAggloIds == curOverlaps(1));
                 curStartNodeId = curStartNodeId + flights.seedNodeIds(curId);
             end
 
@@ -120,39 +137,25 @@ function out = patchIntoAgglos(param, axons, flights)
             curFlightEdges{curIdx} = curEdgesToAdd;
         end
 
-        curAxon.nodes = cat(1, curAxon.nodes, cell2mat(curFlightNodes));
-        curAxon.edges = cat(1, curAxon.edges, cell2mat(curFlightEdges));
-        curAxon.edges = sort(curAxon.edges, 2);
+        curAgglo.nodes = cat(1, curAgglo.nodes, cell2mat(curFlightNodes));
+        curAgglo.edges = cat(1, curAgglo.edges, cell2mat(curFlightEdges));
+        curAgglo.edges = sort(curAgglo.edges, 2);
 
         curFlightNodeCount = sum(cellfun( ...
             @(n) size(n, 1), curFlightNodes));
-        curAxon.solvedChiasma = cat( ...
-            1, curAxons.solvedChiasma, ...
+        curAgglo.solvedChiasma = cat( ...
+            1, curAgglos.solvedChiasma, ...
             false(curFlightNodeCount, 1));
 
         % sanity check
         curAdj = sparse( ...
-            curAxon.edges(:, 2), curAxon.edges(:, 1), ...
-            true, size(curAxon.nodes, 1),size(curAxon.nodes, 1));
+            curAgglo.edges(:, 2), curAgglo.edges(:, 1), ...
+            true, size(curAgglo.nodes, 1),size(curAgglo.nodes, 1));
         assert(graphconncomp(curAdj, 'Directed', false) == 1);
 
-        out.axons(curComp) = curAxon;
+        out.agglos(curComp) = curAgglo;
     end
     
-    %{
-    otherAxonIds = setdiff(1:numel(allAxons), axonIds);
-    out.axons = cat(1, out.axons(:), allAxons(otherAxonIds));
-
-    out.indBigAxons = false(size(out.axons));
-    out.indBigAxons(1:axonCompCount) = true;
-
-    % track into which output agglo the input agglos were merged
-    out.childIds = nan(numel(allAxons), 1);
-    out.childIds(axonIds) = axonComps;
-    out.childIds(otherAxonIds) = axonCompCount + (1:numel(otherAxonIds));
-    assert(not(any(isnan(out.childIds))));
-
-    % track which flight paths have been used
-    out.usedFlightIds = cat(1, flights.id);
-    %}
+    out.aggos = reshape(out.agglos, [], 1);
+    out.childIds = reshape(aggloComps, [], 1);
 end
