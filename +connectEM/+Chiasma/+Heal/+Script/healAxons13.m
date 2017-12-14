@@ -97,8 +97,8 @@ flights.overlaps = ...
 
 % remove flights with no or multiple attachments
 numOverlaps = cellfun(@numel, flights.overlaps(:, 2));
-fprintf('%5.1f %% of flights have no overlap \n', 100 * mean(~numOverlaps));
-fprintf('%5.1f %% of flights have too many overlaps \n', 100 * mean(numOverlaps > 1));
+fprintf('%5.1f %% of flights are dangling\n', 100 * mean(~numOverlaps));
+fprintf('%5.1f %% of flights have too many overlaps\n', 100 * mean(numOverlaps > 1));
 
 %% debugging
 if logical(debugDir)
@@ -161,6 +161,16 @@ clear mask;
 
 flights.overlaps = cell2mat(flights.overlaps);
 
+% self-attachment is forbidden
+mask = diff(flights.overlaps, 1, 2) ~= 0;
+flights = structfun(@(f) f(mask, :), flights, 'UniformOutput', false);
+clear mask;
+
+% drop duplicate connections
+[~, uniIds] = unique(sort(flights.overlaps, 2), 'rows');
+flights = structfun(@(f) f(uniIds, :), flights, 'UniformOutput', false);
+clear uniIds;
+
 %% generate requeries
 if generateRequeries
     endings = queries(~queries.flightId, {'aggloId', 'nodeId'});
@@ -182,26 +192,10 @@ if generateRequeries
     Util.saveStruct(fullfile(taskGenDir, outFile), out);
 end
 
-%% apply
-% TODO(amotta): remove
-mask = flights.overlaps(:, 2) ~= 0;
-flights = structfun(@(f) f(mask, :), flights, 'UniformOutput', false);
-clear mask;
-
-% self-attachment is forbidden
-mask = diff(flights.overlaps, 1, 2) ~= 0;
-flights = structfun(@(f) f(mask, :), flights, 'UniformOutput', false);
-clear mask;
-
-% drop duplicate
-[~, uniIds] = unique(sort(flights.overlaps, 2), 'rows');
-flights = structfun(@(f) f(uniIds, :), flights, 'UniformOutput', false);
-clear uniIds;
-
-%%
-flights.overlaps = axonIdsBig(flights.overlaps);
-
 %% patching flights into agglomerates
-tic; fprintf('Patching flights into agglomerates... ');
+tic;
+fprintf('\n');
+fprintf('Patching flights into agglomerates... ');
 out = connectEM.Flight.patchIntoAgglos(param, allAxons, flights);
-fprintf('done!\n'); toc;
+fprintf('done!\n');
+toc;
