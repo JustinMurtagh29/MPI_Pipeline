@@ -18,6 +18,9 @@ function out = patchIntoAgglos(param, agglos, flights)
     %% grouping agglomerates
     adjEdges = flights.overlaps;
     adjEdges = sort(adjEdges, 2);
+    
+    % ignore dangling flights
+    adjEdges(~adjEdges(:, 1), :) = [];
 
     adjMat = sparse( ...
         adjEdges(:, 2), adjEdges(:, 1), ...
@@ -50,7 +53,8 @@ function out = patchIntoAgglos(param, agglos, flights)
 
         % determine node offset
         curNodeOff = arrayfun(@(a) size(a.nodes, 1), curAgglos);
-        curNodeOff = cumsum(cat(1, 0, curNodeOff(1:(end - 1))));
+        curNodeOff = reshape(curNodeOff(1:(end - 1)), [], 1);
+        curNodeOff = cumsum(cat(1, 0, curNodeOff));
 
         curAgglo.edges = cell2mat(arrayfun( ...
             @(ag, off) ag.edges + off, ...
@@ -84,7 +88,7 @@ function out = patchIntoAgglos(param, agglos, flights)
                 curEndIdx = 1 + find(curEndIdx(2:end), 1, 'first');
             else
                 % flight path is dangling
-                curEndIdx = 1 + size(curOverlaps, 2);
+                curEndIdx = 1 + size(curEndId, 2);
             end
             
             if ~isfield(flights, 'seedNodeIds') ...
