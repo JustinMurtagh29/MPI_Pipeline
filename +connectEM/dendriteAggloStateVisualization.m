@@ -22,7 +22,7 @@ function dendriteAggloStateVisualization()
         fileparts(mfilename('fullpath')), ...
         'evaluationData', 'dendrite_gt_spine_head_seeded');
     outputDir = '/tmpscratch/amotta/l4/2017-12-14-dendrites-16-visualization';
-    assert(exist(outputDir, 'dir'));
+    assert(exist(outputDir, 'dir') ~= 0);
     
     %% Load & modify parameter struct to use WKW segmentation
     param = load(fullfile(rootDir, 'allParameter.mat'), 'p');
