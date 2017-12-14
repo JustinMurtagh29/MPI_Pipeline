@@ -1,0 +1,32 @@
+<things>
+  <parameters>
+    <experiment name="2012-09-28_ex145_07x2_ROI2017" description="" />
+    <scale x="11.4" y="11.4" z="28.0" />
+    <offset x="0" y="0" z="0" />
+    <time ms="1513016591605" />
+    <editPosition x="4723" y="1550" z="1979" />
+    <editRotation xRot="0.0" yRot="0.0" zRot="0.0" />
+    <zoomLevel zoom="0.29728725604828676" />
+  </parameters>
+  <thing id="1" color.r="1.0" color.g="0.0" color.b="0.0" color.a="1.0" name="task_5a2e7bba650000d21136b1a4_Julian_Heller_001">
+    <nodes>
+      <node id="4" radius="120.0" x="4700" y="1585" z="1974" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="8" interpolation="true" time="1513016718422" />
+      <node id="5" radius="120.0" x="4715" y="1560" z="1976" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="8" interpolation="true" time="1513016727076" />
+      <node id="1" radius="120.0" x="4690" y="1655" z="1957" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="1" inMag="1" bitDepth="0" interpolation="false" time="1512995770037" />
+      <node id="3" radius="120.0" x="4698" y="1597" z="1971" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="8" interpolation="true" time="1513016714972" />
+      <node id="6" radius="120.0" x="4723" y="1550" z="1979" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="8" interpolation="true" time="1513016836242" />
+      <node id="2" radius="120.0" x="4706" y="1626" z="1963" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="8" interpolation="true" time="1513016705965" />
+    </nodes>
+    <edges>
+      <edge source="5" target="6" />
+      <edge source="4" target="5" />
+      <edge source="3" target="4" />
+      <edge source="2" target="3" />
+      <edge source="1" target="2" />
+    </edges>
+  </thing>
+  <branchpoints />
+  <comments>
+    <comment node="6" content="unsure" />
+  </comments>
+</things>
