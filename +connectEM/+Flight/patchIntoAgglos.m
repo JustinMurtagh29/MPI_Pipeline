@@ -41,13 +41,6 @@ function out = patchIntoAgglos(param, agglos, flights)
         curAggloIds = find(aggloComps == curComp);
         curAgglos = agglos(curAggloIds);
         
-        % fast path
-        % TODO(amotta): Remove for dangling flights
-        if isscalar(curAgglos)
-            out.agglos(curComp) = curAgglos;
-            continue;
-        end
-        
         curAgglo = struct;
         curAgglo.nodes = cat(1, curAgglos.nodes);
         
@@ -84,10 +77,15 @@ function out = patchIntoAgglos(param, agglos, flights)
 
             curEndId = aggloLUT(1 + curSegIds);
             curOverlaps = flights.overlaps(curId, :);
-
-            % find flight path stretch to extract
-            curEndMask = any(curEndId == curOverlaps(2), 1);
-            curEndIdx = 1 + find(curEndMask(2:end), 1, 'first');
+            
+            if curOverlaps(2)
+                % find flight path stretch to extract
+                curEndIdx = any(curEndId == curOverlaps(2), 1);
+                curEndIdx = 1 + find(curEndIdx(2:end), 1, 'first');
+            else
+                % flight path is dangling
+                curEndIdx = 1 + size(curOverlaps, 2);
+            end
             
             if ~isfield(flights, 'seedNodeIds') ...
                     || ~flights.seedNodeIds(curId)
@@ -106,11 +104,16 @@ function out = patchIntoAgglos(param, agglos, flights)
                 curStartNodeId = curNodeOff(curAggloIds == curOverlaps(1));
                 curStartNodeId = curStartNodeId + flights.seedNodeIds(curId);
             end
-
-            curEndNodeId = find( ...
-                curEndId(:, curEndIdx) == curOverlaps(2), 1);
-            curEndNodeId = curSegIds(curEndNodeId, curEndIdx);
-            curEndNodeId = curSegLUT(curEndNodeId);
+            
+            if curOverlaps(2)
+                curEndNodeId = find( ...
+                    curEndId(:, curEndIdx) == curOverlaps(2), 1);
+                curEndNodeId = curSegIds(curEndNodeId, curEndIdx);
+                curEndNodeId = curSegLUT(curEndNodeId);
+            else
+                % no end attachment for dangling flights
+                curEndNodeId = 0;
+            end
 
             % path in flight nodes
             curNodesToAdd = flights.nodes{curId};
@@ -132,6 +135,11 @@ function out = patchIntoAgglos(param, agglos, flights)
             % connect to super-agglomerates
             curEdgesToAdd(1) = curStartNodeId;
             curEdgesToAdd(end) = curEndNodeId;
+            
+            if ~curEdgesToAdd(end)
+                % remove last edge, if dangling
+                curEdgesToAdd(end, :) = [];
+            end
 
             curFlightNodes{curIdx} = curNodesToAdd;
             curFlightEdges{curIdx} = curEdgesToAdd;
