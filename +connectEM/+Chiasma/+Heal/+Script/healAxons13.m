@@ -199,3 +199,44 @@ fprintf('Patching flights into agglomerates... ');
 out = connectEM.Flight.patchIntoAgglos(param, allAxons, flights);
 fprintf('done!\n');
 toc;
+
+%% debug patching in
+if logical(debugDir)
+    rng(0);
+    mkdir(debugDir);
+    
+    % select random flights
+    flightCount = size(flights.filenames, 1);
+    flightIds = randperm(flightCount, 20);
+    
+    for curIdx = 1:numel(flightIds)
+        curFlightId = flightIds(curIdx);
+        curTaskId = flights.filenamesShort{curFlightId};
+        
+        curSkel = skeleton();
+
+        curFlightNodes = flights.nodes{curFlightId};
+        curSkel = curSkel.addTree('Flights', curFlightNodes);
+        
+        curAggloIdsPre = flights.overlaps(curFlightId, 1);
+        for curPreIdx = 1:numel(curAggloIdsPre)
+            curPreId = curAggloIdsPre(curPreIdx);
+            curAggloPre = axons(curPreId);
+            
+            curSkel = curSkel.addTree( ...
+                sprintf('Axon Pre (%d)', curPreId), ...
+                curAggloPre.nodes(:, 1:3), curAggloPre.edges);
+        end
+        
+        curAggloIdPost = out.childIds(curAggloIdsPre(1));
+        curAggloPost = out.agglos(curAggloIdPost);
+        curSkel = curSkel.addTree( ...
+            sprintf('Axon Post (%d)', curAggloIdPost), ...
+            curAggloPost.nodes(:, 1:3), curAggloPost.edges);
+        
+        curSkel = Skeleton.setParams4Pipeline(curSkel, param);
+        
+        curSkelName = sprintf('%d_flight-%s.nml', curIdx, curTaskId);
+        curSkel.write(fullfile(debugDir, curSkelName));
+    end
+end
