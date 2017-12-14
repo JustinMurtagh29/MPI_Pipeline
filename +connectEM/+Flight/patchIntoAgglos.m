@@ -23,7 +23,7 @@ function out = patchIntoAgglos(param, axons, flights)
     out.axons = axons([]);
 
     for curComp = 1:axonCompCount
-        curAxonIds = (axonComps == curComp);
+        curAxonIds = find(axonComps == curComp);
         curAxons = axons(curAxonIds);
 
         if numel(curAxons) == 1
