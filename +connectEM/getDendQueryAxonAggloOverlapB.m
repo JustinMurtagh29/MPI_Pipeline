@@ -1,4 +1,4 @@
-function getDendQueryAxonAggloOverlapB(param,suffix)
+function getDendQueryAxonAggloOverlapB(param,state)
     % Written by
     %   Manuel Berning <manuel.berning@brain.mpg.de>
     %   Christian Schramm <christian.schramm@brain.mpg.de>
@@ -7,17 +7,18 @@ function getDendQueryAxonAggloOverlapB(param,suffix)
     dataDir = fullfile(param.saveFolder, 'aggloState');
     
     % State of query generation
+    [~, suffixVersion, flighpathVersion, suffixDendrites] = connectEM.setDendriteQueryState(state);  
     
     % Load flight paths
-    m = load(fullfile(dataDir, strcat('dendriteFlightPaths_',suffix,'.mat')), 'ff');
+    m = load(fullfile(dataDir, strcat('dendriteFlightPaths_',flighpathVersion,'.mat')), 'ff');
     ff = m.ff;
 
     % Load axon agglomerates
-    m = load(fullfile(dataDir, 'axons_09_a.mat'));
+    m = load(fullfile(dataDir, 'axons_13_a.mat'));
     axons = m.axons(m.indBigAxons);
     axons = arrayfun(@Agglo.fromSuperAgglo, axons, 'UniformOutput', false);
     clear m;
-    m = load(fullfile(dataDir, 'dendrites_flight_01.mat'));
+    m = load(fullfile(dataDir, sprintf('dendrites_%s.mat',suffixDendrites)));
     dendrites = m.dendrites(m.indBigDends);
     dendrites = arrayfun(@Agglo.fromSuperAgglo, dendrites, 'UniformOutput', false);
     clear m;
@@ -27,7 +28,7 @@ function getDendQueryAxonAggloOverlapB(param,suffix)
     ff = structfun(@(x)x(cellfun(@isempty, ff.comments)), ff, 'uni', 0);
     ff = structfun(@(x)x(~cellfun(@isempty, ff.startNode)), ff, 'uni', 0);
 
-    m = load(fullfile(dataDir, strcat('dendritePostQueryAnalysisState_',suffix,'.mat')));
+    m = load(fullfile(dataDir, strcat('dendritePostQueryAnalysisState_',suffixVersion,'.mat')));
     idxNoClearEnd = m.idxNoClearEnd;
     clear m
     ff = structfun(@(x)x(idxNoClearEnd), ff, 'uni', 0);
@@ -64,7 +65,7 @@ function getDendQueryAxonAggloOverlapB(param,suffix)
     results.gitInfo = Util.gitInfo();
 
     % Save results and deprive writing permission
-    saveFile = fullfile(dataDir, strcat('axonDendriteQueryOverlaps_',suffix,'.mat'));
+    saveFile = fullfile(dataDir, strcat('axonDendriteQueryOverlaps_',suffixVersion,'.mat'));
     save(saveFile, 'results', 'queryOverlap', 'idxNoClearAxonAttachment','idxNoClearDendriteAttachment');
     system(['chmod -w ' saveFile]);
     
