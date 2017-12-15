@@ -1,4 +1,4 @@
-function [skeletonFolders, versionSuffix, dendriteVersion,...
+function [skeletonFolders, versionSuffix, flighpathVersion, dendriteVersion,...
     dendriteVersionNew, casesToMerge] = setDendriteQueryState(state)
     % Written by
     %   Christian Schramm <christian.schramm@brain.mpg.de>
@@ -19,6 +19,7 @@ function [skeletonFolders, versionSuffix, dendriteVersion,...
             skeletonFolders = cellfun(@(x)[scratchFolder x filesep], skeletonFolders, 'uni', 0);
             % filename additionals for getAggloQueryOverlapB and flightEndingOverlapRun
             versionSuffix = '1.0';
+            flighpathVersion = '1.0';
             dendriteVersion = 'flight_01';
             
             % Commented queries of first clean run
@@ -29,6 +30,7 @@ function [skeletonFolders, versionSuffix, dendriteVersion,...
             skeletonFolders = cellfun(@(x)[scratchFolder x filesep], skeletonFolders, 'uni', 0);
             % filename additionals for getAggloQueryOverlapB and flightEndingOverlapRun
             versionSuffix = '_1.1';
+            flighpathVersion = '_1.1';
             dendriteVersion = 'flight_01';
             
             % Second run
@@ -39,6 +41,7 @@ function [skeletonFolders, versionSuffix, dendriteVersion,...
             skeletonFolders = cellfun(@(x)[scratchFolder x filesep], skeletonFolders, 'uni', 0);
             % filename additionals for getAggloQueryOverlapB and flightEndingOverlapRun
             versionSuffix = '2.0';
+            flighpathVersion = '2.0';
             dendriteVersion = 'flight_01';
             dendriteVersionNew = 'flight_02';
             
@@ -49,7 +52,8 @@ function [skeletonFolders, versionSuffix, dendriteVersion,...
             skeletonFolders = {'L4_dendrite_queries_01_11_2017'};
             skeletonFolders = cellfun(@(x)[scratchFolder x filesep], skeletonFolders, 'uni', 0);
             % filename additionals for getAggloQueryOverlapB and flightEndingOverlapRun
-            versionSuffix = '_2.1';
+            versionSuffix = '_1.1';
+            flighpathVersion = '2.0';
             dendriteVersion = 'flight_01';
             
             % Run with the whole cells included
@@ -60,6 +64,7 @@ function [skeletonFolders, versionSuffix, dendriteVersion,...
             skeletonFolders = cellfun(@(x)[scratchFolder x filesep], skeletonFolders, 'uni', 0);
             % filename additionals for getAggloQueryOverlapB and flightEndingOverlapRun
             versionSuffix = '2.2';
+            flighpathVersion = '2.0';
             dendriteVersion = 'andWholeCells_01';
             dendriteVersionNew = 'andWholeCells_02';
         otherwise

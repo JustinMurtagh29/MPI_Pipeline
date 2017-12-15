@@ -19,7 +19,7 @@ function getAggloQueryOverlapA(param,state,type)
     if type ==1
         [skeletonFolders, suffix] = connectEM.setQueryState(state);    
     else
-        [skeletonFolders, suffix] = connectEM.setDendriteQueryState(state);
+        [skeletonFolders,~, suffix] = connectEM.setDendriteQueryState(state);
     end
 
     % Lookup segment ids of nodes+neighbours of nmls in all folders defined above

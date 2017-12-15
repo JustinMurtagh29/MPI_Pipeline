@@ -4,7 +4,7 @@ function createNewDendriteSuperagglos(param, state)
    
     dataDir = fullfile(param.saveFolder, 'aggloState');
 
-    [~, suffix, dendriteVersion, dendriteVersionNew] = ...
+    [~, suffix, ~, dendriteVersion, dendriteVersionNew] = ...
         connectEM.setDendriteQueryState(state);
 
     % Load current state of agglomerates
