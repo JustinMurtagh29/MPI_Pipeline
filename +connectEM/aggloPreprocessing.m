@@ -678,3 +678,29 @@ disp('State 16 dendrites loaded/generated')
 %     clear dendrites myelinDend indBigDends
 %     load(fullfile(outputFolder,'dendrites_08.mat'))
 % end
+
+
+%% remove axons from whole cells and add them to a new state of dendrites
+assert(isequal(uint32(1:max(segmentMeta.segIds))',segmentMeta.segIds))
+for n = 1:numel(wholeCells)
+    branches = Superagglos.removeSegIdsFromAgglos(wholeCells(n),somaSegIds);
+    branches = branches(arrayfun(@(x) size(x.nodes,1),branches)>20); % remove all small leftovers smaller than 20 nodes
+    [axonP,dendriteP] = arrayfun(@(x) deal(median(segmentMeta.axonProb(x.nodes(~isnan(x.nodes(:,4)),4))),median(segmentMeta.dendriteProb(x.nodes(~isnan(x.nodes(:,4)),4)))),branches);
+    [~,ind1] = min(dendriteP);
+    [~,ind2] = max(axonP);
+    if ind1==ind2
+        wholeCells(n).axon = ismember(wholeCells(n).nodes,branches(ind1).nodes,'rows');
+    else
+        error('not working')
+    end
+end
+
+wholeCellsNoAxon = Superagglos.removeNodesFromAgglo(wholeCells,arrayfun(@(x) x.axon,wholeCells,'uni',0)); % get the whole cells without the axon
+
+indWholeCells = cat(1,false(numel(dendrites),1),true(numel(wholeCellsNoAxon),1));
+dendrites = cat(1,dendrites,wholeCellsNoAxon);
+indBigDends = cat(1,indBigDends,true(numel(wholeCellsNoAxon),1));
+[ myelinDend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
+
+save(fullfile(outputFolder,'dendrites+wholeCells_01.mat'),'dendrites','myelinDend','indBigDends')%,'info');
+

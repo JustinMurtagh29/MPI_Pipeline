@@ -1,5 +1,5 @@
 function [newSuperagglos] = removeSegIdsFromAgglos(superagglos,ids, noCC )
-% removes a set of segment IDs from all superagglos and, if noCC flag is not true performs connected
+% removes a set of segment IDs from all superagglos and, if noCC flag is false, it performs connected
 % component afterwards to ensure internode connectivity in each superagglo
 if ~exist('noCC','var') || isempty(noCC)
     noCC = 0;
@@ -78,11 +78,15 @@ newnodes = cellfun(@(x) nodes(x,:),equivalenceClass,'uni',0)';
 for f = 1:numel(fNames)
     if size(tmpstrct{f},1) == size(nodes,1) % apply same sorting to all other field names if their size was the same as the number of nodes, else leave the same
         tmpstrct{f} = cellfun(@(x) tmpstrct{f}(x,:),equivalenceClass,'uni',0)';
+    elseif size(tmpstrct{f},1) ==1
+        tmpstrct{f} = repmat(tmpstrct{f},1,numel(equivalenceClass));
+    elseif isempty(tmpstrct{f})
+        tmpstrct{f} = cell(1,numel(equivalenceClass));
     end
 end
 % tranform the global node ids in the edge vector to local node ids
 [~, newedges] = cellfun(@(x,y) ismember(x,y),newedges,equivalenceClass','uni',0);
 
-newSuperagglos = cell2struct([newedges;newnodes;tmpstrct(:)],[{'edges'},{'nodes'},fNames'],1);
+newSuperagglos = cell2struct([newedges;newnodes;tmpstrct{:}],[{'edges'},{'nodes'},fNames'],1);
 end
 
