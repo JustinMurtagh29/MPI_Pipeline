@@ -27,6 +27,10 @@ tasks = cellfun(@(id) struct( ...
 	'flightDataFileBuild', false), ...
     taskGenIds);
 
+% output file
+healedAxonsFile = sprintf('%s_healedAxons.mat', taskGenIds{1});
+healedAxonsFile = fullfile(taskGenDir, healedAxonsFile);
+
 info = Util.runInfo();
 
 %% loading parameters
@@ -210,6 +214,10 @@ out = rmfield(out, 'agglos');
 out.indBigAxons = accumarray( ...
     out.childIds, axonMaskBig, [], @any);
 out.info = info;
+
+%% saving result
+Util.saveStruct(healedAxonsFile, out);
+system(sprintf('chmod a-w "%s"', healedAxonsFile));
 
 %% debug patching in
 if logical(debugDir)
