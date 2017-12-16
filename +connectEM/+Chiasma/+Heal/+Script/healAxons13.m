@@ -40,10 +40,10 @@ axonFile = load(axonFile, 'axonFile');
 axonFile = axonFile.axonFile;
 
 axons = load(axonFile, 'axons', 'indBigAxons');
-axonIdsBig = find(axons.indBigAxons);
+axonMaskBig = axons.indBigAxons(:);
 
 allAxons = axons.axons;
-axons = axons.axons(axonIdsBig);
+axons = axons.axons(axonMaskBig);
 
 %% build data file, if necessary
 queries = cell(size(tasks));
@@ -202,6 +202,14 @@ fprintf('Patching flights into agglomerates... ');
 out = connectEM.Flight.patchIntoAgglos(param, allAxons, flights);
 fprintf('done!\n');
 toc;
+
+%% complete output
+out.axons = out.agglos;
+out = rmfield(out, 'agglos');
+
+out.indBigAxons = accumarray( ...
+    out.childIds, axonMaskBig, [], @any);
+out.info = info;
 
 %% debug patching in
 if logical(debugDir)
