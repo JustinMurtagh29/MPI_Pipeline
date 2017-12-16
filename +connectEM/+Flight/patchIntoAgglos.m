@@ -168,6 +168,6 @@ function out = patchIntoAgglos(param, agglos, flights)
         out.agglos(curComp) = curAgglo;
     end
     
-    out.aggos = reshape(out.agglos, [], 1);
+    out.agglos = reshape(out.agglos, [], 1);
     out.childIds = reshape(aggloComps, [], 1);
 end
