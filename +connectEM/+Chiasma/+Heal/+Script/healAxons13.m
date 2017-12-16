@@ -187,6 +187,9 @@ if generateRequeries
     out.endings = endings;
     out.taskDefs = taskDefs;
     out.taskDefFile = taskDefFile;
+    
+    % add fake `axonFile` param
+    out.info.param.axonFile = axonFile;
 
     outFile = sprintf('%s_taskGeneration.mat', runId);
     Util.saveStruct(fullfile(taskGenDir, outFile), out);
