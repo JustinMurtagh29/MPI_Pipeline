@@ -204,6 +204,11 @@ if ~exist(fullfile(outputFolder,'dendrites_03_v2_splitmerged.mat'),'file') || ov
     fprintf('Folder with correction nmls for state dendrites_03_v2 is %s\n',fullfile(outputFolder,correctionFolder));
 %     [dendrites,dendriteLUT] = connectEM.applyWholeCellCorrections(dendrites,somaAgglos,p,fullfile(outputFolder,correctionFolder),1);
     [dendrites,dendriteLUT] = connectEM.applyAggloCorrections(dendrites,p,fullfile(outputFolder,correctionFolder),1);
+    
+    % test for duplets
+    agglos = cell2mat(Superagglos.transformAggloNewOldRepr(dendrites));
+    assert(numel(agglos)==numel(unique(agglos)))
+    
     dendriteSegIds = find(dendriteLUT);
     [ismem,ind] = ismember(somaSegIds,dendriteSegIds);
     % get each dend id which contains most of the seg ids of each soma
@@ -226,6 +231,10 @@ if ~exist(fullfile(outputFolder,'dendrites_04.mat'),'file') || overwrite
     fprintf('Folder with correction nmls for state dendrites_03_v2_splitmerged is %s\n',fullfile(outputFolder,correctionFolder));
     [dendrites,dendriteLUT] = connectEM.applyAggloCorrections(dendrites,p,fullfile(outputFolder,correctionFolder));
 
+    % test for duplets
+    agglos = cell2mat(Superagglos.transformAggloNewOldRepr(dendrites));
+    assert(numel(agglos)==numel(unique(agglos)))
+    
     dendriteSegIds = find(dendriteLUT);
     [ismem,ind] = ismember(somaSegIds,dendriteSegIds);
     % get each dend id which contains most of the seg ids of each soma
@@ -254,6 +263,10 @@ if ~exist(fullfile(outputFolder,'dendrites_05.mat'),'file') || overwrite
     [axons,axonLUT] = connectEM.applyAggloCorrections(axons,p,fullfile(outputFolder,correctionFolder,'checkedBeforeAdd'),1);
     
     [dendrites,dendriteLUT] = connectEM.applyAggloCorrections(dendrites,p,fullfile(outputFolder,correctionFolder),0,axons);
+    
+    % test for duplets
+    agglos = cell2mat(Superagglos.transformAggloNewOldRepr(dendrites));
+    assert(numel(agglos)==numel(unique(agglos)))
     
     dendriteSegIds = find(dendriteLUT);
     [ismem,ind] = ismember(somaSegIds,dendriteSegIds);
@@ -289,6 +302,10 @@ if ~exist(fullfile(outputFolder,'wholeCells_02.mat'),'file') || overwrite
     
     [dendrites,dendriteLUT] = connectEM.applyAggloCorrections(cat(1,wholeCells,dendrites),p,fullfile(outputFolder,correctionFolder),0,axons);
     
+    % test for duplets
+    agglos = cell2mat(Superagglos.transformAggloNewOldRepr(dendrites));
+    assert(numel(agglos)==numel(unique(agglos)))
+    
     dendriteSegIds = find(dendriteLUT);
     [ismem,ind] = ismember(somaSegIds,dendriteSegIds);
     % get each dend id which contains most of the seg ids of each soma
@@ -321,6 +338,10 @@ if ~exist(fullfile(outputFolder,'wholeCells_03.mat'),'file') || overwrite
     % no correction was necessary
     
     [dendrites,dendriteLUT] = connectEM.applyAggloCorrections(cat(1,wholeCells,dendrites),p,fullfile(outputFolder,correctionFolder),0,axons);
+    
+    % test for duplets
+    agglos = cell2mat(Superagglos.transformAggloNewOldRepr(dendrites));
+    assert(numel(agglos)==numel(unique(agglos)))
     
     dendriteSegIds = find(dendriteLUT);
     [ismem,ind] = ismember(somaSegIds,dendriteSegIds);
@@ -370,6 +391,10 @@ if ~exist(fullfile(outputFolder,'dendrites_08.mat'),'file') || overwrite
     fprintf('Folder with correction nmls for state dendrites_07 is %s\n',fullfile(outputFolder,correctionFolder));
     [dendrites,dendriteLUT] = connectEM.applyAggloCorrections(dendrites,p,fullfile(outputFolder,correctionFolder),1);
   
+    % test for duplets
+    agglos = cell2mat(Superagglos.transformAggloNewOldRepr(dendrites));
+    assert(numel(agglos)==numel(unique(agglos)))
+    
     indBigDends = Agglo.isMaxBorderToBorderDistAbove(p, 5000, Superagglos.transformAggloNewOldRepr(dendrites));
     [ myelinDend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
     save(fullfile(outputFolder,'dendrites_08.mat'),'dendrites','BorderWholeCellId','myelinDend','indBigDends')%,'info');
@@ -399,6 +424,14 @@ if ~exist(fullfile(outputFolder,'dendrites_09.mat'),'file') || overwrite
     
     [dendrites,dendriteLUT] = connectEM.applyAggloCorrections(dendrites,p,fullfile(outputFolder,correctionFolder),0,axons);
 
+    % test for duplets
+    agglos = cell2mat(Superagglos.transformAggloNewOldRepr(dendrites));
+    assert(numel(agglos)==numel(unique(agglos)))
+    
+    % test for duplets
+    agglos = cell2mat(Superagglos.transformAggloNewOldRepr(dendrites));
+    assert(numel(agglos)==numel(unique(agglos)))
+    
     dendriteSegIds = find(dendriteLUT);
     [ismem,ind] = ismember(somaSegIds,dendriteSegIds);
     % get each dend id which contains most of the seg ids of each soma
@@ -432,6 +465,10 @@ if ~exist(fullfile(outputFolder,'dendrites_10.mat'),'file') || overwrite
     
     [dendrites,dendriteLUT] = connectEM.applyAggloCorrections(dendrites,p,fullfile(outputFolder,correctionFolder),0,axons);
 
+    % test for duplets
+    agglos = cell2mat(Superagglos.transformAggloNewOldRepr(dendrites));
+    assert(numel(agglos)==numel(unique(agglos)))
+    
     dendriteSegIds = find(dendriteLUT);
     [ismem,ind] = ismember(somaSegIds,dendriteSegIds);
     % get each dend id which contains most of the seg ids of each soma
@@ -465,7 +502,11 @@ if ~exist(fullfile(outputFolder,'dendrites_11.mat'),'file') || overwrite
     
     
     [dendrites,dendriteLUT] = connectEM.applyAggloCorrections(dendrites,p,fullfile(outputFolder,correctionFolder),0,axons);
-
+    
+    % test for duplets
+    agglos = cell2mat(Superagglos.transformAggloNewOldRepr(dendrites));
+    assert(numel(agglos)==numel(unique(agglos)))
+    
     dendriteSegIds = find(dendriteLUT);
     [ismem,ind] = ismember(somaSegIds,dendriteSegIds);
     % get each dend id which contains most of the seg ids of each soma
@@ -499,7 +540,11 @@ if ~exist(fullfile(outputFolder,'dendrites_12.mat'),'file') || overwrite
     
     
     [dendrites,dendriteLUT] = connectEM.applyAggloCorrections(dendrites,p,fullfile(outputFolder,correctionFolder),0,axons);
-
+    
+    % test for duplets
+    agglos = cell2mat(Superagglos.transformAggloNewOldRepr(dendrites));
+    assert(numel(agglos)==numel(unique(agglos)))
+    
     dendriteSegIds = find(dendriteLUT);
     [ismem,ind] = ismember(somaSegIds,dendriteSegIds);
     % get each dend id which contains most of the seg ids of each soma
@@ -525,6 +570,10 @@ if ~exist(fullfile(outputFolder,'wholeCells_04.mat'),'file') || overwrite
     
     [dendrites,dendriteLUT] = connectEM.applyAggloCorrections(dendrites,p,fullfile(outputFolder,correctionFolder),0,axons);
 
+    % test for duplets
+    agglos = cell2mat(Superagglos.transformAggloNewOldRepr(dendrites));
+    assert(numel(agglos)==numel(unique(agglos)))
+    
     dendriteSegIds = find(dendriteLUT);
     [ismem,ind] = ismember(somaSegIds,dendriteSegIds);
     % get each dend id which contains most of the seg ids of each soma
@@ -573,7 +622,11 @@ if ~exist(fullfile(outputFolder,'wholeCells_05.mat'),'file') || overwrite
     fprintf('Folder with correction nmls for state dendrites_13 is %s\n',fullfile(outputFolder,correctionFolder));
     
     [dendrites,dendriteLUT] = connectEM.applyAggloCorrections(cat(1,wholeCells,dendrites),p,fullfile(outputFolder,correctionFolder),0,axons);
-
+    
+    % test for duplets
+    agglos = cell2mat(Superagglos.transformAggloNewOldRepr(dendrites));
+    assert(numel(agglos)==numel(unique(agglos)))
+    
     dendriteSegIds = find(dendriteLUT);
     [ismem,ind] = ismember(somaSegIds,dendriteSegIds);
     % get each dend id which contains most of the seg ids of each soma
@@ -607,7 +660,11 @@ if ~exist(fullfile(outputFolder,'wholeCells_06.mat'),'file') || overwrite
     fprintf('Folder with correction nmls for state dendrites_14 is %s\n',fullfile(outputFolder,correctionFolder));
     
     [dendrites,dendriteLUT] = connectEM.applyAggloCorrections(cat(1,wholeCells,dendrites),p,fullfile(outputFolder,correctionFolder),0,axons);
-
+    
+    % test for duplets
+    agglos = cell2mat(Superagglos.transformAggloNewOldRepr(dendrites));
+    assert(numel(agglos)==numel(unique(agglos)))
+    
     dendriteSegIds = find(dendriteLUT);
     [ismem,ind] = ismember(somaSegIds,dendriteSegIds);
     % get each dend id which contains most of the seg ids of each soma
@@ -641,7 +698,11 @@ if ~exist(fullfile(outputFolder,'wholeCells_06.mat'),'file') || overwrite
     fprintf('Folder with correction nmls for state dendrites_15 is %s\n',fullfile(outputFolder,correctionFolder));
     
     [dendrites,dendriteLUT] = connectEM.applyAggloCorrections(cat(1,wholeCells,dendrites),p,fullfile(outputFolder,correctionFolder),0,axons);
-
+    
+    % test for duplets
+    agglos = cell2mat(Superagglos.transformAggloNewOldRepr(dendrites));
+    assert(numel(agglos)==numel(unique(agglos)))
+    
     dendriteSegIds = find(dendriteLUT);
     [ismem,ind] = ismember(somaSegIds,dendriteSegIds);
     % get each dend id which contains most of the seg ids of each soma
@@ -736,9 +797,12 @@ end
 
 % concatenate truncated whole cells with dendrite class and make new state
 indWholeCells = cat(1,false(numel(dendrites),1),true(numel(wholeCellsNoAxon),1));
-dendrites = cat(1,dendrites,wholeCellsNoAxon);
+dendrites = cat(1,dendrites,wholeCellsNoAxon');
 indBigDends = cat(1,indBigDends,true(numel(wholeCellsNoAxon),1));
 [ myelinDend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
 
 save(fullfile(outputFolder,'dendrites_andWholeCells_01.mat'),'dendrites','myelinDend','indBigDends','indWholeCells')%,'info');
-
+%%
+connectEM.getDendriteQueryOverlapB(p,'2.2')
+connectEM.getDendQueryAxonAggloOverlapB(p,'2.2')
+connectEM.createNewDendriteSuperagglos(p,'2.2')
