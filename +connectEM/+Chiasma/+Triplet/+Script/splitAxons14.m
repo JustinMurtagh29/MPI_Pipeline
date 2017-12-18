@@ -3,7 +3,6 @@
 import connectEM.Chiasma.*;
 import connectEM.Chiasma.Flight.loadSplitData;
 import connectEM.Chiasma.Flight.shuffleExits;
-import connectEM.Chiasma.Util.loadFlightPaths;
 import connectEM.Chiasma.Util.loadTaskIds;
 
 clear;
