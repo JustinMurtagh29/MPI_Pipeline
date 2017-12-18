@@ -2,8 +2,8 @@ function splitData = loadSplitData(param, taskGenFile, taskIdFile, nmlDir)
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     import connectEM.Chiasma.Util.loadTaskIds;
-    import connectEM.Chiasma.Util.loadFlightPaths;
     import connectEM.Chiasma.Flight.buildSplitData;
+    import connectEM.Flight.loadFromDirs;
     
     % task definitions
     taskGenData = load(taskGenFile);
@@ -21,7 +21,7 @@ function splitData = loadSplitData(param, taskGenFile, taskIdFile, nmlDir)
     taskIds = taskIds.id;
 
     % flight paths
-    flights = loadFlightPaths(param, nmlDir);
+    flights = loadFromDirs(param, nmlDir);
 
     % build split file
     splitData = buildSplitData( ...
