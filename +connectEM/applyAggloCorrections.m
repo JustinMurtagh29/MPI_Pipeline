@@ -157,7 +157,19 @@ for f = 1:numel(files)
                             axons(indToAddAxons(i)).comments = repmat({''},size(axons(indToAddAxons(i)).nodes,1),1);
                         end
                         axons(indToAddAxons(i)).comments(indComment) = repmat({'attached segments'},numel(indComment),1);
-                        
+                    end
+                    indToAddDendritesAll = cat(1,indToAddDendritesAll,indToAddDendrites);
+                    for i = 1:numel(indToAddDendrites)
+                        [~,indComment] = ismember(theseSkelSegIds,dendrites(indToAddDendrites(i)).nodes(:,4));
+                        indComment = nonzeros(indComment);
+                        if isempty(dendrites(indToAddDendrites(i)).comments)
+                            dendrites(indToAddDendrites(i)).comments = repmat({''},size(dendrites(indToAddDendrites(i)).nodes,1),1);
+                        end
+                        dendrites(indToAddDendrites(i)).comments(indComment) = repmat({'attached segments'},numel(indComment),1);
+                    end
+                    continue
+                elseif modus == 0
+                    for i = 1:numel(indToAddAxons)
                         % this part handles the problem of segment ID
                         % duplets in axon and dendrite class by either
                         % removing segIds from dendrite class that are in
@@ -172,26 +184,15 @@ for f = 1:numel(files)
                             count = count(2:end);
                         end
                         canBeDeleted = arrayfun(@(x) size(x.nodes,1),dendrites(indDend))==count; % if the whole dendrite agglos is contained in the axon it can be removed from dendrite class
-                        dendritesLUT = connectEM.changem(dendritesLUT,(0:numel(dendrites))-[0, cumsum(accumarray(indDend(canBeDeleted),1,[numel(dendrites),1]))'],0:numel(dendrites));
-                        dendrites(indDend(canBeDeleted)) = [];
+                        [dendrites,dendritesLUT] = Superagglos.remove(dendrites,indDend(canBeDeleted),dendritesLUT);
                         ind = ind - sum(indDend(canBeDeleted) <= ind); % update index to agglomerate
-                        indDend = indDend(~canBeDeleted);  % get all dendrite agglos that have only partial overlap with the axon
-                        for d = 1:numel(indDend) % go through these agglos, get the segId duplets and transform the axon nodes with segID duplets into a flight path
-                            makeTheseNaN = ismember(axons(indToAddAxons(i)).nodes(:,4),axSegIds(indDend(d) == dendritesLUT(axSegIds)));
+                        indDendRest = indDendRest(~canBeDeleted);  % get all dendrite agglos that have only partial overlap with the axon
+                        for d = 1:numel(indDendRest) % go through these agglos, get the segId duplets and transform the axon nodes with segID duplets into a flight path
+                            makeTheseNaN = ismember(axons(indToAddAxons(i)).nodes(:,4),axSegIds(indDendRest(d) == dendritesLUT(axSegIds)));
                             axons(indToAddAxons(i)).nodes(makeTheseNaN,4) = NaN;
                             axons(indToAddAxons(i)).nodes(makeTheseNaN,1:3) = axons(indToAddAxons(i)).nodes(makeTheseNaN,1:3)+0.1; % add tiny value to coordinate to make it different from segment centroid
                         end
                     end
-                    indToAddDendritesAll = cat(1,indToAddDendritesAll,indToAddDendrites);
-                    for i = 1:numel(indToAddDendrites)
-                        [~,indComment] = ismember(theseSkelSegIds,dendrites(indToAddDendrites(i)).nodes(:,4));
-                        indComment = nonzeros(indComment);
-                        if isempty(dendrites(indToAddDendrites(i)).comments)
-                            dendrites(indToAddDendrites(i)).comments = repmat({''},size(dendrites(indToAddDendrites(i)).nodes,1),1);
-                        end
-                        dendrites(indToAddDendrites(i)).comments(indComment) = repmat({'attached segments'},numel(indComment),1);
-                    end
-                    continue
                 end
 
                 % find nodes at segIds that are not part of the whole cell or
