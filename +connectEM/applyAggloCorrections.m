@@ -219,8 +219,7 @@ for f = 1:numel(files)
                  % remove agglo which has been added and update LUT
                 axonsLUT = connectEM.changem(axonsLUT,(0:numel(axons))- [0, cumsum(accumarray(indToAddAxons,1,[numel(axons),1]))'],0:numel(axons));
                 axons(indToAddAxons) = [];
-                dendritesLUT = connectEM.changem(dendritesLUT,(0:numel(dendrites))-[0, cumsum(accumarray(indToAddDendrites,1,[numel(dendrites),1]))'],0:numel(dendrites));
-                dendrites(indToAddDendrites) = [];
+                [dendrites,dendritesLUT] = Superagglos.remove(dendrites,indToAddDendrites,dendritesLUT);
                 ind = ind - sum(indToAddDendrites <= ind); % update index to agglomerate
                 agglos = cell2mat(Superagglos.transformAggloNewOldRepr(dendrites));
                 assert(numel(agglos)==numel(unique(agglos)))
