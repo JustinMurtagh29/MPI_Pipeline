@@ -142,5 +142,5 @@ if maxNrRequeries > 0
     Util.saveStruct(fullfile(taskGenDir, outFile), out);
     
     %% report if new queries were generated
-    fprint('%d new queries in %s\n', size(taskDefs, 1), taskDefFile);
+    fprintf('%d new queries in %s\n', size(taskDefs, 1), taskDefFile);
 end
