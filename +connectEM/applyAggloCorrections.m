@@ -157,6 +157,30 @@ for f = 1:numel(files)
                             axons(indToAddAxons(i)).comments = repmat({''},size(axons(indToAddAxons(i)).nodes,1),1);
                         end
                         axons(indToAddAxons(i)).comments(indComment) = repmat({'attached segments'},numel(indComment),1);
+                        
+                        % this part handles the problem of segment ID
+                        % duplets in axon and dendrite class by either
+                        % removing segIds from dendrite class that are in
+                        % the axon to be added (if whole dendrite agglo is
+                        % contained in the axon) or by transforming the locations
+                        % in dendrite agglos with segment duplets to a flight path
+                        axSegIds = axons(indToAddAxons(i)).nodes(~isnan(axons(indToAddAxons(i)).nodes(:,4)),4); % get all axon seg Ids
+                        indDend = unique(dendritesLUT(axSegIds));       % get dendrites that contain these seg Ids ,too
+                        count = histc(dendritesLUT(axSegIds),indDend);  % count how many such duplets each of the dendrite agglos have
+                        if indDend(1) == 0                              % remove zeros from the LUT
+                            indDend = indDend(2:end);
+                            count = count(2:end);
+                        end
+                        canBeDeleted = arrayfun(@(x) size(x.nodes,1),dendrites(indDend))==count; % if the whole dendrite agglos is contained in the axon it can be removed from dendrite class
+                        dendritesLUT = connectEM.changem(dendritesLUT,(0:numel(dendrites))-[0, cumsum(accumarray(indDend(canBeDeleted),1,[numel(dendrites),1]))'],0:numel(dendrites));
+                        dendrites(indToAddDendrites) = [];
+                        ind = ind - sum(indDend(canBeDeleted) <= ind); % update index to agglomerate
+                        indDend = indDend(~canBeDeleted);  % get all dendrite agglos that have only partial overlap with the axon
+                        for d = 1:numel(indDend) % go through these agglos and transform the nodes with segID duplets into a flight path
+                            makeTheseNaN = ismember(axons(indToAddAxons(i)).nodes(:,4),axSegIds(indDend(d) == dendritesLUT(axSegIds)));
+                            axons(indToAddAxons(i)).nodes(makeTheseNaN,4) = NaN;
+                            axons(indToAddAxons(i)).nodes(makeTheseNaN,1:3) = axons(indToAddAxons(i)).nodes(makeTheseNaN,1:3)+0.1; % add tiny value to coordinate to make it different from segment centroid
+                        end
                     end
                     indToAddDendritesAll = cat(1,indToAddDendritesAll,indToAddDendrites);
                     for i = 1:numel(indToAddDendrites)
