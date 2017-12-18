@@ -173,10 +173,10 @@ for f = 1:numel(files)
                         end
                         canBeDeleted = arrayfun(@(x) size(x.nodes,1),dendrites(indDend))==count; % if the whole dendrite agglos is contained in the axon it can be removed from dendrite class
                         dendritesLUT = connectEM.changem(dendritesLUT,(0:numel(dendrites))-[0, cumsum(accumarray(indDend(canBeDeleted),1,[numel(dendrites),1]))'],0:numel(dendrites));
-                        dendrites(indToAddDendrites) = [];
+                        dendrites(indDend(canBeDeleted)) = [];
                         ind = ind - sum(indDend(canBeDeleted) <= ind); % update index to agglomerate
                         indDend = indDend(~canBeDeleted);  % get all dendrite agglos that have only partial overlap with the axon
-                        for d = 1:numel(indDend) % go through these agglos and transform the nodes with segID duplets into a flight path
+                        for d = 1:numel(indDend) % go through these agglos, get the segId duplets and transform the axon nodes with segID duplets into a flight path
                             makeTheseNaN = ismember(axons(indToAddAxons(i)).nodes(:,4),axSegIds(indDend(d) == dendritesLUT(axSegIds)));
                             axons(indToAddAxons(i)).nodes(makeTheseNaN,4) = NaN;
                             axons(indToAddAxons(i)).nodes(makeTheseNaN,1:3) = axons(indToAddAxons(i)).nodes(makeTheseNaN,1:3)+0.1; % add tiny value to coordinate to make it different from segment centroid
