@@ -197,6 +197,8 @@ for f = 1:numel(files)
                 dendritesLUT = connectEM.changem(dendritesLUT,(0:numel(dendrites))-[0, cumsum(accumarray(indToAddDendrites,1,[numel(dendrites),1]))'],0:numel(dendrites));
                 dendrites(indToAddDendrites) = [];
                 ind = ind - sum(indToAddDendrites <= ind); % update index to agglomerate
+                agglos = cell2mat(Superagglos.transformAggloNewOldRepr(dendrites));
+                assert(numel(agglos)==numel(unique(agglos)))
             end
         end
         if modus == 2
