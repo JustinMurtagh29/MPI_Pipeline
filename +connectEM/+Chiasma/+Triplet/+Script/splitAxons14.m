@@ -35,7 +35,7 @@ splitAxonsFile = fullfile( ...
     chiasmaDir, sprintf('%s_splitAxons.mat', taskGenIds{1}));
 
 % how many requeries to generate per chiasmata
-maxNrRequeries = 1;
+maxNrRequeries = inf;
 
 info = Util.runInfo();
 
