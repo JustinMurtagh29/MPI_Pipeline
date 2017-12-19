@@ -186,7 +186,7 @@ for f = 1:numel(files)
                         canBeDeleted = arrayfun(@(x) size(x.nodes,1),dendrites(indDend))==count; % if the whole dendrite agglos is contained in the axon it can be removed from dendrite class
                         [dendrites,dendritesLUT] = Superagglos.remove(dendrites,indDend(canBeDeleted),dendritesLUT);
                         ind = ind - sum(indDend(canBeDeleted) <= ind); % update index to agglomerate
-                        indDendRest = indDendRest(~canBeDeleted);  % get all dendrite agglos that have only partial overlap with the axon
+                        indDendRest = indDend(~canBeDeleted);  % get all dendrite agglos that have only partial overlap with the axon
                         for d = 1:numel(indDendRest) % go through these agglos, get the segId duplets and transform the axon nodes with segID duplets into a flight path
                             makeTheseNaN = ismember(axons(indToAddAxons(i)).nodes(:,4),axSegIds(indDendRest(d) == dendritesLUT(axSegIds)));
                             axons(indToAddAxons(i)).nodes(makeTheseNaN,4) = NaN;
