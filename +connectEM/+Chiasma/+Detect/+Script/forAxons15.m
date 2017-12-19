@@ -8,7 +8,7 @@ axonFile = fullfile(rootDir, 'aggloState', 'axons_15_a.mat');
 
 outputDir = fullfile( ...
     rootDir, 'chiasmataSplitting', ...
-    '20171113T171102-on-axons-11a-plus-remaining-E3a');
+    '20171219T214041-on-axons-15a');
 tempOutputDir = '/tmpscratch/amotta/l4/chiasma-detection';
 
 chiasmaParam = struct;
