@@ -5,6 +5,12 @@ load('/gaba/u/mberning/results/pipeline/20170217_ROI/allParameterWithSynapses.ma
 disp('Parameters loaded');
 outputFolder = fullfile(p.saveFolder, 'aggloState');
 info = Util.runInfo(); % added by BS
+statesDendrites = {'dendrites_01','dendrites_02','dendrites_03_v2','dendrites_03_v2_splitmerged','dendrites_04','dendrites_05','dendrites_06','dendrites_07','dendrites_08','dendrites_09','dendrites_10','dendrites_11','dendrites_12','dendrites_13','dendrites_14','dendrites_15','dendrites_16','dendrites_andWholeCells_01'};
+statesAxons = {'axons_01','axons_02','axons_03'};
+statesWC = {'wholeCells_01','wholeCells_02','wholeCells_03','wholeCells_04','wholeCells_05','wholeCells_06','wholeCells_07'};
+existentDendrites = cellfun(@(x) exist(strcat(x,'.mat'),'file'),statesDendrites) | overwrite;
+existentAxons = cellfun(@(x) exist(strcat(x,'.mat'),'file'),statesAxons) | overwrite;
+existentWC = cellfun(@(x) exist(strcat(x,'.mat'),'file'),statesWC) | overwrite;
 
 if ~exist('graph','var') || ~all(isfield(graph,{'edges','prob','borderIdx'}))
     graph = load(fullfile(p.saveFolder, 'graphNew.mat'),'edges','prob','borderIdx');
@@ -43,7 +49,7 @@ disp('heuristics loaded');
 corrEdges = corrEdges(all(heuristics.myelinScore(corrEdges) <= 0.5,2),:);
 
 %% load dendrite equivalence classes after grid search & create dendrite superagglo
-if ~exist(fullfile(outputFolder,'dendrites_01.mat'),'file') || overwrite
+if ~existentDendrites(1)
     % load all dendrite agglomerate results from after grid search
     thisGrid = load('/gaba/scratch/mberning/aggloGridSearch/search03_00514.mat','axons','dendrites','heuristics','dendritesFinal','dendriteEdges');
     
@@ -76,12 +82,12 @@ if ~exist(fullfile(outputFolder,'dendrites_01.mat'),'file') || overwrite
     indSingleSeg(1:end-numel(singleSegDendrites)) = false;
     clear thisGrid edgesGTall dendritesNoMyelin edgesFiltered dendVec;
     save(fullfile(outputFolder,'dendrites_01.mat'),'dendrites','indSingleSeg','info');
-else
+elseif ~existentDendrites(2)
     load(fullfile(outputFolder,'dendrites_01.mat'),'dendrites');
 end
 
 %% load/ create axon superagglos
-if ~exist(fullfile(outputFolder,'axons_01.mat'),'file') || overwrite
+if ~existentAxons(1)
     % all axons agglomerate results from after directionality based grid
     % search (> 100 voxel)
     load('/gaba/scratch/mberning/aggloGridSearch6/6_01_00046/metricsFinal.mat', 'axonsNew');
@@ -100,23 +106,23 @@ if ~exist(fullfile(outputFolder,'axons_01.mat'),'file') || overwrite
     axons = Superagglos.transformAggloOldNewRepr(axons, edgesGTall, segmentMeta,1);
     clear axonsNew edgesGTall axonsNoMyelin axVec edgesFiltered;
     save(fullfile(outputFolder,'axons_01.mat'),'axons','info');
-else
+elseif ~existentAxons(2)
     load(fullfile(outputFolder,'axons_01.mat'),'axons');
 end
 disp('State 01 superagglos loaded/generated')
 
 %% execute corresponding edges
-if ~exist(fullfile(outputFolder,'axons_02.mat'),'file') || overwrite
+if ~existentAxons(2)
     axons = connectEM.executeEdges(axons,corrEdges,segmentMeta);
     save(fullfile(outputFolder,'axons_02.mat'),'axons','info');
-else
+elseif ~existentAxons(3)
     load(fullfile(outputFolder,'axons_02.mat'),'axons');
 end
-if ~exist(fullfile(outputFolder,'dendrites_02.mat'),'file') || overwrite
+if ~existentDendrites(2)
     dendrites = connectEM.executeEdges(dendrites,corrEdges,segmentMeta);
     indSingleSeg = arrayfun(@(x) size(x.nodes,1),dendrites)==1;
     save(fullfile(outputFolder,'dendrites_02.mat'),'dendrites','indSingleSeg','info');
-else
+elseif ~existentDendrites(3)
     load(fullfile(outputFolder,'dendrites_02.mat'),'dendrites','indSingleSeg');
 end
 disp('State 02 superagglos loaded/generated')
@@ -139,7 +145,7 @@ disp('State 02 superagglos loaded/generated')
 % end
 
 %% add myelinated processes to axon class
-if ~exist(fullfile(outputFolder,'axons_03.mat'),'file') || ~exist(fullfile(outputFolder,'dendrites_03_v2.mat'),'file') || overwrite
+if ~existentAxons(3) || ~existentDendrites(3)
     disp('Add myelinated processes of dendrite class to axon class and execute correspondences again')
     
     % load somata including merged somata
@@ -178,8 +184,8 @@ if ~exist(fullfile(outputFolder,'axons_03.mat'),'file') || ~exist(fullfile(outpu
     
     save(fullfile(outputFolder,'axons_03.mat'),'axons','myelinAxon','indBigAxons','info');
     save(fullfile(outputFolder,'dendrites_03_v2.mat'),'dendrites','myelinDend','indBigDends','info');
-else
-    load(fullfile(outputFolder,'axons_03.mat'),'axons','myelinAxon','indBigAxons');
+elseif ~existentDendrites(4)
+%     load(fullfile(outputFolder,'axons_03.mat'),'axons','myelinAxon','indBigAxons');
     load(fullfile(outputFolder,'dendrites_03_v2.mat'),'dendrites','myelinDend','indBigDends');
 end
 disp('State 03 superagglos loaded/generated')
@@ -198,7 +204,7 @@ disp('Soma whole cell agglos loaded')
 
 
 %% apply manual fixes of whole cells in dendrite class
-if ~exist(fullfile(outputFolder,'dendrites_03_v2_splitmerged.mat'),'file') || overwrite
+if ~existentDendrites(4)
     % ending detection done by christian!
     correctionFolder = 'WholeCellCorrections_03_v2';
     fprintf('Folder with correction nmls for state dendrites_03_v2 is %s\n',fullfile(outputFolder,correctionFolder));
@@ -217,7 +223,7 @@ if ~exist(fullfile(outputFolder,'dendrites_03_v2_splitmerged.mat'),'file') || ov
     indBigDends = Agglo.isMaxBorderToBorderDistAbove(p, 5000, Superagglos.transformAggloNewOldRepr(dendrites));
     [ myelinDend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
     save(fullfile(outputFolder,'dendrites_03_v2_splitmerged.mat'),'dendrites','WholeCellId','myelinDend','indBigDends','info');
-else
+elseif ~existentDendrites(5)
     clear dendrites myelinDend indBigDends
     load(fullfile(outputFolder,'dendrites_03_v2_splitmerged.mat'),'dendrites','WholeCellId')%,'myelinDend','indBigDends');
 end
@@ -225,7 +231,7 @@ disp('Dendrites state 03 splitmerged superagglos loaded/generated')
 
 %% next round of fixes
 % apply manual fixes of whole cells in dendrite class
-if ~exist(fullfile(outputFolder,'dendrites_04.mat'),'file') || overwrite
+if ~existentDendrites(5)
     % ending detection done by christian!
     correctionFolder = 'WholeCellCorrections_03_v2_splitmerged';
     fprintf('Folder with correction nmls for state dendrites_03_v2_splitmerged is %s\n',fullfile(outputFolder,correctionFolder));
@@ -243,14 +249,14 @@ if ~exist(fullfile(outputFolder,'dendrites_04.mat'),'file') || overwrite
     indBigDends = Agglo.isMaxBorderToBorderDistAbove(p, 5000, Superagglos.transformAggloNewOldRepr(dendrites));
     [ myelinDend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
     save(fullfile(outputFolder,'dendrites_04.mat'),'dendrites','WholeCellId','myelinDend','indBigDends','info');
-else
+elseif ~existentDendrites(6)
     clear dendrites myelinDend indBigDends
     load(fullfile(outputFolder,'dendrites_04.mat'))
 end
 disp('Dendrites state 04 dendrites loaded/generated')
 %% next round of fixes
 % apply manual fixes of whole cells in dendrite class
-if ~exist(fullfile(outputFolder,'dendrites_05.mat'),'file') || overwrite
+if ~existentDendrites(6) || ~existentWC(1)
     
     load(fullfile(outputFolder,'axons_07_b.mat'),'axons')
     % ending detection done by christian!
@@ -282,7 +288,7 @@ if ~exist(fullfile(outputFolder,'dendrites_05.mat'),'file') || overwrite
     [ myelinDend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
     save(fullfile(outputFolder,'dendrites_05.mat'),'dendrites','WholeCellId','myelinDend','indBigDends','info');
     
-else
+elseif ~existentDendrites(7) || ~existentWC(2)
     clear dendrites myelinDend indBigDends
     load(fullfile(outputFolder,'dendrites_05.mat'))
     load(fullfile(outputFolder,'wholeCells_01.mat'));
@@ -290,7 +296,7 @@ end
 disp('Dendrites state 05 dendrites loaded/generated')
 
 %% 
-if ~exist(fullfile(outputFolder,'wholeCells_02.mat'),'file') || overwrite
+if  ~existentWC(2) || ~existentDendrites(7)
     
     % this function is in Alessandro's repo
     
@@ -319,14 +325,14 @@ if ~exist(fullfile(outputFolder,'wholeCells_02.mat'),'file') || overwrite
     indBigDends = Agglo.isMaxBorderToBorderDistAbove(p, 5000, Superagglos.transformAggloNewOldRepr(dendrites));
     [ myelinDend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
     save(fullfile(outputFolder,'dendrites_06.mat'),'dendrites','myelinDend','indBigDends')%,'info');
-else
+elseif ~existentDendrites(8) || ~existentWC(3)
     clear dendrites myelinDend indBigDends
     load(fullfile(outputFolder,'dendrites_06.mat'))
     load(fullfile(outputFolder,'wholeCells_02.mat'),'wholeCells');
 end
 disp('State 06 dendrites loaded/generated')
 %%
-if ~exist(fullfile(outputFolder,'wholeCells_03.mat'),'file') || overwrite
+if ~existentWC(3) || ~existentDendrites(8)
     
     % this function is in Alessandro's repo
     
@@ -356,7 +362,7 @@ if ~exist(fullfile(outputFolder,'wholeCells_03.mat'),'file') || overwrite
     indBigDends = Agglo.isMaxBorderToBorderDistAbove(p, 5000, Superagglos.transformAggloNewOldRepr(dendrites));
     [ myelinDend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
     save(fullfile(outputFolder,'dendrites_07.mat'),'dendrites','myelinDend','indBigDends')%,'info');
-else
+elseif ~existentDendrites(9) || ~existentWC(4)
     clear dendrites myelinDend indBigDends
     load(fullfile(outputFolder,'dendrites_07.mat'))
     load(fullfile(outputFolder,'wholeCells_03.mat'),'wholeCells');
@@ -377,7 +383,7 @@ somaLUT(somaSegIds) = repelem(1:numel(somaAgglos),cellfun(@numel,somaAgglos));
 disp('Soma whole cell agglos loaded')
 
 %% 
-if ~exist(fullfile(outputFolder,'dendrites_08.mat'),'file') || overwrite
+if ~existentDendrites(9)
     load(fullfile(outputFolder,'axons_07_b.mat'),'axons')
     [dendriteLUT,dendriteSegIds] = Superagglos.buildLUT(dendrites);
     [ismem,ind] = ismember(somaSegIds,dendriteSegIds);
@@ -398,14 +404,14 @@ if ~exist(fullfile(outputFolder,'dendrites_08.mat'),'file') || overwrite
     indBigDends = Agglo.isMaxBorderToBorderDistAbove(p, 5000, Superagglos.transformAggloNewOldRepr(dendrites));
     [ myelinDend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
     save(fullfile(outputFolder,'dendrites_08.mat'),'dendrites','BorderWholeCellId','myelinDend','indBigDends')%,'info');
-else
+elseif ~existentDendrites(10)
     clear dendrites myelinDend indBigDends
     load(fullfile(outputFolder,'dendrites_08.mat'))
 end
 disp('State 08 dendrites loaded/generated')
 
 %% 
-if ~exist(fullfile(outputFolder,'dendrites_09.mat'),'file') || overwrite
+if ~existentDendrites(10)
     load(fullfile(outputFolder,'axons_07_b.mat'),'axons')
     
     % here was christians ending detection done on dendrites_08 + manual
@@ -440,14 +446,14 @@ if ~exist(fullfile(outputFolder,'dendrites_09.mat'),'file') || overwrite
     indBigDends = Agglo.isMaxBorderToBorderDistAbove(p, 5000, Superagglos.transformAggloNewOldRepr(dendrites));
     [ myelinDend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
     save(fullfile(outputFolder,'dendrites_09.mat'),'dendrites','BorderWholeCellId','myelinDend','indBigDends')%,'info');
-else
+elseif ~existentDendrites(11)
     clear dendrites myelinDend indBigDends
     load(fullfile(outputFolder,'dendrites_09.mat'))
 end
 disp('State 09 dendrites loaded/generated')
 
 %% 
-if ~exist(fullfile(outputFolder,'dendrites_10.mat'),'file') || overwrite
+if ~existentDendrites(11)
     load(fullfile(outputFolder,'axons_07_b.mat'),'axons')
     
     % here was christians ending detection done on dendrites_08 + manual
@@ -477,7 +483,7 @@ if ~exist(fullfile(outputFolder,'dendrites_10.mat'),'file') || overwrite
     indBigDends = Agglo.isMaxBorderToBorderDistAbove(p, 5000, Superagglos.transformAggloNewOldRepr(dendrites));
     [ myelinDend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
     save(fullfile(outputFolder,'dendrites_10.mat'),'dendrites','BorderWholeCellId','myelinDend','indBigDends')%,'info');
-else
+elseif ~existentDendrites(12)
     clear dendrites myelinDend indBigDends
     load(fullfile(outputFolder,'dendrites_10.mat'))
 end
@@ -485,7 +491,7 @@ disp('State 10 dendrites loaded/generated')
 
 
 %% 
-if ~exist(fullfile(outputFolder,'dendrites_11.mat'),'file') || overwrite
+if ~existentDendrites(12)
     load(fullfile(outputFolder,'axons_07_b.mat'),'axons')
     
     % here was christians ending detection done on dendrites_08 + manual
@@ -515,14 +521,14 @@ if ~exist(fullfile(outputFolder,'dendrites_11.mat'),'file') || overwrite
     indBigDends = Agglo.isMaxBorderToBorderDistAbove(p, 5000, Superagglos.transformAggloNewOldRepr(dendrites));
     [ myelinDend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
     save(fullfile(outputFolder,'dendrites_11.mat'),'dendrites','BorderWholeCellId','myelinDend','indBigDends')%,'info');
-else
+elseif ~existentDendrites(13)
     clear dendrites myelinDend indBigDends
     load(fullfile(outputFolder,'dendrites_11.mat'))
 end
 disp('State 11 dendrites loaded/generated')
 
 %% 
-if ~exist(fullfile(outputFolder,'dendrites_12.mat'),'file') || overwrite
+if ~existentDendrites(13)
     
     load(fullfile(outputFolder,'axons_08_b.mat'),'axons')
     
@@ -553,14 +559,14 @@ if ~exist(fullfile(outputFolder,'dendrites_12.mat'),'file') || overwrite
     indBigDends = Agglo.isMaxBorderToBorderDistAbove(p, 5000, Superagglos.transformAggloNewOldRepr(dendrites));
     [ myelinDend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
     save(fullfile(outputFolder,'dendrites_12.mat'),'dendrites','BorderWholeCellId','myelinDend','indBigDends')%,'info');
-else
+elseif ~existentDendrites(14)
     clear dendrites myelinDend indBigDends
     load(fullfile(outputFolder,'dendrites_12.mat'))
 end
 disp('State 12 dendrites loaded/generated')
 
 %% 
-if ~exist(fullfile(outputFolder,'wholeCells_04.mat'),'file') || overwrite
+if ~existentDendrites(14) || ~existentWC(4)
     load(fullfile(outputFolder,'axons_08_b.mat'),'axons')
     
     % the corrections are based on checking border whole cells in
@@ -588,7 +594,7 @@ if ~exist(fullfile(outputFolder,'wholeCells_04.mat'),'file') || overwrite
     indBigDends = Agglo.isMaxBorderToBorderDistAbove(p, 5000, Superagglos.transformAggloNewOldRepr(dendrites));
     [ myelinDend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
     save(fullfile(outputFolder,'dendrites_13.mat'),'dendrites','myelinDend','indBigDends')%,'info');
-else
+elseif ~existentDendrites(15) || ~existentWC(5)
     load(fullfile(outputFolder,'wholeCells_04.mat'))
     load(fullfile(outputFolder,'dendrites_13.mat'))
 end
@@ -609,7 +615,7 @@ disp('Soma whole cell agglos loaded')
 
 %% check manually added edges if agglos have been skipped there
 
-if ~exist(fullfile(outputFolder,'wholeCells_05.mat'),'file') || overwrite
+if  ~existentWC(5) || ~existentDendrites(15)
     % this script was used to write out whole cells that mighted have
     % skipped agglos inbetween
 %     connectEM.searchSkippedAgglos(wholeCells,'/tmpscratch/mbeining/checkForMissingEndings',p)
@@ -640,7 +646,7 @@ if ~exist(fullfile(outputFolder,'wholeCells_05.mat'),'file') || overwrite
     indBigDends = Agglo.isMaxBorderToBorderDistAbove(p, 5000, Superagglos.transformAggloNewOldRepr(dendrites));
     [ myelinDend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
     save(fullfile(outputFolder,'dendrites_14.mat'),'dendrites','myelinDend','indBigDends')%,'info');
-else
+elseif ~existentDendrites(16) || ~existentWC(6)
     load(fullfile(outputFolder,'wholeCells_05.mat'))
     load(fullfile(outputFolder,'dendrites_14.mat'))
 end
@@ -648,7 +654,7 @@ disp('State 14 dendrites loaded/generated')
 
 %% another round of fixing added stuff
 
-if ~exist(fullfile(outputFolder,'wholeCells_06.mat'),'file') || overwrite
+if  ~existentWC(6) || ~existentDendrites(16)
     % created nmls with connectEM.autoView('wholeCells_05','cells') and
     % checked only the five corrected last time
 
@@ -678,7 +684,7 @@ if ~exist(fullfile(outputFolder,'wholeCells_06.mat'),'file') || overwrite
     indBigDends = Agglo.isMaxBorderToBorderDistAbove(p, 5000, Superagglos.transformAggloNewOldRepr(dendrites));
     [ myelinDend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
     save(fullfile(outputFolder,'dendrites_15.mat'),'dendrites','myelinDend','indBigDends')%,'info');
-else
+elseif ~existentDendrites(17) || ~existentWC(7)
     load(fullfile(outputFolder,'wholeCells_06.mat'))
     load(fullfile(outputFolder,'dendrites_15.mat'))
 end
@@ -686,7 +692,7 @@ disp('State 15 dendrites loaded/generated')
 
 %% another round of fixing added stuff
 
-if ~exist(fullfile(outputFolder,'wholeCells_06.mat'),'file') || overwrite
+if  ~existentWC(7) || ~existentDendrites(17)
     % created nmls with connectEM.autoView('wholeCells_05','cells') and
     % checked only the five corrected last time
 
@@ -716,7 +722,7 @@ if ~exist(fullfile(outputFolder,'wholeCells_06.mat'),'file') || overwrite
     indBigDends = Agglo.isMaxBorderToBorderDistAbove(p, 5000, Superagglos.transformAggloNewOldRepr(dendrites));
     [ myelinDend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
     save(fullfile(outputFolder,'dendrites_16.mat'),'dendrites','myelinDend','indBigDends')%,'info');
-else
+elseif ~existentDendrites(18)
     load(fullfile(outputFolder,'wholeCells_07.mat'))
     load(fullfile(outputFolder,'dendrites_16.mat'))
 end
