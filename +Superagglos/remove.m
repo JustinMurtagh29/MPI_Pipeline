@@ -3,7 +3,7 @@ function [agglo,aggloLUT] = remove(agglo,ind,aggloLUT)
 
 if ~isempty(ind)
     if nargin > 2 && nargout > 1
-        aggloLUT = connectEM.changem(aggloLUT,((0:numel(agglo))-[0, cumsum(accumarray(ind+1,1,[numel(agglo),1]))']).*~[0;accumarray(ind,1,[numel(agglo),1])]',0:numel(agglo));
+        aggloLUT = connectEM.changem(aggloLUT,((0:numel(agglo))-[0, cumsum(accumarray(ind,1,[numel(agglo),1]))']).*~[0;accumarray(ind,1,[numel(agglo),1])]',0:numel(agglo));
     end
     agglo(ind) = [];
 end
