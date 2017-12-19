@@ -69,7 +69,7 @@ for f = 1:numel(files)
     % avoid using a wrong dendrite/axons agglo because it overlaps only a
     % little
     if sum(ismember(skelCoords,dendrites(ind).nodes(:,1:3),'rows'))/size(skelCoords,1) < 0.5
-        warning('Found overlap of skeleton %s with an agglo is less than 50%%..skipping..',skel.filename);
+        warning('Found overlap of skeleton %s with any agglo is less than 50%%..skipping..',skel.filename);
         continue
     end
     if ~isnan(usedCells(ind))
@@ -184,14 +184,14 @@ for f = 1:numel(files)
                             count = count(2:end);
                         end
                         canBeDeleted = arrayfun(@(x) size(x.nodes,1),dendrites(indDend))==count; % if the whole dendrite agglos is contained in the axon it can be removed from dendrite class
-                        [dendrites,dendritesLUT] = Superagglos.remove(dendrites,indDend(canBeDeleted),dendritesLUT);
-                        ind = ind - sum(indDend(canBeDeleted) <= ind); % update index to agglomerate
                         indDendRest = indDend(~canBeDeleted);  % get all dendrite agglos that have only partial overlap with the axon
                         for d = 1:numel(indDendRest) % go through these agglos, get the segId duplets and transform the axon nodes with segID duplets into a flight path
                             makeTheseNaN = ismember(axons(indToAddAxons(i)).nodes(:,4),axSegIds(indDendRest(d) == dendritesLUT(axSegIds)));
                             axons(indToAddAxons(i)).nodes(makeTheseNaN,4) = NaN;
                             axons(indToAddAxons(i)).nodes(makeTheseNaN,1:3) = axons(indToAddAxons(i)).nodes(makeTheseNaN,1:3)+0.1; % add tiny value to coordinate to make it different from segment centroid
                         end
+                        [dendrites,dendritesLUT] = Superagglos.remove(dendrites,indDend(canBeDeleted),dendritesLUT);
+                        ind = ind - sum(indDend(canBeDeleted) <= ind); % update index to agglomerate
                     end
                 end
 
