@@ -12,7 +12,7 @@ function summary = splitChiasmataMultiLogic(summary)
     for chiIdx = 1:numel(summary.tracings)
         nrExits = summary.nrExits(chiIdx);
         tracings = summary.tracings{chiIdx};
-        nrTracings = numel(tracings);
+        nrTracings = numel(tracings.taskIds);
         
         overlaps = reshape(tracings.overlaps, 1, []);
         overlaps = transpose(cell2mat(overlaps));
