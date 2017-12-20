@@ -2,8 +2,6 @@
 %   Alessandro Motta <alessandro.motta@brain.mpg.de>
 import connectEM.Chiasma.Flight.loadSplitData;
 import connectEM.Chiasma.Flight.shuffleExits;
-import connectEM.Chiasma.Util.loadFlightPaths;
-import connectEM.Chiasma.Util.loadTaskIds;
 
 clear;
 runId = datestr(now, 30);
