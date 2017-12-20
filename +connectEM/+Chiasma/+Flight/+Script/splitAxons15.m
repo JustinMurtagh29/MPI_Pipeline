@@ -55,14 +55,13 @@ end
 axonFile = load(tasks(end).splitDataFile, 'axonFile');
 axonFile = axonFile.axonFile;
 
-chiasmaParam = load(tasks(end).genFile, 'info');
-chiasmaParam = load(chiasmaParam.info.param.chiasmataFile, 'info');
-chiasmaParam = chiasmaParam.info.param.chiasmaParam;
+chiasmataFile = load(tasks(end).genFile, 'info');
+chiasmataFile = chiasmataFile.info.param.chiasmataFile;
 
 fprintf('Splitting chiasmata...\n');
 [splitAxons, openExits] = ...
     connectEM.splitChiasmataMultiSuper( ...
-        param, chiasmaParam, axonFile, {tasks.splitDataFile});
+        param, chiasmataFile, axonFile, {tasks.splitDataFile});
 splitAxons.info = info;
 
 %% saving result
