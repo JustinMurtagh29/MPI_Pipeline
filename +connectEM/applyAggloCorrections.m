@@ -191,11 +191,13 @@ for f = 1:numel(files)
                                 axons(indToAddAxons(i)).nodes(makeTheseNaN,4) = NaN;
                                 axons(indToAddAxons(i)).nodes(makeTheseNaN,1:3) = axons(indToAddAxons(i)).nodes(makeTheseNaN,1:3)+0.1; % add tiny value to coordinate to make it different from segment centroid
                             end
-                            [dendrites,dendritesLUT] = Superagglos.remove(dendrites,indDend(canBeDeleted),dendritesLUT);
-                            % update indices to agglomerate
-                            ind = ind - sum(indDend(canBeDeleted) <= ind); 
-                            indToAddDendrites = setdiff(indToAddDendrites,indDend(canBeDeleted));
-                            indToAddDendrites = connectEM.changem(indToAddDendrites,((1:numel(dendrites))-cumsum(accumarray(indDend(canBeDeleted),1,[numel(dendrites),1]))'),1:numel(dendrites));
+                            if any(canBeDeleted)
+                                [dendrites,dendritesLUT] = Superagglos.remove(dendrites,indDend(canBeDeleted),dendritesLUT);
+                                % update indices to agglomerate
+                                ind = ind - sum(indDend(canBeDeleted) <= ind);
+                                indToAddDendrites = setdiff(indToAddDendrites,indDend(canBeDeleted));
+                                indToAddDendrites = connectEM.changem(indToAddDendrites,((1:numel(dendrites))-cumsum(accumarray(indDend(canBeDeleted),1,[numel(dendrites),1]))'),1:numel(dendrites));
+                            end
                         end
                     end
                 end
