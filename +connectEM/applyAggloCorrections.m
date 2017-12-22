@@ -47,7 +47,7 @@ files = dir(fullfile(folder,'*.nml'));
 usedCells = NaN(numel(dendrites),1);
 
 for f = 1:numel(files)
-
+    dendritesbkp = dendrites;
     skel = skeleton(fullfile(folder,files(f).name));  % load skeleton
     skel.edges = cellfun(@(x) x(~any(x==0,2),:),skel.edges,'uni',0);
 
@@ -228,10 +228,11 @@ for f = 1:numel(files)
                 axons(indToAddAxons) = [];
                 [dendrites,dendritesLUT] = Superagglos.remove(dendrites,indToAddDendrites,dendritesLUT);
                 ind = ind - sum(indToAddDendrites <= ind); % update index to agglomerate
-                agglos = cell2mat(Superagglos.transformAggloNewOldRepr(dendrites));
-                assert(numel(agglos)==numel(unique(agglos)))
+                
             end
         end
+        segIds = cell2mat(Superagglos.transformAggloNewOldRepr(dendrites));
+        assert(numel(segIds)==numel(unique(segIds)))
         if modus == 2
             % write out all axons and skeletons that would be added this
             % turn
