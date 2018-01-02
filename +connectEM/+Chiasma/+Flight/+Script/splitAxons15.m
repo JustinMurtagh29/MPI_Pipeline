@@ -70,10 +70,6 @@ system(sprintf('chmod a-w "%s"', splitAxonsFile));
 
 %% requerying
 taskGen = load(tasks(end).genFile);
-exits = taskGen.exits;
-taskDefs = taskGen.taskDefs;
-chiasmataFile = taskGen.chiasmataFile;
-clear taskGen;
 
 % find unsolved chiasmata
 unsolvedT = table;
@@ -88,13 +84,13 @@ unsolvedT.isSolved = [];
 
 % mark tasks to requery
 requeryMask =  ...
-    ismember(exits, openExits, 'rows') | ismember( ...
-    exits(:, {'aggloId', 'chiasmaId'}), unsolvedT, 'rows');
+    ismember(taskGen.exits, openExits, 'rows') | ismember( ...
+    taskGen.exits(:, {'aggloId', 'chiasmaId'}), unsolvedT, 'rows');
 clear unsolvedT;
 
 requery = struct;
-requery.exits = exits(requeryMask, :);
-requery.taskDefs = taskDefs(requeryMask, :);
+requery.exits = taskGen.exits(requeryMask, :);
+requery.taskDefs = taskGen.taskDefs(requeryMask, :);
 clear requeryMask;
 
 [requery.exits, shuffledRows] = shuffleExits(requery.exits, 500);
@@ -109,7 +105,7 @@ writetable( ...
 %% build output
 requery.info = info;
 requery.taskDefFile = requeryTaskDefFile;
-requery.chiasmataFile = chiasmataFile;
+requery.chiasmataFile = taskGen.chiasmataFile;
 
 requeryTaskGenFile = fullfile( ...
     taskGenDir, sprintf('%s_taskGeneration.mat', runId));
