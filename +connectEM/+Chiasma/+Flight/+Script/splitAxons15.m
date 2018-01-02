@@ -94,10 +94,11 @@ clear unsolvedT;
 
 requery = struct;
 requery.exits = exits(requeryMask, :);
+requery.taskDefs = taskDefs(requeryMask, :);
 clear requeryMask;
 
 [requery.exits, shuffledRows] = shuffleExits(requery.exits, 500);
-requery.taskDefs = taskDefs(shuffledRows, :);
+requery.taskDefs = requery.taskDefs(shuffledRows, :);
 clear shuffledRows;
 
 requeryTaskDefFile = fullfile( ...
