@@ -231,8 +231,8 @@ for f = 1:numel(files)
                 
             end
         end
-        segIds = cell2mat(Superagglos.transformAggloNewOldRepr(dendrites));
-        assert(numel(segIds)==numel(unique(segIds)))
+%         segIds = cell2mat(Superagglos.transformAggloNewOldRepr(dendrites));
+%         assert(numel(segIds)==numel(unique(segIds)))
         if modus == 2
             % write out all axons and skeletons that would be added this
             % turn
