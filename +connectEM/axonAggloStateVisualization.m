@@ -19,11 +19,11 @@ function axonAggloStateVisualization()
     minSegmentOverlap = 3;
     
     rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI/';
-    axonFile = fullfile(rootDir, 'aggloState', 'axons_13_a.mat');
+    axonFile = fullfile(rootDir, 'aggloState', 'axons_16_b.mat');
     
     thisDir = fileparts(mfilename('fullpath'));
     axonGtDir = fullfile(thisDir, 'evaluationData', 'new_axon_gt_ROI2017');
-    cacheDir = '/tmpscratch/amotta/l4/2017-12-08-axons-13-visualization';
+    cacheDir = '/tmpscratch/amotta/l4/2018-01-04-axons-16b-visualization';
     
    [~, axonName, axonExt] = fileparts(axonFile);
     axonFlightFile = fullfile(cacheDir, strcat(axonName, axonExt));
