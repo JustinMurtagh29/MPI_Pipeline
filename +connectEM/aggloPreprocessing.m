@@ -388,7 +388,7 @@ if ~existentDendrites(9)
     [dendriteLUT,dendriteSegIds] = Superagglos.buildLUT(dendrites);
     [ismem,ind] = ismember(somaSegIds,dendriteSegIds);
     % get each dend id which contains most of the seg ids of each soma
-    BorderWholeCellId = accumarray(somaLUT(somaSegIds(ismem))',dendriteLUT(dendriteSegIds(ind(ismem)))',[],@mode);
+    BorderWholeCellId = unique(accumarray(somaLUT(somaSegIds(ismem))',dendriteLUT(dendriteSegIds(ind(ismem)))',[],@mode));       
 
     % writes out skeletons of whole cells for inspection
 %     connectEM.aggloAutoView('dendrites_07','wc_border',1)
@@ -440,7 +440,7 @@ if ~existentDendrites(10)
     dendriteSegIds = find(dendriteLUT);
     [ismem,ind] = ismember(somaSegIds,dendriteSegIds);
     % get each dend id which contains most of the seg ids of each soma
-    BorderWholeCellId = accumarray(somaLUT(somaSegIds(ismem))',dendriteLUT(dendriteSegIds(ind(ismem)))',[],@mode);       
+    BorderWholeCellId = unique(accumarray(somaLUT(somaSegIds(ismem))',dendriteLUT(dendriteSegIds(ind(ismem)))',[],@mode));       
   
     indBigDends = Agglo.isMaxBorderToBorderDistAbove(p, 5000, Superagglos.transformAggloNewOldRepr(dendrites));
     [ myelinDend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
@@ -477,7 +477,7 @@ if ~existentDendrites(11)
     dendriteSegIds = find(dendriteLUT);
     [ismem,ind] = ismember(somaSegIds,dendriteSegIds);
     % get each dend id which contains most of the seg ids of each soma
-    BorderWholeCellId = accumarray(somaLUT(somaSegIds(ismem))',dendriteLUT(dendriteSegIds(ind(ismem)))',[],@mode);       
+    BorderWholeCellId = unique(accumarray(somaLUT(somaSegIds(ismem))',dendriteLUT(dendriteSegIds(ind(ismem)))',[],@mode));       
   
     indBigDends = Agglo.isMaxBorderToBorderDistAbove(p, 5000, Superagglos.transformAggloNewOldRepr(dendrites));
     [ myelinDend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
@@ -515,7 +515,7 @@ if ~existentDendrites(12)
     dendriteSegIds = find(dendriteLUT);
     [ismem,ind] = ismember(somaSegIds,dendriteSegIds);
     % get each dend id which contains most of the seg ids of each soma
-    BorderWholeCellId = accumarray(somaLUT(somaSegIds(ismem))',dendriteLUT(dendriteSegIds(ind(ismem)))',[],@mode);       
+    BorderWholeCellId = unique(accumarray(somaLUT(somaSegIds(ismem))',dendriteLUT(dendriteSegIds(ind(ismem)))',[],@mode));       
   
     indBigDends = Agglo.isMaxBorderToBorderDistAbove(p, 5000, Superagglos.transformAggloNewOldRepr(dendrites));
     [ myelinDend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
@@ -553,7 +553,7 @@ if ~existentDendrites(13)
     dendriteSegIds = find(dendriteLUT);
     [ismem,ind] = ismember(somaSegIds,dendriteSegIds);
     % get each dend id which contains most of the seg ids of each soma
-    BorderWholeCellId = accumarray(somaLUT(somaSegIds(ismem))',dendriteLUT(dendriteSegIds(ind(ismem)))',[],@mode);       
+    BorderWholeCellId = unique(accumarray(somaLUT(somaSegIds(ismem))',dendriteLUT(dendriteSegIds(ind(ismem)))',[],@mode));       
   
     indBigDends = Agglo.isMaxBorderToBorderDistAbove(p, 5000, Superagglos.transformAggloNewOldRepr(dendrites));
     [ myelinDend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
@@ -582,7 +582,7 @@ if ~existentDendrites(14) || ~existentWC(4)
     dendriteSegIds = find(dendriteLUT);
     [ismem,ind] = ismember(somaSegIds,dendriteSegIds);
     % get each dend id which contains most of the seg ids of each soma
-    BorderWholeCellId = accumarray(somaLUT(somaSegIds(ismem))',dendriteLUT(dendriteSegIds(ind(ismem)))',[],@mode);       
+    BorderWholeCellId = unique(accumarray(somaLUT(somaSegIds(ismem))',dendriteLUT(dendriteSegIds(ind(ismem)))',[],@mode));       
 
     load(fullfile(outputFolder,'wholeCells_03.mat'),'wholeCells');
     wholeCells = cat(1,wholeCells,dendrites(BorderWholeCellId));
@@ -635,7 +635,7 @@ if  ~existentWC(5) || ~existentDendrites(15)
     dendriteSegIds = find(dendriteLUT);
     [ismem,ind] = ismember(somaSegIds,dendriteSegIds);
     % get each dend id which contains most of the seg ids of each soma
-    wholeCellId = accumarray(somaLUT(somaSegIds(ismem))',dendriteLUT(dendriteSegIds(ind(ismem)))',[],@mode);       
+    wholeCellId = unique(accumarray(somaLUT(somaSegIds(ismem))',dendriteLUT(dendriteSegIds(ind(ismem)))',[],@mode));       
 
     wholeCells = dendrites(wholeCellId);
     dendrites = dendrites(setdiff(1:numel(dendrites),wholeCellId));
@@ -673,8 +673,8 @@ if  ~existentWC(6) || ~existentDendrites(16)
     dendriteSegIds = find(dendriteLUT);
     [ismem,ind] = ismember(somaSegIds,dendriteSegIds);
     % get each dend id which contains most of the seg ids of each soma
-    wholeCellId = accumarray(somaLUT(somaSegIds(ismem))',dendriteLUT(dendriteSegIds(ind(ismem)))',[],@mode);       
-
+    wholeCellId = unique(accumarray(somaLUT(somaSegIds(ismem))',dendriteLUT(dendriteSegIds(ind(ismem)))',[],@mode));       
+    
     wholeCells = dendrites(wholeCellId);
     dendrites = dendrites(setdiff(1:numel(dendrites),wholeCellId));
     
@@ -711,7 +711,7 @@ if  ~existentWC(7) || ~existentDendrites(17)
     dendriteSegIds = find(dendriteLUT);
     [ismem,ind] = ismember(somaSegIds,dendriteSegIds);
     % get each dend id which contains most of the seg ids of each soma
-    wholeCellId = accumarray(somaLUT(somaSegIds(ismem))',dendriteLUT(dendriteSegIds(ind(ismem)))',[],@mode);       
+    wholeCellId = unique(accumarray(somaLUT(somaSegIds(ismem))',dendriteLUT(dendriteSegIds(ind(ismem)))',[],@mode));       
 
     wholeCells = dendrites(wholeCellId);
     dendrites = dendrites(setdiff(1:numel(dendrites),wholeCellId));
@@ -757,9 +757,9 @@ for n = 1:numel(wholeCells)
     % get cell branches by removing soma agglo and small segments
     branches = Superagglos.removeSegIdsFromAgglos(wholeCells(n),somaAgglos{n});
     branches = branches(arrayfun(@(x) size(x.nodes,1),branches)>20); % remove all small leftovers smaller than 20 nodes
-    branchLUT = Superagglos.buildLUT(branches,maxSegId);
-    countPre = histc(branchLUT(presynSegIds),0:numel(branches));
-    countPost = histc(branchLUT(postsynSegIds),0:numel(branches));
+%     branchLUT = Superagglos.buildLUT(branches);
+%     countPre = histc(branchLUT(presynSegIds),0:numel(branches));
+%     countPost = histc(branchLUT(postsynSegIds),0:numel(branches));
 
     if isempty(branches) % if there was only somatic stuff, nothing is axonic
         wholeCells(n).axon = false(size(wholeCells(n).nodes,1),1);
