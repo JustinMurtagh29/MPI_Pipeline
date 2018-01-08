@@ -100,6 +100,26 @@ for f = 1:numel(files)
     dendrites(ind) = splitAgglo(1);  % replace this agglo with one of the correctly splitted version
     dendritesLUT(splitAgglo(1).nodes(~isnan(splitAgglo(1).nodes(:,4)),4)) = repelem(ind,sum(~isnan(splitAgglo(1).nodes(:,4))));
     
+    % this part deletes splitted stuff that is already in the axon class
+    % (to not put axonic stuff into dendrite class)
+    delSplit = false(numel(splitAgglo),1);
+    for s = 2:numel(splitAgglo) % go through all splitted parts of the agglo
+        idxMostOVAx = mode(axonsLUT(splitAgglo(s).nodes(~isnan(splitAgglo(s).nodes(:,4)),4))); % get axon agglo idx with which the splitted part overlaps most
+        if ~isnan(idxMostOVAx)
+            n = sum(ismember(splitAgglo(s).nodes(:,1:3),axons(idxMostOVAx).nodes(:,1:3),'rows')); % check how much overlap incl. flight path points
+            if n == size(splitAgglo(s).nodes,1) % if splitted thing fully exists in axon class, do not keep it
+                delSplit(s) = true;
+                if n/size(axons(idxMostOVAx).nodes,1) > 0.1
+                    
+                end
+            end
+        else  % if it is only a flight path, delete
+            delSplit(s) = true;
+        end
+    end
+    splitAgglo(delSplit) = [];
+    
+    
     if numel(splitAgglo) > 1
         % update  LUT
         dendritesLUT(cell2mat(arrayfun(@(x) x.nodes(~isnan(x.nodes(:,4)),4),splitAgglo(2:end),'uni',0))) = repelem((1:numel(splitAgglo)-1)+numel(dendrites),arrayfun(@(x) sum(~isnan(x.nodes(:,4))),splitAgglo(2:end)));
@@ -188,6 +208,7 @@ for f = 1:numel(files)
                             indDendRest = indDend(~canBeDeleted);  % get all dendrite agglos that have only partial overlap with the axon
                             for d = 1:numel(indDendRest) % go through these agglos, get the segId duplets and transform the axon nodes with segID duplets into a flight path
                                 makeTheseNaN = ismember(axons(indToAddAxons(i)).nodes(:,4),axSegIds(indDendRest(d) == dendritesLUT(axSegIds)));
+                                axonsLUT(axons(indToAddAxons(i)).nodes(makeTheseNaN,4)) = 0; % remove ref to the axon for these seg ids
                                 axons(indToAddAxons(i)).nodes(makeTheseNaN,4) = NaN;
                                 axons(indToAddAxons(i)).nodes(makeTheseNaN,1:3) = axons(indToAddAxons(i)).nodes(makeTheseNaN,1:3)+0.1; % add tiny value to coordinate to make it different from segment centroid
                             end
@@ -200,6 +221,10 @@ for f = 1:numel(files)
                             end
                         end
                     end
+                    % recheck which axons will be added, as some might get
+                    % thrown out now 
+                    indToAddAxons = unique(nonzeros(axonsLUT(nonzeros(theseSkelSegIds))))'; % get the index of the superagglo(s) to add
+                    indToAddAxons = indToAddAxons(:);
                 end
 
                 % find nodes at segIds that are not part of the whole cell or

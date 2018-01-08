@@ -1,4 +1,4 @@
-function somas = getSomaAgglos(filename,type)
+function [somas,somaCoords] = getSomaAgglos(filename,type)
 % returns the somata which overlap with the center, border or with all soma
 % locations (which were extracted from the KAMIN list)
 % INPUTS
@@ -161,13 +161,14 @@ switch type
 end
 
 somaCOMs = bsxfun(@times,cell2mat(cellfun(@mean,somas(:,1),'uni',0)),[11.2400   11.2400   28]);
-centerSomas = zeros(size(theseSomaCoordinates,1),1);
+idxSomas = zeros(size(theseSomaCoordinates,1),1);
 for s = 1:size(theseSomaCoordinates,1)
-    [~,centerSomas(s)] = min(pdist2(theseSomaCoordinates(s,:),somaCOMs));
+    [dst(s),idxSomas(s)] = min(pdist2(theseSomaCoordinates(s,:),somaCOMs));
 end
-if (numel(unique(centerSomas))~=size(theseSomaCoordinates,1))
-    [~,ind] = unique(centerSomas);
-    warning('Caution! %d soma coordinates from the KAMIN list were part from the same soma agglo!Duplicates are removed!',numel(centerSomas)-numel(ind))
-    centerSomas = centerSomas(sort(ind));
+if (numel(unique(idxSomas))~=size(theseSomaCoordinates,1))
+    [~,ind] = unique(idxSomas);
+    warning('Caution! %d soma coordinates from the KAMIN list were part from the same soma agglo!Duplicates are removed!',numel(idxSomas)-numel(ind))
+    idxSomas = idxSomas(sort(ind));
 end
-somas = somas(centerSomas,3);
+somaCoords = cellfun(@(x) bsxfun(@times,x,[11.2400   11.2400   28]),somas(idxSomas,1),'uni',0);
+somas = somas(idxSomas,3);
