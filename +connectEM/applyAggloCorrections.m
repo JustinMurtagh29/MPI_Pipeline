@@ -124,7 +124,7 @@ for f = 1:numel(files)
         % update  LUT
         dendritesLUT(cell2mat(arrayfun(@(x) x.nodes(~isnan(x.nodes(:,4)),4),splitAgglo(2:end),'uni',0))) = repelem((1:numel(splitAgglo)-1)+numel(dendrites),arrayfun(@(x) sum(~isnan(x.nodes(:,4))),splitAgglo(2:end)));
         dendrites(end+1:end+numel(splitAgglo)-1) = splitAgglo(2:end);  % add the splitted stuff to end of agglo class
-    elseif any(edgesToDelete)
+    elseif any(edgesToDelete) && ~any(delSplit)
         warning('Deleting the edges from the skeleton %s did not split the agglo!',skel.filename)
     end
     if ~isempty(nodesToDelete)
@@ -245,7 +245,7 @@ for f = 1:numel(files)
                     segIdEdges = segIdEdges';
                 end
                 dendrites(ind) = Superagglos.applyEquivalences({1:numel(indToAddAxons)+numel(indToAddDendrites)+1},cat(1,dendrites([ind;indToAddDendrites]),axons(indToAddAxons)),segIdEdges);
-                
+                assert(numel(Graph.findConnectedComponents(dendrites(ind).edges))==1)
                 dendritesLUT(cell2mat(arrayfun(@(x) x.nodes(~isnan(x.nodes(:,4)),4),axons(indToAddAxons),'uni',0))) = ind; % update LUT
                 dendritesLUT(cell2mat(arrayfun(@(x) x.nodes(~isnan(x.nodes(:,4)),4),dendrites(indToAddDendrites),'uni',0))) = ind; % update LUT
                  % remove agglo which has been added and update LUT
@@ -256,8 +256,6 @@ for f = 1:numel(files)
                 
             end
         end
-%         segIds = cell2mat(Superagglos.transformAggloNewOldRepr(dendrites));
-%         assert(numel(segIds)==numel(unique(segIds)))
         if modus == 2
             % write out all axons and skeletons that would be added this
             % turn
