@@ -1,4 +1,4 @@
-function [flights, info] = loadProject( nmlDir, taskIdFile )
+function [flights, info] = loadProject( nmlDir, taskIdFile, p )
 %LOADPROJECT Load all files from a project.
 % INPUT nmlDir: string
 %           Path to folder containing all nml files of the project.
@@ -9,6 +9,8 @@ function [flights, info] = loadProject( nmlDir, taskIdFile )
 %           the task generation list).
 %           (Default: the order of the flights is determined by how matlab
 %           reads the nml files).
+%       p: (Optional) struct
+%           Segmentation parameter struct to load the segmentation ids.
 % OUTPUT flights: struct
 %           Structure containing the flight path queries. If taskIdFile is
 %           supplied then each field of flights has length equal to the
@@ -19,13 +21,20 @@ function [flights, info] = loadProject( nmlDir, taskIdFile )
 %           Miscellaneous information about the flights. Currently contains
 %           the fields
 %           'missingTasks': Tasks that are missing in nmlDir.
-%           'emptyTasks': Tasks that do not have any nodes.
+%           'emptyTasks': Tasks that do not have any nodes (including
+%               missinjg ones).
+%           'hasComment': Task that have a comment.
 % Author: Benedikt Staffler <benedikt.staffler@brain.mpg.de>
 
+if ~exist('p', 'var')
+    p = [];
+end
+
 Util.log('Loading nml files from %s.', nmlDir);
-flights = connectEM.Flight.loadFromDirs([], nmlDir);
+flights = connectEM.Flight.loadFromDirs(p, nmlDir);
 
 if ~exist('taskIdFile', 'var') || isempty(taskIdFile)
+    info = [];
     return
 end
 
@@ -44,10 +53,23 @@ assert(all(wasFound), 'Not all nml files correspond to generated tasks.');
 flights = structfun( ...
     @(x)createSortedFlightMember(x, idx, size(taskIdsGen, 1)), ...
     flights, 'uni', 0);
-flights.startPosOrig = startPosGen;
+
+flights.seedNodes = startPosGen;
+% load start pos ids
+if ~isempty(p)
+    flights.seedNodeIds = Skeleton.getSegmentIdsOfNodes(p, ...
+        flights.seedNodes);
+end
+flights.seedNodes = num2cell(flights.seedNodes, 2);
 
 info.missingTasks = find(cellfun(@isempty, flights.filenames));
 info.emptyTasks = find(cellfun(@isempty, flights.nodes));
+info.hasComment = find(~cellfun(@isempty, flights.comments));
+Util.log(sprintf(['Finished project loading:\n'...
+    'Missing tasks: %d\n', ...
+    'Empty tasks: %d\n', ...
+    'Tasks with comment: %d'], length(info.missingTasks), ...
+    length(info.emptyTasks), length(info.hasComment)));
 
 end
 
