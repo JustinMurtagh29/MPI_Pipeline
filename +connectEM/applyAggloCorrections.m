@@ -102,23 +102,26 @@ for f = 1:numel(files)
     
     % this part deletes splitted stuff that is already in the axon class
     % (to not put axonic stuff into dendrite class)
-    delSplit = false(numel(splitAgglo),1);
-    for s = 2:numel(splitAgglo) % go through all splitted parts of the agglo
-        idxMostOVAx = mode(axonsLUT(splitAgglo(s).nodes(~isnan(splitAgglo(s).nodes(:,4)),4))); % get axon agglo idx with which the splitted part overlaps most
-        if ~isnan(idxMostOVAx)
-            n = sum(ismember(splitAgglo(s).nodes(:,1:3),axons(idxMostOVAx).nodes(:,1:3),'rows')); % check how much overlap incl. flight path points
-            if n == size(splitAgglo(s).nodes,1) % if splitted thing fully exists in axon class, do not keep it
-                delSplit(s) = true;
-                if n/size(axons(idxMostOVAx).nodes,1) > 0.1
-                    
+    if exist('axons','var') && ~isempty(axons)
+        delSplit = false(numel(splitAgglo),1);
+        for s = 2:numel(splitAgglo) % go through all splitted parts of the agglo
+            idxMostOVAx = mode(axonsLUT(splitAgglo(s).nodes(~isnan(splitAgglo(s).nodes(:,4)),4))); % get axon agglo idx with which the splitted part overlaps most
+            if ~isnan(idxMostOVAx)
+                n = sum(ismember(splitAgglo(s).nodes(:,1:3),axons(idxMostOVAx).nodes(:,1:3),'rows')); % check how much overlap incl. flight path points
+                if n == size(splitAgglo(s).nodes,1) % if splitted thing fully exists in axon class, do not keep it
+                    delSplit(s) = true;
+                    if n/size(axons(idxMostOVAx).nodes,1) > 0.1
+                        
+                    end
                 end
+            else  % if it is only a flight path, delete
+                delSplit(s) = true;
             end
-        else  % if it is only a flight path, delete
-            delSplit(s) = true;
         end
+        splitAgglo(delSplit) = [];
+    else
+        delSplit = false;
     end
-    splitAgglo(delSplit) = [];
-    
     
     if numel(splitAgglo) > 1
         % update  LUT
