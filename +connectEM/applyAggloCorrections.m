@@ -198,7 +198,7 @@ for f = 1:numel(files)
                         % removing segIds from dendrite class that are in
                         % the axon to be added (if whole dendrite agglo is
                         % contained in the axon) or by transforming the locations
-                        % in dendrite agglos with segment duplets to a flight path
+                        % in axon agglos with segment duplets to a flight path
                         axSegIds = axons(indToAddAxons(i)).nodes(~isnan(axons(indToAddAxons(i)).nodes(:,4)),4); % get all axon seg Ids
                         indDend = unique(dendritesLUT(axSegIds));       % get dendrites that contain these seg Ids ,too
                         if ~all(indDend==0)
@@ -224,10 +224,6 @@ for f = 1:numel(files)
                             end
                         end
                     end
-                    % recheck which axons will be added, as some might get
-                    % thrown out now 
-                    indToAddAxons = unique(nonzeros(axonsLUT(nonzeros(theseSkelSegIds))))'; % get the index of the superagglo(s) to add
-                    indToAddAxons = indToAddAxons(:);
                 end
 
                 % find nodes at segIds that are not part of the whole cell or
