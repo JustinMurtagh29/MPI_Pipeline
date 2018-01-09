@@ -67,7 +67,12 @@ function [segIds, neighbours, filenames, nodes, startNode, comments, errors] = l
     errors(idxTooManyTrees) = [];
     toc;
     
-    temp.nodes = nodes;
-    [segIds, neighbours] = connectEM.lookupSkelGT(p, temp);
+    if ~isempty(p)
+        temp.nodes = nodes;
+        [segIds, neighbours] = connectEM.lookupSkelGT(p, temp);
+    else
+        segIds = [];
+        neighbours = [];
+    end
 
 end
