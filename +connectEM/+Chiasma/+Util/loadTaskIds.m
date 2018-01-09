@@ -1,4 +1,4 @@
-function tasks = loadTaskIds(taskFile)
+function [tasks, startPos] = loadTaskIds(taskFile)
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     fid = fopen(taskFile, 'rt');
@@ -22,4 +22,14 @@ function tasks = loadTaskIds(taskFile)
     tasks = table;
     tasks.id = data(:, 1);
     tasks.nmlFile = data(:, 2);
+    
+    if nargout > 1 % read out start position
+        
+        % get rid of commas
+        data(:,3) = cellfun(@(x)x(2:end), data(:,3), 'uni', 0);
+        data(:,5) = cellfun(@(x)x(1:end-2), data(:,5), 'uni', 0);
+        
+        % to array
+        startPos = cell2mat(cellfun(@str2num, data(:,3:5), 'uni', 0));
+    end
 end
