@@ -24,6 +24,7 @@ function [flights, info] = loadProject( nmlDir, taskIdFile, p )
 %           'emptyTasks': Tasks that do not have any nodes (including
 %               missinjg ones).
 %           'hasComment': Task that have a comment.
+%           'errors':
 % Author: Benedikt Staffler <benedikt.staffler@brain.mpg.de>
 
 if ~exist('p', 'var')
@@ -31,7 +32,7 @@ if ~exist('p', 'var')
 end
 
 Util.log('Loading nml files from %s.', nmlDir);
-flights = connectEM.Flight.loadFromDirs(p, nmlDir);
+[flights, errors] = connectEM.Flight.loadFromDirs(p, nmlDir);
 
 if ~exist('taskIdFile', 'var') || isempty(taskIdFile)
     info = [];
@@ -57,14 +58,16 @@ flights = structfun( ...
 flights.seedNodes = startPosGen;
 % load start pos ids
 if ~isempty(p)
-    flights.seedNodeIds = Skeleton.getSegmentIdsOfNodes(p, ...
-        flights.seedNodes);
+    flights.seedNodeIds = num2cell(Skeleton.getSegmentIdsOfNodes(p, ...
+        flights.seedNodes));
 end
 flights.seedNodes = num2cell(flights.seedNodes, 2);
 
 info.missingTasks = find(cellfun(@isempty, flights.filenames));
 info.emptyTasks = find(cellfun(@isempty, flights.nodes));
 info.hasComment = find(~cellfun(@isempty, flights.comments));
+info.errors.hasError = find(~cellfun(@isempty, errors(:,1)));
+info.errors.error = errors(info.errors.hasError, :);
 Util.log(sprintf(['Finished project loading:\n'...
     'Missing tasks: %d\n', ...
     'Empty tasks: %d\n', ...
