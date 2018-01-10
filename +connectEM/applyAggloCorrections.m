@@ -1,4 +1,4 @@
-function [dendrites,dendritesLUT] = applyAggloCorrections(dendrites,p,folder,modus,axons)
+function [dendrites,dendritesLUT] = applyAggloCorrections(dendrites,p,folder,modus,axons,axonlegacy)
 % this function applied the changes (merges/splits) made in the nml files located in
 % "folder" to all whole cell superagglos
 %
@@ -9,6 +9,7 @@ function [dendrites,dendritesLUT] = applyAggloCorrections(dendrites,p,folder,mod
 % modus        0: applySplitsAndMerges; 1: only apply splits; 2: only write out agglos as skeletons that would be added by this step (to inspect for mergers) (DEFAULT 0)
 % axons        agglos in the superagglo format to add axonic stuff to whole
 %              cells
+% axonlegacy   Boolean necessary for the whole cell corrections of L4 which have old skeletons where coordinate was not shifted by tiny bit to differentiate them from sgementId centroids
 %
 % OUTPUT
 % dendrites       modified agglos in the superagglo format
@@ -17,6 +18,9 @@ function [dendrites,dendritesLUT] = applyAggloCorrections(dendrites,p,folder,mod
 %
 % by Marcel Beining <marcel.beining@brain.mpg.de>
 
+if ~exist('legacy','var') || isempty(axonlegacy)
+    axonlegacy = 0; % necessary for the whole cell corrections of L4 which have old skeletons where coordinate was not shifted by tiny bit to differentiate them from sgementId centroids
+end 
 if ~exist('modus','var') || isempty(modus)
     modus = 0;
 end
@@ -215,7 +219,9 @@ for f = 1:numel(files)
                                 makeTheseNaN = ismember(axons(indToAddAxons(i)).nodes(:,4),setdiff(axSegIds(indDendRest(d) == dendritesLUT(axSegIds)),theseSkelSegIds(endingSkelEdgesClusters{n})));
                                 axonsLUT(axons(indToAddAxons(i)).nodes(makeTheseNaN,4)) = 0; % remove ref to the axon for these seg ids
                                 axons(indToAddAxons(i)).nodes(makeTheseNaN,4) = NaN;
-                                axons(indToAddAxons(i)).nodes(makeTheseNaN,1:3) = axons(indToAddAxons(i)).nodes(makeTheseNaN,1:3)+0.1; % add tiny value to coordinate to make it different from segment centroid
+                                if ~axonlegacy   % unfortunately for the current L4 whole cell I have to keep it that way otherwise the nodes do not overlap with the skeleton nodes of the next skeleton and will be thus deleted....
+                                    axons(indToAddAxons(i)).nodes(makeTheseNaN,1:3) = axons(indToAddAxons(i)).nodes(makeTheseNaN,1:3)+0.1; % add tiny value to coordinate to make it different from segment centroid
+                                end
                             end
                             if any(canBeDeleted)
                                 % update indices to agglomerate
