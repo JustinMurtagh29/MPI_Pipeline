@@ -27,7 +27,7 @@ function [tasks, startPos] = loadTaskIds(taskFile)
         
         % get rid of commas
         data(:,3) = cellfun(@(x)x(2:end), data(:,3), 'uni', 0);
-        data(:,5) = cellfun(@(x)x(1:end-2), data(:,5), 'uni', 0);
+        data(:,5) = cellfun(@(x)x(1:strfind(x, ')')-1), data(:,5), 'uni', 0);
         
         % to array
         startPos = cell2mat(cellfun(@str2num, data(:,3:5), 'uni', 0));
