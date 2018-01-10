@@ -107,7 +107,7 @@ for f = 1:numel(files)
     if exist('axons','var') && ~isempty(axons)
         delSplit = false(numel(splitAgglo),1);
         for s = 2:numel(splitAgglo) % go through all splitted parts of the agglo
-            idxMostOVAx = mode(axonsLUT(splitAgglo(s).nodes(~isnan(splitAgglo(s).nodes(:,4)),4))); % get axon agglo idx with which the splitted part overlaps most
+            idxMostOVAx = mode(nonzeros(axonsLUT(splitAgglo(s).nodes(~isnan(splitAgglo(s).nodes(:,4)),4)))); % get axon agglo idx with which the splitted part overlaps most
             if ~isnan(idxMostOVAx)
                 n = sum(ismember(splitAgglo(s).nodes(:,1:3),axons(idxMostOVAx).nodes(:,1:3),'rows')); % check how much overlap incl. flight path points
                 if n == size(splitAgglo(s).nodes,1) % if splitted thing fully exists in axon class, do not keep it

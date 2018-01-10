@@ -433,10 +433,6 @@ if ~existentDendrites(10)
     agglos = cell2mat(Superagglos.transformAggloNewOldRepr(dendrites));
     assert(numel(agglos)==numel(unique(agglos)))
     
-    % test for duplets
-    agglos = cell2mat(Superagglos.transformAggloNewOldRepr(dendrites));
-    assert(numel(agglos)==numel(unique(agglos)))
-    
     dendriteSegIds = find(dendriteLUT);
     [ismem,ind] = ismember(somaSegIds,dendriteSegIds);
     % get each dend id which contains most of the seg ids of each soma
