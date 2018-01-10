@@ -156,7 +156,7 @@ for f = 1:numel(files)
                 warning('Skel %s contained an ending which could not be processed, because it seemed to be part of a merged agglo which had been split away now.',skel.filename)
                 continue
             end
-            
+            theseSkelSegIds(ismember(theseSkelSegIds,segIdsToDelete)) = 0;  % prevent reattachment from deleted seg ids
             %hasAxonComment = cellfun(@(x) ~isempty(strfind(x,'axon')),comments(ismember(nodeIdx,endingClusters{n})));
             hasTrueEndingComment = cellfun(@(x) ~isempty(strfind(x,'true ending')),comments(ismember(nodeIdx,endingClusters{n})));
             if ~isempty(hasTrueEndingComment) && any(hasTrueEndingComment)
@@ -209,8 +209,8 @@ for f = 1:numel(files)
                             end
                             canBeDeleted = arrayfun(@(x) size(x.nodes,1),dendrites(indDend))==count; % if the whole dendrite agglos is contained in the axon it can be removed from dendrite class
                             indDendRest = indDend(~canBeDeleted);  % get all dendrite agglos that have only partial overlap with the axon
-                            for d = 1:numel(indDendRest) % go through these agglos, get the segId duplets and transform the axon nodes with segID duplets into a flight path
-                                makeTheseNaN = ismember(axons(indToAddAxons(i)).nodes(:,4),axSegIds(indDendRest(d) == dendritesLUT(axSegIds)));
+                            for d = 1:numel(indDendRest) % go through these agglos, get the segId duplets and transform the axon nodes with segID duplets into a flight path (but not the ones needed for adding them to the current agglo
+                                makeTheseNaN = ismember(axons(indToAddAxons(i)).nodes(:,4),setdiff(axSegIds(indDendRest(d) == dendritesLUT(axSegIds)),theseSkelSegIds(endingSkelEdgesClusters{n})));
                                 axonsLUT(axons(indToAddAxons(i)).nodes(makeTheseNaN,4)) = 0; % remove ref to the axon for these seg ids
                                 axons(indToAddAxons(i)).nodes(makeTheseNaN,4) = NaN;
                                 axons(indToAddAxons(i)).nodes(makeTheseNaN,1:3) = axons(indToAddAxons(i)).nodes(makeTheseNaN,1:3)+0.1; % add tiny value to coordinate to make it different from segment centroid
