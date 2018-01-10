@@ -1,8 +1,9 @@
 function exportToAmira(param, agglos, outDir)
     % exportToAmira(param, agglos, outDir)
     %   Exports super-agglomerates to Amira for visualization. For now this
-    %   is done by writing out each super-agglomerate as a separate NML
-    %   file. In the future this might be changed to HOC files.
+    %   is done by writing out the minimum-spanning tree of each super-
+    %   agglomerate as a separate NML file. In the future this might be
+    %   changed to HOC files.
     %
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
@@ -13,11 +14,9 @@ function exportToAmira(param, agglos, outDir)
     tic;
     for curIdx = 1:numAgglos
         curAgglo = agglos(curIdx);
+        curNodes = curAgglo.nodes(:, 1:3);
         
-        curSkel = skeleton();
-        curSkel = curSkel.addTree( ...
-            sprintf('Agglomerate %d', curIdx), ...
-            curAgglo.nodes(:, 1:3), curAgglo.edges);
+        curSkel = Skeleton.fromMST(curNodes, param.raw.voxelSize);
         curSkel = Skeleton.setParams4Pipeline(curSkel, param);
         
         curOutPath = sprintf('agglomerate_%0*d', numDigits, curIdx);
