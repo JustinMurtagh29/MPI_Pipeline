@@ -1,4 +1,4 @@
-function ff = loadFromDirs(p, nmlDirs)
+function [ff, errors] = loadFromDirs(p, nmlDirs)
     % Written by
     %   Kevin Boergens <kevin.boergens@brain.mpg.de>
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
@@ -8,7 +8,7 @@ function ff = loadFromDirs(p, nmlDirs)
     
     ff = struct;
    [ff.segIds, ff.neighbours, ff.filenames, ...
-    ff.nodes, ff.startNode, ff.comments] = ...
+    ff.nodes, ff.startNode, ff.comments, errors] = ...
         connectEM.lookupNmlMulti(p, nmlDirs, false);
     
     second = @(x) x(2);

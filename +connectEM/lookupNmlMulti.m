@@ -18,7 +18,7 @@ function [segIds, neighbours, filenames, nodes, startNode, comments, errors] = l
     startNode = cell(1, numel(filenames));
     idxTooManyTrees = false(length(filenames),1);
     comments = cell(length(filenames),1);
-    errors = cell(length(filenames),2);
+    errors = cell(length(filenames),1);
     
     for i=1:length(filenames)
         try
@@ -27,8 +27,8 @@ function [segIds, neighbours, filenames, nodes, startNode, comments, errors] = l
             display(filenames{i});
             warning('parseNml generated an error');
             display(ME.message);
-            errors{i,1} = ME.message;
-            errors{i,2} = filenames{i};
+            errors{i,1}{1} = ME.message;
+            errors{i,1}{2} = filenames{i};
             continue;
         end
         
