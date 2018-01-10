@@ -24,7 +24,8 @@ function [flights, info] = loadProject( nmlDir, taskIdFile, p )
 %           'emptyTasks': Tasks that do not have any nodes (including
 %               missinjg ones).
 %           'hasComment': Task that have a comment.
-%           'errors':
+%           'errors':  Information about errors that occurred during nml
+%               loading.
 % Author: Benedikt Staffler <benedikt.staffler@brain.mpg.de>
 
 if ~exist('p', 'var')
@@ -54,6 +55,8 @@ assert(all(wasFound), 'Not all nml files correspond to generated tasks.');
 flights = structfun( ...
     @(x)createSortedFlightMember(x, idx, size(taskIdsGen, 1)), ...
     flights, 'uni', 0);
+errors = createSortedFlightMember(errors, idx, size(taskIdsGen, 1));
+errors = vertcat(errors{:});
 
 flights.seedNodes = startPosGen;
 % load start pos ids
