@@ -33,7 +33,7 @@ end
 if ~isfield(segmentMeta,'dendriteProb')
     segmentMeta = connectEM.addSegmentClassInformation(p,segmentMeta);
 end
-sMpoints(cat(1,segmentMeta.segIDs),1:3) = cat(1,segmentMeta.point);
+sMpoints(cat(1,segmentMeta.segIds),1:3) = cat(1,segmentMeta.point');
 disp('segment meta loaded');
 
 if ~exist('borderMeta','var')
