@@ -1,5 +1,11 @@
 function [flights, flightsMeta] = ...
         getFlightPathSegIds(param, sagglos, nhood)
+    % [flights, flightsMeta] = getFlightPathSegIds(param, sagglos, nhood)
+    %   This function takes a bunch of super-agglomerates `sagglos`, splits
+    %   them in connected segment- and flight-based parts, and looks up the
+    %   segment IDs for all flight nodes. Optionally, the segment IDs are
+    %   being looked up for a whole neighborhood around the node.
+    %
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     
