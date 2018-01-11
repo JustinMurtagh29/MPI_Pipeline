@@ -18,7 +18,7 @@ function [dendrites,dendritesLUT] = applyAggloCorrections(dendrites,p,folder,mod
 %
 % by Marcel Beining <marcel.beining@brain.mpg.de>
 
-if ~exist('legacy','var') || isempty(axonlegacy)
+if ~exist('axonlegacy','var') || isempty(axonlegacy)
     axonlegacy = 0; % necessary for the whole cell corrections of L4 which have old skeletons where coordinate was not shifted by tiny bit to differentiate them from sgementId centroids
 end 
 if ~exist('modus','var') || isempty(modus)
