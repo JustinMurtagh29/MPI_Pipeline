@@ -33,6 +33,7 @@ end
 if ~isfield(segmentMeta,'dendriteProb')
     segmentMeta = connectEM.addSegmentClassInformation(p,segmentMeta);
 end
+sMpoints(cat(1,segmentMeta.segIDs),1:3) = cat(1,segmentMeta.point);
 disp('segment meta loaded');
 
 if ~exist('borderMeta','var')
@@ -208,8 +209,8 @@ if ~existentDendrites(4)
     % ending detection done by christian!
     correctionFolder = 'WholeCellCorrections_03_v2';
     fprintf('Folder with correction nmls for state dendrites_03_v2 is %s\n',fullfile(outputFolder,correctionFolder));
-%     [dendrites,dendriteLUT] = connectEM.applyWholeCellCorrections(dendrites,somaAgglos,p,fullfile(outputFolder,correctionFolder),1);
-    [dendrites,dendriteLUT] = connectEM.applyAggloCorrections(dendrites,p,fullfile(outputFolder,correctionFolder),1);
+%     [dendrites,dendriteLUT] = connectEM.applyWholeCellCorrections(dendrites,somaAgglos,p,fullfile(outputFolder,correctionFolder),1,sMpoints);
+    [dendrites,dendriteLUT] = connectEM.applyAggloCorrections(dendrites,p,fullfile(outputFolder,correctionFolder),1,sMpoints);
     
     % test for duplets
     agglos = cell2mat(Superagglos.transformAggloNewOldRepr(dendrites));
@@ -235,7 +236,7 @@ if ~existentDendrites(5)
     % ending detection done by christian!
     correctionFolder = 'WholeCellCorrections_03_v2_splitmerged';
     fprintf('Folder with correction nmls for state dendrites_03_v2_splitmerged is %s\n',fullfile(outputFolder,correctionFolder));
-    [dendrites,dendriteLUT] = connectEM.applyAggloCorrections(dendrites,p,fullfile(outputFolder,correctionFolder));
+    [dendrites,dendriteLUT] = connectEM.applyAggloCorrections(dendrites,p,fullfile(outputFolder,correctionFolder),0,sMpoints);
 
     % test for duplets
     agglos = cell2mat(Superagglos.transformAggloNewOldRepr(dendrites));
@@ -262,13 +263,13 @@ if ~existentDendrites(6) || ~existentWC(1)
     % ending detection done by christian!
     correctionFolder = 'WholeCellCorrections_04';
     fprintf('Folder with correction nmls for state dendrites_04 is %s\n',fullfile(outputFolder,correctionFolder));
-%     connectEM.applyAggloCorrections(dendrites,p,fullfile(outputFolder,correctionFolder),2,axons,1);
+%     connectEM.applyAggloCorrections(dendrites,p,fullfile(outputFolder,correctionFolder),2,sMpoints,axons,1);
     
     % split the stuff to be added now
-    dendrites = connectEM.applyAggloCorrections(dendrites,p,fullfile(outputFolder,correctionFolder,'checkedBeforeAdd'),1);
-    [axons,axonLUT] = connectEM.applyAggloCorrections(axons,p,fullfile(outputFolder,correctionFolder,'checkedBeforeAdd'),1);
+    dendrites = connectEM.applyAggloCorrections(dendrites,p,fullfile(outputFolder,correctionFolder,'checkedBeforeAdd'),1,sMpoints);
+    [axons,axonLUT] = connectEM.applyAggloCorrections(axons,p,fullfile(outputFolder,correctionFolder,'checkedBeforeAdd'),1,sMpoints);
     
-    [dendrites,dendriteLUT] = connectEM.applyAggloCorrections(dendrites,p,fullfile(outputFolder,correctionFolder),0,axons,1);
+    [dendrites,dendriteLUT] = connectEM.applyAggloCorrections(dendrites,p,fullfile(outputFolder,correctionFolder),0,sMpoints,axons,1);
     
     % test for duplets
     agglos = cell2mat(Superagglos.transformAggloNewOldRepr(dendrites));
@@ -304,9 +305,9 @@ if  ~existentWC(2) || ~existentDendrites(7)
     % ending detection done by christian!
     correctionFolder = 'WholeCellCorrections_05';
     fprintf('Folder with correction nmls for state dendrites_05 is %s\n',fullfile(outputFolder,correctionFolder));
-%     connectEM.applyAggloCorrections(cat(1,wholeCells,dendrites),p,fullfile(outputFolder,correctionFolder),2,axons,1);
+%     connectEM.applyAggloCorrections(cat(1,wholeCells,dendrites),p,fullfile(outputFolder,correctionFolder),2,sMpoints,axons,1);
     
-    [dendrites,dendriteLUT] = connectEM.applyAggloCorrections(cat(1,wholeCells,dendrites),p,fullfile(outputFolder,correctionFolder),0,axons,1);
+    [dendrites,dendriteLUT] = connectEM.applyAggloCorrections(cat(1,wholeCells,dendrites),p,fullfile(outputFolder,correctionFolder),0,sMpoints,axons,1);
     
     % test for duplets
     agglos = cell2mat(Superagglos.transformAggloNewOldRepr(dendrites));
@@ -340,10 +341,10 @@ if ~existentWC(3) || ~existentDendrites(8)
     % ending detection done by christian!
     correctionFolder = 'WholeCellCorrections_06';
     fprintf('Folder with correction nmls for state dendrites_06 is %s\n',fullfile(outputFolder,correctionFolder));
-%     connectEM.applyAggloCorrections(cat(1,wholeCells,dendrites),p,fullfile(outputFolder,correctionFolder),2,axons,1);
+%     connectEM.applyAggloCorrections(cat(1,wholeCells,dendrites),p,fullfile(outputFolder,correctionFolder),2,sMpoints,axons,1);
     % no correction was necessary
     
-    [dendrites,dendriteLUT] = connectEM.applyAggloCorrections(cat(1,wholeCells,dendrites),p,fullfile(outputFolder,correctionFolder),0,axons,1);
+    [dendrites,dendriteLUT] = connectEM.applyAggloCorrections(cat(1,wholeCells,dendrites),p,fullfile(outputFolder,correctionFolder),0,sMpoints,axons,1);
     
     % test for duplets
     agglos = cell2mat(Superagglos.transformAggloNewOldRepr(dendrites));
@@ -395,7 +396,7 @@ if ~existentDendrites(9)
     
     correctionFolder = 'WholeCellCorrections_07';
     fprintf('Folder with correction nmls for state dendrites_07 is %s\n',fullfile(outputFolder,correctionFolder));
-    [dendrites,dendriteLUT] = connectEM.applyAggloCorrections(dendrites,p,fullfile(outputFolder,correctionFolder),1);
+    [dendrites,dendriteLUT] = connectEM.applyAggloCorrections(dendrites,p,fullfile(outputFolder,correctionFolder),1,sMpoints);
   
     % test for duplets
     agglos = cell2mat(Superagglos.transformAggloNewOldRepr(dendrites));
@@ -421,13 +422,13 @@ if ~existentDendrites(10)
     fprintf('Folder with correction nmls for state dendrites_08 is %s\n',fullfile(outputFolder,correctionFolder));
     
     % write out the stuff to be added for checking
-%     connectEM.applyAggloCorrections(dendrites,p,fullfile(outputFolder,correctionFolder),2,axons,1);
+%     connectEM.applyAggloCorrections(dendrites,p,fullfile(outputFolder,correctionFolder),2,sMpoints,axons,1);
     
     % split the stuff to be added now
-    [axons,axonLUT] = connectEM.applyAggloCorrections(axons,p,fullfile(outputFolder,correctionFolder,'checkedBeforeAdd'),1);
+    [axons,axonLUT] = connectEM.applyAggloCorrections(axons,p,fullfile(outputFolder,correctionFolder,'checkedBeforeAdd'),1,sMpoints);
     
     
-    [dendrites,dendriteLUT] = connectEM.applyAggloCorrections(dendrites,p,fullfile(outputFolder,correctionFolder),0,axons,1);
+    [dendrites,dendriteLUT] = connectEM.applyAggloCorrections(dendrites,p,fullfile(outputFolder,correctionFolder),0,sMpoints,axons,1);
 
     % test for duplets
     agglos = cell2mat(Superagglos.transformAggloNewOldRepr(dendrites));
@@ -458,13 +459,13 @@ if ~existentDendrites(11)
     fprintf('Folder with correction nmls for state dendrites_09 is %s\n',fullfile(outputFolder,correctionFolder));
     
     % write out the stuff to be added for checking
-%     connectEM.applyAggloCorrections(dendrites,p,fullfile(outputFolder,correctionFolder),2,axons,1);
+%     connectEM.applyAggloCorrections(dendrites,p,fullfile(outputFolder,correctionFolder),2,sMpoints,axons,1);
     
     % split the stuff to be added now (dendrites had no checks necessary)
-    [axons,axonLUT] = connectEM.applyAggloCorrections(axons,p,fullfile(outputFolder,correctionFolder,'checkedBeforeAdd'),1);
+    [axons,axonLUT] = connectEM.applyAggloCorrections(axons,p,fullfile(outputFolder,correctionFolder,'checkedBeforeAdd'),1,sMpoints);
     
     
-    [dendrites,dendriteLUT] = connectEM.applyAggloCorrections(dendrites,p,fullfile(outputFolder,correctionFolder),0,axons,1);
+    [dendrites,dendriteLUT] = connectEM.applyAggloCorrections(dendrites,p,fullfile(outputFolder,correctionFolder),0,sMpoints,axons,1);
 
     % test for duplets
     agglos = cell2mat(Superagglos.transformAggloNewOldRepr(dendrites));
@@ -496,13 +497,13 @@ if ~existentDendrites(12)
     fprintf('Folder with correction nmls for state dendrites_10 is %s\n',fullfile(outputFolder,correctionFolder));
     
     % write out the stuff to be added for checking
-%     connectEM.applyAggloCorrections(dendrites,p,fullfile(outputFolder,correctionFolder),2,axons,1);
+%     connectEM.applyAggloCorrections(dendrites,p,fullfile(outputFolder,correctionFolder),2,sMpoints,axons,1);
     
     % split the stuff to be added now (dendrites had no checks necessary)
-    [axons,axonLUT] = connectEM.applyAggloCorrections(axons,p,fullfile(outputFolder,correctionFolder,'checkedBeforeAdd'),1);
+    [axons,axonLUT] = connectEM.applyAggloCorrections(axons,p,fullfile(outputFolder,correctionFolder,'checkedBeforeAdd'),1,sMpoints);
     
     
-    [dendrites,dendriteLUT] = connectEM.applyAggloCorrections(dendrites,p,fullfile(outputFolder,correctionFolder),0,axons,1);
+    [dendrites,dendriteLUT] = connectEM.applyAggloCorrections(dendrites,p,fullfile(outputFolder,correctionFolder),0,sMpoints,axons,1);
     
     % test for duplets
     agglos = cell2mat(Superagglos.transformAggloNewOldRepr(dendrites));
@@ -534,13 +535,13 @@ if ~existentDendrites(13)
     fprintf('Folder with correction nmls for state dendrites_11 is %s\n',fullfile(outputFolder,correctionFolder));
     
     % write out the stuff to be added for checking
-%     connectEM.applyAggloCorrections(dendrites,p,fullfile(outputFolder,correctionFolder),2,axons,1);
+%     connectEM.applyAggloCorrections(dendrites,p,fullfile(outputFolder,correctionFolder),2,sMpoints,axons,1);
     
     % split the stuff to be added now (dendrites had no checks necessary)
-    [axons,axonLUT] = connectEM.applyAggloCorrections(axons,p,fullfile(outputFolder,correctionFolder,'checkedBeforeAdd'),1);
+    [axons,axonLUT] = connectEM.applyAggloCorrections(axons,p,fullfile(outputFolder,correctionFolder,'checkedBeforeAdd'),1,sMpoints);
     
     
-    [dendrites,dendriteLUT] = connectEM.applyAggloCorrections(dendrites,p,fullfile(outputFolder,correctionFolder),0,axons,1);
+    [dendrites,dendriteLUT] = connectEM.applyAggloCorrections(dendrites,p,fullfile(outputFolder,correctionFolder),0,sMpoints,axons,1);
     
     % test for duplets
     agglos = cell2mat(Superagglos.transformAggloNewOldRepr(dendrites));
@@ -569,7 +570,7 @@ if ~existentDendrites(14) || ~existentWC(4)
     correctionFolder = 'WholeCellCorrections_13';
     fprintf('Folder with correction nmls for state dendrites_12 is %s\n',fullfile(outputFolder,correctionFolder));
     
-    [dendrites,dendriteLUT] = connectEM.applyAggloCorrections(dendrites,p,fullfile(outputFolder,correctionFolder),0,axons,1);
+    [dendrites,dendriteLUT] = connectEM.applyAggloCorrections(dendrites,p,fullfile(outputFolder,correctionFolder),0,sMpoints,axons,1);
 
     % test for duplets
     agglos = cell2mat(Superagglos.transformAggloNewOldRepr(dendrites));
@@ -622,7 +623,7 @@ if  ~existentWC(5) || ~existentDendrites(15)
     correctionFolder = 'WholeCellCorrections_14';
     fprintf('Folder with correction nmls for state dendrites_13 is %s\n',fullfile(outputFolder,correctionFolder));
     
-    [dendrites,dendriteLUT] = connectEM.applyAggloCorrections(cat(1,wholeCells,dendrites),p,fullfile(outputFolder,correctionFolder),0,axons,1);
+    [dendrites,dendriteLUT] = connectEM.applyAggloCorrections(cat(1,wholeCells,dendrites),p,fullfile(outputFolder,correctionFolder),0,sMpoints,axons,1);
     
     % test for duplets
     agglos = cell2mat(Superagglos.transformAggloNewOldRepr(dendrites));
@@ -660,7 +661,7 @@ if  ~existentWC(6) || ~existentDendrites(16)
     correctionFolder = 'WholeCellCorrections_15';
     fprintf('Folder with correction nmls for state dendrites_14 is %s\n',fullfile(outputFolder,correctionFolder));
     
-    [dendrites,dendriteLUT] = connectEM.applyAggloCorrections(cat(1,wholeCells,dendrites),p,fullfile(outputFolder,correctionFolder),0,axons,1);
+    [dendrites,dendriteLUT] = connectEM.applyAggloCorrections(cat(1,wholeCells,dendrites),p,fullfile(outputFolder,correctionFolder),0,sMpoints,axons,1);
     
     % test for duplets
     agglos = cell2mat(Superagglos.transformAggloNewOldRepr(dendrites));
@@ -698,7 +699,7 @@ if  ~existentWC(7) || ~existentDendrites(17)
     correctionFolder = 'WholeCellCorrections_16';
     fprintf('Folder with correction nmls for state dendrites_15 is %s\n',fullfile(outputFolder,correctionFolder));
     
-    [dendrites,dendriteLUT] = connectEM.applyAggloCorrections(cat(1,wholeCells,dendrites),p,fullfile(outputFolder,correctionFolder),0,axons,1);
+    [dendrites,dendriteLUT] = connectEM.applyAggloCorrections(cat(1,wholeCells,dendrites),p,fullfile(outputFolder,correctionFolder),0,sMpoints,axons,1);
     
     % test for duplets
     agglos = cell2mat(Superagglos.transformAggloNewOldRepr(dendrites));

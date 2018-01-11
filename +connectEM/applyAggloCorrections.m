@@ -1,4 +1,4 @@
-function [dendrites,dendritesLUT] = applyAggloCorrections(dendrites,p,folder,modus,axons,axonlegacy)
+function [dendrites,dendritesLUT] = applyAggloCorrections(dendrites,p,folder,modus,sMpoints,axons,axonlegacy)
 % this function applied the changes (merges/splits) made in the nml files located in
 % "folder" to all whole cell superagglos
 %
@@ -7,6 +7,9 @@ function [dendrites,dendritesLUT] = applyAggloCorrections(dendrites,p,folder,mod
 % p            parameter structure from the pipeline
 % folder       path to the folder containing the nml files with the changes
 % modus        0: applySplitsAndMerges; 1: only apply splits; 2: only write out agglos as skeletons that would be added by this step (to inspect for mergers) (DEFAULT 0)
+% sMpoints     the point information of segmentMeta, sorted by segID. This 
+%              improves performance as not every segID has to be searched 
+%              in the segmentation data 
 % axons        agglos in the superagglo format to add axonic stuff to whole
 %              cells
 % axonlegacy   Boolean necessary for the whole cell corrections of L4 which have old skeletons where coordinate was not shifted by tiny bit to differentiate them from sgementId centroids
@@ -61,9 +64,12 @@ for f = 1:numel(files)
 %     skel = skel.deleteTrees(cellfun(@isempty,skel.edges)); % delete single or zero node skels
     singleNodeSkels = cellfun(@isempty,skel.edges);
     skelCoordsCatEdges = cell2mat(cellfun(@(x,y) [x(y(:,1),1:3),x(y(:,2),1:3)],skel.nodes(~singleNodeSkels),skel.edges(~singleNodeSkels),'uni',0));  % putting all skel nodes together
-
+    
+    if exist('sMpoints','var') && ~isempty(sMpoints)
+        [~,skelSegIds] = ismember(skelCoords,sMpoints,'rows');
+    end
     warning('OFF','auxiliaryMethods:readKnossosCube')
-    skelSegIds = Seg.Global.getSegIds(p,skelCoords);  % extract the seg Ids of all skel nodes
+    skelSegIds(skelSegIds==0) = Seg.Global.getSegIds(p,skelCoords(skelSegIds==0,:));  % extract the seg Ids of all skel nodes
     warning('ON','auxiliaryMethods:readKnossosCube')
     % get soma index for current skeleton
 %     [~,aggloOverlapsSkel] = ismember(skelCoords,dendriteCoord,'rows');
