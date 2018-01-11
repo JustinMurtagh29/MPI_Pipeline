@@ -9,7 +9,7 @@ axonFile = fullfile(rootDir, 'aggloState', 'axons_16_b.mat');
 
 % For now, let's use the same neighborhood size as in
 % `+connectEM/axonAggloStateVisualization.m`.
-nhoodSize = 54;
+nhoodSize = 3;
 
 [~, axonName] = fileparts(axonFile);
 cacheFile = fullfile(cacheDir, strcat(axonName, '_flights.mat'));
