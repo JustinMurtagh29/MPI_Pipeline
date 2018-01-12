@@ -5,6 +5,7 @@ clear;
 %% configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 cacheDir = '/tmpscratch/amotta/l4/2018-01-axon-16b-flight-paths';
+debugDir = '/home/amotta/Desktop/overlaps';
 axonFile = fullfile(rootDir, 'aggloState', 'axons_16_b.mat');
 
 % For now, let's use the same neighborhood size as in
@@ -71,6 +72,47 @@ descPairs = nan(numOverlaps, 2);
 [descPairs(:, 2), descPairs(:, 1), descOverlaps] = find(overlaps);
 [descOverlaps, descRows] = sort(descOverlaps, 'descend');
 descPairs = descPairs(descRows, :);
+
+%% export examples
+% To determine a good threshold we want examples from the whole range.
+numBins = 10;
+numPairs = 3;
+
+[bins, logEdges] = discretize(log10(descOverlaps), numBins);
+binCounts = accumarray(bins, 1);
+
+rng(0);
+samplePairs = zeros(0, 1);
+
+for curBin = 1:numBins
+    curPairIds = find(bins == curBin);
+    curPairIds = curPairIds(randperm(numel(curPairIds), numPairs));
+    samplePairs = cat(1, samplePairs, curPairIds(:));
+end
+
+for curIdx = 1:size(samplePairs, 1)
+    curPairId = samplePairs(curIdx);
+    
+    curPair = descPairs(curPairId, :);
+    curOverlap = descOverlaps(curPairId);
+    curAgglos = axons(curPair);
+    
+    curSkel = skeleton();
+    curSkel = curSkel.addTree( ...
+        sprintf('Agglomerate %d', curPair(1)), ...
+        curAgglos(1).nodes(:, 1:3), curAgglos(1).edges, [1, 0, 0, 1]);
+    curSkel = curSkel.addTree( ...
+        sprintf('Agglomerate %d', curPair(2)), ...
+        curAgglos(2).nodes(:, 1:3), curAgglos(2).edges, [0, 0, 1, 1]);
+    curSkel = curSkel.setDescription(...
+        sprintf('Overlap: %d', curOverlap));
+    
+    curSkel = Skeleton.setParams4Pipeline(curSkel, param);
+    
+    curSkelFile = fullfile(debugDir, sprintf( ...
+        '%d_agglos-%d-and-%d.nml', curIdx, curPair));
+    curSkel.write(curSkelFile);
+end
 
 %% overlap between flights and segment-based agglomerates
 function overlap = flightAggloOverlaps(numAgglos, aggloLUT, aggloTable)
