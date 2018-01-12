@@ -47,14 +47,14 @@ end
 
 %% simplify / process flight table
 % remove entries with segment ID zero
-flightTable(~flightTable.segId, :) = [];
+axonFlights(~axonFlights.segId, :) = [];
 
 % remove per-node multiplicity
-flightTable = unique(flightTable, 'rows');
+axonFlights = unique(axonFlights, 'rows');
 
 % count per-agglomerate
 [aggloTable, ~, uniRows] = unique( ...
-    flightTable(:, {'aggloId', 'segId'}), 'rows');
+    axonFlights(:, {'aggloId', 'segId'}), 'rows');
 aggloTable.evidence = accumarray(uniRows, 1);
 
 %% calculate overlaps
