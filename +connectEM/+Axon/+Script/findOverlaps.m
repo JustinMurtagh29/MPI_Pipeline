@@ -61,11 +61,24 @@ aggloTable.evidence = accumarray(uniRows, 1);
 faOverlaps = flightAggloOverlaps(numAgglos, aggloLUT, aggloTable);
 ffOverlaps = flightFlightOverlaps(numAgglos, aggloTable);
 
+overlaps = faOverlaps + ffOverlaps;
+save(cacheFile, '-append', 'overlaps');
+
+%% show pairs with a lot of overlap
+numOverlaps = nnz(overlaps);
+descPairs = nan(numOverlaps, 2);
+
+[descPairs(:, 2), descPairs(:, 1), descOverlaps] = find(overlaps);
+[descOverlaps, descRows] = sort(descOverlaps, 'descend');
+descPairs = descPairs(descRows, :);
+
 %% overlap between flights and segment-based agglomerates
 function overlap = flightAggloOverlaps(numAgglos, aggloLUT, aggloTable)
     aggloTable.aggloId(:, 2) = aggloLUT(aggloTable.segId);
     aggloTable.aggloId = sort(aggloTable.aggloId, 2);
+    
     aggloTable(~aggloTable.aggloId(:, 1), :) = [];
+    aggloTable(~diff(aggloTable.aggloId, 1, 2), :) = [];
     
    [~, uniRows, uniIds] = unique(aggloTable.aggloId, 'rows');
    
