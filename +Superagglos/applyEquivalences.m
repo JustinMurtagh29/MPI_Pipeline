@@ -29,7 +29,7 @@ else   % new representation, more complicated as edges have to be established
     % concatenate the edges of different agglos by adding number of
     % nodes of agglo 1:n to the edge indices of agglo n+1
     newedges = cellfun(@(x) cat(1,agglos(x).edges) + repmat(reshape(repelem(cumsum(cat(1,0,numSegsAgglos(x(1:end-1),:))),numEdgesAgglos(x)),sum(numEdgesAgglos(x)),1),1,2),equivalencesClass1,'uni',0);
-    if exist('segIds','var')
+    if exist('segIds','var') && ~isempty(segIds)
         % these are normal edges with seg ID
         % create a lookup of which segmentId is found in which agglo,
         % thereby reducing lookup table size and allowing negative seg ids
