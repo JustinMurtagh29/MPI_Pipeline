@@ -29,7 +29,7 @@ flights = structfun(@(f) f(mask, :), flights, 'UniformOutput', false);
 clear mask;
 
 % drop duplicate connections
-[~, uniIds] = unique(sort(flights.overlaps, 2), 'rows');
+[~, uniIds] = unique(sort(flights.overlaps, 2), 'rows', 'stable');
 flights = structfun(@(f) f(uniIds, :), flights, 'UniformOutput', false);
 clear uniIds;
 
