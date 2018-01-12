@@ -31,12 +31,16 @@ else   % new representation, more complicated as edges have to be established
     newedges = cellfun(@(x) cat(1,agglos(x).edges) + repmat(reshape(repelem(cumsum(cat(1,0,numSegsAgglos(x(1:end-1),:))),numEdgesAgglos(x)),sum(numEdgesAgglos(x)),1),1,2),equivalencesClass1,'uni',0);
     if exist('segIds','var')
         % these are normal edges with seg ID
-        % create a lookup of which segmentId is found in which agglo
+        % create a lookup of which segmentId is found in which agglo,
+        % thereby reducing lookup table size and allowing negative seg ids
+        % by subtracting minimum value
+        minVal = min(segIds(:));
+        segIds = segIds - minVal +1;
         lookup = zeros(max(segIds(:)),1);
-        lookup(cell2mat(cellfun(@(x) x(~isnan(x(:,4)),4), newnodes, 'uni', 0))) = repelem((1:length(newnodes))', cellfun(@(x) sum(~isnan(x(:,4))), newnodes));
+        lookup(cell2mat(cellfun(@(x) x(~isnan(x(:,4)),4), newnodes, 'uni', 0))-minVal+1) = repelem((1:length(newnodes))', cellfun(@(x) sum(~isnan(x(:,4))), newnodes));
         aggloIdx = lookup(segIds(:,1));
         % get indices of the node to which the corr edge hints to
-        [~,idx] = arrayfun(@(x) ismember(segIds(aggloIdx==x,:),newnodes{x}(:,4)),(1:numel(newnodes))','uni',0);
+        [~,idx] = arrayfun(@(x) ismember(segIds(aggloIdx==x,:)+minVal-1,newnodes{x}(:,4)),(1:numel(newnodes))','uni',0);
         % this gives the edge which has to be added to the edge list to
         % concatenate them with the corrEdge
         newedges = cellfun(@(x,y) unique(cat(1,x,sort(y(all(y,2),:),2)),'rows'),newedges,idx,'uni',0);
