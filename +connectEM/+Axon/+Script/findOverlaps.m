@@ -5,7 +5,6 @@ clear;
 %% configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 cacheDir = '/tmpscratch/amotta/l4/2018-01-axon-16b-flight-paths';
-debugDir = '/home/amotta/Desktop/overlaps';
 axonFile = fullfile(rootDir, 'aggloState', 'axons_16_b.mat');
 
 % For now, let's use the same neighborhood size as in
@@ -15,6 +14,9 @@ nhoodSize = 3;
 [~, axonName] = fileparts(axonFile);
 cacheFile = fullfile(cacheDir, strcat(axonName, '_flights.mat'));
 clear axonName;
+
+debugDir = fullfile(cacheDir, 'debug');
+mkdir(debugDir);
 
 info = Util.runInfo();
 
