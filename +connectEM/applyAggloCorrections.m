@@ -164,16 +164,16 @@ for f = 1:numel(files)
         for n = 1:numel(endingClusters)
 %             [~,segIdInd] = ismember(endingClusters{n},endingSkelEdges(:));
             theseSkelSegIds = skelSegIds(endingClusters{n});
-            if ~any(ismember(theseSkelSegIds(endingSkelEdgesClusters{n}(:)),dendrites(ind).nodes(:,4)))
+            if ~any(ismember(theseSkelSegIds(endingSkelEdgesClusters{n}(:)),dendrites(ind).nodes(:,4))) && ~any(ismember(skelCoords(endingClusters{n}(endingSkelEdgesClusters{n}),:),dendrites(ind).nodes(:,1:3),'rows'))
                 warning('Skel %s contained an ending which could not be processed, because it seemed to be part of a merged agglo which had been split away now.',skel.filename)
                 continue
             end
+            
             theseSkelSegIds(ismember(theseSkelSegIds,segIdsToDelete)) = 0;  % prevent reattachment from deleted seg ids
-            %hasAxonComment = cellfun(@(x) ~isempty(strfind(x,'axon')),comments(ismember(nodeIdx,endingClusters{n})));
             hasTrueEndingComment = cellfun(@(x) ~isempty(strfind(x,'true ending')),comments(ismember(nodeIdx,endingClusters{n})));
             if ~isempty(hasTrueEndingComment) && any(hasTrueEndingComment)
                 continue
-            else %~isempty(hasAxonComment) && any(hasAxonComment)
+            else
                 indToAddAxons = unique(nonzeros(axonsLUT(nonzeros(theseSkelSegIds))))'; % get the index of the superagglo(s) to add
                 indToAddDendrites = setdiff(dendritesLUT(nonzeros(theseSkelSegIds)),[0,ind]); % get the index of the superagglo(s) to add
                 indToAddAxons = indToAddAxons(:);
@@ -252,13 +252,23 @@ for f = 1:numel(files)
                     endingClusters{n}(endingNodesToDelete(d)) = [];
                     endingSkelEdgesClusters{n}(endingSkelEdgesClusters{n}>endingNodesToDelete(d)) = endingSkelEdgesClusters{n}(endingSkelEdgesClusters{n}>endingNodesToDelete(d)) - 1;
                 end
-
+                % find the anchoring node to which new part is added.
+                % necessary as anchoring node might be NaN and thus not
+                % found by segID comparison. temporally make anchoring node
+                % segID -1 and use applyEquivalences to make an edge to
+                % that -1 segID
+                [anchorSkel,anchorDend] = ismember(skelCoords(endingClusters{n}(endingSkelEdgesClusters{n}(:)),:),dendrites(ind).nodes(:,1:3),'rows');
+                theseSkelSegIds(endingSkelEdgesClusters{n}(anchorSkel)) = -1;  % force an edge from segID -1 to rest
+                preVal = dendrites(ind).nodes(anchorDend,4); % store value to overwrite again later
+                dendrites(ind).nodes(anchorDend,4) = -1; % temporally overwrite anchor segID with -1
                 segIdEdges = theseSkelSegIds(endingSkelEdgesClusters{n});  % get segId edge vector of skeleton
                 if size(segIdEdges,2)~=2 % fix stupid 1 value pair problem
                     segIdEdges = segIdEdges';
                 end
                 dendrites(ind) = Superagglos.applyEquivalences({1:numel(indToAddAxons)+numel(indToAddDendrites)+1},cat(1,dendrites([ind;indToAddDendrites]),axons(indToAddAxons)),segIdEdges);
                 assert(numel(Graph.findConnectedComponents(dendrites(ind).edges))==1)
+                dendrites(ind).nodes(dendrites(ind).nodes(:,4)==-1,4) = preVal;  % overwrite with original value
+                
                 dendritesLUT(cell2mat(arrayfun(@(x) x.nodes(~isnan(x.nodes(:,4)),4),axons(indToAddAxons),'uni',0))) = ind; % update LUT
                 dendritesLUT(cell2mat(arrayfun(@(x) x.nodes(~isnan(x.nodes(:,4)),4),dendrites(indToAddDendrites),'uni',0))) = ind; % update LUT
                  % remove agglo which has been added and update LUT

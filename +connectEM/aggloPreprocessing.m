@@ -707,8 +707,10 @@ if  ~existentWC(7) || ~existentDendrites(17)
     
     dendriteSegIds = find(dendriteLUT);
     [ismem,ind] = ismember(somaSegIds,dendriteSegIds);
-    % get each dend id which contains most of the seg ids of each soma
-    wholeCellId = unique(accumarray(somaLUT(somaSegIds(ismem))',dendriteLUT(dendriteSegIds(ind(ismem)))',[],@mode));       
+    % get each dend id which contains most of the seg ids of each soma, in
+    % this last step do not make unique, as all cells are now supposed to
+    % not be merged and thus no duplets exist
+    wholeCellId = (accumarray(somaLUT(somaSegIds(ismem))',dendriteLUT(dendriteSegIds(ind(ismem)))',[],@mode));       
 
     wholeCells = dendrites(wholeCellId);
     dendrites = dendrites(setdiff(1:numel(dendrites),wholeCellId));
@@ -749,6 +751,7 @@ assert(isequal(uint32(1:max(segmentMeta.segIds))',segmentMeta.segIds))
 % presynSegIds = cellfun(@(x) x(1),synapses.presynId); % only one presyn id necessary
 % postsynSegIds = cellfun(@(x) x(1),synapses.postsynId); % only one postsyn id necessary
 % maxSegId = max([presynSegIds;postsynSegIds]);
+
 clear wholeCellsNoAxon
 for n = 1:numel(wholeCells)
     % get cell branches by removing soma agglo and small segments
@@ -803,7 +806,7 @@ dendrites = cat(1,dendrites,wholeCellsNoAxon');
 indBigDends = cat(1,indBigDends,true(numel(wholeCellsNoAxon),1));
 [ myelinDend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
 
-save(fullfile(outputFolder,'dendrites_andWholeCells_01.mat'),'dendrites','myelinDend','indBigDends','indWholeCells')%,'info');
+save(fullfile(outputFolder,'dendrites+wholeCells.mat'),'dendrites','myelinDend','indBigDends','indWholeCells')%,'info');
 %%
 connectEM.getDendriteQueryOverlapB(p,'2.2')
 connectEM.getDendQueryAxonAggloOverlapB(p,'2.2')
