@@ -77,11 +77,11 @@ descPairs = descPairs(descRows, :);
 
 %% export examples
 % To determine a good threshold we want examples from the whole range.
-numBins = 10;
-numPairs = 3;
+numBins = 1;
+numPairs = 10;
 
-[bins, logEdges] = discretize(log10(descOverlaps), numBins);
-binCounts = accumarray(bins, 1);
+binEdges = linspace(log10(20), log10(50), numBins + 1);
+bins = discretize(log10(descOverlaps), binEdges);
 
 rng(0);
 samplePairs = zeros(0, 1);
