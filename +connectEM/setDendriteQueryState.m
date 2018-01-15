@@ -65,8 +65,8 @@ function [skeletonFolders, versionSuffix, flighpathVersion, dendriteVersion,...
             % filename additionals for getAggloQueryOverlapB and flightEndingOverlapRun
             versionSuffix = '2.2';
             flighpathVersion = '2.0';
-            dendriteVersion = 'andWholeCells_01';
-            dendriteVersionNew = 'andWholeCells_02';
+            dendriteVersion = 'wholeCells_01';
+            dendriteVersionNew = 'wholeCells_02';
         otherwise
             error('Unknown state ''%s''', state);
     end

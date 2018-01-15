@@ -806,7 +806,7 @@ dendrites = cat(1,dendrites,wholeCellsNoAxon');
 indBigDends = cat(1,indBigDends,true(numel(wholeCellsNoAxon),1));
 [ myelinDend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
 
-save(fullfile(outputFolder,'dendrites+wholeCells.mat'),'dendrites','myelinDend','indBigDends','indWholeCells')%,'info');
+save(fullfile(outputFolder,'dendrites_wholeCells.mat'),'dendrites','myelinDend','indBigDends','indWholeCells')%,'info');
 %%
 connectEM.getDendriteQueryOverlapB(p,'2.2')
 connectEM.getDendQueryAxonAggloOverlapB(p,'2.2')
