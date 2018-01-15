@@ -179,6 +179,40 @@ out.parentIds(largeAxonIds) = compLUT;
 out.parentIds(smallAxonIds) = ...
     (compCount - 1) + (1:numel(smallAxonIds));
 
+%{
+%% show examples
+axons = load(fullfile(cacheDir, 'merged-axons.mat'), 'axons', 'parentIds');
+
+%%
+randIds = accumarray(axons.parentIds, 1);
+randIds = find(randIds > 1);
+
+rng(0);
+randIds = randIds(randperm(numel(randIds), 5));
+
+for curIdx = 1:numel(randIds)
+    curSkel = skeleton();
+    
+    curAxonId = randIds(curIdx);
+    curAxonIds = find(axons.parentIds == curAxonId);
+    
+    for curPreIdx = reshape(curAxonIds, 1, [])
+        curPreAxon = allAxons(curPreIdx);
+        curSkel = curSkel.addTree( ...
+            sprintf('Agglomerate %d', curPreIdx), ...
+            curPreAxon.nodes(:, 1:3), curPreAxon.edges);
+    end
+    
+    curAxon = axons.axons(curAxonId);
+    curSkel = curSkel.addTree( ...
+        'Merged', curAxon.nodes(:, 1:3), curAxon.edges);
+    
+    curSkel = Skeleton.setParams4Pipeline(curSkel, param);
+    curSkelName = sprintf('%d_axon-%d.nml', curIdx, curAxonId);
+    curSkel.write(fullfile(debugDir, curSkelName));
+end
+%}
+    
 %% overlap between flights and segment-based agglomerates
 function overlap = flightAggloOverlaps(numAgglos, aggloLUT, aggloTable)
     aggloTable.aggloId(:, 2) = aggloLUT(aggloTable.segId);
