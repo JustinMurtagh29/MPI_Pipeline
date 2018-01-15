@@ -32,6 +32,13 @@ largeAxonIds = find(temp.indBigAxons(:));
 smallAxonIds = find(~temp.indBigAxons(:));
 clear temp;
 
+% sort edges
+% I've messed up in axons 16b.
+for curIdx = 1:numel(allAxons)
+    allAxons(curIdx).edges = ...
+        sort(allAxons(curIdx).edges, 2);
+end
+
 %% use WKW segmentation
 param.seg = struct;
 param.seg.root = '/tmpscratch/amotta/l4/2012-09-28_ex145_07x2_ROI2017/segmentation/1';
@@ -145,10 +152,11 @@ for curIdx = 1:compCount
     % sort axon according to increasing importance
     curSortIds = Superagglos.mstLength( ...
         curAxons, param.raw.voxelSize);
-    [~, curSortIds] = sort(curSortIds, 'ascend');
+   [~, curSortIds] = sort(curSortIds, 'ascend');
+    curSortIds = reshape(curSortIds, 1, []);
     
     curAxon = curAxons(curSortIds(1));
-    for curAggloIdx = reshape(curSortIds(2:end), 1, [])
+    for curAggloIdx = curSortIds(2:end)
         curAxon = Superagglos.mergeOnOverlaps( ...
             curAxons(curAggloIdx), curAxon, ...
             'scale', param.raw.voxelSize, ...

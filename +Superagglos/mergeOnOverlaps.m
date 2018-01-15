@@ -35,6 +35,9 @@ function agglo = mergeOnOverlaps(aggloA, aggloB, varargin)
     % apply user-specified values
     opts = Util.modifyStruct(opts, varargin{:});
     
+    % sanity checks
+    assert(issorted(aggloB.edges, 2));
+    
     %% find and discard common nodes
     % calculate pair-wise distance
     distMat = pdist2( ...
@@ -113,6 +116,9 @@ function agglo = mergeOnOverlaps(aggloA, aggloB, varargin)
             aggloA.solvedChiasma, aggloB.solvedChiasma);
         agglo.solvedChiasma(edgesAB) = false;
     end
+    
+    % sanity checks
+    assert(issorted(agglo.edges, 2));
 end
 
 function len = pathLen(nodesNm)
