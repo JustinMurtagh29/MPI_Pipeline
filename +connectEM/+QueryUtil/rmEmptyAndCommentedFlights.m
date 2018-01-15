@@ -12,7 +12,6 @@ function [flights, wasDel] = rmEmptyAndCommentedFlights( flights )
 
 wasDel = cellfun(@isempty, flights.nodes) | ...
      ~cellfun(@isempty, flights.comments);
-flights = structfun(@(x)x(~wasDel), flights, 'uni', 0);
+flights = structfun(@(x)x(~wasDel, :), flights, 'uni', 0);
 
 end
-
