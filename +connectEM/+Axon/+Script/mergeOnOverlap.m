@@ -7,7 +7,9 @@ rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 axonFile = fullfile(rootDir, 'aggloState', 'axons_16_b.mat');
 
 % for prototyping
-aggloIds = [2121, 12348];
+% aggloIds = [2121, 12348]; % example #1 works
+% aggloIds = [2252, 14719]; % example #2 works
+% aggloIds = [ 303,  5567]; % example #3 works
 
 %% loading data
 param = load(fullfile(rootDir, 'allParameter.mat'), 'p');
@@ -44,7 +46,7 @@ distMat = pdist2(nodesA, nodesB);
 distVec = reshape(min(distMat, [], 1), [], 1);
 
 % discard common nodes
-nodeIdsB = find(distVec > 500);
+nodeIdsB = find(distVec > 100);
 nodesB = nodesB(nodeIdsB, :);
 distMat = distMat(:, nodeIdsB);
 distVec = distVec(nodeIdsB);
@@ -114,6 +116,11 @@ skel = Skeleton.setParams4Pipeline(skel, param);
 skel.write('/home/amotta/Desktop/merged.nml');
 
 function len = pathLen(nodesNm)
+    if size(nodesNm, 1) < 2
+        len = 0;
+        return;
+    end
+    
     adj = squareform(pdist(nodesNm));
     mst = graphminspantree(sparse(adj), 'Method', 'Kruskal');
     len = full(sum(mst(:)));
