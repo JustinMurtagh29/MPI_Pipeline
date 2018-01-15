@@ -131,7 +131,7 @@ tic;
 disp('Merging axons...');
 
 out = struct;
-out.axons = largeAxons([]);
+out.axons = allAxons([]);
 
 for curIdx = 1:compCount
     curAxonIds = largeAxonIds(compLUT == curIdx);
