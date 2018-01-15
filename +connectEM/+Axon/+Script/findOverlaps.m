@@ -75,6 +75,7 @@ descPairs = nan(numOverlaps, 2);
 [descOverlaps, descRows] = sort(descOverlaps, 'descend');
 descPairs = descPairs(descRows, :);
 
+%{
 %% export examples
 % To determine a good threshold we want examples from the whole range.
 numBins = 1;
@@ -115,7 +116,9 @@ for curIdx = 1:size(samplePairs, 1)
         '%d_agglos-%d-and-%d.nml', curIdx, curPair));
     curSkel.write(curSkelFile);
 end
+%}
 
+%%
 %% overlap between flights and segment-based agglomerates
 function overlap = flightAggloOverlaps(numAgglos, aggloLUT, aggloTable)
     aggloTable.aggloId(:, 2) = aggloLUT(aggloTable.segId);
