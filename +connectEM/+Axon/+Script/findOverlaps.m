@@ -26,8 +26,11 @@ param = param.p;
 
 maxSegId = Seg.Global.getMaxSegId(param);
 
-axons = load(axonFile);
-axons = axons.axons(axons.indBigAxons);
+temp = load(axonFile);
+allAxons = temp.axons(:);
+largeAxonIds = find(temp.indBigAxons(:));
+smallAxonIds = find(~temp.indBigAxons(:));
+clear temp;
 
 %% use WKW segmentation
 param.seg = struct;
@@ -35,14 +38,15 @@ param.seg.root = '/tmpscratch/amotta/l4/2012-09-28_ex145_07x2_ROI2017/segmentati
 param.seg.backend = 'wkwrap';
 
 %% build lookup table
-numAgglos = numel(axons);
-aggloSegIds = Superagglos.getSegIds(axons);
+numAgglos = numel(largeAxonIds);
+aggloSegIds = Superagglos.getSegIds(allAxons(largeAxonIds));
 aggloLUT = Agglo.buildLUT(maxSegId, aggloSegIds);
 
 %% look up flight paths
 if ~exist(cacheFile, 'file')
    [axonFlights, axonFlightsMeta] = ...
-        Superagglos.getFlightPathSegIds(param, axons, nhoodSize);
+        Superagglos.getFlightPathSegIds( ...
+            param, allAxons(largeAxonIds), nhoodSize);
     save(cacheFile, '-v7.3', 'axonFlights', 'axonFlightsMeta');
 else
     load(cacheFile, 'axonFlights', 'axonFlightsMeta');
@@ -118,7 +122,55 @@ for curIdx = 1:size(samplePairs, 1)
 end
 %}
 
-%%
+%% find axons to be merged
+[compCount, compLUT] = graphconncomp( ...
+    overlaps >= 25, 'Directed', false);
+compLUT = reshape(compLUT, [], 1);
+
+tic;
+disp('Merging axons...');
+
+out = struct;
+out.axons = largeAxons([]);
+
+for curIdx = 1:compCount
+    curAxonIds = largeAxonIds(compLUT == curIdx);
+    curAxons = allAxons(curAxonIds);
+    
+    if isscalar(curAxons)
+        out.axons(curIdx) = curAxons;
+        continue;
+    end
+    
+    % sort axon according to increasing importance
+    curSortIds = Superagglos.mstLength( ...
+        curAxons, param.raw.voxelSize);
+    [~, curSortIds] = sort(curSortIds, 'ascend');
+    
+    curAxon = curAxons(curSortIds(1));
+    for curAggloIdx = reshape(curSortIds(2:end), 1, [])
+        curAxon = Superagglos.mergeOnOverlaps( ...
+            curAxons(curAggloIdx), curAxon, ...
+            'scale', param.raw.voxelSize, ...
+            'overlapDistNm', 200, ...
+            'minLenNm', 2000);
+    end
+    
+    out.axons(curIdx) = curAxon;
+    Util.progressBar(curIdx, compCount);
+end
+toc;
+
+out.axons = vertcat( ...
+    out.axons(:), allAxons(smallAxonIds));
+out.indBigAxons = false(numel(out.axons), 1);
+out.indBigAxons(1:compCount) = true;
+
+out.parentIds = nan(numel(allAxons), 1);
+out.parentIds(largeAxonIds) = compLUT;
+out.parentIds(smallAxonIds) = ...
+    (compCount - 1) + (1:numel(smallAxonIds));
+
 %% overlap between flights and segment-based agglomerates
 function overlap = flightAggloOverlaps(numAgglos, aggloLUT, aggloTable)
     aggloTable.aggloId(:, 2) = aggloLUT(aggloTable.segId);
@@ -171,7 +223,7 @@ function overlap = flightFlightOverlaps(numAgglos, aggloTable)
                 % update evidence
                 overlap(curIdB, curIdA) = ...
                     overlap(curIdB, curIdA) ...
-                  + min(curAgglos.evidence([curRowA, curRowB]));
+                  + min(curAgglos.evidence([curRowA, curRowB])); %#ok
             end
         end
     end
