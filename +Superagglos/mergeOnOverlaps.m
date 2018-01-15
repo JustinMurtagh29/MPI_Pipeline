@@ -1,7 +1,14 @@
 function agglo = mergeOnOverlaps(aggloA, aggloB, varargin)
     % agglo = mergerOnOverlaps(aggloA, aggloB)
     %   This function takes a pair of super-agglomerates (`aggloA` and
-    %   `aggloB`) and merges them at overlaps.
+    %   `aggloB`) and merges `aggloB` into `aggloA`. To avoid redundancies,
+    %   `aggloB` is first stripped from all parts it has in common with
+    %   `aggloA`.
+    %
+    % NOTE
+    %   This function is not symmetric with respect to its input arguments.
+    %   That is, `mergeOnOverlaps(A, B)` is not `mergeOnOverlaps(B, A)`.
+    %   Typically, you'd want the "stronger" agglomerate to be `aggloA`.
     %
     % Options
     %   * scale: 1x3 vector which is used to scale the nodes before
@@ -27,18 +34,6 @@ function agglo = mergeOnOverlaps(aggloA, aggloB, varargin)
     
     % apply user-specified values
     opts = Util.modifyStruct(opts, varargin{:});
-    
-    %%
-    % The smaller of the two agglomerates is merged into the larger one. In
-    % the following, `aggloA` is assumed to be the larger than `aggloB`.
-    % Let's make sure this is true.
-    if pathLen(aggloA.nodes(:, 1:3) .* opts.scale) ...
-            < pathLen(aggloB.nodes(:, 1:3) .* opts.scale)
-        temp = aggloA;
-        aggloA = aggloB;
-        aggloB = temp;
-        clear temp;
-    end
     
     %% find and discard common nodes
     % calculate pair-wise distance
