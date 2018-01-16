@@ -30,7 +30,7 @@ end
 % introduce a new node with shortest distance
 d = pdist2(bsxfun(@times, sagglo1.nodes(:,1:3), scale), ...
            bsxfun(@times, sagglo2.nodes(:,1:3), scale));
-[~, idx] = min(d);
+[~, idx] = min(d(:));
 [x, y] = ind2sub(size(d), idx);
 
 % add new edge between shortest nodes
