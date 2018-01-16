@@ -27,7 +27,7 @@ gliaNuclei = Soma.getNuclei(gliaIds);
 outFile = fullfile(outputFolder, 'gliaNuclei.mat');
 if ~exist(outFile, 'file')
     Util.log('Storing automated agglomeration results at %s.', outFile)
-    save(outFile, 'info', 'gliaNuclei')
+    save(outFile, 'info', 'gliaNuclei', 'gliaIds')
 else
     Util.log('File %s already exists and will not be overwritten.');
 end
