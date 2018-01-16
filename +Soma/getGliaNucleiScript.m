@@ -12,6 +12,7 @@ thisFolder = fileparts(mfilename('fullpath'));
 somaList = fullfile(thisFolder, 'somaDoc_BS.xlsx');
 
 % get glia
+numNuclei = 125;
 [~, ~, gliaIds] = xlsread(somaList, sprintf('B2:B%d', numNuclei + 1));
 gliaIds = find(~cellfun(@isnan, gliaIds));
 
