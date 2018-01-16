@@ -27,6 +27,8 @@ mag1bbox = mag1bbox + [-25 25; -25 25; -10 10];
 
 nuclei = cell(length(somaIDs), 1);
 
+Util.log('Loading nuclei masks and segment IDs.');
+fprintf('Processing ');
 for somaID = somaIDs(:)'
     
     % Note (BS): Load directly from nuclei segmentation?
@@ -57,7 +59,9 @@ for somaID = somaIDs(:)'
         clear raw mask maskrp maskbox boxsize
     end
     
+    warning('off', 'all');
     somaSeg = Seg.IO.loadSeg(p, bbox);
+    warning('on', 'all');
 
     % this caused some bugs so assert it
     assert(all(size(somaSeg) == size(nucleus)));
@@ -69,6 +73,9 @@ for somaID = somaIDs(:)'
     nucleusSegIds = nucleusSegIds(toKeep, 1);
     nuclei{somaID} = nucleusSegIds;
     clear nucleus somaSeg
+    fprintf('.');
 end
+fprintf(' done\n');
+Util.log('Finished loading nuclei.');
 
 end
