@@ -28,8 +28,8 @@ if isfield(sagglo1, 'solvedChiasma') && isfield(sagglo2, 'solvedChiasma')
 end
 
 % introduce a new node with shortest distance
-d = pdist2(bsxfun(@times, sagglo1.nodes, scale), ...
-           bsxfun(@times, sagglo1.nodes, scale));
+d = pdist2(bsxfun(@times, sagglo1.nodes(:,1:3), scale), ...
+           bsxfun(@times, sagglo2.nodes(:,1:3), scale));
 [~, idx] = min(d);
 [x, y] = ind2sub(size(d), idx);
 
