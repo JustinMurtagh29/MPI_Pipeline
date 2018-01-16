@@ -29,8 +29,9 @@ nuclei = cell(length(somaIDs), 1);
 
 Util.log('Loading nuclei masks and segment IDs.');
 fprintf('Processing ');
-for somaID = somaIDs(:)'
+for i = 1:length(somaIDs)
     
+    somaID = somaIDs(i);
     % Note (BS): Load directly from nuclei segmentation?
     m = load(strcat(['/gaba/u/mberning/results/pipeline/20170217_ROI/' ...
         'soma/Nuclei/Nucleus'], int2str(somaID), '.mat'));
@@ -38,6 +39,9 @@ for somaID = somaIDs(:)'
     if isfield(m, 'bbox') % load bbox from file if exists
         bbox = m.bbox;
     else
+        m = load(fullfile(p.saveFolder, 'soma', ...
+            'NucleiCoordinates.mat'), 'rp');
+        rp = m.rp;
         margin = [15, 15, 10]; 
         bboxM4Cropped = [round(rp(somaID).BoundingBox(1:3)) - margin; ...
             round(rp(somaID).BoundingBox(1:3) + ...
@@ -71,7 +75,7 @@ for somaID = somaIDs(:)'
     nucleusSegIds = nucleusSegIds(2:end, 1:2);
     toKeep = nucleusSegIds(:,2) > overlapF*meta.voxelCount(nucleusSegIds(:,1));
     nucleusSegIds = nucleusSegIds(toKeep, 1);
-    nuclei{somaID} = nucleusSegIds;
+    nuclei{i} = nucleusSegIds;
     clear nucleus somaSeg
     fprintf('.');
 end
