@@ -46,8 +46,8 @@ function agglo = mergeOnOverlaps(aggloA, aggloB, varargin)
     %% find and discard common nodes
     % calculate pair-wise distance
     distMat = pdist2( ...
-        aggloA.nodes(:, 1:3) .* opts.scale, ...
-        aggloB.nodes(:, 1:3) .* opts.scale);
+        bsxfun(@times, aggloA.nodes(:, 1:3), opts.scale), ...
+        bsxfun(@times, aggloB.nodes(:, 1:3), opts.scale));
     distVec = reshape(min(distMat, [], 1), [], 1);
 
     % discard common nodes
