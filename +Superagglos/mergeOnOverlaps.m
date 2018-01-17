@@ -31,12 +31,17 @@ function agglo = mergeOnOverlaps(aggloA, aggloB, varargin)
     opts.scale = [1, 1, 1];
     opts.overlapDistNm = 100;
     opts.minLenNm = 2000;
+    opts.use2015b = false;
     
     % apply user-specified values
     opts = Util.modifyStruct(opts, varargin{:});
     
     % sanity checks
-    assert(issorted(aggloB.edges, 2));
+    if opts.use2015b
+        assert(all(aggloB.edges(:,2) >= aggloB.edges(:,1)));
+    else
+        assert(issorted(aggloB.edges, 2));
+    end
     
     %% find and discard common nodes
     % calculate pair-wise distance
@@ -118,7 +123,12 @@ function agglo = mergeOnOverlaps(aggloA, aggloB, varargin)
     end
     
     % sanity checks
-    assert(issorted(agglo.edges, 2));
+    if opts.use2015b
+        assert(all(agglo.edges(:,2) >= agglo.edges(:,1)));
+    else
+        assert(issorted(agglo.edges, 2));
+    end
+    
 end
 
 function len = pathLen(nodesNm)
