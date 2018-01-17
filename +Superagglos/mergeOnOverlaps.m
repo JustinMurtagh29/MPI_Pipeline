@@ -76,7 +76,7 @@ function agglo = mergeOnOverlaps(aggloA, aggloB, varargin)
     edgesAB = nan(numCompsB, 2);
     for curIdx = 1:numCompsB
         curNodeIds = nodeIdsB(lutB == curIdx);
-        curLen = pathLen(aggloB.nodes(curNodeIds, 1:3) .* opts.scale);
+        curLen = pathLen(bsxfun(@times, aggloB.nodes(curNodeIds, 1:3), opts.scale));
 
         % tiny component → ignore
         if curLen < opts.minLenNm; continue; end
