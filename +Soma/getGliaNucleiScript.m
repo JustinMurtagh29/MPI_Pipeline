@@ -31,3 +31,18 @@ if ~exist(outFile, 'file')
 else
     Util.log('File %s already exists and will not be overwritten.');
 end
+
+
+%% calculate isosurfaces
+
+p = Gaba.getSegParameters('ex145_ROI2017');
+outDirIssfs = '/tmpscratch/bstaffle/data/L4/somata/nuclei_issfs/';
+if ~exist(outDirIssfs, 'dir')
+    mkdir(outDirIssfs)
+end
+m = load(outFile);
+gliaNuclei = m.gliaNuclei;
+Util.log('Calculating isosurfaces and storing them at %s.', outDirIssfs);
+Visualization.exportAggloToAmira(p, gliaNuclei, outDirIssfs, ...
+    'reduce', 0.2, 'smoothSizeHalf', 4, 'smoothWidth', 8);
+Util.log('Finished isosurface calculation.');
