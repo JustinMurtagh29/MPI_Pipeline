@@ -30,8 +30,8 @@ fprintf('done!\n');
 outFile = sprintf('%s_meta.mat', outFile);
 outFile = fullfile(outDir, outFile);
 
-append = {{'-append'}, {}};
-append = append{1 + logical(exist(outFile, 'file'))};
+append = {{}, {'-append'}};
+append = append{1 + (exist(outFile, 'file') ~= 0)};
 
 out = struct;
 out.pathLen = pathLen;
