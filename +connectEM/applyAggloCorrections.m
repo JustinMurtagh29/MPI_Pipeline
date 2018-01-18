@@ -259,10 +259,11 @@ for f = 1:numel(files)
                 % that -1 segID
                 [anchorSkel,anchorDend] = ismember(skelCoords(endingClusters{n}(endingSkelEdgesClusters{n}(:)),:),dendrites(ind).nodes(:,1:3),'rows');
                 anchorDend = unique(nonzeros(anchorDend));
-                theseSkelSegIds(endingSkelEdgesClusters{n}(anchorSkel)) = -1;  % force an edge from segID -1 to rest
+                theseSkelSegIds(theseSkelSegIds==theseSkelSegIds(endingSkelEdgesClusters{n}(anchorSkel))) = -1;  % force an edge from segID -1 to rest
                 preVal = dendrites(ind).nodes(anchorDend,4); % store value to overwrite again later
                 dendrites(ind).nodes(anchorDend,4) = -1; % temporally overwrite anchor segID with -1
                 segIdEdges = theseSkelSegIds(endingSkelEdgesClusters{n});  % get segId edge vector of skeleton
+                segIdEdges(all(segIdEdges==-1,2),:) = [];  % delete edge to itsself
                 if size(segIdEdges,2)~=2 % fix stupid 1 value pair problem
                     segIdEdges = segIdEdges';
                 end
