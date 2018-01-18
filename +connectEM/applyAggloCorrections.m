@@ -263,10 +263,10 @@ for f = 1:numel(files)
                 preVal = dendrites(ind).nodes(anchorDend,4); % store value to overwrite again later
                 dendrites(ind).nodes(anchorDend,4) = -1; % temporally overwrite anchor segID with -1
                 segIdEdges = theseSkelSegIds(endingSkelEdgesClusters{n});  % get segId edge vector of skeleton
-                segIdEdges(all(segIdEdges==-1,2),:) = [];  % delete edge to itsself
                 if size(segIdEdges,2)~=2 % fix stupid 1 value pair problem
                     segIdEdges = segIdEdges';
                 end
+                segIdEdges(all(segIdEdges==-1,2),:) = [];  % delete edge to itsself
                 dendrites(ind) = Superagglos.applyEquivalences({1:numel(indToAddAxons)+numel(indToAddDendrites)+1},cat(1,dendrites([ind;indToAddDendrites]),axons(indToAddAxons)),segIdEdges);
                 assert(numel(Graph.findConnectedComponents(dendrites(ind).edges))==1)
                 dendrites(ind).nodes(dendrites(ind).nodes(:,4)==-1,4) = preVal;  % overwrite with original value
