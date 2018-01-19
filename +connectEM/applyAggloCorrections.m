@@ -258,9 +258,8 @@ for f = 1:numel(files)
                 % segID -1 and use applyEquivalences to make an edge to
                 % that -1 segID
                 [anchorSkel,anchorDend] = ismember(skelCoords(endingClusters{n}(endingSkelEdgesClusters{n}(:)),:),dendrites(ind).nodes(:,1:3),'rows');
-                anchorSkel = unique(find(anchorSkel));
                 anchorDend = unique(nonzeros(anchorDend));
-                theseSkelSegIds(theseSkelSegIds==theseSkelSegIds(endingSkelEdgesClusters{n}(anchorSkel))) = -1;  % force an edge from segID -1 to rest
+                theseSkelSegIds(theseSkelSegIds==theseSkelSegIds(unique(endingSkelEdgesClusters{n}(anchorSkel)))) = -1;  % force an edge from segID -1 to rest
                 preVal = dendrites(ind).nodes(anchorDend,4); % store value to overwrite again later
                 dendrites(ind).nodes(anchorDend,4) = -1; % temporally overwrite anchor segID with -1
                 segIdEdges = theseSkelSegIds(endingSkelEdgesClusters{n});  % get segId edge vector of skeleton
