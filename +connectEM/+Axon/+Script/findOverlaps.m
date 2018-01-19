@@ -4,8 +4,8 @@ clear;
 
 %% configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-cacheDir = '/tmpscratch/amotta/l4/2018-01-axon-16b-flight-paths';
-axonFile = fullfile(rootDir, 'aggloState', 'axons_16_b.mat');
+cacheDir = '/tmpscratch/amotta/l4/2018-01-19-axon-17a-flight-paths';
+axonFile = fullfile(rootDir, 'aggloState', 'axons_17_a.mat');
 
 % For now, let's use the same neighborhood size as in
 % `+connectEM/axonAggloStateVisualization.m`.
