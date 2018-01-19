@@ -61,6 +61,7 @@ fprintf('\n');
 fprintf('Total path length: %.3f m\n', totalM);
 fprintf('\n');
 
+%%
 figure;
 histogram(pathLenUm, 100);
 title('Axonal path length distribution');
@@ -73,3 +74,12 @@ title(ax, 'Axonal path length distribution');
 xlabel(ax, 'Path length (MST) [µm]');
 ax.YScale = 'log';
 
+%% cumulative (descending) for MH
+cumDescM = cumsum(sort(pathLenUm, 'descend')) / 1E6;
+fig = figure;
+ax = axes(fig);
+
+plot(ax, cumDescM);
+title(ax, 'Cumulative distribution of axonal path length');
+xlabel(ax, '# super-agglomerates');
+ylabel(ax, 'Cumulative path length [m]');
