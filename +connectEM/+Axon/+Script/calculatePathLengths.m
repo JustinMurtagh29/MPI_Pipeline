@@ -61,25 +61,38 @@ fprintf('\n');
 fprintf('Total path length: %.3f m\n', totalM);
 fprintf('\n');
 
-%%
-figure;
-histogram(pathLenUm, 100);
-title('Axonal path length distribution');
-xlabel('Path length (MST) [µm]');
+descUm = sort(pathLenUm, 'descend');
+cumDescM = cumsum(descUm ./ 1E6);
 
+%% linear
 fig = figure;
 ax = axes(fig);
+
+yyaxis(ax, 'left');
 histogram(ax, pathLenUm, 100);
+ylabel(ax, '# agglomerates');
+
+yyaxis(ax, 'right');
+plot(ax, descUm, cumDescM, 'black');
+ylabel(ax, 'Cumulative path length [m]', 'Color', 'black');
+
 title(ax, 'Axonal path length distribution');
 xlabel(ax, 'Path length (MST) [µm]');
-ax.YScale = 'log';
+xlim([0, maxUm]);
 
-%% cumulative (descending) for MH
-cumDescM = cumsum(sort(pathLenUm, 'descend')) / 1E6;
+%% logarithmic
 fig = figure;
 ax = axes(fig);
 
-plot(ax, cumDescM);
-title(ax, 'Cumulative distribution of axonal path length');
-xlabel(ax, '# super-agglomerates');
-ylabel(ax, 'Cumulative path length [m]');
+yyaxis(ax, 'left');
+histogram(ax, pathLenUm, 100);
+ylabel(ax, '# agglomerates');
+ax.YScale = 'log';
+
+yyaxis(ax, 'right');
+plot(ax, descUm, cumDescM, 'black');
+ylabel(ax, 'Cumulative path length [m]', 'Color', 'black');
+
+title(ax, 'Axonal path length distribution');
+xlabel(ax, 'Path length (MST) [µm]');
+xlim([0, maxUm]);
