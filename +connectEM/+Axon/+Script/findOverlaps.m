@@ -179,6 +179,8 @@ out.parentIds(largeAxonIds) = compLUT;
 out.parentIds(smallAxonIds) = ...
     (compCount - 1) + (1:numel(smallAxonIds));
 
+out.info = info;
+
 %{
 %% show examples
 axons = load(fullfile(cacheDir, 'merged-axons.mat'), 'axons', 'parentIds');
