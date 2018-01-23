@@ -23,6 +23,24 @@ param = param.p;
 param.agglo = struct;
 param.agglo.axonAggloFile = axonFile;
 
+% for speed
+param.seg = struct;
+param.seg.root = '/tmpscratch/amotta/l4/2012-09-28_ex145_07x2_ROI2017/segmentation/1';
+param.seg.backend = 'wkwrap';
+
 %% load and complete agglomerates
-axons = L4.Axons.getLargeAxons(param, true, true);
-save(fullfile(outDir, 'axons.mat'), 'info', 'axons');
+cacheFile = fullfile(outDir, 'axons.mat');
+
+if ~exist(cacheFile, 'file')
+    disp('Generating axon agglomerates and cache');
+    axons = L4.Axons.getLargeAxons(param, true, true);
+    save(cacheFile, 'info', 'axons');
+else
+    disp('Loading axon agglomerates from cache');
+    load(cacheFile, 'axons');
+end
+
+%% generate isosurfaces
+Visualization.exportAggloToAmira( ...
+    param, axons, outDir, 'reduce', 0.5, ...
+    'smoothSizeHalf', 4,'smoothWidth', 8);
