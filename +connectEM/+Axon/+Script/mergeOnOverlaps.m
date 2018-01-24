@@ -177,8 +177,8 @@ for curIdx = 1:compCount
    [curEdges(:, 2), curEdges(:, 1)] = find(curOverlaps);
    
     % sort edges by ascending size of the larger axon
-    curSortIds = max(curAxonLens(curEdges), [], 2);
-   [~, curSortIds] = sort(curSortIds, 'ascend');
+    curSortIds = reshape(curAxonLens(curEdges), [], 2);
+   [~, curSortIds] = sort(max(curSortIds, [], 2), 'ascend');
     curEdges = curEdges(curSortIds, :);
     
     curAxon = curAxons(curSeedAxonId);
