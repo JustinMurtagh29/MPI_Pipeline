@@ -1,3 +1,18 @@
+% This script looks for pair-wise overlaps between super-agglomerates. By
+% definition, the segment-based parts of the agglomerates are pair-wise
+% disjoint.
+%
+% However, the flight path part of a super-agglomerate might overlap with
+% a) the segment-based part, or b) the flight path-based part of another
+% super-agglomerate.
+%
+% To identify these overlaps, this script first maps the flight nodes to
+% segment IDs. It then separately calculates the pair-wise a) flight-to-
+% flight, and b) flight-to-segment overlaps.
+%
+% These two contributions are then added about to obtain a single overlap
+% evidence value per pair of super-agglomerates.
+%
 % Written by
 %   Alessandro Motta <alessandro.motta@brain.mpg.de>
 clear;
@@ -130,8 +145,9 @@ end
 %}
 
 %% find axons to be merged
+execOverlaps = (overlaps >= 25);
 [compCount, compLUT] = graphconncomp( ...
-    overlaps >= 25, 'Directed', false);
+    execOverlaps, 'Directed', false);
 compLUT = reshape(compLUT, [], 1);
 
 tic;
@@ -149,19 +165,42 @@ for curIdx = 1:compCount
         continue;
     end
     
-    % sort axon according to increasing importance
-    curSortIds = Superagglos.mstLength( ...
+    curAxonLens = Superagglos.mstLength( ...
         curAxons, param.raw.voxelSize);
-   [~, curSortIds] = sort(curSortIds, 'ascend');
-    curSortIds = reshape(curSortIds, 1, []);
+   [~, curSeedAxonId] = min(curAxonLens);
     
-    curAxon = curAxons(curSortIds(1));
-    for curAggloIdx = curSortIds(2:end)
+    % find minimal set of edges to execute
+    curOverlaps = execOverlaps(curAxonIds, curAxonIds);
+    curOverlaps = graphminspantree(curOverlaps, curSeedAxonId);
+    
+    curEdges = nan(nnz(curOverlaps), 2);
+   [curEdges(:, 2), curEdges(:, 1)] = find(curOverlaps);
+   
+    % sort edges by ascending size of the larger axon
+    curSortIds = max(curAxonLens(curEdges), [], 2);
+   [~, curSortIds] = sort(curSortIds, 'ascend');
+    curEdges = curEdges(curSortIds, :);
+    
+    curAxon = curAxons(curSeedAxonId);
+    curMerged = false(size(curAxons));
+    curMerged(curSeedAxonId) = true;
+    
+    while ~all(curMerged)
+        curAggloIdx = find(xor( ...
+            curMerged(curEdges(:, 1)), ...
+            curMerged(curEdges(:, 2))), 1);
+        
+        curAggloIdx = curEdges(curAggloIdx, :);
+        curAggloIdx(curMerged(curAggloIdx)) = [];
+        assert(isscalar(curAggloIdx));
+        
         curAxon = Superagglos.mergeOnOverlaps( ...
             curAxons(curAggloIdx), curAxon, ...
             'scale', param.raw.voxelSize, ...
             'overlapDistNm', 200, ...
             'minLenNm', 2000);
+        
+        curMerged(curAggloIdx) = true;
     end
     
     out.axons(curIdx) = curAxon;
