@@ -19,8 +19,10 @@ adData = load(adFile);
 aisData = load(aisFile);
 
 %% sanity checks
-% for smooth dendrites
+idxBig = find(dendData.indBigDends(:));
 numBigDends = sum(dendData.indBigDends);
+
+% for smooth dendrites
 assert(numBigDends == numel(sdData.idxSmooth));
 fprintf('Smooth dendrites\n');
 fprintf('  # found: %d\n', sum(sdData.idxSmooth));
@@ -45,3 +47,17 @@ fprintf('  # also in smooth dendrites: %d\n', ...
 fprintf('  # also in apical dendrites: %d\n', ...
     numel(intersect(adData.idxAD, aisData.idxAIS)));
 fprintf('\n');
+
+%%
+targetClass = zeros(size(dendData.dendAgglos));
+targetClass(idxBig)                   = 1;
+targetClass(idxBig(sdData.idxSmooth)) = 2;
+targetClass(idxBig(adData.idxAD))     = 3;
+targetClass(idxBig(aisData.idxAIS))   = 4;
+targetClass(dendData.indWholeCells)   = 5;
+
+targetLabels = { ...
+    'Ignore', 'OtherDendrite', 'SmoothDendrite', ...
+    'ApicalDendrite', 'AxonInitialSegment', 'WholeCell'};
+targetClass = categorical( ...
+    targetClass, 0:5, targetLabels);
