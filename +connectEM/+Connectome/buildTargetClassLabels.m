@@ -21,6 +21,12 @@ aisData = load(aisFile);
 %% sanity checks
 idxBig = find(dendData.indBigDends(:));
 numBigDends = sum(dendData.indBigDends);
+numWholeCells = numel(dendData.indWholeCells);
+
+fprintf('Overall:\n');
+fprintf('  # large dendrites: %d\n', numBigDends);
+fprintf('  # whole cells: %d\n', numWholeCells);
+fprintf('\n');
 
 % for smooth dendrites
 assert(numBigDends == numel(sdData.idxSmooth));
