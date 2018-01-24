@@ -4,8 +4,8 @@ clear;
 
 %% configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-axonFile = fullfile(rootDir, 'aggloState', 'axons_16_b.mat');
-outDir = '/tmpscratch/amotta/l4/2018-01-23-axon-16b-isosurfaces';
+axonFile = fullfile(rootDir, 'aggloState', 'axons_18_a.mat');
+outDir = '/tmpscratch/amotta/l4/2018-01-24-axons-18a-isosurfaces';
 
 % temporarily add Benedikt's repo to path
 beneDir = '/gaba/u/amotta/code/benedikt';
