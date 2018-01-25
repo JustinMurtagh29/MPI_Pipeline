@@ -31,7 +31,7 @@ function createNewDendriteSuperagglos(param, state)
     clear m
 
     excludedFlights = idxNoClearEnd(~idxNoClearAxonAttachment);
-    excludedFlights = cat(1,excludedFlights,idxNoClearStart);
+    
 %     endings = load(fullfile(dataDir, 'dendriteEndings.mat'));
 %     endingOverlap = load(fullfile(dataDir, strcat('dendriteEndingOverlaps',suffix,'.mat')));
 %     [linkages, idxMultipleHits] = cellfun(@connectEM.edgeCreator, endingOverlap.startEndingOverlaps, endingOverlap.endEndingOverlaps, 'uni', 0);
@@ -39,8 +39,8 @@ function createNewDendriteSuperagglos(param, state)
 %     idxMultipleHits = cat(1, idxMultipleHits{:});
     
     linkagesAgglos = cellfun(@connectEM.edgeCreator, flightPaths.startAgglo, flightPaths.endAgglo, 'uni', 0);
-    multiEdge = cellfun(@isempty,linkagesAgglos);
     
+    excludedFlights = cat(1,excludedFlights,idxNoClearStart,find(cellfun(@isempty,linkagesAgglos)));
     
     idxExcludedFlights = true(size(flightPaths.startAgglo));
     idxExcludedFlights(excludedFlights) = false;
@@ -49,9 +49,7 @@ function createNewDendriteSuperagglos(param, state)
     flightPaths.ff = structfun(@(x)x(idxExcludedFlights), flightPaths.ff, 'uni', 0);
     linkagesAgglos(excludedFlights, :) = [];
     linkagesAgglos = cat(1, linkagesAgglos{:});
-    flightPaths.endAgglo(multiEdge) = [];
-    flightPaths.startAgglo(multiEdge) = [];
-    flightPaths.ff.segIds(multiEdge) = [];
+   
     fprintf('%d multi hit flight paths ignored.\n',sum(multiEdge))
     % sanity checks
     assert(size(linkagesAgglos, 1) == numel(flightPaths.startAgglo));
