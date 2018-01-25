@@ -311,5 +311,3 @@ function overlap = flightFlightOverlaps(numAgglos, aggloTable)
         end
     end
 end
-
-
