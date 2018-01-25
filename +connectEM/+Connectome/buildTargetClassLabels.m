@@ -10,6 +10,10 @@ dendFile = fullfile( ...
 sdFile  = '/tmpscratch/sahilloo/L4/dataPostSyn/dendritesSmoothState.mat';
 adFile  = '/tmpscratch/sahilloo/L4/dataPostSyn/dendritesADState.mat';
 aisFile = '/tmpscratch/sahilloo/L4/dataPostSyn/dendritesAISState.mat';
+
+% set to export NML files
+nmlDir = '';
+
 info = Util.runInfo();
 
 %% loading data
@@ -67,3 +71,35 @@ targetLabels = { ...
     'ApicalDendrite', 'AxonInitialSegment', 'WholeCell'};
 targetClass = categorical( ...
     targetClass, 0:5, targetLabels);
+
+%% export examples
+if ~isempty(nmlDir)
+    mkdir(nmlDir);
+    
+    param = load(fullfile(rootDir, 'allParameter.mat'), 'p');
+    param = param.p;
+    
+    voxelSize = param.raw.voxelSize;
+    points = Seg.Global.getSegToPointMap(param);
+    
+    for curLabelIdx = 3:numel(targetLabels)
+        curLabel = targetLabels{curLabelIdx};
+        curAggloIds = find(targetClass(:) == curLabel);
+        curAgglos = dendData.dendAgglos(curAggloIds);
+        
+        curNodes = cellfun( ...
+            @(segIds) points(segIds, :), ...
+            curAgglos, 'UniformOutput', false);
+        
+        curSkel = Skeleton.fromMST(curNodes, voxelSize);
+        curSkel.names = arrayfun( ...
+            @(i) sprintf('Dendrite #%d', i), ...
+            curAggloIds, 'UniformOutput', false);
+        
+        curNmlFile = strcat(lower(curLabel), '.nml');
+        curNmlFile = fullfile(nmlDir, curNmlFile);
+        
+        curSkel = Skeleton.setParams4Pipeline(curSkel, param);
+        curSkel.write(curNmlFile);
+    end
+end
