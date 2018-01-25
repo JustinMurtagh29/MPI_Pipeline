@@ -7,7 +7,7 @@ outputFolder = fullfile(p.saveFolder, 'aggloState');
 info = Util.runInfo(); % added by BS
 statesDendrites = {'dendrites_01','dendrites_02','dendrites_03_v2','dendrites_03_v2_splitmerged','dendrites_04','dendrites_05','dendrites_06','dendrites_07','dendrites_08','dendrites_09','dendrites_10','dendrites_11','dendrites_12','dendrites_13','dendrites_14','dendrites_15','dendrites_16','dendrites_andWholeCells_01'};
 statesAxons = {'axons_01','axons_02','axons_03'};
-statesWC = {'wholeCells_01','wholeCells_02','wholeCells_03','wholeCells_04','wholeCells_05','wholeCells_06','wholeCells_07'};
+statesWC = {'wholeCells_01','wholeCells_02','wholeCells_03','wholeCells_04','wholeCells_05','wholeCells_06','wholeCells_07','wholeCells_08'};
 existentDendrites = cellfun(@(x) exist(fullfile(outputFolder,strcat(x,'.mat')),'file'),statesDendrites) | overwrite;
 existentAxons = cellfun(@(x) exist(fullfile(outputFolder,strcat(x,'.mat')),'file'),statesAxons) | overwrite;
 existentWC = cellfun(@(x) exist(fullfile(outputFolder,strcat(x,'.mat')),'file'),statesWC) | overwrite;
@@ -746,69 +746,71 @@ disp('State 16 dendrites loaded/generated')
 
 
 %% remove axons from whole cells and add them to a new state of dendrites
-assert(isequal(uint32(1:max(segmentMeta.segIds))',segmentMeta.segIds))
-% load(fullfile(p.saveFolder,'connectomeState','SynapseAgglos_v2.mat'),'synapses') % (erzeugt via E:\workspace\pipeline\Benedikt\+L4\+Synapses\+Scripts\synapseDetection.m)
-% presynSegIds = cellfun(@(x) x(1),synapses.presynId); % only one presyn id necessary
-% postsynSegIds = cellfun(@(x) x(1),synapses.postsynId); % only one postsyn id necessary
-% maxSegId = max([presynSegIds;postsynSegIds]);
-
-clear wholeCellsNoAxon
-for n = 1:numel(wholeCells)
-    % get cell branches by removing soma agglo and small segments
-    branches = Superagglos.removeSegIdsFromAgglos(wholeCells(n),somaAgglos{n});
-    branches = branches(arrayfun(@(x) size(x.nodes,1),branches)>20); % remove all small leftovers smaller than 20 nodes
-%     branchLUT = Superagglos.buildLUT(branches);
-%     countPre = histc(branchLUT(presynSegIds),0:numel(branches));
-%     countPost = histc(branchLUT(postsynSegIds),0:numel(branches));
-
-    if isempty(branches) % if there was only somatic stuff, nothing is axonic
-        wholeCells(n).axon = false(size(wholeCells(n).nodes,1),1);
-    else
-        % get the median axon and dendrite probabilities for each branch
-        [axonP,dendriteP] = arrayfun(@(x) deal(median(segmentMeta.axonProb(x.nodes(~isnan(x.nodes(:,4)),4))),median(segmentMeta.dendriteProb(x.nodes(~isnan(x.nodes(:,4)),4)))),branches);
-%         [spineP,gliaP] = arrayfun(@(x) deal(median(segmentMeta.spineProb(x.nodes(~isnan(x.nodes(:,4)),4))),median(segmentMeta.gliaProb(x.nodes(~isnan(x.nodes(:,4)),4)))),branches);
-        [~,ind1] = min(dendriteP);
-        [~,ind2] = max(axonP);
+if  ~existentWC(8)
+    assert(isequal(uint32(1:max(segmentMeta.segIds))',segmentMeta.segIds))
+    % load(fullfile(p.saveFolder,'connectomeState','SynapseAgglos_v2.mat'),'synapses') % (erzeugt via E:\workspace\pipeline\Benedikt\+L4\+Synapses\+Scripts\synapseDetection.m)
+    % presynSegIds = cellfun(@(x) x(1),synapses.presynId); % only one presyn id necessary
+    % postsynSegIds = cellfun(@(x) x(1),synapses.postsynId); % only one postsyn id necessary
+    % maxSegId = max([presynSegIds;postsynSegIds]);
+    
+    clear wholeCellsNoAxon
+    for n = 1:numel(wholeCells)
+        % get cell branches by removing soma agglo and small segments
+        branches = Superagglos.removeSegIdsFromAgglos(wholeCells(n),somaAgglos{n});
+        branches = branches(arrayfun(@(x) size(x.nodes,1),branches)>20); % remove all small leftovers smaller than 20 nodes
+        %     branchLUT = Superagglos.buildLUT(branches);
+        %     countPre = histc(branchLUT(presynSegIds),0:numel(branches));
+        %     countPost = histc(branchLUT(postsynSegIds),0:numel(branches));
         
-        if ~any(axonP > 0.1) % one axon probability has at least be over 10% otherwise do not label any branch as axonic
+        if isempty(branches) % if there was only somatic stuff, nothing is axonic
             wholeCells(n).axon = false(size(wholeCells(n).nodes,1),1);
-        elseif ind1==ind2 %if one branch has the highest axon and the lowest dendrite prob, then everything is easy
-            wholeCells(n).axon = ismember(wholeCells(n).nodes(:,1:3),branches(ind1).nodes(:,1:3),'rows');
         else
-            % check which ratio (dendriteProb or axonProb versus median) is
-            % more prominent and accept only if axonProb of one branch is
-            % high
-            [~,ind] = max([median(dendriteP)/min(dendriteP), max(axonP)/median(axonP)]);
-            switch ind
-                case 1
-                    error('No branch showed a high axon probability compared to the median of all branches.')
-                case 2
-                    % label the found branch as axonic
-                    wholeCells(n).axon = ismember(wholeCells(n).nodes(:,1:3),branches(ind2).nodes(:,1:3),'rows');
+            % get the median axon and dendrite probabilities for each branch
+            [axonP,dendriteP] = arrayfun(@(x) deal(median(segmentMeta.axonProb(x.nodes(~isnan(x.nodes(:,4)),4))),median(segmentMeta.dendriteProb(x.nodes(~isnan(x.nodes(:,4)),4)))),branches);
+            %         [spineP,gliaP] = arrayfun(@(x) deal(median(segmentMeta.spineProb(x.nodes(~isnan(x.nodes(:,4)),4))),median(segmentMeta.gliaProb(x.nodes(~isnan(x.nodes(:,4)),4)))),branches);
+            [~,ind1] = min(dendriteP);
+            [~,ind2] = max(axonP);
+            
+            if ~any(axonP > 0.1) % one axon probability has at least be over 10% otherwise do not label any branch as axonic
+                wholeCells(n).axon = false(size(wholeCells(n).nodes,1),1);
+            elseif ind1==ind2 %if one branch has the highest axon and the lowest dendrite prob, then everything is easy
+                wholeCells(n).axon = ismember(wholeCells(n).nodes(:,1:3),branches(ind1).nodes(:,1:3),'rows');
+            else
+                % check which ratio (dendriteProb or axonProb versus median) is
+                % more prominent and accept only if axonProb of one branch is
+                % high
+                [~,ind] = max([median(dendriteP)/min(dendriteP), max(axonP)/median(axonP)]);
+                switch ind
+                    case 1
+                        error('No branch showed a high axon probability compared to the median of all branches.')
+                    case 2
+                        % label the found branch as axonic
+                        wholeCells(n).axon = ismember(wholeCells(n).nodes(:,1:3),branches(ind2).nodes(:,1:3),'rows');
+                end
             end
         end
+        tmp = rmfield(Superagglos.removeNodesFromAgglo(wholeCells(n),wholeCells(n).axon),'axon'); % get the whole cells without the axon
+        tmp = tmp(arrayfun(@(x) size(x.nodes,1),tmp)>10);
+        if numel(tmp) > 1
+            [~,ind] = max(arrayfun(@(x) sum(ismember(somaAgglos{n},x.nodes(:,4))),tmp));
+            wholeCellsNoAxon(n) = tmp(ind);
+            warning('Multiple CCs found when deleting axonic branch of whole Cell %d. Please check',n)
+        else
+            wholeCellsNoAxon(n) = tmp;
+        end
     end
-    tmp = rmfield(Superagglos.removeNodesFromAgglo(wholeCells(n),wholeCells(n).axon),'axon'); % get the whole cells without the axon
-    tmp = tmp(arrayfun(@(x) size(x.nodes,1),tmp)>10);
-    if numel(tmp) > 1
-        [~,ind] = max(arrayfun(@(x) sum(ismember(somaAgglos{n},x.nodes(:,4))),tmp));
-        wholeCellsNoAxon(n) = tmp(ind);
-        warning('Multiple CCs found when deleting axonic branch of whole Cell %d. Please check',n)
-    else
-        wholeCellsNoAxon(n) = tmp;
-    end
+    % remove all branches that have been labeled axonic from all wholeCells
+    
+    % concatenate truncated whole cells with dendrite class and make new state
+    indWholeCells = cat(1,false(numel(dendrites),1),true(numel(wholeCellsNoAxon),1));
+    dendrites = cat(1,dendrites,wholeCellsNoAxon');
+    indBigDends = cat(1,indBigDends,true(numel(wholeCellsNoAxon),1));
+    [ myelinDend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
+    
+    save(fullfile(outputFolder,'wholeCells_08.mat'),'wholeCells');
+    
+    save(fullfile(outputFolder,'dendrites_wholeCells_01.mat'),'dendrites','myelinDend','indBigDends','indWholeCells')%,'info');
 end
-% remove all branches that have been labeled axonic from all wholeCells
-
-% concatenate truncated whole cells with dendrite class and make new state
-indWholeCells = cat(1,false(numel(dendrites),1),true(numel(wholeCellsNoAxon),1));
-dendrites = cat(1,dendrites,wholeCellsNoAxon');
-indBigDends = cat(1,indBigDends,true(numel(wholeCellsNoAxon),1));
-[ myelinDend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
-
-save(fullfile(outputFolder,'wholeCells_08.mat'),'wholeCells');
-
-save(fullfile(outputFolder,'dendrites_wholeCells.mat'),'dendrites','myelinDend','indBigDends','indWholeCells')%,'info');
 %%
 connectEM.getDendriteQueryOverlapB(p,'2.2')
 connectEM.getDendQueryAxonAggloOverlapB(p,'2.2')

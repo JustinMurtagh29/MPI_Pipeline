@@ -39,7 +39,8 @@ function createNewDendriteSuperagglos(param, state)
 %     idxMultipleHits = cat(1, idxMultipleHits{:});
     
     linkagesAgglos = cellfun(@connectEM.edgeCreator, flightPaths.startAgglo, flightPaths.endAgglo, 'uni', 0);
-    linkagesAgglos = cat(1, linkagesAgglos{:});
+    multiEdge = cellfun(@isempty,linkagesAgglos);
+    
     
     idxExcludedFlights = true(size(flightPaths.startAgglo));
     idxExcludedFlights(excludedFlights) = false;
@@ -47,7 +48,11 @@ function createNewDendriteSuperagglos(param, state)
     flightPaths.endAgglo(excludedFlights,:) = [];
     flightPaths.ff = structfun(@(x)x(idxExcludedFlights), flightPaths.ff, 'uni', 0);
     linkagesAgglos(excludedFlights, :) = [];
-
+    linkagesAgglos = cat(1, linkagesAgglos{:});
+    flightPaths.endAgglo(multiEdge) = [];
+    flightPaths.startAgglo(multiEdge) = [];
+    flightPaths.ff.segIds(multiEdge) = [];
+    fprintf('%d multi hit flight paths ignored.\n',sum(multiEdge))
     % sanity checks
     assert(size(linkagesAgglos, 1) == numel(flightPaths.startAgglo));
     assert(size(linkagesAgglos, 1) == numel(flightPaths.endAgglo));
