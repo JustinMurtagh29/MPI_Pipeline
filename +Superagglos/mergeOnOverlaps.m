@@ -76,10 +76,23 @@ function agglo = mergeOnOverlaps(aggloA, aggloB, varargin)
     edgesAB = nan(numCompsB, 2);
     for curIdx = 1:numCompsB
         curNodeIds = nodeIdsB(lutB == curIdx);
-        curLen = pathLen(bsxfun(@times, aggloB.nodes(curNodeIds, 1:3), opts.scale));
-
-        % tiny component → ignore
-        if curLen < opts.minLenNm; continue; end
+        
+        curLenLower = ...
+            max(aggloB.nodes(curNodeIds, 1:3), [], 1) ...
+          - min(aggloB.nodes(curNodeIds, 1:3), [], 1);
+        curLenLower = sqrt(sum((curLenLower .* opts.scale) .^ 2));
+        
+        if curLenLower < opts.minLenNm
+            % At this point the lower bound of the super-agglomerate length
+            % is below the required threshold. But it's still possible that
+            % the true length (calculated below) is large enough. So, let's
+            % test that...
+            curLenTrue = pathLen(bsxfun( ...
+                @times, aggloB.nodes(curNodeIds, 1:3), opts.scale));
+            
+            % tiny component → ignore
+            if curLenTrue < opts.minLenNm; continue; end
+        end
 
         curDistMat = distMat(:, curNodeIds);
        [~, curMinIdx] = min(curDistMat(:));
