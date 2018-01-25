@@ -4,15 +4,18 @@ clear;
 
 %%
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-outFile = '/home/amotta/Desktop/connectomes.xls';
 
-connFiles = strcat('connectome_axons_', {'16_b'; '17_a'; '18_a'}, '.mat');
+connFiles = { ...
+  % 'connectome.mat'; ...
+    'connectome_axons_16_b.mat'; ...
+    'connectome_axons_17_a.mat';
+    'connectome_axons_18_a.mat'};
 connFiles = fullfile(rootDir, 'connectomeState', connFiles);
 
 %% loading data
 conns = cellfun(@load, connFiles, 'UniformOutput', false);
 
-%%
+%% collect numbers
 vals = cell(0, 2);
 
 for idx = 1:numel(conns)
@@ -57,6 +60,7 @@ for idx = 1:numel(conns)
     end
 end
 
+%% show results
 vals = transpose(vals);
 vals = reshape(vals, 2, [], numel(conns));
 
