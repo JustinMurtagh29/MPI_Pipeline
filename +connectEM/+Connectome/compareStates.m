@@ -67,4 +67,5 @@ t = cell2table(out(2:end, 2:end));
 t.Properties.VariableNames = out(1, 2:end);
 t.Properties.RowNames = out(2:end, 1);
 
-format('long', 'g'); t
+format('long', 'g');
+disp(t);
