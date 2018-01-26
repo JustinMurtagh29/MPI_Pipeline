@@ -6,7 +6,7 @@ clear;
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 
 connFiles = { ...
-  % 'connectome.mat'; ...
+    'connectome_revised.mat'; ...
     'connectome_axons_16_b.mat'; ...
     'connectome_axons_17_a.mat';
     'connectome_axons_18_a.mat'};
@@ -16,9 +16,10 @@ connFiles = fullfile(rootDir, 'connectomeState', connFiles);
 conns = cellfun(@load, connFiles, 'UniformOutput', false);
 
 %% collect numbers
-vals = cell(0, 2);
+connVals = cell(numel(conns), 2);
 
 for idx = 1:numel(conns)
+    vals = cell(0, 2);
     conn = conns{idx};
     
    [~, connName] = fileparts(connFiles{idx});
@@ -58,18 +59,30 @@ for idx = 1:numel(conns)
             sprintf('# synapses onto %s', conn.denClasses{classIdx}), ...
             sum(conn.classConnectome(:, classIdx))};
     end
+    
+    connVals{idx, 1} = vals(:, 1);
+    connVals{idx, 2} = vals(:, 2);
 end
 
 %% show results
-vals = transpose(vals);
-vals = reshape(vals, 2, [], numel(conns));
+rowNames = cat(1, connVals{:, 1});
+rowNames = unique(rowNames, 'stable');
 
-out = shiftdim(vals(1, :, 1));
-out = cat(2, out, shiftdim(vals(2, :, :)));
+tableData = cell(numel(rowNames), numel(conns));
+tableData(:) = num2cell(nan);
 
-t = cell2table(out(2:end, 2:end));
-t.Properties.VariableNames = out(1, 2:end);
-t.Properties.RowNames = out(2:end, 1);
+for idx = 1:numel(conns)
+   [~, rows] = ismember(connVals{idx, 1}, rowNames);
+    tableData(rows, idx) = connVals{idx, 2};
+end
+
+colNames = tableData(1, :);
+tableData(1, :) = [];
+rowNames(1, :) = [];
+
+t = cell2table(tableData);
+t.Properties.VariableNames = colNames;
+t.Properties.RowNames = rowNames;
 
 format('long', 'g');
 disp(t);
