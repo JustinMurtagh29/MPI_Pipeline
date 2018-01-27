@@ -40,11 +40,9 @@ targetClasses = { ...
 classConnectome = accumarray( ...
     cat(2, connectome.edges(:, 1), connectome.targetClassId), ...
     connectome.synCount, [numel(conn.axons), numel(targetClasses)]);
-% den
 
 %% specificity analysis
 axonMask = (conn.axonMeta.synCount >= minSynPre);
-
 specificities = classConnectome(axonMask, :);
 specificities = specificities ./ sum(specificities, 2);
 
