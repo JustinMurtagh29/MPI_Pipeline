@@ -68,19 +68,18 @@ ax.YAxis.TickDirection = 'out';
 fig.Position(3:4) = [570, 350];
 
 %% soma synapse analysis
-% show number of soma synapses per axon
+% show number of synapses per soma
 
 fig = figure;
 ax = axes(fig);
 
-somaSynCount = classConnectome(axonMask, 1);
-histogram(ax, somaSynCount);
+somaMask = (conn.denMeta.targetClass == 'Somata');
+somaSynCount = conn.denMeta.synCount(somaMask);
 
-xlabel('Soma synapses');
-ylabel('Axons');
+histogram(ax, somaSynCount, 21);
 
-ax.YAxis.Limits(1) = 10 ^ (-0.1);
-ax.YAxis.Scale = 'log';
+xlabel('Synapses');
+ylabel('Somata');
 
 ax.XAxis.TickDirection = 'out';
 ax.YAxis.TickDirection = 'out';
