@@ -41,8 +41,30 @@ classConnectome = accumarray( ...
     cat(2, connectome.edges(:, 1), connectome.targetClassId), ...
     connectome.synCount, [numel(conn.axons), numel(targetClasses)]);
 
-%% specificity analysis
+%% spine fraction analysis
 axonMask = (conn.axonMeta.synCount >= minSynPre);
+
+% show spine synapse fraction for each axon
+conn.axonMeta.spineSynFrac = ...
+    conn.axonMeta.spineSynCount ...
+    ./ conn.axonMeta.synCount;
+
+fig = figure;
+ax = axes(fig);
+
+spineSynFrac = conn.axonMeta.spineSynFrac(axonMask, :);
+histogram(ax, spineSynFrac, linspace(0, 1, 51));
+
+xlim(ax, [0, 1]);
+xlabel(ax, 'Fraction of synapses onto spines');
+ylabel(ax, 'Axons');
+
+ax.XAxis.TickDirection = 'out';
+ax.YAxis.TickDirection = 'out';
+
+fig.Position(3:4) = [570, 350];
+
+%% specificity analysis
 specificities = classConnectome(axonMask, :);
 specificities = specificities ./ sum(specificities, 2);
 
