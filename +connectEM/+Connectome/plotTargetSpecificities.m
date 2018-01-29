@@ -8,6 +8,7 @@ rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 connFile = fullfile( ...
     rootDir, 'connectomeState', ...
     'connectome_axons_18_a_with_den_meta.mat');
+
 minSynPre = 10;
 minSynPost = 0;
 
@@ -64,34 +65,49 @@ ax.YAxis.TickDirection = 'out';
 
 fig.Position(3:4) = [570, 350];
 
-%% specificity analysis
-specificities = classConnectome(axonMask, :);
-specificities = specificities ./ sum(specificities, 2);
+%% build axon classes
+axonClasses = { ...
+    'Axons with spine fraction > 0.5', ...
+    axonMask & conn.axonMeta.spineSynFrac > 0.5;
+    'Axons with spine fraction < 0.5', ...
+    axonMask & conn.axonMeta.spineSynFrac < 0.5};
 
-classCount = numel(conn.denClasses);
+%% specificity analysis
+preClassCount = size(axonClasses, 1);
+postClassCount = numel(conn.denClasses);
 
 fig = figure;
-for curIdx = 1:classCount
-    curClassName = conn.denClasses{curIdx};
+for curPreIdx = 1:preClassCount
+    curPreName = axonClasses{curPreIdx, 1};
+    curPreMask = axonClasses{curPreIdx, 2};
     
-    ax = subplot(1, classCount, curIdx);
-    histogram( ...
-        ax, specificities(:, curIdx), ...
-        linspace(0, 1, 51), 'EdgeColor', 'none');
+    specificities = classConnectome(curPreMask, :);
+    specificities = specificities ./ sum(specificities, 2);
 
-    xlabel(ax, curClassName);
-    ax.XAxis.TickDirection = 'out';
-    ax.XAxis.Limits = [0, 1];
-    
-    if curIdx == 1
-        ylabel(ax, 'Axons');
-    else
-        ax.YTickLabel = [];
+    for curPostIdx = 1:postClassCount
+        curPostClassName = conn.denClasses{curPostIdx};
+        
+        curPlotIdx = curPostIdx + (curPreIdx - 1) * postClassCount;
+        ax = subplot(preClassCount, postClassCount, curPlotIdx);
+        
+        histogram( ...
+            ax, specificities(:, curPostIdx), ...
+            linspace(0, 1, 51), 'EdgeColor', 'none');
+
+        xlabel(ax, curPostClassName);
+        ax.XAxis.TickDirection = 'out';
+        ax.XAxis.Limits = [0, 1];
+
+        if curPostIdx == 1
+            ylabel(ax, curPreName);
+        else
+            ax.YTickLabel = [];
+        end
+
+        ax.YAxis.TickDirection = 'out';
+        ax.YAxis.Limits(1) = 10 ^ (-0.1);
+        ax.YAxis.Scale = 'log';
     end
-    
-    ax.YAxis.TickDirection = 'out';
-    ax.YAxis.Limits(1) = 10 ^ (-0.1);
-    ax.YAxis.Scale = 'log';
 end
 
 annotation(...
