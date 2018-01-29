@@ -16,6 +16,9 @@ spineFracThresh = 0.5;
 %% loading data
 conn = load(connFile);
 
+%% build axon mask based on synapse count
+axonMask = (conn.axonMeta.synCount >= minSynPre);
+
 %% sanity check
 % try to replicate cass connectome
 connectome = conn.connectome;
@@ -44,8 +47,6 @@ classConnectome = accumarray( ...
     connectome.synCount, [numel(conn.axons), numel(targetClasses)]);
 
 %% spine fraction analysis
-axonMask = (conn.axonMeta.synCount >= minSynPre);
-
 % show spine synapse fraction for each axon
 conn.axonMeta.spineSynFrac = ...
     conn.axonMeta.spineSynCount ...
@@ -60,6 +61,26 @@ histogram(ax, spineSynFrac, linspace(0, 1, 51));
 xlim(ax, [0, 1]);
 xlabel(ax, 'Fraction of synapses onto spines');
 ylabel(ax, 'Axons');
+
+ax.XAxis.TickDirection = 'out';
+ax.YAxis.TickDirection = 'out';
+
+fig.Position(3:4) = [570, 350];
+
+%% soma synapse analysis
+% show number of soma synapses per axon
+
+fig = figure;
+ax = axes(fig);
+
+somaSynCount = classConnectome(axonMask, 1);
+histogram(ax, somaSynCount);
+
+xlabel('Soma synapses');
+ylabel('Axons');
+
+ax.YAxis.Limits(1) = 10 ^ (-0.1);
+ax.YAxis.Scale = 'log';
 
 ax.XAxis.TickDirection = 'out';
 ax.YAxis.TickDirection = 'out';
