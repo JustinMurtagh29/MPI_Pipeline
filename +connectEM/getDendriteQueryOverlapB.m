@@ -5,7 +5,7 @@ function getDendriteQueryOverlapB(param,state)
 
     % Directory with input / output data
     dataDir = fullfile(param.saveFolder, 'aggloState');
-    
+    segmentMeta = load(fullfile(param.saveFolder, 'segmentMeta.mat'),'voxelCount');
     % State of query generation
     [~, suffixVersion, flighpathVersion, suffixDendrites] = connectEM.setDendriteQueryState(state);    
 
@@ -36,13 +36,23 @@ function getDendriteQueryOverlapB(param,state)
     % Exclude all queries that do not have a clear starting point
     idxNoClearStart = cellfun('isempty', startAgglo);
     % Multiple ends (all above 53vx evidence, corresponds to 2 full nodes)
-    endAgglo = arrayfun(@(x)x.eqClasses(x.occurences > 107), queryOverlap.ends, 'uni', 0);
     % Exclude startAgglo from endAgglo (as we do not want to count self-attachment)
-    endAgglo = cellfun(@(x,y)setdiff(x,y), endAgglo, startAgglo, 'uni', 0);
+    endAgglo = arrayfun(@(x,y) setdiff(x.eqClasses(x.occurences > 107),y), queryOverlap.ends, startAgglo, 'uni', 0);
     % Exclude all queries that do not have (at least one) clear end
     idxNoClearEnd = cellfun('isempty', endAgglo);
+    % find multiple end agglo hits (possible if state of query agglos was
+    % different from current agglo state
+    idxMultiEdge = find(cellfun(@numel,endAgglo) > 1);
+    % only those multi hits are problematic where interim agglos are not
+    % fully covered by flight path (measured by checking if picked up
+    % segments make up more than 85% of interim agglo volume)
+    idxStrangeMultiEdge = idxMultiEdge( arrayfun(@(x)  sum(cellfun(@(y) sum(segmentMeta.voxelCount(y(ismember(y,ff.segIds{idxMultiEdge(x)})))),dendrites(endAgglo{idxMultiEdge(x)})) < cellfun(@(y) sum(segmentMeta.voxelCount(y)), dendrites(endAgglo{idxMultiEdge(x)}))*0.85) > 1, (1:numel(idxMultiEdge))')); % sum > 1 is because real end agglo is in most cases not full covered by flgiht path
+    idxStrangeMultiEdge = accumarray(idxStrangeMultiEdge,1,[numel(idxNoClearEnd),1]);
+    
+    fprintf('%d multi hit flight paths detected, of which %d cannot be taken.\n',numel(idxMultiEdge),numel(idxStrangeMultiEdge))
+    
     % 18.5% of queries excluded overall due to missing start or end (or both)
-    idxGood = ~(idxNoClearStart | idxNoClearEnd);
+    idxGood = ~(idxNoClearStart | idxNoClearEnd | idxStrangeMultiEdge);
     % Display some statistics
     display([num2str(sum(idxNoClearStart)./numel(idxNoClearStart)*100, '%.2f') '% of remaining queries have no clear start']);
     display([num2str(sum(idxNoClearStart)) ' in total']);
