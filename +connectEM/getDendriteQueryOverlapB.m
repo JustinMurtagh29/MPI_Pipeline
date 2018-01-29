@@ -37,7 +37,7 @@ function getDendriteQueryOverlapB(param,state)
     idxNoClearStart = cellfun('isempty', startAgglo);
     % Multiple ends (all above 53vx evidence, corresponds to 2 full nodes)
     % Exclude startAgglo from endAgglo (as we do not want to count self-attachment)
-    endAgglo = arrayfun(@(x,y) setdiff(x.eqClasses(x.occurences > 107),y), queryOverlap.ends, startAgglo, 'uni', 0);
+    endAgglo = arrayfun(@(x) setdiff(queryOverlap.ends(x).eqClasses(queryOverlap.ends(x).occurences > 107),startAgglo{x}), (1:numel(queryOverlap.ends))', 'uni', 0);
     % Exclude all queries that do not have (at least one) clear end
     idxNoClearEnd = cellfun('isempty', endAgglo);
     % find multiple end agglo hits (possible if state of query agglos was
