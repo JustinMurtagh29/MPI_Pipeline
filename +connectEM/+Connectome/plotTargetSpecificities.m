@@ -67,25 +67,6 @@ ax.YAxis.TickDirection = 'out';
 
 fig.Position(3:4) = [570, 350];
 
-%% soma synapse analysis
-% show number of synapses per soma
-
-fig = figure;
-ax = axes(fig);
-
-somaMask = (conn.denMeta.targetClass == 'Somata');
-somaSynCount = conn.denMeta.synCount(somaMask);
-
-histogram(ax, somaSynCount, 21);
-
-xlabel('Synapses');
-ylabel('Somata');
-
-ax.XAxis.TickDirection = 'out';
-ax.YAxis.TickDirection = 'out';
-
-fig.Position(3:4) = [570, 350];
-
 %% build axon classes
 axonClasses = { ...
     sprintf('Axons with spine fraction > %.1f', spineFracThresh)...
