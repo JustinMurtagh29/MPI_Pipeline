@@ -11,6 +11,7 @@ connFile = fullfile( ...
 
 minSynPre = 10;
 minSynPost = 0;
+spineFracThresh = 0.5;
 
 %% loading data
 conn = load(connFile);
@@ -67,10 +68,10 @@ fig.Position(3:4) = [570, 350];
 
 %% build axon classes
 axonClasses = { ...
-    'Axons with spine fraction > 0.5', ...
-    axonMask & conn.axonMeta.spineSynFrac > 0.5;
-    'Axons with spine fraction < 0.5', ...
-    axonMask & conn.axonMeta.spineSynFrac < 0.5};
+    sprintf('Axons with spine fraction > %.1f', spineFracThresh)...
+    axonMask & conn.axonMeta.spineSynFrac > spineFracThresh;
+    sprintf('Axons with spine fraction < %.1f', spineFracThresh), ...
+    axonMask & conn.axonMeta.spineSynFrac < spineFracThresh};
 
 %% specificity analysis
 preClassCount = size(axonClasses, 1);
