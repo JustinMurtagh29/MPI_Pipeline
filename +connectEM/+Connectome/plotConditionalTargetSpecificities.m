@@ -86,7 +86,7 @@ annotation(...
 
 fig.Position(3:4) = [1117, 1117];
 
-%% plot proposed by Emmanuel
+%% plot suggested by Emmanuel
 fig = figure;
 ax = axes(fig);
 
@@ -105,6 +105,10 @@ for curIdx = 1:classCount
     curSpecs(~any(curRemSpecs, 2)) = [];
     curRemSpecs(~any(curRemSpecs, 2), :) = [];
     
+    % sanity checks
+    assert(size(curRemSpecs, 1) == size(curSpecs, 1));
+    assert(size(curRemSpecs, 2) == (classCount - 1));
+    
     % calculate specificity
     curRemSpecs = curRemSpecs ./ sum(curRemSpecs, 2);
 
@@ -112,9 +116,11 @@ for curIdx = 1:classCount
     curRemNames(curIdx) = [];
 
     % sort by increasing specificity for `x` class
-    [~, sortIds] = sort(curSpecs, 'descend');
+   [~, sortIds] = sort(curSpecs, 'descend');
     curSpecs = curSpecs(sortIds);
     curRemSpecs = curRemSpecs(sortIds, :);
+    
+    assert(size(curSpecs, 1) == size(curRemSpecs, 1));
 
     ySpecsRed = cell2mat(arrayfun( ...
         @(i) median(curRemSpecs(1:i, :), 1), ...
@@ -158,3 +164,64 @@ annotation(...
     'HorizontalAlignment', 'center');
 
 fig.Position(3:4) = [1916, 522];
+
+%% plot specificity histograms as function of threshold
+for curIdxClass = 1:numel(classNames)
+    yName = classNames{curIdxClass};
+
+    fig = figure;
+
+    % determine thresholds
+    ySpec = classConnectome(:, curIdxY) ./ sum(classConnectome, 2);
+    ySpecThreshs = linspace(0, max(ySpec), 6);
+    ySpecThreshs(end) = [];
+
+    curRemSpecs = classConnectome;
+    curRemSpecs(:, curIdxY) = [];
+
+    curRemNames = classNames;
+    curRemNames(curIdxY) = [];
+
+    % TODO(amotta): Check if legal
+    % Remove axons which have no other synapses at all
+    ySpec(~any(curRemSpecs, 2)) = [];
+    curRemSpecs(~any(curRemSpecs, 2), :) = [];
+
+    % "remaining" specificity
+    curRemSpecs = curRemSpecs ./ sum(curRemSpecs, 2);
+
+    for curIdxY = 1:numel(ySpecThreshs)
+        curThreshY = ySpecThreshs(curIdxY);
+        curMask = (ySpec >= curThreshY);
+
+        curIdxX = 1;
+        for curIdxX = 1:size(curRemSpecs, 2)
+            curAx = subplot( ...
+                numel(ySpecThreshs), size(curRemSpecs, 2), ...
+                curIdxX + (curIdxY - 1) * size(curRemSpecs, 2));
+
+            histogram( ...
+                curAx, ...
+                curRemSpecs(curMask, curIdxX), ...
+                linspace(0, 1, 21));
+
+            xlim(curAx, [0, 1]);
+            xticks(curAx, []);
+
+            if curIdxX == 1
+                ylabel({ ...
+                    'Axons with'; sprintf( ...
+                    'S(%s) ≥ %.2f', yName, curThreshY)});
+            end
+
+            if curIdxY == numel(ySpecThreshs)
+                xlabel(sprintf( ...
+                    'S_{rem}(%s)', ...
+                    curRemNames{curIdxX}));
+                xticks(curAx, [0, 1]);
+            end
+        end
+    end
+
+    fig.Position(3:4) = [970, 970];
+end
