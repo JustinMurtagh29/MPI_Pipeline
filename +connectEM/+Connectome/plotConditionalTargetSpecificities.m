@@ -85,3 +85,76 @@ annotation(...
     'EdgeColor', 'none', 'HorizontalAlignment', 'center')
 
 fig.Position(3:4) = [1117, 1117];
+
+%% plot proposed by Emmanuel
+fig = figure;
+ax = axes(fig);
+
+for curIdx = 1:classCount
+    curName = classNames{curIdx};
+    
+    % specificities for `x` class
+    curSpecs = classConnectome(:, curIdx) ./ sum(classConnectome, 2);
+
+    % specificities for remaining synapses
+    curRemSpecs = classConnectome;
+    curRemSpecs(:, curIdx) = [];
+    
+    % remove axons that have no other synapses
+    % TODO(amotta): discuss if this is allowed
+    curSpecs(~any(curRemSpecs, 2)) = [];
+    curRemSpecs(~any(curRemSpecs, 2), :) = [];
+    
+    % calculate specificity
+    curRemSpecs = curRemSpecs ./ sum(curRemSpecs, 2);
+
+    curRemNames = classNames;
+    curRemNames(curIdx) = [];
+
+    % sort by increasing specificity for `x` class
+    [~, sortIds] = sort(curSpecs, 'descend');
+    curSpecs = curSpecs(sortIds);
+    curRemSpecs = curRemSpecs(sortIds, :);
+
+    ySpecsRed = cell2mat(arrayfun( ...
+        @(i) median(curRemSpecs(1:i, :), 1), ...
+        reshape(1:numel(curSpecs), [], 1), ...
+        'UniformOutput', false));
+    
+    ax = subplot(1, classCount, curIdx);
+    hold(ax, 'on');
+    
+    curColors = ax.ColorOrder;
+    curColors(curIdx, :) = [];
+    
+    for curPlotIdx = 1:size(ySpecsRed, 2)
+        plot( ...
+            ax, ...
+            curSpecs, ySpecsRed(:, curPlotIdx), ...
+            'Color', curColors(curPlotIdx, :), ...
+            'Marker', 'square', ...
+            'MarkerSize', 3);
+    end
+    
+    legend(curRemNames, 'Location', 'East');
+
+    xlim(ax, [0, 1]); xticks(ax, [0, 1]);
+    xlabel(sprintf('%s specificity threshold', curName));
+    
+    ylim(ax, [0, 1]); yticks(ax, [0, 1]);
+    ax.TickDir = 'out';
+    
+    if curIdx == 1
+        ylabel('Median specificity of remaining synapses');
+    end
+end
+
+annotation(...
+    'textbox', [0, 0.9, 1, 0.1], ...
+    'String', {
+        'Thresholded conditional target specificities';
+        info.git_repos{1}.hash}, ...
+    'EdgeColor', 'none', ...
+    'HorizontalAlignment', 'center');
+
+fig.Position(3:4) = [1916, 522];
