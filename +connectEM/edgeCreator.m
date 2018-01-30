@@ -26,7 +26,7 @@ function [edges, idxMultipleHits] = edgeCreator(sources, targets, allowMultiEnd)
  
     if idxMultipleHits
         if allowMultiEnd
-            edges = [repmat(sources,numel(targets),1) , targets];
+            edges = [repmat(sources,numel(targets),1) , targets(:)];
         else
             % Flight paths which reach multiple ends (i.e., agglomerates or
             % endings) are ignored. Return empty edge list instead.
