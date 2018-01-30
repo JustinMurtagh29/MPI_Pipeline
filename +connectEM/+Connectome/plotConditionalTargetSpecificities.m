@@ -172,15 +172,17 @@ for curIdxClass = 1:numel(classNames)
     fig = figure;
 
     % determine thresholds
-    ySpec = classConnectome(:, curIdxY) ./ sum(classConnectome, 2);
+    ySpec = ...
+        classConnectome(:, curIdxClass) ...
+        ./ sum(classConnectome, 2);
     ySpecThreshs = linspace(0, max(ySpec), 6);
     ySpecThreshs(end) = [];
 
     curRemSpecs = classConnectome;
-    curRemSpecs(:, curIdxY) = [];
+    curRemSpecs(:, curIdxClass) = [];
 
     curRemNames = classNames;
-    curRemNames(curIdxY) = [];
+    curRemNames(curIdxClass) = [];
 
     % TODO(amotta): Check if legal
     % Remove axons which have no other synapses at all
