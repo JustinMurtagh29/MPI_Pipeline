@@ -32,13 +32,7 @@ function createNewDendriteSuperagglos(param, state)
 
     excludedFlights = idxNoClearEnd(~idxNoClearAxonAttachment);
     
-%     endings = load(fullfile(dataDir, 'dendriteEndings.mat'));
-%     endingOverlap = load(fullfile(dataDir, strcat('dendriteEndingOverlaps',suffix,'.mat')));
-%     [linkages, idxMultipleHits] = cellfun(@connectEM.edgeCreator, endingOverlap.startEndingOverlaps, endingOverlap.endEndingOverlaps, 'uni', 0);
-%     linkagesFlat = cat(1, linkages{:});
-%     idxMultipleHits = cat(1, idxMultipleHits{:});
-    
-    linkagesAgglos = cellfun(@connectEM.edgeCreator, flightPaths.startAgglo, flightPaths.endAgglo, 'uni', 0);
+    linkagesAgglos = cellfun(@connectEM.edgeCreator, flightPaths.startAgglo, flightPaths.endAgglo, 1, 'uni', 0);
     excludedFlights = cat(1,excludedFlights,idxNoClearStart);
     
     idxExcludedFlights = true(size(flightPaths.startAgglo));
@@ -47,12 +41,15 @@ function createNewDendriteSuperagglos(param, state)
     flightPaths.endAgglo(excludedFlights,:) = [];
     flightPaths.ff = structfun(@(x)x(idxExcludedFlights), flightPaths.ff, 'uni', 0);
     linkagesAgglos(excludedFlights, :) = [];
+    linkagesLUT = repelem(1:numel(linkagesAgglos),cellfun(@(x) size(x,1),linkagesAgglos));
     linkagesAgglos = cat(1, linkagesAgglos{:});
-   
+    
+    % 
+    flightPaths.endAgglo = cellfun(@(x) reshape(x,[],1),flightPaths.endAgglo,'uni',0);
     % sanity checks
-    assert(size(linkagesAgglos, 1) == numel(flightPaths.startAgglo));
-    assert(size(linkagesAgglos, 1) == numel(flightPaths.endAgglo));
-    assert(size(linkagesAgglos, 1) == numel(flightPaths.ff.segIds));
+%     assert(size(linkagesAgglos, 1) == numel(flightPaths.startAgglo));
+    assert(size(linkagesAgglos, 1) == numel(cat(1,flightPaths.endAgglo{:})));
+%     assert(size(linkagesAgglos, 1) == numel(flightPaths.ff.segIds));
     assert(~any(diff(structfun(@numel, flightPaths.ff))));
     
     % Eliminate duplicates
@@ -61,9 +58,9 @@ function createNewDendriteSuperagglos(param, state)
     duplicates(positionUniques) = 0;
     
     % NOTE(amotta): Dimensions agree!
-    flightPaths.startAgglo(duplicates,:) = [];
-    flightPaths.endAgglo(duplicates,:) = [];
-    flightPaths.ff = structfun(@(x)x(~duplicates), flightPaths.ff, 'uni', 0);
+    flightPaths.startAgglo(linkagesLUT(duplicates),:) = [];
+    flightPaths.endAgglo(linkagesLUT(duplicates),:) = [];
+    flightPaths.ff = structfun(@(x)x(linkagesLUT(~duplicates)), flightPaths.ff, 'uni', 0);
     
     dendritesNew = connectEM.mergeSuperagglosBasedOnFlightPath( ...
         superAgglos, flightPaths.eqClassCCfull, flightPaths.startAgglo, ...

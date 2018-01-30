@@ -47,10 +47,8 @@ function getDendriteQueryOverlapB(param,state)
     % fully covered by flight path (measured by checking if picked up
     % segments make up more than 85% of interim agglo volume)
     idxStrangeMultiEdge = idxMultiEdge( arrayfun(@(x)  sum(cellfun(@(y) sum(segmentMeta.voxelCount(y(ismember(y,ff.segIds{idxMultiEdge(x)})))),dendrites(endAgglo{idxMultiEdge(x)})) < cellfun(@(y) sum(segmentMeta.voxelCount(y)), dendrites(endAgglo{idxMultiEdge(x)}))*0.85) > 1, (1:numel(idxMultiEdge))')); % sum > 1 is because real end agglo is in most cases not full covered by flgiht path
-    idxStrangeMultiEdge = accumarray(idxStrangeMultiEdge,1,[numel(idxNoClearEnd),1]);
-    
     fprintf('%d multi hit flight paths detected, of which %d cannot be taken.\n',numel(idxMultiEdge),numel(idxStrangeMultiEdge))
-    
+    idxStrangeMultiEdge = accumarray(idxStrangeMultiEdge,1,[numel(idxNoClearEnd),1]);
     % 18.5% of queries excluded overall due to missing start or end (or both)
     idxGood = ~(idxNoClearStart | idxNoClearEnd | idxStrangeMultiEdge);
     % Display some statistics
