@@ -23,8 +23,10 @@ function superagglos_new = mergeSuperagglosBasedOnFlightPath( ...
         
         % same test if there is an end agglomerate
         if isempty(endAgglo{curIdx}); continue; end;
-        curEndSegIds = superagglos(endAgglo{curIdx}).nodes(:, 4);
-        assert(numel(intersect(curSegIdsHit, curEndSegIds)) > 0);
+        for curEndIdx = 1:numel(endAgglo{curIdx})
+            curEndSegIds = superagglos(endAgglo{curIdx}(curEndIdx)).nodes(:, 4);
+            assert(numel(intersect(curSegIdsHit, curEndSegIds)) > 0);
+        end
     end
     
     % find connected component for each flight path
