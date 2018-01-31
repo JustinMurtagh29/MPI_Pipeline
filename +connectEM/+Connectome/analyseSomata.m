@@ -20,33 +20,19 @@ param = param.p;
 points = Seg.Global.getSegToPointMap(param);
 sizes = Seg.Global.getSegToSizeMap(param);
 
-edges = load(fullfile(rootDir, 'globalEdges.mat'), 'edges');
-edges = edges.edges;
-
-borderAreas = load(fullfile(rootDir, 'globalBorder.mat'), 'borderArea2');
-borderAreas = borderAreas.borderArea2;
-
 conn = load(connFile);
-
-%% calculate surface area
-somaMask = (conn.denMeta.targetClass == 'Somata');
-somaAgglos = conn.dendrites(somaMask);
-
-somaSurfArea = ...
-    Agglo.calculateSurfaceArea( ...
-        edges, borderAreas, somaAgglos);
 
 %% soma synapse analysis
 % show number of synapses per soma
 fig = figure;
 ax = axes(fig);
 
+somaMask = (conn.denMeta.targetClass == 'Somata');
 somaSynCount = conn.denMeta.synCount(somaMask);
-somaSynDensity = somaSynCount ./ somaSurfArea;
 
-histogram(ax, somaSynDensity, 21);
+histogram(ax, somaSynCount, 21);
 
-xlabel('Synapse density [1 / µm²]');
+xlabel('Synapses');
 ylabel('Somata');
 
 ax.XAxis.TickDirection = 'out';
@@ -55,6 +41,7 @@ ax.YAxis.TickDirection = 'out';
 fig.Position(3:4) = [570, 350];
 
 %% calculate per-soma position
+somaAgglos = conn.dendrites(somaMask);
 somaSize = cellfun(@(segIds) ...
     sum(sizes(segIds)), somaAgglos);
 somaPos = cellfun(@(segIds) ...
@@ -63,15 +50,13 @@ somaPos = cellfun(@(segIds) ...
 somaPos = ceil(cell2mat(somaPos) ./ somaSize);
 
 %% export somata to webKNOSSOS
-[~, somaIds] = sort(somaSynDensity, 'descend');
+[~, somaIds] = sort(somaSynCount, 'descend');
 
 numDigits = ceil(log10(1 + numel(somaSynCount)));
-treeNames = arrayfun( ...
-    @(r, i, n, a) sprintf( ...
-        '%0*d. Soma %d (%d synapses, %.1f µm²)', ...
-        numDigits, r, i, n, a), ...
-    reshape(1:numel(somaSynCount), [], 1), somaIds, ...
-    somaSynCount(somaIds, :), somaSurfArea(somaIds, :), ...
+treeNames = arrayfun(@(r, i, n) sprintf( ...
+    '%0*d. Soma %d (%d synapses)', numDigits, r, i, n), ...
+    reshape(1:numel(somaSynCount), [], 1), ...
+    somaIds, somaSynCount(somaIds, :), ...
     'UniformOutput', false);
 
 skel = skeleton();
