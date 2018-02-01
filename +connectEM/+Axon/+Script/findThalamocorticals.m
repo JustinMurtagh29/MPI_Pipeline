@@ -7,6 +7,8 @@ rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a.mat');
 synFile = fullfile(rootDir, 'connectomeState', 'SynapseAgglos_v3.mat');
 
+info = Util.runInfo();
+
 %% loading data
 conn = load(connFile);
 syn = load(synFile);
@@ -36,6 +38,7 @@ synapses.borderIdx = cellfun( ...
     @(ids) setdiff(segGraph.borderIdx(ids), 0), ...
     synapses.edgeIdx, 'UniformOutput', false);
 
+% calculate synapse locations
 synapses.pos = cell2mat(cellfun( ...
     @(i) ceil( ...
         sum( ...
@@ -44,48 +47,41 @@ synapses.pos = cell2mat(cellfun( ...
         ) ./ sum(borders.borderArea2(i))), ...
     synapses.borderIdx, 'UniformOutput', false));
 
-%% testing
-% show an axon agglomerate an all its synapses
-axonId = find(conn.axonMeta.synCount >= 10);
+%% calculate synapse-to-synapse distances
+% only consider axons with at least two output synapses
+axonIds = find(conn.axonMeta.synCount >= 2);
+synToSynDists = cell(size(axonIds));
 
-rng(0);
-axonId = axonId(randperm(numel(axonId), 1));
-axonSegIds = conn.axons{axonId};
+tic;
+for idx = 1:numel(axonIds)
+    axonId = axonIds(idx);
+    axonSegIds = conn.axons{axonId};
 
-% find synapses for axon
-synapseIds = conn.connectome.edges(:, 1) == axonId;
-synapseIds = conn.connectome.synIdx(synapseIds);
-synapseIds = cell2mat(synapseIds);
+    % find synapses for axon
+    synapseIds = conn.connectome.edges(:, 1) == axonId;
+    synapseIds = conn.connectome.synIdx(synapseIds);
+    synapseIds = cell2mat(synapseIds);
 
-% map synapses to segments
-synapseNodeDist = pdist2( ...
-    points(axonSegIds, :) .* param.raw.voxelSize, ...
-    synapses.pos(synapseIds, :) .* param.raw.voxelSize);
-[~, synapseNodeIds] = min(synapseNodeDist, [], 1);
+    % map synapses to segments
+    synapseNodeDist = pdist2( ...
+        points(axonSegIds, :) .* param.raw.voxelSize, ...
+        synapses.pos(synapseIds, :) .* param.raw.voxelSize);
+    [~, synapseNodeIds] = min(synapseNodeDist, [], 1);
 
-% build MST representation
-mstGraph = graphminspantree(sparse(squareform( ...
-    pdist(points(axonSegIds, :) .* param.raw.voxelSize))));
-mstGraph = graph(mstGraph, 'lower');
+    % build MST representation of axon
+    mstGraph = graphminspantree(sparse(squareform( ...
+        pdist(points(axonSegIds, :) .* param.raw.voxelSize))));
+    mstGraph = graph(mstGraph, 'lower');
 
-% calculate synapse-to-synapse distance (along MST)
-[uniNodeIds, ~, synToUniNodes] = unique(synapseNodeIds);
-synToSynDist = distances(mstGraph, uniNodeIds, uniNodeIds);
-synToSynDist = synToSynDist(synToUniNodes, synToUniNodes);
+    % calculate synapse-to-synapse distance (along MST)
+    [uniNodeIds, ~, synToUniNodes] = unique(synapseNodeIds);
+    synToSynDist = distances(mstGraph, uniNodeIds, uniNodeIds);
+    synToSynDist = synToSynDist(synToUniNodes, synToUniNodes);
 
-% set self-distance to infinity
-synToSynDist(1:(size(synToSynDist, 1) + 1):end) = inf;
-synToSynDist(~synToSynDist) = eps;
-closestSynDist = min(synToSynDist, [], 1);
-
-figure;
-histogram(closestSynDist / 1E3, linspace(0, 30, 31));
-
-%{
-
-
-skel = Skeleton.fromMST(points(axonSegIds, :), param.raw.voxelSize);
-skel = skel.addNodesAsTrees(synapses.pos(synapseIds, :));
-skel = Skeleton.setParams4Pipeline(skel, param);
-skel.write('/home/amotta/Desktop/debug-synapse-locations.nml');
-%}
+    % set self-distance to infinity
+    synToSynDist(1:(size(synToSynDist, 1) + 1):end) = inf;
+    
+    % store output
+    synToSynDists{idx} = synToSynDist;
+    Util.progressBar(idx, numel(axonIds));
+end
