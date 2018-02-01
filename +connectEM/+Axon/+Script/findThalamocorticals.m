@@ -50,6 +50,7 @@ synapses.pos = cell2mat(cellfun( ...
 %% calculate synapse-to-synapse distances
 % only consider axons with at least two output synapses
 axonIds = find(conn.axonMeta.synCount >= 2);
+axonPathLens = nan(size(axonIds));
 synToSynDists = cell(size(axonIds));
 
 tic;
@@ -62,26 +63,38 @@ for idx = 1:numel(axonIds)
     synapseIds = conn.connectome.synIdx(synapseIds);
     synapseIds = cell2mat(synapseIds);
 
-    % map synapses to segments
-    synapseNodeDist = pdist2( ...
-        points(axonSegIds, :) .* param.raw.voxelSize, ...
-        synapses.pos(synapseIds, :) .* param.raw.voxelSize);
-    [~, synapseNodeIds] = min(synapseNodeDist, [], 1);
+    if numel(axonSegIds) > 1
+        % map synapses to segments
+        synapseNodeDist = pdist2( ...
+            points(axonSegIds, :) .* param.raw.voxelSize, ...
+            synapses.pos(synapseIds, :) .* param.raw.voxelSize);
+       [~, synapseNodeIds] = min(synapseNodeDist, [], 1);
+       
+        % build MST representation of axon
+        mstGraph = graphminspantree(sparse(squareform( ...
+            pdist(points(axonSegIds, :) .* param.raw.voxelSize))));
+        
+        axonPathLen = sum(mstGraph(:));
+        mstGraph = graph(mstGraph, 'lower');
 
-    % build MST representation of axon
-    mstGraph = graphminspantree(sparse(squareform( ...
-        pdist(points(axonSegIds, :) .* param.raw.voxelSize))));
-    mstGraph = graph(mstGraph, 'lower');
-
-    % calculate synapse-to-synapse distance (along MST)
-    [uniNodeIds, ~, synToUniNodes] = unique(synapseNodeIds);
-    synToSynDist = distances(mstGraph, uniNodeIds, uniNodeIds);
-    synToSynDist = synToSynDist(synToUniNodes, synToUniNodes);
+        % calculate synapse-to-synapse distance (along MST)
+       [uniNodeIds, ~, synToUniNodes] = unique(synapseNodeIds);
+        synToSynDist = distances(mstGraph, uniNodeIds, uniNodeIds);
+        synToSynDist = synToSynDist(synToUniNodes, synToUniNodes);
+    else
+        % It's possible for axon to consist of a single segment and still
+        % to have multiple synapses. In this case the adjacency matrix
+        % produced by `pdist` will be empty.
+        axonPathLen = 0;
+        synToSynDist = zeros(numel(synapseIds));
+    end
 
     % set self-distance to infinity
     synToSynDist(1:(size(synToSynDist, 1) + 1):end) = inf;
     
     % store output
+    axonPathLens(idx) = axonPathLen;
     synToSynDists{idx} = synToSynDist;
+    
     Util.progressBar(idx, numel(axonIds));
 end
