@@ -16,7 +16,7 @@ spineFracThresh = 0.5;
 % relative to all the 'Somata' agglomerates
 inSomaIdsRel = [13, 56];
 minInSomaSynCount = 1;
-minSpineFracExc = 0.5;
+minSpineFracExc = 0.7;
 
 info = Util.runInfo();
 
