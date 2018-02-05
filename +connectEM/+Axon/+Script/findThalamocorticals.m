@@ -107,3 +107,39 @@ end
 
 % save results
 Util.save(interSynFile, info, axonIds, axonPathLens, synToSynDists);
+
+%% plot histogram of synapse frequency
+% configuration
+minSynCount = 10;
+axonIds = find(conn.axonMeta.synCount >= minSynCount);
+
+% load data from cache
+data = load(interSynFile, 'axonIds', 'axonPathLens');
+[~, rows] = ismember(axonIds, data.axonIds);
+assert(all(rows));
+
+synCount = conn.axonMeta.synCount(axonIds);
+pathLenUm = data.axonPathLens(rows) ./ 1E3;
+synFreq = synCount ./ pathLenUm;
+
+fig = figure();
+ax = axes(fig);
+
+histogram(ax, synFreq);
+
+ax.TickDir = 'out';
+ax.XAxis.Limits(1) = 0;
+
+xlabel(ax, 'Synapse frequency [µm^{-1}]');
+ylabel(ax, 'Axons');
+
+annotation( ...
+    fig, ...
+    'textbox', [0, 0.9, 1, 0.1], ...
+    'EdgeColor', 'none', ...
+    'HorizontalAlignment', 'center', ...
+	'String', { ...
+        'Distribution of synapse frequency over axons'; ...
+        info.git_repos{1}.hash});
+
+fig.Position(3:4) = [880 490];
