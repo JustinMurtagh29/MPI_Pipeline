@@ -19,13 +19,13 @@ function superagglos_new = mergeSuperagglosBasedOnFlightPath( ...
         
         % make sure there is overlap with start agglomerate
         curStartSegIds = superagglos(startAgglo{curIdx}).nodes(:, 4);
-        assert(numel(intersect(curSegIdsHit, curStartSegIds)) > 0);
+        assert(~isempty(intersect(curSegIdsHit, curStartSegIds)));
         
         % same test if there is an end agglomerate
         if isempty(endAgglo{curIdx}); continue; end;
         for curEndIdx = 1:numel(endAgglo{curIdx})
             curEndSegIds = superagglos(endAgglo{curIdx}(curEndIdx)).nodes(:, 4);
-            assert(numel(intersect(curSegIdsHit, curEndSegIds)) > 0);
+            assert(~isempty(intersect(curSegIdsHit, curEndSegIds)));
         end
     end
     

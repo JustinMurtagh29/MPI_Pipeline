@@ -32,7 +32,7 @@ function createNewDendriteSuperagglos(param, state)
 
     excludedFlights = idxNoClearEnd(~idxNoClearAxonAttachment);
     
-    linkagesAgglos = cellfun(@(x,y) connectEM.edgeCreator(x,y,1), flightPaths.startAgglo, flightPaths.endAgglo, 'uni', 0);
+    
     excludedFlights = cat(1,excludedFlights,idxNoClearStart);
     
     idxExcludedFlights = true(size(flightPaths.startAgglo));
@@ -40,7 +40,8 @@ function createNewDendriteSuperagglos(param, state)
     flightPaths.startAgglo(excludedFlights,:) = [];
     flightPaths.endAgglo(excludedFlights,:) = [];
     flightPaths.ff = structfun(@(x)x(idxExcludedFlights), flightPaths.ff, 'uni', 0);
-    linkagesAgglos(excludedFlights, :) = [];
+    
+    linkagesAgglos = cellfun(@(x,y) connectEM.edgeCreator(x,y,1), flightPaths.startAgglo, flightPaths.endAgglo, 'uni', 0);
     linkagesLUT = repelem(1:numel(linkagesAgglos),cellfun(@(x) size(x,1),linkagesAgglos));
     linkagesAgglos = cat(1, linkagesAgglos{:});
     
