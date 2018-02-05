@@ -108,42 +108,6 @@ end
 % save results
 Util.save(interSynFile, info, axonIds, axonPathLens, synToSynDists);
 
-%% plot histogram of synapse frequency
-% configuration
-minSynCount = 10;
-axonIds = find(conn.axonMeta.synCount >= minSynCount);
-
-% load data from cache
-data = load(interSynFile, 'axonIds', 'axonPathLens');
-[~, rows] = ismember(axonIds, data.axonIds);
-assert(all(rows));
-
-synCount = conn.axonMeta.synCount(axonIds);
-pathLenUm = data.axonPathLens(rows) ./ 1E3;
-synFreq = synCount ./ pathLenUm;
-
-fig = figure();
-ax = axes(fig);
-
-histogram(ax, synFreq);
-
-ax.TickDir = 'out';
-ax.XAxis.Limits(1) = 0;
-
-xlabel(ax, 'Synapse frequency [µm^{-1}]');
-ylabel(ax, 'Axons');
-
-annotation( ...
-    fig, ...
-    'textbox', [0, 0.9, 1, 0.1], ...
-    'EdgeColor', 'none', ...
-    'HorizontalAlignment', 'center', ...
-	'String', { ...
-        'Distribution of synapse frequency over axons'; ...
-        info.git_repos{1}.hash});
-
-fig.Position(3:4) = [880 490];
-
 %% calculate inter-synapse distances
 % Previously we've calculate the synapse-to-synapse distances along the
 % axon. To calculate the inter-synapse distances we now need to construct a
@@ -175,61 +139,6 @@ for curIdx = 1:numel(data.axonIds)
     conn.axonMeta.pathLen(curAxonId) = curPathLen;
     conn.axonMeta.interSynDists{curAxonId} = curInterSynDists;
 end
-
-%% plot distribution over median inter-synapse distance
-minSynCount = 10;
-isdCumProb = 1 / 3;
-
-axonIds = find(conn.axonMeta.synCount >= minSynCount);
-[~, rows] = ismember(axonIds, data.axonIds);
-assert(all(rows));
-
-isdQuantiles = cellfun( ...
-    @(v) quantile(v, isdCumProb), ...
-    data.interSynDists(rows));
-
-fig = figure();
-ax = axes(fig);
-
-histogram(ax, isdQuantiles);
-
-ax.TickDir = 'out';
-ax.XAxis.Limits(1) = 0;
-
-xlabel(ax, sprintf( ...
-   ['%.0fth percentile of inter-', ...
-    'synapse distance [µm]'], 100 * isdCumProb));
-ylabel(ax, 'Axons');
-
-annotation( ...
-    fig, ...
-    'textbox', [0, 0.9, 1, 0.1], ...
-    'EdgeColor', 'none', ...
-    'HorizontalAlignment', 'center', ...
-	'String', info.git_repos{1}.hash);
-
-fig.Position(3:4) = [880 490];
-
-%% write out random examples to check for TC
-candIsdQuantileThresh = 0.25;
-
-[isdQuantiles, sortIds] = sort(isdQuantiles, 'ascend');
-axonIds = axonIds(sortIds);
-
-candMask = isdQuantiles <= candIsdQuantileThresh;
-candAxonIds = axonIds(candMask);
-
-skel = Skeleton.fromMST(cellfun( ...
-    @(ids) points(ids, :), conn.axons(candAxonIds), ...
-    'UniformOutput', false), param.raw.voxelSize);
-skel.names = arrayfun( ...
-    @(i, n) sprintf('%0*d. Axon %d', ...
-        ceil(log10(1 + numel(candAxonIds))), i, n), ...
-	reshape(1:numel(candAxonIds), [], 1), candAxonIds, ...
-    'UniformOutput', false);
-
-skel = Skeleton.setParams4Pipeline(skel, param);
-skel.write('/home/amotta/Desktop/tc-axon-candidates.nml');
 
 %% orthogonal approach
 minSynCount = 10;
@@ -274,4 +183,4 @@ skel.names = arrayfun( ...
     'UniformOutput', false);
 
 skel = Skeleton.setParams4Pipeline(skel, param);
-skel.write('/home/amotta/Desktop/tc-axon-candidates-2.nml');
+skel.write('/home/amotta/Desktop/tc-axon-candidates.nml');
