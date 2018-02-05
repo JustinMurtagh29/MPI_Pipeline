@@ -18,7 +18,6 @@ info = Util.runInfo();
 conn = load(connFile);
 syn = load(synFile);
 
-%%
 % load dataset parameters
 param = load(fullfile(rootDir, 'allParameter.mat'), 'p');
 param = param.p;
@@ -26,6 +25,7 @@ param = param.p;
 % load segment positions
 points = Seg.Global.getSegToPointMap(param);
 
+%%
 % load border indices for edges
 % TODO(amotta): make sure that Benedikt used the same graph!
 segGraph = fullfile(rootDir, 'graph.mat');
@@ -203,3 +203,64 @@ annotation( ...
 	'String', info.git_repos{1}.hash);
 
 fig.Position(3:4) = [880 490];
+
+%% write out random examples to check for TC
+candIsdQuantileThresh = 0.25;
+
+[isdQuantiles, sortIds] = sort(isdQuantiles, 'ascend');
+axonIds = axonIds(sortIds);
+
+candMask = isdQuantiles <= candIsdQuantileThresh;
+candAxonIds = axonIds(candMask);
+
+skel = Skeleton.fromMST(cellfun( ...
+    @(ids) points(ids, :), conn.axons(candAxonIds), ...
+    'UniformOutput', false), param.raw.voxelSize);
+skel.names = arrayfun( ...
+    @(i, n) sprintf('%0*d. Axon %d', ...
+        ceil(log10(1 + numel(candAxonIds))), i, n), ...
+	reshape(1:numel(candAxonIds), [], 1), candAxonIds, ...
+    'UniformOutput', false);
+
+skel = Skeleton.setParams4Pipeline(skel, param);
+skel.write('/home/amotta/Desktop/tc-axon-candidates.nml');
+
+%% orthogonal approach
+minSynCount = 10;
+minSynDensity = 0.25;
+minSpineSynFrac = 0.5;
+
+data = load(interSynFile, 'axonIds', 'axonPathLens');
+
+% spine synapse fraction
+conn.axonMeta.spineFrac = ...
+    conn.axonMeta.spineSynCount ...
+    ./ conn.axonMeta.synCount;
+
+% synapse density
+[~, row] = ismember(data.axonIds, conn.axonMeta.id);
+conn.axonMeta.synDensity = nan(size(conn.axonMeta.id));
+
+conn.axonMeta.synDensity(row) = ...
+    conn.axonMeta.synCount(row) ...
+    ./ (data.axonPathLens ./ 1E3);
+
+candMask = ...
+    (conn.axonMeta.synCount >= minSynCount) ...
+  & (conn.axonMeta.spineFrac >= minSpineSynFrac) ...
+  & (conn.axonMeta.synDensity >= minSynDensity);
+
+candAxonIds = conn.axonMeta.id(candMask);
+candAxonIds = candAxonIds(1:100);
+
+skel = Skeleton.fromMST(cellfun( ...
+    @(ids) points(ids, :), conn.axons(candAxonIds), ...
+    'UniformOutput', false), param.raw.voxelSize);
+skel.names = arrayfun( ...
+    @(i, n) sprintf('%0*d. Axon %d', ...
+        ceil(log10(1 + numel(candAxonIds))), i, n), ...
+	reshape(1:numel(candAxonIds), [], 1), candAxonIds, ...
+    'UniformOutput', false);
+
+skel = Skeleton.setParams4Pipeline(skel, param);
+skel.write('/home/amotta/Desktop/tc-axon-candidates-2.nml');
