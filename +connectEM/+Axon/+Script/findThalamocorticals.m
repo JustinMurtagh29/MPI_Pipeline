@@ -7,12 +7,18 @@ rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a.mat');
 synFile = fullfile(rootDir, 'connectomeState', 'SynapseAgglos_v3.mat');
 
+[interSynFile, interSynName] = fileparts(connFile);
+interSynName = sprintf('%s_intersynapse.mat', interSynName);
+interSynFile = fullfile(interSynFile, interSynName);
+clear interSynName;
+
 info = Util.runInfo();
 
 %% loading data
 conn = load(connFile);
 syn = load(synFile);
 
+%%
 % load dataset parameters
 param = load(fullfile(rootDir, 'allParameter.mat'), 'p');
 param = param.p;
@@ -98,3 +104,6 @@ for idx = 1:numel(axonIds)
     
     Util.progressBar(idx, numel(axonIds));
 end
+
+% save results
+Util.save(interSynFile, info, axonIds, axonPathLens, synToSynDists);
