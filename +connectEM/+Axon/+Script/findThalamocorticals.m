@@ -149,10 +149,15 @@ fig.Position(3:4) = [880 490];
 % axon. To calculate the inter-synapse distances we now need to construct a
 % tree-like representation of the axon. Let's do this by calculating the
 % minimal spanning-tree over the synapses.
-data = load(interSynFile, 'axonIds', 'synToSynDists');
-data.interSynDists = cell(size(data.axonIds));
+data = load(interSynFile, 'axonIds', 'axonPathLens', 'synToSynDists');
+
+conn.axonMeta.pathLen = nan(size(conn.axonMeta.id));
+conn.axonMeta.interSynDists = cell(size(conn.axonMeta.id));
 
 for curIdx = 1:numel(data.axonIds)
+    curAxonId = data.axonIds(curIdx);
+    curPathLen = data.axonPathLens(curIdx) / 1E3;
+    
     curSynToSynDists = data.synToSynDists{curIdx};
     curSynToSynDists = curSynToSynDists ./ 1E3;
     
@@ -167,7 +172,8 @@ for curIdx = 1:numel(data.axonIds)
     curInterSynDists = graphminspantree(sparse(curSynToSynDists));
     curInterSynDists = nonzeros(curInterSynDists);
     
-    data.interSynDists{curIdx} = curInterSynDists;
+    conn.axonMeta.pathLen(curAxonId) = curPathLen;
+    conn.axonMeta.interSynDists{curAxonId} = curInterSynDists;
 end
 
 %% plot distribution over median inter-synapse distance
@@ -227,10 +233,11 @@ skel.write('/home/amotta/Desktop/tc-axon-candidates.nml');
 
 %% orthogonal approach
 minSynCount = 10;
+
+% empirically found
 minSynDensity = 0.25;
 minSpineSynFrac = 0.5;
-
-data = load(interSynFile, 'axonIds', 'axonPathLens');
+maxMedianInterSynDist = 2.2;
 
 % spine synapse fraction
 conn.axonMeta.spineFrac = ...
@@ -238,20 +245,24 @@ conn.axonMeta.spineFrac = ...
     ./ conn.axonMeta.synCount;
 
 % synapse density
-[~, row] = ismember(data.axonIds, conn.axonMeta.id);
-conn.axonMeta.synDensity = nan(size(conn.axonMeta.id));
+conn.axonMeta.synDensity = ...
+    conn.axonMeta.synCount ...
+    ./ conn.axonMeta.pathLen;
 
-conn.axonMeta.synDensity(row) = ...
-    conn.axonMeta.synCount(row) ...
-    ./ (data.axonPathLens ./ 1E3);
+% median inter-synapse distance
+conn.axonMeta.medianInterSynDist = ...
+    cellfun(@median, conn.axonMeta.interSynDists);
 
 candMask = ...
     (conn.axonMeta.synCount >= minSynCount) ...
   & (conn.axonMeta.spineFrac >= minSpineSynFrac) ...
-  & (conn.axonMeta.synDensity >= minSynDensity);
+  & (conn.axonMeta.synDensity >= minSynDensity) ...
+  & (conn.axonMeta.medianInterSynDist <= maxMedianInterSynDist);
 
+% select random subset
+rng(0);
 candAxonIds = conn.axonMeta.id(candMask);
-candAxonIds = candAxonIds(1:100);
+candAxonIds = candAxonIds(randperm(sum(candMask), 100));
 
 skel = Skeleton.fromMST(cellfun( ...
     @(ids) points(ids, :), conn.axons(candAxonIds), ...
