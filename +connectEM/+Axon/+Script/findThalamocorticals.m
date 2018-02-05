@@ -143,3 +143,63 @@ annotation( ...
         info.git_repos{1}.hash});
 
 fig.Position(3:4) = [880 490];
+
+%% calculate inter-synapse distances
+% Previously we've calculate the synapse-to-synapse distances along the
+% axon. To calculate the inter-synapse distances we now need to construct a
+% tree-like representation of the axon. Let's do this by calculating the
+% minimal spanning-tree over the synapses.
+data = load(interSynFile, 'axonIds', 'synToSynDists');
+data.interSynDists = cell(size(data.axonIds));
+
+for curIdx = 1:numel(data.axonIds)
+    curSynToSynDists = data.synToSynDists{curIdx};
+    curSynToSynDists = curSynToSynDists ./ 1E3;
+    
+    % NOTE(amotta): Zeros in the adjacency matrix are interpreted as
+    % missing edge. This is a problem since synapse-to-synapse distance
+    % zero occurs naturally when multiple synapses originate from the same
+    % segment. Let's instead set these zeros to the smallest possible
+    % non-zero value.
+    curSynToSynDists(~curSynToSynDists) = eps;
+    
+    % claculate inter-synapse distances
+    curInterSynDists = graphminspantree(sparse(curSynToSynDists));
+    curInterSynDists = nonzeros(curInterSynDists);
+    
+    data.interSynDists{curIdx} = curInterSynDists;
+end
+
+%% plot distribution over median inter-synapse distance
+minSynCount = 10;
+isdCumProb = 1 / 3;
+
+axonIds = find(conn.axonMeta.synCount >= minSynCount);
+[~, rows] = ismember(axonIds, data.axonIds);
+assert(all(rows));
+
+isdQuantiles = cellfun( ...
+    @(v) quantile(v, isdCumProb), ...
+    data.interSynDists(rows));
+
+fig = figure();
+ax = axes(fig);
+
+histogram(ax, isdQuantiles);
+
+ax.TickDir = 'out';
+ax.XAxis.Limits(1) = 0;
+
+xlabel(ax, sprintf( ...
+   ['%.0fth percentile of inter-', ...
+    'synapse distance [µm]'], 100 * isdCumProb));
+ylabel(ax, 'Axons');
+
+annotation( ...
+    fig, ...
+    'textbox', [0, 0.9, 1, 0.1], ...
+    'EdgeColor', 'none', ...
+    'HorizontalAlignment', 'center', ...
+	'String', info.git_repos{1}.hash);
+
+fig.Position(3:4) = [880 490];
