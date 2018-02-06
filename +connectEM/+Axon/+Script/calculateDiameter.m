@@ -22,4 +22,4 @@ segCov = reshape(segCov.covMat, [], 3, 3);
 
 %% calculate diameters
 [segIds, coms, diams] = Agglo.calculateDiameter( ...
-    segSizes, segCentroids, segCov, conn.axons, 'nhoodSize', 750);
+    segSizes, segCentroids, segCov, conn.axons, 'nhoodThresh', 750);
