@@ -18,29 +18,20 @@ function createNewDendriteSuperagglos(param, state)
     % Load linkages
     flightPaths = load(fullfile(dataDir, strcat('dendritePostQueryAnalysisState_',suffix,'.mat')),'edgesCC','eqClassCCfull','startAgglo','endAgglo','ff');
     
-    m = load(fullfile(dataDir, strcat('dendritePostQueryAnalysisState_',suffix,'.mat')),'idxNoClearEnd','idxNoClearStart');
-    idxNoClearEnd = m.idxNoClearEnd;
-    idxNoClearStart = m.idxNoClearStart;
-    idxNoClearStart = find(idxNoClearStart);
-    idxNoClearEnd = find(idxNoClearEnd);
-    
+    m = load(fullfile(dataDir, strcat('dendritePostQueryAnalysisState_',suffix,'.mat')),'idxGood');
+    idxGood = m.idxGood;
     clear m
     
-    m = load(fullfile(dataDir, strcat('axonDendriteQueryOverlaps_',suffix,'.mat')),'idxNoClearAxonAttachment');
-    idxNoClearAxonAttachment = m.idxNoClearAxonAttachment;
+    m = load(fullfile(dataDir, strcat('axonDendriteQueryOverlaps_',suffix,'.mat')),'idxNoClearEndButAxonAttachment');
+    idxNoClearEndButAxonAttachment = m.idxNoClearEndButAxonAttachment;
     clear m
+    % remove flight paths with no clear and but clear axon attachment
+    idxGood(idxNoClearEndButAxonAttachment) = false;
 
-    excludedFlights = idxNoClearEnd(~idxNoClearAxonAttachment);
-    
-    
-    excludedFlights = cat(1,excludedFlights,idxNoClearStart);
-    
-    idxExcludedFlights = true(size(flightPaths.startAgglo));
-    idxExcludedFlights(excludedFlights) = false;
-    flightPaths.startAgglo(excludedFlights,:) = [];
-    flightPaths.endAgglo(excludedFlights,:) = [];
-    flightPaths.ff = structfun(@(x)x(idxExcludedFlights), flightPaths.ff, 'uni', 0);
-    
+    flightPaths.startAgglo = flightPaths.startAgglo(idxGood);
+    flightPaths.endAgglo = flightPaths.endAgglo(idxGood);
+    flightPaths.ff = structfun(@(x)x(idxGood), flightPaths.ff, 'uni', 0);
+
     linkagesAgglos = cellfun(@(x,y) connectEM.edgeCreator(x,y,1), flightPaths.startAgglo, flightPaths.endAgglo, 'uni', 0);
     linkagesLUT = repelem(1:numel(linkagesAgglos),cellfun(@(x) size(x,1),linkagesAgglos));
     linkagesAgglos = cat(1, linkagesAgglos{:});

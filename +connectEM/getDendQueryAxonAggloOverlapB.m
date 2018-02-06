@@ -29,7 +29,7 @@ function getDendQueryAxonAggloOverlapB(param,state)
     ff = structfun(@(x)x(~cellfun(@isempty, ff.startNode)), ff, 'uni', 0);
 
     m = load(fullfile(dataDir, strcat('dendritePostQueryAnalysisState_',suffixVersion,'.mat')));
-    idxNoClearEnd = m.idxNoClearEnd;
+    idxNoClearEnd = find(m.idxNoClearEnd);
     clear m
     ff = structfun(@(x)x(idxNoClearEnd), ff, 'uni', 0);
     
@@ -51,6 +51,7 @@ function getDendQueryAxonAggloOverlapB(param,state)
     idxNoClearDendriteAttachment = cellfun('isempty', startDendrite);
     % 18.5% of queries excluded overall due to missing start or end (or both)
     idxGood = ~idxNoClearAxonAttachment;
+    idxNoClearEndButAxonAttachment = idxNoClearEnd(~idxNoClearAxonAttachment);
     % Display some statistics
     display([num2str(sum(~idxNoClearAxonAttachment)./numel(idxNoClearAxonAttachment)*100, '%.2f') '% of remaining queries have axon attachment']);
     display([num2str(sum(~idxNoClearAxonAttachment)) ' in total']);
@@ -66,7 +67,7 @@ function getDendQueryAxonAggloOverlapB(param,state)
 
     % Save results and deprive writing permission
     saveFile = fullfile(dataDir, strcat('axonDendriteQueryOverlaps_',suffixVersion,'.mat'));
-    save(saveFile, 'results', 'queryOverlap', 'idxNoClearAxonAttachment','idxNoClearDendriteAttachment');
+    save(saveFile, 'results', 'queryOverlap', 'idxNoClearAxonAttachment','idxNoClearDendriteAttachment','idxNoClearEndButAxonAttachment');
     system(['chmod -w ' saveFile]);
     
     

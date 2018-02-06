@@ -30,7 +30,7 @@ function superagglos_new = mergeSuperagglosBasedOnFlightPath( ...
     end
     
     % find connected component for each flight path
-    attachments = cellfun(@(x,y)[x y], startAgglo, endAgglo, 'uni', 0);
+    attachments = cellfun(@(x,y)[x; y], startAgglo, endAgglo, 'uni', 0);
     
     ccLookup = Agglo.buildLUT(max(cell2mat(eqClassCCfull)), eqClassCCfull);
     attachmentsCC = cellfun(@(x)unique(ccLookup(x)), attachments);
