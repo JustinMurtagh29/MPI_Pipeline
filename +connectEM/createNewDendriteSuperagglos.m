@@ -22,12 +22,13 @@ function createNewDendriteSuperagglos(param, state)
     idxGood = m.idxGood;
     clear m
     
-    m = load(fullfile(dataDir, strcat('axonDendriteQueryOverlaps_',suffix,'.mat')),'idxNoClearEndButAxonAttachment');
-    idxNoClearEndButAxonAttachment = m.idxNoClearEndButAxonAttachment;
+    m = load(fullfile(dataDir, strcat('axonDendriteQueryOverlaps_',suffix,'.mat')),'idxNoClearEndAndNoAxonAttachment');
+   
+    % flight paths with no clear end and no axon attachment (dangling)
+    % should be added
+    idxGood(m.idxNoClearEndAndNoAxonAttachment) = true;
     clear m
-    % remove flight paths with no clear and but clear axon attachment
-    idxGood(idxNoClearEndButAxonAttachment) = false;
-
+    
     flightPaths.startAgglo = flightPaths.startAgglo(idxGood);
     flightPaths.endAgglo = flightPaths.endAgglo(idxGood);
     flightPaths.ff = structfun(@(x)x(idxGood), flightPaths.ff, 'uni', 0);
