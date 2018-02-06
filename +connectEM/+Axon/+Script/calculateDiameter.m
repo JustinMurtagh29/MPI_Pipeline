@@ -40,41 +40,33 @@ nhoods = accumarray( ...
     segSizes(segIds), segCentroids(segIds, :), segCov(segIds, :, :), nhoods);
 
 skel = Skeleton.fromMST( ...
-    ceil(segCentroids(segIds, :) ./ param.raw.voxelSize), param.raw.voxelSize);
+    ceil( ...
+        segCentroids(segIds, :) ...
+        ./ param.raw.voxelSize), ...
+	param.raw.voxelSize);
 
 for curIdx = 1:numel(segIds)
-    curPos = ceil(comVecsOut(curIdx, :) ./ param.raw.voxelSize);
+    curMass = massesOut(curIdx);
+    curPos = comVecsOut(curIdx, :);
     curCov = shiftdim(covMatsOut(curIdx, :, :));
-    curCov = curCov * massesOut(curIdx);
     
+    % convert covariance matrix to tensor of inertia
+    curCov = curCov * curMass;
     curInMat = eye(size(curCov)) * trace(curCov) - curCov;
-   [~, curD] = eig(curInMat, 'vector');
    
-    curAbc = sqrt(5 .* (sum(curD) / 2 - curD) ./ massesOut(curIdx));
-    curAbc = ceil(repelem(curAbc(end), 3, 1) ./ param.raw.voxelSize(:))
+    % extract half-axes of ellipsoid from tensor of inertia
+   [~, curD] = eig(curInMat, 'vector');
+    curAbc = sqrt(5 .* (sum(curD) / 2 - curD) ./ curMass);
+    curAbc = repelem(sqrt(prod(curAbc(2:3))), 3, 1);
+    curAbc = ceil(curAbc ./ param.raw.voxelSize(:));
     
+    curPos = ceil(curPos ./ param.raw.voxelSize);
     skel = skel.addTree('X', curPos + curAbc(1) .* [-1; +1] .* [1, 0, 0]);
     skel = skel.addTree('Y', curPos + curAbc(2) .* [-1; +1] .* [0, 1, 0]);
     skel = skel.addTree('Z', curPos + curAbc(3) .* [-1; +1] .* [0, 0, 1]);
 end
 
 skel = Skeleton.setParams4Pipeline(skel, param);
-skel.write('/home/amotta/Desktop/blah.nml');
 
-%{
-curCov = reshape(covMatsOut, 3, 3);
-
-%{
-curWeights = segSizes(curSegIds);
-curWeights = curWeights ./ sum(curWeights);
-
-% calculate merged covariance matrix
-% curCentroids = sum(curWeights .* segCentroids(curSegIds, :), 1);
-curCov = sum((curWeights .* curWeights) .* segCov(curSegIds, :), 1);
-curCov = reshape(curCov, 3, 3);
-%}
-    
-curInMat = eye(size(curCov)) * trace(curCov) - curCov;
-[~, curD] = eig(curInMat, 'vector');
-curAbc = 2 * sqrt(5 .* (sum(curD) / 2 - curD)) ./ 1E3
-%}
+skelName = sprintf('axon-%-diameter.nml', axonId);
+skel.write(fullfile('/home/amotta/Desktop', skelName));
