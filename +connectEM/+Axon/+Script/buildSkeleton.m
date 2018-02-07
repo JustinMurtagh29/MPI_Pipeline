@@ -38,12 +38,10 @@ bpNodeIds = find(nodeDegree > 2);
 %% alternative approach
 [~, maxIdx] = max(reshape(mstDists(tipNodeIds, tipNodeIds), [], 1));
 [~, maxIdx] = ind2sub([numel(tipNodeIds), numel(tipNodeIds)], maxIdx);
-
 refId = tipNodeIds(maxIdx);
-assert(all(nodeLabels));
 
-[nodeLabels, ~, mstEdges] = ...
-    Graph.buildDendogram(mstAdj, refId, 3500);
+[nodeLabels, nodeDists, mstEdges] = ...
+    Graph.buildDendrogram(mstAdj, refId, 3500);
 
 nodeSets = accumarray( ...
     reshape(nodeLabels, [], 1), ...
@@ -78,3 +76,21 @@ end
 
 skel = Skeleton.setParams4Pipeline(skel, param);
 skel.write(fullfile('/home/amotta/Desktop', sprintf('agglo-%d.nml', axonId)));
+
+%% plot axonogram
+branchEdges = nodeLabels(mstEdges);
+branchEdges(~diff(branchEdges, 1, 2), :) = [];
+branchEdges = unique(branchEdges, 'rows');
+
+treeEdges = 1 + cat(1, [1, 0], branchEdges);
+
+branchMaxDist = accumarray(nodeLabels, nodeDists, [], @max);
+treeNodes = cat(2, branchMaxDist, zeros(size(branchMaxDist, 1), 2));
+treeNodes = cat(1, zeros(1, 3), treeNodes);
+
+tree = struct;
+tree.name = sprintf('axon %d', axonId);
+tree.edges = treeEdges;
+tree.nodes = treeNodes;
+
+axonogram(tree, [], 1, [1, 1, 1])
