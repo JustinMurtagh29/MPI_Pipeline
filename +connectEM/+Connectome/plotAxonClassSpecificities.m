@@ -5,18 +5,20 @@ clear;
 %% configuration
 param = struct;
 param.saveFolder = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-
 connName = 'connectome_axons_18_a_with_den_meta';
 
 minSynPre = 10;
 minSynPost = 0;
 spineFracThresh = 0.5;
 
+info = Util.runInfo();
+
 %% loading data
 conn = connectEM.Connectome.load(param, connName);
 
 %% build axon mask based on synapse count
 axonMask = (conn.axonMeta.synCount >= minSynPre);
+tcMask = conn.axonMeta.isThalamocortical;
 
 %% sanity check
 % try to replicate cass connectome
@@ -68,10 +70,12 @@ fig.Position(3:4) = [570, 350];
 
 %% build axon classes
 axonClasses = { ...
-    sprintf('Axons with spine fraction > %.1f', spineFracThresh)...
-    axonMask & conn.axonMeta.spineSynFrac > spineFracThresh;
-    sprintf('Axons with spine fraction < %.1f', spineFracThresh), ...
-    axonMask & conn.axonMeta.spineSynFrac < spineFracThresh};
+    'Thalamocortical axons', ...
+    axonMask &  tcMask;
+    sprintf('Non-TC axons with spine fraction > %.1f', spineFracThresh), ...
+    axonMask & ~tcMask & conn.axonMeta.spineSynFrac > spineFracThresh;
+    sprintf('Non-TC axons with spine fraction < %.1f', spineFracThresh), ...
+    axonMask & ~tcMask & conn.axonMeta.spineSynFrac < spineFracThresh};
 
 %% specificity analysis
 preClassCount = size(axonClasses, 1);
@@ -95,7 +99,7 @@ for curPreIdx = 1:preClassCount
             ax, specificities(:, curPostIdx), ...
             linspace(0, 1, 51), 'EdgeColor', 'none');
 
-        xlabel(ax, curPostClassName);
+        xlabel(ax, sprintf('S(%s)', curPostClassName));
         ax.XAxis.TickDirection = 'out';
         ax.XAxis.Limits = [0, 1];
 
@@ -113,11 +117,12 @@ end
 
 annotation(...
     'textbox', [0, 0.9, 1, 0.1], ...
-    'String', 'Target specificities', ...
-    'EdgeColor', 'none', ...
-    'HorizontalAlignment', 'center');
+    'EdgeColor', 'none', 'HorizontalAlignment', 'center', ...
+    'String', { ...
+        'Target specificities for different axon classes';
+        info.git_repos{1}.hash});
 
 yMax = max(arrayfun(@(a) a.YAxis.Limits(end), fig.Children));
 for i = 1:numel(fig.Children); fig.Children(i).YAxis.Limits(end) = yMax; end
 
-fig.Position(3:4) = [1099, 570];
+fig.Position(3:4) = [1800, 1005];
