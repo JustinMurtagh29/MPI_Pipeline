@@ -3,18 +3,17 @@
 clear;
 
 %% configuration
-rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
+param = struct;
+param.saveFolder = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 
-connFile = fullfile( ...
-    rootDir, 'connectomeState', ...
-    'connectome_axons_18_a_with_den_meta.mat');
+connName = 'connectome_axons_18_a_with_den_meta';
 
 minSynPre = 10;
 minSynPost = 0;
 spineFracThresh = 0.5;
 
 %% loading data
-conn = load(connFile);
+conn = connectEM.Connectome.load(param, connName);
 
 %% build axon mask based on synapse count
 axonMask = (conn.axonMeta.synCount >= minSynPre);
