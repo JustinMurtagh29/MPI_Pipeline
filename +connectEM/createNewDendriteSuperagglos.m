@@ -16,7 +16,7 @@ function createNewDendriteSuperagglos(param, state)
     % is restricted to the large-enough ones.
 
     % Load linkages
-    flightPaths = load(fullfile(dataDir, strcat('dendritePostQueryAnalysisState_',suffix,'.mat')),'edgesCC','eqClassCCfull','startAgglo','endAgglo','ff');
+    flightPaths = load(fullfile(dataDir, strcat('dendritePostQueryAnalysisState_',suffix,'.mat')),'startAgglo','endAgglo','ff');
     
     m = load(fullfile(dataDir, strcat('dendritePostQueryAnalysisState_',suffix,'.mat')),'idxGood');
     idxGood = m.idxGood;
@@ -35,7 +35,7 @@ function createNewDendriteSuperagglos(param, state)
 
     linkagesAgglos = cellfun(@(x,y) connectEM.edgeCreator(x,y,1), flightPaths.startAgglo, flightPaths.endAgglo, 'uni', 0);
     linkagesLUT = repelem(1:numel(linkagesAgglos),cellfun(@(x) size(x,1),linkagesAgglos));
-    linkagesAgglos = cat(1, linkagesAgglos{:});
+    linkagesAgglos = sort(cat(1, linkagesAgglos{:}),2);
     
     % reshape empty cells to 1st dimension
     flightPaths.endAgglo = cellfun(@(x) reshape(x,[],1),flightPaths.endAgglo,'uni',0);
@@ -46,7 +46,7 @@ function createNewDendriteSuperagglos(param, state)
     assert(~any(diff(structfun(@numel, flightPaths.ff))));
     
     % Eliminate duplicates
-    [~, positionUniques] = unique(sort(linkagesAgglos,2), 'rows');
+    [~, positionUniques] = unique(linkagesAgglos, 'rows');
     duplicates = true(size(linkagesAgglos,1),1);
     duplicates(positionUniques) = 0;
     
@@ -55,8 +55,11 @@ function createNewDendriteSuperagglos(param, state)
     flightPaths.endAgglo(linkagesLUT(duplicates),:) = [];
     flightPaths.ff = structfun(@(x)x(linkagesLUT(~duplicates)), flightPaths.ff, 'uni', 0);
     
+    eqClassCCfull = Graph.findConnectedComponents(linkagesAgglos, true, true);
+    eqClassCCfull = [eqClassCCfull; num2cell(setdiff(1 : length(superagglos), cell2mat(eqClassCCfull)))'];
+    
     dendritesNew = connectEM.mergeSuperagglosBasedOnFlightPath( ...
-        superAgglos, flightPaths.eqClassCCfull, flightPaths.startAgglo, ...
+        superAgglos, eqClassCCfull, flightPaths.startAgglo, ...
         flightPaths.endAgglo, flightPaths.ff);
 
     % sanity check
