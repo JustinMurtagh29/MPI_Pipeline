@@ -7,7 +7,7 @@ clear;
 blockSize = [32, 32, 16];
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a.mat');
-outDir = '/tmpscratch/amotta/l4/2018-02-02-surface-availability-connectome-axons-18-a';
+outDir = '/tmpscratch/amotta/l4/2018-02-09-surface-availability-connectome-axons-18-a';
 
 %% loading data
 param = load(fullfile(rootDir, 'allParameter.mat'), 'p');
