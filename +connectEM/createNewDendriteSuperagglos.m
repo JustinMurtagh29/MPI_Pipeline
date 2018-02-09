@@ -55,7 +55,7 @@ function createNewDendriteSuperagglos(param, state)
     flightPaths.endAgglo(linkagesLUT(duplicates),:) = [];
     flightPaths.ff = structfun(@(x)x(linkagesLUT(~duplicates)), flightPaths.ff, 'uni', 0);
     
-    eqClassCCfull = Graph.findConnectedComponents(linkagesAgglos, true, true);
+    eqClassCCfull = Graph.findConnectedComponents(linkagesAgglos(~any(isnan(linkagesAgglos),2),:), true, true);
     eqClassCCfull = [eqClassCCfull; num2cell(setdiff(1 : length(superagglos), cell2mat(eqClassCCfull)))'];
     
     dendritesNew = connectEM.mergeSuperagglosBasedOnFlightPath( ...
