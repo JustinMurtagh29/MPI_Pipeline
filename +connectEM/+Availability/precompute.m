@@ -37,7 +37,7 @@ function [axonBlocks, targetClassAreas, targetClasses] = ...
     for curIdx = 1:size(out, 1)
         curAreas = out{curIdx, 2};
 
-        curOff = param.local(curId).bboxSmall(:, 1);
+        curOff = param.local(curIdx).bboxSmall(:, 1);
         curOff = (curOff - param.bbox(:, 1)) ./ blockSize(:);
         
         targetClassAreas(:, ...
