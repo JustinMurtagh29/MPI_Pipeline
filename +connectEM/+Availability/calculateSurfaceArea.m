@@ -1,8 +1,7 @@
-function borderCalc(param, connFile, outDir, idx)
+function calculateSurfaceArea(param, blockSize, connFile, outDir, idx)
     % Written by
     %   Kevin M. Boergens <kevin.boergens@brain.mpg.de>
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
-    blockSize = [32, 32, 16];
     info = Util.runInfo(false);
     
     %% loading data
