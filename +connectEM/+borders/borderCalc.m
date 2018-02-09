@@ -33,7 +33,7 @@ function borderCalc(param, connFile, outDir, idx)
 
     %% find edges and borders
     % TODO(amotta): Cube borders are not properly handled yet.
-    [edges, ind] = connectEM.borders.codeBenedikt(seg);
+   [edges, ind] = connectEM.borders.codeBenedikt(seg);
 
     % sanity checks
     assert(size(edges, 1) == numel(ind));
@@ -42,7 +42,7 @@ function borderCalc(param, connFile, outDir, idx)
     %% split into blocks
     corrSegId = max(seg(:)) + 1;
     seg = padarray(seg, [1, 1, 1], corrSegId);
-    [X, Y, Z] = ind2sub(size(seg) , ind);
+   [X, Y, Z] = ind2sub(size(seg) , ind);
 
     % correct for padding
     X = X - 1;
@@ -58,15 +58,13 @@ function borderCalc(param, connFile, outDir, idx)
         ceil(Z / blockSize(3)));
     
     %% process blocks
-    edges = cell(blockCount);
-    areasUm = cell(blockCount);
+    blockData = cell(blockCount);
     for curBlkIdx = 1:prod(blockCount)
         curBlkMask = (blkIdx == curBlkIdx);
         curEdges = edges(curBlkMask, :);
 
         if isempty(curEdges)
-            edges{curBlkIdx} = zeros(0, 3);
-            areasUm{curBlkIdx} = zeros(0, 1);
+            blockData{curBlkIdx} = zeros(0, 4);
             continue;
         end
 
@@ -80,16 +78,15 @@ function borderCalc(param, connFile, outDir, idx)
             @(idx) curVxIds(curEdgeId == idx), ...
             1:size(curEdges, 1), 'UniformOutput', false);
 
-        areasUm{curBlkIdx} = ...
-            Seg.Local.physicalBorderArea2( ...
-                curVxIds, curEdges, seg, param.raw.voxelSize, true);
+        curAreasUm = Seg.Local.physicalBorderArea2( ...
+            curVxIds, curEdges, seg, param.raw.voxelSize, true);
 
         % set non-neural segment ID to infinity
         curEdges(curEdges(:) == nonNeuralSegId) = inf;
-        edges{curBlkIdx} = [curEdges, curVxCount];
+        blockData{curBlkIdx} = [curEdges, curVxCount, curAreasUm];
     end
     
     %% save results
     outFile = fullfile(outDir, sprintf('cube-%d.mat', idx));
-    Util.save(outFile, info, edges, areasUm);
+    Util.save(outFile, info, blockData);
 end
