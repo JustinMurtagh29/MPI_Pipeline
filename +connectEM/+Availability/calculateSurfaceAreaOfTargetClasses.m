@@ -1,13 +1,8 @@
 function [classSurfAreas, classes] = ...
-        calculateSurfaceAreaOfTargetClasses(param, conn, seg, blockSize)
+        calculateSurfaceAreaOfTargetClasses(conn, aggloSurfAreas)
     % Written by
     %   Kevin M. Boergens <kevin.boergens@brain.mpg.de>
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
-    import connectEM.Availability.*;
-    
-    %% calculate per-agglomerate surface area
-    aggloSurfAreas = ...
-        calculateSurfaceAreaOfAgglomerates(param, conn, seg, blockSize);
     
     %% build target classes
     classes = unique(conn.denMeta.targetClass);
