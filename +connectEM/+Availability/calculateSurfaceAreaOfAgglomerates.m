@@ -1,13 +1,9 @@
-function calculateSurfaceArea(param, blockSize, connFile, outDir, idx)
+function surfAreas = ...
+        calculateSurfaceAreaOfAgglomerates(param, conn, seg, blockSize)
     % Written by
     %   Kevin M. Boergens <kevin.boergens@brain.mpg.de>
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
-    info = Util.runInfo(false);
-    
-    %% loading data
     maxSegId = Seg.Global.getMaxSegId(param);
-    seg = loadSegDataGlobal(param.seg, param.local(idx).bboxSmall);
-    conn = load(connFile, 'axons', 'dendrites');
     
     %% apply axon / dendrite mappings to segmentation
     axonLookup = Agglo.buildLUT(maxSegId, conn.axons);
@@ -57,13 +53,13 @@ function calculateSurfaceArea(param, blockSize, connFile, outDir, idx)
         ceil(Z / blockSize(3)));
     
     %% process blocks
-    blockData = cell(blockCount);
+    surfAreas = cell(blockCount);
     for curBlkIdx = 1:prod(blockCount)
         curBlkMask = (blkIdx == curBlkIdx);
         curEdges = edges(curBlkMask, :);
 
         if isempty(curEdges)
-            blockData{curBlkIdx} = zeros(0, 4);
+            surfAreas{curBlkIdx} = zeros(0, 4);
             continue;
         end
 
@@ -82,10 +78,6 @@ function calculateSurfaceArea(param, blockSize, connFile, outDir, idx)
 
         % set non-neural segment ID to infinity
         curEdges(curEdges(:) == nonNeuralSegId) = inf;
-        blockData{curBlkIdx} = [curEdges, curVxCount, curAreasUm];
+        surfAreas{curBlkIdx} = [curEdges, curVxCount, curAreasUm];
     end
-    
-    %% save results
-    outFile = fullfile(outDir, sprintf('cube-%d.mat', idx));
-    Util.save(outFile, info, blockData);
 end
