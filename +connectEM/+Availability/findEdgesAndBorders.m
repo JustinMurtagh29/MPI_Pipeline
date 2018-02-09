@@ -1,4 +1,4 @@
-function [edges, ind] = codeBenedikt(seg, excludeVoxels)
+function [edges, ind] = findEdgesAndBorders(seg, excludeVoxels)
 borderId = max(seg(:)) + 1;
 seg = padarray(seg,[1, 1, 1],borderId);
 [M,N,~] = size(seg);
