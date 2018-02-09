@@ -32,7 +32,7 @@ function calculateSurfaceArea(param, blockSize, connFile, outDir, idx)
 
     %% find edges and borders
     % TODO(amotta): Cube borders are not properly handled yet.
-   [edges, ind] = connectEM.borders.codeBenedikt(seg);
+   [edges, ind] = connectEM.Availability.findEdgesAndBorders(seg);
 
     % sanity checks
     assert(size(edges, 1) == numel(ind));
