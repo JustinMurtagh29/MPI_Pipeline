@@ -17,3 +17,7 @@ param = param.p;
 %% precompute
 [axonBlocks, targetClassAreas, targetClasses] = ...
 	connectEM.Availability.precompute(param, connFile, blockSize);
+
+%% store result
+outFile = fullfile(outDir, 'block-data.mat');
+out = Util.save(outFile, info, axonBlocks, targetClassAreas, targetClasses);
