@@ -20,4 +20,4 @@ param = param.p;
 
 %% store result
 outFile = fullfile(outDir, 'block-data.mat');
-out = Util.save(outFile, info, axonBlocks, targetClassAreas, targetClasses);
+Util.save(outFile, info, axonBlocks, targetClassAreas, targetClasses);
