@@ -44,7 +44,7 @@ wait(job);
 
 %% build output
 out = fetchOutputs(job);
-targetClassAvail = vertcat(out{:});
+targetClassAvail = cat(3, out{:});
 
 %% runs on cluster
 function targetClassAvail = jobFunction( ...
