@@ -3,10 +3,8 @@ function targetClassAvail = ...
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     
-    % TODO(amotta): take from `blockData`
-    blockSize = [32, 32, 16];
-    
     voxelSize = param.raw.voxelSize;
+    blockSize = blockData.info.param.blockSize;
     blockSizeNm = blockSize .* voxelSize;
     
     % linearize matrix
