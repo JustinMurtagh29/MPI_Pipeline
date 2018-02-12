@@ -27,7 +27,7 @@ conn.axonMeta.spineSynFrac = ...
 
 axonIds = find(conn.axonMeta.synCount >= minSynPre);
 poissAxonIds = find(conn.axonMeta.spineSynFrac < maxSpineSynFracPoiss);
-poissAxonIds = intersect(axonids, poissAxonIds);
+poissAxonIds = intersect(axonIds, poissAxonIds);
 
 %% build class connectome
 % try to replicate cass connectome
