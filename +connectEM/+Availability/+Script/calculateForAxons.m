@@ -7,6 +7,9 @@ rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 blockDataFile = '/tmpscratch/amotta/l4/2018-02-02-surface-availability-connectome-axons-18-a/block-data.mat';
 axonsPerJob = 10;
 
+outFile = fileparts(blockDataFile);
+outFile = fullfile(outFile, 'axon-availability.mat');
+
 %% loading data
 param = load(fullfile(rootDir, 'allParameter.mat'), 'p');
 param = param.p;
@@ -43,8 +46,25 @@ job = Cluster.startJob( ...
 wait(job);
 
 %% build output
-out = fetchOutputs(job);
-targetClassAvail = cat(3, out{:});
+classCount = numel(blockData.targetClasses);
+
+outMat = matfile(outFile);
+outMat.axonAvail = nan(classCount, numel(saveDists), axonCount);
+
+tic;
+fprintf('Writing output file... ');
+for curTaskIdx = 1:numel(inputArgs)
+    curTask = job.Tasks(curTaskIdx);
+    
+    curAxonIds = inputArgs{curTaskIdx}{1};
+    curResults = curTask.OutputArguments{1};
+    
+    % write partial results to output file
+    outMat.axonAvail(:, :, curAxonIds) = curResults;
+end
+
+fprintf('done!');
+toc;
 
 %% runs on cluster
 function targetClassAvail = jobFunction( ...
