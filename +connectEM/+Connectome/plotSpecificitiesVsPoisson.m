@@ -14,17 +14,22 @@ targetClasses = { ...
     'SmoothDendrite', 'AxonInitialSegment', 'OtherDendrite'};
 
 minSynPre = 10;
+maxSpineSynFracPoiss = 0.5;
 info = Util.runInfo();
 
 %% loading data
 conn = load(connFile);
 
-%% calculate target-class probability over synapses
-[~, targetClassSyns] = ismember(conn.denMeta.targetClass, targetClasses);
-targetClassSyns = accumarray(targetClassSyns, conn.denMeta.synCount);
-targetClassProbs = targetClassSyns ./ sum(targetClassSyns);
+%% find inhibitory axons
+conn.axonMeta.spineSynFrac = ...
+    conn.axonMeta.spineSynCount ...
+    ./ conn.axonMeta.synCount;
 
-%%
+axonIds = find(conn.axonMeta.synCount >= minSynPre);
+poissAxonIds = find(conn.axonMeta.spineSynFrac < maxSpineSynFracPoiss);
+poissAxonIds = intersect(axonids, poissAxonIds);
+
+%% build class connectome
 % try to replicate cass connectome
 connectome = conn.connectome;
 
@@ -35,6 +40,7 @@ connectome.synIdx = [];
 % add target class to connectome
 [~, denMetaRow] = ismember(connectome.edges(:, 2), conn.denMeta.id);
 connectome.targetClass = conn.denMeta.targetClass(denMetaRow);
+
 [~, connectome.targetClassId] = ismember( ...
     connectome.targetClass, targetClasses);
 
@@ -42,14 +48,16 @@ classConnectome = accumarray( ...
     cat(2, connectome.edges(:, 1), connectome.targetClassId), ...
     connectome.synCount, [numel(conn.axons), numel(targetClasses)]);
 
-%% restrict to axons with enough synapses
-axonIds = find(conn.axonMeta.synCount >= minSynPre);
+%% calculate probabilities for Poisson
+targetClassSyns = sum(classConnectome(poissAxonIds, :), 1);
+targetClassProbs = targetClassSyns ./ sum(targetClassSyns);
 
+%% restrict to axons with enough synapses
 [synCounts, ~, synCountAxons] = unique(conn.axonMeta.synCount(axonIds));
 synCountAxons = accumarray(synCountAxons, 1);
 
-specificities = classConnectome(axonIds, :);
-specificities = specificities ./ sum(specificities, 2);
+specificities = classConnectome ./ sum(classConnectome, 2);
+specificities = specificities(axonIds, :);
 
 %% plotting
 fig = figure;
@@ -68,9 +76,11 @@ for classIdx = 1:numel(targetClasses)
     poiss.spec = cell2mat(arrayfun( ...
         @(nSyn) (0:nSyn)' ./ nSyn, ...
         synCounts, 'UniformOutput', false));
-    poiss.binId = discretize(poiss.spec, binEdges);
     
+    poiss.binId = discretize(poiss.spec, binEdges);
     poissBinCount = accumarray(poiss.binId, poiss.prob);
+    
+    % Measured
     
     ax = subplot(1, numel(targetClasses), classIdx);
     hold(ax, 'on');
@@ -96,3 +106,11 @@ end
 axes = horzcat(axes{:});
 yMax = max(arrayfun(@(a) a.YAxis.Limits(end), axes));
 for ax = axes; ax.YAxis.Limits(end) = yMax; end
+
+annotation(...
+    'textbox', [0, 0.9, 1, 0.1], ...
+    'EdgeColor', 'none', 'HorizontalAlignment', 'center', ...
+    'String', { ...
+        'Observed specificities vs. Poisson model';
+        sprintf('Based on axons with spine synapse fraction < %.1f', maxSpineSynFracPoiss);
+        info.git_repos{1}.hash});
