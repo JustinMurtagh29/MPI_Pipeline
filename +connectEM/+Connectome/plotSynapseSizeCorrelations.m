@@ -31,23 +31,85 @@ param = param.p;
 
 points = Seg.Global.getSegToPointMap(param);
 
-%% plot distribution of synapse size
+%% limit synapses
 synT = table;
 synT.id = cell2mat(conn.connectome.synIdx);
 synT.area = cell2mat(conn.connectomeMeta.contactArea);
+synT.isSpine = syn.isSpineSyn(synT.id);
+
+synT.preAggloId = repelem( ...
+    conn.connectome.edges(:, 1), ...
+    cellfun(@numel, conn.connectome.synIdx));
+
+synT.postAggloId = repelem( ...
+    conn.connectome.edges(:, 2), ...
+    cellfun(@numel, conn.connectome.synIdx));
 
 % limit to spine synapses
-synT(~syn.isSpineSyn(synT.id), :) = [];
+synT(~synT.isSpine, :) = [];
+synT.isSpine = [];
 
 % remove duplicate entries
-[~, uniRows] = unique(synT.id);
+[~, uniRows, uniCount] = unique(synT.id);
 synT = synT(uniRows, :);
 
-fprintf('Spine synapses\n');
-fprintf('  %d spine synapses in connectome\n', size(synT, 1));
-fprintf('  %d spine synapses with ASI > 1.5 µm²\n', sum(synT.area > 1.5));
-fprintf('  Largest ASI: %.1f µm\n', max(synT.area));
+% remove synapses occuring multiple times
+% (i.e., between at least two different pairs of neurites)
+synT.occurences = accumarray(uniCount, 1);
+synT(synT.occurences > 1, :) = [];
+synT.occurences = [];
 
+% remove synapses whose size is obviously wrong
+synT(synT.area > 1.5, :) = [];
+
+%% look at doubly coupled neurites
+[dupNeurites, ~, uniRows] = unique( ...
+    synT(:, {'preAggloId', 'postAggloId'}), 'rows');
+
+dupNeurites.areas = accumarray( ...
+    uniRows, synT.area, [], ...
+    @(a) {reshape(sort(a), 1, [])});
+
+uniCount = accumarray(uniRows, 1);
+dupNeurites(uniCount ~= 2, :) = [];
+
+dupNeurites.areas = cell2mat(dupNeurites.areas);
+
+fig = figure();
+ax = axes(fig);
+
+hold(ax, 'on');
+scatter(ax, ...
+    dupNeurites.areas(:, 2), ...
+    dupNeurites.areas(:, 1), 12, '+');
+
+xlim([1E-2, 1E1]); xlabel('Axon-spine interface 1 (µm²)');
+ylim([1E-2, 1E1]); ylabel('Axon-spine interface 2 (µm²)');
+
+ax.XScale = 'log';
+ax.YScale = 'log';
+
+% do the fit
+% taken from `matlab/+Analysis/+Script/bartolEtAl2015eLife.m` in `amotta`
+xLog = log10(dupNeurites.areas(:, 2));
+yLog = log10(dupNeurites.areas(:, 1));
+
+b = [ones(numel(xLog), 1), xLog] \ yLog;
+b(1) = 10 ^ b(1);
+
+fitF = @(x) b(1) .* (x .^ b(2));
+fitName = sprintf('y = %.2f x^{%.2f}', b(1), b(2));
+rawName = sprintf('Raw data (n = %d)', numel(xLog));
+
+fitRange = xlim();
+fitRange = linspace(fitRange(1), fitRange(end), 2);
+plot(fitRange, fitF(fitRange));
+plot(fitRange, fitRange, 'k--');
+
+title({'Same-axon same-dendrite spine synapses'; info.git_repos{1}.hash});
+legend(rawName, fitName, 'Location', 'NorthWest');
+
+%% plot distribution of synapse size
 % plot distribution
 fig = figure();
 ax = axes(fig);
@@ -63,7 +125,7 @@ annotation(...
     'EdgeColor', 'none', ...
     'HorizontalAlignment', 'center', ...
     'String', { ...
-        sprintf('%s, figure %d', mfilename, fig.Number);
+        'Spine synapse size distribution';
         info.git_repos{1}.hash});
     
 fig.Position(3:4) = [820, 475];
