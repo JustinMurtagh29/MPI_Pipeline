@@ -39,7 +39,7 @@ synT = synT(uniRows, :);
 
 fprintf('Spine synapses\n');
 fprintf('  %d spine synapses in connectome\n', size(synT, 1));
-fprintf('  %d spine synapses with ASI > 1 µm²\n', sum(synT.area > 1));
+fprintf('  %d spine synapses with ASI > 1.5 µm²\n', sum(synT.area > 1.5));
 fprintf('  Largest ASI: %.1f µm\n', max(synT.area));
 
 % plot distribution
