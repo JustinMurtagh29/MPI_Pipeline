@@ -13,13 +13,10 @@ rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 synFile = fullfile(rootDir, 'connectomeState', 'SynapseAgglos_v3.mat');
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a_with_den_meta.mat');
 
-%{
-synFile = '/home/amotta/Desktop/SynapseAgglos_v3.mat';
-connFile = '/home/amotta/Desktop/connectome_axons_18_a_with_den_meta.mat';
-%}
-
 synCountFilter = @(n) (n == 2); % couplings with exactly two synapses, only
 spineSynFilter = @(s) s; % spine synapses only
+
+info = Util.runInfo();
 
 %% loading data
 % NOTE(amotta): Synapses sizes are contained in the `contactArea` field of 
@@ -27,6 +24,43 @@ spineSynFilter = @(s) s; % spine synapses only
 % correponding entries in `conn.connectome`.
 conn = load(connFile);
 syn = load(synFile);
+
+%% plot distribution of synapse size
+synT = table;
+synT.id = cell2mat(conn.connectome.synIdx);
+synT.area = cell2mat(conn.connectomeMeta.contactArea);
+
+% limit to spine synapses
+synT(~syn.isSpineSyn(synT.id), :) = [];
+
+% remove duplicate entries
+[~, uniRows] = unique(synT.id);
+synT = synT(uniRows, :);
+
+fprintf('Spine synapses\n');
+fprintf('  %d spine synapses in connectome\n', size(synT, 1));
+fprintf('  %d spine synapses with ASI > 1 µm²\n', sum(synT.area > 1));
+fprintf('  Largest ASI: %.1f µm\n', max(synT.area));
+
+% plot distribution
+fig = figure();
+ax = axes(fig);
+
+histogram(ax, synT.area, linspace(0, 1.5, 51));
+xlabel(ax, 'Axon-spine interface (µm²)');
+ylabel(ax, 'Spine synapses');
+ax.TickDir = 'out';
+
+annotation(...
+    fig, ...
+    'textbox', [0, 0.9, 1, 0.1], ...
+    'EdgeColor', 'none', ...
+    'HorizontalAlignment', 'center', ...
+    'String', { ...
+        sprintf('%s, figure %d', mfilename, fig.Number);
+        info.git_repos{1}.hash});
+    
+fig.Position(3:4) = [820, 475];
 
 %% find doubly coupled neurites
 % filter based on spine / non-spine
