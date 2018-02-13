@@ -25,6 +25,12 @@ info = Util.runInfo();
 conn = load(connFile);
 syn = load(synFile);
 
+% for debugging
+param = load(fullfile(rootDir, 'allParameter.mat'), 'p');
+param = param.p;
+
+points = Seg.Global.getSegToPointMap(param);
+
 %% plot distribution of synapse size
 synT = table;
 synT.id = cell2mat(conn.connectome.synIdx);
@@ -61,6 +67,33 @@ annotation(...
         info.git_repos{1}.hash});
     
 fig.Position(3:4) = [820, 475];
+
+%% write out large synapses for inspection in webKNOSSOS
+rng(0);
+largeSynT = synT(synT.area > 1.5, :);
+largeSynT = largeSynT(randperm(size(largeSynT, 1), 50), :);
+numDigits = ceil(log10(1 + size(largeSynT, 1)));
+
+skelNames = arrayfun(@(i, n, a) sprintf( ...
+    '%0*d. Synapse %d (%.1f µm²)', numDigits, i, n, a), ...
+    1:size(synIds, 1), largeSynT.id', largeSynT.area', ...
+    'UniformOutput', false);
+skelNames = [ ...
+    strcat(skelNames, {'. Pre'}); ...
+    strcat(skelNames, {'. Post'})];
+
+skelNodes = syn.synapses(synIds, {'presynId', 'postsynId'});
+skelNodes = transpose(table2cell(skelNodes));
+
+skelNodes = cellfun( ...
+    @(segIds) points(segIds, :), ...
+    skelNodes, 'UniformOutput', false);
+
+skel = Skeleton.fromMST(skelNodes(:), param.raw.voxelSize);
+skel.names = skelNames(:);
+
+skel = Skeleton.setParams4Pipeline(skel, param);
+skel.write('/home/amotta/Desktop/large-spine-synapses.nml');
 
 %% find doubly coupled neurites
 % filter based on spine / non-spine
