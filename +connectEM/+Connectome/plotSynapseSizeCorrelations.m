@@ -13,8 +13,8 @@ rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 synFile = fullfile(rootDir, 'connectomeState', 'SynapseAgglos_v3.mat');
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a_with_den_meta.mat');
 
-synCountFilter = @(n) (n == 2); % couplings with exactly two synapses, only
-spineSynFilter = @(s) s; % spine synapses only
+% set this variable to debug
+debugDir = '';
 
 info = Util.runInfo();
 
@@ -66,22 +66,36 @@ synT(synT.area > 1.5, :) = [];
 [dupNeurites, ~, uniRows] = unique( ...
     synT(:, {'preAggloId', 'postAggloId'}), 'rows');
 
-dupNeurites.areas = accumarray( ...
-    uniRows, synT.area, [], ...
-    @(a) {reshape(sort(a), 1, [])});
+dupNeurites.synIds = accumarray( ...
+    uniRows, synT.id, [], @(synIds) {transpose(synIds)});
 
 uniCount = accumarray(uniRows, 1);
 dupNeurites(uniCount ~= 2, :) = [];
 
-dupNeurites.areas = cell2mat(dupNeurites.areas);
+% we now know that there are exactly two synapses
+dupNeurites.synIds = cell2mat(dupNeurites.synIds);
 
+% load synapse areas
+[~, synRows] = ismember(dupNeurites.synIds, synT.id);
+dupNeurites.synAreas = synT.area(synRows);
+
+flipMask = ...
+    dupNeurites.synAreas(:, 2) ...
+  < dupNeurites.synAreas(:, 1);
+
+dupNeurites.synIds(flipMask, :) = ...
+    fliplr(dupNeurites.synIds(flipMask, :));
+dupNeurites.synAreas(flipMask, :) = ...
+    fliplr(dupNeurites.synAreas(flipMask, :));
+
+%%
 fig = figure();
 ax = axes(fig);
 
 hold(ax, 'on');
 scatter(ax, ...
-    dupNeurites.areas(:, 2), ...
-    dupNeurites.areas(:, 1), 12, '+');
+    dupNeurites.synAreas(:, 2), ...
+    dupNeurites.synAreas(:, 1), 12, '+');
 
 xlim([1E-2, 1E1]); xlabel('Axon-spine interface 1 (µm²)');
 ylim([1E-2, 1E1]); ylabel('Axon-spine interface 2 (µm²)');
@@ -91,8 +105,8 @@ ax.YScale = 'log';
 
 % do the fit
 % taken from `matlab/+Analysis/+Script/bartolEtAl2015eLife.m` in `amotta`
-xLog = log10(dupNeurites.areas(:, 2));
-yLog = log10(dupNeurites.areas(:, 1));
+xLog = log10(dupNeurites.synAreas(:, 2));
+yLog = log10(dupNeurites.synAreas(:, 1));
 
 b = [ones(numel(xLog), 1), xLog] \ yLog;
 b(1) = 10 ^ b(1);
@@ -108,6 +122,53 @@ plot(fitRange, fitRange, 'k--');
 
 title({'Same-axon same-dendrite spine synapses'; info.git_repos{1}.hash});
 legend(rawName, fitName, 'Location', 'NorthWest');
+
+%% look at highly inconsistent pairs
+% search for pairs which differ by more than a factor of 10
+randDupNeurites = find( ...
+    dupNeurites.synAreas(:, 2) ...
+ ./ dupNeurites.synAreas(:, 1) > 10);
+
+rng(0);
+randDupNeurites = randDupNeurites( ...
+    randperm(numel(randDupNeurites), 25));
+randDupNeurites = dupNeurites(randDupNeurites, :);
+
+for curIdx = 1:size(randDupNeurites, 1)
+    curRow = randDupNeurites(curIdx, :);
+    
+    curSynAgglos = cellfun(@vertcat, ...
+        syn.synapses.presynId(curRow.synIds), ....
+        syn.synapses.postsynId(curRow.synIds), ...
+        'UniformOutput', false);
+    
+    curAgglos = [ ...
+        conn.axons(curRow.preAggloId); ...
+        conn.dendrites(curRow.postAggloId); ...
+        curSynAgglos];
+    curNodes = cellfun( ...
+        @(segIds) points(segIds, :), ...
+        curAgglos, 'UniformOutput', false);
+    
+    curNames = { ...
+        sprintf('Axon #%d', curRow.preAggloId); ...
+        sprintf('Dendrite #%d', curRow.postAggloId)};
+    curNames = [curNames; arrayfun(@(synId) ....
+        sprintf('Synapse #%d', synId), ...
+        curRow.synIds(:), 'UniformOutput', false)]; %#ok
+    
+    curSkel = Skeleton.fromMST(curNodes, param.raw.voxelSize);
+    curSkel = Skeleton.setParams4Pipeline(curSkel, param);
+    curSkel.names = curNames;
+    
+    curSkelFile = sprintf( ...
+        '%d_axon-%d_dendrite_%d.nml', ...
+        curIdx, curRow.preAggloId, curRow.postAggloId);
+    curSkelFile = fullfile(debugDir, curSkelFile);
+    
+    if isempty(debugDir); continue; end
+    curSkel.write(curSkelFile);
+end
 
 %% plot distribution of synapse size
 % plot distribution
@@ -129,68 +190,3 @@ annotation(...
         info.git_repos{1}.hash});
     
 fig.Position(3:4) = [820, 475];
-
-%% write out large synapses for inspection in webKNOSSOS
-rng(0);
-largeSynT = synT(synT.area > 1.5, :);
-largeSynT = largeSynT(randperm(size(largeSynT, 1), 50), :);
-numDigits = ceil(log10(1 + size(largeSynT, 1)));
-
-skelNames = arrayfun(@(i, n, a) sprintf( ...
-    '%0*d. Synapse %d (%.1f µm²)', numDigits, i, n, a), ...
-    1:size(largeSynT, 1), largeSynT.id', largeSynT.area', ...
-    'UniformOutput', false);
-skelNames = [ ...
-    strcat(skelNames, {'. Pre'}); ...
-    strcat(skelNames, {'. Post'})];
-
-skelNodes = syn.synapses(largeSynT.id, {'presynId', 'postsynId'});
-skelNodes = transpose(table2cell(skelNodes));
-
-skelNodes = cellfun( ...
-    @(segIds) points(segIds, :), ...
-    skelNodes, 'UniformOutput', false);
-
-skel = Skeleton.fromMST(skelNodes(:), param.raw.voxelSize);
-skel.names = skelNames(:);
-
-skel = Skeleton.setParams4Pipeline(skel, param);
-skel.write('/home/amotta/Desktop/large-spine-synapses.nml');
-
-%% find doubly coupled neurites
-% filter based on spine / non-spine
-spineSynMask = spineSynFilter(syn.isSpineSyn);
-
-conn.connectomeMeta.contactArea = cellfun( ...
-    @(ids, areas) areas(spineSynMask(ids)), ...
-    conn.connectome.synIdx, conn.connectomeMeta.contactArea, ...
-    'UniformOutput', false);
-conn.connectome.synIdx = cellfun( ...
-    @(ids) ids(spineSynMask(ids)), ...
-    conn.connectome.synIdx, 'UniformOutput', false);
-
-% filter based on synapse count
-conn.connectome.synCount = ...
-    cellfun(@numel, conn.connectome.synIdx);
-synCountMask = synCountFilter(conn.connectome.synCount);
-
-conn.connectome(~synCountMask, :) = [];
-conn.connectomeMeta.contactArea(~synCountMask) = [];
-
-%% plot correlation for pre- & post-coupled synapses
-prePostPairSynAreas = conn.connectomeMeta.contactArea;
-
-% sort areas within
-prePostPairSynAreas = cellfun( ...
-    @(areas) reshape(sort(areas), 1, []), ...
-    prePostPairSynAreas, 'UniformOutput', false);
-
-fig = figure();
-ax = axes(fig);
-
-data = cell2mat(prePostPairSynAreas);
-dataMax = max(data(:));
-
-scatter(ax, data(:, 2), data(:, 1), 18, '+');
-xlim(ax, [0, dataMax]);
-ylim(ax, [0, dataMax]);
