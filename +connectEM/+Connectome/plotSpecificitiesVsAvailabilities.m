@@ -70,7 +70,7 @@ for curAxonId = reshape(axonIds, 1, [])
     plot(ax, avail.dists / 1E3, curAvails, 'Color', curColor);
 end
 
-xlabel(ax, 'r_{pred}');
+xlabel(ax, 'r_{pred} (µm)');
 xlim(ax, [0, avail.dists(end)] / 1E3);
 ylabel(ax, sprintf('%s availability', className));
 
@@ -82,3 +82,5 @@ annotation( ...
     'textbox', [0, 0.9, 1, 0.1], ...
     'EdgeColor', 'none', 'HorizontalAlignment', 'center', ...
     'String', info.git_repos{1}.hash);
+
+fig.Position(3:4) = [840, 630];
