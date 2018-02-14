@@ -54,21 +54,24 @@ axonIds = find( ...
 %% plot
 fig = figure();
 ax = axes(fig);
-ax.Color = 'black';
 hold(ax, 'on');
+
+% color map
+cmap = parula(101);
+colormap(ax, cmap);
+ax.Color = 'black';
 
 for curAxonId = reshape(axonIds, 1, [])
     curAvails = shiftdim(availabilities(classIdx, :, curAxonId));
     
     curColor = specificities(curAxonId, classIdx);
-    curColor = ...
-             curColor  .* [1, 1, 0] ...
-      + (1 - curColor) .* [0, 0, 1];
+    curColor = cmap(round(100 * curColor) + 1, :);
   
     plot(ax, avail.dists / 1E3, curAvails, 'Color', curColor);
 end
 
 xlabel(ax, 'r_{pred}');
+xlim(ax, [0, avail.dists(end)] / 1E3);
 ylabel(ax, sprintf('%s availability', className));
 
 cbar = colorbar('peer', ax);
