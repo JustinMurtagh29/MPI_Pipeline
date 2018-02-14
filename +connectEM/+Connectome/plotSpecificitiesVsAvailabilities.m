@@ -45,7 +45,7 @@ availabilities = availabilities ./ sum(availabilities, 1);
 %% find AD specific axons
 className = 'ApicalDendrite';
 classIdx = find(targetClasses == className);
-minSpecificity = 0.25;
+minSpecificity = -inf;
 
 axonIds = find( ...
     conn.axonMeta.synCount >= 10 ...
