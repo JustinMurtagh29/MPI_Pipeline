@@ -56,6 +56,44 @@ synT.occurences = [];
 % remove synapses whose size is obviously wrong
 synT(synT.area > 1.5, :) = [];
 
+%% plot distribution of synapse size
+% plot distribution
+fig = figure();
+ax = axes(fig);
+
+histogram(ax, synT.area, linspace(0, 1.5, 51));
+xlabel(ax, 'Axon-spine interface (µm²)');
+ylabel(ax, 'Spine synapses');
+ax.TickDir = 'out';
+
+title( ...
+   {'Spine synapse size distribution'; info.git_repos{1}.hash}, ...
+    'FontWeight', 'norma', 'FontSize', 10);
+    
+fig.Position(3:4) = [820, 475];
+
+%% calculate baseline slope
+synT = sortrows(synT, 'area', 'ascend');
+
+rng(0);
+randSynAreas = nan(1E5, 2);
+for curIdx = 1:size(randSynAreas, 1)
+    curIdxB = 1 + randi(size(synT, 1) - 1);
+    curIdxA = randi(curIdxB);
+    
+    randSynAreas(curIdx, 1) = synT.area(curIdxA);
+    randSynAreas(curIdx, 2) = synT.area(curIdxB);
+end
+
+xLog = log10(randSynAreas(:, 2));
+yLog = log10(randSynAreas(:, 1));
+
+bl = [ones(numel(xLog), 1), xLog] \ yLog;
+bl(1) = 10 ^ bl(1);
+
+blFitF = @(x) bl(1) .* (x .^ bl(2));
+blFitName = sprintf('Baseline (y = %.2f x^{%.2f})', bl(1), bl(2));
+
 %% look at doubly coupled neurites
 [dupNeurites, ~, uniRows] = unique( ...
     synT(:, {'preAggloId', 'postAggloId'}), 'rows');
@@ -82,6 +120,31 @@ dupNeurites.synIds(flipMask, :) = ...
 dupNeurites.synAreas(flipMask, :) = ...
     fliplr(dupNeurites.synAreas(flipMask, :));
 
+%% plot distribution of CV
+randCv = std(log(randSynAreas), 0, 2);
+randCv = sqrt(exp(randCv .^ 2) - 1);
+
+foundCv = std(log(dupNeurites.synAreas), 0, 2);
+foundCv = sqrt(exp(foundCv .^ 2) - 1);
+
+fig = figure();
+ax = axes(fig);
+hold(ax, 'on');
+
+histogram( ...
+    ax, randCv, linspace(0, 10, 101), ...
+    'Normalization', 'probability', 'EdgeColor', 'none');
+histogram( ...
+    ax, foundCv, linspace(0, 10, 101), ...
+    'Normalization', 'probability', 'EdgeColor', 'none');
+
+title( ...
+   {'Synapse size variability'; info.git_repos{1}.hash}, ...
+    'FontWeight', 'normal', 'FontSize', 10);
+legend('Baseline', 'Same-axon same-dendrite');
+xlabel('Coefficient of variation');
+ylabel('Probability');
+
 %%
 fig = figure();
 ax = axes(fig);
@@ -106,16 +169,19 @@ b = [ones(numel(xLog), 1), xLog] \ yLog;
 b(1) = 10 ^ b(1);
 
 fitF = @(x) b(1) .* (x .^ b(2));
-fitName = sprintf('y = %.2f x^{%.2f}', b(1), b(2));
+fitName = sprintf('Fit (y = %.2f x^{%.2f})', b(1), b(2));
 rawName = sprintf('Raw data (n = %d)', numel(xLog));
 
 fitRange = xlim();
 fitRange = linspace(fitRange(1), fitRange(end), 2);
 plot(fitRange, fitF(fitRange));
+plot(fitRange, blFitF(fitRange));
 plot(fitRange, fitRange, 'k--');
 
-title({'Same-axon same-dendrite spine synapses'; info.git_repos{1}.hash});
-legend(rawName, fitName, 'Location', 'NorthWest');
+title( ...
+   {'Same-axon same-dendrite spine synapses'; info.git_repos{1}.hash}, ...
+    'FontWeight', 'normal', 'FontSize', 10);
+legend(rawName, fitName, blFitName, 'Location', 'NorthWest');
 
 %% look at highly inconsistent pairs
 % search for pairs which differ by more than a factor of 10
@@ -163,24 +229,3 @@ for curIdx = 1:size(randDupNeurites, 1)
     if isempty(debugDir); continue; end
     curSkel.write(curSkelFile);
 end
-
-%% plot distribution of synapse size
-% plot distribution
-fig = figure();
-ax = axes(fig);
-
-histogram(ax, synT.area, linspace(0, 1.5, 51));
-xlabel(ax, 'Axon-spine interface (µm²)');
-ylabel(ax, 'Spine synapses');
-ax.TickDir = 'out';
-
-annotation(...
-    fig, ...
-    'textbox', [0, 0.9, 1, 0.1], ...
-    'EdgeColor', 'none', ...
-    'HorizontalAlignment', 'center', ...
-    'String', { ...
-        'Spine synapse size distribution';
-        info.git_repos{1}.hash});
-    
-fig.Position(3:4) = [820, 475];
