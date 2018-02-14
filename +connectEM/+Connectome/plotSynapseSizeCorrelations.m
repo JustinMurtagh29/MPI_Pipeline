@@ -1,9 +1,3 @@
-% TODO(amotta)
-% * `contactArea` in `connectomeMeta` ranges up to ~120. That's true even
-%   for spine-head filtered synapses. Find out what's going on: Do I
-%   misunderstand the data structure or the physical units? Is there a bug?
-%   Is synapse agglomeration off? Soma segments classified as spine?
-%
 % Written by`
 %   Alessandro Motta <alessandro.motta@brain.mpg.de>
 clear;
