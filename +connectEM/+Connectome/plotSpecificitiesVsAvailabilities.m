@@ -45,7 +45,7 @@ availabilities = availabilities ./ sum(availabilities, 1);
 %% find AD specific axons
 className = 'ApicalDendrite';
 classIdx = find(targetClasses == className);
-minSpecificity = -inf;
+minSpecificity = 0.2;
 
 axonIds = find( ...
     conn.axonMeta.synCount >= 10 ...
@@ -61,11 +61,15 @@ cmap = parula(101);
 colormap(ax, cmap);
 ax.Color = 'black';
 
+maxSpec = max(specificities(axonIds, classIdx));
+[~, sortIds] = sort(specificities(axonIds, classIdx), 'ascend');
+axonIds = axonIds(sortIds);
+
 for curAxonId = reshape(axonIds, 1, [])
     curAvails = shiftdim(availabilities(classIdx, :, curAxonId));
     
     curColor = specificities(curAxonId, classIdx);
-    curColor = cmap(round(100 * curColor) + 1, :);
+    curColor = cmap(round(100 * curColor / maxSpec) + 1, :);
   
     plot(ax, avail.dists / 1E3, curAvails, 'Color', curColor);
 end
@@ -76,6 +80,7 @@ ylabel(ax, sprintf('%s availability', className));
 
 cbar = colorbar('peer', ax);
 cbar.Label.String = sprintf('%s specificity', className);
+caxis([0, maxSpec]);
 
 annotation( ...
     fig, ...
@@ -106,3 +111,6 @@ xlabel(ax, { ...
     sprintf('for %s', className)});
 ylabel(ax, {'Axons with'; sprintf( ...
     'S(%s) > %.1f', className, minSpecificity)});
+title( ...
+   {'Synapse predictability'; info.git_repos{1}.hash}, ...
+    'FontWeight', 'normal', 'FontSize', 10);
