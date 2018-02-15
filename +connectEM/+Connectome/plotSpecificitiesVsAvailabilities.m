@@ -37,7 +37,7 @@ classConnectome = accumarray( ...
     connectome.synCount, [numel(conn.axons), numel(targetClasses)]);
 specificities = classConnectome ./ sum(classConnectome, 2);
 
-%% build availabilitie
+%% build availabilities
 [~, classIds] = ismember(targetClasses, avail.targetClasses);
 availabilities = avail.axonAvail(classIds, :, :);
 availabilities = availabilities ./ sum(availabilities, 1);
@@ -84,3 +84,25 @@ annotation( ...
     'String', info.git_repos{1}.hash);
 
 fig.Position(3:4) = [840, 630];
+
+%% plot distribution over peak-predictability
+% For each axon, we calculate
+% * specificity / {min, max}(availability)
+% * distribution over radii of peak predictability
+classSpec = specificities(axonIds, classIdx);
+classAvails = shiftdim(availabilities(classIdx, :, axonIds));
+
+[classPeakAvail, classPeakIdx] = max(classAvails, [], 1);
+classPeakPred = classSpec(:) ./ classPeakAvail(:);
+
+fig = figure();
+ax = axes(fig);
+
+histogram(ax, classPeakPred);
+ax.XLim(1) = 0;
+
+xlabel(ax, { ...
+    'specificity / max(availability)'; ...
+    sprintf('for %s', className)});
+ylabel(ax, {'Axons with'; sprintf( ...
+    'S(%s) > %.1f', className, minSpecificity)});
