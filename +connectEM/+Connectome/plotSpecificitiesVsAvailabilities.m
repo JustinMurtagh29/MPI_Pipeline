@@ -72,8 +72,8 @@ for curAxonId = reshape(axonIds, 1, [])
 end
 
 xlabel(ax, 'r_{pred} (µm)');
-xlim(ax, [0, avail.dists(end)] / 1E3);
 ylabel(ax, sprintf('%s availability', className));
+xlim(ax, [0, 60]);
 
 cbar = colorbar('peer', ax);
 cbar.Label.String = sprintf('%s specificity', className);
@@ -101,7 +101,7 @@ fig = figure();
 ax = axes(fig);
 
 histogram(ax, classPeakPred);
-ax.XLim(1) = 0;
+ax.XLim = [0, 80];
 
 xlabel(ax, { ...
     'specificity / max(availability)'; ...
@@ -111,3 +111,22 @@ ylabel(ax, {'Axons with'; sprintf( ...
 title( ...
    {'Synapse predictability'; info.git_repos{1}.hash}, ...
     'FontWeight', 'normal', 'FontSize', 10);
+
+%% plot availability vs. specificity
+axonIds = find(conn.axonMeta.synCount >= 10);
+peakAvails = squeeze(max(availabilities, [], 2))';
+
+fig = figure();
+
+for curClassIdx = 1:numel(targetClasses)
+    curAx = subplot(1, numel(targetClasses), curClassIdx);
+    scatter(curAx, ...
+        specificities(axonIds, curClassIdx), ...
+        peakAvails(axonIds, curClassIdx), 'x');
+    
+    xlim(curAx, [0, 1]);
+    ylim(curAx, [0, 1]);
+    
+    xlabel(curAx, sprintf('S(%s)', targetClasses(curClassIdx)));
+    ylabel(curAx, sprintf('A(%s)', targetClasses(curClassIdx)));
+end
