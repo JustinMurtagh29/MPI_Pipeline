@@ -5,7 +5,7 @@ clear;
 %% configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 synFile = fullfile(rootDir, 'connectomeState', 'SynapseAgglos_v3.mat');
-connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a_with_den_meta.mat');
+connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a.mat');
 
 % set this variable to debug
 debugDir = '';

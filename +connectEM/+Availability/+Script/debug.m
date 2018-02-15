@@ -9,10 +9,7 @@ clear;
 outDir = '/home/amotta/Desktop';
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 availFile = '/tmpscratch/amotta/l4/2018-02-02-surface-availability-connectome-axons-18-a/axon-avail-data.mat';
-
-connFile = fullfile( ...
-    rootDir, 'connectomeState', ...
-    'connectome_axons_18_a_with_den_meta.mat');
+connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a.mat');
 
 className = 'ApicalDendrite';
 radiusNm = 1000;

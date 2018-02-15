@@ -5,7 +5,7 @@ clear;
 %% configuration
 blockSize = [32, 32, 16];
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a_with_den_meta.mat');
+connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a.mat');
 outDir = '/tmpscratch/amotta/l4/2018-02-09-surface-availability-connectome-axons-18-a';
 
 info = Util.runInfo();
