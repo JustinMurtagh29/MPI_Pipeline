@@ -4,8 +4,8 @@ clear;
 
 %% configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-synFile = fullfile(rootDir, 'connectomeState', 'SynapseAgglos_v3.mat');
-connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a.mat');
+synFile = fullfile(rootDir, 'connectomeState', 'SynapseAgglos_v3_ax_spine_clustered.mat');
+connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a_ax_spine_syn_clust.mat');
 
 % set this variable to debug
 debugDir = '';
@@ -53,15 +53,12 @@ synT.occurences = accumarray(uniCount, 1);
 synT(synT.occurences > 1, :) = [];
 synT.occurences = [];
 
-% remove synapses whose size is obviously wrong
-synT(synT.area > 1.5, :) = [];
-
 %% plot distribution of synapse size
 % plot distribution
 fig = figure();
 ax = axes(fig);
 
-histogram(ax, synT.area, linspace(0, 1.5, 51));
+histogram(ax, synT.area, 51);
 xlabel(ax, 'Axon-spine interface (µm²)');
 ylabel(ax, 'Spine synapses');
 ax.TickDir = 'out';
