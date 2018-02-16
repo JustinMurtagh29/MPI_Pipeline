@@ -143,6 +143,9 @@ xlim([0, 1.5]);
 xlabel('Coefficient of variation');
 ylabel('Probability');
 
+[~, pValue] = kstest2(foundCv, randCv);
+fprintf('Asymptotic p-value: %e\n', pValue);
+
 %%
 fig = figure();
 ax = axes(fig);
