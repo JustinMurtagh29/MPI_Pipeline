@@ -39,6 +39,51 @@ specificities = classConnectome ./ sum(classConnectome, 2);
 availabilities = avail.axonAvail(classIds, :, :);
 availabilities = availabilities ./ sum(availabilities, 1);
 
+%% show how contact area translates into synapses
+radiusUm = 1;
+minSynCount = 10;
+
+axonIds = find(conn.axonMeta.synCount >= minSynCount);
+radiusIdx = find(avail.dists == (1E3 * radiusUm));
+
+fig = figure();
+for curClassIdx = 1:numel(targetClasses)
+    curClassName = targetClasses(curClassIdx);
+    
+    curAvail = squeeze(availabilities( ...
+        curClassIdx, radiusIdx, axonIds));
+    curSpecs = squeeze(specificities( ...
+        axonIds, curClassIdx));
+    
+    % plotting
+    curAx = subplot(1, numel(targetClasses), curClassIdx);
+    hold(curAx, 'on');
+    
+    % scatter plot
+    scatter(curAx, curAvail, curSpecs, 'x');
+    
+    xlim(curAx, [0, 1]);
+    ylim(curAx, [0, 1]);
+    
+    xlabel(curAx, ...
+       {sprintf('A(%s)', curClassName); ...
+        sprintf('at r_{pred} = %d µm', radiusUm)});
+    ylabel(curAx, sprintf('S(%s)', curClassName));
+    
+    % diagonal
+    plot(curAx, [0, 1], [0, 1], 'k--');
+end
+
+annotation( ...
+    fig, ...
+    'textbox', [0, 0.9, 1, 0.1], ...
+    'EdgeColor', 'none', 'HorizontalAlignment', 'center', ...
+    'String', { ...
+        'Target class availability versus specificity';
+        info.git_repos{1}.hash});
+
+fig.Position(3:4) = [1912, 290];
+
 %% find AD specific axons
 className = 'ApicalDendrite';
 classIdx = find(targetClasses == className);
