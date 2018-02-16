@@ -60,6 +60,7 @@ synapses.pos = cell2mat(cellfun( ...
 axonIds = find(conn.axonMeta.synCount >= 2);
 axonPathLens = nan(size(axonIds));
 synToSynDists = cell(size(axonIds));
+synIds = cell(size(axonIds));
 
 tic;
 for idx = 1:numel(axonIds)
@@ -103,6 +104,7 @@ for idx = 1:numel(axonIds)
     % store output
     axonPathLens(idx) = axonPathLen;
     synToSynDists{idx} = synToSynDist;
+    synIds{idx} = synapseIds(:);
     
     Util.progressBar(idx, numel(axonIds));
 end
