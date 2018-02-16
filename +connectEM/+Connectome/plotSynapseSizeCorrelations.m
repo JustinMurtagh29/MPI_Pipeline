@@ -87,7 +87,7 @@ bl = [ones(numel(xLog), 1), xLog] \ yLog;
 bl(1) = 10 ^ bl(1);
 
 blFitF = @(x) bl(1) .* (x .^ bl(2));
-blFitName = sprintf('Baseline (y = %.2f x^{%.2f})', bl(1), bl(2));
+blFitName = sprintf('Random pairs (y = %.2f x^{%.2f})', bl(1), bl(2));
 
 %% look at doubly coupled neurites
 [dupNeurites, ~, uniRows] = unique( ...
@@ -137,7 +137,7 @@ histogram( ...
 title( ...
    {'Synapse size variability'; info.git_repos{1}.hash}, ...
     'FontWeight', 'normal', 'FontSize', 10);
-legend('Baseline', 'Same-axon same-dendrite');
+legend('Random pairs', 'Same-axon same-dendrite');
 
 xlim([0, 1.5]);
 xlabel('Coefficient of variation');
