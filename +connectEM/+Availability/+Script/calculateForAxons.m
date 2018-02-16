@@ -21,7 +21,7 @@ maxDist = 1 + diff(param.bbox, 1, 2);
 maxDist = maxDist .* param.raw.voxelSize(:);
 maxDist = ceil(sqrt(sum(maxDist .^ 2)));
 
-saveDists = 1E3:1E3:maxDist;
+saveDists = 0:1E3:maxDist;
 
 %% calculate on cluster
 axonCount = numel(blockData.axonBlocks);
