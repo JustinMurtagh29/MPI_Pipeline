@@ -57,7 +57,7 @@ rng(0);
 randIds = randperm(size(shT, 1), 10);
 randShT = shT(randIds, :);
 
-for curIdx = 1:1%size(randShT, 1)
+for curIdx = 1:size(randShT, 1)
     curSh = randShT(curIdx, :);
     curSh = table2struct(curSh);
     
