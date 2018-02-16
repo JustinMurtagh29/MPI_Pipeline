@@ -73,14 +73,12 @@ fig.Position(3:4) = [820, 475];
 synT = sortrows(synT, 'area', 'ascend');
 
 rng(0);
-randSynAreas = nan(1E5, 2);
-for curIdx = 1:size(randSynAreas, 1)
-    curIdxB = 1 + randi(size(synT, 1) - 1);
-    curIdxA = randi(curIdxB);
-    
-    randSynAreas(curIdx, 1) = synT.area(curIdxA);
-    randSynAreas(curIdx, 2) = synT.area(curIdxB);
-end
+randIds = floor(size(synT, 1) / 2);
+randIds = randperm(size(synT, 1), 2 * randIds);
+
+randIds = reshape(randIds, [], 2);
+randSynAreas = synT.area(randIds);
+randSynAreas = sort(randSynAreas, 2);
 
 xLog = log10(randSynAreas(:, 2));
 yLog = log10(randSynAreas(:, 1));
