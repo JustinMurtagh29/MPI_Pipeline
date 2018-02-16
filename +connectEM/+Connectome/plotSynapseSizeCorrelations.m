@@ -191,11 +191,16 @@ title( ...
     'FontWeight', 'normal', 'FontSize', 10);
 legend(rawName, fitName, blFitName, 'Location', 'NorthWest');
 
-%% look at highly inconsistent pairs
-% search for pairs which differ by more than a factor of 10
+%% debugging
+%{
+% select highly inconsistent pairs
 randDupNeurites = find( ...
     dupNeurites.synAreas(:, 2) ...
  ./ dupNeurites.synAreas(:, 1) > 10);
+%}
+
+% select random pairs
+randDupNeurites = 1:size(dupNeurites, 1);
 
 rng(0);
 randDupNeurites = randDupNeurites( ...
