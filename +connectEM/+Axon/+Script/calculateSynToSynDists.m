@@ -57,14 +57,16 @@ synapses.pos = cell2mat(cellfun( ...
 
 %% calculate synapse-to-synapse distances
 % only consider axons with at least two output synapses
-axonIds = find(conn.axonMeta.synCount >= 2);
-axonPathLens = nan(size(axonIds));
-synToSynDists = cell(size(axonIds));
-synIds = cell(size(axonIds));
+out = struct;
+out.info = info;
+out.axonIds = find(conn.axonMeta.synCount >= 2);
+out.axonPathLens = nan(size(out.axonIds));
+out.synToSynDists = cell(size(out.axonIds));
+out.synIds = cell(size(out.axonIds));
 
 tic;
-for idx = 1:numel(axonIds)
-    axonId = axonIds(idx);
+for idx = 1:numel(out.axonIds)
+    axonId = out.axonIds(idx);
     axonSegIds = conn.axons{axonId};
 
     % find synapses for axon
@@ -102,12 +104,12 @@ for idx = 1:numel(axonIds)
     synToSynDist(1:(size(synToSynDist, 1) + 1):end) = inf;
     
     % store output
-    axonPathLens(idx) = axonPathLen;
-    synToSynDists{idx} = synToSynDist;
-    synIds{idx} = synapseIds(:);
+    out.axonPathLens(idx) = axonPathLen;
+    out.synToSynDists{idx} = synToSynDist;
+    out.synIds{idx} = synapseIds(:);
     
-    Util.progressBar(idx, numel(axonIds));
+    Util.progressBar(idx, numel(out.axonIds));
 end
 
 % save results
-Util.save(interSynFile, info, axonIds, axonPathLens, synToSynDists);
+Util.saveStruct(interSynFile, out);
