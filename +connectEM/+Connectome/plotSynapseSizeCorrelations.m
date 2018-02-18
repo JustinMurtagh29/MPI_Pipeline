@@ -115,44 +115,6 @@ dupNeurites.synIds(flipMask, :) = ...
 dupNeurites.synAreas(flipMask, :) = ...
     fliplr(dupNeurites.synAreas(flipMask, :));
 
-%% plot distribution of CV
-randCv = ...
-    std(randSynAreas, 0, 2) ...
-    ./ mean(randSynAreas, 2);
-foundCv = ...
-    std(dupNeurites.synAreas, 0, 2) ...
-    ./ mean(dupNeurites.synAreas, 2);
-
-fig = figure();
-ax = axes(fig);
-hold(ax, 'on');
-
-histogram( ...
-    ax, randCv, linspace(0, 1.5, 51), ...
-    'Normalization', 'probability', 'EdgeColor', 'none');
-histogram( ...
-    ax, foundCv, linspace(0, 1.5, 51), ...
-    'Normalization', 'probability', 'EdgeColor', 'none');
-
-plot( ...
-    ax, repelem(median(randCv), 1, 2), ax.YLim, ...
-    'LineStyle', '--', 'Color', ax.ColorOrder(1, :));
-plot( ...
-    ax, repelem(median(foundCv), 1, 2), ax.YLim, ...
-    'LineStyle', '--', 'Color', ax.ColorOrder(2, :));
-
-title( ...
-   {'Synapse size variability'; info.git_repos{1}.hash}, ...
-    'FontWeight', 'normal', 'FontSize', 10);
-legend(ax, 'Random pairs', 'Same-axon same-dendrite pairs');
-
-xlim([0, 1.5]);
-xlabel('Coefficient of variation');
-ylabel('Probability');
-
-[~, pValue] = kstest2(foundCv, randCv);
-fprintf('Asymptotic p-value: %e\n', pValue);
-
 %%
 fig = figure();
 ax = axes(fig);
@@ -338,6 +300,61 @@ title( ...
    {'Different-axon same-dendrite'; info.git_repos{1}.hash}, ...
     'FontWeight', 'normal', 'FontSize', 10);
 legend(rawName, fitName, blFitName, 'Location', 'NorthWest');
+
+%%
+maxCv = 1.5;
+
+cvData = struct;
+cvData(1).name = 'Random pairs';
+cvData(1).data = randSynAreas;
+
+cvData(2).name = 'Same-axon same-dendrite';
+cvData(2).data = dupNeurites.synAreas;
+
+cvData(3).name = 'Same-axon different-dendrite';
+cvData(3).data = reshape(saddT.area, 2, [])';
+
+cvData(4).name = 'Different-axon same-dendrite';
+cvData(4).data = reshape(dasdT.area, 2, [])';
+
+fig = figure();
+ax = axes(fig);
+hold(ax, 'on');
+
+for curIdx = 1:numel(cvData)
+    cvData(curIdx).cv = ...
+        std(cvData(curIdx).data, 0, 2) ...
+        ./ mean(cvData(curIdx).data, 2);
+    
+    cvData(curIdx).median = ...
+        median(cvData(curIdx).cv);
+    
+   [~, cvData(curIdx).pValue] = ...
+        kstest2(cvData(curIdx).cv, cvData(1).cv);
+    
+    if curIdx == 1; continue; end
+    
+    cvData(curIdx).name = sprintf( ...
+        '%s (p = %.2g)', ...
+        cvData(curIdx).name, ...
+        cvData(curIdx).pValue);
+end
+
+for curIdx = 1:numel(cvData)
+    histogram( ...
+        ax, cvData(curIdx).cv, linspace(0, maxCv, 51), ...
+        'Normalization', 'probability', 'DisplayStyle', 'stairs');
+end
+
+title( ...
+   {'Synapse size variability'; info.git_repos{1}.hash}, ...
+    'FontWeight', 'normal', 'FontSize', 10);
+legend(ax, cvData.name, 'Location', 'SouthWest');
+
+ax.TickDir = 'out';
+ax.XLim = [0, maxCv];
+xlabel(ax, 'Coefficient of variation');
+ylabel(ax, 'Probability');
 
 %% debugging
 %{
