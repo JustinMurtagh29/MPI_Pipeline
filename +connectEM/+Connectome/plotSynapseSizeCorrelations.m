@@ -7,6 +7,11 @@ rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 synFile = fullfile(rootDir, 'connectomeState', 'SynapseAgglos_v3_ax_spine_clustered.mat');
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a_ax_spine_syn_clust.mat');
 
+[interSynDir, interSynFile] = fileparts(connFile);
+interSynFile = sprintf('%s_intersynapse.mat', interSynFile);
+interSynFile = fullfile(interSynDir, interSynFile);
+clear interSynDir;
+
 % set this variable to debug
 debugDir = '';
 
@@ -18,6 +23,7 @@ info = Util.runInfo();
 % correponding entries in `conn.connectome`.
 conn = load(connFile);
 syn = load(synFile);
+interSyn = load(interSynFile);
 
 % for debugging
 param = load(fullfile(rootDir, 'allParameter.mat'), 'p');
@@ -114,6 +120,19 @@ dupNeurites.synIds(flipMask, :) = ...
     fliplr(dupNeurites.synIds(flipMask, :));
 dupNeurites.synAreas(flipMask, :) = ...
     fliplr(dupNeurites.synAreas(flipMask, :));
+
+[~, dupNeurites.interSynDist] = ismember( ...
+    dupNeurites.preAggloId, interSyn.axonIds);
+for curIdx = 1:size(dupNeurites, 1)
+    curAxonIdx = dupNeurites.interSynDist(curIdx);
+    curInterSynDists = interSyn.synToSynDists{curAxonIdx};
+    
+   [~, curSynIdx] = ismember( ...
+        dupNeurites.synIds(curIdx, :), ...
+        interSyn.synIds{curAxonIdx});
+    dupNeurites.interSynDist(curIdx) = ...
+        curInterSynDists(curSynIdx(1), curSynIdx(2));
+end
 
 %%
 fig = figure();
@@ -437,6 +456,42 @@ ax.TickDir = 'out';
 ax.XLim = [0, maxCv];
 xlabel(ax, 'Coefficient of variation');
 ylabel(ax, 'Probability');
+
+%% plot same-axon same-dendrite CV vs. intersynapse distance
+maxInterSynDistUm = 25;
+
+% calculate inter-synapse distance
+dupNeurites.synAreaCv = ...
+    std(dupNeurites.synAreas, 0, 2) ...
+    ./ mean(dupNeurites.synAreas, 2);
+
+fig = figure();
+ax = axes(fig);
+hold(ax, 'on');
+
+scatter(ax, ...
+    dupNeurites.interSynDist / 1E3, ...
+    dupNeurites.synAreaCv, 'x');
+
+mask = (dupNeurites.interSynDist < maxInterSynDistUm * 1E3);
+b = [ ...
+    ones(size(dupNeurites.interSynDist(mask))), ...
+    dupNeurites.interSynDist(mask) / 1E3] \ dupNeurites.synAreaCv(mask);
+
+fitF = @(x) b(1) + x .* b(2);
+rawName = sprintf('Raw data (n = %d)', numel(xLog));
+fitName = sprintf( ...
+    'Linear fit (y = %.2g + %.4gd; d_{max} = %g µm)', ...
+    b(1), b(2), maxInterSynDistUm);
+
+fitRange = xlim(ax);
+fitRange = linspace(fitRange(1), fitRange(end), 2);
+plot(ax, fitRange, fitF(fitRange));
+
+ax.TickDir = 'out';
+xlabel(ax, 'Intersynapse distance (µm)');
+ylabel(ax, 'Coefficient of variation');
+legend(ax, rawName, fitName, 'Location', 'SouthEast');
 
 %% debugging
 %{
