@@ -205,21 +205,25 @@ saddT = synT(randperm(size(synT, 1)), :);
 saddT = saddT(uniRows, :);
 
 % find axons that occur at least twice
-[axonDupIds, ~, axonDupCount] = unique(saddT.preAggloId);
-axonDupCount = accumarray(axonDupCount, 1);
+[dendDupIds, ~, dendDupCount] = unique(saddT.preAggloId);
+dendDupCount = accumarray(dendDupCount, 1);
 
-axonDupIds(axonDupCount < 2) = [];
-axonDupCount(axonDupCount < 2) = [];
+dendDupIds(dendDupCount < 2) = [];
+dendDupCount(dendDupCount < 2) = [];
 
 assert(issorted(saddT.preAggloId));
-[~, uniRows] = ismember(axonDupIds, saddT.preAggloId);
+[~, uniRows] = ismember(dendDupIds, saddT.preAggloId);
 
-% TODO(amotta): Allow multiple entries per axon
-uniRows = transpose([uniRows, (uniRows + 1)]);
+uniRows = arrayfun( ...
+    @(r, c) r + (1:(2 * floor(c / 2)))' - 1, ...
+	uniRows, dendDupCount, 'UniformOutput', false);
+uniRows = cell2mat(uniRows);
+
 saddT = saddT(uniRows, :);
+saddT.pairId = ceil((1:size(saddT, 1)) / 2)';
 
 % now that we've chosen the synapses, we can sort by size
-saddT = sortrows(saddT, {'preAggloId', 'area'});
+saddT = sortrows(saddT, {'preAggloId', 'pairId', 'area'});
 
 % sanity checks
 assert(all(saddT.preAggloId(1:2:end) == saddT.preAggloId(2:2:end)));
@@ -253,12 +257,87 @@ rawName = sprintf('Raw data (n = %d)', numel(xLog));
 fitRange = xlim(ax);
 fitRange = linspace(fitRange(1), fitRange(end), 2);
 plot(ax, fitRange, fitF(fitRange));
+plot(ax, fitRange, blFitF(fitRange));
 plot(ax, fitRange, fitRange, 'k--');
 
 title( ...
    {'Same-axon different-dendrite'; info.git_repos{1}.hash}, ...
     'FontWeight', 'normal', 'FontSize', 10);
-legend(rawName, fitName, 'Location', 'NorthWest');
+legend(rawName, fitName, blFitName, 'Location', 'NorthWest');
+
+%% different-axon same-dendrite pairs
+rng(0);
+
+% get rid of any synapse size preference
+dasdT = synT(randperm(size(synT, 1)), :);
+
+% TODO(amotta): If axon A makes multiple synapses onto dendrite D, we
+% forget about all but one synapses for the following analysis. This makes
+% the code easier. But I'm not yet sure whether this introduces some kind
+% of bias...
+[~, uniRows] = unique(dasdT(:, {'postAggloId', 'preAggloId'}), 'rows');
+dasdT = dasdT(uniRows, :);
+
+% find axons that occur at least twice
+[dendDupIds, ~, dendDupCount] = unique(dasdT.postAggloId);
+dendDupCount = accumarray(dendDupCount, 1);
+
+dendDupIds(dendDupCount < 2) = [];
+dendDupCount(dendDupCount < 2) = [];
+
+assert(issorted(dasdT.postAggloId));
+[~, uniRows] = ismember(dendDupIds, dasdT.postAggloId);
+
+uniRows = arrayfun( ...
+    @(r, c) r + (1:(2 * floor(c / 2)))' - 1, ...
+	uniRows, dendDupCount, 'UniformOutput', false);
+uniRows = cell2mat(uniRows);
+
+dasdT = dasdT(uniRows, :);
+dasdT.pairId = ceil((1:size(dasdT, 1)) / 2)';
+
+% now that we've chosen the synapses, we can sort by size
+dasdT = sortrows(dasdT, {'postAggloId', 'pairId', 'area'});
+
+% sanity checks
+assert(all(dasdT.postAggloId(1:2:end) == dasdT.postAggloId(2:2:end)));
+assert(all(dasdT.preAggloId(1:2:end) ~= dasdT.preAggloId(2:2:end)));
+assert(all(dasdT.area(1:2:end) <= dasdT.area(2:2:end)));
+
+fig = figure();
+ax = axes(fig);
+
+hold(ax, 'on');
+scatter(ax, ...
+    dasdT.area(2:2:end), ...
+    dasdT.area(1:2:end), 12, '+');
+
+xlim([1E-2, 1E1]); xlabel('Axon-spine interface 1 (µm²)');
+ylim([1E-2, 1E1]); ylabel('Axon-spine interface 2 (µm²)');
+
+ax.XScale = 'log';
+ax.YScale = 'log';
+
+xLog = log10(dasdT.area(2:2:end));
+yLog = log10(dasdT.area(1:2:end));
+
+b = [ones(numel(xLog), 1), xLog] \ yLog;
+b(1) = 10 ^ b(1);
+
+fitF = @(x) b(1) .* (x .^ b(2));
+fitName = sprintf('Fit (y = %.2f x^{%.2f})', b(1), b(2));
+rawName = sprintf('Raw data (n = %d)', numel(xLog));
+
+fitRange = xlim(ax);
+fitRange = linspace(fitRange(1), fitRange(end), 2);
+plot(ax, fitRange, fitF(fitRange));
+plot(ax, fitRange, blFitF(fitRange));
+plot(ax, fitRange, fitRange, 'k--');
+
+title( ...
+   {'Different-axon same-dendrite'; info.git_repos{1}.hash}, ...
+    'FontWeight', 'normal', 'FontSize', 10);
+legend(rawName, fitName, blFitName, 'Location', 'NorthWest');
 
 %% debugging
 %{
