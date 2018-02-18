@@ -301,6 +301,85 @@ title( ...
     'FontWeight', 'normal', 'FontSize', 10);
 legend(rawName, fitName, blFitName, 'Location', 'NorthWest');
 
+%% different-axon different-dendrite
+rng(0);
+
+% get rid of any synapse size preference
+daddT = synT(randperm(size(synT, 1)), :);
+
+[~, uniRows] = unique(daddT(:, {'preAggloId', 'postAggloId'}), 'rows');
+daddT = daddT(uniRows, :);
+
+curPos = 0;
+curSynsOpen = true(size(daddT, 1), 1);
+curIds = zeros(0, 2);
+
+while curPos < height(daddT)
+    curPos = curPos + 1;
+    
+    if ~curSynsOpen(curPos)
+        continue;
+    end
+    
+    curSyn = daddT(curPos, :);
+    curPossIds = all(bsxfun(@ne, ...
+        [daddT.preAggloId, daddT.postAggloId], ...
+        [curSyn.preAggloId, curSyn.postAggloId]), 2);
+    curPossIds = find(curPossIds & curSynsOpen);
+    
+    if ~isempty(curPossIds)
+        curPossId = curPossIds(randi(numel(curPossIds)));
+        curSynsOpen(cat(2, curPossId, curPos)) = false;
+        curIds(end + 1, :) = [curPos, curPossId]; %#ok
+    end
+end
+
+curIds = reshape(transpose(curIds), [], 1);
+daddT = daddT(curIds, :);
+
+daddT.pairId = ceil((1:size(daddT, 1)) / 2)';
+daddT = sortrows(daddT, {'pairId', 'area'});
+
+% sanity checks
+assert(all(daddT.postAggloId(1:2:end) ~= daddT.postAggloId(2:2:end)));
+assert(all(daddT.preAggloId(1:2:end) ~= daddT.preAggloId(2:2:end)));
+assert(all(daddT.area(1:2:end) <= daddT.area(2:2:end)));
+
+fig = figure();
+ax = axes(fig);
+
+hold(ax, 'on');
+scatter(ax, ...
+    daddT.area(2:2:end), ...
+    daddT.area(1:2:end), 12, '+');
+
+xlim([1E-2, 1E1]); xlabel('Axon-spine interface 1 (µm²)');
+ylim([1E-2, 1E1]); ylabel('Axon-spine interface 2 (µm²)');
+
+ax.XScale = 'log';
+ax.YScale = 'log';
+
+xLog = log10(daddT.area(2:2:end));
+yLog = log10(daddT.area(1:2:end));
+
+b = [ones(numel(xLog), 1), xLog] \ yLog;
+b(1) = 10 ^ b(1);
+
+fitF = @(x) b(1) .* (x .^ b(2));
+fitName = sprintf('Fit (y = %.2f x^{%.2f})', b(1), b(2));
+rawName = sprintf('Raw data (n = %d)', numel(xLog));
+
+fitRange = xlim(ax);
+fitRange = linspace(fitRange(1), fitRange(end), 2);
+plot(ax, fitRange, fitF(fitRange));
+plot(ax, fitRange, blFitF(fitRange));
+plot(ax, fitRange, fitRange, 'k--');
+
+title( ...
+   {'Different-axon different-dendrite'; info.git_repos{1}.hash}, ...
+    'FontWeight', 'normal', 'FontSize', 10);
+legend(rawName, fitName, blFitName, 'Location', 'NorthWest');
+
 %%
 maxCv = 1.5;
 
@@ -316,6 +395,9 @@ cvData(3).data = reshape(saddT.area, 2, [])';
 
 cvData(4).name = 'Different-axon same-dendrite';
 cvData(4).data = reshape(dasdT.area, 2, [])';
+
+cvData(5).name = 'Different-axon different-dendrite';
+cvData(5).data = reshape(daddT.area, 2, [])';
 
 fig = figure();
 ax = axes(fig);
@@ -357,6 +439,7 @@ xlabel(ax, 'Coefficient of variation');
 ylabel(ax, 'Probability');
 
 %% debugging
+%{
 %{
 % select highly inconsistent pairs
 randDupNeurites = find( ...
@@ -407,3 +490,4 @@ for curIdx = 1:size(randDupNeurites, 1)
     if isempty(debugDir); continue; end
     curSkel.write(curSkelFile);
 end
+%}
