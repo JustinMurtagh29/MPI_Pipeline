@@ -493,6 +493,10 @@ xlabel(ax, 'Intersynapse distance (µm)');
 ylabel(ax, 'Coefficient of variation');
 legend(ax, rawName, fitName, 'Location', 'SouthEast');
 
+title( ...
+   {'Distance dependence of synaptic consistency'; ...
+    info.git_repos{1}.hash}, 'FontWeight', 'normal', 'FontSize', 10);
+
 %% debugging
 %{
 %{
