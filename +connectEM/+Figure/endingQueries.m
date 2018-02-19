@@ -59,60 +59,12 @@ bigAxons = axons.indBigAxons;
 bigAxons = axons.axons(bigAxons);
 bigAxons = bigAxons(axonIds(:));
 
-for curIdx = 1:numel(axonIds)
-    curSagglo = bigAxons(curIdx);
-    assert(issorted(curSagglo.edges, 2));
-    
-    % separate flight paths from agglomerates
-    curIntraEdges = ismember( ...
-        curSagglo.edges, find(isnan(curSagglo.nodes(:, 4))));
-    curIntraEdges = curSagglo.edges(sum(curIntraEdges, 2) ~= 1, :);
-    
-   [curNodeIds, ~, curIntraEdges] = unique(curIntraEdges);
-    curIntraEdges = reshape(curIntraEdges, [], 2);
-    
-    curNodeCount = numel(curNodeIds);
-    curNodes = curSagglo.nodes(curNodeIds, :);
-    
-    % build agglomerates
-    curAdj = sparse( ...
-        curIntraEdges(:, 2), curIntraEdges(:, 1), ...
-        true, curNodeCount, curNodeCount);
-   [curCompCount, curLUT] = ...
-        graphconncomp(curAdj, 'Directed', false);
-    assert(all(curLUT > 0));
-    
-    % split super-agglomerate
-    curSkel = skeleton;
-    for curCompIdx = 1:curCompCount
-        curCompNodeIds = find(curLUT == curCompIdx);
-        curCompNodes = curNodes(curCompNodeIds, 1:3);
-        
-        % edges
-       [~, curCompEdges] = ismember(curIntraEdges, curCompNodeIds);
-        curCompEdges(~all(curCompEdges, 2), :) = [];
-        
-        if any(isnan(curNodes(curCompNodeIds, 4)))
-            % flight path
-            curCompName = 'Flight';
-            curCompColor = [1, 0, 0, 1];
-        else
-            % agglomerate
-            curCompName = 'Agglomerate';
-            curCompColor = [0, 0, 1, 1];
-        end
-        
-        % name
-        curCompName = sprintf( ...
-            '%0*d %s', ceil(log10(curCompCount + 1)), ...
-            curCompIdx, curCompName);
-        curSkel = curSkel.addTree( ...
-            curCompName, curCompNodes, curCompEdges, curCompColor);
-    end
-    
-    curSkel = curSkel.setDescription(skelDesc);
-    curSkel = Skeleton.setParams4Pipeline(curSkel, param);
-    
+skels = skeleton();
+skels = skels.setDescription(skelDesc);
+skels = Skeleton.setParams4Pipeline(skels, param);
+skels = Superagglos.buildAggloAndFlightSkels(bigAxons, skels);
+
+for curIdx = 1:numel(skels)
     curSkelFile = sprintf('%d_axon-%d.nml', curIdx, axonIds(curIdx));
-    curSkel.write(fullfile(outputDir, curSkelFile));
+    skels(curIdx).write(fullfile(outputDir, curSkelFile));
 end
