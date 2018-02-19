@@ -39,6 +39,42 @@ specificities = classConnectome ./ sum(classConnectome, 2);
 availabilities = avail.axonAvail(classIds, :, :);
 availabilities = availabilities ./ sum(availabilities, 1);
 
+%% geometric predictability for exc. vs. inh. axons
+minSynCount = 10;
+axonIds = find(conn.axonMeta.synCount >= minSynCount);
+
+% presumed excitatory axons
+axonExcMask = conn.axonMeta(axonIds, :);
+axonExcMask = axonExcMask.spineSynCount ./ axonExcMask.synCount;
+axonExcMask = (axonExcMask > 0.7);
+
+cosSims = nan(numel(avail.dists), numel(axonIds));
+for curIdx = 1:numel(axonIds)
+    curAxonId = axonIds(curIdx);
+    
+    curAvail = squeeze(availabilities(:, :, curAxonId));
+    curSpec = specificities(curAxonId, :);
+    
+    cosSims(:, curIdx) = curSpec * curAvail;
+end
+
+fig = figure();
+ax = axes(fig);
+hold(ax, 'on');
+
+plot(ax, avail.dists / 1E3, median(cosSims(:,  axonExcMask), 2));
+plot(ax, avail.dists / 1E3, median(cosSims(:, ~axonExcMask), 2));
+
+xlabel(ax, 'r_{pred} (µm)');
+ylabel(ax, ...
+   {'Geometric predictability'; ...
+    'i.e., median d_{cos}(availability, specificity)'});
+
+legend(ax, ...
+    sprintf('Excitatory axons (n = %d)', sum( axonExcMask)), ...
+    sprintf('Inhibitory aoxns (n = %d)', sum(~axonExcMask)));
+title(ax, info.git_repos{1}.hash, 'FontWeight', 'normal', 'FontSize', 10);
+
 %% show how contact area translates into synapses
 radiusUm = 1;
 minSynCount = 10;
