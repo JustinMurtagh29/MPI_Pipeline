@@ -1,10 +1,12 @@
 % Written by
 %   Alessandro Motta <alessandro.motta@brain.mpg.de>
 
+%% configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-resultsFile = fullfile(rootDir, 'chiasmataSplitting/20171009T193744-kmb-on-axons-6c/outputs/20171023T115300_results.mat');
+resultsFile = fullfile(rootDir, 'chiasmataSplitting/20171009T193744-kmb-on-axons-6c/outputs/20171030T181930_results.mat');
 outputDir = '/home/amotta/Desktop/chiasmata-splitting';
 
+%% loading data
 param = load(fullfile(rootDir, 'allParameter.mat'), 'p');
 param = param.p;
 
@@ -29,7 +31,7 @@ disp(results)
 clearvars -except outputDir data;
 
 nrExits = 4;
-solved = false;
+solved = true;
 
 prefix = {'unsolved', 'solved'};
 prefix = sprintf('%d-fold__%s', nrExits, prefix{1 + solved});
@@ -50,7 +52,7 @@ t = t(t.solved == solved, :);
 
 % select random examples
 rng(0);
-t = t(randperm(size(t, 1), 10), :);
+t = t(randperm(size(t, 1), 100), :);
 
 parentIds = find(data.oldAxons.indBigAxons);
 t.parentId = parentIds(t.axonId);
@@ -99,7 +101,8 @@ for row = 1:size(t, 1)
     end
     
     skelFile = sprintf( ...
-        '%s__axon-%d__chiasma-%d.nml', ...
+        '%0*d_%s__axon-%d__chiasma-%d.nml', ...
+        ceil(log10(1 + size(t, 1))), row, ...
         prefix, t.axonId(row), t.chiasmaId(row));
     skelFile = fullfile(outputDir, skelFile);
     
