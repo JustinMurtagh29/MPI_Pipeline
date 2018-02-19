@@ -68,6 +68,8 @@ ax.YAxis.TickDirection = 'out';
 
 fig.Position(3:4) = [570, 350];
 
+title(ax, info.git_repos{1}.hash, 'FontWeight', 'norma', 'FontSize', 10);
+
 %% build axon classes
 axonClasses = { ...
     'Thalamocortical axons', ...
