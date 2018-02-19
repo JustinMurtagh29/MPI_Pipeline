@@ -50,6 +50,7 @@ for curIdx = 1:50
     curSkel.write(fullfile(outputDir, curSkelFile));
 end
 %}
+
 %% selection of axons that illustrate ending queries particularly well
 skelDesc = sprintf('%s (%s)', mfilename, info.git_repos{1}.hash);
 axonIds = [2369, 4859, 9912, 6285];
