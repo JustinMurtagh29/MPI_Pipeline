@@ -5,7 +5,7 @@ clear;
 %% configuration
 param = struct;
 param.saveFolder = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-connName = 'connectome_axons_18_a';
+connName = 'connectome_axons_18_a_ax_spine_syn_clust';
 
 minSynPre = 10;
 minSynPost = 0;
