@@ -91,6 +91,30 @@ ax.XLim = 0.5 + [0, max(neuriteCoupling)];
 ax.YLim(1) = 10 ^ (-0.1);
 ax.YTickLabel = arrayfun(@num2str, ax.YTick, 'UniformOutput', false);
 
+%% ASI areas vs. degree of coupling
+[~, ~, neuriteCoupling] = unique( ...
+    synT(:, {'preAggloId', 'postAggloId'}), 'rows');
+
+neuriteSynAreas = accumarray( ...
+    neuriteCoupling, synT.area, [], @(areas) {areas});
+neuriteCoupling = accumarray(neuriteCoupling, 1);
+
+neuriteCoupling = repelem( ...
+    neuriteCoupling, cellfun(@numel, neuriteSynAreas));
+neuriteSynAreas = cell2mat(neuriteSynAreas);
+
+% plot
+fig = figure();
+ax = axes(fig);
+
+boxplot(ax, neuriteSynAreas, neuriteCoupling);
+title(ax, info.git_repos{1}.hash, 'FontWeight', 'normal', 'FontSize', 10);
+xlabel(ax, 'Spine synapses per connection');
+ylabel(ax, 'Axon-spine interface area (µm²)');
+
+ax.YLim(1) = 0;
+ax.TickDir = 'out';
+
 %% calculate baseline slope
 synT = sortrows(synT, 'area', 'ascend');
 
