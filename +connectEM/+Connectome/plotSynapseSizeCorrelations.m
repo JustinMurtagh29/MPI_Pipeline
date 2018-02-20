@@ -457,6 +457,18 @@ ax.XLim = [0, maxCv];
 xlabel(ax, 'Coefficient of variation');
 ylabel(ax, 'Probability');
 
+%% estimate circuit learnedness
+% TODO(amotta): justify + automatically derive
+threshCv = 0.66;
+
+areaB = mean(cvData(2).cv > threshCv);
+areaC = mean(cvData(1).cv < threshCv);
+areaA = mean(cvData(2).cv < threshCv) - areaC;
+
+% NOTE(amotta): areas A + B + C = 1
+learnLowerBound = areaA / (areaA + areaB + areaC)
+learnUpperBound = (1 - areaB) / (areaA + areaB + areaC)
+
 %% plot same-axon same-dendrite CV vs. intersynapse distance
 maxInterSynDistUm = 25;
 
