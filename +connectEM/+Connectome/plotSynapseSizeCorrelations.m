@@ -115,6 +115,58 @@ ylabel(ax, 'Axon-spine interface area (µm²)');
 ax.YLim(1) = 0;
 ax.TickDir = 'out';
 
+%% ASI area variability
+[~, ~, neuriteCoupling] = unique( ...
+    synT(:, {'preAggloId', 'postAggloId'}), 'rows');
+neuriteCv = accumarray( ...
+    neuriteCoupling, synT.area, [], ...
+    @(areas) std(areas) / mean(areas));
+neuriteCoupling = accumarray(neuriteCoupling, 1);
+
+% remove single-spine case
+neuriteCv(neuriteCoupling < 2) = [];
+neuriteCoupling(neuriteCoupling < 2) = [];
+
+% plot
+fig = figure();
+ax = axes(fig);
+
+boxplot(ax, neuriteCv, neuriteCoupling);
+title(ax, info.git_repos{1}.hash, 'FontWeight', 'normal', 'FontSize', 10);
+xlabel(ax, 'Spine synapses per connection');
+ylabel(ax, 'Variability of all ASI areas (CV)');
+
+ax.YLim(1) = 0;
+ax.TickDir = 'out';
+
+%% ASI area variability for largest two synapses
+[~, ~, neuriteCoupling] = unique( ...
+    synT(:, {'preAggloId', 'postAggloId'}), 'rows');
+
+upToTwo = @(i) i(1:min(2, numel(i)));
+cvOf = @(i) std(i) / mean(i);
+
+neuriteCv = accumarray( ...
+    neuriteCoupling, synT.area, [], ...
+    @(a) cvOf(upToTwo(sort(a, 'descend'))));
+neuriteCoupling = accumarray(neuriteCoupling, 1);
+
+% remove single-spine case
+neuriteCv(neuriteCoupling < 2) = [];
+neuriteCoupling(neuriteCoupling < 2) = [];
+
+% plot
+fig = figure();
+ax = axes(fig);
+
+boxplot(ax, neuriteCv, neuriteCoupling);
+title(ax, info.git_repos{1}.hash, 'FontWeight', 'normal', 'FontSize', 10);
+xlabel(ax, 'Spine synapses per connection');
+ylabel(ax, 'Variability of largest two ASI areas (CV)');
+
+ax.YLim(1) = 0;
+ax.TickDir = 'out';
+
 %% calculate baseline slope
 synT = sortrows(synT, 'area', 'ascend');
 
