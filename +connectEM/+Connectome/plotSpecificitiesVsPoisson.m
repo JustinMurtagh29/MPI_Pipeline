@@ -58,7 +58,7 @@ specificities = specificities(axonIds, :);
 
 %% plotting
 fig = figure;
-binEdges = linspace(0, 1, 51);
+binEdges = linspace(0, 1, 26);
 axes = cell(size(targetClasses));
 
 for classIdx = 1:numel(targetClasses)
@@ -82,8 +82,16 @@ for classIdx = 1:numel(targetClasses)
     ax = subplot(1, numel(targetClasses), classIdx);
     hold(ax, 'on');
     
-    histogram(ax, 'BinEdges', binEdges, 'BinCounts', poissBinCount, 'EdgeColor', 'none');
-    histogram(ax, specificities(:, classIdx), binEdges, 'EdgeColor', 'none');
+    histogram(ax, ...
+        'BinEdges', binEdges, ...
+        'BinCounts', poissBinCount, ...
+        'DisplayStyle', 'stairs', ...
+        'LineWidth', 2);
+    
+    histogram(ax, ...
+        specificities(:, classIdx), binEdges, ...
+        'DisplayStyle', 'stairs', ...
+        'LineWidth', 2);
 
     xlabel(ax, sprintf('S(%s)', className));
     ax.XAxis.TickDirection = 'out';
@@ -93,8 +101,10 @@ for classIdx = 1:numel(targetClasses)
     ax.YAxis.Limits(1) = 10 ^ (-0.1);
     ax.YAxis.Scale = 'log';
     
-    if classIdx == 1
-        legend('Expected (Poisson)', 'Observed');
+    if classIdx == numel(targetClasses)
+        legend(ax, ...
+            'Expected (Poisson)', 'Observed', ...
+            'Location', 'NorthEast');
     end
     
     axes{classIdx} = ax;
