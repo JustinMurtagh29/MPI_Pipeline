@@ -39,40 +39,125 @@ specificities = classConnectome ./ sum(classConnectome, 2);
 availabilities = avail.axonAvail(classIds, :, :);
 availabilities = availabilities ./ sum(availabilities, 1);
 
-%% geometric predictability for exc. vs. inh. axons
+%%
 minSynCount = 10;
 axonIds = find(conn.axonMeta.synCount >= minSynCount);
 
 % presumed excitatory axons
-axonExcMask = conn.axonMeta(axonIds, :);
-axonExcMask = axonExcMask.spineSynCount ./ axonExcMask.synCount;
-axonExcMask = (axonExcMask > 0.7);
+excMask = conn.axonMeta(axonIds, :);
+excMask = excMask.spineSynCount ./ excMask.synCount;
+excMask = excMask > 0.5;
 
-cosSims = nan(numel(avail.dists), numel(axonIds));
+availSpecSims = nan(numel(avail.dists), numel(axonIds));
+availGlobalSims = nan(numel(avail.dists), numel(axonIds));
 for curIdx = 1:numel(axonIds)
     curAxonId = axonIds(curIdx);
     
-    curAvail = squeeze(availabilities(:, :, curAxonId));
+    curAvail = squeeze(availabilities(:, :, curAxonId))';
     curSpec = specificities(curAxonId, :);
     
-    cosSims(:, curIdx) = curSpec * curAvail;
+    availSpecSims(:, curIdx) = ...
+        1 - pdist2(curAvail, curSpec, 'cosine');
+    availGlobalSims(:, curIdx) = ...
+        1 - pdist2(curAvail, curAvail(end, :), 'cosine');
 end
 
+%% show example traces
 fig = figure();
 ax = axes(fig);
 hold(ax, 'on');
 
-plot(ax, avail.dists / 1E3, median(cosSims(:,  axonExcMask), 2));
-plot(ax, avail.dists / 1E3, median(cosSims(:, ~axonExcMask), 2));
+rng(0);
+for curAxonId = randperm(numel(axonIds), 10)
+    plot(ax, avail.dists / 1E3, availSpecSims(:, curAxonId));
+end
 
 xlabel(ax, 'r_{pred} (µm)');
 ylabel(ax, ...
    {'Geometric predictability'; ...
-    'i.e., median d_{cos}(availability, specificity)'});
+    'i.e., S_{cos}(availability, specificity)'});
+title(ax, info.git_repos{1}.hash, 'FontWeight', 'normal', 'FontSize', 10);
+
+%% heatmap of all axons
+heatSpecBins = 101;
+heatCols = repelem((1:numel(avail.dists))', 1, numel(axonIds));
+heatRows = ceil(availSpecSims / (1 / heatSpecBins));
+
+heatMat = accumarray( ...
+   [heatRows(:), heatCols(:)], 1, ...
+   [heatSpecBins, numel(avail.dists)]);
+
+fig = figure();
+ax = axes(fig);
+
+imagesc(ax, log10(heatMat));
+
+ax.XLim(1) = 0;
+ax.XTickLabel(2:end) = arrayfun( ...
+    @num2str, avail.dists(ax.XTick(2:end)) / 1E3, ...
+    'UniformOutput', false);
+
+ax.YLim = [1, heatSpecBins];
+ax.YTick = 1 + linspace(0, heatSpecBins - 1, 6);
+ax.YTickLabel = arrayfun( ...
+    @(i) sprintf('%g', i), (ax.YTick - 1) / (heatSpecBins - 1), ...
+    'UniformOutput', false);
+
+xlabel(ax, 'r_{pred} (µm)');
+ylabel(ax, ...
+   {'Geometric predictability'; ...
+    'i.e., S_{cos}(availability, specificity)'});
+
+cbar = colorbar('peer', ax);
+cbar.Label.String = 'Axons';
+
+cbar.Ticks = 0:floor(cbar.Limits(end));
+cbar.TickLabels = arrayfun( ...
+    @num2str, 10 .^ cbar.Ticks, ...
+    'UniformOutput', false);
+
+ax.YDir = 'normal';
+ax.TickDir = 'out';
+
+title(ax, ...
+    info.git_repos{1}.hash, ...
+    'FontWeight', 'normal', ...
+    'FontSize', 10);
+
+%% geometric predictability for exc. vs. inh. axons
+fig = figure();
+ax = axes(fig);
+hold(ax, 'on');
+
+plot(ax, avail.dists / 1E3, median(availSpecSims(:,  excMask), 2));
+plot(ax, avail.dists / 1E3, median(availSpecSims(:, ~excMask), 2));
+
+xlabel(ax, 'r_{pred} (µm)');
+ylabel(ax, ...
+   {'Geometric predictability'; ...
+    'i.e., median S_{cos}(availability, specificity)'});
 
 legend(ax, ...
-    sprintf('Excitatory axons (n = %d)', sum( axonExcMask)), ...
-    sprintf('Inhibitory aoxns (n = %d)', sum(~axonExcMask)));
+    sprintf('Excitatory axons (n = %d)', sum( excMask)), ...
+    sprintf('Inhibitory aoxns (n = %d)', sum(~excMask)));
+title(ax, info.git_repos{1}.hash, 'FontWeight', 'normal', 'FontSize', 10);
+
+%% randomness of surround
+fig = figure();
+ax = axes(fig);
+hold(ax, 'on');
+
+plot(ax, avail.dists / 1E3, median(availGlobalSims(:,  excMask), 2));
+plot(ax, avail.dists / 1E3, median(availGlobalSims(:, ~excMask), 2));
+
+xlabel(ax, 'r_{pred} (µm)');
+ylabel(ax, ...
+   {'Randomness of surround'; ...
+    'i.e., median S_{cos}(availability, overall availability)'});
+
+legend(ax, ...
+    sprintf('Excitatory axons (n = %d)', sum( excMask)), ...
+    sprintf('Inhibitory aoxns (n = %d)', sum(~excMask)));
 title(ax, info.git_repos{1}.hash, 'FontWeight', 'normal', 'FontSize', 10);
 
 %% show how contact area translates into synapses
