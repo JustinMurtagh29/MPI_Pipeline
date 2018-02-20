@@ -1,4 +1,4 @@
-% Written by`
+% Written by
 %   Alessandro Motta <alessandro.motta@brain.mpg.de>
 clear;
 
@@ -24,12 +24,6 @@ info = Util.runInfo();
 conn = load(connFile);
 syn = load(synFile);
 interSyn = load(interSynFile);
-
-% for debugging
-param = load(fullfile(rootDir, 'allParameter.mat'), 'p');
-param = param.p;
-
-points = Seg.Global.getSegToPointMap(param);
 
 %% limit synapses
 synT = table;
@@ -74,6 +68,28 @@ title( ...
     'FontWeight', 'norma', 'FontSize', 10);
     
 fig.Position(3:4) = [820, 475];
+
+%% plot histogram over no. of synapse per neurite pair
+% precompute
+[~, ~, neuriteCoupling] = unique( ...
+    synT(:, {'preAggloId', 'postAggloId'}), 'rows');
+neuriteCoupling = accumarray(neuriteCoupling, 1);
+
+% pot
+fig = figure();
+ax = axes(fig);
+
+histogram(ax, neuriteCoupling, 'LineWidth', 2, 'DisplayStyle', 'stairs');
+title(ax, info.git_repos{1}.hash, 'FontWeight', 'normal', 'FontSize', 10);
+xlabel(ax, 'Spine synapses per connection');
+ylabel(ax, 'Connections');
+
+ax.YScale = 'log';
+ax.TickDir = 'out';
+
+ax.XLim = 0.5 + [0, max(neuriteCoupling)];
+ax.YLim(1) = 10 ^ (-0.1);
+ax.YTickLabel = arrayfun(@num2str, ax.YTick, 'UniformOutput', false);
 
 %% calculate baseline slope
 synT = sortrows(synT, 'area', 'ascend');
