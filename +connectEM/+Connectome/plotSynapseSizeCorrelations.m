@@ -466,8 +466,8 @@ areaC = mean(cvData(1).cv < threshCv);
 areaA = mean(cvData(2).cv < threshCv) - areaC;
 
 % NOTE(amotta): areas A + B + C = 1
-learnLowerBound = areaA / (areaA + areaB + areaC)
-learnUpperBound = (1 - areaB) / (areaA + areaB + areaC)
+learnLowerBound = areaA / (areaA + areaB + areaC) %#ok
+learnUpperBound = (1 - areaB) / (areaA + areaB + areaC) %#ok
 
 %% plot same-axon same-dendrite CV vs. intersynapse distance
 maxInterSynDistUm = 25;
