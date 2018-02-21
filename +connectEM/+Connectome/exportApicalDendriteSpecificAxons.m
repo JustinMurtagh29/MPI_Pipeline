@@ -6,7 +6,9 @@ clear;
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a.mat');
 synFile = fullfile(rootDir, 'connectomeState', 'SynapseAgglos_v3.mat');
+
 outputDir = '/home/amotta/Desktop/ad-specific-axons';
+assert(mkdir(outputDir));
 
 info = Util.runInfo();
 
