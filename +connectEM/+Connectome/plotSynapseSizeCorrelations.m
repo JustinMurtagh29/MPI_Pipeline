@@ -103,6 +103,10 @@ neuriteCoupling = repelem( ...
     neuriteCoupling, cellfun(@numel, neuriteSynAreas));
 neuriteSynAreas = cell2mat(neuriteSynAreas);
 
+% add overall box
+neuriteSynAreas = [neuriteSynAreas; synT.area];
+neuriteCoupling = [neuriteCoupling; zeros(size(synT.area))];
+
 % plot
 fig = figure();
 ax = axes(fig);
@@ -113,6 +117,36 @@ xlabel(ax, 'Spine synapses per connection');
 ylabel(ax, 'Axon-spine interface area (µm²)');
 
 ax.YLim(1) = 0;
+ax.TickDir = 'out';
+ax.XTickLabel{1} = 'Overall';
+
+%% plot
+fig = figure();
+ax = axes(fig);
+hold(ax, 'on');
+
+plotCouplings = 1:5;
+
+for i = plotCouplings
+    histogram(ax, ...
+        neuriteSynAreas(neuriteCoupling == i), ...
+        linspace(0, 3, 51), ...
+        'Normalization', 'probability', ...
+        'DisplayStyle', 'stairs', ...
+        'LineWidth', 2);
+end
+
+xlabel(ax, 'Axon-spine interface area (µm²)');
+ylabel(ax, 'Probability');
+
+legend(ax, arrayfun( ...
+    @(n) sprintf('%d spine synapses per connection', n), ...
+    plotCouplings, 'UniformOutput', false));
+title( ...
+    ax, info.git_repos{1}.hash, ...
+    'FontWeight', 'normal', 'FontSize', 10);
+
+ax.XLim(1) = 0;
 ax.TickDir = 'out';
 
 %% ASI area variability
@@ -137,6 +171,35 @@ xlabel(ax, 'Spine synapses per connection');
 ylabel(ax, 'Variability of all ASI areas (CV)');
 
 ax.YLim(1) = 0;
+ax.TickDir = 'out';
+
+%% as histogram
+fig = figure();
+ax = axes(fig);
+hold(ax, 'on');
+
+plotCouplings = 2:5;
+
+for i = plotCouplings
+    histogram(ax, ...
+        neuriteCv(neuriteCoupling == i), ...
+        linspace(0, 1.5, 21), ...
+        'Normalization', 'probability', ...
+        'DisplayStyle', 'stairs', ...
+        'LineWidth', 2);
+end
+
+xlabel(ax, 'Variability of all ASI areas (CV)');
+ylabel(ax, 'Probability');
+
+legend(ax, arrayfun( ...
+    @(n) sprintf('%d spine synapses per connection', n), ...
+    plotCouplings, 'UniformOutput', false));
+title( ...
+    ax, info.git_repos{1}.hash, ...
+    'FontWeight', 'normal', 'FontSize', 10);
+
+ax.XLim(1) = 0;
 ax.TickDir = 'out';
 
 %% ASI area variability for largest two synapses
@@ -165,6 +228,35 @@ xlabel(ax, 'Spine synapses per connection');
 ylabel(ax, 'Variability of largest two ASI areas (CV)');
 
 ax.YLim(1) = 0;
+ax.TickDir = 'out';
+
+%% as histogram
+fig = figure();
+ax = axes(fig);
+hold(ax, 'on');
+
+plotCouplings = 2:5;
+
+for i = plotCouplings
+    histogram(ax, ...
+        neuriteCv(neuriteCoupling == i), ...
+        linspace(0, 1.5, 21), ...
+        'Normalization', 'probability', ...
+        'DisplayStyle', 'stairs', ...
+        'LineWidth', 2);
+end
+
+xlabel(ax, 'Variability of all ASI areas (CV)');
+ylabel(ax, 'Probability');
+
+legend(ax, arrayfun( ...
+    @(n) sprintf('%d spine synapses per connection', n), ...
+    plotCouplings, 'UniformOutput', false));
+title( ...
+    ax, info.git_repos{1}.hash, ...
+    'FontWeight', 'normal', 'FontSize', 10);
+
+ax.XLim(1) = 0;
 ax.TickDir = 'out';
 
 %% calculate baseline slope
