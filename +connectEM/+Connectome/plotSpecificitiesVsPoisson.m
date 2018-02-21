@@ -68,6 +68,55 @@ for curIdx = 1:numel(axonClasses)
         targetClasses, axonClasses(curIdx));
 end
 
+%% look at AD-specific axons
+param = load(fullfile(rootDir, 'allParameter.mat'), 'p');
+param = param.p;
+
+points = Seg.Global.getSegToPointMap(param);
+
+%%
+className = 'ApicalDendrite';
+
+axonSpecs = ...
+    classConnectome ...
+    ./ sum(classConnectome, 2);
+axonIds = find( ...
+    conn.axonMeta.synCount >= minSynPre ...
+  & abs(conn.axonMeta.spineSynFrac - 0.5) > 0.2 ...
+  & axonSpecs(:, strcmpi(targetClasses, className)) > 0.45);
+
+skel = skeleton();
+skel = Skeleton.setParams4Pipeline(skel, param);
+skel = skel.setDescription(sprintf( ...
+    '%s (%s)', mfilename, info.git_repos{1}.hash));
+
+% axons
+for curIdx = 1:numel(axonIds)
+    curAxonId = axonIds(curIdx);
+    curAgglo = conn.axons{curAxonId};
+    
+    skel = Skeleton.fromMST( ...
+        points(curAgglo, :), param.raw.voxelSize, skel);
+    skel.names{end} = sprintf( ...
+        'Axon %d. Spine fraction %.2f', ...
+        curAxonId, conn.axonMeta.spineSynFrac(curAxonId));
+    skel.colors{end} = [1, 0, 0, 1];
+end
+
+% targets
+dendIds = find(conn.denMeta.targetClass == className);
+for curIdx = 1:numel(dendIds)
+    curDendId = dendIds(curIdx);
+    curAgglo = conn.dendrites{curDendId};
+    
+    skel = Skeleton.fromMST( ...
+        points(curAgglo, :), param.raw.voxelSize, skel);
+    skel.names{end} = sprintf('Dendrite %d', curDendId);
+    skel.colors{end} = [0, 0, 1, 1];
+end
+
+skel.write('/home/amotta/Desktop/test.nml');
+
 %% plotting
 function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
     %% preparations
