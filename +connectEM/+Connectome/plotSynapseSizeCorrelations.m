@@ -246,7 +246,7 @@ for i = plotCouplings
         'LineWidth', 2);
 end
 
-xlabel(ax, 'Variability of all ASI areas (CV)');
+xlabel(ax, 'Variability of largest two ASI areas (CV)');
 ylabel(ax, 'Probability');
 
 legend(ax, arrayfun( ...
