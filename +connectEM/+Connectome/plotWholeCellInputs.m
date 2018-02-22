@@ -142,10 +142,19 @@ conn.axonMeta.isExc = (conn.axonMeta.spineSynFrac > 0.5);
 conn.axonMeta.isInh = ~conn.axonMeta.isExc;
 
 %% plotting
-for curIdx = 1:10
+curPlot = @(ax, data) ...
+    histogram( ...
+        ax, data, ...
+        'BinEdges', curBinEdges, ...
+        'DisplayStyle', 'stairs', ...
+        'LineWidth', 2);
+
+for curIdx = 9 %1:size(wcT, 1)
     curFig = figure('visible', 'off');
+    curFig.Position(3:4) = [860, 480];
     
     curSyns = wcT.synapses{curIdx};
+    if isempty(curSyns); continue; end
     
     curSyns.isSpine = syn.isSpineSyn(curSyns.id);
     curSyns.isSoma = logical(somaLUT( ...
@@ -158,13 +167,6 @@ for curIdx = 1:10
     curSyns.dist = curSyns.dist / 1E3;
     curMaxDist = 10 * ceil(max(curSyns.dist) / 10);
     curBinEdges = 0:10:curMaxDist;
-    
-    curPlot = @(ax, data) ...
-        histogram( ...
-            ax, data, ...
-            'BinEdges', curBinEdges, ...
-            'DisplayStyle', 'stairs', ...
-            'LineWidth', 2);
         
     curAx = subplot(2, 1, 1);
     hold(curAx, 'on');
@@ -174,16 +176,20 @@ for curIdx = 1:10
     curPlot(curAx, curSyns.dist(curSyns.isSoma));
     
     curAx.TickDir = 'out';
+    curAx.Position(3) = 0.8 - curAx.Position(1);
+    
     xlim(curAx, curBinEdges([1, end]));
     ylabel(curAx, 'Synapses');
     
-    legend(curAx, ...
-        'All', 'Onto spines', 'Onto soma', ...
-        'Location', 'NorthWest');
     title(curAx, { ...
         sprintf('Inputs onto whole cell %d', curIdx); ...
         sprintf('%s (%s)', info.filename, info.git_repos{1}.hash)}, ...
         'FontWeight', 'normal', 'FontSize', 10);
+    
+    curLeg = legend(curAx, ...
+        'All', 'Onto spines', 'Onto soma', ...
+        'Location', 'EastOutside');
+    curLeg.Position([1, 3]) = [0.82, (0.98 - 0.82)];
     
     curAx = subplot(2, 1, 2);
     hold(curAx, 'on');
@@ -192,18 +198,20 @@ for curIdx = 1:10
     curPlot(curAx, curSyns.dist(curSyns.isInh));
     
     curAx.TickDir = 'out';
+    curAx.Position(3) = 0.8 - curAx.Position(1);
+    
+    xlabel(curAx, 'Distance to soma center (µm)');
     xlim(curAx, curBinEdges([1, end]));
     ylabel(curAx, 'Synapses');
     
-    legend(curAx, ...
-        'Excitatory synapses', ...
-        'Inhibitory synapses', ...
-        'Location', 'NorthWest');
-    xlabel(curAx, 'Distance to soma center (µm)');
+    curLeg = legend(curAx, ...
+        'Excitatory', 'Inhibitory', ...
+        'Location', 'EastOutside');
+    curLeg.Position([1, 3]) = [0.82, (0.98 - 0.82)];
     
     curFigName = sprintf('input-distribution_whole-cell-%d.png', curIdx);
     curFigName = fullfile(outputDir, curFigName);
     
     export_fig('-r172', curFigName, curFig);
-    clear('curFig');
+    clear curFig;
 end
