@@ -3,8 +3,9 @@
 clear;
 
 %% configuration
-rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a.mat');
+param = struct;
+param.saveFolder = '/gaba/u/mberning/results/pipeline/20170217_ROI';
+connName = 'connectome_axons_18_a_ax_spine_syn_clust';
 
 targetClasses = { ...
     'Somata', 'WholeCell', 'ApicalDendrite', ...
@@ -14,7 +15,7 @@ minSynPre = 20;
 info = Util.runInfo();
 
 %% loading data
-conn = load(connFile);
+conn = connectEM.Connectome.load(param, connName);
 
 %% build class connectome
 % try to replicate cass connectome
@@ -68,6 +69,12 @@ axonClasses(4).axonIds = find( ...
 axonClasses(4).title = sprintf( ...
    ['axons with ≥ %d synapses and ', ...
     'at most 30 %% onto spines)'], minSynPre);
+
+axonClasses(5).axonIds = find( ...
+    conn.axonMeta.isThalamocortical);
+axonClasses(5).title = sprintf( ...
+    'thalamocortical axons (n = %d)', ...
+    numel(axonClasses(end).axonIds));
 
 %% plot
 for curIdx = 1:numel(axonClasses)
