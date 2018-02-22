@@ -7,6 +7,7 @@ rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 availFile = '/tmpscratch/amotta/l4/2018-02-02-surface-availability-connectome-axons-18-a/axon-avail-data.mat';
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a.mat');
 
+minSynPre = 10;
 info = Util.runInfo();
 
 %% loading data
@@ -32,267 +33,148 @@ targetClasses = unique(conn.denMeta.targetClass);
 classConnectome = accumarray( ...
     cat(2, connectome.edges(:, 1), connectome.targetClassId), ...
     connectome.synCount, [numel(conn.axons), numel(targetClasses)]);
-specificities = classConnectome ./ sum(classConnectome, 2);
 
 %% build availabilities
 [~, classIds] = ismember(targetClasses, avail.targetClasses);
 availabilities = avail.axonAvail(classIds, :, :);
 availabilities = availabilities ./ sum(availabilities, 1);
 
-%%
-minSynCount = 10;
-axonIds = find(conn.axonMeta.synCount >= minSynCount);
+%% likelihoods
+axonTargetLik = cellfun(@numel, {avail.dists, conn.axons, targetClasses});
+axonTargetLik = nan(axonTargetLik);
 
-% presumed excitatory axons
-excMask = conn.axonMeta(axonIds, :);
-excMask = excMask.spineSynCount ./ excMask.synCount;
-excMask = excMask > 0.5;
-
-availSpecSims = nan(numel(avail.dists), numel(axonIds));
-availGlobalSims = nan(numel(avail.dists), numel(axonIds));
-for curIdx = 1:numel(axonIds)
-    curAxonId = axonIds(curIdx);
+for curAxonId = 1:numel(conn.axons)
+    curTargetSyns = classConnectome(curAxonId, :);
+    curSynCount = conn.axonMeta.synCount(curAxonId);
+    curLambdas = curSynCount * availabilities(:, :, curAxonId);
     
-    curAvail = squeeze(availabilities(:, :, curAxonId))';
-    curSpec = specificities(curAxonId, :);
-    
-    availSpecSims(:, curIdx) = ...
-        1 - pdist2(curAvail, curSpec, 'cosine');
-    availGlobalSims(:, curIdx) = ...
-        1 - pdist2(curAvail, curAvail(end, :), 'cosine');
+    for curClassIdx = 1:numel(targetClasses)
+        axonTargetLik(:, curAxonId, curClassIdx) = poisspdf( ...
+            curTargetSyns(curClassIdx), curLambdas(curClassIdx, :));
+    end
 end
 
-%% show example traces
-fig = figure();
-ax = axes(fig);
-hold(ax, 'on');
+%% build axon classes
+conn.axonMeta.spineSynFrac = ...
+    conn.axonMeta.spineSynCount ...
+    ./ conn.axonMeta.synCount;
 
-rng(0);
-for curAxonId = randperm(numel(axonIds), 10)
-    plot(ax, avail.dists / 1E3, availSpecSims(:, curAxonId));
-end
+axonClasses = struct;
+axonClasses(1).axonIds = find( ...
+    conn.axonMeta.synCount >= minSynPre ...
+  & conn.axonMeta.spineSynFrac > 0.7);
+axonClasses(1).title = sprintf( ...
+   ['axons with ≥ %d synapses and ', ...
+    'at least 70 %% onto spines'], minSynPre);
 
-xlabel(ax, 'r_{pred} (µm)');
-ylabel(ax, ...
-   {'Geometric predictability'; ...
-    'i.e., S_{cos}(availability, specificity)'});
-title(ax, info.git_repos{1}.hash, 'FontWeight', 'normal', 'FontSize', 10);
+axonClasses(2).axonIds = find( ...
+    conn.axonMeta.synCount >= minSynPre ...
+  & conn.axonMeta.spineSynFrac > 0.5);
+axonClasses(2).title = sprintf( ...
+   ['axons with ≥ %d synapses and ', ...
+    'at least 50 %% onto spines'], minSynPre);
 
-%% heatmap of all axons
-heatSpecBins = 101;
-heatCols = repelem((1:numel(avail.dists))', 1, numel(axonIds));
-heatRows = ceil(availSpecSims / (1 / heatSpecBins));
-
-heatMat = accumarray( ...
-   [heatRows(:), heatCols(:)], 1, ...
-   [heatSpecBins, numel(avail.dists)]);
-
-fig = figure();
-ax = axes(fig);
-
-imagesc(ax, log10(heatMat));
-
-ax.XLim(1) = 0;
-ax.XTickLabel(2:end) = arrayfun( ...
-    @num2str, avail.dists(ax.XTick(2:end)) / 1E3, ...
-    'UniformOutput', false);
-
-ax.YLim = [1, heatSpecBins];
-ax.YTick = 1 + linspace(0, heatSpecBins - 1, 6);
-ax.YTickLabel = arrayfun( ...
-    @(i) sprintf('%g', i), (ax.YTick - 1) / (heatSpecBins - 1), ...
-    'UniformOutput', false);
-
-xlabel(ax, 'r_{pred} (µm)');
-ylabel(ax, ...
-   {'Geometric predictability'; ...
-    'i.e., S_{cos}(availability, specificity)'});
-
-cbar = colorbar('peer', ax);
-cbar.Label.String = 'Axons';
-
-cbar.Ticks = 0:floor(cbar.Limits(end));
-cbar.TickLabels = arrayfun( ...
-    @num2str, 10 .^ cbar.Ticks, ...
-    'UniformOutput', false);
-
-ax.YDir = 'normal';
-ax.TickDir = 'out';
-
-title(ax, ...
-    info.git_repos{1}.hash, ...
-    'FontWeight', 'normal', ...
-    'FontSize', 10);
-
-%% geometric predictability for exc. vs. inh. axons
-fig = figure();
-ax = axes(fig);
-hold(ax, 'on');
-
-plot(ax, avail.dists / 1E3, median(availSpecSims(:,  excMask), 2));
-plot(ax, avail.dists / 1E3, median(availSpecSims(:, ~excMask), 2));
-
-xlabel(ax, 'r_{pred} (µm)');
-ylabel(ax, ...
-   {'Geometric predictability'; ...
-    'i.e., median S_{cos}(availability, specificity)'});
-
-legend(ax, ...
-    sprintf('Excitatory axons (n = %d)', sum( excMask)), ...
-    sprintf('Inhibitory aoxns (n = %d)', sum(~excMask)));
-title(ax, info.git_repos{1}.hash, 'FontWeight', 'normal', 'FontSize', 10);
-
-%% randomness of surround
-fig = figure();
-ax = axes(fig);
-hold(ax, 'on');
-
-plot(ax, avail.dists / 1E3, median(availGlobalSims(:,  excMask), 2));
-plot(ax, avail.dists / 1E3, median(availGlobalSims(:, ~excMask), 2));
-
-xlabel(ax, 'r_{pred} (µm)');
-ylabel(ax, ...
-   {'Randomness of surround'; ...
-    'i.e., median S_{cos}(availability, overall availability)'});
-
-legend(ax, ...
-    sprintf('Excitatory axons (n = %d)', sum( excMask)), ...
-    sprintf('Inhibitory aoxns (n = %d)', sum(~excMask)));
-title(ax, info.git_repos{1}.hash, 'FontWeight', 'normal', 'FontSize', 10);
-
-%% show how contact area translates into synapses
-radiusUm = 1;
-minSynCount = 10;
-
-axonIds = find(conn.axonMeta.synCount >= minSynCount);
-radiusIdx = find(avail.dists == (1E3 * radiusUm));
-
-fig = figure();
-for curClassIdx = 1:numel(targetClasses)
-    curClassName = targetClasses(curClassIdx);
+axonClasses(3).axonIds = find( ...
+    conn.axonMeta.synCount >= minSynPre ...
+  & conn.axonMeta.spineSynFrac < 0.5);
+axonClasses(3).title = sprintf( ...
+   ['axons with ≥ %d synapses and ', ...
+    'at most 50 %% onto spines'], minSynPre);
     
-    curAvail = squeeze(availabilities( ...
-        curClassIdx, radiusIdx, axonIds));
-    curSpecs = squeeze(specificities( ...
-        axonIds, curClassIdx));
+axonClasses(4).axonIds = find( ...
+    conn.axonMeta.synCount >= minSynPre ...
+  & conn.axonMeta.spineSynFrac < 0.3);
+axonClasses(4).title = sprintf( ...
+   ['axons with ≥ %d synapses and ', ...
+    'at most 30 %% onto spines'], minSynPre);
+
+%% plot likelihoods
+fig = figure();
+for curTargetClassIdx = fliplr(1:numel(targetClasses))
+    curTargetClass = targetClasses(curTargetClassIdx);
     
-    % plotting
-    curAx = subplot(1, numel(targetClasses), curClassIdx);
+    curAx = subplot(1, numel(targetClasses), curTargetClassIdx);
     hold(curAx, 'on');
     
-    % scatter plot
-    scatter(curAx, curAvail, curSpecs, 'x');
+    for curAxonClassIdx = 1:numel(axonClasses)
+        curAxonIds = axonClasses(curAxonClassIdx).axonIds;
+        curMedianLik = axonTargetLik(:, curAxonIds, curTargetClassIdx);
+        curMedianLik = median(curMedianLik, 2);
+        
+        plot(curAx, avail.dists / 1E3, curMedianLik, 'LineWidth', 2);
+    end
     
-    xlim(curAx, [0, 1]);
     ylim(curAx, [0, 1]);
+    title(curAx, char(curTargetClass));
     
-    xlabel(curAx, ...
-       {sprintf('A(%s)', curClassName); ...
-        sprintf('at r_{pred} = %d µm', radiusUm)});
-    ylabel(curAx, sprintf('S(%s)', curClassName));
+    xlabel(curAx, 'r_{pred} (µm)');
     
-    % diagonal
-    plot(curAx, [0, 1], [0, 1], 'k--');
+    if curTargetClassIdx ~= 1
+        yticklabels(curAx, {});
+    end
+    
+    curAx.TickDir = 'out';
 end
 
+ylabel(curAx, { ...
+    'Likelihood of target synapses';
+    'under availability-based Poisson model'});
+legend(curAx, {axonClasses.title}, 'Location', 'NorthWest');
 annotation( ...
-    fig, ...
     'textbox', [0, 0.9, 1, 0.1], ...
-    'EdgeColor', 'none', 'HorizontalAlignment', 'center', ...
-    'String', { ...
-        'Target class availability versus specificity';
-        info.git_repos{1}.hash});
+    'String', {info.filename; info.git_repos{1}.hash}, ...
+    'EdgeColor', 'none', 'HorizontalAlignment', 'center');
 
-fig.Position(3:4) = [1912, 290];
-
-%% find AD specific axons
-className = 'ApicalDendrite';
-classIdx = find(targetClasses == className);
-minSpecificity = 0.2;
-
-axonIds = find( ...
-    conn.axonMeta.synCount >= 10 ...
-  & specificities(:, classIdx) >= minSpecificity);
-
-%% plot
+%% plot correlations
 fig = figure();
-ax = axes(fig);
-hold(ax, 'on');
-
-% color map
-cmap = parula(101);
-colormap(ax, cmap);
-ax.Color = 'black';
-
-maxSpec = max(specificities(axonIds, classIdx));
-[~, sortIds] = sort(specificities(axonIds, classIdx), 'ascend');
-axonIds = axonIds(sortIds);
-
-for curAxonId = reshape(axonIds, 1, [])
-    curAvails = shiftdim(availabilities(classIdx, :, curAxonId));
+for curTargetClassIdx = fliplr(1:numel(targetClasses))
+    curTargetClass = targetClasses(curTargetClassIdx);
     
-    curColor = specificities(curAxonId, classIdx);
-    curColor = cmap(round(100 * curColor / maxSpec) + 1, :);
-  
-    plot(ax, avail.dists / 1E3, curAvails, 'Color', curColor);
+    curAx = subplot(1, numel(targetClasses), curTargetClassIdx);
+    hold(curAx, 'on');
+    
+    for curAxonClassIdx = 1:numel(axonClasses)
+        curAxonIds = axonClasses(curAxonClassIdx).axonIds;
+        
+        curAvails = availabilities(curTargetClassIdx, :, curAxonIds);
+        curAvails = transpose(squeeze(curAvails));
+        
+        curSpecs = classConnectome(curAxonIds, :);
+        curSpecs = curSpecs ./ sum(curSpecs, 2);
+        
+        curCorrVec = nan(numel(avail.dists), 1);
+        for curDistIdx = 1:numel(avail.dists)
+            curCorrMat = corrcoef( ...
+                curAvails(:, curDistIdx), ...
+                curSpecs(:, curTargetClassIdx));
+            curCorrVec(curDistIdx) = curCorrMat(2);
+        end
+        
+        plot(curAx, avail.dists / 1E3, curCorrVec, 'LineWidth', 2);
+    end
+    
+    plot(curAx, avail.dists([1, end]) / 1E3, [0, 0], 'k--');
+    
+    title(curAx, char(curTargetClass));
+    xlabel(curAx, 'r_{pred} (µm)');
+    
+    if curTargetClass == targetClasses(1)
+        ylabel(curAx, { ...
+            'Correlation between'; ...
+            'availability and specificity'});
+    else
+        curAx.YTickLabel = {};
+    end
+    
+    curAx.TickDir = 'out';
 end
 
-xlabel(ax, 'r_{pred} (µm)');
-ylabel(ax, sprintf('%s availability', className));
-xlim(ax, [0, 60]);
+yMin = min(arrayfun(@(a) a.YLim(1), fig.Children));
+yMax = max(arrayfun(@(a) a.YLim(2), fig.Children));
+[fig.Children.YLim] = deal([yMin, yMax]);
 
-cbar = colorbar('peer', ax);
-cbar.Label.String = sprintf('%s specificity', className);
-caxis([0, maxSpec]);
-
+legend(curAx, {axonClasses.title}, 'Location', 'NorthWest');
 annotation( ...
-    fig, ...
     'textbox', [0, 0.9, 1, 0.1], ...
-    'EdgeColor', 'none', 'HorizontalAlignment', 'center', ...
-    'String', info.git_repos{1}.hash);
-
-fig.Position(3:4) = [840, 630];
-
-%% plot distribution over peak-predictability
-% For each axon, we calculate
-% * specificity / {min, max}(availability)
-% * distribution over radii of peak predictability
-classSpec = specificities(axonIds, classIdx);
-classAvails = shiftdim(availabilities(classIdx, :, axonIds));
-
-[classPeakAvail, classPeakIdx] = max(classAvails, [], 1);
-classPeakPred = classSpec(:) ./ classPeakAvail(:);
-
-fig = figure();
-ax = axes(fig);
-
-histogram(ax, classPeakPred);
-ax.XLim = [0, 80];
-
-xlabel(ax, { ...
-    'specificity / max(availability)'; ...
-    sprintf('for %s', className)});
-ylabel(ax, {'Axons with'; sprintf( ...
-    'S(%s) > %.1f', className, minSpecificity)});
-title( ...
-   {'Synapse predictability'; info.git_repos{1}.hash}, ...
-    'FontWeight', 'normal', 'FontSize', 10);
-
-%% plot availability vs. specificity
-axonIds = find(conn.axonMeta.synCount >= 10);
-peakAvails = squeeze(max(availabilities, [], 2))';
-
-fig = figure();
-
-for curClassIdx = 1:numel(targetClasses)
-    curAx = subplot(1, numel(targetClasses), curClassIdx);
-    scatter(curAx, ...
-        specificities(axonIds, curClassIdx), ...
-        peakAvails(axonIds, curClassIdx), 'x');
-    
-    xlim(curAx, [0, 1]);
-    ylim(curAx, [0, 1]);
-    
-    xlabel(curAx, sprintf('S(%s)', targetClasses(curClassIdx)));
-    ylabel(curAx, sprintf('A(%s)', targetClasses(curClassIdx)));
-end
+    'String', {info.filename; info.git_repos{1}.hash}, ...
+    'EdgeColor', 'none', 'HorizontalAlignment', 'center');
