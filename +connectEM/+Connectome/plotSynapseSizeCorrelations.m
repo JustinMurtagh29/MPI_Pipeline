@@ -240,6 +240,62 @@ ylabel(ax, 'Variability of largest two ASI areas (CV)');
 ax.YLim(1) = 0;
 ax.TickDir = 'out';
 
+%% ASI variability for all combinations
+plotCouplings = 2:5;
+
+[~, ~, neuriteCoupling] = unique( ...
+    synT(:, {'preAggloId', 'postAggloId'}), 'rows');
+neuriteAsis = accumarray( ...
+    neuriteCoupling, synT.area, [], ...
+    @(areas) {sort(areas, 'descend')});
+neuriteCoupling = accumarray(neuriteCoupling, 1);
+
+cvOf = @(d) std(d, 0, 2) ./ mean(d, 2);
+
+fig = figure();
+fig.Color = 'white';
+fig.Position(3:4) = [1000, 900];
+
+for curCouplingIdx = 1:numel(plotCouplings)
+    curCoupling = plotCouplings(curCouplingIdx);
+    
+    curPairs = sortrows(combnk(1:curCoupling, 2));
+   [~, curSortIds] = sort(diff(curPairs, 1, 2), 'ascend');
+    curPairs = curPairs(curSortIds, :);
+    
+    curCvs = cellfun( ...
+        @(asis) cvOf(reshape(asis(curPairs), [], 2))', ...
+        neuriteAsis(neuriteCoupling == curCoupling), ...
+        'UniformOutput', false);
+    curCvs = cell2mat(curCvs);
+    
+    curAx = subplot(numel(plotCouplings), 1, curCouplingIdx);
+    boxplot(curAx, curCvs);
+    
+    curAx.TickDir = 'out';
+    curAx.XTickLabel = arrayfun( ...
+        @(a, b) sprintf('(%d, %d)', a, b), ...
+        curPairs(:, 1), curPairs(:, 2), ...
+        'UniformOutput', false);
+end
+
+xlabel(curAx, 'Synapse pair');
+ylabel(curAx, 'Variability of ASI areas (CV)');
+
+xMax = max(arrayfun(@(a) a.XLim(end), fig.Children));
+yMax = max(arrayfun(@(a) a.YLim(end), fig.Children));
+
+[fig.Children.XLim] = deal([0, xMax]);
+[fig.Children.YLim] = deal([0, yMax]);
+
+annotation( ...
+    fig, ...
+    'textbox', [0, 0.9, 1, 0.1], ...
+	'String', { ...
+        'Variability for all synapse combinations'; ...
+        info.git_repos{1}.hash}, ...
+    'EdgeColor', 'none', 'HorizontalAlignment', 'center');
+
 %% as histogram
 fig = figure();
 ax = axes(fig);
