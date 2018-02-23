@@ -107,6 +107,16 @@ neuriteSynAreas = cell2mat(neuriteSynAreas);
 neuriteSynAreas = [neuriteSynAreas; synT.area];
 neuriteCoupling = [neuriteCoupling; zeros(size(synT.area))];
 
+testT = table;
+testT.pair = combnk(0:5, 2);
+[~, testT.alpha] = arrayfun( ...
+    @(one, two) kstest2( ...
+        neuriteSynAreas(neuriteCoupling == one), ...
+        neuriteSynAreas(neuriteCoupling == two), ...
+        'Tail', 'larger'), ...
+    testT.pair(:, 1), testT.pair(:, 2));
+disp(testT);
+
 % plot
 fig = figure();
 ax = axes(fig);
