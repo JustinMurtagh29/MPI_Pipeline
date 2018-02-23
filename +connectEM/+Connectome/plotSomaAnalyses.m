@@ -4,7 +4,7 @@ clear;
 
 %% configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a.mat');
+connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a_ax_spine_syn_clust.mat');
 
 minSynPre = 10;
 spineFracThresh = 0.5;
@@ -173,3 +173,69 @@ annotation( ...
     'EdgeColor', 'none', 'HorizontalAlignment', 'center');
 
 fig.Position(3:4) = [1758, 631];
+
+%% look at excitatory inputs onto somata
+somaId = 72;
+
+somaIds = find(conn.denMeta.targetClass == 'Somata');
+somaId = somaIds(somaId);
+
+mask = (conn.connectome.edges(:, 2) == somaId);
+axonIds = conn.connectome.edges(mask, 1);
+synIds = conn.connectome.synIdx(mask);
+clear mask;
+
+conn.axonMeta.spineSynFrac = ...
+    conn.axonMeta.spineSynCount ...
+    ./ conn.axonMeta.synCount;
+
+somaSynT = table;
+somaSynT.id = cell2mat(synIds);
+somaSynT.axonId = repelem(axonIds, cellfun(@numel, synIds));
+somaSynT(conn.axonMeta.spineSynFrac(somaSynT.axonId) < 0.5, :) = [];
+
+somaSynT.segIds = cellfun(@vertcat, ...
+    syn.synapses.presynId(somaSynT.id), ...
+    syn.synapses.postsynId(somaSynT.id), ...
+    'UniformOutput', false);
+clear axonIds synIds;
+
+skel = skeleton();
+skel = Skeleton.setParams4Pipeline(skel, param);
+
+skel = Skeleton.fromMST( ...
+    segCentroids(conn.dendrites{somaId}, :), ...
+    param.raw.voxelSize, skel);
+skel.names{end} = sprintf('Soma #%d', somaId);
+skel.colors(end) = {[1, 0, 0, 1]};
+
+axonIds = unique(somaSynT.axonId);
+skel = Skeleton.fromMST( ...
+    cellfun( ...
+        @(segIds) segCentroids(segIds, :), ...
+        conn.axons(axonIds), 'UniformOutput', false), ...
+	param.raw.voxelSize, skel);
+
+axonNames = arrayfun( ...
+    @(id) sprintf( ...
+        'Axon #%d (%d synapses. %.1f %% onto spines)', ...
+        id, conn.axonMeta.synCount(id), ...
+        100 * conn.axonMeta.spineSynFrac(id)), ...
+    axonIds, 'UniformOutput', false);
+
+skel.names(end - (0:(numel(axonIds) - 1))) = flip(axonNames);
+skel.colors(end - (0:(numel(axonIds) - 1))) = {[0, 0, 1, 1]};
+
+skel = Skeleton.fromMST( ...
+    cellfun( ...
+        @(segIds) segCentroids(segIds, :), ...
+        somaSynT.segIds, 'UniformOutput', false), ...
+	param.raw.voxelSize, skel);
+
+synNames = arrayfun(@(id, axonId) ...
+    sprintf('Synapse #%d from axon #%d', id, axonId), ...
+    somaSynT.id, somaSynT.axonId, 'UniformOutput', false);
+skel.names(end - (0:(size(somaSynT, 1) - 1))) = flip(synNames);
+skel.colors(end - (0:(size(somaSynT, 1) - 1))) = {[0, 1, 0, 1]};
+
+skel.write('/home/amotta/Desktop/soma-72.nml');
