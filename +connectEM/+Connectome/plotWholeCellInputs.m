@@ -58,43 +58,50 @@ wcT.segIds = cellfun( ...
     @(segIds, somaSegIds) unique(cat(1, segIds, somaSegIds)), ...
     wcT.segIds, somaAgglos(wcT.somaId), 'UniformOutput', false);
 
-%% determine segment of origin (representing soma)
-wcT.origSegIdx = nan(size(wcT.aggloId));
-
-for curIdx = 1:size(wcT, 1)
-    curSomaSegIds = somaAgglos{wcT.somaId(curIdx)};
-    
-    curSomaSegPos = segCentroids(curSomaSegIds, :);
-    curSomaSegPos = curSomaSegPos .* param.raw.voxelSize;
-    
-    curSomaPos = segMass(curSomaSegIds);
-    curSomaPos = curSomaPos(:) ./ sum(curSomaPos);
-    curSomaPos = sum(curSomaPos .* curSomaSegPos, 1);
-    
-   [~, curSomaSegId] = min( ...
-       pdist2(curSomaSegPos, curSomaPos));
-   [~, wcT.origSegIdx(curIdx)] = ismember( ...
-        curSomaSegIds(curSomaSegId), wcT.segIds{curIdx});
-end
-
-%% calculate distance to soma center
+%% calculate distance to soma surface
 wcT.nodeDists = cell(size(wcT.segIds));
 
 for curIdx = 1:10 % size(wcT, 1)
-    curOrigSegIdx = wcT.origSegIdx(curIdx);
+    curSegIds = wcT.segIds{curIdx};
     
-    curNodes = wcT.segIds{curIdx};
-    curNodes = segCentroids(curNodes, :);
-    curNodes = curNodes .* param.raw.voxelSize;
+    curSomaSegIds = somaAgglos{wcT.somaId(curIdx)};
+   [~, curSomaSegIds] = ismember(curSomaSegIds, curSegIds);
+    assert(all(curSomaSegIds));
     
-    curAdj = pdist(curNodes);
-    assert(all(curAdj));
+    % build weights
+    curDists = segCentroids(curSegIds, :);
+    curDists = curDists .* param.raw.voxelSize;
+    curDists = pdist(curDists);
+    assert(all(curDists));
     
-    curAdj = sparse(squareform(curAdj));
-    curAdj = graphminspantree(curAdj, curOrigSegIdx);
-   
+    curDists = squareform(curDists);
+    
+    % NOTE(amotta): Set distance between somatic segments to zero.
+    %
+    % True zeros cannot be used (not even with the additional 'Weights'
+    % option of `graphminspantree`) since the output matrix will contain
+    % zeros for both absent and somatic edges.
+    curDists(curSomaSegIds, curSomaSegIds) = eps;
+    
+    curAdj = graphminspantree( ...
+        sparse(curDists), curSomaSegIds(1));
+    curAdj = logical(curAdj);
+    
+    % now we can use true zeros
+    curDists(curSomaSegIds, curSomaSegIds) = 0;
+
     curDists = graphshortestpath( ...
-        curAdj, curOrigSegIdx, 'Directed', false);
+        curAdj, curSomaSegIds(1), ...
+        'Weights', curDists(curAdj), ...
+        'Directed', false);
+    
+    % sanity checks
+    curSomaMask = false(size(curSegIds));
+    curSomaMask(curSomaSegIds) = true;
+    
+    assert(~any(curDists(curSomaMask)));
+    assert(all(curDists(~curSomaMask)));
+    
     curDists = reshape(curDists, [], 1);
     wcT.nodeDists{curIdx} = curDists;
 end
@@ -158,8 +165,12 @@ for curIdx = 1:size(wcT, 1)
     
     curSyns.dist = wcT.nodeDists{curIdx}(curSyns.segIdx);
     curSyns.dist = curSyns.dist / 1E3;
+    
+    % move soma synapses to separate bin
+    curSyns.dist(curSyns.isSoma) = -eps;
+    
     curMaxDist = 10 * ceil(max(curSyns.dist) / 10);
-    curBinEdges = 0:10:curMaxDist;
+    curBinEdges = -10:10:curMaxDist;
     
     curPlot = @(ax, data) ...
         histogram( ...
@@ -200,7 +211,7 @@ for curIdx = 1:size(wcT, 1)
     curAx.TickDir = 'out';
     curAx.Position(3) = 0.8 - curAx.Position(1);
     
-    xlabel(curAx, 'Distance to soma center (µm)');
+    xlabel(curAx, 'Distance to soma (µm)');
     xlim(curAx, curBinEdges([1, end]));
     ylabel(curAx, 'Synapses');
     
