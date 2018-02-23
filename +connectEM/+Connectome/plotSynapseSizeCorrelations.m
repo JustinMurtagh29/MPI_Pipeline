@@ -341,6 +341,7 @@ for curCouplingIdx = 1:numel(plotCouplings)
         'UniformOutput', false);
     curCvs = cell2mat(curCvs);
     
+    figure(fig);
     curAx = subplot(numel(plotCouplings), 1, curCouplingIdx);
     boxplot(curAx, curCvs);
     
