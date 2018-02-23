@@ -240,6 +240,78 @@ ylabel(ax, 'Variability of largest two ASI areas (CV)');
 ax.YLim(1) = 0;
 ax.TickDir = 'out';
 
+%% as histogram
+fig = figure();
+ax = axes(fig);
+hold(ax, 'on');
+
+plotCouplings = 2:5;
+
+for i = plotCouplings
+    histogram(ax, ...
+        neuriteCv(neuriteCoupling == i), ...
+        linspace(0, 1.5, 21), ...
+        'Normalization', 'probability', ...
+        'DisplayStyle', 'stairs', ...
+        'LineWidth', 2);
+end
+
+xlabel(ax, 'Variability of largest two ASI areas (CV)');
+ylabel(ax, 'Probability');
+
+legend(ax, arrayfun( ...
+    @(n) sprintf('%d spine synapses per connection', n), ...
+    plotCouplings, 'UniformOutput', false));
+title( ...
+    ax, info.git_repos{1}.hash, ...
+    'FontWeight', 'normal', 'FontSize', 10);
+
+ax.XLim(1) = 0;
+ax.TickDir = 'out';
+
+%% do comparisons again null hypothesis
+controlCouplings = 2:5;
+for curCoupling = controlCouplings
+    % control
+    rng(0);
+    curCtrlCount = curCoupling * floor(size(synT, 1) / curCoupling);
+    
+    curCtrlVals = randperm(size(synT, 1), curCtrlCount);
+    curCtrlVals = reshape(curCtrlVals, [], curCoupling);
+    curCtrlVals = synT.area(curCtrlVals);
+    
+    curCtrlVals = sort(curCtrlVals, 2, 'descend');
+    curCtrlVals = curCtrlVals(:, 1:2);
+    
+    curCtrlCvs = ...
+        std(curCtrlVals, 0, 2) ...
+     ./ mean(curCtrlVals, 2);
+    
+    fig = figure();
+    ax = axes(fig); %#ok
+    hold(ax, 'on');
+    
+    histogram(ax, ...
+        neuriteCv(neuriteCoupling == curCoupling), ...
+        linspace(0, 1.5, 21), ...
+        'Normalization', 'probability', ...
+        'DisplayStyle', 'stairs', ...
+        'LineWidth', 2);
+    histogram(ax, ...
+        curCtrlCvs, ...
+        linspace(0, 1.5, 21), ...
+        'Normalization', 'probability', ...
+        'DisplayStyle', 'stairs', ...
+        'LineWidth', 2);
+    
+    title(ax, ...
+       {sprintf('Control for %d-fold coupled neurites', curCoupling);
+        info.git_repos{1}.hash}, 'FontWeight', 'normal', 'FontSize', 10);
+    legend(ax, 'Observed', 'Control');
+    xlabel(ax, 'CV of largest two AIS');
+    ylabel(ax, 'Fraction');
+end
+
 %% ASI variability for all combinations
 plotCouplings = 2:5;
 
@@ -295,35 +367,6 @@ annotation( ...
         'Variability for all synapse combinations'; ...
         info.git_repos{1}.hash}, ...
     'EdgeColor', 'none', 'HorizontalAlignment', 'center');
-
-%% as histogram
-fig = figure();
-ax = axes(fig);
-hold(ax, 'on');
-
-plotCouplings = 2:5;
-
-for i = plotCouplings
-    histogram(ax, ...
-        neuriteCv(neuriteCoupling == i), ...
-        linspace(0, 1.5, 21), ...
-        'Normalization', 'probability', ...
-        'DisplayStyle', 'stairs', ...
-        'LineWidth', 2);
-end
-
-xlabel(ax, 'Variability of largest two ASI areas (CV)');
-ylabel(ax, 'Probability');
-
-legend(ax, arrayfun( ...
-    @(n) sprintf('%d spine synapses per connection', n), ...
-    plotCouplings, 'UniformOutput', false));
-title( ...
-    ax, info.git_repos{1}.hash, ...
-    'FontWeight', 'normal', 'FontSize', 10);
-
-ax.XLim(1) = 0;
-ax.TickDir = 'out';
 
 %% calculate baseline slope
 synT = sortrows(synT, 'area', 'ascend');
