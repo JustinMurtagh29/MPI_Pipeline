@@ -4,7 +4,7 @@ clear;
 
 %% configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-outputDir = '/home/amotta/Desktop';
+outputDir = '/tmpscratch/amotta/l4/2018-02-23-whole-cell-input-distributions/20180223T132250-run';
 
 synFile = fullfile(rootDir, 'connectomeState', 'SynapseAgglos_v3_ax_spine_clustered.mat');
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a_ax_spine_syn_clust.mat');
@@ -63,7 +63,7 @@ wcT.segIds = cellfun( ...
 %% calculate distance to soma surface
 wcT.nodeDists = cell(size(wcT.segIds));
 
-for curIdx = 1:10 % size(wcT, 1)
+for curIdx = 1:size(wcT, 1)
     curSegIds = wcT.segIds{curIdx};
     
     curSomaSegIds = somaAgglos{wcT.somaId(curIdx)};
@@ -111,7 +111,7 @@ end
 %% collect input synapses
 wcT.synapses = cell(size(wcT.aggloId));
 
-for curIdx = 1:10 % size(wcT, 1)
+for curIdx = 1:size(wcT, 1)
     curPostIds = [ ...
         somaAggloIds(wcT.somaId(curIdx)), ...
         dendAggloIds(wcT.dendId(curIdx))];
