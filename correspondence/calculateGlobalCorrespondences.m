@@ -1,5 +1,8 @@
 function calculateGlobalCorrespondences(pSeg, cubeCoords1, cubeCoords2, bboxSmall1, bboxSmall2, saveFolder)
     % calculateGlobalCorrespondences -> Find correspondence between global segmentations by comparing over faces of adjacent cubes
+    % Author: Manuel Berning <manuel.berning@brain.mpg.de>
+    % Author: Benedikt Staffler <benedikt.staffler@brain.mpg.de>
+    
 
     % Determine direction orthogonal to plane that touches in bboxSmall
     dirOfOverlap = find(~all(bboxSmall1 == bboxSmall2,2));
