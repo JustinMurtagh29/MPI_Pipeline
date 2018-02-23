@@ -1,4 +1,6 @@
 function [corrEdges, corrCom] = collectGlobalCorrespondences(p)
+% Author: Manuel Berning <manuel.berning@brain.mpg.de>
+% Author: Benedikt Staffler <benedikt.staffler@brain.mpg.de>
 
     saveFolder = p.correspondence.saveFolder;
     files = dir([saveFolder '*.mat']);
