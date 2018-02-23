@@ -21,8 +21,10 @@ segMass = Seg.Global.getSegToSizeMap(param);
 segCentroids = Seg.Global.getSegToCentroidMap(param);
 
 syn = load(synFile);
-conn = load(connFile);
 dend = load(dendFile);
+
+[~, connName] = fileparts(connFile);
+conn = connectEM.Connectome.load(param, connName);
 
 %% establish correspondence between connectome and whole cells
 somaAggloIds = find(conn.denMeta.targetClass == 'Somata');
@@ -162,6 +164,7 @@ for curIdx = 1:size(wcT, 1)
     
     curSyns.isExc = conn.axonMeta.isExc(curSyns.axonId);
     curSyns.isInh = conn.axonMeta.isInh(curSyns.axonId);
+    curSyns.isTc = conn.axonMeta.isThalamocortical(curSyns.axonId);
     
     curSyns.dist = wcT.nodeDists{curIdx}(curSyns.segIdx);
     curSyns.dist = curSyns.dist / 1E3;
@@ -207,6 +210,7 @@ for curIdx = 1:size(wcT, 1)
     
     curPlot(curAx, curSyns.dist(curSyns.isExc));
     curPlot(curAx, curSyns.dist(curSyns.isInh));
+    curPlot(curAx, curSyns.dist(curSyns.isTc));
     
     curAx.TickDir = 'out';
     curAx.Position(3) = 0.8 - curAx.Position(1);
@@ -216,7 +220,9 @@ for curIdx = 1:size(wcT, 1)
     ylabel(curAx, 'Synapses');
     
     curLeg = legend(curAx, ...
-        'Excitatory', 'Inhibitory', ...
+        'Excitatory', ...
+        'Inhibitory', ...
+        'Thalamocortical', ...
         'Location', 'EastOutside');
     curLeg.Position([1, 3]) = [0.82, (0.98 - 0.82)];
     
