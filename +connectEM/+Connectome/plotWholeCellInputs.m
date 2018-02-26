@@ -232,3 +232,19 @@ for curIdx = 1:size(wcT, 1)
     export_fig('-r172', curFigName, curFig);
     clear curFig;
 end
+
+%% calculate fraction of spine synapses from TC axons
+allWcSyns = cat(1, wcT.synapses{:});
+
+% only consider spine synapses
+allWcSyns.isSpine = syn.isSpineSyn(allWcSyns.id);
+allWcSyns(~allWcSyns.isSpine, :) = [];
+
+% check if from TC axon
+allWcSyns.isTc = conn.axonMeta.isThalamocortical(allWcSyns.axonId);
+allWcTcSpineFrac = mean(allWcSyns.isTc);
+
+fprintf( ...
+   ['Fraction of spine synapses ', ...
+    'from TC axons: %.1f %%\n'], ...
+    100 * allWcTcSpineFrac);
