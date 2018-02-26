@@ -64,7 +64,7 @@ skelDesc = sprintf('%s (%s)', mfilename, info.git_repos{1}.hash);
 skel = skel.setDescription(skelDesc);
 
 rng(0);
-randIds = randperm(size(prePostPair, 1), 10);
+randIds = randperm(size(prePostPair, 1), 25);
 
 for curIdx = 1:numel(randIds)
     curId = randIds(curIdx);
