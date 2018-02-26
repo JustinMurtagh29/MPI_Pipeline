@@ -173,7 +173,9 @@ for curIdx = 1:size(wcT, 1)
     curSyns = wcT.synapses{curIdx};
     if isempty(curSyns); continue; end
     
+    curSyns.isSpine = syn.isSpineSyn(curSyns.id);
     curSyns.targetClassId = conn.denMeta.targetClassId(curSyns.dendId);
+    
     curSyns.dist = wcT.nodeDists{curIdx}(curSyns.segIdx);
     curSyns.dist = curSyns.dist / 1E3;
     
@@ -191,11 +193,22 @@ for curIdx = 1:size(wcT, 1)
     curFig.Position(3:4) = [960, 1100];
     
     curAx = subplot(1 + numel(targetClasses), 1, 1);
+    curAx.TickDir = 'out';
+    hold(curAx, 'on');
     
 	curPlot(curAx, curSyns.dist);
+    curHist = curPlot(curAx, curSyns.dist(curSyns.isSpine));
+    curHist.LineStyle = '--';
+    
     xlim(curAx, curBinEdges([1, end]));
     ylabel(curAx, 'All');
-    curAx.TickDir = 'out';
+    
+    curAx.YLim(1) = 0;
+    curYlim = curAx.YLim;
+    
+    legend(curAx, ...
+        'All', 'Onto spines', ...
+        'Location', 'West');
     
     title(curAx, { ...
         sprintf('Outputs from whole cell %d', curWcId); ...
@@ -206,21 +219,22 @@ for curIdx = 1:size(wcT, 1)
         curAx = subplot( ...
             1 + numel(targetClasses), ...
             1, 1 + curClassIdx);
+        curAx.TickDir = 'out';
+        hold(curAx, 'on');
         
         curClassMask = (curSyns.targetClassId == curClassIdx);
         curPlot(curAx, curSyns.dist(curClassMask));
         
+        curHist = curPlot(curAx, ...
+            curSyns.dist(curClassMask & curSyns.isSpine));
+        curHist.LineStyle = '--';
+        
+        ylim(curYlim);
         xlim(curAx, curBinEdges([1, end]));
         ylabel(curAx, targetClasses{curClassIdx});
-        
-        curAx.TickDir = 'out';
-        curAx.YLim(1) = 0;
     end
-    
+   
     xlabel(curAx, 'Distance to soma (µm)');
-    
-    yMax = max(arrayfun(@(a) a.YLim(end), curFig.Children));
-   [curFig.Children.YLim] = deal([0, yMax]);
    
     curFigName = sprintf('output-distribution_whole-cell-%d.png', curWcId);
     export_fig('-r172', fullfile(outputDir, curFigName), curFig);
