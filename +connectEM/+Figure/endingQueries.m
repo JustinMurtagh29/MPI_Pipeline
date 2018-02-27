@@ -16,6 +16,7 @@ param = load(fullfile(rootDir, 'allParameter.mat'), 'p');
 param = param.p;
 
 %% write out examples to webKNOSSOS
+%{
 bigAxons = axons.indBigAxons;
 bigAxons = axons.axons(bigAxons);
 
@@ -50,15 +51,25 @@ for curIdx = 1:100
     curSkelFile = sprintf('%02d_axon.nml', curIdx);
     curSkel.write(fullfile(outputDir, curSkelFile));
 end
+%}
 
 %% selection of axons that illustrate ending queries particularly well
-%{
-skelDesc = sprintf('%s (%s)', mfilename, info.git_repos{1}.hash);
-axonIds = [2369, 4859, 9912, 6285];
+skelDesc = sprintf('%s (%s)', info.filename, info.git_repos{1}.hash);
+axonIds = [15196, 16543, 1836, 8137, 3579, 13522, 3859, 8439];
 
 bigAxons = axons.indBigAxons;
 bigAxons = axons.axons(bigAxons);
 bigAxons = bigAxons(axonIds(:));
+
+% make sure that edges are sorted
+fixedEdges = {bigAxons.edges};
+fixedEdges = reshape(fixedEdges, [], 1);
+
+fixedEdges = cellfun( ...
+    @(edges) sort(edges, 2, 'ascend'), ...
+    fixedEdges, 'UniformOutput', false);
+[bigAxons.edges] = deal(fixedEdges{:});
+clear fixedEdges;
 
 skels = skeleton();
 skels = skels.setDescription(skelDesc);
@@ -69,4 +80,3 @@ for curIdx = 1:numel(skels)
     curSkelFile = sprintf('%d_axon-%d.nml', curIdx, axonIds(curIdx));
     skels(curIdx).write(fullfile(outputDir, curSkelFile));
 end
-%}
