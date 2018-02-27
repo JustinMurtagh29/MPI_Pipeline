@@ -27,13 +27,21 @@ classNames{strcmpi(classNames, 'smooth dendrite')} = 'SDs';
 fig = figure;
 
 for curRow = 1:classCount
-    curRowSpecificities = ...
+    curX = ...
         classConnectome(:, curRow) ...
         ./ sum(classConnectome, 2);
     
     % virtually remove current class
     curClassConnectome = classConnectome;
     curClassConnectome(:, curRow) = 0;
+    
+    % filter
+    curDropMask = ~sum(curClassConnectome, 2);
+    curClassConnectome(curDropMask, :) = [];
+    curX(curDropMask, :) = [];
+    
+    % size of confidence interval and s.e.m. goes like 1 / sqrt(n)
+    curWeights = sqrt(sum(curClassConnectome, 2));
     
     % calculate conditional specificity
     curCondSpecificities = ...
@@ -45,26 +53,33 @@ for curRow = 1:classCount
             classCount, classCount, ...
             curCol + (curRow - 1) * classCount);
         
+        hold(ax, 'on');
+        xlim(ax, [0, 1]);
+        ylim(ax, [0, 1]);
+        
         if curCol == curRow
             ax.Visible = 'off';
             continue;
         end
         
-        scatter( ...
-            ax, curRowSpecificities, ...
-            curCondSpecificities(:, curCol), ...
-            '.');
+        curY = curCondSpecificities(:, curCol);
+        scatter(ax, curX, curY, '.');
         
         if curCol == 1 && curRow == classCount
             xticks(ax, [0, 1]);
             yticks(ax, [0, 1]);
         end
         
-        xlim(ax, [0, 1]);
-        ylim(ax, [0, 1]);
-        
         xlabel(sprintf('S(%s)', classNames{curRow}));
         ylabel(sprintf('S_{rem}(%s)', classNames{curCol}));
+        
+        % linear fit
+        curFit = fit(curX, curY, 'poly1', 'Weights', curWeights);
+        curConf = confint(curFit);
+        
+        plot(ax, ax.XLim, curConf(1, 1) .* ax.XLim + curConf(1, 2), 'k');
+        plot(ax, ax.XLim, curConf(2, 1) .* ax.XLim + curConf(2, 2), 'k');
+        plot(ax, ax.XLim, curFit(ax.XLim), 'k--', 'LineWidth', 2);
         
         if curCol == 1 && curRow == classCount
             xticks(ax, [0, 1]);
