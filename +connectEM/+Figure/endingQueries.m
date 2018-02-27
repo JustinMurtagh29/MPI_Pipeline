@@ -16,7 +16,6 @@ param = load(fullfile(rootDir, 'allParameter.mat'), 'p');
 param = param.p;
 
 %% write out examples to webKNOSSOS
-%{
 bigAxons = axons.indBigAxons;
 bigAxons = axons.axons(bigAxons);
 
@@ -31,27 +30,29 @@ bigAxons = bigAxons(sortIds);
 % get rid of hugely merged axon
 nodeCount = arrayfun(@(a) size(a.nodes, 1), bigAxons);
 bigAxons(nodeCount > 2E3) = [];
-skelDesc = sprintf('%s (%s)', mfilename, info.git_repos{1}.hash);
 
-for curIdx = 1:50
+skel = skeleton();
+skel = Skeleton.setParams4Pipeline(skel, param);
+
+skelDesc = sprintf('%s (%s)', info.filename, info.git_repos{1}.hash);
+skel = skel.setDescription(skelDesc);
+
+for curIdx = 1:100
     curAxon = bigAxons(curIdx);
     
-    curSkel = skeleton();
+    curSkel = skel;
     curSkel = curSkel.addTree( ...
         sprintf('Axon %d', curAxon.id), ...
         curAxon.nodes(:, 1:3), curAxon.edges);
     curSkel = curSkel.addBranchpoint( ...
         find(isnan(curAxon.nodes(:, 4)))); %#ok
     
-    curSkel = curSkel.setDescription(skelDesc);
-    curSkel = Skeleton.setParams4Pipeline(curSkel, param);
-    
     curSkelFile = sprintf('%02d_axon.nml', curIdx);
     curSkel.write(fullfile(outputDir, curSkelFile));
 end
-%}
 
 %% selection of axons that illustrate ending queries particularly well
+%{
 skelDesc = sprintf('%s (%s)', mfilename, info.git_repos{1}.hash);
 axonIds = [2369, 4859, 9912, 6285];
 
@@ -68,3 +69,4 @@ for curIdx = 1:numel(skels)
     curSkelFile = sprintf('%d_axon-%d.nml', curIdx, axonIds(curIdx));
     skels(curIdx).write(fullfile(outputDir, curSkelFile));
 end
+%}
