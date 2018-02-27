@@ -4,7 +4,7 @@ clear;
 
 %% configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-axonFile = fullfile(rootDir, 'aggloState', 'axons_06_c.mat');
+axonFile = fullfile(rootDir, 'aggloState', 'axons_10_a_plus_10kE3a_c.mat');
 outputDir = '/home/amotta/Desktop/ending-queries';
 
 info = Util.runInfo();
