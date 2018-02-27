@@ -49,11 +49,15 @@ function createNewDendriteSuperagglos(param, state)
     [~, positionUniques] = unique(linkagesAgglos, 'rows');
     duplicates = true(size(linkagesAgglos,1),1);
     duplicates(positionUniques) = 0;
+    linkagesAgglos = linkagesAgglos(~duplicates,:);
     
-    % NOTE(amotta): Dimensions agree!
-    flightPaths.startAgglo(linkagesLUT(duplicates),:) = [];
-    flightPaths.endAgglo(linkagesLUT(duplicates),:) = [];
-    flightPaths.ff = structfun(@(x)x(linkagesLUT(~duplicates)), flightPaths.ff, 'uni', 0);
+    % eliminate only those start/endAgglo/ffs where all found ends result
+    % were found as duplicate
+    duplicates = find(histc(linkagesLUT(duplicates),1:max(linkagesLUT)) == histc(linkagesLUT,1:max(linkagesLUT)));
+    positionUniques = setdiff(1:max(linkagesLUT),duplicates);
+    flightPaths.startAgglo(duplicates,:) = [];
+    flightPaths.endAgglo(duplicates,:) = [];
+    flightPaths.ff = structfun(@(x)x(positionUniques), flightPaths.ff, 'uni', 0);
     
     eqClassCCfull = Graph.findConnectedComponents(linkagesAgglos(~any(isnan(linkagesAgglos),2),:), true, true);
     eqClassCCfull = [eqClassCCfull; num2cell(setdiff(1 : length(superAgglos), cell2mat(eqClassCCfull)))'];

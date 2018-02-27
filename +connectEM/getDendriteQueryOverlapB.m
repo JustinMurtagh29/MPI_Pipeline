@@ -52,13 +52,13 @@ function getDendriteQueryOverlapB(param,state)
     % 18.5% of queries excluded overall due to missing start or end (or both)
     idxGood = ~(idxNoClearStart | idxNoClearEnd | idxStrangeMultiEdge);
     % Display some statistics
-    display([num2str(sum(idxNoClearStart)./numel(idxNoClearStart)*100, '%.2f') '% of remaining queries have no clear start']);
-    display([num2str(sum(idxNoClearStart)) ' in total']);
-    display([num2str(sum(idxNoClearEnd)./numel(idxNoClearEnd)*100, '%.2f') '% of remaining queries have no clear end']);
-    display([num2str(sum(idxNoClearEnd)) ' in total']);
-    display([num2str(sum(idxGood)./numel(idxGood)*100, '%.2f') '% of remaining queries have clear start and ending']);
-    display([num2str(sum(idxGood)) ' in total']);
-    display([num2str(numel(cat(2, endAgglo{idxGood}))) ' attachments made by ' num2str(sum(idxGood)) ' queries']);
+    disp([num2str(sum(idxNoClearStart)./numel(idxNoClearStart)*100, '%.2f') '% of remaining queries have no clear start']);
+    disp([num2str(sum(idxNoClearStart)) ' in total']);
+    disp([num2str(sum(idxNoClearEnd)./numel(idxNoClearEnd)*100, '%.2f') '% of remaining queries have no clear end']);
+    disp([num2str(sum(idxNoClearEnd)) ' in total']);
+    disp([num2str(sum(idxGood)./numel(idxGood)*100, '%.2f') '% of remaining queries have clear start and ending']);
+    disp([num2str(sum(idxGood)) ' in total']);
+    disp([num2str(numel(cat(2, endAgglo{idxGood}))) ' attachments made by ' num2str(sum(idxGood)) ' queries']);
     % Find CC of eqClasses to be joined including single eqClasses with or
     % without dangling query
     edgesCC = cellfun(@(x,y)combnk([x y], 2), startAgglo(idxGood), endAgglo(idxGood), 'uni', 0);
