@@ -11,7 +11,7 @@ targetClasses = { ...
     'Somata', 'WholeCell', 'ApicalDendrite', ...
     'SmoothDendrite', 'AxonInitialSegment', 'OtherDendrite'};
 
-minSynPre = 20;
+minSynPre = 10;
 info = Util.runInfo();
 
 %% loading data
