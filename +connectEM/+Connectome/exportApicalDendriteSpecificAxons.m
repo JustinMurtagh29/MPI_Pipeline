@@ -4,8 +4,8 @@ clear;
 
 %% configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a.mat');
-synFile = fullfile(rootDir, 'connectomeState', 'SynapseAgglos_v3.mat');
+connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a_ax_spine_syn_clust.mat');
+synFile = fullfile(rootDir, 'connectomeState', 'SynapseAgglos_v3_ax_spine_clustered.mat');
 
 outputDir = '/home/amotta/Desktop/ad-specific-axons';
 assert(mkdir(outputDir));
@@ -13,13 +13,14 @@ assert(mkdir(outputDir));
 info = Util.runInfo();
 
 %% loading data
-syn = load(synFile);
-conn = load(connFile);
-
 param = load(fullfile(rootDir, 'allParameter.mat'), 'p');
 param = param.p;
 
 points = Seg.Global.getSegToPointMap(param);
+
+[~, connName] = fileparts(connFile);
+conn = connectEM.Connectome.load(param, connName);
+syn = load(synFile);
 
 %% build class connectome
 % try to replicate cass connectome
@@ -53,7 +54,7 @@ axonSpecs = ...
 
 axonIds = find( ...
     conn.axonMeta.synCount >= 10 ...
-  & abs(conn.axonMeta.spineSynFrac - 0.5) >= 0.2 ...
+  & conn.axonMeta.spineSynFrac >= 0.7 ...
   & axonSpecs(:, targetClasses == className) >= 0.45);
 
 % sort by increasing spine fraction
@@ -86,7 +87,8 @@ for curIdx = 1:numel(axonIds)
     curSkel = Skeleton.fromMST( ...
         points(curAgglo, :), param.raw.voxelSize, skel);
     curSkel.names{end} = sprintf( ...
-        'Axon %d. Specificity: %.2f. Spine fraction %.2f', curAxonId, ...
+        'Axon %d. TC: %d. Specificity: %.2f. Spine fraction %.2f', ...
+        curAxonId, conn.axonMeta.isThalamocortical(curAxonId), ...
         axonSpecs(curAxonId, targetClasses == className), ...
         conn.axonMeta.spineSynFrac(curAxonId));
     curSkel.colors{end} = [1, 0, 0, 1];
