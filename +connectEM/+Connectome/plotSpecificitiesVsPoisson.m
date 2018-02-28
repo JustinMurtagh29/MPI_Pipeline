@@ -72,6 +72,9 @@ axonClasses(4).title = sprintf( ...
 
 axonClasses(5).axonIds = find( ...
     conn.axonMeta.isThalamocortical);
+axonClasses(5).poissAxonIds = find( ...
+    conn.axonMeta.synCount >= minSynPre ...
+  & conn.axonMeta.spineSynFrac > 0.7);
 axonClasses(5).title = sprintf( ...
     'thalamocortical axons (n = %d)', ...
     numel(axonClasses(end).axonIds));
@@ -85,13 +88,21 @@ end
 
 %% plotting
 function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
-    %% preparations
-    % calculate probabilities for Poisson
-    targetClassSyns = sum(classConn(axonClass.axonIds, :), 1);
-    targetClassProbs = targetClassSyns / sum(targetClassSyns);
-    
     specificities = classConn(axonClass.axonIds, :);
     specificities = specificities ./ sum(specificities, 2);
+    
+    %% preparations
+    % select axons for Poisson
+    if isfield(axonClass, 'poissAxonIds') ...
+            && ~isempty(axonClass.poissAxonIds)
+        poissAxonIds = axonClass.poissAxonIds;
+    else
+        poissAxonIds = axonClass.axonIds;
+    end
+    
+    % calculate probabilities for Poisson
+    targetClassSyns = sum(classConn(poissAxonIds, :), 1);
+    targetClassProbs = targetClassSyns / sum(targetClassSyns);
 
     % restrict to axons with enough synapses
    [synCounts, ~, synCountAxons] = unique( ...
