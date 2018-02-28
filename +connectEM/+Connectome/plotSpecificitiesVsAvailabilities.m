@@ -94,6 +94,66 @@ annotation( ...
     'EdgeColor', 'none', 'HorizontalAlignment', 'center', ...
     'String', {info.filename; info.git_repos{1}.hash});
 
+%% scatter plot with specificity vs. availability
+axonIds = find(conn.axonMeta.synCount >= 10);
+plotDists = [1E3 .* [1, 10, 20, 50], avail.dists(end)];
+[~, plotDists] = ismember(plotDists, avail.dists);
+
+classCount = numel(targetClasses);
+distCount = numel(plotDists);
+
+fig = figure();
+fig.Color = 'white';
+
+for curDistIdx = 1:distCount
+    curDistId = plotDists(curDistIdx);
+    curDistUm = avail.dists(curDistId) / 1E3;
+    
+    for curClassIdx = 1:classCount
+        curAvail = squeeze(availabilities( ...
+            curClassIdx, curDistId, axonIds));
+        curSpecs = specificities(axonIds, curClassIdx);
+        
+        curFit = fit( ...
+            curSpecs, curAvail, 'poly1', ...
+            'Weights', conn.axonMeta.synCount(axonIds));
+        
+        curAxIdx = curClassIdx + (curDistIdx - 1) * classCount;
+        curAx = subplot(distCount, classCount, curAxIdx);
+        curAx.TickDir = 'out';
+        
+        hold(curAx, 'on');
+        xlim(curAx, [0, 1]);
+        ylim(curAx, [0, 1]);
+        
+        scatter(curAx, curSpecs(:), curAvail(:), '.');
+        plot(curAx, xlim(curAx), curFit(xlim(curAx)));
+        annotation( ...
+            fig, ...
+            'textbox', curAx.Position, ...
+            'EdgeColor', 'none', 'HorizontalAlignment', 'center', ...
+            'String', sprintf('y = %.2fx + %.2f', curFit.p1, curFit.p2));
+        
+        if curClassIdx == 1
+            ylabel(curAx, {'Availability'; ...
+                sprintf('r_{pred} = %d µm', curDistUm)});
+        else
+            yticklabels(curAx, {});
+        end
+        
+        if curDistIdx == distCount
+            xlabel(curAx, {'Specificity'; ...
+                char(targetClasses(curClassIdx))});
+        end
+    end
+end
+
+annotation( ...
+    fig, ...
+    'textbox', [0, 0.9, 1, 0.1], ...
+    'EdgeColor', 'none', 'HorizontalAlignment', 'center', ...
+    'String', {info.filename; info.git_repos{1}.hash});
+
 %% likelihoods
 axonTargetLik = cellfun(@numel, {avail.dists, conn.axons, targetClasses});
 axonTargetLik = nan(axonTargetLik);
