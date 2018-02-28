@@ -40,8 +40,9 @@ for curRow = 1:classCount
     curClassConnectome(curDropMask, :) = [];
     curX(curDropMask, :) = [];
     
-    % size of confidence interval and s.e.m. goes like 1 / sqrt(n)
-    curWeights = sqrt(sum(curClassConnectome, 2));
+    % variance goes like 1 / n
+    % use the inverse for weights
+    curWeights = sum(curClassConnectome, 2);
     
     % calculate conditional specificity
     curCondSpecificities = ...
