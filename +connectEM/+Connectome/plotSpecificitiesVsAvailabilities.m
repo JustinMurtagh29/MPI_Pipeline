@@ -154,6 +154,75 @@ annotation( ...
     'EdgeColor', 'none', 'HorizontalAlignment', 'center', ...
     'String', {info.filename; info.git_repos{1}.hash});
 
+%% plot fraction of specificity explained by availability
+axonIds = find(conn.axonMeta.synCount >= 10);
+plotDists = [1E3 .* [1, 10, 20, 50], avail.dists(end)];
+[~, plotDists] = ismember(plotDists, avail.dists);
+
+classCount = numel(targetClasses);
+distCount = numel(plotDists);
+
+maxX = nan(classCount, 1);
+for curClassIdx = 1:classCount
+    curAvail = squeeze(availabilities( ...
+        curClassIdx, plotDists, axonIds))';
+    curSpecs = specificities(axonIds, curClassIdx);
+    
+    curFracExp = reshape(curAvail ./ curSpecs, [], 1);
+    curFracExp = curFracExp(~isinf(curFracExp));
+    
+    maxX(curClassIdx) = prctile(curFracExp, 99);
+end
+
+maxX = max(maxX, 1);
+
+fig = figure();
+fig.Color = 'white';
+
+for curDistIdx = 1:distCount
+    curDistId = plotDists(curDistIdx);
+    curDistUm = avail.dists(curDistId) / 1E3;
+    
+    for curClassIdx = 1:classCount
+        curAvail = squeeze(availabilities( ...
+            curClassIdx, curDistId, axonIds));
+        curSpecs = specificities(axonIds, curClassIdx);
+        
+        curFracExp = curAvail(:) ./ curSpecs(:);
+        curMaxX = maxX(curClassIdx);
+        
+        curAxIdx = curClassIdx + (curDistIdx - 1) * classCount;
+        curAx = subplot(distCount, classCount, curAxIdx);
+        curAx.TickDir = 'out';
+        
+        hold(curAx, 'on');
+        xlim(curAx, [0, curMaxX]);
+        
+        histogram( ...
+            curAx, curFracExp, linspace(0, curMaxX, 21), ...
+            'DisplayStyle', 'stairs', 'LineWidth', 2);
+        plot(curAx, [1, 1], ylim(curAx), 'k--');
+        
+        if curClassIdx == 1
+            ylabel(curAx, {sprintf( ...
+                'r_{pred} = %d µm', curDistUm); 'Axons'});
+        end
+        
+        switch curDistIdx
+            case 1
+                title(curAx, char(targetClasses(curClassIdx)));
+            case distCount
+                xlabel(curAx, 'Availability / Specificity');
+        end
+    end
+end
+
+annotation( ...
+    fig, ...
+    'textbox', [0, 0.9, 1, 0.1], ...
+    'EdgeColor', 'none', 'HorizontalAlignment', 'center', ...
+    'String', {info.filename; info.git_repos{1}.hash});
+
 %% likelihoods
 axonTargetLik = cellfun(@numel, {avail.dists, conn.axons, targetClasses});
 axonTargetLik = nan(axonTargetLik);
