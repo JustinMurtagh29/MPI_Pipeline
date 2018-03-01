@@ -207,7 +207,7 @@ for curIdx = 1:size(wcT, 1)
     if isempty(curSyns); continue; end
     
     curFig = figure('visible', 'off');
-    curFig.Position(3:4) = [860, 480];
+    curFig.Position(3:4) = [1075, 600];
     
     curSyns.isSpine = syn.isSpineSyn(curSyns.id);
     curSyns.isSoma = logical(somaLUT( ...
@@ -361,7 +361,7 @@ for curIdx = 1:size(wcT, 1)
     
     % save figure
     curFigName = sprintf('input-distribution_whole-cell-%d.png', curIdx);
-    export_fig('-r172', fullfile(outputDir, curFigName), curFig);
+    export_fig(fullfile(outputDir, curFigName), curFig);
     clear curFig;
 end
 
