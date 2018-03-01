@@ -146,11 +146,14 @@ for curIdx = 1:size(wcT, 1)
         curSynT.segIdx, 'UniformOutput', false);
     
     % assign synapse to largest segment
-   [~, curSegIdx] = cellfun(@(ids) max(segMass(ids)), curSynT.segIdx);
-    curSegIds = arrayfun(@(ids, idx) ids{1}(idx), curSynT.segIdx, curSegIdx);
+   [~, curSegIdx] = cellfun( ...
+        @(ids) max(segMass(ids)), curSynT.segIdx);
+    curSegIds = arrayfun( ...
+        @(ids, idx) ids{1}(idx), curSynT.segIdx, curSegIdx);
     
     % translate to relative 
-   [~, curSynT.segIdx] = ismember(double(curSegIds), wcT.segIds{curIdx});
+   [~, curSynT.segIdx] = ismember( ...
+       double(curSegIds), wcT.segIds{curIdx});
     
     curSynT.axonId = repelem( ...
         curConnRows.edges(:, 1), ...
