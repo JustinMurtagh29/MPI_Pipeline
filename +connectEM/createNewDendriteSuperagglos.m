@@ -34,7 +34,7 @@ function createNewDendriteSuperagglos(param, state)
     flightPaths.ff = structfun(@(x)x(idxGood), flightPaths.ff, 'uni', 0);
 
     linkagesAgglos = cellfun(@(x,y) connectEM.edgeCreator(x,y,1), flightPaths.startAgglo, flightPaths.endAgglo, 'uni', 0);
-    linkagesLUT = repelem(1:numel(linkagesAgglos),cellfun(@(x) size(x,1),linkagesAgglos));
+    linkagesLUT = repelem(1:numel(linkagesAgglos),cellfun(@(x) size(x,1),linkagesAgglos)); % tells you which start/end edge belongs to which flight path
     linkagesAgglos = sort(cat(1, linkagesAgglos{:}),2);
     
     % reshape empty cells to 1st dimension
@@ -64,7 +64,7 @@ function createNewDendriteSuperagglos(param, state)
     
     dendritesNew = connectEM.mergeSuperagglosBasedOnFlightPath( ...
         superAgglos, eqClassCCfull, flightPaths.startAgglo, ...
-        flightPaths.endAgglo, flightPaths.ff);
+        flightPaths.endAgglo, flightPaths.ff,1,0);
 
     % sanity check
     assert(all(arrayfun(@(x) ...

@@ -1,12 +1,29 @@
 function superagglos_new = mergeSuperagglosBasedOnFlightPath( ...
-        superagglos, eqClassCCfull, startAgglo, endAgglo, ff)
+        superagglos, eqClassCCfull, startAgglo, endAgglo, ff,allowMultiAttachments, checkOccurences)
+    % INPUTS 
+    % allowMultiAttachments: Boolean allowing attachment of the flight paths with
+    %                        multiple ends (DEFAULT 0)
+    % checkOccurences: Boolean to (re)check node edvidence of flight paths
+    %                  with segments (DEFAULT 1). Should be switched to
+    %                  False if flight tracings were done on a different
+    %                  agglomerate state than the one they are now attached
+    %                  to to avoid problems (node evidence was checked
+    %                  anyway before).
+    %
     % Written by
     %   Manuel Berning <manuel.berning@brain.mpg.de>
     %   Christian Schramm <christian.schramm@brain.mpg.de>
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
+    %   Marcel Beining <marcel.beining@brain.mpg.de>
     
     % configuration
     voxelSize = [11.24, 11.24, 28];
+    if ~exist('allowMultiAttachments','var') || isempty(allowMultiAttachments)
+        allowMultiAttachments = 0;
+    end
+    if ~exist('checkOccurences','var') || isempty(checkOccurences)
+        checkOccurences = 1;
+    end
     
     % sanity check
     % Make sure that flight paths actually do have a segment overlap with
@@ -22,7 +39,7 @@ function superagglos_new = mergeSuperagglosBasedOnFlightPath( ...
         assert(~isempty(intersect(curSegIdsHit, curStartSegIds)));
         
         % same test if there is an end agglomerate
-        if isempty(endAgglo{curIdx}); continue; end;
+        if isempty(endAgglo{curIdx}); continue; end
         for curEndIdx = 1:numel(endAgglo{curIdx})
             curEndSegIds = superagglos(endAgglo{curIdx}(curEndIdx)).nodes(:, 4);
             assert(~isempty(intersect(curSegIdsHit, curEndSegIds)));
@@ -32,8 +49,8 @@ function superagglos_new = mergeSuperagglosBasedOnFlightPath( ...
     % find connected component for each flight path
     attachments = cellfun(@(x,y)[x; y], startAgglo, endAgglo, 'uni', 0);
     
-    ccLookup = Agglo.buildLUT(max(cell2mat(eqClassCCfull)), eqClassCCfull);
-    attachmentsCC = cellfun(@(x)unique(ccLookup(x)), attachments);
+    ccLookup = Agglo.buildLUT(max(cell2mat(eqClassCCfull)), eqClassCCfull); % creates lookup which agglo is in which eqClass
+    attachmentsCC = cellfun(@(x)unique(ccLookup(x)), attachments);  % tells which flight path belongs to which eqClass. if a flight path would belong to several eqClasses, this would give an error
     
     % Generate new superagglo
     for i=1:length(eqClassCCfull)
@@ -58,8 +75,7 @@ function superagglos_new = mergeSuperagglosBasedOnFlightPath( ...
             newNodes = cat(1, ff.nodes{queryIdx});
             newNodes(:,4) = NaN(size(newNodes,1),1);
             
-            queryIndices = find(queryIdx);
-            flightAgglos = arrayfun(@(x)cat(1,[startAgglo{x};endAgglo{x}]),queryIndices,'uni',0);
+            flightAgglos = attachments(queryIdx);  % agglos that should be connected with the flight path(s)
             % reconstruct flight path edges using MST
             edgeCell = cellfun(@(n) ...
                 Graph.getMST(bsxfun(@times, n(:, 1:3), voxelSize)), ...
@@ -75,13 +91,12 @@ function superagglos_new = mergeSuperagglosBasedOnFlightPath( ...
             % Just add one edge which is directly at the border between 
             % flight path and agglomerate
             segIdsThisSuperagglo = superagglos_new(i).nodes(:,4);
-            segIdsHitByNewNodes = cat(2, cat(1, ff.segIds{queryIdx}), cat(1, ff.neighbours{queryIdx}));
-            [idxNewNodes, idxOldNodes] = ismember(segIdsHitByNewNodes, segIdsThisSuperagglo);
+            segIdsHitByFlightPath = cat(2, cat(1, ff.segIds{queryIdx}), cat(1, ff.neighbours{queryIdx}));
+            [idxNewNodes, idxOldNodes] = ismember(segIdsHitByFlightPath, segIdsThisSuperagglo);
             
             classOrigin = zeros(size(idxOldNodes));
             classOrigin(idxOldNodes>0) = classLookup(idxOldNodes(idxOldNodes>0));
-            classOrigin = max(classOrigin')';
-            classes = unique(classOrigin(classOrigin~=0));
+            classOrigin = max(classOrigin,[],2);
             occurences = sum(idxNewNodes,2);
             
 
@@ -94,44 +109,49 @@ function superagglos_new = mergeSuperagglosBasedOnFlightPath( ...
             ind_after = [1 ind]; ind_after(ind_after > N) = N;
             occurences = arrayfun(@(x,y) occurences(x:y), ind_after, ind_before, 'uni', 0);
             classOrigin = arrayfun(@(x,y) classOrigin(x:y), ind_after, ind_before, 'uni', 0);
-
-            occurences = cellfun(@(x,y)assignValues(x,y,1),occurences,occurences,'uni',0);
-            classOrigin = cellfun(@(x,y)assignValues(x,y,1),classOrigin,occurences,'uni',0);
             
+            if checkOccurences
+                occurences = cellfun(@(x,y)assignValues(x,y,1),occurences,occurences,'uni',0);
+                classOrigin = cellfun(@(x,y)assignValues(x,y,1),classOrigin,occurences,'uni',0);
+            end
             % Eliminate evidences of not attached agglomerates
             eliminateClasses = cellfun(@(x,y)~ismember(x,y),classOrigin',flightAgglos,'uni',0);
             classOrigin = cellfun(@(x,y)assignValues(x,y),classOrigin,eliminateClasses','uni',0);
 
-            nodesBeingAttached = cellfun(@(x)find(x),occurences,'uni',0);
+            nodesBeingAttached = cellfun(@(x)find(x),occurences,'uni',0); % index to node ids of FLIGHT PATH (=newNodes) that have nodeEvidence
             nodesClasses = cellfun(@(x,y)x(y),classOrigin,nodesBeingAttached,'uni',0);
             classes = cellfun(@(x)unique(x(x~=0)),classOrigin,'uni',0);
 
             borderNodeIdx = cell(size(occurences));
             for j=1:length(occurences)
-                if numel(classes{j})==1
-                    borderNode = max(find(nodesClasses{j}));
-                    borderNode = nodesBeingAttached{j}(borderNode);
-                    borderNodeIdx{j} = zeros(size(occurences{j}));
-                    borderNodeIdx{j}(borderNode) = 1;
-                elseif numel(classes{j})==2
-                    firstNode = nodesClasses{j}(1);
-                    currentNode=1;
-                    while firstNode == nodesClasses{j}(currentNode)
-                        currentNode = currentNode+1;
-                    end
-                    borderNodes = [currentNode-1 currentNode]';
-                    borderNodes = nodesBeingAttached{j}(borderNodes);
-                    borderNodeIdx{j} = zeros(size(occurences{j}));
-                    borderNodeIdx{j}(borderNodes) = 1;
-                elseif numel(classes{j})==0
-                    disp('Warning: Not a single node has enough node evidence!')
-                else
-                    disp('Warning: One flight has enough node evidence to different end agglos!')
+                switch numel(classes{j})
+                    case 1
+                        borderNodes = find(nodesClasses{j},1,'last');
+                        borderNodes = nodesBeingAttached{j}(borderNodes);
+                    case 2
+                        firstNode = nodesClasses{j}(1);
+                        currentNode=1;
+                        while firstNode == nodesClasses{j}(currentNode)
+                            currentNode = currentNode+1;
+                        end
+                        borderNodes = [currentNode-1 currentNode]';
+                        borderNodes = nodesBeingAttached{j}(borderNodes);
+                    case 0
+                        warning('Not a single node has enough node evidence!')
+                        borderNodes = [];
+                    otherwise
+                        if allowMultiAttachments
+                            borderNodes = find(abs(diff(nodesClasses{j},1,1)) > 0)+1;
+                            borderNodes = cat(1,borderNodes-1,borderNodes);
+                        else
+                            warning('One flight has enough node evidence to different end agglos!')
+                            borderNodes = [];
+                        end
                 end
+                borderNodeIdx{j} = zeros(size(occurences{j}));
+                borderNodeIdx{j}(borderNodes) = 1;
             end
-            
-            borderNodeIdx = cat(1,borderNodeIdx{:});
-            newNodesBeingAttached = find(borderNodeIdx);
+            newNodesBeingAttached = find(cat(1,borderNodeIdx{:}));
             flatten = @(x)x(:);
             
             % Build segment-to-query edges
