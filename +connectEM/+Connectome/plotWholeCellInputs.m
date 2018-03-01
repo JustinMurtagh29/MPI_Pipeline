@@ -10,6 +10,10 @@ synFile = fullfile(rootDir, 'connectomeState', 'SynapseAgglos_v3_ax_spine_cluste
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a_ax_spine_syn_clust.mat');
 dendFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_01_spine_attachment.mat');
 
+% debugging
+debugDir = '';
+debugCellIds = [];
+
 info = Util.runInfo();
 
 %% loading data
@@ -153,6 +157,43 @@ for curIdx = 1:size(wcT, 1)
         cellfun(@numel, curConnRows.synIdx));
     
     wcT.synapses{curIdx} = curSynT;
+end
+
+%% debugging
+if ~isempty(debugDir)
+    skel = skeleton();
+    skel = Skeleton.setParams4Pipeline(skel, param);
+    skel = skel.setDescription(sprintf( ...
+        '%s (%s)', info.filename, info.git_repos{1}.hash));
+
+    for curIdx = 1:size(wcT, 1)
+        curId = debugCellIds(curIdx);
+        
+        curEdges = wcT.edges{curId};
+        curSegIds = wcT.segIds{curId};
+        curDistsUm = wcT.nodeDists{curId} / 1E3;
+        curSynIdx = wcT.synapses{curId}.segIdx;
+
+        % generate skeleton
+        curSkel = skel.addTree( ...
+            sprintf('Whole cell %d', curId), ...
+            ceil(segCentroids(curSegIds, :)), curEdges);
+
+        % add distance annotations
+        curComments = arrayfun( ...
+            @(segId, distUm) sprintf( ...
+                'Synapse. Segment %d. %.1f µm to soma.', segId, distUm), ...
+            curSegIds(curSynIdx), curDistsUm(curSynIdx), 'UniformOutput', false);
+       [curSkel.nodesAsStruct{end}(curSynIdx).comment] = deal(curComments{:});
+
+        % add branchpoints
+        curSkel = curSkel.addBranchpoint(curSynIdx);
+
+        curSkelName = sprintf( ...
+            '%0*d_whole-cell-%d.nml', ...
+            ceil(log10(1 + size(wcT, 1))), curIdx, curId);
+        curSkel.write(fullfile(debugDir, curSkelName));
+    end
 end
 
 %% plotting
