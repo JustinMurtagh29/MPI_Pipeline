@@ -817,7 +817,7 @@ if  ~existentWC(8)
     
     dirWCGT = '/gaba/u/mberning/results/pipeline/20170217_ROI/aggloState/centerWholeCellGT/axonInfo';
     for n = 1:numel(wholeCells)  % make the axon field NaN for all wholeCells, to have those wCs labeled which do not have an axon marked in the GT
-        wholeCells(n).axon = NaN;
+        wholeCells(n).axon = NaN(size(wholeCells(n).nodes,1),1);
     end
     files = dir(fullfile(dirWCGT,'*.nml'));
     wcLUT = Superagglos.buildLUT(wholeCells,segmentMeta.maxSegId);
@@ -825,8 +825,10 @@ if  ~existentWC(8)
         skel = skeleton(fullfile(dirWCGT,files(f).name));
         numSkelNodes = cellfun(@(x) size(x,1),skel.nodes);
         skelLUT = repelem(1:numel(skel.nodes),numSkelNodes);
+        warning('off')
         skelSegIds = Seg.Global.getSegIds(p,cell2mat(cellfun(@(x) x(:,1:3),skel.nodes,'uni',0)));  % extract the seg Ids of all skel nodes
-        ind = mode(wcLUT(skelSegIds)); % get the whole cell overlapping the most with the skeleton in terms of segIds
+        warning on
+        ind = mode(wcLUT(nonzeros(skelSegIds))); % get the whole cell overlapping the most with the skeleton in terms of segIds
         
         if numel(numSkelNodes) > 1  % if there is only one skeleton, there was no axon found
             indAxonSkel = find(~cellfun(@isempty,regexp(skel.names,'axon')));
