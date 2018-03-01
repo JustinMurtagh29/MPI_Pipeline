@@ -837,9 +837,10 @@ if  ~existentWC(8)
             end
             
             % get cell branches by removing soma agglo and small segments
-            branches = Superagglos.removeSegIdsFromAgglos(wholeCells(n),somaAgglos{n});
+            branches = Superagglos.removeSegIdsFromAgglos(wholeCells(ind),somaAgglos{ind});
+            branches = branches(arrayfun(@(x) size(x.nodes,1),branches)>20); % remove all small leftovers smaller than 10 nodes
             branchLUT = Superagglos.buildLUT(branches);
-            indBranch = mode(branchLUT(skelSegIds(skelLUT==indAxonSkel))); % get the branch overlapping the most with the axonic skeleton in terms of segIds
+            indBranch = mode(branchLUT(nonzeros(skelSegIds(skelLUT==indAxonSkel)))); % get the branch overlapping the most with the axonic skeleton in terms of segIds
             wholeCells(ind).axon = ismember(wholeCells(ind).nodes(:,1:3),branches(indBranch).nodes(:,1:3),'rows'); % mark the whole cell nodes as axonic which are the same as the branch nodes
         end
     end
