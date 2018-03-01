@@ -69,6 +69,7 @@ wcT.segIds = cellfun( ...
     wcT.segIds, somaAgglos(wcT.somaId), 'UniformOutput', false);
 
 %% calculate distance to soma surface
+wcT.edges = cell(size(wcT.segIds));
 wcT.nodeDists = cell(size(wcT.segIds));
 
 for curIdx = 1:size(wcT, 1)
@@ -96,6 +97,10 @@ for curIdx = 1:size(wcT, 1)
     curAdj = graphminspantree( ...
         sparse(curDists), curSomaSegIds(1));
     curAdj = logical(curAdj);
+    
+    curEdges = nan(nnz(curAdj), 2);
+   [curEdges(:, 2), curEdges(:, 1)] = find(curAdj);
+    wcT.edges{curIdx} = curEdges;
     
     % now we can use true zeros
     curDists(curSomaSegIds, curSomaSegIds) = 0;
