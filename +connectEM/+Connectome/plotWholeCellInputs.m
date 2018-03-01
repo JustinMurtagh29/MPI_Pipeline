@@ -198,11 +198,11 @@ end
 
 %% plotting
 for curIdx = 1:size(wcT, 1)
-    curFig = figure('visible', 'off');
-    curFig.Position(3:4) = [860, 480];
-    
     curSyns = wcT.synapses{curIdx};
     if isempty(curSyns); continue; end
+    
+    curFig = figure('visible', 'off');
+    curFig.Position(3:4) = [860, 480];
     
     curSyns.isSpine = syn.isSpineSyn(curSyns.id);
     curSyns.isSoma = logical(somaLUT( ...
@@ -218,6 +218,22 @@ for curIdx = 1:size(wcT, 1)
     % move soma synapses to separate bin
     curSyns.dist(curSyns.isSoma) = -eps;
     
+    % find repeated synapses
+    curRepT = table;
+   [curRepT.axonId, ~, curSynCount] = unique(curSyns.axonId);
+    curRepT.synDist = accumarray( ...
+        curSynCount, curSyns.dist, [], ...
+        @(dist) {sort(dist, 'ascend')});
+    
+    curRepT.synCount = accumarray(curSynCount, 1);
+    curRepT(curRepT.synCount < 2, :) = [];
+    clear curSynCount;
+    
+    % sorting
+   [~, curSortIds] = sort(cellfun( ...
+       @median, curRepT.synDist), 'descend');
+    curRepT = curRepT(curSortIds, :);
+    
     curMaxDist = 10 * ceil(max(curSyns.dist) / 10);
     curBinEdges = -10:10:curMaxDist;
     
@@ -228,10 +244,10 @@ for curIdx = 1:size(wcT, 1)
             'DisplayStyle', 'stairs', ...
             'LineWidth', 2);
         
-    curAx = subplot(2, 1, 1);
+    curAx = subplot(3, 1, 1);
     hold(curAx, 'on');
     
-	curPlot(curAx, curSyns.dist);
+    curPlot(curAx, curSyns.dist);
     curPlot(curAx, curSyns.dist(curSyns.isSpine));
     curPlot(curAx, curSyns.dist(curSyns.isSoma));
     
@@ -251,31 +267,75 @@ for curIdx = 1:size(wcT, 1)
         'Location', 'EastOutside');
     curLeg.Position([1, 3]) = [0.82, (0.98 - 0.82)];
     
-    curAx = subplot(2, 1, 2);
+    curAx = subplot(3, 1, 2);
     hold(curAx, 'on');
     
+    curDiscretize = ...
+        @(data) accumarray( ...
+            discretize(data, curBinEdges), ...
+            1, [numel(curBinEdges) - 1, 1]);
+    curBinsAll = curDiscretize(curSyns.dist);
+    
+    curPlot = ...
+        @(ax, data) histogram(ax, ...
+            'BinCount', min( ...
+                curDiscretize(data) ...
+                ./ curBinsAll, 1), ...
+            'BinEdges', curBinEdges, ...
+            'DisplayStyle', 'stairs', ...
+            'LineWidth', 2);
+        
     curPlot(curAx, curSyns.dist(curSyns.isExc));
-    curPlot(curAx, curSyns.dist(curSyns.isInh));
     curPlot(curAx, curSyns.dist(curSyns.isTc));
+    
+    if ~isempty(curRepT)
+        % `histogram` fails if there are no synapses
+        curPlot(curAx, cell2mat(curRepT.synDist));
+    end
     
     curAx.TickDir = 'out';
     curAx.Position(3) = 0.8 - curAx.Position(1);
     
-    xlabel(curAx, 'Distance to soma (µm)');
     xlim(curAx, curBinEdges([1, end]));
-    ylabel(curAx, 'Synapses');
+    ylabel(curAx, 'Fraction of synapses');
+    ylim(curAx, [0, 1]);
     
     curLeg = legend(curAx, ...
         'Excitatory', ...
-        'Inhibitory', ...
         'Thalamocortical', ...
+        'Repeated', ...
         'Location', 'EastOutside');
     curLeg.Position([1, 3]) = [0.82, (0.98 - 0.82)];
     
-    curFigName = sprintf('input-distribution_whole-cell-%d.png', curIdx);
-    curFigName = fullfile(outputDir, curFigName);
+    % plot synaptic clustering
+    curAx = subplot(3, 1, 3);
+    hold(curAx, 'on');
     
-    export_fig('-r172', curFigName, curFig);
+    for curRepIdx = 1:size(curRepT, 1)
+        % randomize soma synapse locations
+        curRepSynDists = curRepT.synDist{curRepIdx};
+        curRepSynDists(curRepSynDists < 0) = curBinEdges(1) + ...
+            diff(curBinEdges(1:2)) * rand(sum(curRepSynDists < 0), 1);
+        
+        plot( ...
+            curAx, curRepSynDists, ...
+            repelem(curRepIdx, curRepT.synCount(curRepIdx)), ...
+            'k.-', 'MarkerSize', 12);
+    end
+    
+    curAx.TickDir = 'out';
+    curAx.Position(3) = 0.8 - curAx.Position(1);
+    
+    ylim(curAx, [0, max(1, size(curRepT, 1))]);
+    yticks(curAx, curAx.YLim);
+    ylabel(curAx, 'Axons');
+    
+    xlabel(curAx, 'Distance to soma (µm)');
+    xlim(curAx, curBinEdges([1, end]));
+    
+    % save figure
+    curFigName = sprintf('input-distribution_whole-cell-%d.png', curIdx);
+    export_fig('-r172', fullfile(outputDir, curFigName), curFig);
     clear curFig;
 end
 
