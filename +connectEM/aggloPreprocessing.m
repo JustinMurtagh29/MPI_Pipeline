@@ -807,9 +807,55 @@ if  ~existentWC(8)
     indBigDends = cat(1,indBigDends,true(numel(wholeCellsNoAxon),1));
     [ myelinDend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
     
-    save(fullfile(outputFolder,'wholeCells_08.mat'),'wholeCells');
+    save(fullfile(outputFolder,'wholeCells_autoAxon_08.mat'),'wholeCells');
     
-    save(fullfile(outputFolder,'dendrites_wholeCells_01.mat'),'dendrites','myelinDend','indBigDends','indWholeCells')%,'info');
+    save(fullfile(outputFolder,'dendrites_wholeCells_autoAxon_01.mat'),'dendrites','myelinDend','indBigDends','indWholeCells')%,'info');
+    
+    
+    % now comes the manual axon detection part
+    clear wholeCellsNoAxon
+    
+    dirWCGT = '/gaba/u/mberning/results/pipeline/20170217_ROI/aggloState/centerWholeCellGT/axonInfo';
+    for n = 1:numel(wholeCells)  % make the axon field NaN for all wholeCells, to have those wCs labeled which do not have an axon marked in the GT
+        wholeCells(n).axon = NaN;
+    end
+    files = dir(fullfile(dirWCGT,'*.nml'));
+    wcLUT = Superagglos.buildLUT(wholeCells,segmentMeta.maxSegId);
+    for f = 1:numel(files)
+        skel = skeleton(fullfile(dirWCGT,files(f).name));
+        numSkelNodes = cellfun(@(x) size(x,1),skel.nodes);
+        skelLUT = repelem(1:numel(skel.nodes),numSkelNodes);
+        skelSegIds = Seg.Global.getSegIds(p,cell2mat(cellfun(@(x) x(:,1:3),skel.nodes,'uni',0)));  % extract the seg Ids of all skel nodes
+        ind = mode(wcLUT(skelSegIds)); % get the whole cell overlapping the most with the skeleton in terms of segIds
+        
+        if numel(numSkelNodes) > 1  % if there is only one skeleton, there was no axon found
+            indAxonSkel = find(~cellfun(@isempty,regexp(skel.names,'axon')));
+            if isempty(indAxonSkel)  % if skeleton was not marked with an axon label, take the smaller one of the two skeletons as axon
+                [~,indAxonSkel] = min(numSkelNodes);
+            end
+            
+            % get cell branches by removing soma agglo and small segments
+            branches = Superagglos.removeSegIdsFromAgglos(wholeCells(n),somaAgglos{n});
+            branchLUT = Superagglos.buildLUT(branches);
+            indBranch = mode(branchLUT(skelSegIds(skelLUT==indAxonSkel))); % get the branch overlapping the most with the axonic skeleton in terms of segIds
+            wholeCells(ind).axon = ismember(wholeCells(ind).nodes(:,1:3),branches(indBranch).nodes(:,1:3),'rows'); % mark the whole cell nodes as axonic which are the same as the branch nodes
+        end
+    end
+    undefAxon = arrayfun(@(x) any(isnan(x.axon)),wholeCells);
+    nodesToDelete = arrayfun(@(x) find(x.axon),wholeCells,'uni',0);
+    nodesToDelete(undefAxon) = {};
+    wholeCellsNoAxon = removeNodesFromAgglo(wholeCells,nodesToDelete);
+    assert(numel(wholeCellsNoAxon)==numel(wholeCells)) % check that no splits occured by axon deletion
+    
+    load(fullfile(outputFolder,'dendrites_16.mat'))
+    % concatenate truncated whole cells with dendrite class and make new state
+    indWholeCells = cat(1,false(numel(dendrites),1),true(numel(wholeCellsNoAxon),1));
+    dendrites = cat(1,dendrites,wholeCellsNoAxon');
+    indBigDends = cat(1,indBigDends,true(numel(wholeCellsNoAxon),1));
+    [ myelinDend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
+  
+    save(fullfile(outputFolder,'wholeCells_GTAxon_08.mat'),'wholeCells');
+    save(fullfile(outputFolder,'dendrites_wholeCells_GTAxon_01.mat'),'dendrites','myelinDend','indBigDends','indWholeCells')%,'info');
 end
 %%
 connectEM.getDendriteQueryOverlapB(p,'2.2')
