@@ -166,7 +166,7 @@ if ~isempty(debugDir)
     skel = skel.setDescription(sprintf( ...
         '%s (%s)', info.filename, info.git_repos{1}.hash));
 
-    for curIdx = 1:size(wcT, 1)
+    for curIdx = 1:numel(debugCellIds)
         curId = debugCellIds(curIdx);
         
         curEdges = wcT.edges{curId};
