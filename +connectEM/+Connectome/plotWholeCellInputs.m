@@ -133,12 +133,14 @@ for curIdx = 1:size(wcT, 1)
         somaAggloIds(wcT.somaId(curIdx)), ...
         dendAggloIds(wcT.dendId(curIdx))];
     
-    curConnRows = ismember( ...
+    curConnMask = ismember( ...
         conn.connectome.edges(:, 2), curPostIds);
-    curConnRows = conn.connectome(curConnRows, :);
+    curConnRows = conn.connectome(curConnMask, :);
+    curAreaRows = conn.connectomeMeta.contactArea(curConnMask);
     
     curSynT = table;
     curSynT.id = cell2mat(curConnRows.synIdx);
+    curSynT.area = cell2mat(curAreaRows);
     
     curSynT.segIdx = syn.synapses.postsynId(curSynT.id);
     curSynT.segIdx = cellfun( ...
@@ -247,7 +249,7 @@ for curIdx = 1:size(wcT, 1)
             'DisplayStyle', 'stairs', ...
             'LineWidth', 2);
         
-    curAx = subplot(3, 1, 1);
+    curAx = subplot(4, 1, 1);
     hold(curAx, 'on');
     
     curPlot(curAx, curSyns.dist);
@@ -270,7 +272,7 @@ for curIdx = 1:size(wcT, 1)
         'Location', 'EastOutside');
     curLeg.Position([1, 3]) = [0.82, (0.98 - 0.82)];
     
-    curAx = subplot(3, 1, 2);
+    curAx = subplot(4, 1, 2);
     hold(curAx, 'on');
     
     curDiscretize = ...
@@ -311,7 +313,7 @@ for curIdx = 1:size(wcT, 1)
     curLeg.Position([1, 3]) = [0.82, (0.98 - 0.82)];
     
     % plot synaptic clustering
-    curAx = subplot(3, 1, 3);
+    curAx = subplot(4, 1, 3);
     hold(curAx, 'on');
     
     for curRepIdx = 1:size(curRepT, 1)
@@ -329,10 +331,31 @@ for curIdx = 1:size(wcT, 1)
     curAx.TickDir = 'out';
     curAx.Position(3) = 0.8 - curAx.Position(1);
     
+    xlim(curAx, curBinEdges([1, end]));
     ylim(curAx, [0, max(1, size(curRepT, 1))]);
     yticks(curAx, curAx.YLim);
     ylabel(curAx, 'Axons');
     
+    % plot (spine) synapse sizes
+    curAx = subplot(4, 1, 4);
+    
+    curSpineSyns = curSyns(curSyns.isSpine, :);
+    curSpineSyns.binId = discretize( ...
+        curSpineSyns.dist, curBinEdges);
+    curSpineSynArea = accumarray( ...
+        curSpineSyns.binId, curSpineSyns.area, ...
+       [numel(curBinEdges) - 1, 1], @median, 0);
+   
+    histogram(curAx, ...
+        'BinCount', curSpineSynArea, ...
+        'BinEdges', curBinEdges, ...
+        'DisplayStyle', 'stairs', ...
+        'LineWidth', 2);
+    
+    curAx.TickDir = 'out';
+    curAx.Position(3) = 0.8 - curAx.Position(1);
+    
+    ylabel(curAx, 'Median ASI (µm²)');
     xlabel(curAx, 'Distance to soma (µm)');
     xlim(curAx, curBinEdges([1, end]));
     
