@@ -26,6 +26,14 @@ dend = load(dendFile);
 [~, connName] = fileparts(connFile);
 conn = connectEM.Connectome.load(param, connName);
 
+%% split axons into exc. and inh.
+conn.axonMeta.spineSynFrac = ...
+    conn.axonMeta.spineSynCount ...
+ ./ conn.axonMeta.synCount;
+
+conn.axonMeta.isExc = (conn.axonMeta.spineSynFrac > 0.5);
+conn.axonMeta.isInh = ~conn.axonMeta.isExc;
+
 %% establish correspondence between connectome and whole cells
 somaAggloIds = find(conn.denMeta.targetClass == 'Somata');
 somaAgglos = conn.dendrites(somaAggloIds);
@@ -142,14 +150,6 @@ for curIdx = 1:size(wcT, 1)
     wcT.synapses{curIdx} = curSynT;
 end
 
-%% split axons into exc. and inh.
-conn.axonMeta.spineSynFrac = ...
-    conn.axonMeta.spineSynCount ...
- ./ conn.axonMeta.synCount;
-
-conn.axonMeta.isExc = (conn.axonMeta.spineSynFrac > 0.5);
-conn.axonMeta.isInh = ~conn.axonMeta.isExc;
-
 %% plotting
 for curIdx = 1:size(wcT, 1)
     curFig = figure('visible', 'off');
@@ -232,6 +232,138 @@ for curIdx = 1:size(wcT, 1)
     export_fig('-r172', curFigName, curFig);
     clear curFig;
 end
+
+%% load cached results
+%{
+% TODO(amotta): remove this
+wcT = load(fullfile(outputDir, 'whole-cell-table.mat'));
+wcT = wcT.wcT;
+%}
+
+%% lump inputs
+% build synapse table and fix `segIdx`
+segIdxOff = cumsum(cellfun(@numel, wcT.segIds));
+segIdxOff = [0; segIdxOff(1:(end - 1))];
+
+lumpedSynapses = cat(1, wcT.synapses{:});
+lumpedSynapses.segIdx = lumpedSynapses.segIdx ...
+    + repelem(segIdxOff, cellfun(@height, wcT.synapses));
+
+lumpedWcT = struct;
+lumpedWcT.segIds = cell2mat(wcT.segIds);
+lumpedWcT.nodeDists = cell2mat(wcT.nodeDists);
+lumpedWcT.synapses = lumpedSynapses;
+
+%% plot lumped inputs
+curFig = figure();
+curFig.Position(3:4) = [860, 480];
+
+curSyns = lumpedWcT.synapses;
+curSyns.isSpine = syn.isSpineSyn(curSyns.id);
+curSyns.isSoma = logical(somaLUT(lumpedWcT.segIds(curSyns.segIdx)));
+
+curSyns.isExc = conn.axonMeta.isExc(curSyns.axonId);
+curSyns.isInh = conn.axonMeta.isInh(curSyns.axonId);
+curSyns.isTc  = conn.axonMeta.isThalamocortical(curSyns.axonId);
+
+curSyns.dist = lumpedWcT.nodeDists(curSyns.segIdx);
+curSyns.dist = curSyns.dist / 1E3;
+
+% move soma synapses to separate bin
+curSyns.dist(curSyns.isSoma) = -eps;
+
+curMaxDist = 10 * ceil(max(curSyns.dist) / 10);
+curBinEdges = -10:10:curMaxDist;
+
+curPlot = @(ax, data) ...
+    histogram( ...
+        ax, data, ...
+        'BinEdges', curBinEdges, ...
+        'DisplayStyle', 'stairs', ...
+        'LineWidth', 2);
+
+curAx = subplot(3, 1, 1);
+hold(curAx, 'on');
+
+curPlot(curAx, curSyns.dist);
+curPlot(curAx, curSyns.dist(curSyns.isSpine));
+curPlot(curAx, curSyns.dist(curSyns.isSoma));
+
+curAx.TickDir = 'out';
+curAx.Position(3) = 0.8 - curAx.Position(1);
+
+xlim(curAx, curBinEdges([1, end]));
+ylabel(curAx, 'Synapses');
+
+title(curAx, { ...
+    'Lumped inputs onto soma-based reconstructions'; ...
+    sprintf('%s (%s)', info.filename, info.git_repos{1}.hash)}, ...
+    'FontWeight', 'normal', 'FontSize', 10);
+
+curLeg = legend(curAx, ...
+    'All', 'Onto spines', 'Onto soma', ...
+    'Location', 'EastOutside');
+curLeg.Position([1, 3]) = [0.82, (0.98 - 0.82)];
+
+% plot axon types
+curAx = subplot(3, 1, 2);
+hold(curAx, 'on');
+
+curPlot(curAx, curSyns.dist(curSyns.isExc));
+curPlot(curAx, curSyns.dist(curSyns.isInh));
+curPlot(curAx, curSyns.dist(curSyns.isTc));
+
+curAx.TickDir = 'out';
+curAx.Position(3) = 0.8 - curAx.Position(1);
+
+xlim(curAx, curBinEdges([1, end]));
+ylabel(curAx, 'Synapses');
+
+curLeg = legend(curAx, ...
+    'Excitatory', ...
+    'Inhibitory', ...
+    'Thalamocortical', ...
+    'Location', 'EastOutside');
+curLeg.Position([1, 3]) = [0.82, (0.98 - 0.82)];
+
+% plot fraction of axon types
+curAx = subplot(3, 1, 3);
+hold(curAx, 'on');
+
+curDiscretize = ...
+    @(data) accumarray( ...
+        discretize(data, curBinEdges), ...
+        1, [numel(curBinEdges) - 1, 1]);
+curBinAll = curDiscretize(curSyns.dist);
+
+curSpineFrac = curDiscretize(curSyns.dist(curSyns.isSpine));
+curExcFrac = curDiscretize(curSyns.dist(curSyns.isExc));
+curTcFrac = curDiscretize(curSyns.dist(curSyns.isTc));
+
+curPlot = ...
+    @(ax, data) histogram(ax, ...
+        'BinEdges', curBinEdges, ...
+        'BinCounts', data, ...
+        'DisplayStyle', 'stairs', ...
+        'LineWidth', 2);
+
+curPlot(curAx, curExcFrac ./ curBinAll);
+curPlot(curAx, curSpineFrac ./ curBinAll);
+curPlot(curAx, curTcFrac ./ curBinAll);
+
+curLeg = legend(curAx, ...
+    'Excitatory', ...
+    'Spine', ...
+    'Thalamocortical', ...
+    'Location', 'EastOutside');
+curLeg.Position([1, 3]) = [0.82, (0.98 - 0.82)];
+
+curAx.TickDir = 'out';
+curAx.Position(3) = 0.8 - curAx.Position(1);
+
+xlim(curAx, curBinEdges([1, end]));
+xlabel(curAx, 'Distance to soma (µm)');
+ylabel(curAx, 'Fraction of synapses');
 
 %% calculate fraction of spine synapses from TC axons
 allWcSyns = cat(1, wcT.synapses{:});
