@@ -62,16 +62,16 @@ conn.axonMeta.spineFrac = ...
     ./ conn.axonMeta.synCount;
 
 axonClasses = struct;
-axonClasses(1).axonIds = find(conn.axonMeta.synCount >= 10);
-axonClasses(1).title = 'All axons';
 
-axonClasses(2).axonIds = find( ...
+axonClasses(1).axonIds = find( ...
     conn.axonMeta.synCount >= 10 ...
   & conn.axonMeta.spineFrac >= 0.5);
-axonClasses(2).title = 'Excitatory axons';
+axonClasses(1).title = 'Excitatory axons';
+axonClasses(1).tag = 'Exc';
 
-axonClasses(3).axonIds = find(conn.axonMeta.isThalamocortical);
-axonClasses(3).title = 'Thalamocortical axons';
+axonClasses(2).axonIds = find(conn.axonMeta.isThalamocortical);
+axonClasses(2).title = 'Thalamocortical axons';
+axonClasses(2).tag = 'TC';
 
 %% plot distribution of synapse size
 binEdges = linspace(0, prctile(synT.area, 99.9), 51);
