@@ -207,25 +207,54 @@ ax.XLim(1) = 0;
 ax.TickDir = 'out';
 
 %% ASI area variability
-[~, ~, neuriteCoupling] = unique( ...
-    synT(:, {'preAggloId', 'postAggloId'}), 'rows');
-neuriteCv = accumarray( ...
-    neuriteCoupling, synT.area, [], ...
-    @(areas) std(areas) / mean(areas));
-neuriteCoupling = accumarray(neuriteCoupling, 1);
+cvVals = zeros(0, 1);
+cvGroups = zeros(0, 1);
 
-% remove single-spine case
-neuriteCv(neuriteCoupling < 2) = [];
-neuriteCoupling(neuriteCoupling < 2) = [];
+for curClassIdx = 1:numel(axonClasses)
+    curAxonIds = axonClasses(curClassIdx).axonIds;
+    curSynMask = ismember(synT.preAggloId, curAxonIds);
+    
+   [~, ~, curCvGroups] = unique(synT( ...
+        curSynMask, {'preAggloId', 'postAggloId'}), 'rows');
+    curCvVals = accumarray( ...
+        curCvGroups, synT.area(curSynMask), [], ...
+        @(areas) std(areas) / mean(areas));
+    curCvGroups = accumarray(curCvGroups, 1);
+
+    % remove single-spine case
+    curCvVals(curCvGroups < 2) = [];
+    curCvGroups(curCvGroups < 2) = [];
+    
+    % translate group id
+    curCvGroups = (curCvGroups - 2) ...
+        * numel(axonClasses) + curClassIdx;
+    
+    cvVals = [cvVals; curCvVals]; %#ok
+    cvGroups = [cvGroups; curCvGroups]; %#ok
+end
+
+groupLabels = arrayfun(@(i) sprintf( ...
+    '%d (%s)', ceil(i / numel(axonClasses)), ...
+    axonClasses(1 + mod(i - 1, numel(axonClasses))).tag), ...
+    unique(cvGroups), 'UniformOutput', false);
 
 % plot
 fig = figure();
 ax = axes(fig);
 
-boxplot(ax, neuriteCv, neuriteCoupling);
-title(ax, info.git_repos{1}.hash, 'FontWeight', 'normal', 'FontSize', 10);
-xlabel(ax, 'Spine synapses per connection');
+boxplot( ...
+    ax, cvVals, cvGroups, ...
+    'Labels', groupLabels, 'Symbol', '.', ...
+    'ColorGroup', mod(cvGroups - 1, numel(axonClasses)), ...
+    'PlotStyle', 'compact', 'Colors', ax.ColorOrder);
+
 ylabel(ax, 'Variability of all ASI areas (CV)');
+xlabel(ax, 'Spine synapses per connection');
+xticks(ax, unique(cvGroups));
+
+title( ...
+    ax, {info.filename; info.git_repos{1}.hash}, ...
+    'FontWeight', 'normal', 'FontSize', 10);
 
 ax.YLim(1) = 0;
 ax.TickDir = 'out';
