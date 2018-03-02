@@ -21,9 +21,12 @@ info = Util.runInfo();
 % NOTE(amotta): Synapses sizes are contained in the `contactArea` field of 
 % `conn.connectomeMeta`. Each cell contains the synapses sizes of the
 % correponding entries in `conn.connectome`.
-conn = load(connFile);
 syn = load(synFile);
 interSyn = load(interSynFile);
+
+[~, connName] = fileparts(connFile);
+conn = connectEM.Connectome.load( ...
+    struct('saveFolder', rootDir), connName);
 
 %% limit synapses
 synT = table;
@@ -53,19 +56,52 @@ synT.occurences = accumarray(uniCount, 1);
 synT(synT.occurences > 1, :) = [];
 synT.occurences = [];
 
+%% define axon classes
+conn.axonMeta.spineFrac = ...
+    conn.axonMeta.spineSynCount ...
+    ./ conn.axonMeta.synCount;
+
+axonClasses = struct;
+axonClasses(1).axonIds = find(conn.axonMeta.synCount >= 10);
+axonClasses(1).title = 'All axons';
+
+axonClasses(2).axonIds = find( ...
+    conn.axonMeta.synCount >= 10 ...
+  & conn.axonMeta.spineFrac >= 0.5);
+axonClasses(2).title = 'Excitatory axons';
+
+axonClasses(3).axonIds = find(conn.axonMeta.isThalamocortical);
+axonClasses(3).title = 'Thalamocortical axons';
+
 %% plot distribution of synapse size
-% plot distribution
+binEdges = linspace(0, prctile(synT.area, 99.9), 51);
+
 fig = figure();
 ax = axes(fig);
 
-histogram(ax, synT.area, 51);
-xlabel(ax, 'Axon-spine interface (µm²)');
-ylabel(ax, 'Spine synapses');
+hold(ax, 'on');
 ax.TickDir = 'out';
+
+for curClassIdx = 1:numel(axonClasses)
+    curAxonIds = axonClasses(curClassIdx).axonIds;
+    curClassMask = ismember(synT.preAggloId, curAxonIds);
+    
+    histogram( ...
+        ax, synT.area(curClassMask), ...
+        'BinEdges', binEdges, ...
+        'Normalization', 'probability', ...
+        'DisplayStyle', 'stairs', ...
+        'LineWidth', 2);
+end
+
+xlim(ax, binEdges([1, end]));
+xlabel(ax, 'Axon-spine interface (µm²)');
+ylabel(ax, 'Probability');
 
 title( ...
    {'Spine synapse size distribution'; info.git_repos{1}.hash}, ...
     'FontWeight', 'norma', 'FontSize', 10);
+legend(ax, {axonClasses.title}, 'Location', 'NorthEast');
     
 fig.Position(3:4) = [820, 475];
 
