@@ -437,29 +437,8 @@ curLeg = legend(curAx, ...
     'Location', 'EastOutside');
 curLeg.Position([1, 3]) = [0.82, (0.98 - 0.82)];
 
-% plot axon types
-curAx = subplot(3, 1, 2);
-hold(curAx, 'on');
-
-curPlot(curAx, curSyns.dist(curSyns.isExc));
-curPlot(curAx, curSyns.dist(curSyns.isInh));
-curPlot(curAx, curSyns.dist(curSyns.isTc));
-
-curAx.TickDir = 'out';
-curAx.Position(3) = 0.8 - curAx.Position(1);
-
-xlim(curAx, curBinEdges([1, end]));
-ylabel(curAx, 'Synapses');
-
-curLeg = legend(curAx, ...
-    'Excitatory', ...
-    'Inhibitory', ...
-    'Thalamocortical', ...
-    'Location', 'EastOutside');
-curLeg.Position([1, 3]) = [0.82, (0.98 - 0.82)];
-
 % plot fraction of axon types
-curAx = subplot(3, 1, 3);
+curAx = subplot(3, 1, 2);
 hold(curAx, 'on');
 
 curDiscretize = ...
@@ -494,8 +473,38 @@ curAx.TickDir = 'out';
 curAx.Position(3) = 0.8 - curAx.Position(1);
 
 xlim(curAx, curBinEdges([1, end]));
-xlabel(curAx, 'Distance to soma (µm)');
 ylabel(curAx, 'Fraction of synapses');
+
+% plot axon types
+curAx = subplot(3, 1, 3);
+hold(curAx, 'on');
+
+curPlot = @(ax, data) ...
+    histogram( ...
+        ax, data, ...
+        'Normalization', 'probability', ...
+        'BinEdges', curBinEdges, ...
+        'DisplayStyle', 'stairs', ...
+        'LineWidth', 2);
+
+curPlot(curAx, curSyns.dist(curSyns.isExc));
+curPlot(curAx, curSyns.dist(curSyns.isInh));
+curPlot(curAx, curSyns.dist(curSyns.isTc));
+
+curAx.TickDir = 'out';
+curAx.Position(3) = 0.8 - curAx.Position(1);
+
+xlim(curAx, curBinEdges([1, end]));
+ylabel(curAx, 'Synapse probability');
+
+curLeg = legend(curAx, ...
+    'Excitatory', ...
+    'Inhibitory', ...
+    'Thalamocortical', ...
+    'Location', 'EastOutside');
+curLeg.Position([1, 3]) = [0.82, (0.98 - 0.82)];
+
+xlabel(curAx, 'Distance to soma (µm)');
 
 %% calculate fraction of spine synapses from TC axons
 allWcSyns = cat(1, wcT.synapses{:});
