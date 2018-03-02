@@ -56,6 +56,8 @@ synT.occurences = accumarray(uniCount, 1);
 synT(synT.occurences > 1, :) = [];
 synT.occurences = [];
 
+synAreaLim = prctile(synT.area, 99.9);
+
 %% define axon classes
 conn.axonMeta.spineFrac = ...
     conn.axonMeta.spineSynCount ...
@@ -74,7 +76,7 @@ axonClasses(2).title = 'Thalamocortical axons';
 axonClasses(2).tag = 'TC';
 
 %% plot distribution of synapse size
-binEdges = linspace(0, prctile(synT.area, 99.9), 51);
+binEdges = linspace(0, synAreaLim, 51);
 
 fig = figure();
 ax = axes(fig);
@@ -139,43 +141,60 @@ title( ...
 legend(ax, {axonClasses.title}, 'Location', 'NorthEast');
 
 %% ASI areas vs. degree of coupling
-[~, ~, neuriteCoupling] = unique( ...
-    synT(:, {'preAggloId', 'postAggloId'}), 'rows');
+asiAreas = zeros(0, 1);
+asiGroups = zeros(0, 1);
 
-neuriteSynAreas = accumarray( ...
-    neuriteCoupling, synT.area, [], @(areas) {areas});
-neuriteCoupling = accumarray(neuriteCoupling, 1);
+for curClassIdx = 1:numel(axonClasses)
+    curAxonIds = axonClasses(curClassIdx).axonIds;
+    curSynMask = ismember(synT.preAggloId, curAxonIds);
+    
+   [~, ~, curAsiGroups] = unique(synT( ...
+        curSynMask, {'preAggloId', 'postAggloId'}), 'rows');
+    curAsiAreas = accumarray( ...
+        curAsiGroups, synT.area(curSynMask), [], @(areas) {areas});
+    curAsiGroups = accumarray(curAsiGroups, 1);
+    
+    curAsiAreas(curAsiGroups < 2) = [];
+    curAsiGroups(curAsiGroups < 2) = [];
+    
+    curAsiGroups = repelem( ...
+        curAsiGroups, cellfun(@numel, curAsiAreas));
+    curAsiAreas = cell2mat(curAsiAreas);
+    
+    % translate group id
+    curAsiGroups = (curAsiGroups - 2) ...
+        * numel(axonClasses) + curClassIdx;
+    
+    asiAreas = [asiAreas; curAsiAreas]; %#ok
+    asiGroups = [asiGroups; curAsiGroups]; %#ok
+end
 
-neuriteCoupling = repelem( ...
-    neuriteCoupling, cellfun(@numel, neuriteSynAreas));
-neuriteSynAreas = cell2mat(neuriteSynAreas);
-
-% add overall box
-neuriteSynAreas = [neuriteSynAreas; synT.area];
-neuriteCoupling = [neuriteCoupling; zeros(size(synT.area))];
-
-testT = table;
-testT.pair = combnk(0:5, 2);
-[~, testT.alpha] = arrayfun( ...
-    @(one, two) kstest2( ...
-        neuriteSynAreas(neuriteCoupling == one), ...
-        neuriteSynAreas(neuriteCoupling == two), ...
-        'Tail', 'larger'), ...
-    testT.pair(:, 1), testT.pair(:, 2));
-disp(testT);
+groupLabels = arrayfun(@(i) sprintf( ...
+    '%d (%s)', ceil(i / numel(axonClasses)), ...
+    axonClasses(1 + mod(i - 1, numel(axonClasses))).tag), ...
+    unique(asiGroups), 'UniformOutput', false);
+groupIds = mod(asiGroups - 1, numel(axonClasses));
 
 % plot
 fig = figure();
 ax = axes(fig);
 
-boxplot(ax, neuriteSynAreas, neuriteCoupling);
-title(ax, info.git_repos{1}.hash, 'FontWeight', 'normal', 'FontSize', 10);
+boxplot( ...
+    ax, asiAreas, asiGroups, ...
+    'Labels', groupLabels, ....
+    'Colors', ax.ColorOrder, ...
+    'ColorGroup', groupIds, ...
+    'Symbol', '.');
+
 xlabel(ax, 'Spine synapses per connection');
 ylabel(ax, 'Axon-spine interface area (µm²)');
+ylim(ax, [0, synAreaLim]);
 
-ax.YLim(1) = 0;
+title( ...
+    ax, {info.filename; info.git_repos{1}.hash}, ...
+    'FontWeight', 'normal', 'FontSize', 10);
+
 ax.TickDir = 'out';
-ax.XTickLabel{1} = 'Overall';
 
 %% plot
 fig = figure();
