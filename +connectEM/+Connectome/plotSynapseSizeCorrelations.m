@@ -154,15 +154,12 @@ for curClassIdx = 1:numel(axonClasses)
         curAsiGroups, synT.area(curSynMask), [], @(areas) {areas});
     curAsiGroups = accumarray(curAsiGroups, 1);
     
-    curAsiAreas(curAsiGroups < 2) = [];
-    curAsiGroups(curAsiGroups < 2) = [];
-    
     curAsiGroups = repelem( ...
         curAsiGroups, cellfun(@numel, curAsiAreas));
     curAsiAreas = cell2mat(curAsiAreas);
     
     % translate group id
-    curAsiGroups = (curAsiGroups - 2) ...
+    curAsiGroups = (curAsiGroups - 1) ...
         * numel(axonClasses) + curClassIdx;
     
     asiAreas = [asiAreas; curAsiAreas]; %#ok
