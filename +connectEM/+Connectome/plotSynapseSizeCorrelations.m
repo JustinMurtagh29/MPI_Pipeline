@@ -106,26 +106,37 @@ legend(ax, {axonClasses.title}, 'Location', 'NorthEast');
 fig.Position(3:4) = [820, 475];
 
 %% plot histogram over no. of synapse per neurite pair
-% precompute
-[~, ~, neuriteCoupling] = unique( ...
-    synT(:, {'preAggloId', 'postAggloId'}), 'rows');
-neuriteCoupling = accumarray(neuriteCoupling, 1);
-
-% pot
 fig = figure();
 ax = axes(fig);
-
-histogram(ax, neuriteCoupling, 'LineWidth', 2, 'DisplayStyle', 'stairs');
-title(ax, info.git_repos{1}.hash, 'FontWeight', 'normal', 'FontSize', 10);
-xlabel(ax, 'Spine synapses per connection');
-ylabel(ax, 'Connections');
+hold(ax, 'on');
 
 ax.YScale = 'log';
 ax.TickDir = 'out';
 
-ax.XLim = 0.5 + [0, max(neuriteCoupling)];
-ax.YLim(1) = 10 ^ (-0.1);
-ax.YTickLabel = arrayfun(@num2str, ax.YTick, 'UniformOutput', false);
+for curClassIdx = 1:numel(axonClasses)
+    curAxonIds = axonClasses(curClassIdx).axonIds;
+    curSynMask = ismember(synT.preAggloId, curAxonIds);
+    
+   [~, ~, curCoupling] = unique(synT( ...
+        curSynMask, {'preAggloId', 'postAggloId'}), 'rows');
+    curCoupling = accumarray(curCoupling, 1);
+
+    histogram( ...
+        ax, curCoupling, ...
+        'Normalization', 'probability', ...
+        'DisplayStyle', 'stairs', ...
+        'LineWidth', 2);
+end
+
+ylabel(ax, 'Probability');
+yticklabels(ax, arrayfun(@num2str, ...
+    yticks(ax), 'UniformOutput', false));
+xlabel(ax, 'Spine synapses per connection');
+
+title( ...
+    ax, {info.filename; info.git_repos{1}.hash}, ...
+    'FontWeight', 'normal', 'FontSize', 10);
+legend(ax, {axonClasses.title}, 'Location', 'NorthEast');
 
 %% ASI areas vs. degree of coupling
 [~, ~, neuriteCoupling] = unique( ...
