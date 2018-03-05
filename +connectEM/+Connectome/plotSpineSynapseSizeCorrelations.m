@@ -68,10 +68,14 @@ axonClasses = struct;
 axonClasses(1).axonIds = find( ...
     conn.axonMeta.synCount >= 10 ...
   & conn.axonMeta.spineFrac >= 0.5);
+axonClasses(1).synIds = find(ismember( ...
+    synT.preAggloId, axonClasses(1).axonIds));
 axonClasses(1).title = 'Excitatory axons';
 axonClasses(1).tag = 'Exc';
 
 axonClasses(2).axonIds = find(conn.axonMeta.isThalamocortical);
+axonClasses(2).synIds = find(ismember( ...
+    synT.preAggloId, axonClasses(2).axonIds));
 axonClasses(2).title = 'Thalamocortical axons';
 axonClasses(2).tag = 'TC';
 
@@ -86,10 +90,10 @@ ax.TickDir = 'out';
 
 for curClassIdx = 1:numel(axonClasses)
     curAxonIds = axonClasses(curClassIdx).axonIds;
-    curClassMask = ismember(synT.preAggloId, curAxonIds);
+    curSynIds = axonClasses(curClassIdx).synIds;
     
     histogram( ...
-        ax, synT.area(curClassMask), ...
+        ax, synT.area(curSynIds), ...
         'BinEdges', binEdges, ...
         'Normalization', 'probability', ...
         'DisplayStyle', 'stairs', ...
@@ -117,10 +121,10 @@ ax.TickDir = 'out';
 
 for curClassIdx = 1:numel(axonClasses)
     curAxonIds = axonClasses(curClassIdx).axonIds;
-    curSynMask = ismember(synT.preAggloId, curAxonIds);
+    curSynIds = axonClasses(curClassIdx).synIds;
     
    [~, ~, curCoupling] = unique(synT( ...
-        curSynMask, {'preAggloId', 'postAggloId'}), 'rows');
+        curSynIds, {'preAggloId', 'postAggloId'}), 'rows');
     curCoupling = accumarray(curCoupling, 1);
 
     histogram( ...
@@ -146,12 +150,12 @@ asiGroups = zeros(0, 1);
 
 for curClassIdx = 1:numel(axonClasses)
     curAxonIds = axonClasses(curClassIdx).axonIds;
-    curSynMask = ismember(synT.preAggloId, curAxonIds);
+    curSynIds = axonClasses(curClassIdx).synIds;
     
    [~, ~, curAsiGroups] = unique(synT( ...
-        curSynMask, {'preAggloId', 'postAggloId'}), 'rows');
+        curSynIds, {'preAggloId', 'postAggloId'}), 'rows');
     curAsiAreas = accumarray( ...
-        curAsiGroups, synT.area(curSynMask), [], @(areas) {areas});
+        curAsiGroups, synT.area(curSynIds), [], @(areas) {areas});
     curAsiGroups = accumarray(curAsiGroups, 1);
     
     curAsiGroups = repelem( ...
@@ -199,12 +203,12 @@ cvGroups = zeros(0, 1);
 
 for curClassIdx = 1:numel(axonClasses)
     curAxonIds = axonClasses(curClassIdx).axonIds;
-    curSynMask = ismember(synT.preAggloId, curAxonIds);
+    curSynIds = axonClasses(curClassIdx).synIds;
     
    [~, ~, curCvGroups] = unique(synT( ...
-        curSynMask, {'preAggloId', 'postAggloId'}), 'rows');
+        curSynIds, {'preAggloId', 'postAggloId'}), 'rows');
     curCvVals = accumarray( ...
-        curCvGroups, synT.area(curSynMask), [], ...
+        curCvGroups, synT.area(curSynIds), [], ...
         @(areas) std(areas) / mean(areas));
     curCvGroups = accumarray(curCvGroups, 1);
 
@@ -310,12 +314,12 @@ for curCouplingIdx = 1:numel(plotCouplings)
 
     for curClassIdx = 1:numel(axonClasses)
         curAxonIds = axonClasses(curClassIdx).axonIds;
-        curSynMask = ismember(synT.preAggloId, curAxonIds);
+        curSynIds = axonClasses(curClassIdx).synIds;
 
        [~, ~, curCvGroups] = unique(synT( ...
-            curSynMask, {'preAggloId', 'postAggloId'}), 'rows');
+            curSynIds, {'preAggloId', 'postAggloId'}), 'rows');
         curSynAreas = accumarray( ...
-            curCvGroups, synT.area(curSynMask), ...
+            curCvGroups, synT.area(curSynIds), ...
             [], @(areas) {sort(areas, 'descend')});
         
         curCvGroups = accumarray(curCvGroups, 1);
