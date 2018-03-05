@@ -82,12 +82,12 @@ axonClasses(2).tag = 'TC';
 %}
 
 % spine vs. shaft synapses
-axonClasses(1).axonIds = find(conn.axonMeta.synCount >= 10);
+axonClasses(1).axonIds = find(conn.axonMeta.synCount);
 axonClasses(1).synIds = find(synT.isSpine);
 axonClasses(1).title = 'Spine synapses';
 axonClasses(1).tag = 'Sp';
 
-axonClasses(2).axonIds = find(conn.axonMeta.synCount >= 10);
+axonClasses(2).axonIds = find(conn.axonMeta.synCount);
 axonClasses(2).synIds = find(~synT.isSpine & ~synT.isSoma);
 axonClasses(2).title = 'Shaft synapses';
 axonClasses(2).tag = 'Sh';
