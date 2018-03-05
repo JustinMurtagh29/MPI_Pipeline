@@ -266,45 +266,71 @@ ax.TickDir = 'out';
 
 %% do comparisons again null hypothesis
 controlCouplings = 2:5;
+cvOf = @(d) std(d, 0, 2) ./ mean(d, 2);
+
 for curCoupling = controlCouplings
-    % control
-    rng(0);
-    curCtrlCount = curCoupling * floor(size(synT, 1) / curCoupling);
+    curFig = figure();
+    curFig.Position(3:4) = [520, 756];
     
-    curCtrlVals = randperm(size(synT, 1), curCtrlCount);
-    curCtrlVals = reshape(curCtrlVals, [], curCoupling);
-    curCtrlVals = synT.area(curCtrlVals);
+    for curClassIdx = 1:numel(axonClasses)
+        curAxonIds = axonClasses(curClassIdx).axonIds;
+        curSynIds = axonClasses(curClassIdx).synIds;
+        
+        % actual CVs
+       [~, ~, curSynCoupling] = unique(synT( ...
+            curSynIds, {'preAggloId', 'postAggloId'}), 'rows');
+        curSynAreas = accumarray( ...
+            curSynCoupling, synT.area(curSynIds), [], ...
+            @(a) {reshape(sort(a, 'descend'), 1, [])});
+        
+        curSynCoupling = accumarray(curSynCoupling, 1);
+        curSynAreas(curSynCoupling ~= curCoupling) = [];
+        
+        curSynAreas = cell2mat(curSynAreas);
+        curCvs = cvOf(curSynAreas(:, 1:2));
+        
+        % control
+        rng(0);
+        curCtrlCount = curCoupling * ...
+            floor(numel(curSynIds) / curCoupling);
+
+        curCtrlVals = randperm(numel(curSynIds), curCtrlCount);
+        curCtrlVals = reshape(curSynIds(curCtrlVals), [], curCoupling);
+        curCtrlVals = synT.area(curCtrlVals);
+
+        curCtrlVals = sort(curCtrlVals, 2, 'descend');
+        curCtrlVals = cvOf(curCtrlVals(:, 1:2));
+        
+        curAx = subplot(numel(axonClasses), 1, curClassIdx);
+        hold(curAx, 'on');
+        
+        histogram( ...
+            curAx, curCtrlCvs, linspace(0, 1.5, 21), ...
+            'Normalization', 'probability', ...
+            'DisplayStyle', 'stairs', ...
+            'LineWidth', 2);
+        histogram( ...
+            curAx, curCvs, linspace(0, 1.5, 21), ...
+            'Normalization', 'probability', ...
+            'DisplayStyle', 'stairs', ...
+            'LineWidth', 2);
+        
+        title( ...
+            curAx, axonClasses(curClassIdx).title, ...
+            'FontWeight', 'normal', 'FontSize', 10);
+    end
     
-    curCtrlVals = sort(curCtrlVals, 2, 'descend');
-    curCtrlVals = curCtrlVals(:, 1:2);
+    annotation( ...
+        curFig, ...
+        'textbox', [0, 0.9, 1, 0.1], ...
+        'String', { ...
+            sprintf('%d-fold coupled neurites', curCoupling);
+            info.git_repos{1}.hash}, ...
+        'EdgeColor', 'none', 'HorizontalAlignment', 'center');
     
-    curCtrlCvs = ...
-        std(curCtrlVals, 0, 2) ...
-     ./ mean(curCtrlVals, 2);
-    
-    fig = figure();
-    ax = axes(fig); %#ok
-    hold(ax, 'on');
-    
-    histogram(ax, ...
-        neuriteCv(neuriteCoupling == curCoupling), ...
-        linspace(0, 1.5, 21), ...
-        'Normalization', 'probability', ...
-        'DisplayStyle', 'stairs', ...
-        'LineWidth', 2);
-    histogram(ax, ...
-        curCtrlCvs, ...
-        linspace(0, 1.5, 21), ...
-        'Normalization', 'probability', ...
-        'DisplayStyle', 'stairs', ...
-        'LineWidth', 2);
-    
-    title(ax, ...
-       {sprintf('Control for %d-fold coupled neurites', curCoupling);
-        info.git_repos{1}.hash}, 'FontWeight', 'normal', 'FontSize', 10);
-    legend(ax, 'Observed', 'Control');
-    xlabel(ax, 'CV of largest two AIS');
-    ylabel(ax, 'Fraction');
+    legend(curAx, 'Control', 'Observed');
+    xlabel(curAx, 'CV of largest two AIS');
+    ylabel(curAx, 'Probability');
 end
 
 %% ASI variability for all combinations
