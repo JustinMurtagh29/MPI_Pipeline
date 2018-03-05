@@ -30,15 +30,16 @@ axonIds = find( ...
 
 %% export examples to webKNOSSOS
 rng(0);
-axonIds = axonIds(randperm(numel(axonIds)));
+randIds = randperm(numel(axonIds));
+randIds = randIds(1:10);
 
 skel = skeleton();
 skel = Skeleton.setParams4Pipeline(skel, param);
 skel = skel.setDescription(sprintf( ...
     '%s (%s)', info.filename, info.git_repos{1}.hash));
 
-for curIdx = 1
-    curAxonId = axonIds(curIdx);
+for curIdx = 1:numel(randIds)
+    curAxonId = axonIds(randIds(curIdx));
     curAxonSegIds = conn.axons{curAxonId};
     
     curSynIds = (conn.connectome.edges(:, 1) == curAxonId);
@@ -64,4 +65,10 @@ for curIdx = 1
             'Synapse %d', curSynIds(curSynIdx));
         curSkel.colors{end} = [1, 0, 0, 1];
     end
+    
+    curSkelName = sprintf( ...
+        '%0*d_axon-%d.nml', ...
+        ceil(log10(1 + numel(randIds))), ...
+        curIdx, curAxonId);
+    curSkel.write(fullfile(debugDir, curSkelName));
 end
