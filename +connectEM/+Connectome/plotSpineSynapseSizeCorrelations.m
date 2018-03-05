@@ -193,35 +193,6 @@ title( ...
 
 ax.TickDir = 'out';
 
-%% plot
-fig = figure();
-ax = axes(fig);
-hold(ax, 'on');
-
-plotCouplings = 1:5;
-
-for i = plotCouplings
-    histogram(ax, ...
-        neuriteSynAreas(neuriteCoupling == i), ...
-        linspace(0, 3, 51), ...
-        'Normalization', 'probability', ...
-        'DisplayStyle', 'stairs', ...
-        'LineWidth', 2);
-end
-
-xlabel(ax, 'Axon-spine interface area (µm²)');
-ylabel(ax, 'Probability');
-
-legend(ax, arrayfun( ...
-    @(n) sprintf('%d spine synapses per connection', n), ...
-    plotCouplings, 'UniformOutput', false));
-title( ...
-    ax, info.git_repos{1}.hash, ...
-    'FontWeight', 'normal', 'FontSize', 10);
-
-ax.XLim(1) = 0;
-ax.TickDir = 'out';
-
 %% ASI area variability
 cvVals = zeros(0, 1);
 cvGroups = zeros(0, 1);
@@ -274,92 +245,6 @@ title( ...
     'FontWeight', 'normal', 'FontSize', 10);
 
 ax.YLim(1) = 0;
-ax.TickDir = 'out';
-
-%% as histogram
-fig = figure();
-ax = axes(fig);
-hold(ax, 'on');
-
-plotCouplings = 2:5;
-
-for i = plotCouplings
-    histogram(ax, ...
-        neuriteCv(neuriteCoupling == i), ...
-        linspace(0, 1.5, 21), ...
-        'Normalization', 'probability', ...
-        'DisplayStyle', 'stairs', ...
-        'LineWidth', 2);
-end
-
-xlabel(ax, 'Variability of all ASI areas (CV)');
-ylabel(ax, 'Probability');
-
-legend(ax, arrayfun( ...
-    @(n) sprintf('%d spine synapses per connection', n), ...
-    plotCouplings, 'UniformOutput', false));
-title( ...
-    ax, info.git_repos{1}.hash, ...
-    'FontWeight', 'normal', 'FontSize', 10);
-
-ax.XLim(1) = 0;
-ax.TickDir = 'out';
-
-%% ASI area variability for largest two synapses
-[~, ~, neuriteCoupling] = unique( ...
-    synT(:, {'preAggloId', 'postAggloId'}), 'rows');
-
-upToTwo = @(i) i(1:min(2, numel(i)));
-cvOf = @(i) std(i) / mean(i);
-
-neuriteCv = accumarray( ...
-    neuriteCoupling, synT.area, [], ...
-    @(a) cvOf(upToTwo(sort(a, 'descend'))));
-neuriteCoupling = accumarray(neuriteCoupling, 1);
-
-% remove single-spine case
-neuriteCv(neuriteCoupling < 2) = [];
-neuriteCoupling(neuriteCoupling < 2) = [];
-
-% plot
-fig = figure();
-ax = axes(fig);
-
-boxplot(ax, neuriteCv, neuriteCoupling);
-title(ax, info.git_repos{1}.hash, 'FontWeight', 'normal', 'FontSize', 10);
-xlabel(ax, 'Spine synapses per connection');
-ylabel(ax, 'Variability of largest two ASI areas (CV)');
-
-ax.YLim(1) = 0;
-ax.TickDir = 'out';
-
-%% as histogram
-fig = figure();
-ax = axes(fig);
-hold(ax, 'on');
-
-plotCouplings = 2:5;
-
-for i = plotCouplings
-    histogram(ax, ...
-        neuriteCv(neuriteCoupling == i), ...
-        linspace(0, 1.5, 21), ...
-        'Normalization', 'probability', ...
-        'DisplayStyle', 'stairs', ...
-        'LineWidth', 2);
-end
-
-xlabel(ax, 'Variability of largest two ASI areas (CV)');
-ylabel(ax, 'Probability');
-
-legend(ax, arrayfun( ...
-    @(n) sprintf('%d spine synapses per connection', n), ...
-    plotCouplings, 'UniformOutput', false));
-title( ...
-    ax, info.git_repos{1}.hash, ...
-    'FontWeight', 'normal', 'FontSize', 10);
-
-ax.XLim(1) = 0;
 ax.TickDir = 'out';
 
 %% do comparisons again null hypothesis
