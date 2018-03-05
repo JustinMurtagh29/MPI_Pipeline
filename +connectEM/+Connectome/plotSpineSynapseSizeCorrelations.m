@@ -32,7 +32,6 @@ conn = connectEM.Connectome.load( ...
 synT = table;
 synT.id = cell2mat(conn.connectome.synIdx);
 synT.area = cell2mat(conn.connectomeMeta.contactArea);
-synT.isSpine = syn.isSpineSyn(synT.id);
 
 synT.preAggloId = repelem( ...
     conn.connectome.edges(:, 1), ...
@@ -42,9 +41,9 @@ synT.postAggloId = repelem( ...
     conn.connectome.edges(:, 2), ...
     cellfun(@numel, conn.connectome.synIdx));
 
-% limit to spine synapses
-synT(~synT.isSpine, :) = [];
-synT.isSpine = [];
+synT.isSpine = syn.isSpineSyn(synT.id);
+synT.isSoma = ismember(synT.postAggloId, ...
+    find(conn.denMeta.targetClass == 'Somata'));
 
 % remove duplicate entries
 [~, uniRows, uniCount] = unique(synT.id);
@@ -65,6 +64,8 @@ conn.axonMeta.spineFrac = ...
 
 axonClasses = struct;
 
+%{
+% excitatory vs. thalamocortical
 axonClasses(1).axonIds = find( ...
     conn.axonMeta.synCount >= 10 ...
   & conn.axonMeta.spineFrac >= 0.5);
@@ -78,6 +79,18 @@ axonClasses(2).synIds = find(ismember( ...
     synT.preAggloId, axonClasses(2).axonIds));
 axonClasses(2).title = 'Thalamocortical axons';
 axonClasses(2).tag = 'TC';
+%}
+
+% spine vs. shaft synapses
+axonClasses(1).axonIds = find(conn.axonMeta.synCount >= 10);
+axonClasses(1).synIds = find(synT.isSpine);
+axonClasses(1).title = 'Spine synapses';
+axonClasses(1).tag = 'Sp';
+
+axonClasses(2).axonIds = find(conn.axonMeta.synCount >= 10);
+axonClasses(2).synIds = find(~synT.isSpine & ~synT.isSoma);
+axonClasses(2).title = 'Shaft synapses';
+axonClasses(2).tag = 'Sh';
 
 %% plot distribution of synapse size
 binEdges = linspace(0, synAreaLim, 51);
@@ -101,11 +114,11 @@ for curClassIdx = 1:numel(axonClasses)
 end
 
 xlim(ax, binEdges([1, end]));
-xlabel(ax, 'Axon-spine interface (µm²)');
+xlabel(ax, 'Synapse area (µm²)');
 ylabel(ax, 'Probability');
 
 title( ...
-   {'Spine synapse size distribution'; info.git_repos{1}.hash}, ...
+   {'Synapse area distribution'; info.git_repos{1}.hash}, ...
     'FontWeight', 'norma', 'FontSize', 10);
 legend(ax, {axonClasses.title}, 'Location', 'NorthEast');
     
@@ -137,14 +150,14 @@ end
 ylabel(ax, 'Probability');
 yticklabels(ax, arrayfun(@num2str, ...
     yticks(ax), 'UniformOutput', false));
-xlabel(ax, 'Spine synapses per connection');
+xlabel(ax, 'Synapses per connection');
 
 title( ...
     ax, {info.filename; info.git_repos{1}.hash}, ...
     'FontWeight', 'normal', 'FontSize', 10);
 legend(ax, {axonClasses.title}, 'Location', 'NorthEast');
 
-%% ASI areas vs. degree of coupling
+%% Synapse areas vs. degree of coupling
 asiAreas = zeros(0, 1);
 asiGroups = zeros(0, 1);
 
@@ -187,8 +200,8 @@ boxplot( ...
     'ColorGroup', groupIds, ...
     'Symbol', '.');
 
-xlabel(ax, 'Spine synapses per connection');
-ylabel(ax, 'Axon-spine interface area (µm²)');
+xlabel(ax, 'Synapses per connection');
+ylabel(ax, 'Synapse area (µm²)');
 ylim(ax, [0, synAreaLim]);
 
 title( ...
@@ -197,7 +210,7 @@ title( ...
 
 ax.TickDir = 'out';
 
-%% ASI area variability
+%% Synapse area variability
 cvVals = zeros(0, 1);
 cvGroups = zeros(0, 1);
 
@@ -241,8 +254,8 @@ boxplot( ...
     'ColorGroup', groupIds, ...
     'Symbol', '.');
 
-ylabel(ax, 'Variability of all ASI areas (CV)');
-xlabel(ax, 'Spine synapses per connection');
+ylabel(ax, 'Variability of synapse areas (CV)');
+xlabel(ax, 'Synapses per connection');
 
 title( ...
     ax, {info.filename; info.git_repos{1}.hash}, ...
@@ -300,7 +313,7 @@ cvOf = @(d) std(d, 0, 2) ./ mean(d, 2);
 
 fig = figure();
 fig.Color = 'white';
-fig.Position(3:4) = [1000, 900];
+fig.Position(3:4) = [960, 1090];
 
 for curCouplingIdx = 1:numel(plotCouplings)
     curCoupling = plotCouplings(curCouplingIdx);
@@ -361,7 +374,7 @@ for curCouplingIdx = 1:numel(plotCouplings)
 end
 
 xlabel(curAx, 'Synapse pair');
-ylabel(curAx, 'Variability of ASI areas (CV)');
+ylabel(curAx, 'Synapse variability (CV)');
 
 xMax = max(arrayfun(@(a) a.XLim(end), fig.Children));
 yMax = max(arrayfun(@(a) a.YLim(end), fig.Children));
