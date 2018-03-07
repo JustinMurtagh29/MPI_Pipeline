@@ -6,7 +6,9 @@ function out = merge(left, right)
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     
-   [~, rightToLeft] = ismember(right.nodes(:, 4), left.nodes(:, 4));
+   [~, rightToLeft] = ismember( ...
+        right.nodes(:, 4), left.nodes(:, 4));
+    rightToLeft = reshape(rightToLeft, 1, []);
     
     % nodes to be added to `left`
     newNodes = right.nodes(~rightToLeft, :);
