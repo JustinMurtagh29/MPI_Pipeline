@@ -91,7 +91,6 @@ faOverlaps = flightAggloOverlaps(numAgglos, aggloLUT, aggloTable);
 ffOverlaps = flightFlightOverlaps(numAgglos, aggloTable);
 
 overlaps = faOverlaps + ffOverlaps;
-save(cacheFile, '-append', 'overlaps');
 
 %% show pairs with a lot of overlap
 numOverlaps = nnz(overlaps);
