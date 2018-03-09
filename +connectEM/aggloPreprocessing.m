@@ -824,7 +824,7 @@ if  ~existentWC(8)
     for a = 1:numel(dirWCGT)
         files = dir(fullfile(dirWCGT{a},'*.nml'));
         for f = 1:numel(files)
-            skel = skeleton(fullfile(dirWCGT,files(f).name));
+            skel = skeleton(fullfile(dirWCGT{a},files(f).name));
             numSkelNodes = cellfun(@(x) size(x,1),skel.nodes);
             skelLUT = repelem(1:numel(skel.nodes),numSkelNodes);
             warning('off')
