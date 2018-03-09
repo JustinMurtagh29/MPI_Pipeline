@@ -828,7 +828,7 @@ if  ~existentWC(8)
     usedCells = zeros(numel(wholeCells),1);
     skelsNotFound = [];
     for f = 1:numel(filenames)
-        skel = skeleton(filenames);
+        skel = skeleton(filenames{f});
         numSkelNodes = cellfun(@(x) size(x,1),skel.nodes);
         skelLUT = repelem(1:numel(skel.nodes),numSkelNodes);
         warning('off')
