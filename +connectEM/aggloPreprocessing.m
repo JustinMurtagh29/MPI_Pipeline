@@ -816,52 +816,65 @@ if  ~existentWC(8)
     clear wholeCellsNoAxon
     
     dirWCGT = {'/gaba/u/mberning/results/pipeline/20170217_ROI/aggloState/centerWholeCellGT/axonInfo','/gaba/u/mberning/results/pipeline/20170217_ROI/aggloState/borderWholeCellGT_axonId'};
+    filenames = cell(0);
+    for a = 1:numel(dirWCGT)
+        files = dir(fullfile(dirWCGT{a},'*.nml'));
+        filenames = cat(2,filenames,cellfun(@(x) fullfile(dirWCGT{a},x),{files.name},'uni',0));
+    end
     for n = 1:numel(wholeCells)  % make the axon field NaN for all wholeCells, to have those wCs labeled which do not have an axon marked in the GT
         wholeCells(n).axon = NaN(size(wholeCells(n).nodes,1),1);
     end
     wcLUT = Superagglos.buildLUT(wholeCells,segmentMeta.maxSegId);
-    usedCells = false(numel(wholeCells),1);
-    for a = 1:numel(dirWCGT)
-        files = dir(fullfile(dirWCGT{a},'*.nml'));
-        for f = 1:numel(files)
-            skel = skeleton(fullfile(dirWCGT{a},files(f).name));
-            numSkelNodes = cellfun(@(x) size(x,1),skel.nodes);
-            skelLUT = repelem(1:numel(skel.nodes),numSkelNodes);
-            warning('off')
-            skelSegIds = Seg.Global.getSegIds(p,cell2mat(cellfun(@(x) x(:,1:3),skel.nodes,'uni',0)));  % extract the seg Ids of all skel nodes
-            warning on
-            ind = mode(wcLUT(nonzeros(skelSegIds))); % get the whole cell overlapping the most with the skeleton in terms of segIds
-            if usedCells(ind)
-                error('Cell %d already used!',ind)
-            else
-                usedCells(ind) = true;
+    usedCells = zeros(numel(wholeCells),1);
+    skelsNotFound = [];
+    for f = 1:numel(filenames)
+        skel = skeleton(filenames);
+        numSkelNodes = cellfun(@(x) size(x,1),skel.nodes);
+        skelLUT = repelem(1:numel(skel.nodes),numSkelNodes);
+        warning('off')
+        skelSegIds = Seg.Global.getSegIds(p,cell2mat(cellfun(@(x) x(:,1:3),skel.nodes,'uni',0)));  % extract the seg Ids of all skel nodes
+        warning on
+        ind = mode(wcLUT(nonzeros(skelSegIds))); % get the whole cell overlapping the most with the skeleton in terms of segIds
+        if ind == 0
+            warning('Found no corresponding whole Cell to skeleton from file %s. Trying to use somaAgglo as index...',files(f).name)
+            ind = mode(somaLUT(nonzeros(skelSegIds)));
+            if ind == 0
+                warning('Still no corresponding whole Cell to skeleton from file %s found! Skipping this one...',files(f).name)
+                skelsNotFound = cat(1,skelsNotFound,f);
+                continue
+            end
+        end
+        if usedCells(ind)
+            error('Error skeleton %s: Cell %d already used from skeleton %s!',filenames{f},ind,filenames{usedCells(ind)})
+        else
+            usedCells(ind) = f;
+        end
+        
+        if numel(numSkelNodes) > 1  % if there is only one skeleton, there was no axon found
+            indAxonSkel = find(~cellfun(@isempty,regexp(skel.names,'axon')));
+            if isempty(indAxonSkel)  % if skeleton was not marked with an axon label, check comments for axon label
+                [comments,treeIndComment] = skel.getAllComments;
+                indComment = ~cellfun(@isempty,regexp(comments,'axon','ONCE'));
+                indAxonSkel = unique(treeIndComment(indComment));
+                if isempty(indAxonSkel)
+                    % if also nothing found in comments, take the smaller one of the two skeletons as axon
+                    [~,indAxonSkel] = min(numSkelNodes);
+                end
             end
             
-            if numel(numSkelNodes) > 1  % if there is only one skeleton, there was no axon found
-                indAxonSkel = find(~cellfun(@isempty,regexp(skel.names,'axon')));
-                if isempty(indAxonSkel)  % if skeleton was not marked with an axon label, check comments for axon label
-                    [comments,treeIndComment] = skel.getAllComments;
-                    indComment = ~cellfun(@isempty,regexp(comments,'axon','ONCE'));
-                    indAxonSkel = unique(treeIndComment(indComment));
-                    if isempty(indAxonSkel)
-                        % if also nothing found in comments, take the smaller one of the two skeletons as axon
-                        [~,indAxonSkel] = min(numSkelNodes);
-                    end
-                end
-                
-                % get cell branches by removing soma agglo and small segments
-                branches = Superagglos.removeSegIdsFromAgglos(wholeCells(ind),somaAgglos{ind});
-                branches = branches(arrayfun(@(x) size(x.nodes,1),branches)>20); % remove all small leftovers smaller than 10 nodes
-                branchLUT = Superagglos.buildLUT(branches,segmentMeta.maxSegId);
-                indBranch = mode(nonzeros(branchLUT(nonzeros(skelSegIds(skelLUT==indAxonSkel))))); % get the branch overlapping the most with the axonic skeleton in terms of segIds
-                if ~isnan(indBranch)
-                    wholeCells(ind).axon = ismember(wholeCells(ind).nodes(:,1:3),branches(indBranch).nodes(:,1:3),'rows'); % mark the whole cell nodes as axonic which are the same as the branch nodes
-                else
-                    warning('With skeleton from file %s and whole cell number %d no axon was found',files(f).name,ind)
-                end
+            % get cell branches by removing soma agglo and small segments
+            branches = Superagglos.removeSegIdsFromAgglos(wholeCells(ind),somaAgglos{ind});
+            branches = branches(arrayfun(@(x) size(x.nodes,1),branches)>20); % remove all small leftovers smaller than 10 nodes
+            branchLUT = Superagglos.buildLUT(branches,segmentMeta.maxSegId);
+            indBranch = mode(nonzeros(branchLUT(nonzeros(skelSegIds(skelLUT==indAxonSkel))))); % get the branch overlapping the most with the axonic skeleton in terms of segIds
+            if ~isnan(indBranch)
+                wholeCells(ind).axon = ismember(wholeCells(ind).nodes(:,1:3),branches(indBranch).nodes(:,1:3),'rows'); % mark the whole cell nodes as axonic which are the same as the branch nodes
+            else
+                warning('With skeleton from file %s and whole cell number %d no axon was found',files(f).name,ind)
             end
         end
     end
+    warning('Skeletons of files \n%s\n did not have a whole cell partner!',filenames{f})
     undefAxon = arrayfun(@(x) any(isnan(x.axon)),wholeCells);
     nodesToDelete = arrayfun(@(x) find(x.axon),wholeCells,'uni',0);
     nodesToDelete(undefAxon) = cell(sum(undefAxon),1);
