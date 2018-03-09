@@ -837,10 +837,10 @@ if  ~existentWC(9)
         warning on
         ind = mode(wcLUT(nonzeros(skelSegIds))); % get the whole cell overlapping the most with the skeleton in terms of segIds
         if ind == 0
-            warning('Found no corresponding whole Cell to skeleton from file %s. Trying to use somaAgglo as index...',files(f).name)
+            warning('Found no corresponding whole Cell to skeleton from file %s. Trying to use somaAgglo as index...',filenames{f})
             ind = mode(somaLUT(nonzeros(skelSegIds)));
             if ind == 0
-                warning('Still no corresponding whole Cell to skeleton from file %s found! Skipping this one...',files(f).name)
+                warning('Still no corresponding whole Cell to skeleton from file %s found! Skipping this one...',filenames{f})
                 skelsNotFound = cat(1,skelsNotFound,f);
                 continue
             end
