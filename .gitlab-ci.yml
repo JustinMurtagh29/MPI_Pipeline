@@ -1,4 +1,6 @@
 before_script:
+  - yum update -y
+  - yum install git -y
   - .ci/updateSubmodules.sh
 
 tests:
