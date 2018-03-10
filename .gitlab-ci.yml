@@ -7,4 +7,3 @@ tests:
   script:
     - .ci/connectToLicenseServer.sh
     - .ci/runMatlabCI.sh
-    - .ci/runTests.sh
