@@ -7,7 +7,7 @@ outputFolder = fullfile(p.saveFolder, 'aggloState');
 info = Util.runInfo(); % added by BS
 statesDendrites = {'dendrites_01','dendrites_02','dendrites_03_v2','dendrites_03_v2_splitmerged','dendrites_04','dendrites_05','dendrites_06','dendrites_07','dendrites_08','dendrites_09','dendrites_10','dendrites_11','dendrites_12','dendrites_13','dendrites_14','dendrites_15','dendrites_16','dendrites_wholeCells_GTAxon_01'};
 statesAxons = {'axons_01','axons_02','axons_03'};
-statesWC = {'wholeCells_01','wholeCells_02','wholeCells_03','wholeCells_04','wholeCells_05','wholeCells_06','wholeCells_07','wholeCells_autoAxon_08','wholeCells_GTAxon_08_v2'};
+statesWC = {'wholeCells_01','wholeCells_02','wholeCells_03','wholeCells_04','wholeCells_05','wholeCells_06','wholeCells_07','wholeCells_autoAxon_08','wholeCells_GTAxon_08_v3'};
 existentDendrites = cellfun(@(x) exist(fullfile(outputFolder,strcat(x,'.mat')),'file'),statesDendrites) | overwrite;
 existentAxons = cellfun(@(x) exist(fullfile(outputFolder,strcat(x,'.mat')),'file'),statesAxons) | overwrite;
 existentWC = cellfun(@(x) exist(fullfile(outputFolder,strcat(x,'.mat')),'file'),statesWC) | overwrite;
@@ -597,14 +597,16 @@ end
 disp('State 13 dendrites loaded/generated')
 
 %% load all soma whole cell agglos
-somaAgglos = connectEM.getSomaAgglos(fullfile(outputFolder,'somas_with_merged_somas.mat'),'all');
+[somaAgglos,somaCoords] = connectEM.getSomaAgglos(fullfile(outputFolder,'somas_with_merged_somas.mat'),'all');
+somaCoords = somaCoords(~cellfun(@isempty,somaAgglos)); % remove not found somata
 somaAgglos = somaAgglos(~cellfun(@isempty,somaAgglos)); % remove not found somata
 somaSegIds = cell2mat(somaAgglos);
 % remove duplicate segIds
 [~,ic] = unique(somaSegIds);
 duplicates = somaSegIds(setdiff(1:numel(somaSegIds),ic));
 % somaDuplicateIds = cellfun(@(x) any(intersect(x,duplicates)),somaAgglos);
-somaAgglos = cellfun(@(x) setdiff(x,duplicates),somaAgglos,'uni',0);
+[somaAgglos,ia] = cellfun(@(x) setdiff(x,duplicates),somaAgglos,'uni',0);
+somaCoords = arrayfun(@(x) somaCoords{x}(ia{x},:),1:numel(ia),'uni',0);
 somaSegIds = cell2mat(somaAgglos);
 somaLUT(somaSegIds) = repelem(1:numel(somaAgglos),cellfun(@numel,somaAgglos));
 disp('Soma whole cell agglos loaded')
@@ -720,7 +722,7 @@ if  ~existentWC(7) || ~existentDendrites(17)
     indBigDends = Agglo.isMaxBorderToBorderDistAbove(p, 5000, Superagglos.transformAggloNewOldRepr(dendrites));
     [ myelinDend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
     save(fullfile(outputFolder,'dendrites_16.mat'),'dendrites','myelinDend','indBigDends')%,'info');
-elseif ~existentDendrites(18)
+elseif ~existentDendrites(18) || ~existentWC(8) || ~existentWC(9)
     load(fullfile(outputFolder,'wholeCells_07.mat'))
     load(fullfile(outputFolder,'dendrites_16.mat'))
 end
@@ -862,17 +864,27 @@ if  ~existentWC(9)
                     [~,indAxonSkel] = min(numSkelNodes);
                 end
             end
-            
-            % get cell branches by removing soma agglo and small segments
-            branches = Superagglos.removeSegIdsFromAgglos(wholeCells(ind),somaAgglos{ind});
-            branches = branches(arrayfun(@(x) size(x.nodes,1),branches)>20); % remove all small leftovers smaller than 10 nodes
-            branchLUT = Superagglos.buildLUT(branches,segmentMeta.maxSegId);
-            indBranch = mode(nonzeros(branchLUT(nonzeros(skelSegIds(skelLUT==indAxonSkel))))); % get the branch overlapping the most with the axonic skeleton in terms of segIds
-            if ~isnan(indBranch)
-                wholeCells(ind).axon = ismember(wholeCells(ind).nodes(:,1:3),branches(indBranch).nodes(:,1:3),'rows'); % mark the whole cell nodes as axonic which are the same as the branch nodes
-            else
-                warning('With skeleton from file %s and whole cell number %d no axon was found',files(f).name,ind)
+            % get node indices in whole cell which overlap with GT
+            [~,mask] = ismember(unique(nonzeros(skelSegIds(skelLUT==indAxonSkel))),wholeCells(ind).nodes(:,4));
+            mask = sort(unique(nonzeros(mask)));
+            centerSoma = mean(somaCoords{ind},1); % get center coordinate of soma
+            % get distance of all nodes to center
+            distToCenter = bsxfun(@minus,bsxfun(@times,wholeCells(ind).nodes(:,1:3),[11.24,11.24,28]),centerSoma);
+            % get the minimal distance of the axon branch to the soma plus
+            % some threshold
+            minDist = min(abs(distToCenter(mask))) - 1000;
+            % grow out soma branch to get all nodes of the branch but do
+            % not go below the minDist threshold
+            while true
+                maskNew = unique(wholeCells(ind).edges(any(ismember(wholeCells(ind).edges,mask),2),:));
+                if isequal(mask,maskNew(abs(distToCenter(maskNew)) > minDist))
+                    break
+                else
+                    mask = maskNew(abs(distToCenter(maskNew)) > minDist);
+                end
             end
+            wholeCells(ind).axon = false(size(wholeCells(ind).nodes,1),1);
+            wholeCells(ind).axon(mask) = true;
         end
     end
     warning('Skeletons of files \n%s\n did not have a whole cell partner!',filenames{f})
@@ -898,9 +910,9 @@ if  ~existentWC(9)
     indWholeCells = cat(1,false(numel(dendrites),1),true(numel(wholeCellsNoAxon),1));
     dendrites = cat(1,dendrites,wholeCellsNoAxon');
     indBigDends = cat(1,indBigDends,true(numel(wholeCellsNoAxon),1));
-    save(fullfile(outputFolder,'wholeCells_GTAxon_08_v2.mat'),'wholeCells');
+    save(fullfile(outputFolder,'wholeCells_GTAxon_08_v3.mat'),'wholeCells');
     [ myelinDend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
-    save(fullfile(outputFolder,'dendrites_wholeCells_01_v3.mat'),'dendrites','myelinDend','indBigDends','indWholeCells')%,'info');
+    save(fullfile(outputFolder,'dendrites_wholeCells_01_v4.mat'),'dendrites','myelinDend','indBigDends','indWholeCells')%,'info');
 end
 %%
 connectEM.getDendriteQueryOverlapB(p,'2.2')
