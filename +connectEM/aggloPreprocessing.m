@@ -724,7 +724,7 @@ if  ~existentWC(7) || ~existentDendrites(17)
     save(fullfile(outputFolder,'dendrites_16.mat'),'dendrites','myelinDend','indBigDends')%,'info');
 elseif ~existentDendrites(18) || ~existentWC(8) || ~existentWC(9)
     load(fullfile(outputFolder,'wholeCells_07.mat'))
-    load(fullfile(outputFolder,'dendrites_16.mat'))
+    load(fullfile(outputFolder,'dendrites_17_a.mat'))
 end
 disp('State 16 dendrites loaded/generated')
 % %% add spines to all agglos
@@ -800,6 +800,10 @@ if  ~existentWC(8)
         else
             wholeCellsNoAxon(n) = tmp;
         end
+%         tmp = rmfield(Superagglos.removeNodesFromAgglo(wholeCells(n),~wholeCells(n).axon),'axon'); % get the whole cells without the axon
+%         ix = max(arrayfun(@(x) size(x.nodes,1),tmp));
+%         tmp = tmp(ix);
+%         AIS(n) = tmp;
     end
     % remove all branches that have been labeled axonic from all wholeCells
     
@@ -807,11 +811,12 @@ if  ~existentWC(8)
     indWholeCells = cat(1,false(numel(dendrites),1),true(numel(wholeCellsNoAxon),1));
     dendrites = cat(1,dendrites,wholeCellsNoAxon');
     indBigDends = cat(1,indBigDends,true(numel(wholeCellsNoAxon),1));
+    indAIS = cat(1,indAIS,false(numel(wholeCellsNoAxon),1));
     [ myelinDend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
     
     save(fullfile(outputFolder,'wholeCells_autoAxon_08.mat'),'wholeCells');
     
-    save(fullfile(outputFolder,'dendrites_wholeCells_01.mat'),'dendrites','myelinDend','indBigDends','indWholeCells')%,'info');
+    save(fullfile(outputFolder,'dendrites_wholeCells_01.mat'),'dendrites','myelinDend','indBigDends','indWholeCells','indAIS')%,'info');
 end
     
 if  ~existentWC(9)
@@ -908,14 +913,15 @@ if  ~existentWC(9)
         end
         wholeCellsNoAxon(n) = rmfield(tmp(ind),'axon');
     end
-    load(fullfile(outputFolder,'dendrites_16.mat'))
+    load(fullfile(outputFolder,'dendrites_17_a.mat'))
     % concatenate truncated whole cells with dendrite class and make new state
     indWholeCells = cat(1,false(numel(dendrites),1),true(numel(wholeCellsNoAxon),1));
     dendrites = cat(1,dendrites,wholeCellsNoAxon');
     indBigDends = cat(1,indBigDends,true(numel(wholeCellsNoAxon),1));
+    indAIS = cat(1,indAIS,false(numel(wholeCellsNoAxon),1));
     save(fullfile(outputFolder,'wholeCells_GTAxon_08_v3.mat'),'wholeCells');
     [ myelinDend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
-    save(fullfile(outputFolder,'dendrites_wholeCells_01_v4.mat'),'dendrites','myelinDend','indBigDends','indWholeCells')%,'info');
+    save(fullfile(outputFolder,'dendrites_wholeCells_01_v4.mat'),'dendrites','myelinDend','indBigDends','indWholeCells','indAIS')%,'info');
 end
 %%
 connectEM.getDendriteQueryOverlapB(p,'2.2')
