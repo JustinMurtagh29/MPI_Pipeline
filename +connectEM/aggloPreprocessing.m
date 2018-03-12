@@ -869,15 +869,18 @@ if  ~existentWC(9)
             mask = sort(unique(nonzeros(mask)));
             centerSoma = mean(somaCoords{ind},1); % get center coordinate of soma
             % get distance of all nodes to center
-            distToCenter = bsxfun(@minus,bsxfun(@times,wholeCells(ind).nodes(:,1:3),[11.24,11.24,28]),centerSoma);
+            distToCenter = sqrt(sum(bsxfun(@minus,bsxfun(@times,wholeCells(ind).nodes(:,1:3),[11.24,11.24,28]),centerSoma).^2,2));
             % get the minimal distance of the axon branch to the soma plus
             % some threshold
-            minDist = min(abs(distToCenter(mask))) - 1000;
+            minDist = min(distToCenter(mask)) - 1000;
+            if minDist < 2000
+                warning('Distance of axon to center of soma is less than 2 micron. Seems strange.. (%s)',filenames{f})
+            end
             % grow out soma branch to get all nodes of the branch but do
             % not go below the minDist threshold
             while true
                 maskNew = unique(wholeCells(ind).edges(any(ismember(wholeCells(ind).edges,mask),2),:));
-                if isequal(mask,maskNew(abs(distToCenter(maskNew)) > minDist))
+                if isequal(mask,maskNew(distToCenter(maskNew) > minDist))
                     break
                 else
                     mask = maskNew(abs(distToCenter(maskNew)) > minDist);
