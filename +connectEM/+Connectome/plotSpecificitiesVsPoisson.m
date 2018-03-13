@@ -98,8 +98,9 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
     %% plotting
     fig = figure;
     fig.Color = 'white';
+    fig.Position(3:4) = [1500, 300];
     
-    binEdges = linspace(0, 1, 26);
+    binEdges = linspace(0, 1, 11);
     axes = cell(size(targetClasses));
 
     for classIdx = 1:numel(targetClasses)
@@ -120,6 +121,7 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
 
         % Measured
         ax = subplot(1, numel(targetClasses), classIdx);
+        axis(ax, 'square');
         hold(ax, 'on');
 
         histogram(ax, ...
@@ -141,14 +143,11 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
         ax.YAxis.Limits(1) = 10 ^ (-0.1);
         ax.YAxis.Scale = 'log';
 
-        if classIdx == numel(targetClasses)
-            legend(ax, ...
-                'Expected (Poisson)', 'Observed', ...
-                'Location', 'NorthEast');
-        end
-
         axes{classIdx} = ax;
     end
+    
+    % Uncomment to show legend
+    % leg = legend(ax, 'Expected (Poisson)', 'Observed');
 
     axes = horzcat(axes{:});
     yMax = max(arrayfun(@(a) a.YAxis.Limits(end), axes));
