@@ -100,7 +100,7 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
     %% plotting
     fig = figure;
     fig.Color = 'white';
-    fig.Position(3:4) = [1500, 300];
+    fig.Position(3:4) = [1500, 420];
     
     binEdges = linspace(0, 1, 11);
     axes = cell(size(targetClasses));
@@ -120,6 +120,7 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
 
         poiss.binId = discretize(poiss.spec, binEdges);
         poissBinCount = accumarray(poiss.binId, poiss.prob);
+        obsBinCount = histcounts(specificities(:, classIdx), binEdges);
 
         % Measured
         ax = subplot(1, numel(targetClasses), classIdx);
@@ -133,7 +134,8 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
             'LineWidth', 2);
 
         histogram(ax, ...
-            specificities(:, classIdx), binEdges, ...
+            'BinEdges', binEdges, ...
+            'BinCounts', obsBinCount, ...
             'DisplayStyle', 'stairs', ...
             'LineWidth', 2);
 
@@ -144,7 +146,33 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
         ax.YAxis.TickDirection = 'out';
         ax.YAxis.Limits(1) = 10 ^ (-0.1);
         ax.YAxis.Scale = 'log';
-
+        
+        % Show number of overly specific axons. Two approaches are used:
+        % 1. Find a synapse fraction threshold above which less than one
+        %    axon is expected under the Poisson assumption. Then count the
+        %    number of axons above this threshold.
+        % 2. Count the number of axons which are above the Poisson
+        %    distribution. This does not truly represent overly-specific
+        %    axons.
+        overBinId = 1 + find(poissBinCount > 1, 1, 'last');
+        overThreshCount = sum(obsBinCount(overBinId:end));
+        overPoissCount = sum(max(obsBinCount(:) - poissBinCount(:), 0));
+        
+        overlyStr = { ...
+            sprintf( ...
+                '%d with S ≥ %.1f', ...
+                overThreshCount, binEdges(overBinId)); ...
+            sprintf( ...
+                '%d above Poisson', round(overPoissCount))};
+        
+        annotation( ...
+            fig, ...
+            'textbox', ax.Position, ...
+            'EdgeColor', 'none', ...
+            'VerticalAlignment', 'bottom', ...
+            'HorizontalAlignment', 'center', ...
+            'String', overlyStr);
+        
         axes{classIdx} = ax;
     end
     
@@ -155,7 +183,7 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
     yMax = max(arrayfun(@(a) a.YAxis.Limits(end), axes));
     for ax = axes; ax.YAxis.Limits(end) = yMax; end
 
-    annotation(...
+    annotation( ...
         'textbox', [0, 0.9, 1, 0.1], ...
         'EdgeColor', 'none', 'HorizontalAlignment', 'center', ...
         'String', ...
