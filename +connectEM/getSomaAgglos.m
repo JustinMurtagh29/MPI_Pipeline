@@ -1,4 +1,4 @@
-function [somas,somaCoords] = getSomaAgglos(filename,type)
+function [somas,somaCoords,theseSomaCoordinates] = getSomaAgglos(filename,type)
 % returns the somata which overlap with the center, border or with all soma
 % locations (which were extracted from the KAMIN list)
 % INPUTS
@@ -151,24 +151,26 @@ allSomaCoordinates =   [1392	2835	2779;
 
 switch type
     case 'center'
-        theseSomaCoordinates = bsxfun(@times,centerSomaCoordinates ,[11.2400   11.2400   28]);
+        theseSomaCoordinates = centerSomaCoordinates;
     case 'all'
-        theseSomaCoordinates = bsxfun(@times,allSomaCoordinates ,[11.2400   11.2400   28]);
+        theseSomaCoordinates = allSomaCoordinates;
     case 'border'
-        theseSomaCoordinates = bsxfun(@times,setdiff(allSomaCoordinates,centerSomaCoordinates,'rows') ,[11.2400   11.2400   28]);
+        theseSomaCoordinates = setdiff(allSomaCoordinates,centerSomaCoordinates,'rows');
     otherwise
         error('Type not found')
 end
+theseSomaCoordinatesScaled = bsxfun(@times, theseSomaCoordinates,[11.2400   11.2400   28]);
 
 somaCOMs = bsxfun(@times,cell2mat(cellfun(@mean,somas(:,1),'uni',0)),[11.2400   11.2400   28]);
-idxSomas = zeros(size(theseSomaCoordinates,1),1);
-for s = 1:size(theseSomaCoordinates,1)
-    [dst(s),idxSomas(s)] = min(pdist2(theseSomaCoordinates(s,:),somaCOMs));
+idxSomas = zeros(size(theseSomaCoordinatesScaled,1),1);
+for s = 1:size(theseSomaCoordinatesScaled,1)
+    [dst(s),idxSomas(s)] = min(pdist2(theseSomaCoordinatesScaled(s,:),somaCOMs));
 end
-if (numel(unique(idxSomas))~=size(theseSomaCoordinates,1))
+if (numel(unique(idxSomas))~=size(theseSomaCoordinatesScaled,1))
     [~,ind] = unique(idxSomas);
     warning('Caution! %d soma coordinates from the KAMIN list were part from the same soma agglo!Duplicates are removed!',numel(idxSomas)-numel(ind))
     idxSomas = idxSomas(sort(ind));
+    theseSomaCoordinates = theseSomaCoordinates(sort(ind),:);
 end
 somaCoords = cellfun(@(x) bsxfun(@times,x,[11.2400   11.2400   28]),somas(idxSomas,1),'uni',0);
 somas = somas(idxSomas,3);
