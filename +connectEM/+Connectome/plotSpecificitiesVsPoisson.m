@@ -76,8 +76,8 @@ end
 
 %% plotting
 function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
-    specificities = classConn(axonClass.axonIds, :);
-    specificities = specificities ./ sum(specificities, 2);
+    axonSynCount = axonMeta.synCount(axonClass.axonIds);
+    axonClassesCount = classConn(axonClass.axonIds, :);
     
     %% preparations
     % select axons for Poisson
@@ -91,51 +91,43 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
     % calculate probabilities for Poisson
     targetClassSyns = sum(classConn(poissAxonIds, :), 1);
     targetClassProbs = targetClassSyns / sum(targetClassSyns);
-
-    % restrict to axons with enough synapses
-   [synCounts, ~, synCountAxons] = unique( ...
-        axonMeta.synCount(axonClass.axonIds));
-    synCountAxons = accumarray(synCountAxons, 1);
     
     %% plotting
     fig = figure;
     fig.Color = 'white';
     fig.Position(3:4) = [1500, 420];
     
-    binEdges = linspace(0, 1, 11);
+    binEdges = linspace(0, 1, 21);
     axes = cell(size(targetClasses));
 
     for classIdx = 1:numel(targetClasses)
         className = targetClasses{classIdx};
         classProb = targetClassProbs(classIdx);
-
-        % Poissons
-        poiss = table;
-        poiss.prob = cell2mat(arrayfun(@(nSyn, nAxons) ...
-            nAxons * poisspdf((0:nSyn)', nSyn * classProb), ...
-            synCounts, synCountAxons, 'UniformOutput', false));
-        poiss.spec = cell2mat(arrayfun( ...
-            @(nSyn) (0:nSyn)' ./ nSyn, ...
-            synCounts, 'UniformOutput', false));
-
-        poiss.binId = discretize(poiss.spec, binEdges);
-        poissBinCount = accumarray(poiss.binId, poiss.prob);
-        obsBinCount = histcounts(specificities(:, classIdx), binEdges);
+        
+        % Calculate the probability of seeing a synapse fraction greater or
+        % equal to the observed one.
+        axonClassCount = axonClassesCount(:, classIdx);
+        assert(all(axonClassCount <= axonSynCount));
+        
+        axonProbs = 1 - arrayfun(@poisscdf, ...
+            axonClassCount, classProb * axonSynCount);
+        
+        % Select non-random axons
+        curAxonSpecs = axonClassCount ./ axonSynCount;
 
         % Measured
         ax = subplot(1, numel(targetClasses), classIdx);
         axis(ax, 'square');
         hold(ax, 'on');
 
-        histogram(ax, ...
+        histogram( ...
+            ax, curAxonSpecs(axonProbs < 0.01), ...
             'BinEdges', binEdges, ...
-            'BinCounts', poissBinCount, ...
-            'DisplayStyle', 'stairs', ...
-            'LineWidth', 2);
-
-        histogram(ax, ...
+            'EdgeColor', 'none', ...
+            'FaceAlpha', 1);
+        histogram( ...
+            ax, curAxonSpecs, ...
             'BinEdges', binEdges, ...
-            'BinCounts', obsBinCount, ...
             'DisplayStyle', 'stairs', ...
             'LineWidth', 2);
 
@@ -146,32 +138,6 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
         ax.YAxis.TickDirection = 'out';
         ax.YAxis.Limits(1) = 10 ^ (-0.1);
         ax.YAxis.Scale = 'log';
-        
-        % Show number of overly specific axons. Two approaches are used:
-        % 1. Find a synapse fraction threshold above which less than one
-        %    axon is expected under the Poisson assumption. Then count the
-        %    number of axons above this threshold.
-        % 2. Count the number of axons which are above the Poisson
-        %    distribution. This does not truly represent overly-specific
-        %    axons.
-        overBinId = 1 + find(poissBinCount > 1, 1, 'last');
-        overThreshCount = sum(obsBinCount(overBinId:end));
-        overPoissCount = sum(max(obsBinCount(:) - poissBinCount(:), 0));
-        
-        overlyStr = { ...
-            sprintf( ...
-                '%d with S ≥ %.1f', ...
-                overThreshCount, binEdges(overBinId)); ...
-            sprintf( ...
-                '%d above Poisson', round(overPoissCount))};
-        
-        annotation( ...
-            fig, ...
-            'textbox', ax.Position, ...
-            'EdgeColor', 'none', ...
-            'VerticalAlignment', 'bottom', ...
-            'HorizontalAlignment', 'center', ...
-            'String', overlyStr);
         
         axes{classIdx} = ax;
     end
