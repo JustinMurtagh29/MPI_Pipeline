@@ -842,11 +842,11 @@ if  ~existentWC(9)
         warning('off')
         skelSegIds = Seg.Global.getSegIds(p,cell2mat(cellfun(@(x) x(:,1:3),skel.nodes,'uni',0)));  % extract the seg Ids of all skel nodes
         warning on
-        ind = mode(wcLUT(nonzeros(skelSegIds))); % get the whole cell overlapping the most with the skeleton in terms of segIds
-        if ind == 0
+        ind = mode(nonzeros(wcLUT(nonzeros(skelSegIds)))); % get the whole cell overlapping the most with the skeleton in terms of segIds
+        if isnan(ind)
             warning('Found no corresponding whole Cell to skeleton from file %s. Trying to use somaAgglo as index...',filenames{f})
-            ind = mode(somaLUT(nonzeros(skelSegIds)));
-            if ind == 0
+            ind = mode(nonzeros(somaLUT(nonzeros(skelSegIds))));
+            if isnan(ind)
                 warning('Still no corresponding whole Cell to skeleton from file %s found! Skipping this one...',filenames{f})
                 skelsNotFound = cat(1,skelsNotFound,f);
                 continue
@@ -895,7 +895,9 @@ if  ~existentWC(9)
             wholeCells(ind).axon(mask) = true;
         end
     end
-    warning('Skeletons of files \n%s\n did not have a whole cell partner!',filenames{f})
+    if ~isempty(skelsNotFound)
+        warning('Skeletons of files \n%s\n did not have a whole cell partner!',filenames{skelsNotFound})
+    end
     undefAxon = arrayfun(@(x) any(isnan(x.axon)),wholeCells);
     nodesToDelete = arrayfun(@(x) find(x.axon),wholeCells,'uni',0);
     nodesToDelete(undefAxon) = cell(sum(undefAxon),1);
