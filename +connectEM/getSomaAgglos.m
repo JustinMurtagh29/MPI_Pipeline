@@ -1,4 +1,4 @@
-function [somas,somaCoords,theseSomaCoordinates] = getSomaAgglos(filename,type)
+function [somas,somaCoords,KAMINsomaCoords] = getSomaAgglos(filename,type)
 % returns the somata which overlap with the center, border or with all soma
 % locations (which were extracted from the KAMIN list)
 % INPUTS
@@ -9,6 +9,8 @@ function [somas,somaCoords,theseSomaCoordinates] = getSomaAgglos(filename,type)
 %
 % OUTPUTS
 % somas        soma agglos in the old agglo format (cell array)
+% somaCoords   all coordinates of each segId in each somaAgglo (scaled to nm)
+% KAMINsomaCoords   the center coordinate from the KAMIN list (in pixels)
 %
 % by marcel.beining@brain.mpg.de
 
@@ -151,15 +153,15 @@ allSomaCoordinates =   [1392	2835	2779;
 
 switch type
     case 'center'
-        theseSomaCoordinates = centerSomaCoordinates;
+        KAMINsomaCoords = centerSomaCoordinates;
     case 'all'
-        theseSomaCoordinates = allSomaCoordinates;
+        KAMINsomaCoords = allSomaCoordinates;
     case 'border'
-        theseSomaCoordinates = setdiff(allSomaCoordinates,centerSomaCoordinates,'rows');
+        KAMINsomaCoords = setdiff(allSomaCoordinates,centerSomaCoordinates,'rows');
     otherwise
         error('Type not found')
 end
-theseSomaCoordinatesScaled = bsxfun(@times, theseSomaCoordinates,[11.2400   11.2400   28]);
+theseSomaCoordinatesScaled = bsxfun(@times, KAMINsomaCoords,[11.2400   11.2400   28]);
 
 somaCOMs = bsxfun(@times,cell2mat(cellfun(@mean,somas(:,1),'uni',0)),[11.2400   11.2400   28]);
 idxSomas = zeros(size(theseSomaCoordinatesScaled,1),1);
@@ -167,10 +169,17 @@ for s = 1:size(theseSomaCoordinatesScaled,1)
     [dst(s),idxSomas(s)] = min(pdist2(theseSomaCoordinatesScaled(s,:),somaCOMs));
 end
 if (numel(unique(idxSomas))~=size(theseSomaCoordinatesScaled,1))
-    [~,ind] = unique(idxSomas);
-    warning('Caution! %d soma coordinates from the KAMIN list were part from the same soma agglo!Duplicates are removed!',numel(idxSomas)-numel(ind))
+    [~,ind,ind2] = unique(idxSomas);
+    % get the KAMIN center coordinate which had the lowest distance to the
+    % soma Agglo
+    for n = 1:numel(ind)
+        ind3 = find(n==ind2);
+        [~,ind4] = dst(ind3);
+        ind(n) = ind3(ind4);
+    end
+    warning('Caution! %d soma coordinates from the KAMIN list were part from the same soma agglo (probably because a somaAgglo does not exist for a KAMIN Id)!These are removed!',numel(idxSomas)-numel(ind))
     idxSomas = idxSomas(sort(ind));
-    theseSomaCoordinates = theseSomaCoordinates(sort(ind),:);
+    KAMINsomaCoords = KAMINsomaCoords(sort(ind),:);
 end
 somaCoords = cellfun(@(x) bsxfun(@times,x,[11.2400   11.2400   28]),somas(idxSomas,1),'uni',0);
 somas = somas(idxSomas,3);
