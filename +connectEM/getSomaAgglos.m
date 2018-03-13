@@ -174,7 +174,7 @@ if (numel(unique(idxSomas))~=size(theseSomaCoordinatesScaled,1))
     % soma Agglo
     for n = 1:numel(ind)
         ind3 = find(n==ind2);
-        [~,ind4] = dst(ind3);
+        [~,ind4] = min(dst(ind3));
         ind(n) = ind3(ind4);
     end
     warning('Caution! %d soma coordinates from the KAMIN list were part from the same soma agglo (probably because a somaAgglo does not exist for a KAMIN Id)!These are removed!',numel(idxSomas)-numel(ind))

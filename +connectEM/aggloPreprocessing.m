@@ -597,7 +597,7 @@ end
 disp('State 13 dendrites loaded/generated')
 
 %% load all soma whole cell agglos
-[somaAgglos,somaCoords] = connectEM.getSomaAgglos(fullfile(outputFolder,'somas_with_merged_somas.mat'),'all');
+[somaAgglos,somaCoords,KAMINcoords] = connectEM.getSomaAgglos(fullfile(outputFolder,'somas_with_merged_somas.mat'),'all');
 somaCoords = somaCoords(~cellfun(@isempty,somaAgglos)); % remove not found somata
 somaAgglos = somaAgglos(~cellfun(@isempty,somaAgglos)); % remove not found somata
 somaSegIds = cell2mat(somaAgglos);
@@ -843,7 +843,7 @@ if  ~existentWC(9)
         skelSegIds = Seg.Global.getSegIds(p,cell2mat(cellfun(@(x) x(:,1:3),skel.nodes,'uni',0)));  % extract the seg Ids of all skel nodes
         warning on
         ind = mode(nonzeros(wcLUT(nonzeros(skelSegIds)))); % get the whole cell overlapping the most with the skeleton in terms of segIds
-        if isnan(ind)
+        if isnan(ind) || sum(nonzeros(wcLUT(nonzeros(skelSegIds)))==ind)/numel(nonzeros(skelSegIds)) < 0.33 % if no overlap found or overlap is less than one third of the skeleton
             warning('Found no corresponding whole Cell to skeleton from file %s. Trying to use somaAgglo as index...',filenames{f})
             ind = mode(nonzeros(somaLUT(nonzeros(skelSegIds))));
             if isnan(ind)
