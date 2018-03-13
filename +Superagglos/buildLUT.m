@@ -10,7 +10,7 @@ function [lut,aggloSegIds] = buildLUT(agglos,maxSegId)
     %  Marcel Beining
     
 
-aggloSegIds = cell2mat(arrayfun(@(x) x.nodes(~isnan(x.nodes(:,4)),4),agglos(:),'uni',0));
+aggloSegIds = cell2mat(arrayfun(@(x) double(x.nodes(~isnan(x.nodes(:,4)),4)),agglos(:),'uni',0));
 if ~exist('maxSegId','var') || isempty(maxSegId)
     maxSegId = max(aggloSegIds);
 end
