@@ -847,9 +847,16 @@ if  ~existentWC(9)
             warning('Found no corresponding whole Cell to skeleton from file %s. Trying to use somaAgglo as index...',filenames{f})
             ind = mode(nonzeros(somaLUT(nonzeros(skelSegIds))));
             if isnan(ind)
-                warning('Still no corresponding whole Cell to skeleton from file %s found! Skipping this one...',filenames{f})
-                skelsNotFound = cat(1,skelsNotFound,f);
-                continue
+                % last try to retrieve correct whole cell by checking
+                % neighbours of the skel, but only if skel is very small
+                % (as it would be for a border soma)
+                if sum(numSkelNodes) > 10 || isnan(mode(nonzeros(somaLUT(cat(1,graph.neighbours{skelSegIds})))))
+                    warning('Still no corresponding whole Cell to skeleton from file %s found! Skipping this one...',filenames{f})
+                    skelsNotFound = cat(1,skelsNotFound,f);
+                    continue
+                else
+                    ind = mode(nonzeros(somaLUT(cat(1,graph.neighbours{skelSegIds}))));
+                end
             end
         end
         if usedCells(ind)
