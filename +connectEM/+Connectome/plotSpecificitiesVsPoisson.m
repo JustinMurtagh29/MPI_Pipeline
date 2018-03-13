@@ -91,11 +91,16 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
     % calculate probabilities for Poisson
     targetClassSyns = sum(classConn(poissAxonIds, :), 1);
     targetClassProbs = targetClassSyns / sum(targetClassSyns);
+
+    % restrict to axons with enough synapses
+   [synCounts, ~, synCountAxons] = unique( ...
+        axonMeta.synCount(axonClass.axonIds));
+    synCountAxons = accumarray(synCountAxons, 1);
     
     %% plotting
     fig = figure;
     fig.Color = 'white';
-    fig.Position(3:4) = [1500, 420];
+    fig.Position(3:4) = [1850, 420];
     
     binEdges = linspace(0, 1, 21);
     axes = cell(size(targetClasses));
@@ -104,40 +109,75 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
         className = targetClasses{classIdx};
         classProb = targetClassProbs(classIdx);
         
-        % Calculate the probability of seeing a synapse fraction greater or
-        % equal to the observed one.
+        % Calculate probability of seeing a value greater or equal to the
+        % observed synapse fraction. Then mark all axons for which this
+        % probability is below 1 % as "specific".
         axonClassCount = axonClassesCount(:, classIdx);
-        assert(all(axonClassCount <= axonSynCount));
+        axonClassSpecs = axonClassCount ./ axonSynCount;
         
-        axonProbs = 1 - arrayfun(@poisscdf, ...
-            axonClassCount, classProb * axonSynCount);
-        
-        % Select non-random axons
-        curAxonSpecs = axonClassCount ./ axonSynCount;
+        classPost = 1 - arrayfun(@poisscdf, ...
+            axonClassCount - 1, classProb * axonSynCount);
+        isSpecific = classPost < 0.01;
+
+        % Poissons
+        poiss = table;
+        poiss.prob = cell2mat(arrayfun(@(nSyn, nAxons) ...
+            nAxons * poisspdf((0:nSyn)', nSyn * classProb), ...
+            synCounts, synCountAxons, 'UniformOutput', false));
+        poiss.spec = cell2mat(arrayfun( ...
+            @(nSyn) (0:nSyn)' ./ nSyn, ...
+            synCounts, 'UniformOutput', false));
+
+        poiss.binId = discretize(poiss.spec, binEdges);
+        poissBinCount = accumarray(poiss.binId, poiss.prob);
 
         % Measured
         ax = subplot(1, numel(targetClasses), classIdx);
         axis(ax, 'square');
         hold(ax, 'on');
 
-        histogram( ...
-            ax, curAxonSpecs(axonProbs < 0.01), ...
+        histogram(ax, ...
+            axonClassSpecs(isSpecific), ...
             'BinEdges', binEdges, ...
             'EdgeColor', 'none', ...
             'FaceAlpha', 1);
-        histogram( ...
-            ax, curAxonSpecs, ...
+        histogram(ax, ...
+            axonClassSpecs, ...
             'BinEdges', binEdges, ...
             'DisplayStyle', 'stairs', ...
             'LineWidth', 2);
+        histogram(ax, ...
+            'BinEdges', binEdges, ...
+            'BinCounts', poissBinCount, ...
+            'DisplayStyle', 'stairs', ...
+            'LineWidth', 2);
 
-        xlabel(ax, sprintf('S(%s)', className));
+        xlabel(ax, className);
         ax.XAxis.TickDirection = 'out';
         ax.XAxis.Limits = [0, 1];
 
         ax.YAxis.TickDirection = 'out';
         ax.YAxis.Limits(1) = 10 ^ (-0.1);
         ax.YAxis.Scale = 'log';
+        
+        % Show number of overly specific axons. Two approaches are used:
+        % 1. Find a synapse fraction threshold above which less than one
+        %    axon is expected under the Poisson assumption. Then count the
+        %    number of axons above this threshold.
+        % 2. Count the number of axons which are above the Poisson
+        %    distribution. This does not truly represent overly-specific
+        %    axons.
+        overBinId = 1 + find(poissBinCount > 1, 1, 'last');
+        
+        obsBinCount = histcounts(axonClassSpecs, binEdges);
+        overThreshCount = sum(obsBinCount(overBinId:end));
+        specificCount = sum(isSpecific);
+        
+        title(ax, { ...
+            sprintf('%d with S ≥ %.1f', ...
+                overThreshCount, binEdges(overBinId)); ...
+            sprintf('%d with p ≤ 1 %%', specificCount)}, ...
+            'FontWeight', 'normal', 'FontSize', 10);
         
         axes{classIdx} = ax;
     end
@@ -153,6 +193,6 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
         'textbox', [0, 0.9, 1, 0.1], ...
         'EdgeColor', 'none', 'HorizontalAlignment', 'center', ...
         'String', ...
-           {'Observed specificities vs. Poisson model'; ...
+           {'Observed synapse fractions vs. Poisson model'; ...
             axonClass.title; info.git_repos{1}.hash});
 end
