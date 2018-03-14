@@ -55,6 +55,8 @@ function plotAxonClass(info, classConn, targetClasses, axonClass, pTheta)
     specClassIds = reshape(sort(specClassIds), 1, []);
 
     fig = figure();
+    fig.Color = 'white';
+    
     for specClassIdx = 1:numel(specClassIds)
         specClassId = specClassIds(specClassIdx);
         
@@ -100,7 +102,8 @@ function plotAxonClass(info, classConn, targetClasses, axonClass, pTheta)
                 'Normalization', 'probability', ...
                 'DisplayStyle', 'stairs', ...
                 'LineWidth', 2);
-
+            
+            ax.TickDir = 'out';
             xlim(ax, [0, 1]);
             ylim(ax, [0, 1]);
 
