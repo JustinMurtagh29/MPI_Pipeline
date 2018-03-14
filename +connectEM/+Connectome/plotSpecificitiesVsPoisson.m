@@ -180,38 +180,49 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
         
         axes{classIdx} = ax;
         
-        %% Distribution of p-values
+        %% p-values
         ax = subplot( ...
             2, numel(targetClasses), ...
             numel(targetClasses) + classIdx);
         axis(ax, 'square');
         hold(ax, 'on');
         
-        % Plot cumulative distribution vs. diagonal
-        curValX = sort(axonClassPoissProbs, 'ascend');
-        curValX = reshape(curValX, 1, []);
+        % Compare p-value distribution against expectation:
+        % We'd expect there to be `theta` percent of axons with a p-value
+        % below `theta`. If there are, however, significantly more axons
+        % with a p-value below `theta`, something interesting is going on.
+        curPVal = sort(axonClassPoissProbs, 'ascend');
+        curPVal = reshape(curPVal, 1, []);
 
-        curValY = (1:numel(curValX)) ./ numel(curValX);
-        curValY = curValY ./ curValX;
+        curPRatio = (1:numel(curPVal)) ./ numel(curPVal);
+        curPRatio = curPRatio ./ curPVal;
         
-        curIdx = find(curValY > 1, 1);
-        if mean(curValY(1:curIdx) > 1) < 0.5; curIdx = []; end
+        % Find chance level (i.e., ratio 1)
+        curThetaIdx = find(curPRatio > 1, 1);
         
-        if ~isempty(curIdx)
-            curIdx = curIdx - 1 + find( ...
-                curValY(curIdx:end) < 1, 1);
+        % No threshold if chance level was reached from below.
+        if mean(curPRatio(1:curThetaIdx) > 1) < 0.5
+            curThetaIdx = [];
         end
         
+        if ~isempty(curThetaIdx)
+            curThetaIdx = curThetaIdx - 1 + find( ...
+                curPRatio(curThetaIdx:end) < 1, 1);
+        end
+        
+        % Plotting
         yyaxis(ax, 'right');
         hold(ax, 'on');
-        plot(ax, curValX, curValY, 'LineWidth', 2);
+        plot(ax, curPVal, curPRatio, 'LineWidth', 2);
         plot(ax, binEdges([1, end]), [1, 1], 'LineStyle', '--');
         ylim(ax, [0, 2]);
         
-        if ~isempty(curIdx)
-            plot(ax, curValX([curIdx, curIdx]), ax.YLim, 'k--');
+        if ~isempty(curThetaIdx)
+            plot(ax, ...
+                curPVal([curThetaIdx, curThetaIdx]), ...
+                ax.YLim, 'LineStyle', '--');
             title(ax, ...
-                sprintf('p = %.2f', curValX(curIdx)), ...
+                sprintf('p = %.2f', curPVal(curThetaIdx)), ...
                 'FontWeight', 'normal', 'FontSize', 10);
         end
         
@@ -225,6 +236,7 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
         
         xlabel(ax, 'p-value');
         ax.XAxis.TickDirection = 'out';
+       [ax.YAxis.TickDirection] = deal('out');
         
         pValAxes{classIdx} = ax;
     end
