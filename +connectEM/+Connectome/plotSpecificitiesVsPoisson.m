@@ -187,15 +187,44 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
         axis(ax, 'square');
         hold(ax, 'on');
         
+        % Plot cumulative distribution vs. diagonal
+        curValX = sort(axonClassPoissProbs, 'ascend');
+        curValX = reshape(curValX, 1, []);
+
+        curValY = (1:numel(curValX)) ./ numel(curValX);
+        curValY = curValY ./ curValX;
+        
+        curIdx = find(curValY > 1, 1);
+        if mean(curValY(1:curIdx) > 1) < 0.5; curIdx = []; end
+        
+        if ~isempty(curIdx)
+            curIdx = curIdx - 1 + find( ...
+                curValY(curIdx:end) < 1, 1);
+        end
+        
+        yyaxis(ax, 'right');
+        hold(ax, 'on');
+        plot(ax, curValX, curValY, 'LineWidth', 2);
+        plot(ax, binEdges([1, end]), [1, 1], 'LineStyle', '--');
+        ylim(ax, [0, 2]);
+        
+        if ~isempty(curIdx)
+            plot(ax, curValX([curIdx, curIdx]), ax.YLim, 'k--');
+            title(ax, ...
+                sprintf('p = %.2f', curValX(curIdx)), ...
+                'FontWeight', 'normal', 'FontSize', 10);
+        end
+        
+        yyaxis(ax, 'left');
         histogram(ax, ...
             axonClassPoissProbs, binEdges, ...
             'DisplayStyle', 'stairs', ...
             'LineWidth', 2);
         xlim(ax, binEdges([1, end]));
+        ylim(ax, [0, size(axonSpecs, 1)]);
         
         xlabel(ax, 'p-value');
         ax.XAxis.TickDirection = 'out';
-        ax.YAxis.TickDirection = 'out';
         
         pValAxes{classIdx} = ax;
     end
@@ -208,7 +237,7 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
     for ax = axes; ax.YAxis.Limits(end) = yMax; end
     
     pValAxes = horzcat(pValAxes{:});
-    yMax = max(arrayfun(@(a) a.YAxis.Limits(end), pValAxes));
+    yMax = max(arrayfun(@(a) a.YAxis(1).Limits(end), pValAxes));
    [pValAxes.YLim] = deal([0, yMax]);
 
     annotation( ...
