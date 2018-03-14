@@ -14,7 +14,7 @@ function probs = calcPoissonProbs(classConn, axonIds, poissAxonIds)
     %
     % poissAxonIds
     %   Optional matrix with indices of axons whose synapses are considered
-    %   to build the Poisson model. Defaults to `(1:size(classConn, 1))'`.
+    %   to build the Poisson model. Defaults to `axonIds`.
     %
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
@@ -25,7 +25,7 @@ function probs = calcPoissonProbs(classConn, axonIds, poissAxonIds)
     end
     
     if ~exist('poissAxonIds', 'var') || isempty(poissAxonIds)
-        poissAxonIds = reshape(1:size(classConn, 1), [], 1);
+        poissAxonIds = axonIds;
     end
     
     % Poisson model probabilities
