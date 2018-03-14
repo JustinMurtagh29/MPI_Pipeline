@@ -1,5 +1,7 @@
-function classConnectome = buildClassConnectome(conn, targetClasses)
-    % classConnectome = buildClassConnectome(conn)
+function [classConnectome, targetClasses] = ...
+        buildClassConnectome(conn, targetClasses)
+    % classConnectome, targetClasses] = ...
+    %     buildClassConnectome(conn, targetClasses)
     %
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
@@ -19,8 +21,10 @@ function classConnectome = buildClassConnectome(conn, targetClasses)
 
    [~, connectome.targetClassId] = ismember( ...
         connectome.targetClass, targetClasses);
-
+    
+    % Build outputs
     classConnectome = accumarray( ...
         cat(2, connectome.edges(:, 1), connectome.targetClassId), ...
         connectome.synCount, [numel(conn.axons), numel(targetClasses)]);
+    targetClasses = reshape(targetClasses, 1, []);
 end
