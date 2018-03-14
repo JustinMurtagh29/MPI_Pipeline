@@ -18,9 +18,13 @@ function [classConnectome, targetClasses] = ...
     % Add target class to connectome
    [~, denMetaRow] = ismember(connectome.edges(:, 2), conn.denMeta.id);
     connectome.targetClass = conn.denMeta.targetClass(denMetaRow);
-
+    
    [~, connectome.targetClassId] = ismember( ...
         connectome.targetClass, targetClasses);
+    
+    % Get rid of synapses onto other targets. This is useful in case
+    % `targetClasses` does not covert all possible target classes.
+    connectome(~connectome.targetClassId, :) = [];
     
     % Build outputs
     classConnectome = accumarray( ...
