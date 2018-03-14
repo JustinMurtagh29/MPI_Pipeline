@@ -3,7 +3,6 @@ function axonClasses = buildAxonClasses(conn, varargin)
     %
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
-    
     opts = struct;
     opts.minSynPre = 1;
     opts = Util.modifyStruct(opts, varargin{:});
