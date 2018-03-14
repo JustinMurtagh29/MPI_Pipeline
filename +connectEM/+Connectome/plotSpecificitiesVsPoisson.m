@@ -76,8 +76,8 @@ end
 
 %% plotting
 function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
-    axonSynCount = axonMeta.synCount(axonClass.axonIds);
-    axonClassesCount = classConn(axonClass.axonIds, :);
+    axonSpecs = classConn(axonClass.axonIds, :);
+    axonSpecs = axonSpecs ./ sum(axonSpecs, 2);
     
     %% preparations
     % select axons for Poisson
@@ -87,6 +87,10 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
     else
         poissAxonIds = axonClass.axonIds;
     end
+    
+    axonPoissProbs = ...
+        connectEM.Specificity.calcPoissonProbs( ...
+            classConn, axonClass.axonIds, poissAxonIds);
     
     % calculate probabilities for Poisson
     targetClassSyns = sum(classConn(poissAxonIds, :), 1);
@@ -100,24 +104,19 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
     %% plotting
     fig = figure;
     fig.Color = 'white';
-    fig.Position(3:4) = [1850, 420];
+    fig.Position(3:4) = [1850, 800];
     
     binEdges = linspace(0, 1, 21);
     axes = cell(size(targetClasses));
+    pValAxes = cell(size(targetClasses));
 
     for classIdx = 1:numel(targetClasses)
         className = targetClasses{classIdx};
         classProb = targetClassProbs(classIdx);
         
-        % Calculate probability of seeing a value greater or equal to the
-        % observed synapse fraction. Then mark all axons for which this
-        % probability is below 1 % as "specific".
-        axonClassCount = axonClassesCount(:, classIdx);
-        axonClassSpecs = axonClassCount ./ axonSynCount;
-        
-        classPost = 1 - arrayfun(@poisscdf, ...
-            axonClassCount - 1, classProb * axonSynCount);
-        isSpecific = classPost < 0.01;
+        axonClassSpecs = axonSpecs(:, classIdx);
+        axonClassPoissProbs = axonPoissProbs(:, classIdx);
+        isSpecific = axonClassPoissProbs < 0.01;
 
         % Poissons
         poiss = table;
@@ -132,7 +131,7 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
         poissBinCount = accumarray(poiss.binId, poiss.prob);
 
         % Measured
-        ax = subplot(1, numel(targetClasses), classIdx);
+        ax = subplot(2, numel(targetClasses), classIdx);
         axis(ax, 'square');
         hold(ax, 'on');
 
@@ -180,6 +179,25 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
             'FontWeight', 'normal', 'FontSize', 10);
         
         axes{classIdx} = ax;
+        
+        %% Distribution of p-values
+        ax = subplot( ...
+            2, numel(targetClasses), ...
+            numel(targetClasses) + classIdx);
+        axis(ax, 'square');
+        hold(ax, 'on');
+        
+        histogram(ax, ...
+            axonClassPoissProbs, binEdges, ...
+            'DisplayStyle', 'stairs', ...
+            'LineWidth', 2);
+        xlim(ax, binEdges([1, end]));
+        
+        xlabel(ax, 'p-value');
+        ax.XAxis.TickDirection = 'out';
+        ax.YAxis.TickDirection = 'out';
+        
+        pValAxes{classIdx} = ax;
     end
     
     % Uncomment to show legend
@@ -188,6 +206,10 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
     axes = horzcat(axes{:});
     yMax = max(arrayfun(@(a) a.YAxis.Limits(end), axes));
     for ax = axes; ax.YAxis.Limits(end) = yMax; end
+    
+    pValAxes = horzcat(pValAxes{:});
+    yMax = max(arrayfun(@(a) a.YAxis.Limits(end), pValAxes));
+   [pValAxes.YLim] = deal([0, yMax]);
 
     annotation( ...
         'textbox', [0, 0.9, 1, 0.1], ...
