@@ -12,7 +12,8 @@ function [synFrac, expAxonCount] = calcPoissonDist(axonSynCounts, synProb)
         @(nSyn) (0:nSyn)' ./ nSyn, synCounts, 'UniformOutput', false));
     poiss = sortrows(poiss, 'synFrac');
     
-    % Prepare output
-    synFrac = poiss.synFrac;
-    expAxonCount = poiss.expAxonCount;
+    % It's possible that we have multiple rows with the same `synFrac`.
+    % Let's merge these entries by adding up `expAxonCount`.
+   [synFrac, ~, uniGroups] = unique(poiss.synFrac);
+    expAxonCount = accumarray(uniGroups, poiss.expAxonCount);
 end
