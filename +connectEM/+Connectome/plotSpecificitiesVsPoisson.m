@@ -50,11 +50,6 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
     % calculate probabilities for Poisson
     targetClassSyns = sum(classConn(poissAxonIds, :), 1);
     targetClassProbs = targetClassSyns / sum(targetClassSyns);
-
-    % restrict to axons with enough synapses
-   [synCounts, ~, synCountAxons] = unique( ...
-        axonMeta.synCount(axonClass.axonIds));
-    synCountAxons = accumarray(synCountAxons, 1);
     
     %% plotting
     fig = figure;
@@ -74,16 +69,12 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
         isSpecific = axonClassPoissProbs < 0.01;
 
         % Poissons
-        poiss = table;
-        poiss.prob = cell2mat(arrayfun(@(nSyn, nAxons) ...
-            nAxons * poisspdf((0:nSyn)', nSyn * classProb), ...
-            synCounts, synCountAxons, 'UniformOutput', false));
-        poiss.spec = cell2mat(arrayfun( ...
-            @(nSyn) (0:nSyn)' ./ nSyn, ...
-            synCounts, 'UniformOutput', false));
-
-        poiss.binId = discretize(poiss.spec, binEdges);
-        poissBinCount = accumarray(poiss.binId, poiss.prob);
+       [poissSynFrac, poissAxonCount] = ...
+            connectEM.Specificity.calcPoissonDist( ...
+                axonMeta.synCount(axonClass.axonIds), classProb);
+        
+        poissBinId = discretize(poissSynFrac, binEdges);
+        poissBinCount = accumarray(poissBinId, poissAxonCount);
 
         % Measured
         ax = subplot(2, numel(targetClasses), classIdx);
