@@ -54,11 +54,10 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
     %% plotting
     fig = figure;
     fig.Color = 'white';
-    fig.Position(3:4) = [1850, 800];
+    fig.Position(3:4) = [1850, 400];
     
     binEdges = linspace(0, 1, 21);
     axes = cell(size(targetClasses));
-    pValAxes = cell(size(targetClasses));
 
     for classIdx = 1:numel(targetClasses)
         className = targetClasses{classIdx};
@@ -87,7 +86,7 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
         binoBinCount = accumarray(binoBinId, binoAxonCount);
 
         % Measured
-        ax = subplot(2, numel(targetClasses), classIdx);
+        ax = subplot(1, numel(targetClasses), classIdx);
         axis(ax, 'square');
         hold(ax, 'on');
         
@@ -135,66 +134,6 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
             'FontWeight', 'normal', 'FontSize', 10);
         
         axes{classIdx} = ax;
-        
-        %% p-values
-        ax = subplot( ...
-            2, numel(targetClasses), ...
-            numel(targetClasses) + classIdx);
-        axis(ax, 'square');
-        hold(ax, 'on');
-        
-        % Compare p-value distribution against expectation:
-        % We'd expect there to be `theta` percent of axons with a p-value
-        % below `theta`. If there are, however, significantly more axons
-        % with a p-value below `theta`, something interesting is going on.
-        curPVal = sort(axonClassPoissProbs, 'ascend');
-        curPVal = reshape(curPVal, 1, []);
-
-        curPRatio = (1:numel(curPVal)) ./ numel(curPVal);
-        curPRatio = curPRatio ./ curPVal;
-        
-        % Find chance level (i.e., ratio 1)
-        curThetaIdx = find(curPRatio > 1, 1);
-        
-        % No threshold if chance level was reached from below.
-        if mean(curPRatio(1:curThetaIdx) > 1) < 0.5
-            curThetaIdx = [];
-        end
-        
-        if ~isempty(curThetaIdx)
-            curThetaIdx = curThetaIdx - 1 + find( ...
-                curPRatio(curThetaIdx:end) < 1, 1);
-        end
-        
-        % Plotting
-        yyaxis(ax, 'right');
-        hold(ax, 'on');
-        plot(ax, curPVal, curPRatio, 'LineWidth', 2);
-        plot(ax, binEdges([1, end]), [1, 1], 'LineStyle', '--');
-        ylim(ax, [0, 2]);
-        
-        if ~isempty(curThetaIdx)
-            plot(ax, ...
-                curPVal([curThetaIdx, curThetaIdx]), ...
-                ax.YLim, 'LineStyle', '--');
-            title(ax, ...
-                sprintf('p = %.2f', curPVal(curThetaIdx)), ...
-                'FontWeight', 'normal', 'FontSize', 10);
-        end
-        
-        yyaxis(ax, 'left');
-        histogram(ax, ...
-            axonClassPoissProbs, binEdges, ...
-            'DisplayStyle', 'stairs', ...
-            'LineWidth', 2);
-        xlim(ax, binEdges([1, end]));
-        ylim(ax, [0, size(axonSpecs, 1)]);
-        
-        xlabel(ax, 'p-value');
-        ax.XAxis.TickDirection = 'out';
-       [ax.YAxis.TickDirection] = deal('out');
-        
-        pValAxes{classIdx} = ax;
     end
     
     ax = axes{end};
@@ -204,25 +143,19 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
         'Poisson model', ...
         'Binomial model', ...
         'Location', 'East');
-    legPos = leg.Position;
     
     % Fix positions
     ax.Position = axPos;
-    legPos(1) = sum(axPos([1, 3])) + 0.005;
-    leg.Position = legPos;
+    leg.Position(1) = sum(axPos([1, 3])) + 0.005;
 
     axes = horzcat(axes{:});
     yMax = max(arrayfun(@(a) a.YAxis.Limits(end), axes));
     for ax = axes; ax.YAxis.Limits(end) = yMax; end
-    
-    pValAxes = horzcat(pValAxes{:});
-    yMax = max(arrayfun(@(a) a.YAxis(1).Limits(end), pValAxes));
-   [pValAxes.YLim] = deal([0, yMax]);
 
     annotation( ...
         'textbox', [0, 0.9, 1, 0.1], ...
         'EdgeColor', 'none', 'HorizontalAlignment', 'center', ...
-        'String', ...
-           {'Observed synapse fractions vs. Poisson model'; ...
+        'String', { ...
+            'Synapse fractions vs. Poisson and binomial model'; ...
             axonClass.title; info.git_repos{1}.hash});
 end
