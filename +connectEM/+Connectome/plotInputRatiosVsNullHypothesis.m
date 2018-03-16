@@ -49,6 +49,7 @@ function plotAxonClass(info, classConn, axonClasses, dendClass)
     % Plotting
     fig = figure();
     fig.Color = 'white';
+    fig.Position(3:4) = [840, 440];
     binEdges = linspace(0, 1, 21);
     
     % Plot expected e / (e + i)
