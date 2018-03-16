@@ -1,3 +1,10 @@
+% NOTE
+%   This script is based on `plotSpecificitiesVsNullHypothesis.m`.
+%
+%   If you find a bug in this script, please check whether the above file
+%   suffers from the same problem! (Yes, I know that this screams "pack it
+%   into a resusable function already.")
+%
 % Written by
 %   Alessandro Motta <alessandro.motta@brain.mpg.de>
 clear;
@@ -7,41 +14,58 @@ param = struct;
 param.saveFolder = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 connName = 'connectome_axons_18_a_ax_spine_syn_clust';
 
-minSynPre = 10;
+minSynPost = 10;
 info = Util.runInfo();
 
 %% loading data
-conn = connectEM.Connectome.load(param, connName);
-[classConnectome, targetClasses] = ...
-    connectEM.Connectome.buildClassConnectome(conn);
-axonClasses = ...
-    connectEM.Connectome.buildAxonClasses(conn, 'minSynPre', minSynPre);
+conn = ...
+    connectEM.Connectome.load(param, connName);
+axonClasses = unique(conn.axonMeta.axonClass);
+
+%% build class connectome
+classConnectome = ...
+    connectEM.Connectome.buildClassConnectome( ...
+        conn, 'targetClasses', [], 'axonClasses', axonClasses);
+
+classConnectome = transpose(classConnectome);
+axonClasses = reshape(axonClasses, 1, []);
+
+%% build dendrite class(es)
+dendClasses = struct;
+dendClasses(1).ids = find( ...
+    conn.denMeta.targetClass ~= 'Somata' ...
+  & conn.denMeta.targetClass ~= 'AxonInitialSegment' ...
+  & conn.denMeta.synCount >= minSynPost);
+dendClasses(1).nullIds = dendClasses(1).ids;
+dendClasses(1).title = sprintf( ...
+    'Dendrites with ≥ %d synapses (n = %d)', ...
+    minSynPost, numel(dendClasses(1).ids));
 
 %% plot
-for curIdx = 1:numel(axonClasses)
+for curIdx = 1:numel(dendClasses)
     plotAxonClass( ...
-        info, conn.axonMeta, classConnectome, ...
-        targetClasses, axonClasses(curIdx));
+        info, conn.denMeta, classConnectome, ...
+        axonClasses, dendClasses(curIdx));
 end
 
 %% plotting
-function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
-    axonSpecs = classConn(axonClass.axonIds, :);
-    axonSpecs = axonSpecs ./ sum(axonSpecs, 2);
+function plotAxonClass(info, dendMeta, classConn, targetClasses, dendClass)
+    dendSynFracs = classConn(dendClass.ids, :);
+    dendSynFracs = dendSynFracs ./ sum(dendSynFracs, 2);
     
     %% preparations
-    axonNullProbs = connectEM.Specificity.calcChanceProbs( ...
-        classConn, axonClass.axonIds, axonClass.nullAxonIds, ...
+    nullProbs = connectEM.Specificity.calcChanceProbs( ...
+        classConn, dendClass.ids, dendClass.nullIds, ...
         'distribution', 'binomial');
     
     % calculate overall synapse probabilities
-    targetClassSyns = sum(classConn(axonClass.nullAxonIds, :), 1);
-    targetClassProbs = targetClassSyns / sum(targetClassSyns);
+    axonClassProbs = sum(classConn(dendClass.nullIds, :), 1);
+    axonClassProbs = axonClassProbs / sum(axonClassProbs);
     
     %% plotting
     fig = figure;
     fig.Color = 'white';
-    fig.Position(3:4) = [1850, 800];
+    fig.Position(3:4) = [1850, 900];
     
     binEdges = linspace(0, 1, 21);
     axes = cell(size(targetClasses));
@@ -49,33 +73,33 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
 
     for classIdx = 1:numel(targetClasses)
         className = char(targetClasses(classIdx));
-        classProb = targetClassProbs(classIdx);
+        axonClassProb = axonClassProbs(classIdx);
         
-        axonClassSpecs = axonSpecs(:, classIdx);
-        axonClassNullProbs = axonNullProbs(:, classIdx);
-        isSpecific = axonClassNullProbs < 0.01;
+        dendClassSynFracs = dendSynFracs(:, classIdx);
+        dendClassNullProbs = nullProbs(:, classIdx);
+        isSpecific = dendClassNullProbs < 0.01;
         
         % Null hypothesis
-       [nullSynFrac, nullAxonCount] = ...
+       [nullSynFrac, nullDendCount] = ...
             connectEM.Specificity.calcExpectedDist( ...
-                axonMeta.synCount(axonClass.axonIds), ...
-                classProb, 'distribution', 'binomial');
+                dendMeta.synCount(dendClass.ids), ...
+                axonClassProb, 'distribution', 'binomial');
         
         nullBinId = discretize(nullSynFrac, binEdges);
-        nullBinCount = accumarray(nullBinId, nullAxonCount);
-
+        nullBinCount = accumarray(nullBinId, nullDendCount);
+        
         % Measured
         ax = subplot(2, numel(targetClasses), classIdx);
         axis(ax, 'square');
         hold(ax, 'on');
-
+        
         histogram(ax, ...
-            axonClassSpecs(isSpecific), ...
+            dendClassSynFracs(isSpecific), ...
             'BinEdges', binEdges, ...
             'EdgeColor', 'none', ...
             'FaceAlpha', 1);
         histogram(ax, ...
-            axonClassSpecs, ...
+            dendClassSynFracs, ...
             'BinEdges', binEdges, ...
             'DisplayStyle', 'stairs', ...
             'LineWidth', 2);
@@ -84,7 +108,7 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
             'BinCounts', nullBinCount, ...
             'DisplayStyle', 'stairs', ...
             'LineWidth', 2);
-
+        
         xlabel(ax, className);
         ax.XAxis.TickDirection = 'out';
         ax.XAxis.Limits = [0, 1];
@@ -93,23 +117,8 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
         ax.YAxis.Limits(1) = 10 ^ (-0.1);
         ax.YAxis.Scale = 'log';
         
-        % Show number of overly specific axons. Two approaches are used:
-        % 1. Find a synapse fraction threshold above which less than one
-        %    axon is expected under the null hypothesis. Then count the
-        %    number of axons above this threshold.
-        % 2. Count the number of axons which are above the null hypothesis
-        %    distribution. This does not truly represent overly-specific
-        %    axons.
-        overBinId = 1 + find(nullBinCount > 1, 1, 'last');
-        
-        obsBinCount = histcounts(axonClassSpecs, binEdges);
-        overThreshCount = sum(obsBinCount(overBinId:end));
-        specificCount = sum(isSpecific);
-        
         title(ax, { ...
-            sprintf('%d with S ≥ %.1f', ...
-                overThreshCount, binEdges(overBinId)); ...
-            sprintf('%d with p ≤ 1 %%', specificCount)}, ...
+            sprintf('%d with p ≤ 1 %%', sum(isSpecific))}, ...
             'FontWeight', 'normal', 'FontSize', 10);
         
         axes{classIdx} = ax;
@@ -122,10 +131,11 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
         hold(ax, 'on');
         
         % Compare p-value distribution against expectation:
-        % We'd expect there to be `theta` percent of axons with a p-value
-        % below `theta`. If there are, however, significantly more axons
-        % with a p-value below `theta`, something interesting is going on.
-        curPVal = sort(axonClassNullProbs, 'ascend');
+        % We'd expect there to be `theta` percent of dendrites with a
+        % p-value below `theta`. If there are, however, significantly more
+        % dendrites with a p-value below `theta`, something interesting is
+        % going on.
+        curPVal = sort(dendClassNullProbs, 'ascend');
         curPVal = reshape(curPVal, 1, []);
 
         curPRatio = (1:numel(curPVal)) ./ numel(curPVal);
@@ -162,11 +172,11 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
         
         yyaxis(ax, 'left');
         histogram(ax, ...
-            axonClassNullProbs, binEdges, ...
+            dendClassNullProbs, binEdges, ...
             'DisplayStyle', 'stairs', ...
             'LineWidth', 2);
         xlim(ax, binEdges([1, end]));
-        ylim(ax, [0, size(axonSpecs, 1)]);
+        ylim(ax, [0, size(dendSynFracs, 1)]);
         
         xlabel(ax, 'p-value');
         ax.XAxis.TickDirection = 'out';
@@ -181,7 +191,7 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
     leg = legend(ax, ...
         'p < 1 %', ...
         'Observed', ...
-        'Binomial model', ...
+        'Expected (binomial)', ...
         'Location', 'East');
     
     % Fix positions
@@ -201,5 +211,5 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
         'EdgeColor', 'none', 'HorizontalAlignment', 'center', ...
         'String', { ...
             'Observed synapse fractions vs. null hypothesis'; ...
-            axonClass.title; info.git_repos{1}.hash});
+            dendClass.title; info.git_repos{1}.hash});
 end
