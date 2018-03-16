@@ -35,20 +35,12 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
     axonSpecs = axonSpecs ./ sum(axonSpecs, 2);
     
     %% preparations
-    % select axons for Poisson
-    if isfield(axonClass, 'poissAxonIds') ...
-            && ~isempty(axonClass.poissAxonIds)
-        poissAxonIds = axonClass.poissAxonIds;
-    else
-        poissAxonIds = axonClass.axonIds;
-    end
+    axonNullProbs = connectEM.Specificity.calcChanceProbs( ...
+        classConn, axonClass.axonIds, axonClass.nullAxonIds, ...
+        'distribution', 'binomial');
     
-    axonPoissProbs = ...
-        connectEM.Specificity.calcPoissonProbs( ...
-            classConn, axonClass.axonIds, poissAxonIds);
-    
-    % calculate probabilities for Poisson
-    targetClassSyns = sum(classConn(poissAxonIds, :), 1);
+    % calculate overall synapse probabilities
+    targetClassSyns = sum(classConn(axonClass.nullAxonIds, :), 1);
     targetClassProbs = targetClassSyns / sum(targetClassSyns);
     
     %% plotting
@@ -65,16 +57,17 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
         classProb = targetClassProbs(classIdx);
         
         axonClassSpecs = axonSpecs(:, classIdx);
-        axonClassPoissProbs = axonPoissProbs(:, classIdx);
-        isSpecific = axonClassPoissProbs < 0.01;
-
-        % Poissons
-       [poissSynFrac, poissAxonCount] = ...
-            connectEM.Specificity.calcPoissonDist( ...
-                axonMeta.synCount(axonClass.axonIds), classProb);
+        axonClassNullProbs = axonNullProbs(:, classIdx);
+        isSpecific = axonClassNullProbs < 0.01;
         
-        poissBinId = discretize(poissSynFrac, binEdges);
-        poissBinCount = accumarray(poissBinId, poissAxonCount);
+        % Null hypothesis
+       [nullSynFrac, nullAxonCount] = ...
+            connectEM.Specificity.calcExpectedDist( ...
+                axonMeta.synCount(axonClass.axonIds), ...
+                classProb, 'distribution', 'binomial');
+        
+        nullBinId = discretize(nullSynFrac, binEdges);
+        nullBinCount = accumarray(nullBinId, nullAxonCount);
 
         % Measured
         ax = subplot(2, numel(targetClasses), classIdx);
@@ -93,7 +86,7 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
             'LineWidth', 2);
         histogram(ax, ...
             'BinEdges', binEdges, ...
-            'BinCounts', poissBinCount, ...
+            'BinCounts', nullBinCount, ...
             'DisplayStyle', 'stairs', ...
             'LineWidth', 2);
 
@@ -107,12 +100,12 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
         
         % Show number of overly specific axons. Two approaches are used:
         % 1. Find a synapse fraction threshold above which less than one
-        %    axon is expected under the Poisson assumption. Then count the
+        %    axon is expected under the null hypothesis. Then count the
         %    number of axons above this threshold.
-        % 2. Count the number of axons which are above the Poisson
+        % 2. Count the number of axons which are above the null hypothesis
         %    distribution. This does not truly represent overly-specific
         %    axons.
-        overBinId = 1 + find(poissBinCount > 1, 1, 'last');
+        overBinId = 1 + find(nullBinCount > 1, 1, 'last');
         
         obsBinCount = histcounts(axonClassSpecs, binEdges);
         overThreshCount = sum(obsBinCount(overBinId:end));
@@ -137,7 +130,7 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
         % We'd expect there to be `theta` percent of axons with a p-value
         % below `theta`. If there are, however, significantly more axons
         % with a p-value below `theta`, something interesting is going on.
-        curPVal = sort(axonClassPoissProbs, 'ascend');
+        curPVal = sort(axonClassNullProbs, 'ascend');
         curPVal = reshape(curPVal, 1, []);
 
         curPRatio = (1:numel(curPVal)) ./ numel(curPVal);
@@ -174,7 +167,7 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
         
         yyaxis(ax, 'left');
         histogram(ax, ...
-            axonClassPoissProbs, binEdges, ...
+            axonClassNullProbs, binEdges, ...
             'DisplayStyle', 'stairs', ...
             'LineWidth', 2);
         xlim(ax, binEdges([1, end]));
@@ -187,8 +180,18 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
         pValAxes{classIdx} = ax;
     end
     
-    % Uncomment to show legend
-    % leg = legend(ax, 'Expected (Poisson)', 'Observed');
+    % Legend
+    ax = axes{end};
+    axPos = ax.Position;
+    leg = legend(ax, ...
+        'p < 1 %', ...
+        'Observed', ...
+        'Binomial model', ...
+        'Location', 'East');
+    
+    % Fix positions
+    ax.Position = axPos;
+    leg.Position(1) = sum(axPos([1, 3])) + 0.005;
 
     axes = horzcat(axes{:});
     yMax = max(arrayfun(@(a) a.YAxis.Limits(end), axes));
@@ -201,7 +204,7 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
     annotation( ...
         'textbox', [0, 0.9, 1, 0.1], ...
         'EdgeColor', 'none', 'HorizontalAlignment', 'center', ...
-        'String', ...
-           {'Observed synapse fractions vs. Poisson model'; ...
+        'String', { ...
+            'Observed synapse fractions vs. null hypothesis'; ...
             axonClass.title; info.git_repos{1}.hash});
 end
