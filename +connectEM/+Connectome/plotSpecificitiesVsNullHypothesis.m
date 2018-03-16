@@ -7,18 +7,13 @@ param = struct;
 param.saveFolder = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 connName = 'connectome_axons_18_a_ax_spine_syn_clust';
 
-targetClasses = { ...
-    'Somata', 'WholeCell', 'ApicalDendrite', ...
-    'SmoothDendrite', 'AxonInitialSegment', 'OtherDendrite'};
-
 minSynPre = 10;
 info = Util.runInfo();
 
 %% loading data
-conn = ...
-    connectEM.Connectome.load(param, connName);
-classConnectome = ...
-    connectEM.Connectome.buildClassConnectome(conn, targetClasses);
+conn = connectEM.Connectome.load(param, connName);
+[classConnectome, targetClasses] = ...
+    connectEM.Connectome.buildClassConnectome(conn);
 axonClasses = ...
     connectEM.Connectome.buildAxonClasses(conn, 'minSynPre', minSynPre);
 
@@ -53,7 +48,7 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
     pValAxes = cell(size(targetClasses));
 
     for classIdx = 1:numel(targetClasses)
-        className = targetClasses{classIdx};
+        className = char(targetClasses(classIdx));
         classProb = targetClassProbs(classIdx);
         
         axonClassSpecs = axonSpecs(:, classIdx);
