@@ -1,3 +1,10 @@
+% NOTE
+%   This script is based on `plotSpecificitiesVsNullHypothesis.m`.
+%
+%   If you find a bug in this script, please check whether the above file
+%   suffers from the same problem! (Yes, I know that this screams "pack it
+%   into a resusable function already.")
+%
 % Written by
 %   Alessandro Motta <alessandro.motta@brain.mpg.de>
 clear;
