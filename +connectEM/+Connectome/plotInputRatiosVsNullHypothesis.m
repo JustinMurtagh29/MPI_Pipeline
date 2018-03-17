@@ -88,7 +88,7 @@ function plotAxonClass(info, classConn, axonClasses, dendClass)
         'DisplayStyle', 'stairs', ...
         'LineWidth', 2);
     
-    xlabel(ax, 'exc / (exc + inh)');
+    xlabel(ax, 'Exc / (Exc + Inh)');
     xlim(ax, binEdges([1, end]));
     
     ax.YAxis.Limits(1) = 10 ^ (-0.1);
@@ -97,21 +97,50 @@ function plotAxonClass(info, classConn, axonClasses, dendClass)
     histAxes{end + 1} = ax;
     
     ax = subplot(2, 2, 3);
+    colorOrder = ax.ColorOrder;
     axis(ax, 'square');
+    
+    yyaxis(ax, 'right');
+    hold(ax, 'on');
+    
+    probLow = sort(probLow, 'ascend');
+    probLowRatio = (1:numel(probLow)) ./ numel(probLow);
+    probLowRatio = probLowRatio(:) ./ probLow;
+    
+    probHigh = sort(probHigh, 'ascend');
+    probHighRatio = (1:numel(probHigh)) ./ numel(probHigh);
+    probHighRatio = probHighRatio(:) ./ probHigh;
+    
+    plot(ax, ...
+        probLow, probLowRatio, ...
+        'Color', colorOrder(1, :), ...
+        'LineStyle', '-');
+    plot(ax, ...
+        probHigh, probHighRatio, ...
+        'Color', colorOrder(2, :), ...
+        'LineStyle', '-');
+    plot(ax, [0, 1], [1, 1], 'k--');
+    
+    xlim(ax, [0, 1]);
+    ylim(ax, [0, 2]);
+    
+    yyaxis(ax, 'left');
     hold(ax, 'on');
     
     histogram(ax, ...
         probLow, ...
         'BinEdges', binEdges, ...
         'DisplayStyle', 'stairs', ...
+        'EdgeColor', colorOrder(1, :), ...
         'LineWidth', 2);
     histogram(ax, ...
         probHigh, ...
         'BinEdges', binEdges, ...
         'DisplayStyle', 'stairs', ...
+        'EdgeColor', colorOrder(2, :), ...
         'LineWidth', 2);
+    xlabel(ax, 'Probability');
     
-    xlabel(ax, 'probability');
     ax.TickDir = 'out';
     pValAxes{end + 1} = ax;
     
@@ -143,7 +172,7 @@ function plotAxonClass(info, classConn, axonClasses, dendClass)
         'DisplayStyle', 'stairs', ...
         'LineWidth', 2);
     
-    xlabel(ax, 'tc / (tc + cc)');
+    xlabel(ax, 'TC / (TC + CC)');
     xlim(ax, binEdges([1, end]));
     
     ax.YAxis.Limits(1) = 10 ^ (-0.1);
@@ -156,35 +185,66 @@ function plotAxonClass(info, classConn, axonClasses, dendClass)
     legend(ax, ...
         'Observed', ...
         'Expected (multinomial)', ...
-        'Location', 'NorthEast');
+        'Location', 'North');
     ax.Position = axPos;
     
     ax = subplot(2, 2, 4);
+    colorOrder = ax.ColorOrder;
     axis(ax, 'square');
+    
+    yyaxis(ax, 'right');
+    hold(ax, 'on');
+    
+    probLow = sort(probLow, 'ascend');
+    probLowRatio = (1:numel(probLow)) ./ numel(probLow);
+    probLowRatio = probLowRatio(:) ./ probLow;
+    
+    probHigh = sort(probHigh, 'ascend');
+    probHighRatio = (1:numel(probHigh)) ./ numel(probHigh);
+    probHighRatio = probHighRatio(:) ./ probHigh;
+    
+    plot(ax, ...
+        probLow, probLowRatio, ...
+        'Color', colorOrder(1, :), ...
+        'LineStyle', '-');
+    plot(ax, ...
+        probHigh, probHighRatio, ...
+        'Color', colorOrder(2, :), ...
+        'LineStyle', '-');
+    plot(ax, [0, 1], [1, 1], 'k--');
+    
+    xlim(ax, [0, 1]);
+    ylim(ax, [0, 2]);
+    
+    yyaxis(ax, 'left');
     hold(ax, 'on');
     
     histogram(ax, ...
         probLow, ...
         'BinEdges', binEdges, ...
         'DisplayStyle', 'stairs', ...
+        'EdgeColor', colorOrder(1, :), ...
         'LineWidth', 2);
     histogram(ax, ...
         probHigh, ...
         'BinEdges', binEdges, ...
         'DisplayStyle', 'stairs', ...
+        'EdgeColor', colorOrder(2, :), ...
         'LineWidth', 2);
+    
+    xlabel('Probability');
     ax.TickDir = 'out';
+    pValAxes{end + 1} = ax;
     
     % Legend
     axPos = ax.Position;
     legend(ax, ...
         'Prob[F ≤ f]', ...
         'Prob[F ≥ f]', ...
-        'Location', 'NorthWest');
+        'Location', 'North');
     
-    xlabel(ax, 'probability');
+    xlabel(ax, 'Probability');
     ax.Position = axPos;
-    pValAxes{end + 1} = ax;
 
     annotation(fig, ...
         'textbox', [0, 0.9, 1, 0.1], ...
