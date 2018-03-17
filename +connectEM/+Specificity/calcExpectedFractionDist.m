@@ -1,14 +1,28 @@
 function [expFrac, expCount] = ...
-        calcExpectedFractionDist(classConn, numClassId, otherClassId)
+        calcExpectedFractionDist(classConn, numClassIds, denomClassIds)
+    % calcExpectedFractionDist(classConn, numClassIds, denumClassIds)
+    %   Given a class connectome and two sets of classes (A and B, with A
+    %   being a subset of B), this function calculates the expected
+    %   distribution of A / B.
+    %
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
+    import connectEM.Specificity.calcFractionProbs;
+    
+    % Sanity check
+    assert(all(ismember(numClassIds, denomClassIds)));
+    
+    otherClassIds = setdiff(1:size(classConn, 2), denomClassIds);
+    denomClassIds = setdiff(denomClassIds, numClassIds);
     
     % Calculate probabilities for multinomial
     classProbs = sum(classConn, 1);
     classProbs = classProbs / sum(classProbs);
     
-    mnProbs = classProbs([numClassId, otherClassId]);
-    mnProbs = horzcat(mnProbs, 1 - sum(mnProbs));
+    mnProbs = [ ...
+        sum(classProbs(numClassIds)), ...
+        sum(classProbs(denomClassIds)), ...
+        sum(classProbs(otherClassIds))];
     
     % Determine minimal set of synapse counts
     synCounts = sum(classConn, 2);
@@ -22,25 +36,7 @@ function [expFrac, expCount] = ...
         curSyns = uniSyns(curIdx);
         curNeurites = uniSynNeurites(curIdx);
         
-        % Evaluate multinomial probability distribution.
-        %
-        % NOTE(amotta): The third entry becomes negative if the sum of
-        % `curExc` and `curInh` is larger than the synapse count. This may
-        % seem bad. But in fact it guarantees that `mnpdf` will return
-        % zero and is thus very useful!
-        curGrid = zeros(curSyns + 1, curSyns + 1, 3);
-       [curGrid(:, :, 1), curGrid(:, :, 2)] = ndgrid(0:curSyns, 0:curSyns);
-        curGrid(:, :, 3) = curSyns - sum(curGrid, 3);
-        
-        curGrid = reshape(curGrid, [], 3);
-        curExpCount = mnpdf(curGrid, mnProbs);
-        
-        % Let's set e / (e + i) = 0 for e = i = 0.
-        curExpFrac = curGrid(:, 1) ./ sum(curGrid(:, 1:2), 2);
-        curExpFrac(isnan(curExpFrac)) = 0;
-        
-       [curExpFrac, ~, curUniIds] = unique(curExpFrac);
-        curExpCount = accumarray(curUniIds, curExpCount);
+       [curExpFrac, curExpCount] = calcFractionProbs(mnProbs, curSyns);
         curExpCount = curNeurites * curExpCount;
         
         expFrac{curIdx} = curExpFrac;
