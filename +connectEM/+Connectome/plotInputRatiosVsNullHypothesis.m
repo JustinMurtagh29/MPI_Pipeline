@@ -44,6 +44,7 @@ end
 %% plotting
 function plotAxonClass(info, classConn, axonClasses, dendClass)
     import connectEM.Specificity.calcExpectedFractionDist;
+    import connectEM.Specificity.calcFractionChanceProbs;
     classConn = classConn(dendClass.nullIds, :);
     
     ccId  = find(axonClasses == 'Corticocortical');
@@ -54,21 +55,25 @@ function plotAxonClass(info, classConn, axonClasses, dendClass)
     fig = figure();
     fig.Color = 'white';
     fig.Position(3:4) = [840, 440];
-    binEdges = linspace(0, 1, 21);
     
-    % Plot exc / (exc + inh)
+    binEdges = linspace(0, 1, 21);
+    histAxes = cell(0);
+    pValAxes = cell(0);
+    
+    %% Plot exc / (exc + inh)
     obsFrac = classConn(:, [ccId, tcId, inhId]);
     obsFrac = sum(obsFrac(:, 1:2), 2) ./ sum(obsFrac, 2);
     obsFrac(isnan(obsFrac)) = 0;
     
-   [expFrac, expCount] = ...
-        calcExpectedFractionDist( ...
-            classConn, [ccId, tcId], [ccId, tcId, inhId]);
-        
-	binId = discretize(expFrac, binEdges);
+   [expFrac, expCount] = calcExpectedFractionDist( ...
+        classConn, [ccId, tcId], [ccId, tcId, inhId]);
+   [probLow, probHigh] = calcFractionChanceProbs( ...
+        classConn, [ccId, tcId], [ccId, tcId, inhId]);
+    
+    binId = discretize(expFrac, binEdges);
     binCount = accumarray(binId, expCount);
     
-    ax = subplot(1, 2, 1);
+    ax = subplot(2, 2, 1);
     axis(ax, 'square');
     hold(ax, 'on');
     
@@ -89,19 +94,41 @@ function plotAxonClass(info, classConn, axonClasses, dendClass)
     ax.YAxis.Limits(1) = 10 ^ (-0.1);
     ax.YScale = 'log';
     ax.TickDir = 'out';
+    histAxes{end + 1} = ax;
     
-    % Plot expected tc / (tc + cc)
+    ax = subplot(2, 2, 3);
+    axis(ax, 'square');
+    hold(ax, 'on');
+    
+    histogram(ax, ...
+        probLow, ...
+        'BinEdges', binEdges, ...
+        'DisplayStyle', 'stairs', ...
+        'LineWidth', 2);
+    histogram(ax, ...
+        probHigh, ...
+        'BinEdges', binEdges, ...
+        'DisplayStyle', 'stairs', ...
+        'LineWidth', 2);
+    
+    xlabel(ax, 'probability');
+    ax.TickDir = 'out';
+    pValAxes{end + 1} = ax;
+    
+    %% Plot expected tc / (tc + cc)
     obsFrac = classConn(:, [tcId, ccId]);
     obsFrac = obsFrac(:, 1) ./ sum(obsFrac, 2);
     obsFrac(isnan(obsFrac)) = 0;
     
    [expFrac, expCount] = ...
         calcExpectedFractionDist(classConn, tcId, [tcId, ccId]);
-        
-	binId = discretize(expFrac, binEdges);
+   [probLow, probHigh] = ...
+        calcFractionChanceProbs(classConn, tcId, [tcId, ccId]);
+    
+    binId = discretize(expFrac, binEdges);
     binCount = accumarray(binId, expCount);
     
-    ax = subplot(1, 2, 2);
+    ax = subplot(2, 2, 2);
     axis(ax, 'square');
     hold(ax, 'on');
     
@@ -122,6 +149,7 @@ function plotAxonClass(info, classConn, axonClasses, dendClass)
     ax.YAxis.Limits(1) = 10 ^ (-0.1);
     ax.YScale = 'log';
     ax.TickDir = 'out';
+    histAxes{end + 1} = ax;
     
     % Legend
     axPos = ax.Position;
@@ -130,6 +158,33 @@ function plotAxonClass(info, classConn, axonClasses, dendClass)
         'Expected (multinomial)', ...
         'Location', 'NorthEast');
     ax.Position = axPos;
+    
+    ax = subplot(2, 2, 4);
+    axis(ax, 'square');
+    hold(ax, 'on');
+    
+    histogram(ax, ...
+        probLow, ...
+        'BinEdges', binEdges, ...
+        'DisplayStyle', 'stairs', ...
+        'LineWidth', 2);
+    histogram(ax, ...
+        probHigh, ...
+        'BinEdges', binEdges, ...
+        'DisplayStyle', 'stairs', ...
+        'LineWidth', 2);
+    ax.TickDir = 'out';
+    
+    % Legend
+    axPos = ax.Position;
+    legend(ax, ...
+        'Prob[F ≤ f]', ...
+        'Prob[F ≥ f]', ...
+        'Location', 'NorthWest');
+    
+    xlabel(ax, 'probability');
+    ax.Position = axPos;
+    pValAxes{end + 1} = ax;
 
     annotation(fig, ...
         'textbox', [0, 0.9, 1, 0.1], ...
@@ -139,4 +194,13 @@ function plotAxonClass(info, classConn, axonClasses, dendClass)
             info.filename; ...
             info.git_repos{1}.hash; ...
             dendClass.title});
+        
+    %% Fix axes
+    histAxes = cat(1, histAxes{:});
+    yLims = sort(cat(2, histAxes.YLim));
+   [histAxes.YLim] = deal(yLims([1, end]));
+   
+    pValAxes = cat(1, pValAxes{:});
+    yLims = sort(cat(2, pValAxes.YLim));
+   [pValAxes.YLim] = deal(yLims([1, end]));
 end
