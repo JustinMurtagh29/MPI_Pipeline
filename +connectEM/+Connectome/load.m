@@ -32,8 +32,8 @@ function conn = load(param, connName)
         connectEM.Connectome.buildAxonClasses(conn, 'minSynPre', 10);
     
     conn.axonMeta.axonClass(:) = {'Other'};
-    conn.axonMeta.axonClass(axonClasses(1).axonIds) = {'Excitatory'};
     conn.axonMeta.axonClass(axonClasses(2).axonIds) = {'Inhibitory'};
+    conn.axonMeta.axonClass(axonClasses(1).axonIds) = {'Corticocortical'};
     conn.axonMeta.axonClass(axonClasses(3).axonIds) = {'Thalamocortical'};
     conn.axonMeta.axonClass = categorical(conn.axonMeta.axonClass);
 end
