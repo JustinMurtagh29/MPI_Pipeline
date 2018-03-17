@@ -55,13 +55,15 @@ function plotAxonClass(info, classConn, axonClasses, dendClass)
     % Plot expected e / (e + i)
     excId = find(axonClasses == 'Excitatory');
     inhId = find(axonClasses == 'Inhibitory');
+    tcId  = find(axonClasses == 'Thalamocortical');
     
-    obsFrac = classConn(:, [excId, inhId]);
-    obsFrac = obsFrac(:, 1) ./ sum(obsFrac, 2);
+    obsFrac = classConn(:, [excId, tcId, inhId]);
+    obsFrac = sum(obsFrac(:, 1:2), 2) ./ sum(obsFrac, 2);
     obsFrac(isnan(obsFrac)) = 0;
     
    [expFrac, expCount] = ...
-        calcExpectedFractionDist(classConn, excId, inhId);
+        calcExpectedFractionDist( ...
+            classConn, [excId, tcId], [excId, tcId, inhId]);
         
 	binId = discretize(expFrac, binEdges);
     binCount = accumarray(binId, expCount);
@@ -89,15 +91,12 @@ function plotAxonClass(info, classConn, axonClasses, dendClass)
     ax.TickDir = 'out';
     
     % Plot expected tc / (tc + e)
-    tcId = find(axonClasses == 'Thalamocortical');
-    excId = find(axonClasses == 'Excitatory');
-    
     obsFrac = classConn(:, [tcId, excId]);
     obsFrac = obsFrac(:, 1) ./ sum(obsFrac, 2);
     obsFrac(isnan(obsFrac)) = 0;
     
    [expFrac, expCount] = ...
-        calcExpectedFractionDist(classConn, tcId, excId);
+        calcExpectedFractionDist(classConn, tcId, [tcId, excId]);
         
 	binId = discretize(expFrac, binEdges);
     binCount = accumarray(binId, expCount);
@@ -117,7 +116,7 @@ function plotAxonClass(info, classConn, axonClasses, dendClass)
         'DisplayStyle', 'stairs', ...
         'LineWidth', 2);
     
-    xlabel(ax, 'tc / (tc + exc)');
+    xlabel(ax, 'tc / (tc + cc)');
     xlim(ax, binEdges([1, end]));
     
     ax.YAxis.Limits(1) = 10 ^ (-0.1);
