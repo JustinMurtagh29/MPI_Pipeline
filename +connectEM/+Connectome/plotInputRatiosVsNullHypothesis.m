@@ -46,24 +46,24 @@ function plotAxonClass(info, classConn, axonClasses, dendClass)
     import connectEM.Specificity.calcExpectedFractionDist;
     classConn = classConn(dendClass.nullIds, :);
     
+    ccId  = find(axonClasses == 'Corticocortical');
+    tcId  = find(axonClasses == 'Thalamocortical');
+    inhId = find(axonClasses == 'Inhibitory');
+    
     % Plotting
     fig = figure();
     fig.Color = 'white';
     fig.Position(3:4) = [840, 440];
     binEdges = linspace(0, 1, 21);
     
-    % Plot expected e / (e + i)
-    excId = find(axonClasses == 'Excitatory');
-    inhId = find(axonClasses == 'Inhibitory');
-    tcId  = find(axonClasses == 'Thalamocortical');
-    
-    obsFrac = classConn(:, [excId, tcId, inhId]);
+    % Plot exc / (exc + inh)
+    obsFrac = classConn(:, [ccId, tcId, inhId]);
     obsFrac = sum(obsFrac(:, 1:2), 2) ./ sum(obsFrac, 2);
     obsFrac(isnan(obsFrac)) = 0;
     
    [expFrac, expCount] = ...
         calcExpectedFractionDist( ...
-            classConn, [excId, tcId], [excId, tcId, inhId]);
+            classConn, [ccId, tcId], [ccId, tcId, inhId]);
         
 	binId = discretize(expFrac, binEdges);
     binCount = accumarray(binId, expCount);
@@ -90,13 +90,13 @@ function plotAxonClass(info, classConn, axonClasses, dendClass)
     ax.YScale = 'log';
     ax.TickDir = 'out';
     
-    % Plot expected tc / (tc + e)
-    obsFrac = classConn(:, [tcId, excId]);
+    % Plot expected tc / (tc + cc)
+    obsFrac = classConn(:, [tcId, ccId]);
     obsFrac = obsFrac(:, 1) ./ sum(obsFrac, 2);
     obsFrac(isnan(obsFrac)) = 0;
     
    [expFrac, expCount] = ...
-        calcExpectedFractionDist(classConn, tcId, [tcId, excId]);
+        calcExpectedFractionDist(classConn, tcId, [tcId, ccId]);
         
 	binId = discretize(expFrac, binEdges);
     binCount = accumarray(binId, expCount);
