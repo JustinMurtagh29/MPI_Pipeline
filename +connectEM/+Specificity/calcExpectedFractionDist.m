@@ -7,6 +7,7 @@ function [expFrac, expCount] = ...
     %
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
+    import connectEM.Specificity.calcFractionProbs;
     
     % Sanity check
     assert(all(ismember(numClassIds, denumClassIds)));
@@ -35,25 +36,7 @@ function [expFrac, expCount] = ...
         curSyns = uniSyns(curIdx);
         curNeurites = uniSynNeurites(curIdx);
         
-        % Evaluate multinomial probability distribution.
-        %
-        % NOTE(amotta): The third entry becomes negative if the sum of
-        % `curExc` and `curInh` is larger than the synapse count. This may
-        % seem bad. But in fact it guarantees that `mnpdf` will return
-        % zero and is thus very useful!
-        curGrid = zeros(curSyns + 1, curSyns + 1, 3);
-       [curGrid(:, :, 1), curGrid(:, :, 2)] = ndgrid(0:curSyns, 0:curSyns);
-        curGrid(:, :, 3) = curSyns - sum(curGrid, 3);
-        
-        curGrid = reshape(curGrid, [], 3);
-        curExpCount = mnpdf(curGrid, mnProbs);
-        
-        % Let's set e / (e + i) = 0 for e = i = 0.
-        curExpFrac = curGrid(:, 1) ./ sum(curGrid(:, 1:2), 2);
-        curExpFrac(isnan(curExpFrac)) = 0;
-        
-       [curExpFrac, ~, curUniIds] = unique(curExpFrac);
-        curExpCount = accumarray(curUniIds, curExpCount);
+       [curExpFrac, curExpCount] = calcFractionProbs(mnProbs, curSyns);
         curExpCount = curNeurites * curExpCount;
         
         expFrac{curIdx} = curExpFrac;
