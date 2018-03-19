@@ -16,12 +16,19 @@ conn = connectEM.Connectome.load(param, connName);
 avail = load(availFile);
 
 %% Prepare data
-synCounts = conn.axonMeta.synCount;
-
 [classConn, targetClasses] = ...
     connectEM.Connectome.buildClassConnectome(conn);
+
 axonClasses = ...
     connectEM.Connectome.buildAxonClasses(conn, 'minSynPre', minSynPre);
+
+synCounts = sum(classConn, 2);
+axonsWithSynapses = find(synCounts);
+
+axonClasses(1).axonIds = intersect( ...
+    axonClasses(1).axonIds, axonsWithSynapses);
+axonClasses(2).axonIds = intersect( ...
+    axonClasses(2).axonIds, axonsWithSynapses);
 
 % Determine relative availabilities of target classes
 [~, classIds] = ismember(targetClasses, avail.targetClasses);
@@ -33,6 +40,7 @@ axonCount = size(classConn, 1);
 distCount = numel(avail.dists);
 classCount = numel(targetClasses);
 
+bhattaDist = nan(axonCount, distCount);
 distProbs = nan(axonCount, distCount);
 distClassProbs = nan(axonCount, classCount, distCount);
 
@@ -46,6 +54,12 @@ for curDistIdx = 1:distCount
     % Calculate per-synapse probabilities
     curProbs = curProbs .^ (1 ./ synCounts);
     distProbs(:, curDistIdx) = curProbs;
+    
+    % Calculate Bhattacharyya distance
+    curBhattaDist = classConn ./ sum(classConn, 2);
+    curBhattaDist = sqrt(curBhattaDist .* curAvail);
+    curBhattaDist = -log(sum(curBhattaDist, 2));
+    bhattaDist(:, curDistIdx) = curBhattaDist;
     
     % Calculate per-class probabilities
     for curClassIdx = 1:classCount
@@ -72,7 +86,21 @@ hold(ax, 'on');
 plot(avail.dists, median(excProbs, 1), 'LineWidth', 2);
 plot(avail.dists, median(inhProbs, 1), 'LineWidth', 2);
 
+legend('Excitatory axons', 'Inhibitory axons');
+
 ylim(ax, [0, 1]);
+
+%% Plotting Bhattacharyya distance
+excDists = bhattaDist(axonClasses(1).axonIds, :);
+inhDists = bhattaDist(axonClasses(2).axonIds, :);
+
+fig = figure();
+ax = axes(fig);
+hold(ax, 'on');
+
+plot(avail.dists, median(excDists, 1), 'LineWidth', 2);
+plot(avail.dists, median(inhDists, 1), 'LineWidth', 2);
+ax.YLim(1) = 0;
 
 %% Per-class plotting
 fig = figure();
