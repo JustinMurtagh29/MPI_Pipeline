@@ -75,6 +75,34 @@ for curDistIdx = 1:distCount
     end
 end
 
+%% Coefficient of determination
+curAxonIds = axonClasses(2).axonIds;
+
+curClassConn = classConn(curAxonIds, :);
+curClassConn = curClassConn ./ sum(curClassConn, 2);
+
+curSsTot = mean(curClassConn, 1);
+curSsTot = sum((curClassConn - curSsTot) .^ 2, 1);
+
+curSsRes = availabilities(:, :, curAxonIds);
+curSsRes = permute(curSsRes, [3, 1, 2]);
+curSsRes = sum((curClassConn - curSsRes) .^ 2, 1);
+curSsRes = transpose(squeeze(curSsRes));
+
+curRsq = 1 - (curSsRes ./ curSsTot);
+
+% Plotting
+fig = figure();
+ax = axes(fig);
+hold(ax, 'on');
+
+for curIdx = 1:size(curRsq, 2)
+    plot(ax, curRsq(:, curIdx), 'LineWidth', 2);
+end
+
+legend(arrayfun(@char, targetClasses, 'Uni', false));
+% ylim([0, 0.5]);
+
 %% Plotting
 excProbs = distProbs(axonClasses(1).axonIds, :);
 inhProbs = distProbs(axonClasses(2).axonIds, :);
