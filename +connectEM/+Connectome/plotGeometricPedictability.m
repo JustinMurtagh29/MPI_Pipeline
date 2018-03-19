@@ -29,8 +29,12 @@ availabilities = avail.axonAvail(classIds, :, :);
 availabilities = availabilities ./ sum(availabilities, 1);
 
 %% Calculate predictability
+axonCount = size(classConn, 1);
 distCount = numel(avail.dists);
-distProbs = nan(size(classConn, 1), distCount);
+classCount = numel(targetClasses);
+
+distProbs = nan(axonCount, distCount);
+distClassProbs = nan(axonCount, classCount, distCount);
 
 for curDistIdx = 1:distCount
     curAvail = availabilities(:, curDistIdx, :);
@@ -42,6 +46,19 @@ for curDistIdx = 1:distCount
     % Calculate per-synapse probabilities
     curProbs = curProbs .^ (1 ./ synCounts);
     distProbs(:, curDistIdx) = curProbs;
+    
+    % Calculate per-class probabilities
+    for curClassIdx = 1:classCount
+        curClassAvail = curAvail(:, curClassIdx);
+        curClassAvail = [curClassAvail, (1 - curClassAvail)];
+        
+        curClassSyns = classConn(:, curClassIdx);
+        curClassSyns = [curClassSyns, (synCounts - curClassSyns)];
+        
+        curClassProbs = mnpdf(curClassSyns, curClassAvail);
+        curClassProbs = curClassProbs .^ (1 ./ synCounts);
+        distClassProbs(:, curClassIdx, curDistIdx) = curClassProbs;
+    end
 end
 
 %% Plotting
@@ -56,3 +73,27 @@ plot(avail.dists, median(excProbs, 1), 'LineWidth', 2);
 plot(avail.dists, median(inhProbs, 1), 'LineWidth', 2);
 
 ylim(ax, [0, 1]);
+
+%% Per-class plotting
+fig = figure();
+
+for curClassIdx = 1:classCount
+    curAx = subplot(1, classCount, curClassIdx);
+    hold(curAx, 'on');
+    
+    curExcProbs = axonClasses(1).axonIds;
+    curExcProbs = distClassProbs(curExcProbs, curClassIdx, :);
+    curExcProbs = median(squeeze(curExcProbs), 1);
+    plot(curAx, avail.dists, curExcProbs, 'LineWidth', 2);
+    
+    curInhProbs = axonClasses(2).axonIds;
+    curInhProbs = distClassProbs(curInhProbs, curClassIdx, :);
+    curInhProbs = median(squeeze(curInhProbs), 1);
+    plot(curAx, avail.dists, curInhProbs, 'LineWidth', 2);
+    
+    ylim(curAx, [0, 1]);
+    
+    title(curAx, ...
+        char(targetClasses(curClassIdx)), ...
+        'FontWeight', 'normal', 'FontSize', 10);
+end
