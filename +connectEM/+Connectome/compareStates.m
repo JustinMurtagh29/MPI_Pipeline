@@ -6,10 +6,8 @@ clear;
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 
 connFiles = { ...
-    'connectome_revised.mat'; ...
-    'connectome_axons_16_b.mat'; ...
-    'connectome_axons_17_a.mat';
-    'connectome_axons_18_a.mat'};
+    'connectome_axons_18_a_ax_spine_syn_clust.mat';
+    'connectome_ax18a_deWC01wSp.mat'};
 connFiles = fullfile(rootDir, 'connectomeState', connFiles);
 
 %% loading data
