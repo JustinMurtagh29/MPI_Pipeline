@@ -748,6 +748,12 @@ disp('State 16 dendrites loaded/generated')
 
 
 %% remove axons from whole cells and add them to a new state of dendrites
+
+% assure that wholeCells are sorted in the same way as the somaAgglos
+newInd = arrayfun(@(x) mode(nonzeros(somaLUT(x.nodes(~isnan(x.nodes(:,4)),4)))),wholeCells);
+assert(numel(unique(newInd)) == numel(newInd))
+wholeCells = wholeCells(newInd);
+
 if  ~existentWC(8)
     assert(isequal(uint32(1:max(segmentMeta.segIds))',segmentMeta.segIds))
     % load(fullfile(p.saveFolder,'connectomeState','SynapseAgglos_v2.mat'),'synapses') % (erzeugt via E:\workspace\pipeline\Benedikt\+L4\+Synapses\+Scripts\synapseDetection.m)
@@ -843,7 +849,7 @@ if  ~existentWC(9)
         skelSegIds = Seg.Global.getSegIds(p,cell2mat(cellfun(@(x) x(:,1:3),skel.nodes,'uni',0)));  % extract the seg Ids of all skel nodes
         warning on
         ind = mode(nonzeros(wcLUT(nonzeros(skelSegIds)))); % get the whole cell overlapping the most with the skeleton in terms of segIds
-        if isnan(ind) || sum(nonzeros(wcLUT(nonzeros(skelSegIds)))==ind)/numel(nonzeros(skelSegIds)) < 0.33 % if no overlap found or overlap is less than one third of the skeleton
+        if isnan(ind) || sum(wcLUT(nonzeros(skelSegIds))==ind)/numel(nonzeros(skelSegIds)) < 0.33 % if no overlap found or overlap is less than one third of the skeleton
             warning('Found no corresponding whole Cell to skeleton from file %s. Trying to use somaAgglo as index...',filenames{f})
             ind = mode(nonzeros(somaLUT(nonzeros(skelSegIds))));
             if isnan(ind)
