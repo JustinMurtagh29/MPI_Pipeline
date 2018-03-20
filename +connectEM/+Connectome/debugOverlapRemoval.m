@@ -25,8 +25,8 @@ segPoints = Seg.Global.getSegToPointMap(param);
 connOld = load(connOldFile);
 connNew = load(connNewFile);
 
-eqClasses = load(eqClassFile);
-eqClassLUT = eqClasses.segMapping;
+eqClassLUT = load(eqClassFile);
+eqClassLUT = eqClassLUT.segMapping;
 
 shAgglos = load(shFile);
 shAgglos = shAgglos.shAgglos;
