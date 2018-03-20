@@ -752,6 +752,7 @@ disp('State 16 dendrites loaded/generated')
 % assure that wholeCells are sorted in the same way as the somaAgglos
 newInd = arrayfun(@(x) mode(nonzeros(somaLUT(x.nodes(~isnan(x.nodes(:,4)),4)))),wholeCells);
 assert(numel(unique(newInd)) == numel(newInd))
+[~,newInd] = sort(newInd);
 wholeCells = wholeCells(newInd);
 
 if  ~existentWC(8)
