@@ -65,7 +65,7 @@ for curAxonClassIdx = 1:numel(plotAxonClasses)
     
     % Plotting
     curAx = subplot(1, numel(plotAxonClasses), curAxonClassIdx);
-    
+    curAx.TickDir = 'out';
     axis(curAx, 'square');
     hold(curAx, 'on');
     
@@ -76,14 +76,16 @@ for curAxonClassIdx = 1:numel(plotAxonClasses)
             'LineWidth', 2);
     end
     
-    ylim(curAx, [-0.2, 0.5]);
-    xlabel('Radius (µm)');
+    % Hint zero line
+    plot(curAx, avail.dists([1, end]) / 1E3, [0, 0], 'k--');
     
     title( ...
         curAx, curAxonClass.title, ...
         'FontWeight', 'normal', 'FontSize', 10);
 end
 
+[fig.Children.YLim] = deal([-0.3, 0.5]);
+xlabel(fig.Children(end), 'Radius (µm)');
 ylabel(fig.Children(end), 'R²');
 
 legend(fig.Children(1), ...
@@ -99,7 +101,63 @@ annotation(fig, ...
     'String', { ...
         'Prediction is availability'; ...
         info.filename; info.git_repos{1}.hash});
+
+%% Plot R² per axon class
+% Model: Availability is synapse fraction
+plotAxonClasses = 1:2;
+
+fig = figure();
+fig.Color = 'white';
+fig.Position(3:4) = [620, 590];
+
+ax = axes(fig);
+ax.TickDir = 'out';
+axis(ax, 'square');
+hold(ax, 'on');
+
+for curAxonClassIdx = 1:numel(plotAxonClasses)
+    curAxonClassId = plotAxonClasses(curAxonClassIdx);
+    curAxonClass = axonClasses(curAxonClassId);
+    curAxonIds = curAxonClass.axonIds;
     
+    % Fractional class connectome
+    curClassConn = classConn(curAxonIds, :);
+    curClassConn = curClassConn ./ sum(curClassConn, 2);
+    
+    % Variance
+    curSsTot = mean(curClassConn, 1);
+    curSsTot = sum(sum((curClassConn - curSsTot) .^ 2));
+    
+    % Residuals
+    curSsRes = availabilities(:, :, curAxonIds);
+    curSsRes = permute(curSsRes, [3, 1, 2]);
+    curSsRes = (curClassConn - curSsRes) .^ 2;
+    curSsRes = reshape(sum(sum(curSsRes, 1), 2), [], 1);
+    
+    % R²
+    curRsq = 1 - (curSsRes ./ curSsTot);
+    
+    % Plotting
+    plot( ...
+        ax, avail.dists / 1E3, ...
+        curRsq, 'LineWidth', 2);
+end
+
+plot(ax, avail.dists([1, end]) / 1E3, [0, 0], 'k--');
+legend(ax, {axonClasses(plotAxonClasses).title});
+
+xlabel(ax, 'Radius (µm)');
+ylabel(ax, 'R²');
+ylim(ax, [-0.3, 0.5]);
+
+annotation(fig, ...
+    'textbox', [0, 0.9, 1, 0.1], ...
+    'EdgeColor', 'none', ...
+    'HorizontalAlignment', 'center', ...
+    'String', { ...
+        'Prediction is availability'; ...
+        info.filename; info.git_repos{1}.hash});
+
 %% Plot R² per axon and dendrite class
 % Model: Linear combination of all availabilities
 plotAxonClasses = 1:2;
@@ -122,7 +180,7 @@ for curAxonClassIdx = 1:numel(plotAxonClasses)
     curSsTot = mean(curClassConn, 1);
     curSsTot = sum((curClassConn - curSsTot) .^ 2, 1);
 
-    for curDistIdx = 1:distCount
+    for curDistIdx = 1:numel(avail.dists)
         curAvail = availabilities(:, curDistIdx, curAxonIds);
         curAvail = transpose(squeeze(curAvail));
         curAvail(:, end + 1) = 1; %#ok
@@ -160,16 +218,15 @@ for curAxonClassIdx = 1:numel(plotAxonClasses)
             'LineWidth', 2);
     end
     
-    xlabel('Radius (µm)');
-    
     title( ...
         curAx, curAxonClass.title, ...
         'FontWeight', 'normal', 'FontSize', 10);
 end
 
 [fig.Children.YLim] = deal([0, 1]);
-
+xlabel(fig.Children(end), 'Radius (µm)');
 ylabel(fig.Children(end), 'R²');
+
 legend(fig.Children(1), ...
     arrayfun( ...
         @char, plotTargetClasses, ...
@@ -204,7 +261,7 @@ for curAxonClassIdx = 1:numel(plotAxonClasses)
     curSsTot = mean(curClassConn, 1);
     curSsTot = sum(sum((curClassConn - curSsTot) .^ 2));
 
-    for curDistIdx = 1:distCount
+    for curDistIdx = 1:numel(avail.dists)
         curAvail = availabilities(:, curDistIdx, curAxonIds);
         curAvail = transpose(squeeze(curAvail));
         curAvail(:, end + 1) = 1; %#ok
@@ -223,6 +280,7 @@ end
 % Plotting
 fig = figure();
 fig.Color = 'white';
+fig.Position(3:4) = [620, 590];
 
 ax = axes(fig);
 ax.TickDir = 'out';
