@@ -33,6 +33,7 @@ availabilities = availabilities ./ sum(availabilities, 1);
 synCounts = sum(classConn, 2);
 
 %% Plot R² per axon and dendrite class
+% Model: Availability is synapse fraction
 plotAxonClasses = 1:2;
 plotTargetClasses = targetClasses;
 
@@ -95,3 +96,77 @@ annotation(fig, ...
     'String', { ...
         info.filename; ...
         info.git_repos{1}.hash});
+    
+%% Plot R² per axon and dendrite class
+% Model: Linear combination of all availabilities
+plotAxonClasses = 1:2;
+
+% Prepare output
+rSq = nan( ...
+    numel(targetClasses), ...
+    numel(avail.dists), ...
+    numel(plotAxonClasses));
+
+% Calculate all R² values
+for curAxonClassIdx = 1:numel(plotAxonClasses)
+    curAxonClassId = plotAxonClasses(curAxonClassIdx);
+    curAxonIds = axonClasses(curAxonClassId).axonIds;
+
+    % Fractional connectome
+    curClassConn = classConn(curAxonIds, :);
+    curClassConn = curClassConn ./ sum(curClassConn, 2);
+
+    curSsTot = mean(curClassConn, 1);
+    curSsTot = sum((curClassConn - curSsTot) .^ 2, 1);
+
+    for curDistIdx = 1:distCount
+        curAvail = availabilities(:, curDistIdx, curAxonIds);
+        curAvail = transpose(squeeze(curAvail));
+        curAvail(:, end + 1) = 1; %#ok
+        
+        curCoefs = curAvail \ curClassConn;
+        curPreds = curAvail * curCoefs;
+
+        % Calculate sum of squares of residuals
+        curSsRes = sum((curPreds - curClassConn) .^ 2, 1);
+        curRSq = 1 - (curSsRes ./ curSsTot);
+        
+        rSq(:, curDistIdx, curAxonClassIdx) = curRSq;
+    end
+end
+
+% Plotting
+fig = figure();
+fig.Color = 'white';
+fig.Position(3:4) = [1100, 850];
+
+for curAxonClassIdx = 1:numel(plotAxonClasses)
+    curAxonClassId = plotAxonClasses(curAxonClassIdx);
+    curAxonClass = axonClasses(curAxonClassId);
+    
+    curAx = subplot(1, numel(plotAxonClasses), curAxonClassIdx);
+    curAx.TickDir = 'out';
+    hold(curAx, 'on');
+    
+    for curTargetClassIdx = 1:numel(plotTargetClasses)
+        plot( ...
+            curAx, avail.dists / 1E3, ...
+            rSq(curTargetClassIdx, :, curAxonClassIdx), ...
+            'LineWidth', 2);
+    end
+    
+    xlabel('Radius (µm)');
+    
+    title( ...
+        curAx, curAxonClass.title, ...
+        'FontWeight', 'normal', 'FontSize', 10);
+end
+
+[fig.Children.YLim] = deal([0, 1]);
+
+ylabel(fig.Children(end), 'R²');
+legend(fig.Children(1), ...
+    arrayfun( ...
+        @char, plotTargetClasses, ...
+        'UniformOutput', false), ...
+	'Location', 'NorthEast');
