@@ -39,7 +39,7 @@ plotTargetClasses = targetClasses;
 
 fig = figure();
 fig.Color = 'white';
-fig.Position(3:4) = [1100, 850];
+fig.Position(3:4) = [1100, 550];
 
 for curAxonClassIdx = 1:numel(plotAxonClasses)
     curAxonClassId = plotAxonClasses(curAxonClassIdx);
@@ -65,6 +65,8 @@ for curAxonClassIdx = 1:numel(plotAxonClasses)
     
     % Plotting
     curAx = subplot(1, numel(plotAxonClasses), curAxonClassIdx);
+    
+    axis(curAx, 'square');
     hold(curAx, 'on');
     
     for curTargetClassIdx = 1:numel(plotTargetClasses)
@@ -83,6 +85,7 @@ for curAxonClassIdx = 1:numel(plotAxonClasses)
 end
 
 ylabel(fig.Children(end), 'R²');
+
 legend(fig.Children(1), ...
     arrayfun( ...
         @char, plotTargetClasses, ...
@@ -94,8 +97,8 @@ annotation(fig, ...
     'EdgeColor', 'none', ...
     'HorizontalAlignment', 'center', ...
     'String', { ...
-        info.filename; ...
-        info.git_repos{1}.hash});
+        'Prediction by availability'; ...
+        info.filename; info.git_repos{1}.hash});
     
 %% Plot R² per axon and dendrite class
 % Model: Linear combination of all availabilities
@@ -138,7 +141,7 @@ end
 % Plotting
 fig = figure();
 fig.Color = 'white';
-fig.Position(3:4) = [1100, 850];
+fig.Position(3:4) = [1100, 550];
 
 for curAxonClassIdx = 1:numel(plotAxonClasses)
     curAxonClassId = plotAxonClasses(curAxonClassIdx);
@@ -146,6 +149,8 @@ for curAxonClassIdx = 1:numel(plotAxonClasses)
     
     curAx = subplot(1, numel(plotAxonClasses), curAxonClassIdx);
     curAx.TickDir = 'out';
+    
+    axis(curAx, 'square');
     hold(curAx, 'on');
     
     for curTargetClassIdx = 1:numel(plotTargetClasses)
@@ -170,3 +175,72 @@ legend(fig.Children(1), ...
         @char, plotTargetClasses, ...
         'UniformOutput', false), ...
 	'Location', 'NorthEast');
+
+annotation(fig, ...
+    'textbox', [0, 0.9, 1, 0.1], ...
+    'EdgeColor', 'none', ...
+    'HorizontalAlignment', 'center', ...
+    'String', { ...
+        'Prediction by linear combination of availabilities'; ...
+        info.filename; info.git_repos{1}.hash});
+
+%% Plot R² over all classes
+plotAxonClasses = 1:2;
+
+% Prepare output
+rSq = nan( ...
+    numel(avail.dists), ...
+    numel(plotAxonClasses));
+
+% Calculate all R² values
+for curAxonClassIdx = 1:numel(plotAxonClasses)
+    curAxonClassId = plotAxonClasses(curAxonClassIdx);
+    curAxonIds = axonClasses(curAxonClassId).axonIds;
+
+    % Fractional connectome
+    curClassConn = classConn(curAxonIds, :);
+    curClassConn = curClassConn ./ sum(curClassConn, 2);
+
+    curSsTot = mean(curClassConn, 1);
+    curSsTot = sum(sum((curClassConn - curSsTot) .^ 2));
+
+    for curDistIdx = 1:distCount
+        curAvail = availabilities(:, curDistIdx, curAxonIds);
+        curAvail = transpose(squeeze(curAvail));
+        curAvail(:, end + 1) = 1; %#ok
+        
+        curCoefs = curAvail \ curClassConn;
+        curPreds = curAvail * curCoefs;
+
+        % Calculate sum of squares of residuals
+        curSsRes = sum((curPreds(:) - curClassConn(:)) .^ 2);
+        curRSq = 1 - (curSsRes ./ curSsTot);
+        
+        rSq(curDistIdx, curAxonClassIdx) = curRSq;
+    end
+end
+
+% Plotting
+fig = figure();
+fig.Color = 'white';
+
+ax = axes(fig);
+ax.TickDir = 'out';
+axis(ax, 'square');
+hold(ax, 'on');
+
+plot(ax, avail.dists / 1E3, rSq, 'LineWidth', 2);
+
+xlabel(ax, 'Radius (µm)');
+ylabel(ax, 'R²');
+ylim(ax, [0, 1]);
+
+legend(ax, {axonClasses(plotAxonClasses).title});
+
+annotation(fig, ...
+    'textbox', [0, 0.9, 1, 0.1], ...
+    'EdgeColor', 'none', ...
+    'HorizontalAlignment', 'center', ...
+    'String', { ...
+        'Prediction by linear combination of availabilities'; ...
+        info.filename; info.git_repos{1}.hash});
