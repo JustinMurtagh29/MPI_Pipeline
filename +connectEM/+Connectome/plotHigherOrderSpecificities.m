@@ -76,6 +76,12 @@ function plotAxonClass(info, classConn, targetClasses, axonClass, pTheta)
         
         condClassSynCount = sum(condClassConn, 2);
         condClassSynFrac = condClassConn ./ condClassSynCount;
+        
+        % Ignore axons which make all their synapses onto the target class
+        % under consideration. Their fractional synapses are not well
+        % defined.
+        condClassSynFrac(~condClassSynCount, :) = [];
+        condClassSynCount(~condClassSynCount) = [];
 
         % Null hypothesis
         nullClassSynCount = classConn( ...
