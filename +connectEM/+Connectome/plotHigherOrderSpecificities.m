@@ -5,7 +5,7 @@ clear;
 %% Configuration
 param = struct;
 param.saveFolder = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-connName = 'connectome_axons_18_a_ax_spine_syn_clust';
+connName = 'connectome_ax18a_deWC01wSp';
 
 minSynPre = 10;
 
@@ -13,16 +13,16 @@ minSynPre = 10;
 % Chosen to be half of chance level.
 pTheta = struct;
 % Excitatory axons
-pTheta(1).WholeCell = 0.05;
+pTheta(1).WholeCell = 0.045;
 pTheta(1).ApicalDendrite = 0.04;
 % Inhibitory axons
-pTheta(2).Somata = 0.115;
-pTheta(2).WholeCell = 0.12;
-pTheta(2).ApicalDendrite = 0.06;
+pTheta(2).Somata = 0.17;
+pTheta(2).WholeCell = 0.19;
+pTheta(2).ApicalDendrite = 0.155;
 % Thalamocortical axons
-pTheta(3).Somata = 0.015;
-pTheta(3).WholeCell = 0.195;
-pTheta(3).ApicalDendrite = 0.025;
+pTheta(3).Somata = 0.04;
+pTheta(3).WholeCell = 0.17;
+pTheta(3).ApicalDendrite = 0.015;
 
 info = Util.runInfo();
 
