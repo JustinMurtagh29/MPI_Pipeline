@@ -7,15 +7,41 @@ param = struct;
 param.saveFolder = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 connName = 'connectome_ax18a_deWC01wSp';
 
+% For recovery of all TC axon definitions
+connOldName = 'connectome_axons_18_a_ax_spine_syn_clust';
+eqClassesFile = fullfile(param.saveFolder, 'SVGDB', 'agglos', 'ax18a_deWC01wSp', 'eClass.mat');
+
 minSynPre = 10;
 info = Util.runInfo();
 
 %% loading data
+% Load all TC axon definitions
+connOld = connectEM.Connectome.load(param, connOldName);
+tcAxonsOld = connOld.axons(connOld.axonMeta.axonClass == 'Thalamocortical');
+
+eqClasses = load(eqClassesFile);
+eqClasses = eqClasses.idsToEClass;
+
+% TODO(amotta): Talk to Benedikt and find out why `eqClasses(segIds)` does
+% not consist of a single non-zero number.
+tcAxonsNew = cellfun( ...
+    @(ids) mode(nonzeros(eqClasses(ids))), ...
+    tcAxonsOld, 'UniformOutput', false);
+
+assert(all(cellfun(@isscalar, tcAxonsNew)));
+tcAxonsNew = cell2mat(tcAxonsNew);
+
 conn = connectEM.Connectome.load(param, connName);
 [classConnectome, targetClasses] = ...
     connectEM.Connectome.buildClassConnectome(conn);
 axonClasses = ...
     connectEM.Connectome.buildAxonClasses(conn, 'minSynPre', minSynPre);
+
+% Overwrite definition of TC axons
+axonClasses(3).axonIds = tcAxonsNew;
+axonClasses(3).title = sprintf( ...
+   ['thalamocortical axons (n = %d; ', ...
+    'from old connectome)'], numel(tcAxonsNew));
 
 %% plot
 for curIdx = 1:numel(axonClasses)
