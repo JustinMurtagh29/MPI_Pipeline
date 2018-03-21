@@ -35,6 +35,10 @@ shAgglos = shAgglos.shAgglos;
 somaAgglos = (connNew.denMeta.targetClass == 'Somata');
 somaAgglos = connNew.dendrites(somaAgglos);
 
+% Only look at ten somata
+somaAgglos = somaAgglos(1:10);
+somaCompIds = cell2mat(somaAgglos);
+
 % Meta
 skel = skeleton();
 skel = Skeleton.setParams4Pipeline(skel, param);
@@ -42,9 +46,9 @@ skel = skel.setDescription(sprintf( ...
     '%s (%s)', info.filename, info.git_repos{1}.hash));
 
 % Trees
-skelNodes = cellfun( ...
-    @(ids) segPoints(ids, :), ...
-    somaAgglos, 'UniformOutput', false);
+skelNodes = arrayfun( ...
+    @(id) segPoints(eqClassLUT == id, :), ...
+    somaCompIds, 'UniformOutput', false);
 skel = Skeleton.fromMST(skelNodes, param.raw.voxelSize, skel);
 
 skel.write(fullfile(outDir, 'somata.nml'));
