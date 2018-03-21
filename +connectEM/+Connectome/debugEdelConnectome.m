@@ -77,7 +77,7 @@ oldMask = cellfun(@(ids) any(oldDendLUT(ids)), shAgglos);
 newMask = cellfun(@(ids) any(newDendLUT(ids)), shAgglos);
 
 vanishedMask = oldMask & (~newMask);
-vanishedCount = sum(vanishedMask)
+vanishedCount = sum(vanishedMask);
 
 %% Check how many spine synapses vanished
 % Compute expected spine synapses in "new" segmentation.
@@ -86,7 +86,8 @@ vanishedCount = sum(vanishedMask)
 % an index error. The maximum `edgeIdx` is larger than the rows in:
 % * `edges` of `/gaba/u/mberning/results/pipeline/20170217_ROI/globalEdges.mat`
 % * `borderMapping` of `/gaba/u/mberning/results/pipeline/20170217_ROI/SVGDB/agglos/ax18a_deWC01wSp/edges.mat`
-newSpineSynEdgesExp = synOld.synapses.edgeIdx(synOld.isSpineSyn);
+newSpineSynEdgesExp = ...
+    synOld.synapses.edgeIdx(synOld.isSpineSyn);
 newSpineSynEdgesExp = cellfun( ...
     @(ids) edgesNew.borderMapping(ids), ...
     newSpineSynEdgesExp, 'UniformOutput', false);
