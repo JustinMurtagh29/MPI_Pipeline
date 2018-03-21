@@ -6,8 +6,8 @@ clear;
 
 %% configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a_ax_spine_syn_clust.mat');
-synFile = fullfile(rootDir, 'connectomeState', 'SynapseAgglos_v3_ax_spine_clustered.mat');
+connFile = fullfile(rootDir, 'connectomeState', 'connectome_ax18a_deWC01wSp.mat');
+synFile = fullfile(rootDir, 'connectomeState', 'SynapseAgglos_v4_ax18a_deWC01wSp.mat');
 
 [interSynFile, interSynName] = fileparts(connFile);
 interSynName = sprintf('%s_intersynapse.mat', interSynName);
@@ -27,33 +27,18 @@ param = param.p;
 % load segment positions
 points = Seg.Global.getSegToPointMap(param);
 
-%%
-% load border indices for edges
-% TODO(amotta): make sure that Benedikt used the same graph!
-segGraph = fullfile(rootDir, 'graph.mat');
-segGraph = load(segGraph, 'borderIdx');
+%% Build LUT for synapse position
+% NOTE(amotta): For some reason the synapse C.o.M is only stored in the
+% connectome. Let's extract it from there...
+posT = table;
+posT.pos = cell2mat(conn.connectomeMeta.coms);
+posT.synId = cell2mat(conn.connectome.synIdx);
 
-% load size and c. o. m. of borders
-borders = fullfile(rootDir, 'globalBorder.mat');
-borders = load(borders, 'borderCoM', 'borderArea2');
+[~, uniRows] = unique(posT.synId);
+posT = posT(uniRows, :);
 
-%% calculate synapse positions
-synapses = syn.synapses;
-synapses.ontoSpine = syn.isSpineSyn;
-
-% convert edge indices to border indices
-synapses.borderIdx = cellfun( ...
-    @(ids) setdiff(segGraph.borderIdx(ids), 0), ...
-    synapses.edgeIdx, 'UniformOutput', false);
-
-% calculate synapse locations
-synapses.pos = cell2mat(cellfun( ...
-    @(i) ceil( ...
-        sum( ...
-            borders.borderArea2(i) ...
-            .* double(borders.borderCoM(i, :)), 1 ...
-        ) ./ sum(borders.borderArea2(i))), ...
-    synapses.borderIdx, 'UniformOutput', false));
+synapsePos = nan(size(syn.synapses, 1), 3);
+synapsePos(posT.synId, :) = posT.pos;
 
 %% calculate synapse-to-synapse distances
 % only consider axons with at least two output synapses
@@ -78,7 +63,7 @@ for idx = 1:numel(out.axonIds)
         % map synapses to segments
         synapseNodeDist = pdist2( ...
             points(axonSegIds, :) .* param.raw.voxelSize, ...
-            synapses.pos(synapseIds, :) .* param.raw.voxelSize);
+            synapsePos(synapseIds, :) .* param.raw.voxelSize);
        [~, synapseNodeIds] = min(synapseNodeDist, [], 1);
        
         % build MST representation of axon
