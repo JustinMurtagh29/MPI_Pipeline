@@ -112,7 +112,10 @@ maskNew = (connNew.axonMeta.synCount >= 10);
 binEdges = linspace(0, 1, 21);
 
 fig = figure();
+fig.Color = 'white';
+
 ax = axes(fig);
+axis(ax, 'square');
 hold(ax, 'on');
 
 histogram( ...
