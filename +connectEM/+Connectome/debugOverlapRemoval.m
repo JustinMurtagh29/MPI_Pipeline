@@ -7,9 +7,16 @@ clear;
 
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
+
 connOldFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a_ax_spine_syn_clust.mat');
+synOldFile = fullfile(rootDir, 'connectomeState', 'SynapseAgglos_v3_ax_spine_clustered.mat');
+
 connNewFile = fullfile(rootDir, 'connectomeState', 'connectome_ax18a_deWC01wSp.mat');
+synNewFile = fullfile(rootDir, 'connectomeState', 'SynapseAgglos_v4_ax18a_deWC01wSp.mat');
+
+edgesNewFile = fullfile(rootDir, 'SVGDB', 'agglos', 'ax18a_deWC01wSp', 'edges.mat');
 eqClassFile = fullfile(rootDir, 'SVGDB', 'agglos', 'ax18a_deWC01wSp', 'eClass.mat');
+
 shFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_01_spine_attachment.mat');
 outDir = '/home/amotta/Desktop';
 
@@ -23,10 +30,15 @@ maxSegId = Seg.Global.getMaxSegId(param);
 segPoints = Seg.Global.getSegToPointMap(param);
 
 connOld = load(connOldFile);
+synOld = load(synOldFile);
+
 connNew = load(connNewFile);
+synNew = load(synNewFile);
 
 eqClassLUT = load(eqClassFile);
 eqClassLUT = eqClassLUT.segMapping;
+
+edgesNew = load(edgesNewFile);
 
 shAgglos = load(shFile);
 shAgglos = shAgglos.shAgglos;
@@ -65,3 +77,19 @@ newMask = cellfun(@(ids) any(newDendLUT(ids)), shAgglos);
 
 vanishedMask = oldMask & (~newMask);
 vanishedCount = sum(vanishedMask)
+
+%% Check how many spine synapses vanished
+% Compute expected spine synapses in "new" segmentation.
+%
+% NOTE(amotta): For some reason the indexing into `borderMappin` produces
+% an index error. The maximum `edgeIdx` is larger than the rows in:
+% * `edges` of `/gaba/u/mberning/results/pipeline/20170217_ROI/globalEdges.mat`
+% * `borderMapping` of `/gaba/u/mberning/results/pipeline/20170217_ROI/SVGDB/agglos/ax18a_deWC01wSp/edges.mat`
+newSpineSynEdgesExp = synOld.synapses.edgeIdx(synOld.isSpineSyn);
+newSpineSynEdgesExp = cellfun( ...
+    @(ids) edgesNew.borderMapping(ids), ...
+    newSpineSynEdgesExp, 'UniformOutput', false);
+
+% Compare against actually found spine synapses
+newSpineSynEdges = synNew.synapses.edgeIdx(synNew.isSpineSyn);
+newSpineSynEdges = cell2mat(newSpineSynEdges);
