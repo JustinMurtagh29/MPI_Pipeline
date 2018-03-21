@@ -9,6 +9,11 @@ rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_ax18a_deWC01wSp.mat');
 synFile = fullfile(rootDir, 'connectomeState', 'SynapseAgglos_v4_ax18a_deWC01wSp.mat');
 
+% When using Benedikt's edel connectome the entries of `conn.axons` and
+% `conn.dendrites` do not refer to segments, but to segment equivalence
+% classes. To undo this mapping, set the following file path.
+eqClassesFile = fullfile(rootDir, 'SVGDB', 'agglos', 'ax18a_deWC01wSp', 'eClass.mat');
+
 [interSynFile, interSynName] = fileparts(connFile);
 interSynName = sprintf('%s_intersynapse.mat', interSynName);
 interSynFile = fullfile(interSynFile, interSynName);
@@ -25,7 +30,24 @@ param = load(fullfile(rootDir, 'allParameter.mat'), 'p');
 param = param.p;
 
 % load segment positions
+maxSegId = Seg.Global.getMaxSegId(param);
 points = Seg.Global.getSegToPointMap(param);
+
+% Map back onto SegEM segments.
+if ~isempty(eqClassesFile)
+    eqClasses = load(eqClassesFile);
+    
+    eqClasses = accumarray( ...
+        1 + eqClasses.segMapping, ...
+        transpose(1:maxSegId), ...
+        [], @(segIds) {segIds});
+    eqClasses(1) = [];
+    
+    conn.axons = cellfun( ...
+        @(ids) cell2mat(eqClasses(ids)), ...
+        conn.axons, 'UniformOutput', false);
+    clear eqClasses;
+end
 
 %% Build LUT for synapse position
 % NOTE(amotta): For some reason the synapse C.o.M is only stored in the
