@@ -1,5 +1,6 @@
-% This script assesses the errors introduced by the removal of overlaps
-% between the axon and dendrite agglomerates.
+% This script helps to analyse some of the differences found between the
+% connectome versions `connectome_axons_18_a_ax_spine_syn_clust` and
+% `connectome_ax18a_deWC01wSp` (i.e., the edel connectome).
 %
 % Written by
 %   Alessandro Motta <alessandro.motta@brain.mpg.de>
