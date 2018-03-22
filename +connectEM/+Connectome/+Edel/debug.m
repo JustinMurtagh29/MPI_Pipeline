@@ -139,3 +139,53 @@ ylabel('Fraction of axons');
 title( ...
     ax, {info.filename; info.git_repos{1}.hash}, ...
     'FontWeight', 'normal', 'FontSize', 10);
+
+%% Compare spine synapses sizes
+oldSynT = table;
+oldSynT.id = cell2mat(connOld.connectome.synIdx);
+oldSynT.area = cell2mat(connOld.connectomeMeta.contactArea);
+oldSynT.isSpine = synOld.isSpineSyn(oldSynT.id);
+
+newSynT = table;
+newSynT.id = cell2mat(connNew.connectome.synIdx);
+newSynT.area = cell2mat(connNew.connectomeMeta.contactArea);
+newSynT.isSpine = synNew.isSpineSyn(newSynT.id);
+
+% Restrict to spine synapses
+oldSynT(~oldSynT.isSpine, :) = [];
+[~, uniRows] = unique(oldSynT.id);
+oldSynT = oldSynT(uniRows, :);
+
+newSynT(~newSynT.isSpine, :) = [];
+[~, uniRows] = unique(newSynT.id);
+newSynT = newSynT(uniRows, :);
+
+% Plot
+binEdges = [oldSynT.area; newSynT.area];
+binEdges = linspace(0, prctile(binEdges, 99), 51);
+
+fig = figure();
+fig.Color = 'white';
+
+ax = axes(fig);
+ax.TickDir = 'out';
+axis(ax, 'square');
+hold(ax, 'on');
+
+histogram( ...
+    ax, oldSynT.area, ...
+    'BinEdges', binEdges, ...
+    'Normalization', 'probability', ...
+    'DisplayStyle', 'stairs', ...
+    'LineWidth', 2);
+histogram( ...
+    ax, newSynT.area, ...
+    'BinEdges', binEdges, ...
+    'Normalization', 'probability', ...
+    'DisplayStyle', 'stairs', ...
+    'LineWidth', 2);
+
+legend(ax, ...
+    'SegEM-based connectome', ...
+    'Edel connectome', ...
+    'Location', 'NorthEast');
