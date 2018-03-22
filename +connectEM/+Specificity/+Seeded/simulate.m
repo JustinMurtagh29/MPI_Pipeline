@@ -20,81 +20,134 @@ info = Util.runInfo();
 syn = load(synFile);
 conn = connectEM.Connectome.load(param, connName);
 
-%% Build class connectome
+%% Process connectome
 [classConn, targetClasses] = ...
     connectEM.Connectome.buildClassConnectome(conn);
+axonClasses = ...
+    connectEM.Connectome.buildAxonClasses(conn, 'minSynPre', minSynPre);
 
-%% Simulate specificity analysis for axons seeded at AD shaft synapse
-plotTargetClasses = {'ApicalDendrite', 'Somata'};
+% Build list of possible seed synapses
+synT = connectEM.Connectome.buildSynapseTable(conn, syn);
+synT.ontoTargetClass = conn.denMeta.targetClass(synT.postAggloId);
 
-% Plot
-fig = figure;
-fig.Color = 'white';
-fig.Position(3:4) = [540, 510];
+%% Seed synapses
+seedConfigs = struct;
+seedConfigs(1).synIds = synT.id( ...
+    ~synT.isSpine & synT.ontoTargetClass == 'ApicalDendrite');
+seedConfigs(1).title = 'Axons seeded at shaft synapse onto apical dendrite';
 
-ax = axes(fig);
-ax.TickDir = 'out';
-axis(ax, 'square');
-hold(ax, 'on');
+seedConfigs(2).synIds = synT.id( ...
+    ~synT.isSpine & synT.ontoTargetClass == 'Somata');
+seedConfigs(2).title = 'Axons seeded at soma synapse';
 
-for curIdx = 1:numel(plotTargetClasses)
-    curClassName = plotTargetClasses{curIdx};
-    
-   	obsConn = forTargetClass( ...
-        conn, syn, classConn, targetClasses, curClassName);
-    
-    % Get rid of of axons that have too few synapses
-    obsConn(sum(obsConn, 2) < (minSynPre - 1), :) = [];
-    obsConn = obsConn ./ sum(obsConn, 2);
-    
-    curMu = mean(obsConn, 1);
-    curSigma = std(obsConn, 0, 1);
-    
-    e = errorbar( ...
-        1:numel(curMu), curMu, curSigma, ...
-        'LineWidth', 1.25, ...
-        'Marker', '.', ...
-        'MarkerSize', 18);
+%% Axon populations
+plotConfigs = struct;
+plotConfigs(1).axonIds = find( ...
+    conn.axonMeta.synCount >= minSynPre);
+plotConfigs(1).seedConfigs = seedConfigs;
+plotConfigs(1).title = sprintf( ...
+    'Axons with ≥ %d synapses', minSynPre);
+
+plotConfigs(2).axonIds = union( ...
+    axonClasses(1).axonIds, axonClasses(2).axonIds);
+plotConfigs(2).seedConfigs = seedConfigs;
+plotConfigs(2).title = sprintf( ...
+    'Strongly exc. or inh. axons with ≥ %d synapses', minSynPre);
+
+plotConfigs(3).axonIds = axonClasses(2).axonIds;
+plotConfigs(3).seedConfigs = seedConfigs;
+plotConfigs(3).title = sprintf( ...
+    'Strongly inh. axons with ≥ %d synapses', minSynPre);
+
+%% Plot
+for curIdx = 1:numel(plotConfigs)
+    curConfig = plotConfigs(curIdx);
+    withConfig(synT, classConn, targetClasses, info, curConfig);
 end
 
-xlim(ax, [0.5, (numel(targetClasses) + 0.5)]);
-xticks(ax, 1:numel(targetClasses));
+%% Functions
+function withConfig(synT, classConn, targetClasses, info, config)
+    fig = figure;
+    fig.Color = 'white';
+    fig.Position(3:4) = [600, 610];
 
-labels = arrayfun( ...
-    @char, targetClasses, ...
-    'UniformOutput', false);
-xticklabels(ax, labels);
-xtickangle(ax, 30);
+    ax = axes(fig);
+    ax.TickDir = 'out';
+    axis(ax, 'square');
+    hold(ax, 'on');
 
-ylabel(ax, 'Fraction of synapses');
-ylim(ax, [0, 1]);
+    axonCounts = nan(size(config.seedConfigs));
+    for curIdx = 1:numel(config.seedConfigs)
+        curSeedConfig = config.seedConfigs(curIdx);
+       [obsConn, obsAxonIds] = forTargetClass( ...
+            synT, classConn, targetClasses, curSeedConfig);
+        
+        % Restrict to axons of interest
+        obsMask = ismember(obsAxonIds, config.axonIds);
+        obsConn = obsConn(obsMask, :);
+        
+        % Count axons (for legend)
+        axonCounts(curIdx) = size(obsConn, 1);
+        
+        % Calculate and plot fractional synapses
+        obsConn = obsConn ./ sum(obsConn, 2);
 
-legends = cellfun(@(n) ...
-    sprintf('Seeded at %s shaft synapse', n), ...
-    plotTargetClasses, 'UniformOutput', false);
-legend(legends, 'Location', 'North');
+        curMu = mean(obsConn, 1);
+        curSigma = std(obsConn, 0, 1);
 
-title(ax, ....
-   {info.filename; info.git_repos{1}.hash; ...
-    sprintf('All axons with ≥ %d synapses', minSynPre)}, ...
-    'FontWeight', 'normal', 'FontSize', 10);
+        errorbar( ...
+            1:numel(curMu), curMu, curSigma, ...
+            'LineWidth', 1.25, ...
+            'Marker', '.', ...
+            'MarkerSize', 18);
+    end
 
-%% Utilities
-function obsConn = forTargetClass( ...
-        conn, syn, classConn, targetClasses, className)
-    % Build list of possible seed synapses
-    seedSynT = connectEM.Connectome.buildSynapseTable(conn, syn);
-    seedSynT.ontoTargetClass = conn.denMeta.targetClass(seedSynT.postAggloId);
+    xlim(ax, [0.5, (numel(targetClasses) + 0.5)]);
+    xticks(ax, 1:numel(targetClasses));
 
-    % Only look at AD shaft synapses
-    seedSynT(seedSynT.isSpine, :) = [];
-    seedSynT(seedSynT.ontoTargetClass ~= className, :) = [];
+    labels = arrayfun( ...
+        @char, targetClasses, ...
+        'UniformOutput', false);
+    xticklabels(ax, labels);
+    xtickangle(ax, 30);
 
-    % Calculate observed synapses
-    axonIds = unique(seedSynT.preAggloId);
+    ylabel(ax, 'Fraction of synapses');
+    ylim(ax, [0, 1]);
+    
+    legends = arrayfun( ...
+        @(c, n) sprintf( ...
+            '%s (n = %d)', c.title, n), ...
+        config.seedConfigs, axonCounts, ...
+        'UniformOutput', false);
+    legend(legends, 'Location', 'North');
+    
+    titleString = sprintf( ...
+        '%s (n = %d)', config.title, ...
+        numel(config.axonIds));
+    title(ax, ....
+       {info.filename; info.git_repos{1}.hash; titleString}, ...
+        'FontWeight', 'normal', 'FontSize', 10);
+end
+
+function [obsConn, axonIds] = forTargetClass( ...
+        seedSynT, classConn, targetClasses, seedConfig)
+    % Determine seed synapses
+    seedSynMask = ismember(seedSynT.id, seedConfig.synIds);
+    seedSynT = seedSynT(seedSynMask, :);
+    
+    % Identified seeded axons
+   [axonIds, uniRows] = unique(seedSynT.preAggloId);
+    seedSynT = seedSynT(uniRows, :);
+    
+    % Trace axons
     obsConn = classConn(axonIds, :);
     
-    % Remove seed synapse
-    classMask = (targetClasses == className);
-    obsConn(:, classMask) = obsConn(:, classMask) - 1;
+    % Remove seed synapses
+   [~, slotIds] = ismember( ...
+        seedSynT.ontoTargetClass, targetClasses);
+    slotIds = arrayfun( ...
+        @(r, c) sub2ind(size(obsConn), r, c), ...
+        transpose(1:size(seedSynT, 1)), slotIds);
+    
+    obsConn(slotIds) = obsConn(slotIds) - 1;
 end
