@@ -12,7 +12,7 @@ rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 connOldFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a_ax_spine_syn_clust.mat');
 synOldFile = fullfile(rootDir, 'connectomeState', 'SynapseAgglos_v3_ax_spine_clustered.mat');
 
-connNewFile = fullfile(rootDir, 'connectomeState', 'connectome_ax18a_deWC01wSp.mat');
+connNewFile = fullfile(rootDir, 'connectomeState', 'connectome_ax18a_deWC01wSp_v2.mat');
 synNewFile = fullfile(rootDir, 'connectomeState', 'SynapseAgglos_v4_ax18a_deWC01wSp.mat');
 
 edgesNewFile = fullfile(rootDir, 'SVGDB', 'agglos', 'ax18a_deWC01wSp', 'edges.mat');
