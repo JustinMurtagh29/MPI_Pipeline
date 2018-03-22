@@ -66,7 +66,7 @@ labels = arrayfun( ...
 xticklabels(ax, labels);
 xtickangle(ax, 30);
 
-ylabel(ax, 'Fractional synapses');
+ylabel(ax, 'Fraction of synapses');
 ylim(ax, [0, 1]);
 
 legends = cellfun(@(n) ...
