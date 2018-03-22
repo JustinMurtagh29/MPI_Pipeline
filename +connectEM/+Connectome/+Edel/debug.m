@@ -162,7 +162,7 @@ newSynT = newSynT(uniRows, :);
 
 % Plot
 binEdges = [oldSynT.area; newSynT.area];
-binEdges = linspace(0, prctile(binEdges, 95), 51);
+binEdges = linspace(0, prctile(binEdges, 99), 51);
 
 fig = figure();
 fig.Color = 'white';
