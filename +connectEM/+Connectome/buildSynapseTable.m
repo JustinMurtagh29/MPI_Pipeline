@@ -20,8 +20,6 @@ function synT = buildSynapseTable(conn, synapses, varargin)
         cellfun(@numel, conn.connectome.synIdx));
 
     synT.isSpine = synapses.isSpineSyn(synT.id);
-    synT.isSoma = ismember(synT.postAggloId, ...
-        find(conn.denMeta.targetClass == 'Somata'));
 
     % remove duplicate entries
     [~, uniRows, uniCount] = unique(synT.id);
