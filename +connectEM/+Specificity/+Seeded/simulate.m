@@ -79,21 +79,26 @@ function withConfig(synT, classConn, targetClasses, info, config)
     axonCounts = nan(size(config.seedConfigs));
     for curIdx = 1:numel(config.seedConfigs)
         curSeedConfig = config.seedConfigs(curIdx);
-       [obsConn, obsAxonIds] = forTargetClass( ...
-            synT, classConn, targetClasses, curSeedConfig);
+       [obsConn, obsAxonIds, obsWeights] = ...
+            forTargetClass(synT, classConn, targetClasses, curSeedConfig);
         
         % Restrict to axons of interest
         obsMask = ismember(obsAxonIds, config.axonIds);
         obsConn = obsConn(obsMask, :);
+        obsWeights = obsWeights(obsMask);
         
         % Count axons (for legend)
         axonCounts(curIdx) = size(obsConn, 1);
         
         % Calculate and plot fractional synapses
         obsConn = obsConn ./ sum(obsConn, 2);
-
-        curMu = mean(obsConn, 1);
-        curSigma = std(obsConn, 0, 1);
+        
+        % Calculate (weighted) mean and standard deviation. Axons are
+        % weighted by the probability of being reconstructed in sparse
+        % synapse-seeded reconstructions.
+        curWeights = obsWeights ./ sum(obsWeights);
+        curMu = sum(curWeights .* obsConn, 1);
+        curSigma = std(obsConn, curWeights, 1);
 
         errorbar( ...
             1:numel(curMu), curMu, curSigma, ...
@@ -129,8 +134,8 @@ function withConfig(synT, classConn, targetClasses, info, config)
         'FontWeight', 'normal', 'FontSize', 10);
 end
 
-function [obsConn, axonIds] = forTargetClass( ...
-        seedSynT, classConn, targetClasses, seedConfig)
+function [obsConn, axonIds, axonSeedCount] = ...
+        forTargetClass(seedSynT, classConn, targetClasses, seedConfig)
     % Determine seed synapses
     seedSynMask = ismember(seedSynT.id, seedConfig.synIds);
     seedSynT = seedSynT(seedSynMask, :);
@@ -148,6 +153,10 @@ function [obsConn, axonIds] = forTargetClass( ...
     slotIds = arrayfun( ...
         @(r, c) sub2ind(size(obsConn), r, c), ...
         transpose(1:size(seedSynT, 1)), slotIds);
-    
     obsConn(slotIds) = obsConn(slotIds) - 1;
+    
+    % Determine the number of synapses each axon made onto the seed class.
+    % This information is needed to simulate the seeding probability in
+    % sparse reconstructions.
+    axonSeedCount = obsConn(slotIds) + 1;
 end
