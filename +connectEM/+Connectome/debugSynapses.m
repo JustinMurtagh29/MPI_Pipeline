@@ -6,7 +6,7 @@ clear;
 param = struct;
 param.saveFolder = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 
-connName = 'connectome_axons_18_a_ax_spine_syn_clust';
+connFile = fullfile(param.saveFolder, 'connectomeState', 'connectome_axons_18_a_ax_spine_syn_clust.mat');
 synFile = fullfile(param.saveFolder, 'connectomeState', 'SynapseAgglos_v3_ax_spine_clustered.mat');
 shFile = fullfile(param.saveFolder, 'aggloState', 'dendrites_wholeCells_01_spine_attachment.mat');
 
@@ -16,7 +16,7 @@ info = Util.runInfo();
 maxSegId = Seg.Global.getMaxSegId(param);
 
 syn = load(synFile);
-conn = connectEM.Connectome.load(param, connName);
+conn = load(connFile);
 
 shAgglos = load(shFile, 'shAgglos');
 shAgglos = shAgglos.shAgglos;
@@ -29,15 +29,23 @@ allSpineSynFrac = mean(syn.isSpineSyn);
 shLUT = Agglo.buildLUT(maxSegId, shAgglos);
 
 % Reproduce spine flag
-syn.myIsSpine = cellfun( ...
-    @(ids) any(shLUT(ids)), syn.synapses.postsynId);
+syn.mySpineIds = cellfun( ...
+    @(ids) reshape(setdiff(shLUT(ids), 0), [], 1), ...
+    syn.synapses.postsynId, 'UniformOutput', false);
+syn.myIsSpine = ~cellfun(@isempty, syn.mySpineIds);
 assert(isequal(syn.myIsSpine, syn.isSpineSyn));
+
+allMultiSpineCount = sum( ...
+    cellfun(@numel, syn.mySpineIds) > 1);
 
 fprintf( ...
     '# synapses: %d\n', allSynCount);
 fprintf( ...
     '# synapses onto spines: %d (%.0f %%)\n', ...
     allSpineSynCount, 100 * allSpineSynFrac);
+fprintf( ...
+    '# synapses onto multiple spines: %d\n', ...
+    allMultiSpineCount);
 
 %% Analyse spine heads
 shCount = numel(shAgglos);
@@ -50,8 +58,15 @@ shWithSyn = cellfun( ...
 shWithSynCount = sum(shWithSyn);
 shWithSynFrac = mean(shWithSyn);
 
+[~, ~, synCountPerSh] = unique(cell2mat(syn.mySpineIds));
+synCountPerSh = accumarray(synCountPerSh, 1);
+shWithMultiSynCount = sum(synCountPerSh > 1);
+
 fprintf( ...
     '# spine heads: %d\n', shCount);
 fprintf( ...
     '# spine heads with synapse: %d (%.0f %%)\n', ...
     shWithSynCount, 100 * shWithSynFrac);
+fprintf( ...
+    '# spine heads with multiple synapses: %d\n', ...
+    shWithMultiSynCount);
