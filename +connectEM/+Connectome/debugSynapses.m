@@ -131,3 +131,18 @@ for curIdx = 1:numel(shIds)
 end
 
 skel.write(fullfile(outDir, 'multi-synaptic-spine-heads.nml'));
+
+%% Look at the connectome (which uses the reconstructions)
+synT = connectEM.Connectome.buildSynapseTable(conn, syn);
+
+connSynCount = numel(synT.isSpine);
+connSpineSynCount = sum(synT.isSpine);
+connSpineSynFrac = mean(synT.isSpine);
+
+fprintf( ...
+    'Connectome\n');
+fprintf( ...
+    '# synapses: %d\n', connSynCount);
+fprintf( ...
+    '# spine synapses: %d (%.0f %%)\n', ...
+    connSpineSynCount, 100 * connSpineSynFrac);
