@@ -50,17 +50,29 @@ fprintf( ...
 %% Analyse spine heads
 shCount = numel(shAgglos);
 
-postSynSegIds = cell2mat(syn.synapses.postsynId);
-postSynSegLUT = logical(Agglo.buildLUT(maxSegId, {postSynSegIds}));
+synShMat = [ ...
+    repelem( ...
+        transpose(1:allSynCount), ...
+        cellfun(@numel, syn.mySpineIds)), ...
+    cell2mat(syn.mySpineIds)];
 
-shWithSyn = cellfun( ...
-    @(ids) any(postSynSegLUT(ids)), shAgglos);
+[uniShIds, ~, uniSynIds] = unique(synShMat(:, 2));
+uniSynIds = accumarray( ...
+    uniSynIds, synShMat(:, 1), [], @(ids) {ids});
+clear synShMat;
+
+shT = table;
+shT.id = reshape(1:shCount, [], 1);
+shT.synIds(:) = {zeros(0, 1)};
+shT.synIds(uniShIds) = uniSynIds;
+clear uniShIds uniSynIds;
+
+shWithSyn = ~cellfun(@isempty, shT.synIds);
 shWithSynCount = sum(shWithSyn);
 shWithSynFrac = mean(shWithSyn);
 
-[~, ~, synCountPerSh] = unique(cell2mat(syn.mySpineIds));
-synCountPerSh = accumarray(synCountPerSh, 1);
-shWithMultiSynCount = sum(synCountPerSh > 1);
+shWithMultiSynCount = sum( ...
+    cellfun(@numel, shT.synIds) > 1);
 
 fprintf( ...
     '# spine heads: %d\n', shCount);
@@ -70,3 +82,5 @@ fprintf( ...
 fprintf( ...
     '# spine heads with multiple synapses: %d\n', ...
     shWithMultiSynCount);
+
+%% Look at spine heads with multiple synapses
