@@ -3,17 +3,21 @@
 clear;
 
 %% Configuration
-param = struct;
-param.saveFolder = '/gaba/u/mberning/results/pipeline/20170217_ROI';
+rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
+connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a_ax_spine_syn_clust.mat');
+synFile = fullfile(rootDir, 'connectomeState', 'SynapseAgglos_v3_ax_spine_clustered.mat');
+shFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_01_spine_attachment.mat');
 
-connFile = fullfile(param.saveFolder, 'connectomeState', 'connectome_axons_18_a_ax_spine_syn_clust.mat');
-synFile = fullfile(param.saveFolder, 'connectomeState', 'SynapseAgglos_v3_ax_spine_clustered.mat');
-shFile = fullfile(param.saveFolder, 'aggloState', 'dendrites_wholeCells_01_spine_attachment.mat');
+outDir = '/home/amotta/Desktop';
 
 info = Util.runInfo();
 
 %% Loading data
+param = load(fullfile(rootDir, 'allParameter.mat'));
+param = param.p;
+
 maxSegId = Seg.Global.getMaxSegId(param);
+segPoints = Seg.Global.getSegToPointMap(param);
 
 syn = load(synFile);
 conn = load(connFile);
@@ -84,3 +88,46 @@ fprintf( ...
     shWithMultiSynCount);
 
 %% Look at spine heads with multiple synapses
+shIds = shT.id(cellfun(@numel, shT.synIds) > 1);
+
+% Select random subset
+rng(0);
+shIds = shIds(randperm(numel(shIds), 20));
+
+% Generate skeleton representation
+skel = skeleton();
+skel = Skeleton.setParams4Pipeline(skel, param);
+skel = skel.setDescription(sprintf( ...
+    '%s (%s)', info.filename, info.git_repos{1}.hash));
+
+for curIdx = 1:numel(shIds)
+    curShId = shIds(curIdx);
+    curShAgglo = shAgglos(curShId);
+
+    curSynIds = shT.synIds{curShId};    
+    curSynAgglos = syn.synapses(curSynIds, :);
+    curSynAgglos = cellfun( ...
+        @vertcat, ...
+        curSynAgglos.presynId, ...
+        curSynAgglos.postsynId, ...
+        'UniformOutput', false);
+    
+    curNodes = cellfun( ...
+        @(segIds) segPoints(segIds, :), ...
+       [curShAgglo; curSynAgglos], ...
+        'UniformOutput', false);
+    skel = Skeleton.fromMST( ...
+        curNodes, param.raw.voxelSize, skel);
+    
+    curPrefix = sprintf( ...
+        '%0*d.', ceil(log10(1 + numel(shIds))), curIdx);
+    curNames = [ ...
+       {sprintf('Spine head #%d', curShId)}; ...
+        arrayfun( ...
+            @(id) sprintf('Synapse #%d', id), ...
+            curSynIds, 'UniformOutput', false)];
+    curNames = strcat(curPrefix, {' '}, curNames);
+    skel.names((end - (numel(curNames) - 1)):end) = curNames;
+end
+
+skel.write(fullfile(outDir, 'multi-synaptic-spine-heads.nml'));
