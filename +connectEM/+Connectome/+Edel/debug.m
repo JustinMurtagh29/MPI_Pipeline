@@ -13,7 +13,7 @@ connOldFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a_ax_spi
 synOldFile = fullfile(rootDir, 'connectomeState', 'SynapseAgglos_v3_ax_spine_clustered.mat');
 
 connNewFile = fullfile(rootDir, 'connectomeState', 'connectome_ax18a_deWC01wSp_v4.mat');
-synNewFile = fullfile(rootDir, 'connectomeState', 'SynapseAgglos_v5_ax18a_deWC01wSp.mat');
+synNewFile = fullfile(rootDir, 'connectomeState', 'SynapseAgglos_v5_ax18a_deWC01wSp_withShId.mat');
 
 edgesNewFile = fullfile(rootDir, 'SVGDB', 'agglos', 'ax18a_deWC01wSp', 'edges.mat');
 eqClassFile = fullfile(rootDir, 'SVGDB', 'agglos', 'ax18a_deWC01wSp', 'eClass.mat');
