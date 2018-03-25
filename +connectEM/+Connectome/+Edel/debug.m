@@ -44,6 +44,26 @@ edgesNew = load(edgesNewFile);
 shAgglos = load(shFile);
 shAgglos = shAgglos.shAgglos;
 
+%% Quantitative comparison of synapses
+syns = {synOldFile, synNewFile};
+data = cell(0, numel(syns) + 1);
+
+for curIdx = 1:numel(syns)
+    curSyn = syns{curIdx};
+    curSyn = load(curSyn);
+    
+    data{1, 1} = '# synapses';
+    data{1, 1 + curIdx} = numel(curSyn.isSpineSyn);
+    data{2, 1} = '# spine synapses';
+    data{2, 1 + curIdx} = sum(curSyn.isSpineSyn);
+end
+
+t = cell2table(data(:, 2:end));
+t.Properties.RowNames = data(:, 1);
+[~, t.Properties.VariableNames] = cellfun( ...
+    @fileparts, syns, 'UniformOutput', false);
+disp(t)
+
 %% Generate NML file with somata
 somaAgglos = (connNew.denMeta.targetClass == 'Somata');
 somaAgglos = connNew.dendrites(somaAgglos);
