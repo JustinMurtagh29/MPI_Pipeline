@@ -64,6 +64,15 @@ t.Properties.RowNames = data(:, 1);
     @fileparts, syns, 'UniformOutput', false);
 disp(t)
 
+%% Look at number of spine heads with synapses
+shLUT = Agglo.buildLUT(maxSegId, shAgglos);
+synOld.ontoSpineHeadId = cellfun( ...
+    @(segIds) max(shLUT(segIds)), ...
+    synOld.synapses.postsynId);
+
+shWithSynOld = numel(setdiff(synOld.ontoSpineHeadId, 0));
+shWithSynNew = numel(setdiff(synNew.ontoSpineHeadId, 0));
+
 %% Generate NML file with somata
 somaAgglos = (connNew.denMeta.targetClass == 'Somata');
 somaAgglos = connNew.dendrites(somaAgglos);
