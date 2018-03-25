@@ -110,6 +110,24 @@ fprintf('\n');
 fprintf('# split ASIs (old): %d\n', splitShSynOld);
 fprintf('# split ASIs (new): %d\n', splitShSynNew);
 
+%% Check for secondary spine innervations
+connOld.connectome.shIds = cellfun( ...
+    @(ids) reshape(setdiff(synOld.ontoSpineHeadId(ids), 0), [], 1), ...
+    connOld.connectome.synIdx, 'UniformOutput', false);
+connNew.connectome.shIds = cellfun( ...
+    @(ids) reshape(setdiff(synNew.ontoSpineHeadId(ids), 0), [], 1), ...
+    connNew.connectome.synIdx, 'UniformOutput', false);
+
+[~, ~, secondSynShOld] = unique(cell2mat(connOld.connectome.shIds));
+secondSynShOld = sum(accumarray(secondSynShOld, 1) - 1);
+
+[~, ~, secondSynShNew] = unique(cell2mat(connNew.connectome.shIds));
+secondSynShNew = sum(accumarray(secondSynShNew, 1) - 1);
+
+fprintf('\n');
+fprintf('# secondary spine synapses (old): %d\n', secondSynShOld);
+fprintf('# secondary spine synapses (new): %d\n', secondSynShNew);
+
 %% Generate NML file with somata
 somaAgglos = (connNew.denMeta.targetClass == 'Somata');
 somaAgglos = connNew.dendrites(somaAgglos);
