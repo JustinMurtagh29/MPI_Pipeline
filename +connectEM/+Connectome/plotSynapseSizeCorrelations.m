@@ -4,8 +4,8 @@ clear;
 
 %% configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-synFile = fullfile(rootDir, 'connectomeState', 'SynapseAgglos_v3_ax_spine_clustered.mat');
-connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a_ax_spine_syn_clust.mat');
+synFile = fullfile(rootDir, 'connectomeState', 'SynapseAgglos_v5_ax18a_deWC01wSp_withShId.mat');
+connFile = fullfile(rootDir, 'connectomeState', 'connectome_ax18a_deWC01wSp_v4.mat');
 
 [interSynDir, interSynFile] = fileparts(connFile);
 interSynFile = sprintf('%s_intersynapse.mat', interSynFile);
@@ -22,11 +22,7 @@ info = Util.runInfo();
 % `conn.connectomeMeta`. Each cell contains the synapses sizes of the
 % correponding entries in `conn.connectome`.
 syn = load(synFile);
-interSyn = load(interSynFile);
-
-[~, connName] = fileparts(connFile);
-conn = connectEM.Connectome.load( ...
-    struct('saveFolder', rootDir), connName);
+conn = load(connFile);
 
 %% limit synapses
 synT = table;
@@ -63,23 +59,6 @@ conn.axonMeta.spineFrac = ...
     ./ conn.axonMeta.synCount;
 
 axonClasses = struct;
-
-%{
-% excitatory vs. thalamocortical
-axonClasses(1).axonIds = find( ...
-    conn.axonMeta.synCount >= 10 ...
-  & conn.axonMeta.spineFrac >= 0.5);
-axonClasses(1).synIds = find(ismember( ...
-    synT.preAggloId, axonClasses(1).axonIds));
-axonClasses(1).title = 'Excitatory axons';
-axonClasses(1).tag = 'Exc';
-
-axonClasses(2).axonIds = find(conn.axonMeta.isThalamocortical);
-axonClasses(2).synIds = find(ismember( ...
-    synT.preAggloId, axonClasses(2).axonIds));
-axonClasses(2).title = 'Thalamocortical axons';
-axonClasses(2).tag = 'TC';
-%}
 
 % spine vs. shaft synapses
 axonClasses(1).axonIds = find(conn.axonMeta.synCount);
