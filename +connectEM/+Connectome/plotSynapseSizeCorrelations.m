@@ -46,7 +46,7 @@ synT.occurences = accumarray(uniCount, 1);
 synT(synT.occurences > 1, :) = [];
 synT.occurences = [];
 
-synAreaLim = prctile(synT.area, 99.9);
+synAreaLim = prctile(synT.area, 99);
 
 %% define axon classes
 conn.axonMeta.spineFrac = ...
