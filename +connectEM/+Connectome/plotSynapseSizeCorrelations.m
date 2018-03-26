@@ -7,11 +7,6 @@ rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 synFile = fullfile(rootDir, 'connectomeState', 'SynapseAgglos_v5_ax18a_deWC01wSp_withShId.mat');
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_ax18a_deWC01wSp_v4.mat');
 
-[interSynDir, interSynFile] = fileparts(connFile);
-interSynFile = sprintf('%s_intersynapse.mat', interSynFile);
-interSynFile = fullfile(interSynDir, interSynFile);
-clear interSynDir;
-
 % set this variable to debug
 debugDir = '';
 
