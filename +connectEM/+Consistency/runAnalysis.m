@@ -30,5 +30,50 @@ ctrlFiles = fullfile(ctrlDir, {ctrlFiles.name});
 ctrlSynT = connectEM.Consistency.loadAnnotations(param, ctrlFiles);
 ctrlSynT = vertcat(ctrlSynT{:});
 
-% Calculate synapse areas
-ctrlSynT.area = connectEM.Consistency.calcSynapseAreas(param, graph, ctrlSynT);
+%% Calculate and plot synapse area
+ctrlSynT.area = ...
+    connectEM.Consistency.calcSynapseAreas( ...
+        param, graph, ctrlSynT);
+
+fig = figure();
+fig.Color = 'white';
+
+ax = axes(fig);
+hold(ax, 'on');
+ax.TickDir = 'out';
+
+binEdges = linspace(0, 1.95, 51);
+
+histogram( ...
+    ax, ctrlSynT.area, binEdges, ...
+    'Normalization', 'probability', ...
+    'DisplayStyle', 'stairs', ...
+    'LineWidth', 2);
+xlim(ax, binEdges([1, end]));
+
+xlabel('Axon spine interface area (µm²)');
+ylabel('Probability');
+
+%% Plot control consistency
+ctrlCVs = combnk(1:numel(ctrlSynT.area), 2);
+ctrlCVs = ctrlSynT.area(ctrlCVs);
+ctrlCVs = std(ctrlCVs, 0, 2) ./ mean(ctrlCVs, 2);
+
+fig = figure();
+fig.Color = 'white';
+
+ax = axes(fig);
+hold(ax, 'on');
+ax.TickDir = 'out';
+
+binEdges = linspace(0, 1.5, 21);
+
+histogram( ...
+    ax, ctrlCVs, binEdges, ...
+    'Normalization', 'probability', ...
+    'DisplayStyle', 'stairs', ...
+    'LineWidth', 2)
+xlim(ax, binEdges([1, end]));
+
+xlabel('Coefficient of variation');
+ylabel('Probability');
