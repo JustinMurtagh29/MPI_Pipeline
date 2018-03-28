@@ -8,6 +8,7 @@ rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 thisDir = fileparts(mfilename('fullpath'));
 ctrlDir = fullfile(thisDir, 'annotations', 'random-spine-synapses');
 twoSpineSynDir = fullfile(thisDir, 'annotations', '2-spine-synapses');
+fourSpineSynDir = fullfile(thisDir, 'annotations', '4-spine-synapses');
 
 info = Util.runInfo();
 
@@ -41,17 +42,28 @@ twoSpineSynT = connectEM.Consistency.loadAnnotations(param, twoSpineSynFiles);
 assert(all(cellfun(@(t) size(t, 1), twoSpineSynT) == 2));
 twoSpineSynT = vertcat(twoSpineSynT{:});
 
+%% Load neurite pairs coupled by four synapses
+fourSpineSynFiles = dir(fullfile(fourSpineSynDir, '*.nml'));
+fourSpineSynFiles = fullfile(fourSpineSynDir, {fourSpineSynFiles.name});
+
+fourSpineSynT = connectEM.Consistency.loadAnnotations(param, fourSpineSynFiles);
+assert(all(cellfun(@(t) size(t, 1), fourSpineSynT) == 4));
+fourSpineSynT = vertcat(fourSpineSynT{:});
+
 %% Calculate synapse areas
 ctrlSynT.area = ...
     connectEM.Consistency.calcSynapseAreas(param, graph, ctrlSynT);
 twoSpineSynT.area = ...
     connectEM.Consistency.calcSynapseAreas(param, graph, twoSpineSynT);
+fourSpineSynT.area = ...
+    connectEM.Consistency.calcSynapseAreas(param, graph, fourSpineSynT);
 
 %% Plot synapse area histogram
 legends = { ...
     'Random spine synapses', ...
-    'Spine synapse pairs'};
-binEdges = linspace(0, 1.5, 16);
+    'Spine synapse pairs', ...
+    'Spine synapse quadruples'};
+binEdges = linspace(0, 1.5, 11);
 
 fig = figure();
 fig.Color = 'white';
@@ -69,6 +81,7 @@ plotIt = @(values) ...
         'LineWidth', 2);
 plotIt(ctrlSynT.area);
 plotIt(twoSpineSynT.area);
+plotIt(fourSpineSynT.area);
 
 xlim(ax, binEdges([1, end]));
 xlabel(ax, 'Axon spine interface area (µm²)');
@@ -91,7 +104,8 @@ ax.TickDir = 'out';
 
 groupedAreas = { ...
     ctrlSynT.area; ...
-    twoSpineSynT.area};
+    twoSpineSynT.area; ...
+    fourSpineSynT.area};
 groupVar = repelem( ...
     reshape(1:numel(groupedAreas), [], 1), ...
     cellfun(@numel, groupedAreas));
