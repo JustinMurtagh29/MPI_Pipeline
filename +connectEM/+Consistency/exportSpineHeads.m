@@ -25,7 +25,7 @@ shAgglos = load(shFile, 'shAgglos');
 shAgglos = shAgglos.shAgglos;
 
 %% Export random examples
-rng();
+rng(0);
 randIds = randperm(numel(shAgglos), 25);
 randShAgglos = cellfun( ...
     @(segIds) segPoints(segIds, :), ...
