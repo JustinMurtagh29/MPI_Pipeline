@@ -8,6 +8,8 @@ rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 thisDir = fileparts(mfilename('fullpath'));
 ctrlDir = fullfile(thisDir, 'annotations', 'random-spine-synapses');
 
+info = Util.runInfo();
+
 %% Loading data
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
@@ -40,6 +42,7 @@ fig.Color = 'white';
 
 ax = axes(fig);
 hold(ax, 'on');
+axis(ax, 'square');
 ax.TickDir = 'out';
 
 binEdges = linspace(0, 1.95, 51);
@@ -54,6 +57,10 @@ xlim(ax, binEdges([1, end]));
 xlabel('Axon spine interface area (µm²)');
 ylabel('Probability');
 
+title(ax, ...
+   {info.filename; info.git_repos{1}.hash}, ...
+    'FontWeight', 'normal', 'FontSize', 10);
+
 %% Plot control consistency
 ctrlCVs = combnk(1:numel(ctrlSynT.area), 2);
 ctrlCVs = ctrlSynT.area(ctrlCVs);
@@ -64,6 +71,7 @@ fig.Color = 'white';
 
 ax = axes(fig);
 hold(ax, 'on');
+axis(ax, 'square');
 ax.TickDir = 'out';
 
 binEdges = linspace(0, 1.5, 21);
@@ -77,3 +85,7 @@ xlim(ax, binEdges([1, end]));
 
 xlabel('Coefficient of variation');
 ylabel('Probability');
+
+title(ax, ...
+   {info.filename; info.git_repos{1}.hash}, ...
+    'FontWeight', 'normal', 'FontSize', 10);
