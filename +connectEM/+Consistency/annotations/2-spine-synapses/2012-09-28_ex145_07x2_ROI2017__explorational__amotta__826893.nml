@@ -1,0 +1,68 @@
+<things>
+  <meta name="writer" content="NmlWriter.scala" />
+  <meta name="writerGitCommit" content="e0e6287b31f9a77ddccc03cc44a8587029cc12dc" />
+  <meta name="timestamp" content="1522248958854" />
+  <meta name="annotationId" content="5ab91db92700007730826893" />
+  <meta name="username" content="Alessandro Motta" />
+  <parameters>
+    <experiment name="2012-09-28_ex145_07x2_ROI2017" description="" />
+    <scale x="11.4" y="11.4" z="28.0" />
+    <offset x="0" y="0" z="0" />
+    <time ms="1522081209065" />
+    <editPosition x="2173" y="411" z="924" />
+    <editRotation xRot="0.0" yRot="0.0" zRot="0.0" />
+    <zoomLevel zoom="0.9330147604194654" />
+    <activeNode id="15" />
+  </parameters>
+  <thing id="4" color.r="0.0" color.g="1.0" color.b="0.7568627595901489" color.a="1.0" name="Syn 2, Axon">
+    <nodes>
+      <node id="12" radius="113.99999" x="2243" y="507" z="936" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="8" interpolation="false" time="1522081380279" />
+      <node id="13" radius="113.99999" x="2251" y="458" z="920" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="0" bitDepth="8" interpolation="false" time="1522081388714" />
+      <node id="14" radius="113.99999" x="2256" y="482" z="926" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="0" bitDepth="8" interpolation="false" time="1522081404560" />
+      <node id="15" radius="113.99999" x="2256" y="462" z="924" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="0" bitDepth="8" interpolation="false" time="1522081406243" />
+    </nodes>
+    <edges>
+      <edge source="14" target="15" />
+      <edge source="13" target="14" />
+      <edge source="12" target="13" />
+    </edges>
+  </thing>
+  <thing id="3" color.r="0.8509804010391235" color.g="0.5215686559677124" color.b="0.07058823853731155" color.a="1.0" name="Syn 2, Spine head">
+    <nodes>
+      <node id="10" radius="113.99999" x="2243" y="475" z="935" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="8" interpolation="false" time="1522081356622" />
+      <node id="11" radius="113.99999" x="2254" y="459" z="935" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="8" interpolation="false" time="1522081357241" />
+    </nodes>
+    <edges>
+      <edge source="10" target="11" />
+    </edges>
+  </thing>
+  <thing id="2" color.r="0.0" color.g="0.0" color.b="1.0" color.a="1.0" name="Syn 1, Axon">
+    <nodes>
+      <node id="9" radius="113.99999" x="2348" y="433" z="778" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="0" bitDepth="8" interpolation="false" time="1522081335624" />
+      <node id="6" radius="113.99999" x="2297" y="440" z="787" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="8" interpolation="false" time="1522081292462" />
+      <node id="8" radius="113.99999" x="2287" y="459" z="758" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="0" bitDepth="8" interpolation="false" time="1522081318148" />
+      <node id="7" radius="113.99999" x="2307" y="427" z="798" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="8" interpolation="false" time="1522081298374" />
+      <node id="2" radius="113.99999" x="2320" y="432" z="769" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="8" interpolation="false" time="1522081279794" />
+      <node id="3" radius="113.99999" x="2305" y="434" z="769" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="8" interpolation="false" time="1522081281158" />
+      <node id="4" radius="113.99999" x="2289" y="424" z="774" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="8" interpolation="false" time="1522081283557" />
+      <node id="5" radius="113.99999" x="2337" y="440" z="768" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="8" interpolation="false" time="1522081288567" />
+    </nodes>
+    <edges>
+      <edge source="8" target="9" />
+      <edge source="3" target="8" />
+      <edge source="6" target="7" />
+      <edge source="5" target="6" />
+      <edge source="4" target="5" />
+      <edge source="3" target="4" />
+      <edge source="2" target="3" />
+    </edges>
+  </thing>
+  <thing id="1" color.r="0.6784313917160034" color.g="0.1411764770746231" color.b="0.05098039284348488" color.a="1.0" name="Syn 1, Spine head">
+    <nodes>
+      <node id="1" radius="113.99999" x="2303" y="414" z="769" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="8" interpolation="false" time="1522081255342" />
+    </nodes>
+    <edges />
+  </thing>
+  <branchpoints />
+  <comments />
+</things>
