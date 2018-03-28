@@ -48,6 +48,11 @@ twoSpineSynT.area = ...
     connectEM.Consistency.calcSynapseAreas(param, graph, twoSpineSynT);
 
 %% Plot synapse area histogram
+legends = { ...
+    'Random spine synapses', ...
+    'Spine synapse pairs'};
+binEdges = linspace(0, 1.5, 16);
+
 fig = figure();
 fig.Color = 'white';
 
@@ -55,8 +60,6 @@ ax = axes(fig);
 hold(ax, 'on');
 axis(ax, 'square');
 ax.TickDir = 'out';
-
-binEdges = linspace(0, 2, 21);
 
 plotIt = @(values) ...
     histogram( ...
@@ -68,24 +71,54 @@ plotIt(ctrlSynT.area);
 plotIt(twoSpineSynT.area);
 
 xlim(ax, binEdges([1, end]));
-xlabel('Axon spine interface area (µm²)');
-ylabel('Probability');
+xlabel(ax, 'Axon spine interface area (µm²)');
+ylabel(ax, 'Probability');
 
 legend(ax, ...
-    'Random spine synapses', ...
-    'Spine synapse pairs', ...
-    'Location', 'NorthEast');
+    legends, 'Location', 'NorthEast');
+title(ax, ...
+   {info.filename; info.git_repos{1}.hash}, ...
+    'FontWeight', 'normal', 'FontSize', 10);
+
+%% Box plot of synapse areas
+fig = figure();
+fig.Color = 'white';
+
+ax = axes(fig);
+hold(ax, 'on');
+axis(ax, 'square');
+ax.TickDir = 'out';
+
+groupedAreas = { ...
+    ctrlSynT.area; ...
+    twoSpineSynT.area};
+groupVar = repelem( ...
+    reshape(1:numel(groupedAreas), [], 1), ...
+    cellfun(@numel, groupedAreas));
+groupedAreas = cell2mat(groupedAreas);
+
+boxplot( ...
+    ax, groupedAreas, groupVar, ...
+    'Labels', legends);
+
+ylim(ax, binEdges([1, end]));
+ylabel(ax, 'Axon spine interface area (µm²)');
 
 title(ax, ...
    {info.filename; info.git_repos{1}.hash}, ...
     'FontWeight', 'normal', 'FontSize', 10);
 
 %% Plot control consistency
+legends = { ...
+    'Random spine synapses', ...
+    'Spine synapse pairs'};
+binEdges = linspace(0, 1.5, 16);
+
 ctrlCVs = combnk(1:numel(ctrlSynT.area), 2);
 ctrlCVs = ctrlSynT.area(ctrlCVs);
 ctrlCVs = std(ctrlCVs, 0, 2) ./ mean(ctrlCVs, 2);
 
-twoSpineSynCVs = transpose(reshape(twoSpineSynT.area, 2, {}));
+twoSpineSynCVs = transpose(reshape(twoSpineSynT.area, 2, []));
 twoSpineSynCVs = std(twoSpineSynCVs, 0, 2) ./ mean(twoSpineSynCVs, 2);
 
 fig = figure();
@@ -95,8 +128,6 @@ ax = axes(fig);
 hold(ax, 'on');
 axis(ax, 'square');
 ax.TickDir = 'out';
-
-binEdges = linspace(0, 1.5, 21);
 
 plotIt = @(data) ...
     histogram( ...
@@ -111,10 +142,35 @@ xlim(ax, binEdges([1, end]));
 xlabel('Coefficient of variation');
 ylabel('Probability');
 
-legend(ax, ...
-    'Random spine synapses', ...
-    'Spine synapse pairs', ...
-    'Location', 'NorthEast');
+legend(ax, legends, 'Location', 'NorthEast');
+
+title(ax, ...
+   {info.filename; info.git_repos{1}.hash}, ...
+    'FontWeight', 'normal', 'FontSize', 10);
+
+%% Box plot of consistency
+fig = figure();
+fig.Color = 'white';
+
+ax = axes(fig);
+hold(ax, 'on');
+axis(ax, 'square');
+ax.TickDir = 'out';
+
+groupedAreas = { ...
+    ctrlCVs; ...
+    twoSpineSynCVs};
+groupVar = repelem( ...
+    reshape(1:numel(groupedAreas), [], 1), ...
+    cellfun(@numel, groupedAreas));
+groupedAreas = cell2mat(groupedAreas);
+
+boxplot( ...
+    ax, groupedAreas, groupVar, ...
+    'Labels', legends);
+
+ylim(ax, binEdges([1, end]));
+ylabel(ax, 'Coefficient of variation');
 
 title(ax, ...
    {info.filename; info.git_repos{1}.hash}, ...
