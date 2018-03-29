@@ -98,7 +98,40 @@ title(ax, ...
     'FontWeight', 'normal', 'FontSize', 10);
 
 %% Plot CVs (observed and expected) for all combinations
-% TODO(amotta)
+plotAreas = {twoSpineSynAreas; fourSpineSynAreas};
+plotCount = numel(plotAreas);
+
+fig = figure();
+fig.Color = 'white';
+
+for curIdx = 1:plotCount
+    curAreas = plotAreas{curIdx};
+    curAreas = transpose(curAreas);
+    curAreas = sort(curAreas, 1, 'descend');
+    
+    curCoupling = size(curAreas, 1);
+    curPairs = sortrows(combnk(1:curCoupling, 2));
+   [~, curSortIds] = sort(diff(curPairs, 1, 2), 'ascend');
+    curPairs = curPairs(curSortIds, :);
+    
+    curCVs = reshape(transpose(curPairs), [], 1);
+    curCVs = reshape(curAreas(curCVs, :), 2, size(curPairs, 1), []);
+    curCVs = squeeze(std(curCVs, 0, 1) ./ mean(curCVs, 1));
+    curCVs = transpose(squeeze(curCVs));
+    
+    curAx = subplot(plotCount, 1, curIdx);
+    curLabels = arrayfun( ...
+        @(a, b) sprintf('(%d, %d)', a, b), ...
+        curPairs(:, 1), curPairs(:, 2), ...
+        'UniformOutput', false);
+    boxplot(curAx, curCVs, 'Labels', curLabels);
+    
+    % This needs to come after `boxplot` for some reason.
+    curAx.TickDir = 'out';
+    curAx.YLim = [0, sqrt(2)];
+end
+
+ylabel(curAx, 'Coefficient of variation');
 
 %% Utilities
 function [synT, synAreas] = loadSynapses(param, graph, nmlDir)
