@@ -28,35 +28,10 @@ graph.borderArea = borderAreas(graph.borderIdx);
 clear borderAreas;
 
 %% Loading control data
-ctrlFiles = dir(fullfile(ctrlDir, '*.nml'));
-ctrlFiles = fullfile(ctrlDir, {ctrlFiles.name});
-
-ctrlSynT = connectEM.Consistency.loadAnnotations(param, ctrlFiles);
-ctrlSynT = vertcat(ctrlSynT{:});
-
-%% Load neurite pairs coupled by two synapses
-twoSpineSynFiles = dir(fullfile(twoSpineSynDir, '*.nml'));
-twoSpineSynFiles = fullfile(twoSpineSynDir, {twoSpineSynFiles.name});
-
-twoSpineSynT = connectEM.Consistency.loadAnnotations(param, twoSpineSynFiles);
-assert(all(cellfun(@(t) size(t, 1), twoSpineSynT) == 2));
-twoSpineSynT = vertcat(twoSpineSynT{:});
-
-%% Load neurite pairs coupled by four synapses
-fourSpineSynFiles = dir(fullfile(fourSpineSynDir, '*.nml'));
-fourSpineSynFiles = fullfile(fourSpineSynDir, {fourSpineSynFiles.name});
-
-fourSpineSynT = connectEM.Consistency.loadAnnotations(param, fourSpineSynFiles);
-assert(all(cellfun(@(t) size(t, 1), fourSpineSynT) == 4));
-fourSpineSynT = vertcat(fourSpineSynT{:});
-
-%% Calculate synapse areas
-ctrlSynT.area = ...
-    connectEM.Consistency.calcSynapseAreas(param, graph, ctrlSynT);
-twoSpineSynT.area = ...
-    connectEM.Consistency.calcSynapseAreas(param, graph, twoSpineSynT);
-fourSpineSynT.area = ...
-    connectEM.Consistency.calcSynapseAreas(param, graph, fourSpineSynT);
+loadClosure = @(n) loadSynapses(param, graph, n);
+[ctrlSynT, ctrlSynAreas] = loadClosure(ctrlDir);
+[twoSpineSynT, twoSpineSynAreas] = loadClosure(twoSpineSynDir);
+[fourSpineSynT, fourSpineSynAreas] = loadClosure(fourSpineSynDir);
 
 %% Plot synapse area histogram
 legends = { ...
@@ -189,3 +164,28 @@ ylabel(ax, 'Coefficient of variation');
 title(ax, ...
    {info.filename; info.git_repos{1}.hash}, ...
     'FontWeight', 'normal', 'FontSize', 10);
+
+%% Utilities
+function [synT, synAreas] = loadSynapses(param, graph, nmlDir)
+    import connectEM.Consistency.loadAnnotations;
+    import connectEM.Consistency.calcSynapseAreas;
+    
+    nmlFiles = dir(fullfile(nmlDir, '*.nml'));
+    nmlFiles = fullfile(nmlDir, {nmlFiles.name});
+    nmlFiles = reshape(nmlFiles, [], 1);
+    
+    synT = loadAnnotations(param, nmlFiles);
+    
+    synCount = cellfun(@(t) size(t, 1), synT);
+    synCount = unique(synCount);
+    
+    if isscalar(synCount)
+        groupSize = synCount;
+    else
+        groupSize = 1;
+    end
+    
+    synT = vertcat(synT{:});
+    synT.area = calcSynapseAreas(param, graph, synT);
+    synAreas = transpose(reshape(synT.area, groupSize, []));
+end
