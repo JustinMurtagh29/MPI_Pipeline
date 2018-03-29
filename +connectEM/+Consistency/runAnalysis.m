@@ -103,6 +103,7 @@ plotCount = numel(plotAreas);
 
 fig = figure();
 fig.Color = 'white';
+fig.Position(3:4) = [570, 520];
 
 for curIdx = 1:plotCount
     rng(0);
@@ -121,20 +122,39 @@ for curIdx = 1:plotCount
         allPairs(:, 1), allPairs(:, 2), ...
         'UniformOutput', false);
     
+    curColors = repmat(1:2, 1, size(allPairs, 1));
+    curColors = curAx.ColorOrder(curColors, :);
+    
     curBoxData = [ ...
         reshape(curExpCVs, 1, []), ...
         reshape(curObsCVs, 1, [])];
     curBoxIds = [ ...
         repmat(2 .* (1:size(allPairs, 1)) - 1, 1, size(curExpCVs, 2)), ...
         repmat(2 .* (1:size(allPairs, 1))    , 1, size(curObsCVs, 2))];
-    boxplot(curAx, curBoxData, curBoxIds);
+    boxplot(curAx, curBoxData, curBoxIds, 'Colors', curColors);
     
     % This needs to come after `boxplot` for some reason.
     curAx.TickDir = 'out';
+    curAx.XTick = mean(reshape(curAx.XTick, 2, []), 1);
+    curAx.XTickLabel = curLabels;
     curAx.YLim = [0, sqrt(2)];
 end
 
 ylabel(curAx, 'Coefficient of variation');
+
+% Add fake plot for legend
+curAx = fig.Children(end);
+hold(curAx, 'on');
+
+plot(curAx, nan, nan, 'Color', curColors(1, :));
+plot(curAx, nan, nan, 'Color', curColors(2, :));
+legend(curAx, 'Control', 'Observed');
+
+annotation( ...
+    fig, ...
+    'textbox', [0, 0.9, 1, 0.1], ...
+	'String', {info.filename; info.git_repos{1}.hash}, ...
+    'EdgeColor', 'none', 'HorizontalAlignment', 'center');
 
 %% Utilities
 function [synT, synAreas] = loadSynapses(param, graph, nmlDir)
