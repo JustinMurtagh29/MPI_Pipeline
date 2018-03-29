@@ -97,73 +97,8 @@ title(ax, ...
    {info.filename; info.git_repos{1}.hash}, ...
     'FontWeight', 'normal', 'FontSize', 10);
 
-%% Plot control consistency
-legends = { ...
-    'Random spine synapses', ...
-    'Spine synapse pairs'};
-binEdges = linspace(0, 1.5, 16);
-
-ctrlCVs = combnk(1:numel(ctrlSynT.area), 2);
-ctrlCVs = ctrlSynT.area(ctrlCVs);
-ctrlCVs = std(ctrlCVs, 0, 2) ./ mean(ctrlCVs, 2);
-
-twoSpineSynCVs = transpose(reshape(twoSpineSynT.area, 2, []));
-twoSpineSynCVs = std(twoSpineSynCVs, 0, 2) ./ mean(twoSpineSynCVs, 2);
-
-fig = figure();
-fig.Color = 'white';
-
-ax = axes(fig);
-hold(ax, 'on');
-axis(ax, 'square');
-ax.TickDir = 'out';
-
-plotIt = @(data) ...
-    histogram( ...
-        ax, data, binEdges, ...
-        'Normalization', 'probability', ...
-        'DisplayStyle', 'stairs', ...
-        'LineWidth', 2);
-plotIt(ctrlCVs);
-plotIt(twoSpineSynCVs);
-
-xlim(ax, binEdges([1, end]));
-xlabel('Coefficient of variation');
-ylabel('Probability');
-
-legend(ax, legends, 'Location', 'NorthEast');
-
-title(ax, ...
-   {info.filename; info.git_repos{1}.hash}, ...
-    'FontWeight', 'normal', 'FontSize', 10);
-
-%% Box plot of consistency
-fig = figure();
-fig.Color = 'white';
-
-ax = axes(fig);
-hold(ax, 'on');
-axis(ax, 'square');
-ax.TickDir = 'out';
-
-groupedAreas = { ...
-    ctrlCVs; ...
-    twoSpineSynCVs};
-groupVar = repelem( ...
-    reshape(1:numel(groupedAreas), [], 1), ...
-    cellfun(@numel, groupedAreas));
-groupedAreas = cell2mat(groupedAreas);
-
-boxplot( ...
-    ax, groupedAreas, groupVar, ...
-    'Labels', legends);
-
-ylim(ax, binEdges([1, end]));
-ylabel(ax, 'Coefficient of variation');
-
-title(ax, ...
-   {info.filename; info.git_repos{1}.hash}, ...
-    'FontWeight', 'normal', 'FontSize', 10);
+%% Plot CVs (observed and expected) for all combinations
+% TODO(amotta)
 
 %% Utilities
 function [synT, synAreas] = loadSynapses(param, graph, nmlDir)
