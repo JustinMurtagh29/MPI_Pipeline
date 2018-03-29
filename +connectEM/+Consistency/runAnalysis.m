@@ -106,25 +106,14 @@ fig.Color = 'white';
 
 for curIdx = 1:plotCount
     curAreas = plotAreas{curIdx};
-    curAreas = transpose(curAreas);
-    curAreas = sort(curAreas, 1, 'descend');
-    
-    curCoupling = size(curAreas, 1);
-    curPairs = sortrows(combnk(1:curCoupling, 2));
-   [~, curSortIds] = sort(diff(curPairs, 1, 2), 'ascend');
-    curPairs = curPairs(curSortIds, :);
-    
-    curCVs = reshape(transpose(curPairs), [], 1);
-    curCVs = reshape(curAreas(curCVs, :), 2, size(curPairs, 1), []);
-    curCVs = squeeze(std(curCVs, 0, 1) ./ mean(curCVs, 1));
-    curCVs = transpose(squeeze(curCVs));
+   [curObsCVs, allPairs] = calcCvsForAreas(curAreas);
     
     curAx = subplot(plotCount, 1, curIdx);
     curLabels = arrayfun( ...
         @(a, b) sprintf('(%d, %d)', a, b), ...
-        curPairs(:, 1), curPairs(:, 2), ...
+        allPairs(:, 1), allPairs(:, 2), ...
         'UniformOutput', false);
-    boxplot(curAx, curCVs, 'Labels', curLabels);
+    boxplot(curAx, curObsCVs, 'Labels', curLabels);
     
     % This needs to come after `boxplot` for some reason.
     curAx.TickDir = 'out';
@@ -156,4 +145,20 @@ function [synT, synAreas] = loadSynapses(param, graph, nmlDir)
     synT = vertcat(synT{:});
     synT.area = calcSynapseAreas(param, graph, synT);
     synAreas = transpose(reshape(synT.area, groupSize, []));
+end
+
+function [allCVs, allPairs] = calcCvsForAreas(synAreas)
+    synAreas = transpose(synAreas);
+    synAreas = sort(synAreas, 1, 'descend');
+    
+    coupling = size(synAreas, 1);
+    allPairs = sortrows(combnk(1:coupling, 2));
+   [~, curSortIds] = sort(diff(allPairs, 1, 2), 'ascend');
+    allPairs = allPairs(curSortIds, :);
+    
+    % Coefficient of variation
+    allCVs = reshape(transpose(allPairs), [], 1);
+    allCVs = reshape(synAreas(allCVs, :), 2, size(allPairs, 1), []);
+    allCVs = squeeze(std(allCVs, 0, 1) ./ mean(allCVs, 1));
+    allCVs = transpose(squeeze(allCVs));
 end
