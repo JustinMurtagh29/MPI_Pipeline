@@ -30,6 +30,7 @@ conn = connectEM.Connectome.load( ...
 
 %% limit synapses
 synT = connectEM.Connectome.buildSynapseTable(conn, syn);
+synT.isSoma = (conn.denMeta.targetClass(synT.postAggloId) == 'Somata');
 synAreaLim = prctile(synT.area, 99.9);
 
 %% define axon classes
