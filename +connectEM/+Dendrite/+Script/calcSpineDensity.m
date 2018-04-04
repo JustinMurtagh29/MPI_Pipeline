@@ -46,5 +46,41 @@ trunkSuperAgglos = struct('nodes', trunkSuperAgglos);
 
 %% Calculate path lengths
 Util.log('Calculating path length');
-trunkLens = Superagglos.mstLength( ...
+trunkLensUm = Superagglos.mstLength( ...
     trunkSuperAgglos, param.raw.voxelSize);
+trunkLensUm = trunkLensUm / 1E3;
+
+%% Calculate spine density
+Util.log('Calculating spine density');
+shLUT = Agglo.buildLUT(maxSegId, shAgglos);
+spineIds = cellfun( ...
+    @(segIds) setdiff(shLUT(segIds), 0), ...
+    withSpine, 'UniformOutput', false);
+
+spineCount = cellfun(@numel, spineIds);
+spineDensity = spineCount ./ trunkLensUm;
+
+%%
+minPathLenUm = 10;
+minPathMask = (trunkLensUm >= minPathLenUm);
+
+fig = figure();
+fig.Color = 'white';
+
+ax = axes(fig);
+axis(ax, 'square');
+hold(ax, 'on');
+
+binEdges = linspace(0, 1.5, 51);
+histogram(ax, ...
+    spineDensity, binEdges, ...
+    'DisplayStyle', 'stairs', ...
+    'LineWidth', 2);
+histogram(ax, ...
+    spineDensity(minPathMask), binEdges, ...
+    'DisplayStyle', 'stairs', ...
+    'LineWidth', 2);
+
+ax.TickDir = 'out';
+xlabel(ax, 'Spine density (µm^{-1})');
+ylabel(ax, 'Dendrites');
