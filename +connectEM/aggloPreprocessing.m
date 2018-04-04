@@ -821,7 +821,7 @@ if  ~existentWC(8)
     indAIS = cat(1,indAIS,false(numel(wholeCellsNoAxon),1));
     [ myelinDend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
     
-    save(fullfile(outputFolder,'wholeCells_autoAxon_08.mat'),'wholeCells');
+    save(fullfile(outputFolder,'wholeCells_08.mat'),'wholeCells');
     
     save(fullfile(outputFolder,'dendrites_wholeCells_01.mat'),'dendrites','myelinDend','indBigDends','indWholeCells','indAIS')%,'info');
 end
