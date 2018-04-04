@@ -4,10 +4,10 @@ clear;
 
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-synFile = fullfile(rootDir, 'connectomeState', 'SynapseAgglos_v3_ax_spine_clustered.mat');
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a_ax_spine_syn_clust.mat');
+outDir = '/home/amotta/Desktop';
 
-minSynCount = 10;
+showPlots = true;
 info = Util.runInfo();
 
 %% Loading data
@@ -17,10 +17,12 @@ param = param.p;
 points = Seg.Global.getSegToPointMap(param);
 
 conn = load(connFile);
-syn = load(synFile);
 
 %% Based on spine synapse fraction
 % This is justified according to Yunfeng's data
+minSynCount = 10;
+spineSynFracThresh = 0.5;
+
 candIds = find( ...
     conn.denMeta.synCount >= minSynCount ...
   & conn.denMeta.targetClass ~= 'Somata');
@@ -28,12 +30,58 @@ candIds = find( ...
 spineSynFrac = ...
     conn.denMeta.spineSynCount ...
     ./ conn.denMeta.synCount;
-candIds(spineSynFrac(candIds) > 0.5) = [];
+
+if showPlots
+    binEdges = linspace(0, 1, 51);
+    
+    fig = figure();
+    fig.Color = 'white';
+    fig.Position(3:4) = [600, 600];
+    
+    ax = axes(fig);
+    axis(ax, 'square');
+    
+    yyaxis(ax, 'right');
+    histogram(ax, ...
+        spineSynFrac(candIds), binEdges, ...
+        'Normalization', 'cdf', ...
+        'DisplayStyle', 'stairs', ...
+        'LineWidth', 2);
+    ylabel(ax, 'Cumulative distribution function');
+    
+    yyaxis(ax, 'left');
+    hold(ax, 'on');
+    histogram(ax, ...
+        spineSynFrac(candIds), binEdges, ...
+        'DisplayStyle', 'stairs', ...
+        'LineWidth', 2);
+    plot(ax, ...
+        repelem(spineSynFracThresh, 1, 2), ...
+        ylim(ax), 'Color', 'black', 'LineStyle', '--');
+    ylabel(ax, 'Dendrites');
+    
+    ax.TickDir = 'out';
+    xlim(ax, binEdges([1, end]));
+    xlabel(ax, 'Spine synapse fraction');
+    
+    annotation(fig, ...
+        'textbox', [0, 0.9, 1, 0.1], ...
+        'String', { ...
+            info.filename; info.git_repos{1}.hash;
+            sprintf( ...
+                '%d dendrites with >= %d synapses', ...
+                numel(candIds), minSynCount)}, ...
+        'EdgeColor', 'none', 'HorizontalAlignment', 'center');
+end
+
+smoothIds = candIds;
+smoothIds(spineSynFrac(smoothIds) > spineSynFracThresh) = [];
 
 %% Export to webKNOSSOS
 rng(0);
-randIds = randperm(numel(candIds));
-randIds = reshape(candIds(randIds(1:25)), 1, []);
+randIds = randperm(numel(smoothIds));
+randIds = smoothIds(randIds(1:25));
+randIds = reshape(randIds, 1, []);
 
 dendPoints = cellfun( ...
     @(segIds) points(segIds, :), ...
@@ -52,3 +100,4 @@ skel.names = dendNames;
 skel = Skeleton.setParams4Pipeline(skel, param);
 skel = skel.setDescription(sprintf( ...
     '%s (%s)', info.filename, info.git_repos{1}.hash));
+skel.write(fullfile(outDir, 'smooth-dendrite-candidates.nml'));
