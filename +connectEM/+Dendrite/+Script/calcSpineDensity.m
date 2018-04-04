@@ -2,14 +2,18 @@
 % trunk. This is done by calculating the MST after removing spine head and
 % neck segments.
 %
+% TODO
+% * Exclude whole cells by brute force
+%
 % Written by
 %   Alessandro Motta <alessandro.motta@brain.mpg.de>
 clear;
 
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-sansSpineFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_01_v2.mat');
-withSpineFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_01_spine_attachment.mat');
+trunkFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_01_v2.mat');
+shFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_01_spine_attachment.mat');
+connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a_ax_spine_syn_clust.mat');
 outDir = '/home/amotta/Desktop';
 
 info = Util.runInfo();
@@ -22,23 +26,32 @@ param = param.p;
 maxSegId = Seg.Global.getMaxSegId(param);
 segPoints = Seg.Global.getSegToPointMap(param);
 
-sansSpine = load(sansSpineFile);
-sansSpine = sansSpine.dendrites(sansSpine.indBigDends);
-sansSpine = Agglo.fromSuperAgglo(sansSpine);
+% Dendrite prior to spine attachment
+trunks = load(trunkFile);
+trunks = trunks.dendrites(trunks.indBigDends);
+trunks = Agglo.fromSuperAgglo(trunks);
 
-withSpine = load(withSpineFile);
-shAgglos = withSpine.shAgglos;
-withSpine = withSpine.dendAgglos(withSpine.indBigDends);
+% Spine heads
+shAgglos = load(shFile);
+shAgglos = shAgglos.shAgglos;
+
+% Connectome (and dendrites after spine attachment)
+conn = load(connFile);
+dendrites = conn.dendrites;
+
+somata = (conn.denMeta.targetClass == 'Somata');
+somata = conn.dendrites(somata);
 
 %% Remove spine heads and necks from dendrites
 Util.log('Removing spine heads and necks');
 mask = false(maxSegId, 1);
-mask(cell2mat(sansSpine)) = true;
+mask(cell2mat(trunks)) = true;
 mask(cell2mat(shAgglos)) = false;
+mask(cell2mat(somata)) = false;
 
 trunkAgglos = cellfun( ...
     @(segIds) segIds(mask(segIds)), ...
-    withSpine, 'UniformOutput', false);
+    dendrites, 'UniformOutput', false);
 
 trunkSuperAgglos = cellfun( ...
     @(segIds) segPoints(segIds, :), ...
@@ -56,14 +69,17 @@ Util.log('Calculating spine density');
 shLUT = Agglo.buildLUT(maxSegId, shAgglos);
 spineIds = cellfun( ...
     @(segIds) setdiff(shLUT(segIds), 0), ...
-    withSpine, 'UniformOutput', false);
+    dendrites, 'UniformOutput', false);
 
 spineCount = cellfun(@numel, spineIds);
 spineDensity = spineCount ./ trunkLensUm;
 
 %% Plot spine densities
-minPathLenUm = 10;
-minPathMask = (trunkLensUm >= minPathLenUm);
+minSynCount = 10;
+maxSpinesPerUm = 0.4;
+dendSubMask = ...
+    (conn.denMeta.targetClass ~= 'Somata') ...
+  & (conn.denMeta.synCount >= minSynCount);
 
 fig = figure();
 fig.Color = 'white';
@@ -79,7 +95,7 @@ histogram(ax, ...
     'DisplayStyle', 'stairs', ...
     'LineWidth', 2);
 histogram(ax, ...
-    spineDensity(minPathMask), binEdges, ...
+    spineDensity(dendSubMask), binEdges, ...
     'DisplayStyle', 'stairs', ...
     'LineWidth', 2);
 
@@ -89,7 +105,7 @@ ylabel(ax, 'Dendrites');
 
 legend(ax, ...
     'All dendrites', ...
-    sprintf('All dendrites >= %d µm', minPathLenUm));
+    sprintf('All dendrites with >= %d synapses', minSynCount));
 
 annotation(fig, ...
     'textbox', [0, 0.9, 1, 0.1], ...
@@ -100,10 +116,9 @@ annotation(fig, ...
 %% Export examples to webKNOSSOS
 % Very rough threshold based on table 2 from
 % Kawaguchi, Karuba, Kubota (2006) Cereb Cortex
-maxSpinesPerUm = 0.25;
 
 randIds = find( ...
-    minPathMask & ...
+    dendSubMask & ...
     spineDensity <= maxSpinesPerUm);
 randIds = randIds(randperm(numel(randIds)));
 randIds = randIds(1:25);
@@ -115,7 +130,7 @@ skel = skel.setDescription(sprintf( ...
 
 randNodes = cellfun( ...
     @(segIds) segPoints(segIds, :), ...
-    withSpine(randIds), 'UniformOutput', false);
+    dendrites(randIds), 'UniformOutput', false);
 randNames = arrayfun( ...
     @(idx, id, rho) sprintf( ...
         '%0*d. Dendrite %g. %.2f spines / µm', ...
