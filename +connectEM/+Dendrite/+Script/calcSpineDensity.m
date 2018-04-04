@@ -60,12 +60,13 @@ spineIds = cellfun( ...
 spineCount = cellfun(@numel, spineIds);
 spineDensity = spineCount ./ trunkLensUm;
 
-%%
+%% Plot spine densities
 minPathLenUm = 10;
 minPathMask = (trunkLensUm >= minPathLenUm);
 
 fig = figure();
 fig.Color = 'white';
+fig.Position(3:4) = [480, 440];
 
 ax = axes(fig);
 axis(ax, 'square');
@@ -84,3 +85,13 @@ histogram(ax, ...
 ax.TickDir = 'out';
 xlabel(ax, 'Spine density (µm^{-1})');
 ylabel(ax, 'Dendrites');
+
+legend(ax, ...
+    'All dendrites', ...
+    sprintf('All dendrites >= %d µm', minPathLenUm));
+
+annotation(fig, ...
+    'textbox', [0, 0.9, 1, 0.1], ...
+    'String', {info.filename; info.git_repos{1}.hash}, ...
+    'HorizontalAlignment', 'center', ...
+    'EdgeColor', 'none');
