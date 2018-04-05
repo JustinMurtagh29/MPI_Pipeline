@@ -13,7 +13,7 @@ clear;
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 trunkFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_01_v2.mat');
-shFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_01_spine_attachment.mat');
+spinyFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_01_spine_attachment.mat');
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a_ax_spine_syn_clust.mat');
 outDir = '/home/amotta/Desktop';
 
@@ -22,6 +22,13 @@ outDir = '/home/amotta/Desktop';
 maxSpinesPerUm = 0.4;
 minSynCount = 10;
 
+% Coordinates of interneuron (IN) somata
+% KAMIN cell #28 is missing because its soma is not within the dataset and
+% is thus not among our set of "whole cells".
+inSomaPos = [ ...
+    453, 4416, 2507;  % KAMIN cell #21
+    3858, 5265, 395]; % KAMIN cell #29
+    
 info = Util.runInfo();
 
 %% Loading data
@@ -38,8 +45,9 @@ trunks = trunks.dendrites(trunks.indBigDends);
 trunks = Agglo.fromSuperAgglo(trunks);
 
 % Spine heads
-shAgglos = load(shFile);
-shAgglos = shAgglos.shAgglos;
+spiny = load(spinyFile);
+spineHeads = spiny.shAgglos;
+spinyWholeCells = spiny.dendAgglos(spiny.indWholeCells);
 
 % Connectome (and dendrites after spine attachment)
 conn = load(connFile);
@@ -52,7 +60,7 @@ somata = conn.dendrites(somata);
 Util.log('Removing spine heads and necks');
 mask = false(maxSegId, 1);
 mask(cell2mat(trunks)) = true;
-mask(cell2mat(shAgglos)) = false;
+mask(cell2mat(spineHeads)) = false;
 mask(cell2mat(somata)) = false;
 
 trunkAgglos = cellfun( ...
@@ -64,6 +72,25 @@ trunkSuperAgglos = cellfun( ...
     trunkAgglos, 'UniformOutput', false);
 trunkSuperAgglos = struct('nodes', trunkSuperAgglos);
 
+%% Find IN whole cells
+somaPos = cell2mat(cellfun( ...
+    @(ids) mean(segPoints(ids, :), 1), ...
+    somata, 'UniformOutput', false));
+
+inSomaIds = pdist2( ...
+    param.raw.voxelSize .* somaPos, ...
+    param.raw.voxelSize .* inSomaPos);
+[~, inSomaIds] = min(inSomaIds, [], 1);
+
+inSomaSegIds = somata(inSomaIds);
+inSomaLUT = Agglo.buildLUT(maxSegId, inSomaSegIds);
+
+inSpinyWholeCellIds = cellfun( ...
+    @(ids) setdiff(inSomaLUT(ids), 0), ...
+    spinyWholeCells, 'UniformOutput', false);
+inSpinyWholeCellIds = find(~cellfun(@isempty, inSpinyWholeCellIds));
+assert(numel(inSpinyWholeCellIds) == numel(inSomaIds));
+
 %% Calculate path lengths
 Util.log('Calculating path length');
 trunkLensUm = Superagglos.mstLength( ...
@@ -72,7 +99,7 @@ trunkLensUm = trunkLensUm / 1E3;
 
 %% Calculate spine density
 Util.log('Calculating spine density');
-shLUT = Agglo.buildLUT(maxSegId, shAgglos);
+shLUT = Agglo.buildLUT(maxSegId, spineHeads);
 spineIds = cellfun( ...
     @(segIds) setdiff(shLUT(segIds), 0), ...
     dendrites, 'UniformOutput', false);
