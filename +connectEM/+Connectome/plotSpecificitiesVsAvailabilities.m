@@ -58,7 +58,7 @@ for classIdx = 1:numel(targetClasses)
     
     ax = subplot(1, numel(targetClasses), classIdx);
     
-    ax.Color = 'black';
+    ax.Color = 'white';
     ax.TickDir = 'out';
     
     colormap(ax, cmap);
@@ -81,6 +81,9 @@ end
 yMax = max(arrayfun(@(a) a.YLim(end), fig.Children));
 [fig.Children.YLim] = deal([0, yMax]);
 ylabel(fig.Children(end), 'Availability');
+
+% X axis (as for panel 4c)
+[fig.Children.XLim] = deal([0, 50]);
 
 % colorbar
 oldPos = ax.Position;
