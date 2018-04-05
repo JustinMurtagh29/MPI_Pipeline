@@ -57,6 +57,7 @@ axonClasses(2).title = 'Thalamocortical axons';
 axonClasses(2).tag = 'TC';
 %}
 
+%{
 % spine vs. shaft synapses
 axonClasses(1).axonIds = find(conn.axonMeta.synCount);
 axonClasses(1).synIds = find(synT.isSpine);
@@ -67,6 +68,16 @@ axonClasses(2).axonIds = find(conn.axonMeta.synCount);
 axonClasses(2).synIds = find(~synT.isSpine & ~synT.isSoma);
 axonClasses(2).title = 'Shaft synapses';
 axonClasses(2).tag = 'Sh';
+%}
+
+% Excitatory axons
+axonClasses(1).axonIds = find( ...
+    conn.axonMeta.synCount >= 10 ...
+  & conn.axonMeta.spineFrac >= 0.5);
+axonClasses(1).synIds = find(synT.isSpine & ...
+    ismember(synT.preAggloId, axonClasses(1).axonIds));
+axonClasses(1).title = 'Excitatory axons';
+axonClasses(1).tag = 'Exc';
 
 %% plot distribution of synapse size
 binEdges = linspace(0, synAreaLim, 51);
@@ -308,6 +319,82 @@ for curCoupling = controlCouplings
     xlabel(curAx, 'CV of largest two AIS');
     ylabel(curAx, 'Probability');
 end
+
+%% ASI sizes (in log scale)
+plotCouplings = 2:5;
+fig = figure();
+fig.Color = 'white';
+fig.Position(3:4) = [960, 1090];
+
+for curCouplingIdx = 1:numel(plotCouplings)
+    curCoupling = plotCouplings(curCouplingIdx);
+    
+    synAreas = zeros(0, 1);
+    synGroups = zeros(0, 1);
+
+    for curClassIdx = 1:numel(axonClasses)
+        curAxonIds = axonClasses(curClassIdx).axonIds;
+        curSynIds = axonClasses(curClassIdx).synIds;
+        
+        curSynGroups = synT(curSynIds, {'preAggloId', 'postAggloId'});
+       [~, ~, curSynGroups] = unique(curSynGroups, 'rows');
+       
+        curSynAreas = accumarray( ...
+            curSynGroups, synT.area(curSynIds), ...
+            [], @(areas) {sort(areas, 'descend')});
+        
+        curSynGroups = accumarray(curSynGroups, 1);
+        curSynAreas(curSynGroups ~= curCoupling) = [];
+        
+        curSynGroups = transpose(repmat( ...
+            1:curCoupling, 1, numel(curSynAreas)));
+        curSynGroups = (curSynGroups - 1) ...
+            * numel(axonClasses) + curClassIdx;
+        curSynAreas = cell2mat(curSynAreas);
+        
+        synAreas = [synAreas; curSynAreas(:)]; %#ok
+        synGroups = [synGroups; curSynGroups(:)]; %#ok
+    end
+    
+    curGroupLabels = arrayfun(@(i) sprintf( ...
+        '(%d) (%s)', ...
+        ceil(i / numel(axonClasses)), ...
+        axonClasses(1 + mod(i - 1, numel(axonClasses))).tag), ...
+        unique(synGroups), 'UniformOutput', false);
+    curGroupIds = mod(synGroups - 1, numel(axonClasses));
+    
+    figure(fig);
+    curAx = subplot(numel(plotCouplings), 1, curCouplingIdx);
+    synAreasLog = log10(synAreas);
+    
+    boxplot( ...
+        curAx, synAreasLog, synGroups, ...
+        'Labels', curGroupLabels, ...
+        'Colors', curAx.ColorOrder, ...
+        'ColorGroup', curGroupIds, ...
+        'Symbol', '.');
+    
+    curAx.TickDir = 'out';
+    curAx.XTickLabelRotation = 30;
+end
+
+xlabel(curAx, 'Synapse');
+ylabel(curAx, 'log_{10}(ASI)');
+
+xMax = max(arrayfun(@(a) a.XLim(end), fig.Children));
+yLims = cell2mat(arrayfun( ...
+    @(a) a.YLim, fig.Children(:), ...
+    'UniformOutput', false));
+yLims = prctile(yLims(:), [0, 100]);
+
+[fig.Children.XLim] = deal([0, xMax]);
+[fig.Children.YLim] = deal(yLims);
+
+annotation( ...
+    fig, ...
+    'textbox', [0, 0.9, 1, 0.1], ...
+	'String', {info.filename; info.git_repos{1}.hash}, ...
+    'EdgeColor', 'none', 'HorizontalAlignment', 'center');
 
 %% ASI variability for all combinations
 plotCouplings = 2:5;
