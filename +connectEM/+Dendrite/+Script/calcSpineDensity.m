@@ -3,7 +3,8 @@
 % neck segments.
 %
 % TODO
-% * Exclude whole cells by brute force
+% * Exclude whole cells by brute force, or
+% * Make sure that only IN whole cells are detected
 %
 % Written by
 %   Alessandro Motta <alessandro.motta@brain.mpg.de>
