@@ -17,6 +17,11 @@ shFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_01_spine_attachme
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a_ax_spine_syn_clust.mat');
 outDir = '/home/amotta/Desktop';
 
+% Very rough threshold based on table 2 from
+% Kawaguchi, Karuba, Kubota (2006) Cereb Cortex
+maxSpinesPerUm = 0.4;
+minSynCount = 10;
+
 info = Util.runInfo();
 
 %% Loading data
@@ -76,10 +81,9 @@ spineCount = cellfun(@numel, spineIds);
 spineDensity = spineCount ./ trunkLensUm;
 
 %% Plot spine densities
-minSynCount = 10;
-maxSpinesPerUm = 0.4;
-dendSubMask = ...
+candMask = ...
     (conn.denMeta.targetClass ~= 'Somata') ...
+  & (conn.denMeta.targetClass ~= 'WholeCell') ...
   & (conn.denMeta.synCount >= minSynCount);
 
 fig = figure();
@@ -96,7 +100,7 @@ histogram(ax, ...
     'DisplayStyle', 'stairs', ...
     'LineWidth', 2);
 histogram(ax, ...
-    spineDensity(dendSubMask), binEdges, ...
+    spineDensity(candMask), binEdges, ...
     'DisplayStyle', 'stairs', ...
     'LineWidth', 2);
 
@@ -114,13 +118,11 @@ annotation(fig, ...
     'HorizontalAlignment', 'center', ...
     'EdgeColor', 'none');
 
-%% Export examples to webKNOSSOS
-% Very rough threshold based on table 2 from
-% Kawaguchi, Karuba, Kubota (2006) Cereb Cortex
+%% Select smooth dendrites
+smoothIds = find(candMask & (spineDensity <= maxSpinesPerUm));
 
-randIds = find( ...
-    dendSubMask & ...
-    spineDensity <= maxSpinesPerUm);
+%% Export examples to webKNOSSOS
+randIds = smoothIds;
 randIds = randIds(randperm(numel(randIds)));
 randIds = randIds(1:25);
 
