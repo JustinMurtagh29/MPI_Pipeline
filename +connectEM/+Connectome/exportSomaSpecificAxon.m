@@ -10,6 +10,10 @@ outDir = '/home/amotta/Desktop/soma-specific-axons';
 
 minSynPre = 10;
 minSomaSpec = 0.3;
+
+% Set to export only these axons
+chosenAxonIds = [630]; %#ok
+
 info = Util.runInfo();
 
 %% Loading data
@@ -36,7 +40,14 @@ inhSomaSpecs = inhSomaSpecs(:, somaMask) ./ sum(inhSomaSpecs, 2);
 inhSomaSpecAxonIds = inhAxonIds;
 inhSomaSpecAxonIds(inhSomaSpecs < minSomaSpec) = [];
 
-%% Export examples to webKNOSSOS
+%% Export to webKNOSSOS
+if ~exist('chosenAxonIds', 'var') ...
+        || isempty(chosenAxonIds)
+	exportAxonIds = inhSomaSpecAxonIds;
+else
+    exportAxonIds = chosenAxonIds(:);
+end
+
 synT = connectEM.Connectome.buildSynapseTable(conn, syn);
 synT.ontoSoma = conn.denMeta.targetClass(synT.postAggloId);
 synT.ontoSoma = (synT.ontoSoma == 'Somata');
@@ -47,32 +58,38 @@ skel = skel.setDescription(sprintf( ...
     '%s (%s)', info.filename, info.git_repos{1}.hash));
 
 somaStrings = {'', ' (Onto soma)'};
-numDigits = ceil(log10(1 + numel(inhSomaSpecAxonIds)));
+numDigits = ceil(log10(1 + numel(exportAxonIds)));
 
-for curIdx = 1:numel(inhSomaSpecAxonIds)
-    curId = inhSomaSpecAxonIds(curIdx);
+for curIdx = 1:numel(exportAxonIds)
+    curId = exportAxonIds(curIdx);
     curAxon = conn.axons(curId);
     
-    curSynMask = (synT.preAggloId == curId);
-    curSomaSynMask = synT.ontoSoma(curSynMask);
-    curSynIds = synT.id(curSynMask);
+    curSynT = synT(synT.preAggloId == curId, :);
+    curSomaIds = unique(curSynT.postAggloId(curSynT.ontoSoma));
     
     curSyn = cellfun(@vertcat, ...
-        syn.synapses.presynId(curSynIds), ...
-        syn.synapses.postsynId(curSynIds), ...
+        syn.synapses.presynId(curSynT.id), ...
+        syn.synapses.postsynId(curSynT.id), ...
         'UniformOutput', false);
+    curSomata = conn.dendrites(curSomaIds);
     
-    curNodes = cat(1, curAxon, curSyn);
     curNodes = cellfun( ...
         @(segIds) segPoints(segIds, :), ...
-        curNodes, 'UniformOutput', false);
-    curSkel = Skeleton.fromMST(curNodes, param.raw.voxelSize, skel);
+        [curAxon; curSyn; curSomata], ...
+        'UniformOutput', false);
+    curNames = [ ...
+       {sprintf('Axon %d', curId)};
+        arrayfun( ...
+            @(id, somaFlag) sprintf( ...
+                'Synapse %d%s', id, somaStrings{1 + somaFlag}), ...
+            curSynT.id, curSynT.ontoSoma, 'UniformOutput', false); ...
+        arrayfun( ...
+            @(id) sprintf('Soma (Dendrite %d)', id), ...
+            curSomaIds, 'UniformOutput', false)];
     
-    curSkel.names{1} = sprintf('Axon %d', curId);
-    curSkel.names(2:end) = arrayfun( ...
-        @(id, somaFlag) sprintf( ...
-            'Synapse %d%s', id, somaStrings{1 + somaFlag}), ...
-        curSynIds, curSomaSynMask, 'UniformOutput', false);
+    curSkel = Skeleton.fromMST( ...
+        curNodes, param.raw.voxelSize, skel);
+    curSkel.names = curNames;
     
     curSkelName = sprintf('%0*d_axon-%d.nml', numDigits, curIdx, curId);
     curSkel.write(fullfile(outDir, curSkelName));
