@@ -1,4 +1,4 @@
-function [ fracMyelinAggloBorder,aggloNeighBordersMyelin, aggloNeighBordersNoMyelin ] = calculateSurfaceMyelinScore( agglos, graph, borderMeta, heuristics )
+function [ fracMyelinAggloBorder,aggloNeighBordersMyelin, aggloNeighBordersNoMyelin,myelinatedNeighbours ] = calculateSurfaceMyelinScore( agglos, graph, borderMeta, heuristics )
 % calculates the fraction of myelinated borders of each agglomeration
 % INPUT
 % agglos        either old (equivalence classes with segment Ids) or new
@@ -26,12 +26,14 @@ agglos = Superagglos.transformAggloNewOldRepr(agglos);
 fracMyelinAggloBorder = NaN(numel(agglos),1);
 aggloNeighBordersMyelin = cell(numel(agglos),1);
 aggloNeighBordersNoMyelin = aggloNeighBordersMyelin;
+myelinatedNeighbours = cell(numel(agglos),1);
 % go through all agglos
 tic
 for n=1:numel(agglos)
     aggloNeighBorders = cat(1,graph.neighBorderIdx{agglos{n}}); % get all border IDs that belong to each agglomeration (outside and inbetween)
     aggloNeighBorders = aggloNeighBorders(indaggloneighbours{n});% get only those borders at the shell of each agglomeration
     ismyelin = heuristics.myelinScore(aggloNeighbours{n})>0.5;  % get index to borders which have a myelin score above 0.5
+    myelinatedNeighbours{n} = aggloNeighbours{n}(ismyelin);
     % get indices to the borders which are no corresponding edge and either
     % myelinated or not
     aggloNeighBordersMyelin{n} = aggloNeighBorders(~isnan(aggloNeighBorders) & ismyelin);
