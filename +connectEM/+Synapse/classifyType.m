@@ -11,7 +11,7 @@ clear;
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 shFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_01_spine_attachment.mat');
-somaFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a_ax_spine_syn_clust.mat');
+connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a_ax_spine_syn_clust.mat');
 synFile = fullfile(rootDir, 'connectomeState', 'SynapseAgglos_v3_ax_spine_clustered.mat');
 
 % As in Benedikt's +L4/updateParamsToNewestFiles.m
@@ -40,17 +40,20 @@ shAgglos = load(shFile, 'shAgglos');
 shAgglos = shAgglos.shAgglos;
 
 % Somata
-somaAgglos = load(somaFile, 'dendrites', 'denMeta');
-somaAgglos = somaAgglos.dendrites( ...
-    somaAgglos.denMeta.targetClass == 'Somata');
+conn = load(connFile);
+
+somaAgglos = (conn.denMeta.targetClass == 'Somata');
+somaAgglos = conn.dendrites(somaAgglos);
+axonAgglos = conn.axons;
 
 % Synapses
-synapses = load(synFile, 'synapses');
-synapses = synapses.synapses;
+syn = load(synFile);
+synapses = syn.synapses;
 
 %%
 % Building look-up tables
 % Soma class dominates over spine heads
+axonLUT = Agglo.buildLUT(maxSegId, axonAgglos);
 somaLUT = Agglo.buildLUT(maxSegId, somaAgglos);
 shLUT = Agglo.buildLUT(maxSegId, shAgglos);
 shLUT(somaLUT ~= 0) = 0;
@@ -66,12 +69,12 @@ synapses.synScores = cellfun( ...
 assert(all(cellfun(@min, synapses.synScores) > -1.67));
 synapses.maxSynScore = cellfun(@max, synapses.synScores);
 
-synapses.somaId = cellfun( ...
-    @(segIds) max(somaLUT(segIds)), ...
-    synapses.postsynId);
 synapses.shId = cellfun( ...
     @(segIds) max(shLUT(segIds)), ...
     synapses.postsynId);
+synapses.axonId = cellfun( ...
+    @(segIds) max(axonLUT(segIds)), ...
+    synapses.presynId);
 
 %% Separate primary from secondary spine synapses
 shSynIds = accumarray( ...
@@ -92,20 +95,47 @@ shT = table;
 shT.id = reshape( ...
     1:numel(shAgglos), [], 1);
 
-mask = ~cellfun(@isempty, shSynIds);
+shT(cellfun(@isempty, shSynIds), :) = [];
+shSynIds(cellfun(@isempty, shSynIds)) = [];
 
-shT.priSynId(:) = 0;
-shT.priSynId(mask) = cellfun( ...
-    @(synIds) synIds(end), shSynIds(mask));
+shT.priSynId = cellfun( ...
+    @(synIds) synIds(end), shSynIds);
+shT.secSynIds = cellfun( ...
+    @(synIds) reshape(synIds(1:(end - 1)), [], 1), ...
+    shSynIds, 'UniformOutput', false);
 
-shT.secSynIds(:) = {zeros(0, 1)};
-shT.secSynIds(mask) = cellfun( ...
-    @(synIds) synIds(1:(end - 1)), ...
-    shSynIds(mask), 'UniformOutput', false);
+%% Handle split spine synapses
+priSpineSynIds = ismember(synapses.id, shT.priSynId);
+priSpineSynIds = synapses(priSpineSynIds, :);
 
-clear mask;
+priSpineSynIds = ismember( ...
+    synapses(:,  {'shId', 'axonId'}), ...
+    priSpineSynIds(:, {'shId', 'axonId'}), 'rows');
+priSpineSynIds = synapses.id(priSpineSynIds);
+
+secSpineSynIds = cell2mat(shT.secSynIds);
+secSpineSynIds = setdiff(secSpineSynIds, priSpineSynIds);
+
+somaSynIds = cellfun( ...
+    @(segIds) max(somaLUT(segIds)), ...
+    synapses.postsynId);
+somaSynIds = find(somaSynIds);
+
+% Sanity check
+assert(isempty(intersect(priSpineSynIds, secSpineSynIds)));
+
+%%
+synapses.type(:) = {'Shaft'};
+synapses.type(priSpineSynIds) = {'PrimarySpine'};
+synapses.type(secSpineSynIds) = {'SecondarySpine'};
+synapses.type(somaSynIds) = {'Soma'};
+synapses.type = categorical(synapses.type);
+
+%%
+
 
 %% Look at examples in webKNOSSOS
+%{
 rng(0);
 
 randIds = find(~cellfun(@isempty, shT.secSynIds));
@@ -150,3 +180,4 @@ for curIdx = 1:numel(randIds)
     skel = Skeleton.fromMST(curAgglos, param.raw.voxelSize, skel);
     skel.names((end - numel(curNames) + 1):end) = curNames;
 end
+%}
