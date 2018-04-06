@@ -5,12 +5,13 @@ isoParamMy = {'smoothWidth',2,'smoothSizeHalf',2,'reduce',0.15};
 
 %% load stuff
 load('/gaba/u/mberning/results/pipeline/20170217_ROI/allParameterWithSynapses.mat');
+p.backend = 'wkwrap';
 disp('Parameters loaded');
 outputFolder = fullfile(p.saveFolder, 'aggloState');
 connDir = fullfile([p.saveFolder], 'connectomeState');
 
-if ~exist('graph','var') || ~all(isfield(graph,{'edges','prob','borderIdx'}))
-    graph = load(fullfile(p.saveFolder, 'graphNew.mat'),'edges','prob','borderIdx');
+if ~exist('graph','var') || ~all(isfield(graph,{'edges','borderIdx'}))
+    graph = load(fullfile(p.saveFolder, 'graphNew.mat'),'edges','borderIdx');
 end
 if  ~all(isfield(graph,{'neighbours','neighBorderIdx'}))
     [graph.neighbours, neighboursIdx] = Graph.edges2Neighbors(graph.edges);
