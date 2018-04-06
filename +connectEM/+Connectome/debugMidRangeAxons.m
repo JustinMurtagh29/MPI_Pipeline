@@ -8,6 +8,7 @@ clear;
 
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
+shFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_01_spine_attachment.mat');
 synFile = fullfile(rootDir, 'connectomeState', 'SynapseAgglos_v3_ax_spine_clustered.mat');
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a_ax_spine_syn_clust.mat');
 outDir = '/home/amotta/Desktop/mid-range-axons';
@@ -25,9 +26,84 @@ param = param.p;
 maxSegId = Seg.Global.getMaxSegId(param);
 segPoints = Seg.Global.getSegToPointMap(param);
 
+shAgglos = load(shFile, 'shAgglos');
+shAgglos = shAgglos.shAgglos;
+
 syn = load(synFile);
 conn = load(connFile);
 
+%% Collect synapses
+% This time we count a synapse even when none of the postsynaptic segments
+% is in a dendrite agglomerates. This should give a more accurate picture
+% of the axonal outputs.
+axonLUT = Agglo.buildLUT(maxSegId, conn.axons);
+shLUT = (Agglo.buildLUT(maxSegId, shAgglos) ~= 0);
+
+synapses = syn.synapses;
+synapses.id = reshape( ...
+    1:size(synapses, 1), [], 1);
+synapses.axonId = cellfun( ...
+    @(segIds) setdiff(axonLUT(segIds), 0), ...
+    synapses.presynId, 'UniformOutput', false);
+synapses.ontoSpine = cellfun( ...
+    @(segIds) any(shLUT(segIds)), ...
+    synapses.postsynId);
+
+% Remove synapses which have
+% * no presynaptic axon at all
+% * multiple axons on presynaptic side (?!)
+synapses(~cellfun(@isscalar, synapses.axonId), :) = [];
+synapses.axonId = cell2mat(synapses.axonId);
+
+axonMeta = conn.axonMeta;
+axonMeta.fullSynCount = accumarray( ...
+    synapses.axonId, 1, size(axonMeta.id));
+axonMeta.fullSpineSynCount = accumarray( ...
+    synapses.axonId, synapses.ontoSpine, size(axonMeta.id));
+axonMeta.fullSynIds = accumarray( ...
+    synapses.axonId, synapses.id, size(axonMeta.id), ...
+    @(synIds) {synIds}, {zeros(0, 1)});
+
+axonMeta.spineSynFrac = ...
+    axonMeta.spineSynCount ...
+ ./ axonMeta.synCount;
+axonMeta.fullSpineSynFrac = ...
+    axonMeta.fullSpineSynCount ...
+ ./ axonMeta.fullSynCount;
+
+%% Plot spine synapse fractions
+binEdges = linspace(0, 1, 21);
+axonMask = (axonMeta.synCount >= minSynCount);
+
+fig = figure();
+fig.Color = 'white';
+
+ax = axes(fig);
+axis(ax, 'square')
+hold(ax, 'on');
+
+histogram(ax, ...
+    axonMeta.spineSynFrac(axonMask), binEdges, ...
+    'DisplayStyle', 'stairs', 'LineWidth', 2);
+histogram(ax, ...
+    axonMeta.fullSpineSynFrac(axonMask), binEdges, ...
+    'DisplayStyle', 'stairs', 'LineWidth', 2);
+
+ax.TickDir = 'out';
+xlim(ax, binEdges([1, end]));
+xlabel(ax, 'Spine synapse fraction');
+ylabel(ax, 'Axons');
+
+legend(ax, ...
+    'Synapses onto dendrite agglos', ...
+    'All synapses', 'Location', 'NorthWest');
+
+title(ax, ...
+   {info.filename; info.git_repos{1}.hash}, ...
+    'FontWeight', 'normal', 'FontSize', 10);
+
+%%
+%{
 %% Build synapse table
 synT = connectEM.Connectome.buildSynapseTable(conn, syn);
 
@@ -113,3 +189,4 @@ for curIdx = 1:numel(randIds)
         '%0*d_axon-%d.nml', numDigits, curIdx, curMeta.id));
     curSkel.write(curSkelName);
 end
+%}
