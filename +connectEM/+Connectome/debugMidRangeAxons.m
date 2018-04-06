@@ -86,9 +86,11 @@ axonMeta.fullSpineSynFrac = ...
 
 clear synapses;
 
+% Remove axons with too few synapses
+axonMeta(axonMeta.synCount < minSynCount, :) = [];
+
 %% Plot spine synapse fractions
 binEdges = linspace(0, 1, 21);
-axonMask = (axonMeta.synCount >= minSynCount);
 
 fig = figure();
 fig.Color = 'white';
@@ -98,10 +100,10 @@ axis(ax, 'square')
 hold(ax, 'on');
 
 histogram(ax, ...
-    axonMeta.spineSynFrac(axonMask), binEdges, ...
+    axonMeta.spineSynFrac, binEdges, ...
     'DisplayStyle', 'stairs', 'LineWidth', 2);
 histogram(ax, ...
-    axonMeta.fullSpineSynFrac(axonMask), binEdges, ...
+    axonMeta.fullSpineSynFrac, binEdges, ...
     'DisplayStyle', 'stairs', 'LineWidth', 2);
 
 ax.TickDir = 'out';
@@ -116,20 +118,6 @@ legend(ax, ...
 title(ax, ...
    {info.filename; info.git_repos{1}.hash}, ...
     'FontWeight', 'normal', 'FontSize', 10);
-
-%% Plot distribution of spine synapse fraction
-fig = figure;
-fig.Color = 'white';
-
-ax = axes(fig);
-axis(ax, 'square');
-hold(ax, 'on');
-
-histogram(ax, ...
-    axonMeta.spineSynFrac, ...
-    linspace(0, 1, 21), ...
-    'DisplayStyle', 'stairs', ...
-    'LineWidth', 2);
 
 %% Pick random examples (corrected for frequency)
 axonMeta(axonMeta.spineSynFrac < minSpineFrac, :) = [];
