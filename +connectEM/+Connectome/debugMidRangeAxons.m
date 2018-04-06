@@ -33,21 +33,25 @@ syn = load(synFile);
 conn = load(connFile);
 
 %% Collect synapses
+shLUT = (Agglo.buildLUT(maxSegId, shAgglos) ~= 0);
+
+syn.synapses.id = reshape( ...
+    1:size(syn.synapses, 1), [], 1);
+syn.synapses.ontoSpine = cellfun( ...
+    @(segIds) any(shLUT(segIds)), ...
+    syn.synapses.postsynId);
+clear shLUT;
+
 % This time we count a synapse even when none of the postsynaptic segments
 % is in a dendrite agglomerates. This should give a more accurate picture
 % of the axonal outputs.
 axonLUT = Agglo.buildLUT(maxSegId, conn.axons);
-shLUT = (Agglo.buildLUT(maxSegId, shAgglos) ~= 0);
 
 synapses = syn.synapses;
-synapses.id = reshape( ...
-    1:size(synapses, 1), [], 1);
 synapses.axonId = cellfun( ...
     @(segIds) setdiff(axonLUT(segIds), 0), ...
     synapses.presynId, 'UniformOutput', false);
-synapses.ontoSpine = cellfun( ...
-    @(segIds) any(shLUT(segIds)), ...
-    synapses.postsynId);
+clear axonLUT;
 
 % Remove synapses which have
 % * no presynaptic axon at all
@@ -80,6 +84,8 @@ axonMeta.fullSpineSynFrac = ...
     axonMeta.fullSpineSynCount ...
  ./ axonMeta.fullSynCount;
 
+clear synapses;
+
 %% Plot spine synapse fractions
 binEdges = linspace(0, 1, 21);
 axonMask = (axonMeta.synCount >= minSynCount);
@@ -110,20 +116,6 @@ legend(ax, ...
 title(ax, ...
    {info.filename; info.git_repos{1}.hash}, ...
     'FontWeight', 'normal', 'FontSize', 10);
-
-%%
-%{
-%% Build synapse table
-synT = connectEM.Connectome.buildSynapseTable(conn, syn);
-
-%% Limit to axons with enough synapses
-axonMask = (conn.axonMeta.synCount >= minSynCount);
-axonMeta = conn.axonMeta(axonMask, :);
-clear axonMask;
-
-axonMeta.spineSynFrac = ...
-    axonMeta.spineSynCount ...
- ./ axonMeta.synCount;
 
 %% Plot distribution of spine synapse fraction
 fig = figure;
@@ -157,6 +149,7 @@ randIds = pdist2(axonMeta.spineSynFrac, randIds);
 
 %% Export to webKNOSSOS
 spineTag = {'shaft', 'spine'};
+connTag = {'not in conn.', 'in conn.'};
 numDigits = ceil(log10(1 + numel(randIds)));
 
 mkdir(outDir);
@@ -170,9 +163,11 @@ for curIdx = 1:numel(randIds)
     curMeta = axonMeta(randIds(curIdx), :);
     
     curAxon = conn.axons(curMeta.id);
-    curSynT = synT(synT.preAggloId == curMeta.id, :);
+    curSynIds = curMeta.fullSynIds{1};
+    curSynOntoSpine = syn.synapses.ontoSpine(curSynIds);
+    curSynInConn = ismember(curSynIds, curMeta.synIds{1});
     
-    curSyns = syn.synapses(curSynT.id, :);
+    curSyns = syn.synapses(curSynIds, :);
     curSyns = cellfun(@vertcat, ...
         curSyns.presynId, curSyns.postsynId, ...
         'UniformOutput', false);
@@ -187,9 +182,11 @@ for curIdx = 1:numel(randIds)
             'Axon %d (%.1f %% of synapses onto spines)', ...
             curMeta.id, 100 * curMeta.spineSynFrac)}; ...
         arrayfun( ...
-            @(id, tag) sprintf( ...
-                'Synapse %d (%s)', id, spineTag{1 + tag}), ...
-            curSynT.id, curSynT.isSpine, 'UniformOutput', false)];
+            @(id, spine, conn) sprintf( ...
+                'Synapse %d (%s, %s)', ...
+                id, spineTag{1 + spine}, connTag{1 + conn}), ...
+            curSynIds, curSynOntoSpine, curSynInConn, ...
+            'UniformOutput', false)];
     
     curSkel = Skeleton.fromMST(curNodes, param.raw.voxelSize, skel);
     curSkel.names = curNames;
@@ -198,4 +195,3 @@ for curIdx = 1:numel(randIds)
         '%0*d_axon-%d.nml', numDigits, curIdx, curMeta.id));
     curSkel.write(curSkelName);
 end
-%}
