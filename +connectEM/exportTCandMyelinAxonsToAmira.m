@@ -46,6 +46,6 @@ Visualization.exportAggloToAmira(p, myelinNeighSegments(isThalamocortical), full
 
 
 %% export myelinated axons including myelin iso, excluding tc axons
-myAxNoTC = ~isThalamocortical & myelinFacAx > 0.2;
+myAxNoTC = ~isThalamocortical & myelinFracAx > 0.2;
 Visualization.exportAggloToAmira(p, conn.axons(myAxNoTC), fullfile(mainOutDir,'AxMy'), isoParamAx{:})
 Visualization.exportAggloToAmira(p, myelinNeighSegments(myAxNoTC), fullfile(mainOutDir,'AxMymyelin'), isoParamMy{:})
