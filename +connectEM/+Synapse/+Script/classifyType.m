@@ -30,8 +30,6 @@ param.svg.graphFile = graphFile;
 param.svg.synScoreFile = synScoreFile;
 
 % Synapse scores
-
-maxSegId = Seg.Global.getMaxSegId(param);
 segPoints = Seg.Global.getSegToPointMap(param);
 graph = Seg.IO.loadGraph(param, false);
 
@@ -39,49 +37,16 @@ graph = Seg.IO.loadGraph(param, false);
 shAgglos = load(shFile, 'shAgglos');
 shAgglos = shAgglos.shAgglos;
 
-% Somata
 conn = load(connFile);
-
-somaAgglos = (conn.denMeta.targetClass == 'Somata');
-somaAgglos = conn.dendrites(somaAgglos);
-axonAgglos = conn.axons;
-
-% Synapses
 syn = load(synFile);
 
 %% Classify synapses
+somaAgglos = conn.denMeta.targetClass == 'Somata';
+somaAgglos = conn.dendrites(somaAgglos);
+
 synTypes = connectEM.Synapse.classifyType( ...
-    param, syn.synapses, graph.synScores, shAgglos, somaAgglos);
-
-%% Handle split spine synapses
-priSpineSynIds = ismember(synapses.id, shT.priSynId);
-priSpineSynIds = synapses(priSpineSynIds, :);
-
-priSpineSynIds = ismember( ...
-    synapses(:,  {'shId', 'axonId'}), ...
-    priSpineSynIds(:, {'shId', 'axonId'}), 'rows');
-priSpineSynIds = synapses.id(priSpineSynIds);
-
-secSpineSynIds = cell2mat(shT.secSynIds);
-secSpineSynIds = setdiff(secSpineSynIds, priSpineSynIds);
-
-somaSynIds = cellfun( ...
-    @(segIds) max(somaLUT(segIds)), ...
-    synapses.postsynId);
-somaSynIds = find(somaSynIds);
-
-% Sanity check
-assert(isempty(intersect(priSpineSynIds, secSpineSynIds)));
-
-%%
-synapses.type(:) = {'Shaft'};
-synapses.type(priSpineSynIds) = {'PrimarySpine'};
-synapses.type(secSpineSynIds) = {'SecondarySpine'};
-synapses.type(somaSynIds) = {'Soma'};
-synapses.type = categorical(synapses.type);
-
-%%
-
+    param, syn.synapses, graph.synScores, ...
+    shAgglos, somaAgglos, conn.axons);
 
 %% Look at examples in webKNOSSOS
 %{
