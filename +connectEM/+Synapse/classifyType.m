@@ -69,7 +69,7 @@ function synTypes = classifyType( ...
     %% Build output
     synTypes = cell(size(synapses.id));
     synTypes(:) = {'Shaft'};
-    synTypes(shT.priSynIds) = {'PrimarySpine'};
+    synTypes(shT.priSynId) = {'PrimarySpine'};
     synTypes(cell2mat(shT.secSynIds)) = {'SecondarySpine'};
     synTypes(synapses.somaId ~= 0) = {'Soma'};
     synTypes = categorical(synTypes);
