@@ -1,7 +1,7 @@
 function synTypes = classifyType( ...
-        param, synapses, synScores, shAgglos, somaAgglos)
+        param, synapses, synScores, shAgglos, somaAgglos, axonAgglos)
     % synTypes = classifyType( ...
-    %     param, synapses, synProbs, shAgglos, somaAgglos)
+    %     param, synapses, synProbs, shAgglos, somaAgglos, axonAgglos)
     %
     %   Classifies synapses into
     %   * shaft synapses
@@ -11,6 +11,12 @@ function synTypes = classifyType( ...
     %
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
+    
+    if ~exist('axonAgglos', 'var')
+        axonAgglos = cell(0, 1);
+    end
+    
+    %% Augment synapse table
     maxSegId = Seg.Global.getMaxSegId(param);
     
     % Building look-up tables
@@ -38,13 +44,17 @@ function synTypes = classifyType( ...
         synapses.postsynId);
 
     %% Distringuish primary and secondary spine synapses
+    % For each spine head which is postsynaptic to at least one synapse, we
+    % consider the synapse with the highest SynEM score to be the primary
+    % spine innervation. All other synapses onto that spine head are
+    % secondary innervations.
+    
     shSynIds = accumarray( ...
         1 + synapses.shId, synapses.id, ...
        [1 + numel(shAgglos), 1], @(ids) {ids}, {zeros(0, 1)});
     shSynIds = shSynIds(2:end);
 
     % Sort synapse by SynEM scores
-    % Most probable synapse becomes primary
    [~, sortedIds] = cellfun( ...
         @(synIds) sort(synapses.maxSynScore(synIds)), ...
         shSynIds, 'UniformOutput', false);
@@ -66,11 +76,36 @@ function synTypes = classifyType( ...
         @(synIds) reshape(synIds(1:(end - 1)), [], 1), ...
         shSynIds, 'UniformOutput', false);
     
+    priSpineSynIds = shT.priSynId;
+    secSpineSynIds = cell2mat(shT.secSynIds);
+    
+    %% If possible, handle split axon-spine interfaces
+    % If axon A has a primary spine synapse onto spine head SH, then all
+    % synapses from A onto SH are marked as primary spine synapses.
+    
+    if ~isempty(axonAgglos)
+        axonLUT = Agglo.buildLUT(maxSegId, axonAgglos);
+        synapses.axonId = cellfun( ...
+            @(segIds) max(axonLUT(segIds)), ...
+            synapses.presynId);
+        
+        priSpineSynIds = synapses(ismember( ...
+            synapses.id, priSpineSynIds), :);
+        priSpineSynIds = synapses.id(ismember( ...
+            synapses(:,  {'shId', 'axonId'}), ...
+            priSpineSynIds(:, {'shId', 'axonId'}), 'rows'));
+        secSpineSynIds = setdiff(secSpineSynIds, priSpineSynIds);
+    end
+    
+    % Sanity check
+    assert(isempty(intersect( ...
+        priSpineSynIds, secSpineSynIds)));
+    
     %% Build output
-    synTypes = cell(size(synapses.id));
+    synTypes = cell(size(synapses, 1), 1);
     synTypes(:) = {'Shaft'};
-    synTypes(shT.priSynId) = {'PrimarySpine'};
-    synTypes(cell2mat(shT.secSynIds)) = {'SecondarySpine'};
+    synTypes(priSpineSynIds) = {'PrimarySpine'};
+    synTypes(secSpineSynIds) = {'SecondarySpine'};
     synTypes(synapses.somaId ~= 0) = {'Soma'};
     synTypes = categorical(synTypes);
 end
