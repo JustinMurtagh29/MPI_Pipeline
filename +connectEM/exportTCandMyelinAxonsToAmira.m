@@ -8,7 +8,6 @@ load('/gaba/u/mberning/results/pipeline/20170217_ROI/allParameterWithSynapses.ma
 p.backend = 'wkwrap';
 disp('Parameters loaded');
 outputFolder = fullfile(p.saveFolder, 'aggloState');
-connDir = fullfile([p.saveFolder], 'connectomeState');
 
 if ~exist('graph','var') || ~all(isfield(graph,{'edges','borderIdx'}))
     graph = load(fullfile(p.saveFolder, 'graphNew.mat'),'edges','borderIdx');
@@ -24,19 +23,13 @@ end
 if ~exist('heuristics','var')
     heuristics = load(fullfile(p.saveFolder, 'heuristicResult.mat'),'myelinScore');
 end
-connFile = fullfile(connDir, sprintf('%s.mat', connName));
 
-% loading connectome data
-conn = load(connFile);
-
-interSynFile = sprintf('%s_intersynapse.mat', connName);
-interSynFile = fullfile([connDir], interSynFile);
-interSyn = load(interSynFile);
+conn = connectEM.Connectome.load(p,connName);
 
 disp('all data loaded')
 %%
 % get classification thalamocortical and myelinated
-isThalamocortical = connectEM.Axon.detectThalamocorticals(conn, interSyn);
+isThalamocortical = conn.axonMeta.isThalamocortical;
 [ myelinFracAx,~,~,myelinNeighSegments] = connectEM.calculateSurfaceMyelinScore( conn.axons, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
 
 disp('Done calculating TC/myelinated axons, creating isos')
