@@ -48,61 +48,10 @@ axonAgglos = conn.axons;
 
 % Synapses
 syn = load(synFile);
-synapses = syn.synapses;
 
-%%
-% Building look-up tables
-% Soma class dominates over spine heads
-axonLUT = Agglo.buildLUT(maxSegId, axonAgglos);
-somaLUT = Agglo.buildLUT(maxSegId, somaAgglos);
-shLUT = Agglo.buildLUT(maxSegId, shAgglos);
-shLUT(somaLUT ~= 0) = 0;
-
-synapses.id = reshape( ...
-    1:size(synapses, 1), [], 1);
-synapses.synScores = cellfun( ...
-    @(ids) max(graph.synScores(ids, :), [], 2), ...
-    synapses.edgeIdx, 'UniformOutput', false);
-
-% Sanity check
-% Synapse threshold was -1.67
-assert(all(cellfun(@min, synapses.synScores) > -1.67));
-synapses.maxSynScore = cellfun(@max, synapses.synScores);
-
-synapses.shId = cellfun( ...
-    @(segIds) max(shLUT(segIds)), ...
-    synapses.postsynId);
-synapses.axonId = cellfun( ...
-    @(segIds) max(axonLUT(segIds)), ...
-    synapses.presynId);
-
-%% Separate primary from secondary spine synapses
-shSynIds = accumarray( ...
-    1 + synapses.shId, synapses.id, ...
-   [1 + numel(shAgglos), 1], @(ids) {ids}, {zeros(0, 1)});
-shSynIds = shSynIds(2:end);
-
-% Sort synapse by SynEM scores
-[~, sortedIds] = cellfun( ...
-    @(synIds) sort(synapses.maxSynScore(synIds)), ...
-    shSynIds, 'UniformOutput', false);
-shSynIds = cellfun( ...
-    @(synIds, sortIds) synIds(sortIds), ...
-    shSynIds, sortedIds, 'UniformOutput', false);
-clear sortedIds;
-
-shT = table;
-shT.id = reshape( ...
-    1:numel(shAgglos), [], 1);
-
-shT(cellfun(@isempty, shSynIds), :) = [];
-shSynIds(cellfun(@isempty, shSynIds)) = [];
-
-shT.priSynId = cellfun( ...
-    @(synIds) synIds(end), shSynIds);
-shT.secSynIds = cellfun( ...
-    @(synIds) reshape(synIds(1:(end - 1)), [], 1), ...
-    shSynIds, 'UniformOutput', false);
+%% Classify synapses
+synTypes = connectEM.Synapse.classifyType( ...
+    param, syn.synapses, graph.synScores, shAgglos, somaAgglos);
 
 %% Handle split spine synapses
 priSpineSynIds = ismember(synapses.id, shT.priSynId);
