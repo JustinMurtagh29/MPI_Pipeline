@@ -13,6 +13,11 @@ synFile = fullfile(rootDir, 'connectomeState', 'SynapseAgglos_v3_ax_spine_cluste
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a_ax_spine_syn_clust.mat');
 outDir = '/home/amotta/Desktop/mid-range-axons';
 
+% As in Benedikt's +L4/updateParamsToNewestFiles.m
+% Commit hash `590d8538d65463151d43491e2446e25ca11dd5f6`
+graphFile = fullfile(rootDir, 'graphNew.mat');
+synScoreFile = fullfile(rootDir, 'globalSynScores.mat');
+
 minSynCount = 10;
 minSpineFrac = 0.3;
 maxSpineFrac = 0.7;
@@ -23,6 +28,11 @@ info = Util.runInfo();
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 
+% Prepare for load synapse scores
+param.svg.graphFile = graphFile;
+param.svg.synScoreFile = synScoreFile;
+graph = Seg.IO.loadGraph(param, false);
+
 maxSegId = Seg.Global.getMaxSegId(param);
 segPoints = Seg.Global.getSegToPointMap(param);
 
@@ -31,6 +41,15 @@ shAgglos = shAgglos.shAgglos;
 
 syn = load(synFile);
 conn = load(connFile);
+
+%% Classify synapses
+somaAgglos = conn.denMeta.targetClass == 'Somata';
+somaAgglos = conn.dendrites(somaAgglos);
+
+syn.synapses.type = ...
+    connectEM.Synapse.classifyType( ...
+        param, syn.synapses, graph.synScores, ...
+        shAgglos, somaAgglos, conn.axons);
 
 %% Collect synapses
 shLUT = (Agglo.buildLUT(maxSegId, shAgglos) ~= 0);
@@ -64,6 +83,8 @@ axonMeta.fullSynCount = accumarray( ...
     synapses.axonId, 1, size(axonMeta.id));
 axonMeta.fullSpineSynCount = accumarray( ...
     synapses.axonId, synapses.ontoSpine, size(axonMeta.id));
+axonMeta.fullPriSpineSynCount = accumarray( ...
+    synapses.axonId, synapses.type == 'PrimarySpine', size(axonMeta.id));
 
 axonMeta.synIds = accumarray( ...
     conn.connectome.edges(:, 1), ...
@@ -82,6 +103,9 @@ axonMeta.spineSynFrac = ...
  ./ axonMeta.synCount;
 axonMeta.fullSpineSynFrac = ...
     axonMeta.fullSpineSynCount ...
+ ./ axonMeta.fullSynCount;
+axonMeta.fullPriSpineSynFrac = ...
+    axonMeta.fullPriSpineSynCount ...
  ./ axonMeta.fullSynCount;
 
 clear synapses;
@@ -103,7 +127,7 @@ histogram(ax, ...
     axonMeta.spineSynFrac, binEdges, ...
     'DisplayStyle', 'stairs', 'LineWidth', 2);
 histogram(ax, ...
-    axonMeta.fullSpineSynFrac, binEdges, ...
+    axonMeta.fullPriSpineSynFrac, binEdges, ...
     'DisplayStyle', 'stairs', 'LineWidth', 2);
 
 ax.TickDir = 'out';
@@ -112,74 +136,10 @@ xlabel(ax, 'Spine synapse fraction');
 ylabel(ax, 'Axons');
 
 legend(ax, ...
-    'Synapses onto dendrite agglos', ...
-    'All synapses', 'Location', 'NorthWest');
+    'All spine innervations', ...
+    'Primary spine innervations', ...
+    'Location', 'NorthWest');
 
 title(ax, ...
    {info.filename; info.git_repos{1}.hash}, ...
     'FontWeight', 'normal', 'FontSize', 10);
-
-%% Pick random examples (corrected for frequency)
-axonMeta(axonMeta.spineSynFrac < minSpineFrac, :) = [];
-axonMeta(axonMeta.spineSynFrac > maxSpineFrac, :) = [];
-
-rng(0);
-axonMeta = sortrows(axonMeta, 'id');
-axonMeta = axonMeta(randperm(size(axonMeta, 1)), :);
-
-rng(0);
-randIds = rand(50, 1);
-randIds = randIds .* (maxSpineFrac - minSpineFrac);
-randIds = randIds + minSpineFrac;
-
-randIds = pdist2(axonMeta.spineSynFrac, randIds);
-[~, randIds] = min(randIds, [], 1);
-
-%% Export to webKNOSSOS
-spineTag = {'shaft', 'spine'};
-connTag = {'not in conn.', 'in conn.'};
-numDigits = ceil(log10(1 + numel(randIds)));
-
-mkdir(outDir);
-
-skel = skeleton();
-skel = Skeleton.setParams4Pipeline(skel, param);
-skel = skel.setDescription(sprintf( ...
-    '%s (%s)', info.filename, info.git_repos{1}.hash));
-
-for curIdx = 1:numel(randIds)
-    curMeta = axonMeta(randIds(curIdx), :);
-    
-    curAxon = conn.axons(curMeta.id);
-    curSynIds = curMeta.fullSynIds{1};
-    curSynOntoSpine = syn.synapses.ontoSpine(curSynIds);
-    curSynInConn = ismember(curSynIds, curMeta.synIds{1});
-    
-    curSyns = syn.synapses(curSynIds, :);
-    curSyns = cellfun(@vertcat, ...
-        curSyns.presynId, curSyns.postsynId, ...
-        'UniformOutput', false);
-    
-    curNodes = vertcat(curAxon, curSyns);
-    curNodes = cellfun( ...
-        @(segIds) segPoints(segIds, :), ...
-        curNodes, 'UniformOutput', false);
-    
-    curNames = [ ...
-       {sprintf( ...
-            'Axon %d (%.1f %% of synapses onto spines)', ...
-            curMeta.id, 100 * curMeta.spineSynFrac)}; ...
-        arrayfun( ...
-            @(id, spine, conn) sprintf( ...
-                'Synapse %d (%s, %s)', ...
-                id, spineTag{1 + spine}, connTag{1 + conn}), ...
-            curSynIds, curSynOntoSpine, curSynInConn, ...
-            'UniformOutput', false)];
-    
-    curSkel = Skeleton.fromMST(curNodes, param.raw.voxelSize, skel);
-    curSkel.names = curNames;
-    
-    curSkelName = fullfile(outDir, sprintf( ...
-        '%0*d_axon-%d.nml', numDigits, curIdx, curMeta.id));
-    curSkel.write(curSkelName);
-end
