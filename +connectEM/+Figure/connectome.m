@@ -66,21 +66,26 @@ assert(all(dendMeta.classIdx));
 dendMeta = sortrows(dendMeta, 'classIdx');
 
 %% Plot
+colorMap = parula(5);
+
 conn.synCount = cellfun(@numel, conn.synIdx);
 conn.coord = nan(size(conn.edges));
 [~, conn.coord(:, 1)] = ismember(conn.edges(:, 1), axonMeta.id);
 [~, conn.coord(:, 2)] = ismember(conn.edges(:, 2), dendMeta.id);
-
+conn = sortrows(conn, 'synCount', 'ascend');
 
 fig = figure();
-fig.Color = 'white';
 
 ax = axes(fig);
 h = scatter(ax, conn.coord(:, 2), conn.coord(:, 1), '.');
+h.CData = colorMap(min(conn.synCount, size(colorMap, 1)), :);
 
 ax.TickDir = 'out';
 ax.YDir = 'reverse';
 ax.XAxisLocation = 'top';
+
+ax.Color = 'black';
+axis(ax, 'equal');
 
 % Target classes
 xMinorTicks = accumarray( ...
