@@ -75,6 +75,8 @@ conn.coord = nan(size(conn.edges));
 conn = sortrows(conn, 'synCount', 'ascend');
 
 fig = figure();
+fig.Color = 'white';
+fig.Position(3:4) = 1100;
 
 ax = axes(fig);
 h = scatter(ax, conn.coord(:, 2), conn.coord(:, 1), '.');
@@ -85,7 +87,6 @@ ax.YDir = 'reverse';
 ax.XAxisLocation = 'top';
 
 ax.Color = 'black';
-axis(ax, 'equal');
 
 % Target classes
 xMinorTicks = accumarray( ...
@@ -125,3 +126,47 @@ ax.YAxis.MinorTickValues = yMinorTicks;
 yticks(ax, yTicks);
 yticklabels(ax, axonClasses);
 ylim(ax, yMinorTicks([1, end]));
+
+ax.Position = [0.15, 0.15, 0.7, 0.7];
+
+% Histogram over incoming synapses
+axDend = axes(fig);
+axDend.Position = ax.Position;
+axDend.Position(2:2:end) = [0.05, ax.Position(2) - 0.05];
+
+dendSynCount = accumarray( ...
+    conn.coord(:, 2), conn.synCount, size(dendMeta.id));
+histogram(axDend, ...
+    'BinCount', dendSynCount, ...
+    'BinEdges', 0:1:numel(dendSynCount), ...
+    'EdgeColor', ax.ColorOrder(1, :));
+
+axDend.YDir = 'reverse';
+axDend.TickDir = 'out';
+
+xlim(axDend, [0, numel(dendSynCount)]);
+xticks(axDend, [xticks(axDend), axDend.XLim(2)]);
+ylabel(axDend, 'Synapses');
+
+% Histogram over outgoing synapses
+axAxon = axes(fig);
+axAxon.Position = ax.Position;
+axAxon.Position(1) = sum(ax.Position(1:2:end));
+axAxon.Position(3) = 0.95 - axAxon.Position(1);
+
+axonSynCount = accumarray( ...
+    conn.coord(:, 1), conn.synCount, size(axonMeta.id));
+histogram(axAxon, ...
+    'BinCounts', axonSynCount, ...
+    'BinEdges', 0:1:numel(axonSynCount), ...
+    'Orientation', 'horizontal', ...
+    'EdgeColor', ax.ColorOrder(1, :));
+
+axAxon.YDir = 'reverse';
+axAxon.TickDir = 'out';
+axAxon.XAxisLocation = 'top';
+axAxon.YAxisLocation = 'right';
+
+ylim(axAxon, [0, numel(axonSynCount)]);
+yticks(axAxon, [yticks(axAxon), numel(axonSynCount)]);
+xlabel('Synapses');
