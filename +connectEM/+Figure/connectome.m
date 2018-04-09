@@ -26,8 +26,8 @@ dendMeta = conn.denMeta;
 dendMeta(dendMeta.synCount < minSynCount, :) = [];
 
 conn = conn.connectome;
-conn(~ismember(conn.edges(:, 1), axonIds), :) = [];
-conn(~ismember(conn.edges(:, 2), dendIds), :) = [];
+conn(~ismember(conn.edges(:, 1), axonMeta.id), :) = [];
+conn(~ismember(conn.edges(:, 2), dendMeta.id), :) = [];
 
 %% Group by classes
 axonClasses = { ...
