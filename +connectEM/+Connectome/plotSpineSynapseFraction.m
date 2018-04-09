@@ -1,7 +1,3 @@
-% Check what's going on with the whacky axons that have
-% * at least ten synapses
-% * a spine synapse fraction between 30 % and 70%
-%
 % Written by
 %   Alessandro Motta <alessandro.motta@brain.mpg.de>
 clear;
@@ -11,7 +7,6 @@ rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 shFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_01_spine_attachment.mat');
 synFile = fullfile(rootDir, 'connectomeState', 'SynapseAgglos_v3_ax_spine_clustered.mat');
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a_ax_spine_syn_clust.mat');
-outDir = '/home/amotta/Desktop/mid-range-axons';
 
 % As in Benedikt's +L4/updateParamsToNewestFiles.m
 % Commit hash `590d8538d65463151d43491e2446e25ca11dd5f6`
@@ -19,8 +14,6 @@ graphFile = fullfile(rootDir, 'graphNew.mat');
 synScoreFile = fullfile(rootDir, 'globalSynScores.mat');
 
 minSynCount = 10;
-minSpineFrac = 0.3;
-maxSpineFrac = 0.7;
 
 info = Util.runInfo();
 
@@ -122,10 +115,6 @@ fig.Color = 'white';
 ax = axes(fig);
 axis(ax, 'square')
 hold(ax, 'on');
-
-histogram(ax, ...
-    axonMeta.spineSynFrac, binEdges, ...
-    'DisplayStyle', 'stairs', 'LineWidth', 2);
 histogram(ax, ...
     axonMeta.fullPriSpineSynFrac, binEdges, ...
     'DisplayStyle', 'stairs', 'LineWidth', 2);
@@ -134,11 +123,6 @@ ax.TickDir = 'out';
 xlim(ax, binEdges([1, end]));
 xlabel(ax, 'Spine synapse fraction');
 ylabel(ax, 'Axons');
-
-legend(ax, ...
-    'All spine innervations', ...
-    'Primary spine innervations', ...
-    'Location', 'NorthWest');
 
 title(ax, ...
    {info.filename; info.git_repos{1}.hash}, ...
