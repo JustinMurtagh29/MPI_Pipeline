@@ -20,6 +20,14 @@ param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 
 maxSegId = Seg.Global.getMaxSegId(param);
+
+% Loading connectEM scores
+graph = Graph.load(rootDir);
+connectEmScores = graph.prob;
+connectEmScores(~graph.borderIdx) = [];
+clear graph;
+
+% Loading TypeEM scores
 typeEmScores = nan(maxSegId, 4);
 
 typeEmAgglo = load(typeEmAggloFile, '-mat');
@@ -107,3 +115,33 @@ ylabel(ax, 'Segments');
 title(ax, ...
     {info.filename; info.git_repos{1}.hash}, ...
     'FontWeight', 'normal', 'FontSize', 10);
+
+%% Plot connectEM probability histogram
+binEdges = linspace(0, 1, 21);
+
+fig = figure();
+fig.Color = 'white';
+ax = axes(fig);
+
+histogram(ax, ...
+    connectEmScores, binEdges, ...
+    'DisplayStyle', 'stairs', ...
+    'LineWidth', 2);
+
+ax.TickDir = 'out';
+ax.XLim = binEdges([1, end]);
+
+if plotLog
+    ax.YScale = 'log';
+    ax.YLim(1) = exp(-0.1);
+else
+    ax.YLim(1) = 0;
+end
+
+xlabel(ax, 'connectEM probability');
+ylabel(ax, 'Edges');
+
+title(ax, ...
+    {info.filename; info.git_repos{1}.hash}, ...
+    'FontWeight', 'normal', 'FontSize', 10);
+
