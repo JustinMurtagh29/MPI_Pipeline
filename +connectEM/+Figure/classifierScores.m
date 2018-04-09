@@ -10,6 +10,9 @@ rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 typeEmAggloFile = fullfile(rootDir, 'segmentAggloPredictions.mat.20170523');
 typeEmSegFile = fullfile(rootDir, 'segmentPredictions.mat');
 
+% Plot histogram with log Y axis
+plotLog = false;
+
 info = Util.runInfo();
 
 %% Loading data
@@ -32,7 +35,7 @@ clear typeEmSeg;
 
 typeEmScores(any(isnan(typeEmScores), 2), :) = [];
 
-%% Plot TypeEM probabilities
+%% Plot all TypeEM probabilities
 rng(0);
 randTypeEmScores = randperm(size(typeEmScores, 1));
 randTypeEmScores = randTypeEmScores(1:1E4);
@@ -71,6 +74,35 @@ ylim(ax, [0, 1]);
 yticks(ax, [0, 0.5, 1]);
 ylim(ax, [0, 1]);
 zticks(ax, [0, 0.5, 1]);
+
+title(ax, ...
+    {info.filename; info.git_repos{1}.hash}, ...
+    'FontWeight', 'normal', 'FontSize', 10);
+
+%% Plot spine head probability histogram
+binEdges = linspace(0, 1, 21);
+
+fig = figure();
+fig.Color = 'white';
+ax = axes(fig);
+
+histogram(ax, ...
+    typeEmScores(:, 4), binEdges, ...
+    'DisplayStyle', 'stairs', ...
+    'LineWidth', 2);
+
+ax.TickDir = 'out';
+ax.XLim = binEdges([1, end]);
+
+if plotLog
+    ax.YScale = 'log';
+    ax.YLim(1) = exp(-0.1);
+else
+    ax.YLim(1) = 0;
+end
+
+xlabel(ax, 'Spine head probability');
+ylabel(ax, 'Segments');
 
 title(ax, ...
     {info.filename; info.git_repos{1}.hash}, ...
