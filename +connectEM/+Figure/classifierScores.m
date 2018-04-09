@@ -10,6 +10,11 @@ rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 typeEmAggloFile = fullfile(rootDir, 'segmentAggloPredictions.mat.20170523');
 typeEmSegFile = fullfile(rootDir, 'segmentPredictions.mat');
 
+% As in Benedikt's +L4/updateParamsToNewestFiles.m
+% Commit hash `590d8538d65463151d43491e2446e25ca11dd5f6`
+synEmGraphFile = fullfile(rootDir, 'graphNew.mat');
+synEmScoreFile = fullfile(rootDir, 'globalSynScores.mat');
+
 % Plot histogram with log Y axis
 plotLog = false;
 
@@ -42,6 +47,15 @@ typeEmScores(typeEmSeg.segId, 4) = typeEmSeg.probs(:, colIds);
 clear typeEmSeg;
 
 typeEmScores(any(isnan(typeEmScores), 2), :) = [];
+
+% Loading SynEM scores
+param.svg.graphFile = synEmGraphFile;
+param.svg.synScoreFile = synEmScoreFile;
+graph = Seg.IO.loadGraph(param, false);
+
+synEmScores = graph.synScores;
+synEmScores(isnan(graph.borderIdx), :) = [];
+clear graph;
 
 %% Plot all TypeEM probabilities
 rng(0);
@@ -145,3 +159,69 @@ title(ax, ...
     {info.filename; info.git_repos{1}.hash}, ...
     'FontWeight', 'normal', 'FontSize', 10);
 
+%% Plot SynEM scores
+binEdges = linspace(-20, 5, 51);
+
+rng(0);
+randSynEmScores = randperm(size(synEmScores, 1));
+randSynEmScores = randSynEmScores(1:1e4);
+randSynEmScores = synEmScores(randSynEmScores, :);
+
+fig = figure();
+fig.Color = 'white';
+fig.Position(3:4) = [680, 680];
+
+ax = axes(fig);
+ax.Position = [0.25, 0.25, 0.65, 0.65];
+
+scatter(ax, ...
+    randSynEmScores(:, 1), ...
+    randSynEmScores(:, 2), '.');
+axis(ax, 'square');
+
+xticks(ax, []);
+xlim(ax, binEdges([1, end]));
+yticks(ax, []);
+ylim(ax, binEdges([1, end]));
+
+% Bottom
+axOne = axes(fig);
+axOne.Position = [0.25, 0.1, 0.65, 0.1];
+
+histogram(axOne, ...
+    randSynEmScores(:, 1), binEdges, ...
+    'Normalization', 'probability', ...
+    'DisplayStyle', 'stairs', ...
+    'LineWidth', 2);
+
+axOne.TickDir = 'out';
+axOne.YDir = 'reverse';
+xlim(axOne, binEdges([1, end]));
+xlabel('SynEM score 1');
+
+% Left
+axTwo = axes(fig);
+axTwo.Position = [0.1, 0.25, 0.1, 0.65];
+
+histogram(axTwo, ...
+    randSynEmScores(:, 2), binEdges, ...
+    'Normalization', 'probability', ...
+    'Orientation', 'horizontal', ...
+    'DisplayStyle', 'stairs', ...
+    'LineWidth', 2);
+
+axTwo.TickDir = 'out';
+axTwo.XDir = 'reverse';
+ylim(axTwo, binEdges([1, end]));
+ylabel('SynEM score 2');
+
+% Make sure both histogram have same ranges
+axOne.YLim(2) = max(axOne.YLim(2), axTwo.XLim(2));
+axTwo.XLim(2) = max(axOne.YLim(2), axTwo.XLim(2));
+
+% Annotation
+annotation(fig, ...
+    'textbox', [0, 0.9, 1, 0.1], ...
+    'EdgeColor', 'none', ...
+    'HorizontalAlignment', 'center', ...
+    'String', {info.filename; info.git_repos{1}.hash});
