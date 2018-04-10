@@ -91,6 +91,7 @@ for curIdx = 1:boxCount
     curSynT = synT( ...
         all(synT.pos >= curBox(1, :), 2) ...
       & all(synT.pos  < curBox(2, :), 2), :);
+    
     curSynFrac = accumarray( ...
         curSynT.targetClassId, 1, size(targetClasses));
     curSynFrac = curSynFrac ./ sum(curSynFrac);
@@ -109,16 +110,29 @@ for curIdx = 1:boxCount
     boxData(:, 2, curIdx) = curSurfFrac;
 end
 
+% Get rid of boxes that don't have any synapses
+dropMask = squeeze(any(any(isnan(boxData), 1), 2));
+boxData(:, :, dropMask) = [];
+
 %% Show results
 boxGroups = reshape(1:numel(targetClasses), [], 1);
-boxGroups = repmat(boxGroups, 1, 2, boxCount);
+boxGroups = repmat(boxGroups, 1, 2, size(boxData, 3));
 
 boxGroups(:, 1, :) = 2 .* boxGroups(:, 1, :) - 1;
 boxGroups(:, 2, :) = 2 .* boxGroups(:, 2, :);
 
 fig = figure();
 fig.Color = 'white';
-
 ax = axes(fig);
-boxplot(ax, boxData(:), boxGroups(:));
+
+colors = ax.ColorOrder(1:2, :);
+colorGroup = repmat(1:2, 1, numel(targetClasses));
+
+boxplot( ...
+    ax, boxData(:), boxGroups(:), ...
+    'PlotStyle', 'compact', ...
+    'ColorGroup', colorGroup, ...
+    'Colors', colors, ...
+    'Symbol', '.');
 ax.TickDir = 'out';
+ax.YScale = 'log';
