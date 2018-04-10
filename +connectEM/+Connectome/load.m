@@ -1,4 +1,4 @@
-function conn = load(param, connName)
+function [conn, syn] = load(param, connFile, synFile)
     % conn = load(param, connName)
     %   Loads a connectome and augments it with
     %
@@ -12,20 +12,22 @@ function conn = load(param, connName)
     %
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
-    connDir = fullfile(param.saveFolder, 'connectomeState');
-    connFile = fullfile(connDir, sprintf('%s.mat', connName));
     
     %% loading data
     conn = load(connFile);
+    syn = load(synFile);
     
-    %% mark thalamocortical axons
     % intersynapse distances (for detection of TC axons)
+   [connDir, connName] = fileparts(connFile);
     interSynFile = sprintf('%s_intersynapse.mat', connName);
     interSynFile = fullfile(connDir, interSynFile);
     interSyn = load(interSynFile);
     
+    %% mark thalamocortical axons
     conn.axonMeta.isThalamocortical = ...
         connectEM.Axon.detectThalamocorticals(conn, interSyn);
+    conn.axonMeta = ...
+        connectEM.Axon.completeSynapseMeta(param, conn, syn);
     
     %% label all axon classes
     axonClasses = ...
