@@ -5,7 +5,7 @@ load('/gaba/u/mberning/results/pipeline/20170217_ROI/allParameterWithSynapses.ma
 disp('Parameters loaded');
 outputFolder = fullfile(p.saveFolder, 'aggloState');
 info = Util.runInfo(); % added by BS
-statesDendrites = {'dendrites_01','dendrites_02','dendrites_03_v2','dendrites_03_v2_splitmerged','dendrites_04','dendrites_05','dendrites_06','dendrites_07','dendrites_08','dendrites_09','dendrites_10','dendrites_11','dendrites_12','dendrites_13','dendrites_14','dendrites_15','dendrites_16','dendrites_wholeCells_GTAxon_01'};
+statesDendrites = {'dendrites_01','dendrites_02','dendrites_03_v2','dendrites_03_v2_splitmerged','dendrites_04','dendrites_05','dendrites_06','dendrites_07','dendrites_08','dendrites_09','dendrites_10','dendrites_11','dendrites_12','dendrites_13','dendrites_14','dendrites_15','dendrites_16','dendrites_16_b','dendrites_wholeCells_GTAxon_01'};
 statesAxons = {'axons_01','axons_02','axons_03'};
 statesWC = {'wholeCells_01','wholeCells_02','wholeCells_03','wholeCells_04','wholeCells_05','wholeCells_06','wholeCells_07','wholeCells_08','wholeCells_GTAxon_08_v3'};
 existentDendrites = cellfun(@(x) exist(fullfile(outputFolder,strcat(x,'.mat')),'file'),statesDendrites) | overwrite;
@@ -724,27 +724,18 @@ if  ~existentWC(7) || ~existentDendrites(17)
     save(fullfile(outputFolder,'dendrites_16.mat'),'dendrites','myelinDend','indBigDends')%,'info');
 elseif ~existentDendrites(18) || ~existentWC(8) || ~existentWC(9)
     load(fullfile(outputFolder,'wholeCells_07.mat'))
-    load(fullfile(outputFolder,'dendrites_17_a.mat'))
+    load(fullfile(outputFolder,'dendrites_16.mat'))
 end
 disp('State 16 dendrites loaded/generated')
-% %% add spines to all agglos
-% if ~exist(fullfile(outputFolder,'wholeCells_04.mat'),'file') || overwrite
-%     % this function is in Alessandro's repo
-%     wholeCells = L4.Spine.Head.attachRun('ex145_07x2_roi2017','wholeCells_03.mat',1);
-%     save(fullfile(outputFolder,'wholeCells_04.mat'),'wholeCells') % dendrites should not become much bigger or get more myelin when spines are attached
-% else
-%     load(fullfile(outputFolder,'wholeCells_04.mat'))
-% end
-%
-%
-% if ~exist(fullfile(outputFolder,'dendrites_08.mat'),'file') || overwrite
-%     % this function is in Alessandro's repo
-%     dendrites = L4.Spine.Head.attachRun('ex145_07x2_roi2017','dendrites_07.mat',1);
-%     save(fullfile(outputFolder,'dendrites_08.mat'),'dendrites','myelinDend','indBigDends') % dendrites should not become much bigger or get more myelin when spines are attached
-% else
-%     clear dendrites myelinDend indBigDends
-%     load(fullfile(outputFolder,'dendrites_08.mat'))
-% end
+
+%% patch in dendrite dendrite and dangling flight paths
+if ~existentDendrites(18)
+    connectEM.getDendriteQueryOverlapB(p,'2.3')
+    connectEM.getDendQueryAxonAggloOverlapB(p,'2.3')
+    connectEM.createNewDendriteSuperagglos(p,'2.3')
+    load(fullfile(outputFolder,'dendrites_16_b.mat'))
+end
+%% patch in AIS
 
 
 %% remove axons from whole cells and add them to a new state of dendrites
@@ -940,6 +931,3 @@ if  ~existentWC(9)
     save(fullfile(outputFolder,'dendrites_wholeCells_01_v4.mat'),'dendrites','myelinDend','indBigDends','indWholeCells','indAIS')%,'info');
 end
 %%
-connectEM.getDendriteQueryOverlapB(p,'2.2')
-connectEM.getDendQueryAxonAggloOverlapB(p,'2.2')
-connectEM.createNewDendriteSuperagglos(p,'2.2')

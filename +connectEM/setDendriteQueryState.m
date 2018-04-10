@@ -67,6 +67,16 @@ function [skeletonFolders, versionSuffix, flighpathVersion, dendriteVersion,...
             flighpathVersion = '2.0';
             dendriteVersion = 'wholeCells_01_v4';
             dendriteVersionNew = 'wholeCells_02';
+        case '2.3'
+            % source folders for flight paths
+            scratchFolder = '/u/scchr/aggloState/dendQueryAnswers/';
+            skeletonFolders = {'L4_dendrite_queries_27_10_2017' 'L4_dendrite_queries_01_11_2017'};
+            skeletonFolders = cellfun(@(x)[scratchFolder x filesep], skeletonFolders, 'uni', 0);
+            % filename additionals for getAggloQueryOverlapB and flightEndingOverlapRun
+            versionSuffix = '2.2';
+            flighpathVersion = '2.0';
+            dendriteVersion = '16';
+            dendriteVersionNew = '16_b';
         otherwise
             error('Unknown state ''%s''', state);
     end
