@@ -12,11 +12,14 @@ boxCount = 100;
 boxSizeVx = [480, 480, 240];
 
 targetClasses = { ...
-    'Somata'; ...
-    'ApicalDendrite'; ...
-    'SmoothDendrite'; ...
-    'AxonInitialSegment'; ...
-    'Rest'};
+    'Somata', 'Somata'; ...
+    'ApicalDendrite', 'AD'; ...
+    'SmoothDendrite', 'SD'; ...
+    'AxonInitialSegment', 'AIS'; ...
+    'Rest', 'Rest'};
+
+targetLabels = targetClasses(:, 2);
+targetClasses = targetClasses(:, 1);
 
 info = Util.runInfo();
 
@@ -88,14 +91,7 @@ for curIdx = 1:boxCount
     curBox = randBoxes(curIdx, :);
     curBox = [curBox; curBox + boxSizeVx]; %#ok
     
-    curSynT = synT( ...
-        all(synT.pos >= curBox(1, :), 2) ...
-      & all(synT.pos  < curBox(2, :), 2), :);
-    
-    curSynFrac = accumarray( ...
-        curSynT.targetClassId, 1, size(targetClasses));
-    curSynFrac = curSynFrac ./ sum(curSynFrac);
-    
+    % Surface fraction
     curAvailIds = curBox - param.bbox(:, 1)';
     curAvailIds = curAvailIds ./ availBlockSize + 1;
     
@@ -106,8 +102,17 @@ for curIdx = 1:boxCount
 	curSurfFrac = reshape(curSurfFrac, size(curSurfFrac, 1), []);
     curSurfFrac = sum(curSurfFrac, 2) ./ sum(curSurfFrac(:));
     
-    boxData(:, 1, curIdx) = curSynFrac;
-    boxData(:, 2, curIdx) = curSurfFrac;
+    % Synapse fraction
+    curSynT = synT( ...
+        all(synT.pos >= curBox(1, :), 2) ...
+      & all(synT.pos  < curBox(2, :), 2), :);
+    
+    curSynFrac = accumarray( ...
+        curSynT.targetClassId, 1, size(targetClasses));
+    curSynFrac = curSynFrac ./ sum(curSynFrac);
+    
+    boxData(:, 1, curIdx) = curSurfFrac;
+    boxData(:, 2, curIdx) = curSynFrac;
 end
 
 % Get rid of boxes that don't have any synapses
@@ -123,9 +128,12 @@ boxGroups(:, 2, :) = 2 .* boxGroups(:, 2, :);
 
 fig = figure();
 fig.Color = 'white';
-ax = axes(fig);
+fig.Position(3:4) = [720, 300];
 
-colors = ax.ColorOrder(1:2, :);
+ax = axes(fig);
+hold(ax, 'on');
+
+colors = ax.ColorOrder([1, 3], :);
 colorGroup = repmat(1:2, 1, numel(targetClasses));
 
 boxplot( ...
@@ -133,6 +141,33 @@ boxplot( ...
     'PlotStyle', 'compact', ...
     'ColorGroup', colorGroup, ...
     'Colors', colors, ...
+    'OutlierSize', 8, ...
     'Symbol', '.');
+
+ax.Box = 'off';
 ax.TickDir = 'out';
 ax.YScale = 'log';
+
+ylim(ax, [1e-4, 1]);
+yticklabels(ax, arrayfun( ...
+    @(f) sprintf('%g', f), ...
+    yticks(ax), 'UniformOutput', false));
+ax.YAxis.MinorTick = 'off';
+ylabel(ax, 'Fraction');
+
+xticks(ax, 2 .* (1:numel(targetClasses)) - 0.5);
+xticklabels(ax, targetLabels);
+
+% Legend
+plot(ax, nan, nan, '.', 'Color', colors(1, :));
+plot(ax, nan, nan, '.', 'Color', colors(2, :));
+
+h = legend(ax, ...
+    'Surface fraction', ...
+    'Synapse fraction', ...
+    'Location', 'eastoutside');
+h.Box = 'off';
+
+title(ax, ...
+    {info.filename; info.git_repos{1}.hash}, ...
+    'FontWeight', 'normal', 'FontSize', 10);
