@@ -8,8 +8,15 @@ availBlockFile = '/tmpscratch/amotta/l4/2018-02-02-surface-availability-connecto
 synFile = fullfile(rootDir, 'connectomeState', 'SynapseAgglos_v3_ax_spine_clustered.mat');
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a_ax_spine_syn_clust.mat');
 
-boxCount = 10;
+boxCount = 100;
 boxSizeVx = [480, 480, 240];
+
+targetClasses = { ...
+    'Somata'; ...
+    'ApicalDendrite'; ...
+    'SmoothDendrite'; ...
+    'AxonInitialSegment'; ...
+    'Rest'};
 
 info = Util.runInfo();
 
@@ -26,22 +33,30 @@ availBlock = load(availBlockFile);
 availBlockSize = availBlock.info.param.blockSize;
 assert(~any(mod(boxSizeVx, availBlockSize)));
 
-targetClasses = ...
-    unique(conn.denMeta.targetClass);
-[~, targetClassIds] = ismember( ...
-    targetClasses, availBlock.targetClasses);
-assert(all(targetClassIds));
+%% Prepare availabilities
+[~, sortIds] = ismember( ...
+    availBlock.targetClasses, ...
+    targetClasses(1:(end - 1)));
+sortIds(~sortIds) = ...
+    numel(targetClasses):numel(sortIds);
 
-availBlock = ...
-    availBlock.targetClassAreas( ...
-        targetClassIds, :, :, :);
+% Build 'Rest' class
+availBlock = availBlock.targetClassAreas;
+availBlock(sortIds, :, :, :) = availBlock;
+availBlock(numel(targetClasses), :, :, :) = ...
+    sum(availBlock(numel(targetClasses):end, :, :, :), 1);
+availBlock = availBlock(1:numel(targetClasses), :, :, :);
 
 %% Prepare synapses
 synT = connectEM.Connectome.buildSynapseTable(conn, syn);
 
 % Determine target class id
-synT.targetClassId = conn.denMeta.targetClass(synT.postAggloId);
-[~, synT.targetClassId] = ismember(synT.targetClassId, targetClasses);
+synT.targetClassId = ...
+    conn.denMeta.targetClass(synT.postAggloId);
+[~, synT.targetClassId] = ismember( ...
+    synT.targetClassId, targetClasses(1:(end - 1)));
+synT.targetClassId(~synT.targetClassId) = numel(targetClasses);
+assert(all(synT.targetClassId));
 
 % Calculate position
 synT.pos = cellfun( ...
@@ -67,6 +82,8 @@ randBoxes = (randBoxes - 1) .* boxSizeVx;
 randBoxes = param.bbox(:, 1)' + randBoxes;
 
 %% Analyse boxes
+boxData = nan(numel(targetClasses), 2, boxCount);
+
 for curIdx = 1:boxCount
     curBox = randBoxes(curIdx, :);
     curBox = [curBox; curBox + boxSizeVx]; %#ok
@@ -81,10 +98,27 @@ for curIdx = 1:boxCount
     curAvailIds = curBox - param.bbox(:, 1)';
     curAvailIds = curAvailIds ./ availBlockSize + 1;
     
-    curAvailFrac = availBlock(:, ...
+    curSurfFrac = availBlock(:, ...
             curAvailIds(1, 1):curAvailIds(2, 1), ...
             curAvailIds(1, 2):curAvailIds(2, 2), ...
             curAvailIds(1, 3):curAvailIds(2, 3));
-	curAvailFrac = reshape(curAvailFrac, size(curAvailFrac, 1), []);
-    curAvailFrac = sum(curAvailFrac, 2) ./ sum(curAvailFrac(:));
+	curSurfFrac = reshape(curSurfFrac, size(curSurfFrac, 1), []);
+    curSurfFrac = sum(curSurfFrac, 2) ./ sum(curSurfFrac(:));
+    
+    boxData(:, 1, curIdx) = curSynFrac;
+    boxData(:, 2, curIdx) = curSurfFrac;
 end
+
+%% Show results
+boxGroups = reshape(1:numel(targetClasses), [], 1);
+boxGroups = repmat(boxGroups, 1, 2, boxCount);
+
+boxGroups(:, 1, :) = 2 .* boxGroups(:, 1, :) - 1;
+boxGroups(:, 2, :) = 2 .* boxGroups(:, 2, :);
+
+fig = figure();
+fig.Color = 'white';
+
+ax = axes(fig);
+boxplot(ax, boxData(:), boxGroups(:));
+ax.TickDir = 'out';
