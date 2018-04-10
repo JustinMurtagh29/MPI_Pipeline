@@ -8,7 +8,6 @@ availBlockFile = '/tmpscratch/amotta/l4/2018-02-02-surface-availability-connecto
 
 synFile = fullfile(rootDir, 'connectomeState', 'SynapseAgglos_v3_ax_spine_clustered.mat');
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a_ax_spine_syn_clust.mat');
-vesselFile = fullfile(rootDir, 'heuristicResult.mat');
 
 boxCount = 100;
 boxSizeVx = [480, 480, 240];
@@ -31,10 +30,6 @@ param = param.p;
 
 maxSegId = Seg.Global.getMaxSegId(param);
 segPoints = Seg.Global.getSegToPointMap(param);
-
-vesselLUT = load(vesselFile);
-vesselLUT = vesselLUT.segIds(vesselLUT.vesselScore > 0.5);
-vesselLUT = Agglo.buildLUT(maxSegId, {vesselLUT});
 
 syn = load(synFile);
 conn = load(connFile);
@@ -94,18 +89,9 @@ randBoxes = param.bbox(:, 1)' + randBoxes;
 %% Analyse boxes
 boxData = nan(numel(targetClasses), 2, boxCount);
 
-tic;
 for curIdx = 1:boxCount
     curBox = randBoxes(curIdx, :);
     curBox = [curBox; curBox + boxSizeVx]; %#ok
-    
-    % Make sure we're not in blood vessel
-    %{
-    curVesselFrac = loadSegDataGlobal(param.seg, curBox');
-    curVesselFrac = nonzeros(curVesselFrac(:));
-    curVesselFrac = mean(vesselLUT(curVesselFrac));
-    if curVesselFrac > 0.1; continue; end
-    %}
     
     % Surface fraction
     curAvailIds = curBox - param.bbox(:, 1)';
@@ -129,7 +115,6 @@ for curIdx = 1:boxCount
     
     boxData(:, 1, curIdx) = curSurfFrac;
     boxData(:, 2, curIdx) = curSynFrac;
-    Util.progressBar(curIdx, boxCount)
 end
 
 % Get rid of boxes that don't have any synapses
