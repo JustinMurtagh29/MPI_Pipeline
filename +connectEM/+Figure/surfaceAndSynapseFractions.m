@@ -8,7 +8,6 @@ availBlockFile = '/tmpscratch/amotta/l4/2018-02-02-surface-availability-connecto
 
 synFile = fullfile(rootDir, 'connectomeState', 'SynapseAgglos_v3_ax_spine_clustered.mat');
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a_ax_spine_syn_clust.mat');
-vesselFile = fullfile(rootDir, 'heuristicResult.mat');
 
 boxCount = 100;
 boxSizeVx = [480, 480, 240];
@@ -31,10 +30,6 @@ param = param.p;
 
 maxSegId = Seg.Global.getMaxSegId(param);
 segPoints = Seg.Global.getSegToPointMap(param);
-
-vesselLUT = load(vesselFile);
-vesselLUT = vesselLUT.segIds(vesselLUT.vesselScore > 0.5);
-vesselLUT = Agglo.buildLUT(maxSegId, {vesselLUT});
 
 syn = load(synFile);
 conn = load(connFile);
@@ -94,18 +89,9 @@ randBoxes = param.bbox(:, 1)' + randBoxes;
 %% Analyse boxes
 boxData = nan(numel(targetClasses), 2, boxCount);
 
-tic;
 for curIdx = 1:boxCount
     curBox = randBoxes(curIdx, :);
     curBox = [curBox; curBox + boxSizeVx]; %#ok
-    
-    % Make sure we're not in blood vessel
-    %{
-    curVesselFrac = loadSegDataGlobal(param.seg, curBox');
-    curVesselFrac = nonzeros(curVesselFrac(:));
-    curVesselFrac = mean(vesselLUT(curVesselFrac));
-    if curVesselFrac > 0.1; continue; end
-    %}
     
     % Surface fraction
     curAvailIds = curBox - param.bbox(:, 1)';
@@ -129,12 +115,21 @@ for curIdx = 1:boxCount
     
     boxData(:, 1, curIdx) = curSurfFrac;
     boxData(:, 2, curIdx) = curSynFrac;
-    Util.progressBar(curIdx, boxCount)
 end
 
 % Get rid of boxes that don't have any synapses
 dropMask = squeeze(any(any(isnan(boxData), 1), 2));
 boxData(:, :, dropMask) = [];
+
+%% Global means
+globalSurfFrac = sum(reshape(availBlock, numel(targetClasses), []), 2);
+globalSurfFrac = globalSurfFrac ./ sum(globalSurfFrac);
+
+globalSynFrac = accumarray( ...
+    synT.targetClassId, 1, size(targetClasses));
+globalSynFrac = globalSynFrac ./ sum(globalSynFrac);
+
+globalData = cat(2, globalSurfFrac, globalSynFrac);
 
 %% Show results
 boxGroups = reshape(1:numel(targetClasses), [], 1);
@@ -142,6 +137,10 @@ boxGroups = repmat(boxGroups, 1, 2, size(boxData, 3));
 
 boxGroups(:, 1, :) = 2 .* boxGroups(:, 1, :) - 1;
 boxGroups(:, 2, :) = 2 .* boxGroups(:, 2, :);
+
+% Add jitter
+boxJitter = 0.5 * (rand(size(boxGroups)) - 0.5);
+boxJitter = boxGroups + boxJitter;
 
 fig = figure();
 fig.Color = 'white';
@@ -153,13 +152,27 @@ hold(ax, 'on');
 colors = ax.ColorOrder([1, 3], :);
 colorGroup = repmat(1:2, 1, numel(targetClasses));
 
-boxplot( ...
-    ax, boxData(:), boxGroups(:), ...
-    'PlotStyle', 'compact', ...
-    'ColorGroup', colorGroup, ...
-    'Colors', colors, ...
-    'OutlierSize', 8, ...
-    'Symbol', '.');
+% Fake plots for legend
+plot(ax, nan, nan, '.', 'Color', colors(1, :));
+plot(ax, nan, nan, '.', 'Color', colors(2, :));
+
+scatter(ax, ...
+    boxJitter(:), boxData(:), [], ...
+    colors(1 + mod(boxGroups(:) - 1, 2), :), '.');
+
+for curIdx = 1:numel(globalData)
+    curY = globalData(curIdx);
+    curY = repelem(curY, 1, 2);
+    
+    curGroup = boxGroups(curIdx);
+    curColor = colors(1 + mod(curGroup - 1, 2), :);
+    curX = curGroup + [-0.45, +0.45];
+    
+    plot(ax, ...
+        curX, curY, ...
+        'Color', curColor, ...
+        'LineWidth', 2);
+end
 
 ax.Box = 'off';
 ax.TickDir = 'out';
@@ -174,10 +187,6 @@ ylabel(ax, 'Fraction');
 
 xticks(ax, 2 .* (1:numel(targetClasses)) - 0.5);
 xticklabels(ax, targetLabels);
-
-% Legend
-plot(ax, nan, nan, '.', 'Color', colors(1, :));
-plot(ax, nan, nan, '.', 'Color', colors(2, :));
 
 h = legend(ax, ...
     'Surface fraction', ...
