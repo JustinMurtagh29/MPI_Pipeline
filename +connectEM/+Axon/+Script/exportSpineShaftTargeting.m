@@ -27,19 +27,16 @@ synT = connectEM.Connectome.buildSynapseTable(conn, syn);
 synT.type = syn.synapses.type(synT.id);
 
 axonMeta = conn.axonMeta;
-axonMeta(axonMeta.synCount < minSynCount, :) = [];
-
 axonMeta.priSpineSynCount = accumarray( ...
     synT.preAggloId, synT.type == 'PrimarySpine', size(conn.axons));
+axonMeta.priSpineSynFrac = axonMeta.priSpineSynCount ./ axonMeta.synCount;
+
 axonMeta.shaftSynCount = accumarray( ...
     synT.preAggloId, synT.type == 'Shaft', size(conn.axons));
+axonMeta.shaftSynFrac = axonMeta.shaftSynCount ./ axonMeta.synCount;
 
-axonMeta.priSpineSynFrac = ...
-    axonMeta.priSpineSynCount ...
- ./ axonMeta.synCount;
-axonMeta.shaftSynFrac = ...
-    axonMeta.shaftSynCount ...
- ./ axonMeta.synCount;
+% Get rid of axons with too few synapses
+axonMeta(axonMeta.synCount < minSynCount, :) = [];
 
 %% Export examples
 rng(0);
