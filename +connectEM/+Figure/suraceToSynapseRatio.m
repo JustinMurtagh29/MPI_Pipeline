@@ -8,13 +8,8 @@ availBlockFile = '/tmpscratch/amotta/l4/2018-02-02-surface-availability-connecto
 synFile = fullfile(rootDir, 'connectomeState', 'SynapseAgglos_v3_ax_spine_clustered.mat');
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a_ax_spine_syn_clust.mat');
 
-availBlockFile = '/home/amotta/Desktop/cache/block-data.mat';
-synFile = '/home/amotta/Desktop/cache/SynapseAgglos_v3_ax_spine_clustered.mat';
-connFile = '/home/amotta/Desktop/cache/connectome_axons_18_a_ax_spine_syn_clust.mat';
-
-boxCount = 1;
-boxSizeVx = 15 * 32;
-boxSizeVx = [boxSizeVx, boxSizeVx, boxSizeVx / 2];
+boxCount = 10;
+boxSizeVx = [480, 480, 240];
 
 info = Util.runInfo();
 
@@ -24,12 +19,12 @@ param = param.p;
 
 segPoints = Seg.Global.getSegToPointMap(param);
 
+syn = load(synFile);
+conn = load(connFile);
+
 availBlock = load(availBlockFile);
 availBlockSize = availBlock.info.param.blockSize;
 assert(~any(mod(boxSizeVx, availBlockSize)));
-
-syn = load(synFile);
-conn = load(connFile);
 
 targetClasses = ...
     unique(conn.denMeta.targetClass);
@@ -37,16 +32,27 @@ targetClasses = ...
     targetClasses, availBlock.targetClasses);
 assert(all(targetClassIds));
 
-%% Calculate synapse location
-synapses = syn.synapses;
-synapses.pos = cellfun( ...
+availBlock = ...
+    availBlock.targetClassAreas( ...
+        targetClassIds, :, :, :);
+
+%% Prepare synapses
+synT = connectEM.Connectome.buildSynapseTable(conn, syn);
+
+% Determine target class id
+synT.targetClassId = conn.denMeta.targetClass(synT.postAggloId);
+[~, synT.targetClassId] = ismember(synT.targetClassId, targetClasses);
+
+% Calculate position
+synT.pos = cellfun( ...
     @vertcat, ...
-    synapses.presynId, ...
-    synapses.postsynId, ...
+    syn.synapses.presynId(synT.id), ...
+    syn.synapses.postsynId(synT.id), ...
     'UniformOutput', false);
-synapses.pos = cell2mat(cellfun( ...
+synT.pos = cellfun( ...
     @(segIds) mean(segPoints(segIds, :), 1), ...
-    synapses.pos, 'UniformOutput', false));
+    synT.pos, 'UniformOutput', false);
+synT.pos = cell2mat(synT.pos);
 
 %% Sample random boxes
 segBoxSize = 1 + diff(param.bbox, 1, 2)';
@@ -60,24 +66,25 @@ randBoxes = cell2mat(randBoxes);
 randBoxes = (randBoxes - 1) .* boxSizeVx;
 randBoxes = param.bbox(:, 1)' + randBoxes;
 
-%%
+%% Analyse boxes
 for curIdx = 1:boxCount
     curBox = randBoxes(curIdx, :);
-    curBox = [curBox; curBox + boxSizeVx];
+    curBox = [curBox; curBox + boxSizeVx]; %#ok
     
-    curSynIds = find( ...
-        all(synapses.pos >= curBox(1, :), 2) ...
-      & all(synapses.pos  < curBox(2, :), 2));
+    curSynT = synT( ...
+        all(synT.pos >= curBox(1, :), 2) ...
+      & all(synT.pos  < curBox(2, :), 2), :);
+    curSynFrac = accumarray( ...
+        curSynT.targetClassId, 1, size(targetClasses));
+    curSynFrac = curSynFrac ./ sum(curSynFrac);
     
     curAvailIds = curBox - param.bbox(:, 1)';
     curAvailIds = curAvailIds ./ availBlockSize + 1;
     
-    curAvail = ...
-        availBlock.targetClassAreas(:, ...
+    curAvailFrac = availBlock(:, ...
             curAvailIds(1, 1):curAvailIds(2, 1), ...
             curAvailIds(1, 2):curAvailIds(2, 2), ...
             curAvailIds(1, 3):curAvailIds(2, 3));
-    
-	curAvail = reshape(curAvail, size(curAvail, 1), []);
-    curAvail = sum(curAvail, 2) ./ sum(curAvail(:));
+	curAvailFrac = reshape(curAvailFrac, size(curAvailFrac, 1), []);
+    curAvailFrac = sum(curAvailFrac, 2) ./ sum(curAvailFrac(:));
 end
