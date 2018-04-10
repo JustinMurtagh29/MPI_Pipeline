@@ -121,12 +121,26 @@ end
 dropMask = squeeze(any(any(isnan(boxData), 1), 2));
 boxData(:, :, dropMask) = [];
 
+%% Global means
+globalSurfFrac = sum(reshape(availBlock, numel(targetClasses), []), 2);
+globalSurfFrac = globalSurfFrac ./ sum(globalSurfFrac);
+
+globalSynFrac = accumarray( ...
+    synT.targetClassId, 1, size(targetClasses));
+globalSynFrac = globalSynFrac ./ sum(globalSynFrac);
+
+globalData = cat(2, globalSurfFrac, globalSynFrac);
+
 %% Show results
 boxGroups = reshape(1:numel(targetClasses), [], 1);
 boxGroups = repmat(boxGroups, 1, 2, size(boxData, 3));
 
 boxGroups(:, 1, :) = 2 .* boxGroups(:, 1, :) - 1;
 boxGroups(:, 2, :) = 2 .* boxGroups(:, 2, :);
+
+% Add jitter
+boxJitter = 0.5 * (rand(size(boxGroups)) - 0.5);
+boxJitter = boxGroups + boxJitter;
 
 fig = figure();
 fig.Color = 'white';
@@ -138,13 +152,27 @@ hold(ax, 'on');
 colors = ax.ColorOrder([1, 3], :);
 colorGroup = repmat(1:2, 1, numel(targetClasses));
 
-boxplot( ...
-    ax, boxData(:), boxGroups(:), ...
-    'PlotStyle', 'compact', ...
-    'ColorGroup', colorGroup, ...
-    'Colors', colors, ...
-    'OutlierSize', 8, ...
-    'Symbol', '.');
+% Fake plots for legend
+plot(ax, nan, nan, '.', 'Color', colors(1, :));
+plot(ax, nan, nan, '.', 'Color', colors(2, :));
+
+scatter(ax, ...
+    boxJitter(:), boxData(:), [], ...
+    colors(1 + mod(boxGroups(:) - 1, 2), :), '.');
+
+for curIdx = 1:numel(globalData)
+    curY = globalData(curIdx);
+    curY = repelem(curY, 1, 2);
+    
+    curGroup = boxGroups(curIdx);
+    curColor = colors(1 + mod(curGroup - 1, 2), :);
+    curX = curGroup + [-0.45, +0.45];
+    
+    plot(ax, ...
+        curX, curY, ...
+        'Color', curColor, ...
+        'LineWidth', 2);
+end
 
 ax.Box = 'off';
 ax.TickDir = 'out';
@@ -159,10 +187,6 @@ ylabel(ax, 'Fraction');
 
 xticks(ax, 2 .* (1:numel(targetClasses)) - 0.5);
 xticklabels(ax, targetLabels);
-
-% Legend
-plot(ax, nan, nan, '.', 'Color', colors(1, :));
-plot(ax, nan, nan, '.', 'Color', colors(2, :));
 
 h = legend(ax, ...
     'Surface fraction', ...
