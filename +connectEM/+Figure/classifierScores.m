@@ -15,6 +15,24 @@ typeEmSegFile = fullfile(rootDir, 'segmentPredictions.mat');
 synEmGraphFile = fullfile(rootDir, 'graphNew.mat');
 synEmScoreFile = fullfile(rootDir, 'globalSynScores.mat');
 
+% File paths taken from `+connectEM/aggloPreprocessing.m`
+% Commit hash `2aac567ca0a704f586ed0e899ea5723a24cd0533`
+
+% Axons from `/gaba/scratch/mberning/aggloGridSearch6/6_01_00046/metricsFinal.mat`
+% This in turn is based on `/gaba/scratch/mberning/aggloGridSearch/search05_00564.mat`
+% SHA256 hash `a59602e74ea231fb55ca3e1c4b30e5f1da0c7469b34bceed0d16d37133fc917f`
+% Extracted `probThresholdAxon` variable
+connectEmThreshAxon = 0.97;
+
+% Dendrites from `/gaba/scratch/mberning/aggloGridSearch/search03_00514.mat`
+% SHA256 hash `610c6a3f1c09c8f6a7c4708bcd64e6691ea6d6a0ae2fbde84c7d20b3e919e9bf`
+% Extracted `probThresholdDendrite` variable
+connectEmThreshDend = 0.98;
+
+% See amotta's `+L4/+Spine/+Head/buildAgglos.m`
+% Commit hash `36012fb00b88c2d16a3cb4383f32adbdf99370f1`
+shThresh = 0.5;
+
 % Plot histogram with log Y axis
 plotLog = false;
 
