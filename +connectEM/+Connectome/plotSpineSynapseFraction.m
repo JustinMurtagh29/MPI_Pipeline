@@ -115,9 +115,10 @@ fig.Color = 'white';
 ax = axes(fig);
 axis(ax, 'square')
 hold(ax, 'on');
+
 histogram(ax, ...
     axonMeta.fullPriSpineSynFrac, binEdges, ...
-    'DisplayStyle', 'stairs', 'LineWidth', 2);
+    'DisplayStyle', 'stairs', 'LineWidth', 2, 'FaceAlpha', 1);
 
 ax.TickDir = 'out';
 xlim(ax, binEdges([1, end]));
