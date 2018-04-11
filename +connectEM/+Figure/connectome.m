@@ -76,7 +76,7 @@ conn = sortrows(conn, 'synCount', 'ascend');
 
 fig = figure();
 fig.Color = 'white';
-fig.Position(3:4) = 1100;
+fig.Position(3:4) = 1200;
 
 ax = axes(fig);
 h = scatter(ax, conn.coord(:, 2), conn.coord(:, 1), '.');
@@ -147,6 +147,15 @@ axDend.YDir = 'reverse';
 axDend.TickDir = 'out';
 axDend.YMinorTick = 'off';
 
+axDend.YLim(1) = minSynCount;
+yTicks = log10(axDend.YLim);
+yTicks = 10 .^ (yTicks(1):yTicks(2));
+
+yticks(axDend, yTicks);
+yticklabels(axDend, arrayfun( ...
+    @(d) sprintf('%d', d), ...
+    yTicks, 'UniformOutput', false));
+
 xlim(axDend, [0, numel(dendSynCount)]);
 xticks(axDend, [xticks(axDend), axDend.XLim(2)]);
 ylabel(axDend, 'Synapses');
@@ -172,6 +181,15 @@ axAxon.XAxisLocation = 'top';
 axAxon.XMinorTick = 'off';
 axAxon.YDir = 'reverse';
 axAxon.YAxisLocation = 'right';
+
+axAxon.XLim(1) = minSynCount;
+xTicks = log10(axAxon.XLim);
+xTicks = 10 .^ (xTicks(1):xTicks(2));
+
+xticks(axAxon, xTicks);
+xticklabels(axAxon, arrayfun( ...
+    @(d) sprintf('%d', d), ...
+    xTicks, 'UniformOutput', false));
 
 ylim(axAxon, [0, numel(axonSynCount)]);
 yticks(axAxon, [yticks(axAxon), numel(axonSynCount)]);
