@@ -920,13 +920,16 @@ if  ~existentWC(9)
         end
         wholeCellsNoAxon(n) = rmfield(tmp(ind),'axon');
     end
+<<<<<<< Updated upstream
+=======
+    save(fullfile(outputFolder,'wholeCells_GTAxon_08_v4.mat'),'wholeCells');  
+>>>>>>> Stashed changes
     load(fullfile(outputFolder,'dendrites_16.mat'))
     % concatenate truncated whole cells with dendrite class and make new state
     indWholeCells = cat(1,false(numel(dendrites),1),true(numel(wholeCellsNoAxon),1));
     dendrites = cat(1,dendrites,wholeCellsNoAxon');
     indBigDends = cat(1,indBigDends,true(numel(wholeCellsNoAxon),1));
     indAIS = cat(1,indAIS,false(numel(wholeCellsNoAxon),1));
-    save(fullfile(outputFolder,'wholeCells_GTAxon_08_v4.mat'),'wholeCells');
     [ myelinDend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
     save(fullfile(outputFolder,'dendrites_wholeCells_01_v5.mat'),'dendrites','myelinDend','indBigDends','indWholeCells','indAIS')%,'info');
 end
