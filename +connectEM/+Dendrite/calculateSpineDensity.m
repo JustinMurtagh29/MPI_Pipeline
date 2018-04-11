@@ -5,10 +5,7 @@ function [spineDensity, spineCount] = ...
     maxSegId = Seg.Global.getMaxSegId(param);
     shLUT = Agglo.buildLUT(maxSegId, shAgglos);
     
-    spineIds = cellfun( ...
-        @(segIds) setdiff(shLUT(segIds), 0), ...
-        dendrites, 'UniformOutput', false);
-    
-    spineCount = cellfun(@numel, spineIds);
+    spineCountFunc = @(segIds) numel(setdiff(shLUT(segIds), 0));
+    spineCount = cellfun(spineCountFunc, dendrites);
     spineDensity = spineCount ./ dendLengths;
 end
