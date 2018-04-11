@@ -920,7 +920,7 @@ if  ~existentWC(9)
         end
         wholeCellsNoAxon(n) = rmfield(tmp(ind),'axon');
     end
-    load(fullfile(outputFolder,'dendrites_17_a.mat'))
+    load(fullfile(outputFolder,'dendrites_16.mat'))
     % concatenate truncated whole cells with dendrite class and make new state
     indWholeCells = cat(1,false(numel(dendrites),1),true(numel(wholeCellsNoAxon),1));
     dendrites = cat(1,dendrites,wholeCellsNoAxon');
