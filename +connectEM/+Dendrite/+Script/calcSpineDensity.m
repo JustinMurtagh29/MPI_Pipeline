@@ -15,7 +15,8 @@ rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 trunkFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_01_v2.mat');
 spinyFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_01_spine_attachment.mat');
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a_ax_spine_syn_clust.mat');
-outDir = '/home/amotta/Desktop';
+
+nmlDir = '';
 
 % Very rough threshold based on table 2 from
 % Kawaguchi, Karuba, Kubota (2006) Cereb Cortex
@@ -149,26 +150,28 @@ annotation(fig, ...
 smoothIds = find(candMask & (spineDensity <= maxSpinesPerUm));
 
 %% Export examples to webKNOSSOS
-randIds = smoothIds;
-randIds = randIds(randperm(numel(randIds)));
-randIds = randIds(1:25);
+if ~isempty(nmlDir)
+    randIds = smoothIds;
+    randIds = randIds(randperm(numel(randIds)));
+    randIds = randIds(1:25);
 
-skel = skeleton();
-skel = Skeleton.setParams4Pipeline(skel, param);
-skel = skel.setDescription(sprintf( ...
-    '%s (%s)', info.filename, info.git_repos{1}.hash));
+    skel = skeleton();
+    skel = Skeleton.setParams4Pipeline(skel, param);
+    skel = skel.setDescription(sprintf( ...
+        '%s (%s)', info.filename, info.git_repos{1}.hash));
 
-randNodes = cellfun( ...
-    @(segIds) segPoints(segIds, :), ...
-    dendrites(randIds), 'UniformOutput', false);
-randNames = arrayfun( ...
-    @(idx, id, rho) sprintf( ...
-        '%0*d. Dendrite %g. %.2f spines / µm', ...
-        ceil(log10(1 + numel(randIds))), idx, id, rho), ...
-    reshape(1:numel(randIds), [], 1), randIds, spineDensity(randIds), ...
-    'UniformOutput', false);
+    randNodes = cellfun( ...
+        @(segIds) segPoints(segIds, :), ...
+        dendrites(randIds), 'UniformOutput', false);
+    randNames = arrayfun( ...
+        @(idx, id, rho) sprintf( ...
+            '%0*d. Dendrite %g. %.2f spines / µm', ...
+            ceil(log10(1 + numel(randIds))), idx, id, rho), ...
+        reshape(1:numel(randIds), [], 1), randIds, spineDensity(randIds), ...
+        'UniformOutput', false);
 
-skel = Skeleton.fromMST(randNodes, param.raw.voxelSize, skel);
-skel.names = randNames;
+    skel = Skeleton.fromMST(randNodes, param.raw.voxelSize, skel);
+    skel.names = randNames;
 
-skel.write(fullfile(outDir, 'smooth-dendrite-candidates.nml'));
+    skel.write(fullfile(nmlDir, 'smooth-dendrite-candidates.nml'));
+end
