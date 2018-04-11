@@ -1,5 +1,6 @@
 %% load graph etc
 % Comment MB: executed with clean state, e.g. ~exist will all trigger
+
 overwrite = 0;
 load('/gaba/u/mberning/results/pipeline/20170217_ROI/allParameterWithSynapses.mat');
 disp('Parameters loaded');
@@ -607,6 +608,7 @@ end
 disp('State 16 dendrites loaded/generated')
 
 %% patch in dendrite dendrite and dangling flight paths
+%{
 if ~existentDendrites(18)
     connectEM.getDendriteQueryOverlapB(p,'2.3')
     connectEM.getDendQueryAxonAggloOverlapB(p,'2.3')
@@ -615,7 +617,7 @@ if ~existentDendrites(18)
 end
 %% patch in AIS
 
-
+%}
 %% remove axons from whole cells and add them to a new state of dendrites
 
 % assure that wholeCells are sorted in the same way as the somaAgglos
@@ -709,6 +711,7 @@ if  ~existentWC(9)
         wholeCells(n).axon = NaN(size(wholeCells(n).nodes,1),1);
     end
     wcLUT = Superagglos.buildLUT(wholeCells,segmentMeta.maxSegId);
+
     usedCells = zeros(numel(wholeCells),1);
     skelsNotFound = [];
     for f = 1:numel(filenames)
@@ -760,7 +763,7 @@ if  ~existentWC(9)
             distToCenter = sqrt(sum(bsxfun(@minus,bsxfun(@times,wholeCells(ind).nodes(:,1:3),[11.24,11.24,28]),centerSoma).^2,2));
             % get the minimal distance of the axon branch to the soma plus
             % some threshold
-            minDist = min(distToCenter(mask));
+            minDist = min(distToCenter(mask))+2000;
             if minDist < 2000
                 warning('Distance of axon to center of soma is less than 2 micron. Seems strange.. (%s)',filenames{f})
             end
@@ -799,7 +802,8 @@ if  ~existentWC(9)
         wholeCellsNoAxon(n) = rmfield(tmp(ind),'axon');
     end
     save(fullfile(outputFolder,'wholeCells_GTAxon_08_v4.mat'),'wholeCells');  
-    load(fullfile(outputFolder,'dendrites_16.mat'))
+ 
+   load(fullfile(outputFolder,'dendrites_16.mat'))
     % concatenate truncated whole cells with dendrite class and make new state
     indWholeCells = cat(1,false(numel(dendrites),1),true(numel(wholeCellsNoAxon),1));
     dendrites = cat(1,dendrites,wholeCellsNoAxon');
@@ -807,5 +811,6 @@ if  ~existentWC(9)
     indAIS = cat(1,indAIS,false(numel(wholeCellsNoAxon),1));
     [ myelinDend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
     save(fullfile(outputFolder,'dendrites_wholeCells_01_v5.mat'),'dendrites','myelinDend','indBigDends','indWholeCells','indAIS')%,'info');
+   
 end
 %%
