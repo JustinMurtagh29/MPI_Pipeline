@@ -920,10 +920,7 @@ if  ~existentWC(9)
         end
         wholeCellsNoAxon(n) = rmfield(tmp(ind),'axon');
     end
-<<<<<<< Updated upstream
-=======
     save(fullfile(outputFolder,'wholeCells_GTAxon_08_v4.mat'),'wholeCells');  
->>>>>>> Stashed changes
     load(fullfile(outputFolder,'dendrites_16.mat'))
     % concatenate truncated whole cells with dendrite class and make new state
     indWholeCells = cat(1,false(numel(dendrites),1),true(numel(wholeCellsNoAxon),1));
