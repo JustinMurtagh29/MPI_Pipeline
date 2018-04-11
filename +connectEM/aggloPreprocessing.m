@@ -5,9 +5,9 @@ load('/gaba/u/mberning/results/pipeline/20170217_ROI/allParameterWithSynapses.ma
 disp('Parameters loaded');
 outputFolder = fullfile(p.saveFolder, 'aggloState');
 info = Util.runInfo(); % added by BS
-statesDendrites = {'dendrites_01','dendrites_02','dendrites_03_v2','dendrites_03_v2_splitmerged','dendrites_04','dendrites_05','dendrites_06','dendrites_07','dendrites_08','dendrites_09','dendrites_10','dendrites_11','dendrites_12','dendrites_13','dendrites_14','dendrites_15','dendrites_16','dendrites_16_b','dendrites_wholeCells_GTAxon_01'};
+statesDendrites = {'dendrites_01','dendrites_02','dendrites_03_v2','dendrites_03_v2_splitmerged','dendrites_04','dendrites_05','dendrites_06','dendrites_07','dendrites_08','dendrites_09','dendrites_10','dendrites_11','dendrites_12','dendrites_13','dendrites_14','dendrites_15','dendrites_16','dendrites_16_b','dendrites_wholeCells_01_v5'};
 statesAxons = {'axons_01','axons_02','axons_03'};
-statesWC = {'wholeCells_01','wholeCells_02','wholeCells_03','wholeCells_04','wholeCells_05','wholeCells_06','wholeCells_07','wholeCells_08','wholeCells_GTAxon_08_v3'};
+statesWC = {'wholeCells_01','wholeCells_02','wholeCells_03','wholeCells_04','wholeCells_05','wholeCells_06','wholeCells_07','wholeCells_08','wholeCells_GTAxon_08_v4'};
 existentDendrites = cellfun(@(x) exist(fullfile(outputFolder,strcat(x,'.mat')),'file'),statesDendrites) | overwrite;
 existentAxons = cellfun(@(x) exist(fullfile(outputFolder,strcat(x,'.mat')),'file'),statesAxons) | overwrite;
 existentWC = cellfun(@(x) exist(fullfile(outputFolder,strcat(x,'.mat')),'file'),statesWC) | overwrite;
@@ -882,7 +882,7 @@ if  ~existentWC(9)
             distToCenter = sqrt(sum(bsxfun(@minus,bsxfun(@times,wholeCells(ind).nodes(:,1:3),[11.24,11.24,28]),centerSoma).^2,2));
             % get the minimal distance of the axon branch to the soma plus
             % some threshold
-            minDist = min(distToCenter(mask)) - 1000;
+            minDist = min(distToCenter(mask));
             if minDist < 2000
                 warning('Distance of axon to center of soma is less than 2 micron. Seems strange.. (%s)',filenames{f})
             end
@@ -926,8 +926,8 @@ if  ~existentWC(9)
     dendrites = cat(1,dendrites,wholeCellsNoAxon');
     indBigDends = cat(1,indBigDends,true(numel(wholeCellsNoAxon),1));
     indAIS = cat(1,indAIS,false(numel(wholeCellsNoAxon),1));
-    save(fullfile(outputFolder,'wholeCells_GTAxon_08_v3.mat'),'wholeCells');
+    save(fullfile(outputFolder,'wholeCells_GTAxon_08_v4.mat'),'wholeCells');
     [ myelinDend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
-    save(fullfile(outputFolder,'dendrites_wholeCells_01_v4.mat'),'dendrites','myelinDend','indBigDends','indWholeCells','indAIS')%,'info');
+    save(fullfile(outputFolder,'dendrites_wholeCells_01_v5.mat'),'dendrites','myelinDend','indBigDends','indWholeCells','indAIS')%,'info');
 end
 %%
