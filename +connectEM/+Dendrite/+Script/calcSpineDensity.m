@@ -17,6 +17,12 @@ spinyFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_01_spine_attac
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a_ax_spine_syn_clust.mat');
 
 nmlDir = '';
+isoDir = '/tmpscratch/amotta/l4/2018-04-11-smooth-dendrite-isosurfaces';
+
+% WKW is faster
+segParam = struct;
+segParam.root = '/tmpscratch/amotta/l4/2012-09-28_ex145_07x2_ROI2017/segmentation/1';
+segParam.backend = 'wkwrap';
 
 % Very rough threshold based on table 2 from
 % Kawaguchi, Karuba, Kubota (2006) Cereb Cortex
@@ -36,6 +42,7 @@ info = Util.runInfo();
 Util.log('Loading data');
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
+param.seg = segParam;
 
 maxSegId = Seg.Global.getMaxSegId(param);
 segPoints = Seg.Global.getSegToPointMap(param);
@@ -175,3 +182,15 @@ if ~isempty(nmlDir)
 
     skel.write(fullfile(nmlDir, 'smooth-dendrite-candidates.nml'));
 end
+
+%% Generate isosurfaces
+if ~isempty(isoDir)
+    Util.log('Generating isosurfaces');
+    Visualization.exportAggloToAmira( ...
+        dendrites(smoothIds), isoDir, ...
+        'smoothSizeHalf', 4, ...
+        'smoothWidth', 8, ...
+        'reduce', 0.05);
+end
+
+Util.log('Done!');
