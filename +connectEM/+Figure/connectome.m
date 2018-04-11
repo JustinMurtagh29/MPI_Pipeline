@@ -141,8 +141,10 @@ histogram(axDend, ...
     'BinEdges', 0:1:numel(dendSynCount), ...
     'EdgeColor', ax.ColorOrder(1, :));
 
+axDend.YScale = 'log';
 axDend.YDir = 'reverse';
 axDend.TickDir = 'out';
+axDend.YMinorTick = 'off';
 
 xlim(axDend, [0, numel(dendSynCount)]);
 xticks(axDend, [xticks(axDend), axDend.XLim(2)]);
@@ -162,9 +164,11 @@ histogram(axAxon, ...
     'Orientation', 'horizontal', ...
     'EdgeColor', ax.ColorOrder(1, :));
 
-axAxon.YDir = 'reverse';
 axAxon.TickDir = 'out';
+axAxon.XScale = 'log';
 axAxon.XAxisLocation = 'top';
+axAxon.XMinorTick = 'off';
+axAxon.YDir = 'reverse';
 axAxon.YAxisLocation = 'right';
 
 ylim(axAxon, [0, numel(axonSynCount)]);
