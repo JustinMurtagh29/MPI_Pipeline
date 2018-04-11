@@ -261,34 +261,18 @@ if ~existentDendrites(6) || ~existentWC(1)
     
     load(fullfile(outputFolder,'axons_07_b.mat'),'axons')
     % ending detection done by christian!
-    correctionFolder = 'WholeCellCorrections_04';
-    fprintf('Folder with correction nmls for state dendrites_04 is %s\n',fullfile(outputFolder,correctionFolder));
+    correctionFolder = fullfile(outputFolder,'WholeCellCorrections_04');
+    fprintf('Folder with correction nmls for dendrites_04 is %s\n',correctionFolder);
     %     connectEM.applyAggloCorrections(dendrites,p,fullfile(outputFolder,correctionFolder),2,sMpoints,axons,1);
     
     % split the stuff to be added now
     dendrites = connectEM.applyAggloCorrections(dendrites,p,fullfile(outputFolder,correctionFolder,'checkedBeforeAdd'),1,sMpoints);
-    [axons,axonLUT] = connectEM.applyAggloCorrections(axons,p,fullfile(outputFolder,correctionFolder,'checkedBeforeAdd'),1,sMpoints);
+    axons = connectEM.applyAggloCorrections(axons,p,fullfile(outputFolder,correctionFolder,'checkedBeforeAdd'),1,sMpoints);
     
-    [dendrites,dendriteLUT] = connectEM.applyAggloCorrections(dendrites,p,fullfile(outputFolder,correctionFolder),0,sMpoints,axons,1);
-    
-    % test for duplets
-    agglos = cell2mat(Superagglos.transformAggloNewOldRepr(dendrites));
-    assert(numel(agglos)==numel(unique(agglos)))
-    
-    dendriteSegIds = find(dendriteLUT);
-    [ismem,ind] = ismember(somaSegIds,dendriteSegIds);
-    % get each dend id which contains most of the seg ids of each soma
-    WholeCellId = accumarray(somaLUT(somaSegIds(ismem))',dendriteLUT(dendriteSegIds(ind(ismem)))',[],@mode);
-    
-    wholeCells = dendrites(WholeCellId);
-    dendrites = dendrites(setdiff(1:numel(dendrites),WholeCellId));
-    
+    [ wholeCells,dendrites,indBigDends,myelinDend ] = connectEM.wcApplyManualAnnotation(cat(1,wholeCells,dendrites), correctionFolder, axons,somaSegIds,somaLUT, sMpoints );
+
     save(fullfile(outputFolder,'wholeCells_01.mat'),'wholeCells');
-    
-    indBigDends = Agglo.isMaxBorderToBorderDistAbove(p, 5000, Superagglos.transformAggloNewOldRepr(dendrites));
-    [ myelinDend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
     save(fullfile(outputFolder,'dendrites_05.mat'),'dendrites','WholeCellId','myelinDend','indBigDends','info');
-    
 elseif ~existentDendrites(7) || ~existentWC(2)
     clear dendrites myelinDend indBigDends
     load(fullfile(outputFolder,'dendrites_05.mat'))
@@ -296,35 +280,20 @@ elseif ~existentDendrites(7) || ~existentWC(2)
 end
 disp('Dendrites state 05 dendrites loaded/generated')
 
-%%
+%% next round of manual whole cell fixes
 if  ~existentWC(2) || ~existentDendrites(7)
     
     % this function is in Alessandro's repo
     
     load(fullfile(outputFolder,'axons_07_b.mat'),'axons')
     % ending detection done by christian!
-    correctionFolder = 'WholeCellCorrections_05';
-    fprintf('Folder with correction nmls for state dendrites_05 is %s\n',fullfile(outputFolder,correctionFolder));
+    correctionFolder = fullfile(outputFolder,'WholeCellCorrections_05');
+    fprintf('Folder with correction nmls for dendrites_05 is %s\n',correctionFolder);
     %     connectEM.applyAggloCorrections(cat(1,wholeCells,dendrites),p,fullfile(outputFolder,correctionFolder),2,sMpoints,axons,1);
-    
-    [dendrites,dendriteLUT] = connectEM.applyAggloCorrections(cat(1,wholeCells,dendrites),p,fullfile(outputFolder,correctionFolder),0,sMpoints,axons,1);
-    
-    % test for duplets
-    agglos = cell2mat(Superagglos.transformAggloNewOldRepr(dendrites));
-    assert(numel(agglos)==numel(unique(agglos)))
-    
-    dendriteSegIds = find(dendriteLUT);
-    [ismem,ind] = ismember(somaSegIds,dendriteSegIds);
-    % get each dend id which contains most of the seg ids of each soma
-    WholeCellId = accumarray(somaLUT(somaSegIds(ismem))',dendriteLUT(dendriteSegIds(ind(ismem)))',[],@mode);
-    
-    wholeCells = dendrites(WholeCellId);
-    dendrites = dendrites(setdiff(1:numel(dendrites),WholeCellId));
-    
+    % no correction was necessary
+    [ wholeCells,dendrites,indBigDends,myelinDend ] = connectEM.wcApplyManualAnnotation(cat(1,wholeCells,dendrites), correctionFolder, axons,somaSegIds,somaLUT, sMpoints );
+
     save(fullfile(outputFolder,'wholeCells_02.mat'),'wholeCells');
-    
-    indBigDends = Agglo.isMaxBorderToBorderDistAbove(p, 5000, Superagglos.transformAggloNewOldRepr(dendrites));
-    [ myelinDend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
     save(fullfile(outputFolder,'dendrites_06.mat'),'dendrites','myelinDend','indBigDends')%,'info');
 elseif ~existentDendrites(8) || ~existentWC(3)
     clear dendrites myelinDend indBigDends
@@ -332,36 +301,17 @@ elseif ~existentDendrites(8) || ~existentWC(3)
     load(fullfile(outputFolder,'wholeCells_02.mat'),'wholeCells');
 end
 disp('State 06 dendrites loaded/generated')
-%%
+%% next round of manual whole cell fixes
 if ~existentWC(3) || ~existentDendrites(8)
-    
-    % this function is in Alessandro's repo
-    
+       
     load(fullfile(outputFolder,'axons_07_b.mat'),'axons')
     % ending detection done by christian!
-    correctionFolder = 'WholeCellCorrections_06';
-    fprintf('Folder with correction nmls for state dendrites_06 is %s\n',fullfile(outputFolder,correctionFolder));
+    correctionFolder = fullfile(outputFolder,'WholeCellCorrections_06');
+    fprintf('Folder with correction nmls for dendrites_06 is %s\n',correctionFolder);
     %     connectEM.applyAggloCorrections(cat(1,wholeCells,dendrites),p,fullfile(outputFolder,correctionFolder),2,sMpoints,axons,1);
     % no correction was necessary
-    
-    [dendrites,dendriteLUT] = connectEM.applyAggloCorrections(cat(1,wholeCells,dendrites),p,fullfile(outputFolder,correctionFolder),0,sMpoints,axons,1);
-    
-    % test for duplets
-    agglos = cell2mat(Superagglos.transformAggloNewOldRepr(dendrites));
-    assert(numel(agglos)==numel(unique(agglos)))
-    
-    dendriteSegIds = find(dendriteLUT);
-    [ismem,ind] = ismember(somaSegIds,dendriteSegIds);
-    % get each dend id which contains most of the seg ids of each soma
-    WholeCellId = accumarray(somaLUT(somaSegIds(ismem))',dendriteLUT(dendriteSegIds(ind(ismem)))',[],@mode);
-    
-    wholeCells = dendrites(WholeCellId);
-    dendrites = dendrites(setdiff(1:numel(dendrites),WholeCellId));
-    
+    [ wholeCells,dendrites,indBigDends,myelinDend ] = connectEM.wcApplyManualAnnotation(cat(1,wholeCells,dendrites), correctionFolder, axons,somaSegIds,somaLUT, sMpoints );
     save(fullfile(outputFolder,'wholeCells_03.mat'),'wholeCells');
-    
-    indBigDends = Agglo.isMaxBorderToBorderDistAbove(p, 5000, Superagglos.transformAggloNewOldRepr(dendrites));
-    [ myelinDend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
     save(fullfile(outputFolder,'dendrites_07.mat'),'dendrites','myelinDend','indBigDends')%,'info');
 elseif ~existentDendrites(9) || ~existentWC(4)
     clear dendrites myelinDend indBigDends
@@ -383,7 +333,7 @@ somaSegIds = cell2mat(somaAgglos);
 somaLUT(somaSegIds) = repelem(1:numel(somaAgglos),cellfun(@numel,somaAgglos));
 disp('Soma whole cell agglos loaded')
 
-%%
+%% next round of manual whole cell fixes
 if ~existentDendrites(9)
     load(fullfile(outputFolder,'axons_07_b.mat'),'axons')
     [dendriteLUT,dendriteSegIds] = Superagglos.buildLUT(dendrites);
@@ -411,7 +361,7 @@ elseif ~existentDendrites(10)
 end
 disp('State 08 dendrites loaded/generated')
 
-%%
+%% next round of manual whole cell fixes
 if ~existentDendrites(10)
     load(fullfile(outputFolder,'axons_07_b.mat'),'axons')
     
@@ -448,7 +398,7 @@ elseif ~existentDendrites(11)
 end
 disp('State 09 dendrites loaded/generated')
 
-%%
+%% next round of manual whole cell fixes
 if ~existentDendrites(11)
     load(fullfile(outputFolder,'axons_07_b.mat'),'axons')
     
@@ -486,7 +436,7 @@ end
 disp('State 10 dendrites loaded/generated')
 
 
-%%
+%% next round of manual whole cell fixes
 if ~existentDendrites(12)
     load(fullfile(outputFolder,'axons_07_b.mat'),'axons')
     
@@ -523,7 +473,7 @@ elseif ~existentDendrites(13)
 end
 disp('State 11 dendrites loaded/generated')
 
-%%
+%% next round of manual whole cell fixes
 if ~existentDendrites(13)
     
     load(fullfile(outputFolder,'axons_08_b.mat'),'axons')
@@ -561,34 +511,19 @@ elseif ~existentDendrites(14)
 end
 disp('State 12 dendrites loaded/generated')
 
-%%
+%% next round of manual whole cell fixes
 if ~existentDendrites(14) || ~existentWC(4)
     load(fullfile(outputFolder,'axons_08_b.mat'),'axons')
     
     % the corrections are based on checking border whole cells in
     % dendrites_12 for remaining mergers/missing ends
-    correctionFolder = 'WholeCellCorrections_13';
-    fprintf('Folder with correction nmls for state dendrites_12 is %s\n',fullfile(outputFolder,correctionFolder));
-    
-    [dendrites,dendriteLUT] = connectEM.applyAggloCorrections(dendrites,p,fullfile(outputFolder,correctionFolder),0,sMpoints,axons,1);
-    
-    % test for duplets
-    agglos = cell2mat(Superagglos.transformAggloNewOldRepr(dendrites));
-    assert(numel(agglos)==numel(unique(agglos)))
-    
-    dendriteSegIds = find(dendriteLUT);
-    [ismem,ind] = ismember(somaSegIds,dendriteSegIds);
-    % get each dend id which contains most of the seg ids of each soma
-    BorderWholeCellId = unique(accumarray(somaLUT(somaSegIds(ismem))',dendriteLUT(dendriteSegIds(ind(ismem)))',[],@mode));
+    correctionFolder = fullfile(outputFolder,'WholeCellCorrections_13');
+    fprintf('Folder with correction nmls for dendrites_12 is %s\n',correctionFolder);
+    [ borderwholeCells,dendrites,indBigDends,myelinDend ] = connectEM.wcApplyManualAnnotation(cat(1,wholeCells,dendrites), correctionFolder, axons,somaSegIds,somaLUT, sMpoints );
     
     load(fullfile(outputFolder,'wholeCells_03.mat'),'wholeCells');
-    wholeCells = cat(1,wholeCells,dendrites(BorderWholeCellId));
-    dendrites = dendrites(setdiff(1:numel(dendrites),BorderWholeCellId));
-    
+    wholeCells = cat(1,wholeCells,borderwholeCells);
     save(fullfile(outputFolder,'wholeCells_04.mat'),'wholeCells');
-    
-    indBigDends = Agglo.isMaxBorderToBorderDistAbove(p, 5000, Superagglos.transformAggloNewOldRepr(dendrites));
-    [ myelinDend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
     save(fullfile(outputFolder,'dendrites_13.mat'),'dendrites','myelinDend','indBigDends')%,'info');
 elseif ~existentDendrites(15) || ~existentWC(5)
     load(fullfile(outputFolder,'wholeCells_04.mat'))
@@ -611,8 +546,7 @@ somaSegIds = cell2mat(somaAgglos);
 somaLUT(somaSegIds) = repelem(1:numel(somaAgglos),cellfun(@numel,somaAgglos));
 disp('Soma whole cell agglos loaded')
 
-%% check manually added edges if agglos have been skipped there
-
+%% next round of manual whole cell fixes
 if  ~existentWC(5) || ~existentDendrites(15)
     % this script was used to write out whole cells that mighted have
     % skipped agglos inbetween
@@ -622,27 +556,11 @@ if  ~existentWC(5) || ~existentDendrites(15)
     
     % the corrections are based on checking the output of
     % connectEM.searchSkippedAgglos
-    correctionFolder = 'WholeCellCorrections_14';
-    fprintf('Folder with correction nmls for state dendrites_13 is %s\n',fullfile(outputFolder,correctionFolder));
-    
-    [dendrites,dendriteLUT] = connectEM.applyAggloCorrections(cat(1,wholeCells,dendrites),p,fullfile(outputFolder,correctionFolder),0,sMpoints,axons,1);
-    
-    % test for duplets
-    agglos = cell2mat(Superagglos.transformAggloNewOldRepr(dendrites));
-    assert(numel(agglos)==numel(unique(agglos)))
-    
-    dendriteSegIds = find(dendriteLUT);
-    [ismem,ind] = ismember(somaSegIds,dendriteSegIds);
-    % get each dend id which contains most of the seg ids of each soma
-    wholeCellId = unique(accumarray(somaLUT(somaSegIds(ismem))',dendriteLUT(dendriteSegIds(ind(ismem)))',[],@mode));
-    
-    wholeCells = dendrites(wholeCellId);
-    dendrites = dendrites(setdiff(1:numel(dendrites),wholeCellId));
-    
+    correctionFolder = fullfile(outputFolder,'WholeCellCorrections_14');
+    fprintf('Folder with correction nmls for dendrites_13 is %s\n',correctionFolder);
+    [ wholeCells,dendrites,indBigDends,myelinDend ] = connectEM.wcApplyManualAnnotation(cat(1,wholeCells,dendrites), correctionFolder, axons,somaSegIds,somaLUT, sMpoints );
+
     save(fullfile(outputFolder,'wholeCells_05.mat'),'wholeCells');
-    
-    indBigDends = Agglo.isMaxBorderToBorderDistAbove(p, 5000, Superagglos.transformAggloNewOldRepr(dendrites));
-    [ myelinDend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
     save(fullfile(outputFolder,'dendrites_14.mat'),'dendrites','myelinDend','indBigDends')%,'info');
 elseif ~existentDendrites(16) || ~existentWC(6)
     load(fullfile(outputFolder,'wholeCells_05.mat'))
@@ -650,8 +568,7 @@ elseif ~existentDendrites(16) || ~existentWC(6)
 end
 disp('State 14 dendrites loaded/generated')
 
-%% another round of fixing added stuff
-
+%% next round of manual whole cell fixes
 if  ~existentWC(6) || ~existentDendrites(16)
     % created nmls with connectEM.autoView('wholeCells_05','cells') and
     % checked only the five corrected last time
@@ -660,27 +577,11 @@ if  ~existentWC(6) || ~existentDendrites(16)
     
     % the corrections are based on checking the output of
     % connectEM.searchSkippedAgglos
-    correctionFolder = 'WholeCellCorrections_15';
-    fprintf('Folder with correction nmls for state dendrites_14 is %s\n',fullfile(outputFolder,correctionFolder));
-    
-    [dendrites,dendriteLUT] = connectEM.applyAggloCorrections(cat(1,wholeCells,dendrites),p,fullfile(outputFolder,correctionFolder),0,sMpoints,axons,1);
-    
-    % test for duplets
-    agglos = cell2mat(Superagglos.transformAggloNewOldRepr(dendrites));
-    assert(numel(agglos)==numel(unique(agglos)))
-    
-    dendriteSegIds = find(dendriteLUT);
-    [ismem,ind] = ismember(somaSegIds,dendriteSegIds);
-    % get each dend id which contains most of the seg ids of each soma
-    wholeCellId = unique(accumarray(somaLUT(somaSegIds(ismem))',dendriteLUT(dendriteSegIds(ind(ismem)))',[],@mode));
-    
-    wholeCells = dendrites(wholeCellId);
-    dendrites = dendrites(setdiff(1:numel(dendrites),wholeCellId));
+    correctionFolder = fullfile(outputFolder,'WholeCellCorrections_15');
+    fprintf('Folder with correction nmls for dendrites_14 is %s\n',correctionFolder);
+    [ wholeCells,dendrites,indBigDends,myelinDend ] = connectEM.wcApplyManualAnnotation(cat(1,wholeCells,dendrites), correctionFolder, axons,somaSegIds,somaLUT, sMpoints );
     
     save(fullfile(outputFolder,'wholeCells_06.mat'),'wholeCells');
-    
-    indBigDends = Agglo.isMaxBorderToBorderDistAbove(p, 5000, Superagglos.transformAggloNewOldRepr(dendrites));
-    [ myelinDend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
     save(fullfile(outputFolder,'dendrites_15.mat'),'dendrites','myelinDend','indBigDends')%,'info');
 elseif ~existentDendrites(17) || ~existentWC(7)
     load(fullfile(outputFolder,'wholeCells_06.mat'))
@@ -688,39 +589,16 @@ elseif ~existentDendrites(17) || ~existentWC(7)
 end
 disp('State 15 dendrites loaded/generated')
 
-%% another round of fixing added stuff
-
+%% next round of manual whole cell fixes
 if  ~existentWC(7) || ~existentDendrites(17)
     % created nmls with connectEM.autoView('wholeCells_05','cells') and
     % checked only the five corrected last time
     
     load(fullfile(outputFolder,'axons_09_a.mat'),'axons')
-    
-    % the corrections are based on checking the output of
-    % connectEM.searchSkippedAgglos
-    correctionFolder = 'WholeCellCorrections_16';
-    fprintf('Folder with correction nmls for state dendrites_15 is %s\n',fullfile(outputFolder,correctionFolder));
-    
-    [dendrites,dendriteLUT] = connectEM.applyAggloCorrections(cat(1,wholeCells,dendrites),p,fullfile(outputFolder,correctionFolder),0,sMpoints,axons,1);
-    
-    % test for duplets
-    agglos = cell2mat(Superagglos.transformAggloNewOldRepr(dendrites));
-    assert(numel(agglos)==numel(unique(agglos)))
-    
-    dendriteSegIds = find(dendriteLUT);
-    [ismem,ind] = ismember(somaSegIds,dendriteSegIds);
-    % get each dend id which contains most of the seg ids of each soma, in
-    % this last step do not make unique, as all cells are now supposed to
-    % not be merged and thus no duplets exist
-    wholeCellId = (accumarray(somaLUT(somaSegIds(ismem))',dendriteLUT(dendriteSegIds(ind(ismem)))',[],@mode));
-    
-    wholeCells = dendrites(wholeCellId);
-    dendrites = dendrites(setdiff(1:numel(dendrites),wholeCellId));
-    
+    correctionFolder = fullfile(outputFolder,'WholeCellCorrections_16');
+    fprintf('Folder with correction nmls for dendrites_15 is %s\n',correctionFolder);
+    [ wholeCells,dendrites,indBigDends,myelinDend ] = connectEM.wcApplyManualAnnotation(cat(1,wholeCells,dendrites), correctionFolder, axons,somaSegIds,somaLUT, sMpoints );
     save(fullfile(outputFolder,'wholeCells_07.mat'),'wholeCells');
-    
-    indBigDends = Agglo.isMaxBorderToBorderDistAbove(p, 5000, Superagglos.transformAggloNewOldRepr(dendrites));
-    [ myelinDend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
     save(fullfile(outputFolder,'dendrites_16.mat'),'dendrites','myelinDend','indBigDends')%,'info');
 elseif ~existentDendrites(18) || ~existentWC(8) || ~existentWC(9)
     load(fullfile(outputFolder,'wholeCells_07.mat'))
