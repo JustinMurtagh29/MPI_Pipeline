@@ -23,7 +23,6 @@ pTheta(3).Somata = 0.015;
 pTheta(3).WholeCell = 0.195;
 pTheta(3).ApicalDendrite = 0.025;
 % Corticocortical axons
-pTheta(4).Somata = 0.01;
 pTheta(4).WholeCell = 0.04;
 pTheta(4).ApicalDendrite = 0.04;
 
