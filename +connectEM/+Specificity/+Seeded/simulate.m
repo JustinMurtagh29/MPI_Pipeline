@@ -6,25 +6,22 @@
 clear;
 
 %% Configuration
-param = struct;
-param.saveFolder = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-
-connName = 'connectome_axons_18_a_ax_spine_syn_clust';
-synFile = fullfile(param.saveFolder, 'connectomeState', 'SynapseAgglos_v3_ax_spine_clustered.mat');
+rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
+connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a_ax_spine_syn_clust.mat');
+synFile = fullfile(rootDir, 'connectomeState', 'SynapseAgglos_v3_ax_spine_clustered_classified.mat');
 
 minSynPre = 10;
 
 info = Util.runInfo();
 
 %% Loading data
-syn = load(synFile);
-conn = connectEM.Connectome.load(param, connName);
+param = load(fullfile(rootDir, 'allParameter.mat'));
+param = param.p;
 
-%% Process connectome
+[conn, syn, axonClasses] = ...
+    connectEM.Connectome.load(param, connFile, synFile);
 [classConn, targetClasses] = ...
     connectEM.Connectome.buildClassConnectome(conn);
-axonClasses = ...
-    connectEM.Connectome.buildAxonClasses(conn, 'minSynPre', minSynPre);
 
 % Build list of possible seed synapses
 synT = connectEM.Connectome.buildSynapseTable(conn, syn);
