@@ -43,18 +43,12 @@ plotConfigs(1).axonIds = find( ...
     conn.axonMeta.synCount >= minSynPre);
 plotConfigs(1).seedConfigs = seedConfigs;
 plotConfigs(1).title = sprintf( ...
-    'Axons with ≥ %d synapses', minSynPre);
+    'All axons with ≥ %d synapses', minSynPre);
 
-plotConfigs(2).axonIds = union( ...
-    axonClasses(1).axonIds, axonClasses(2).axonIds);
+plotConfigs(2).axonIds = axonClasses(2).axonIds;
 plotConfigs(2).seedConfigs = seedConfigs;
 plotConfigs(2).title = sprintf( ...
-    'Strongly exc. or inh. axons with ≥ %d synapses', minSynPre);
-
-plotConfigs(3).axonIds = axonClasses(2).axonIds;
-plotConfigs(3).seedConfigs = seedConfigs;
-plotConfigs(3).title = sprintf( ...
-    'Strongly inh. axons with ≥ %d synapses', minSynPre);
+    'Inhibitory axons with ≥ %d synapses', minSynPre);
 
 %% Plot
 for curIdx = 1:numel(plotConfigs)
