@@ -22,7 +22,8 @@ info = Util.runInfo();
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 
-conn = connectEM.Connectome.load(param, connFile, synFile);
+[conn, ~, axonClasses] = ...
+    connectEM.Connectome.load(param, connFile, synFile);
 
 %% Building class connectome
 [classConn, targetIds] = ...
@@ -35,10 +36,21 @@ axonIds = find(conn.axonMeta.synCount >= minSynCount);
 coinMat = nan(numel(targetClasses));
 
 for curIdx = 1:numel(targetClasses)
+    curTargetClass = targetClasses{curIdx};
     curTargetId = targetIds(curIdx);
     
-    curAxonIds = find(classConn(:, curTargetId));
-    curAxonIds = intersect(curAxonIds, axonIds);
+    % Collect specific axons
+    curAxonIds = zeros(0, 1);
+    for curAxonClass = reshape(axonClasses, 1, [])
+        try
+            curSpecs = curAxonClass.specs;
+            curSpecs = curSpecs.(curTargetClass);
+            curAxonIds = [curAxonIds; curSpecs.axonIds];
+        catch
+            % Yes, I'm abusing exceptions for control flow.
+            % Whatcha gonna do 'bout it, ha? - amotta
+        end
+    end
     
     % Calculate co-innervation
     % After removal of seed synapse
