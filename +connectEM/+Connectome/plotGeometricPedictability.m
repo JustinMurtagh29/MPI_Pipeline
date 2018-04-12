@@ -9,6 +9,7 @@ availFile = '/tmpscratch/amotta/l4/2018-02-02-surface-availability-connectome-ax
 connName = 'connectome_axons_18_a_ax_spine_syn_clust';
 
 minSynPre = 10;
+maxRadius = 50;
 info = Util.runInfo();
 
 %% Loading data
@@ -84,6 +85,7 @@ for curAxonClassIdx = 1:numel(plotAxonClasses)
         'FontWeight', 'normal', 'FontSize', 10);
 end
 
+[fig.Children.XLim] = deal([0, maxRadius]);
 [fig.Children.YLim] = deal([-0.3, 0.5]);
 xlabel(fig.Children(end), 'Radius (µm)');
 ylabel(fig.Children(end), 'R²');
@@ -92,7 +94,8 @@ legend(fig.Children(1), ...
     arrayfun( ...
         @char, plotTargetClasses, ...
         'UniformOutput', false), ...
-	'Location', 'NorthEast');
+	'Location', 'NorthEast', ...
+    'Box', 'off');
 
 annotation(fig, ...
     'textbox', [0, 0.9, 1, 0.1], ...
@@ -108,7 +111,7 @@ plotAxonClasses = 1:2;
 
 fig = figure();
 fig.Color = 'white';
-fig.Position(3:4) = [620, 590];
+fig.Position(3:4) = [600, 590];
 
 ax = axes(fig);
 ax.TickDir = 'out';
@@ -143,10 +146,15 @@ for curAxonClassIdx = 1:numel(plotAxonClasses)
         curRsq, 'LineWidth', 2);
 end
 
-plot(ax, avail.dists([1, end]) / 1E3, [0, 0], 'k--');
-legend(ax, {axonClasses(plotAxonClasses).title});
+plot(ax, ...
+    avail.dists([1, end]) / 1E3, [0, 0], ...
+    'Color', 'black', 'LineStyle', '--');
+legend(ax, ...
+    {axonClasses(plotAxonClasses).title}, ...
+    'Location', 'North', 'Box', 'off');
 
 xlabel(ax, 'Radius (µm)');
+xlim(ax, [0, maxRadius]);
 ylabel(ax, 'R²');
 ylim(ax, [-0.3, 0.5]);
 
@@ -223,6 +231,7 @@ for curAxonClassIdx = 1:numel(plotAxonClasses)
         'FontWeight', 'normal', 'FontSize', 10);
 end
 
+[fig.Children.XLim] = deal([0, maxRadius]);
 [fig.Children.YLim] = deal([0, 1]);
 xlabel(fig.Children(end), 'Radius (µm)');
 ylabel(fig.Children(end), 'R²');
@@ -231,7 +240,8 @@ legend(fig.Children(1), ...
     arrayfun( ...
         @char, plotTargetClasses, ...
         'UniformOutput', false), ...
-	'Location', 'NorthEast');
+	'Location', 'NorthEast', ...
+    'Box', 'off');
 
 annotation(fig, ...
     'textbox', [0, 0.9, 1, 0.1], ...
@@ -280,7 +290,7 @@ end
 % Plotting
 fig = figure();
 fig.Color = 'white';
-fig.Position(3:4) = [620, 590];
+fig.Position(3:4) = [600, 590];
 
 ax = axes(fig);
 ax.TickDir = 'out';
@@ -290,10 +300,13 @@ hold(ax, 'on');
 plot(ax, avail.dists / 1E3, rSq, 'LineWidth', 2);
 
 xlabel(ax, 'Radius (µm)');
+xlim(ax, [0, maxRadius]);
 ylabel(ax, 'R²');
 ylim(ax, [0, 1]);
 
-legend(ax, {axonClasses(plotAxonClasses).title});
+legend(ax, ...
+    {axonClasses(plotAxonClasses).title}, ...
+    'Location', 'North', 'Box', 'off');
 
 annotation(fig, ...
     'textbox', [0, 0.9, 1, 0.1], ...
