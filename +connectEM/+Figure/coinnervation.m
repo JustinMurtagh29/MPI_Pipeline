@@ -56,7 +56,7 @@ end
 % TODO(amotta): color
 fig = figure();
 ax = axes(fig);
-imshow(10 .* coinMat, 'Parent', ax);
+imshow(coinMat, 'Parent', ax, 'Colormap', parula);
 
 fig.Color = 'white';
 fig.Position(3:4) = [660, 660];
@@ -83,14 +83,19 @@ for curIdx = 1:numel(coinMat)
     curOff = [curCol, numel(targetClasses) - curRow + 1];
     curOff = ax.Position(1:2) + (curOff - 1) .* curBoxSize;
     
-    annotation( ...
+    curAnn = annotation( ...
         'textbox', [curOff, curBoxSize], ...
-        'String', sprintf('%.1f %%', 100 * coinMat(curIdx)), ...
-        'HorizontalAlignment', 'center', ...
-        'VerticalAlignment', 'middle', ...
-        'EdgeColor', 'none', ...
-        'Color', 'white');
+        'String', sprintf('%.1f %%', 100 * coinMat(curIdx)));
+    curAnn.HorizontalAlignment = 'center';
+	curAnn.VerticalAlignment = 'middle';
+	curAnn.EdgeColor = 'none';
+	curAnn.Color = 'white';
+    curAnn.FontSize = 12;
 end
+
+cbar = colorbar('peer', ax);
+cbar.TickDirection = 'out';
+cbar.Position = [0.925, 0.1, 0.02, 0.8];
 
 title(ax, ...
     {info.filename; info.git_repos{1}.hash}, ...
