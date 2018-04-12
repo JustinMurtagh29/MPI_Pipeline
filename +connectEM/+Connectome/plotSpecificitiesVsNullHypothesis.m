@@ -3,9 +3,9 @@
 clear;
 
 %% configuration
-param = struct;
-param.saveFolder = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-connName = 'connectome_axons_18_a_ax_spine_syn_clust';
+rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
+connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a_ax_spine_syn_clust.mat');
+synFile = fullfile(rootDir, 'connectomeState', 'SynapseAgglos_v3_ax_spine_clustered_classified.mat');
 
 targetClasses = { ...
     'Somata', 'WholeCell', 'ApicalDendrite', ...
@@ -15,13 +15,14 @@ minSynPre = 10;
 info = Util.runInfo();
 
 %% loading data
-conn = ...
-    connectEM.Connectome.load(param, connName);
+param = load(fullfile(rootDir, 'allParameter.mat'));
+param = param.p;
+
+[conn, ~, axonClasses] = ...
+    connectEM.Connectome.load(param, connFile, synFile);
 classConnectome = ...
     connectEM.Connectome.buildClassConnectome( ...
         conn, 'targetClasses', targetClasses);
-axonClasses = ...
-    connectEM.Connectome.buildAxonClasses(conn, 'minSynPre', minSynPre);
 
 %% plot
 for curIdx = 1:numel(axonClasses)
