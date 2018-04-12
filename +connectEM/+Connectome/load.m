@@ -1,5 +1,5 @@
-function [conn, syn] = load(param, connFile, synFile)
-    % conn = load(param, connName)
+function [conn, syn, axonClasses] = load(param, connFile, synFile)
+    % [conn, syn, axonClasses] = load(param, connFile, synFile)
     %   Loads a connectome and augments it with
     %
     %   * conn.axonMeta.isThalamocortical
