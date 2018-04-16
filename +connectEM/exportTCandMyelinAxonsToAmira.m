@@ -1,4 +1,4 @@
-connFileName = 'connectome_ax18a_deWC01wSp_v4.mat';
+connName = 'connectome_ax18a_deWC01wSp';
 mainOutDir = ['/tmpscratch/mbeining/isos/',connName];
 isoParamAx = {'smoothWidth',5,'smoothSizeHalf',5,'reduce',0.1};  % heiko suggests 9 , 9 , 0.2
 isoParamMy = {'smoothWidth',2,'smoothSizeHalf',2,'reduce',0.15};
@@ -24,7 +24,7 @@ if ~exist('heuristics','var')
     heuristics = load(fullfile(p.saveFolder, 'heuristicResult.mat'),'myelinScore');
 end
 
-conn = connectEM.Connectome.load(p,fullfile(p.saveFolder,'connectomeState',connName));
+conn = connectEM.Connectome.load(p,connName);
 load(fullfile(p.saveFolder,'aggloState','axons_18_a.mat'))
 
 % map axons from connectome state to the ones from axon state in order to
