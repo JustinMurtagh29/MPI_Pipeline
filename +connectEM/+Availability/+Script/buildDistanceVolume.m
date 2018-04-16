@@ -10,7 +10,7 @@ outDir = '/tmpscratch/amotta/l4/2018-04-16-distance-volume-test/wkw';
 % This is the AD-specific axon from panel 4c
 distRefIsoFile = '/tmpscratch/amotta/l4/2018-01-24-axons-18a-isosurfaces/mat/iso-23325.mat';
 
-boxSize = [128, 128, 128];
+boxSize = [256, 256, 256];
 
 %% Loading data
 param = load(fullfile(rootDir, 'allParameter.mat'));
@@ -22,8 +22,6 @@ distRefPoints = distRefPoints.vertices;
 
 %% Build boxes
 boxGlobal = param.bbox;
-assert(~any(mod((boxGlobal(:, 1)' - 1), boxSize)));
-
 boxSizeGlobal = 1 + diff(boxGlobal, 1, 2)';
 boxCounts = ceil(boxSizeGlobal ./ boxSize);
 
