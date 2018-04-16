@@ -9,11 +9,29 @@ outDir = '/tmpscratch/amotta/l4/2018-04-16-distance-volume-test/wkw';
 distRefIsoFile = '/tmpscratch/amotta/l4/2018-04-11-smooth-dendrite-isosurfaces/mat/iso-9.mat';
 distThreshUm = 10;
 
+boxSize = [128, 128, 128];
+
 %% Loading data
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 
-wkwInit('new', outDir, 32, 32, 'uint8', 1);
+wkwInit('new', outDir, 32, 32, 'uint32', 1);
+
+%% Build boxes
+boxGlobal = param.bbox;
+assert(~any(mod((boxGlobal(:, 1)' - 1), boxSize)));
+
+boxSizeGlobal = 1 + diff(boxGlobal, 1, 2)';
+boxCounts = ceil(boxSizeGlobal ./ boxSize);
+
+boxes = cell(prod(boxCounts), 1);
+for curIdx = 1:numel(boxes)
+   [curX, curY, curZ] = ind2sub(boxCounts, curIdx);
+    curBox = ([curX, curY, curZ] - 1) .* boxSize;
+    curBox = ([curBox; (curBox + boxSize - 1)])';
+    curBox = curBox + boxGlobal(:, 1);
+    boxes{curIdx} = curBox;
+end
 
 %% Starting job
 cluster = Cluster.getCluster( ...
@@ -21,8 +39,9 @@ cluster = Cluster.getCluster( ...
     '-l h_vmem=12G', ...
     '-l h_rt=6:00:00');
 
-taskArgs = arrayfun(@(i) {{i}}, 1:numel(param.local));
-taskSharedArgs = {param, outDir, distRefIsoFile, distThreshUm};
+%%
+taskArgs = cellfun(@(box) {{box}}, boxes);
+taskSharedArgs = {param, outDir, distRefIsoFile};
 
 job = Cluster.startJob( ...
     @taskFunction, taskArgs, ...
@@ -31,17 +50,14 @@ job = Cluster.startJob( ...
     'name', mfilename);
 
 %% Utility
-function taskFunction(param, outDir, distRefIsoFile, distThreshUm, cubeIdx)
+function taskFunction(param, outDir, distRefIsoFile, bbox)
     import connectEM.Availability.buildDistanceVolume;
     
     distRefIso = load(distRefIsoFile);
     distRefIso = distRefIso.isoSurf;
     
-    bbox = param.local(cubeIdx).bbox;
+    distVol = buildDistanceVolume(param, distRefIso, bbox);
+    distVol = uint32(distVol);
     
-    mask = buildDistanceVolume(param, distRefIso, distThreshUm, bbox);
-    if ~any(mask(:)); return; end
-    
-    mask = uint8(mask);
-    wkwSaveRoi(outDir, bbox(:, 1)', mask);
+    wkwSaveRoi(outDir, bbox(:, 1)', distVol);
 end
