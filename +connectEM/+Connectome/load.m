@@ -15,7 +15,12 @@ function [conn, syn, axonClasses] = load(param, connFile, synFile)
     
     %% loading data
     conn = load(connFile);
-    syn = load(synFile);
+    if exist('synFile','var') 
+        syn = load(synFile);
+    else
+        syn = [];
+        warning('No synapse file loaded')
+    end
     
     % intersynapse distances (for detection of TC axons)
    [connDir, connName] = fileparts(connFile);
@@ -26,9 +31,10 @@ function [conn, syn, axonClasses] = load(param, connFile, synFile)
     %% mark thalamocortical axons
     conn.axonMeta.isThalamocortical = ...
         connectEM.Axon.detectThalamocorticals(conn, interSyn);
-    conn.axonMeta = ...
-        connectEM.Axon.completeSynapseMeta(param, conn, syn);
-    
+    if ~isempty(syn)
+        conn.axonMeta = ...
+            connectEM.Axon.completeSynapseMeta(param, conn, syn);
+    end
     %% label all axon classes
     axonClasses = ...
         connectEM.Connectome.buildAxonClasses(conn, 'minSynPre', 10);
