@@ -6,8 +6,9 @@ clear;
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 outDir = '/tmpscratch/amotta/l4/2018-04-16-distance-volume-test/wkw';
 
-distRefIsoFile = '/tmpscratch/amotta/l4/2018-04-11-smooth-dendrite-isosurfaces/mat/iso-9.mat';
-distThreshUm = 10;
+% Use axon #23325 as reference
+% This is the AD-specific axon from panel 4c
+distRefIsoFile = '/tmpscratch/amotta/l4/2018-01-24-axons-18a-isosurfaces/mat/iso-23325.mat';
 
 boxSize = [128, 128, 128];
 
@@ -15,7 +16,9 @@ boxSize = [128, 128, 128];
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 
-wkwInit('new', outDir, 32, 32, 'uint32', 1);
+distRefPoints = load(distRefIsoFile);
+distRefPoints = reducepatch(distRefPoints.isoSurf, 0.1);
+distRefPoints = distRefPoints.vertices;
 
 %% Build boxes
 boxGlobal = param.bbox;
@@ -39,9 +42,12 @@ cluster = Cluster.getCluster( ...
     '-l h_vmem=12G', ...
     '-l h_rt=6:00:00');
 
-%%
+%% Run job
 taskArgs = cellfun(@(box) {{box}}, boxes);
-taskSharedArgs = {param, outDir, distRefIsoFile};
+taskSharedArgs = {param, outDir, distRefPoints};
+
+% Prepare WKW dataset
+wkwInit('new', outDir, 32, 32, 'uint32', 1);
 
 job = Cluster.startJob( ...
     @taskFunction, taskArgs, ...
@@ -50,13 +56,10 @@ job = Cluster.startJob( ...
     'name', mfilename);
 
 %% Utility
-function taskFunction(param, outDir, distRefIsoFile, bbox)
+function taskFunction(param, outDir, distRefPoints, bbox)
     import connectEM.Availability.buildDistanceVolume;
     
-    distRefIso = load(distRefIsoFile);
-    distRefIso = distRefIso.isoSurf;
-    
-    distVol = buildDistanceVolume(param, distRefIso, bbox);
+    distVol = buildDistanceVolume(param, distRefPoints, bbox);
     distVol = uint32(distVol);
     
     wkwSaveRoi(outDir, bbox(:, 1)', distVol);
