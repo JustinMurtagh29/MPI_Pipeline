@@ -6,11 +6,14 @@ function axonClasses = buildAxonClasses(conn, varargin)
     opts = struct;
     opts.minSynPre = 1;
     opts = Util.modifyStruct(opts, varargin{:});
-    
-    conn.axonMeta.fullPriSpineSynFrac = ...
-        conn.axonMeta.fullPriSpineSynCount ...
-     ./ conn.axonMeta.fullSynCount;
-
+    if ~isfield(conn.axonMeta,'fullPriSpineSynFrac')
+        conn.axonMeta.fullPriSpineSynFrac = ones(numel(conn.axonMeta.synCount),1);
+        warning('Spine syn fraction not provided')
+    else
+        conn.axonMeta.fullPriSpineSynFrac = ...
+            conn.axonMeta.fullPriSpineSynCount ...
+            ./ conn.axonMeta.fullSynCount;
+    end
     % Excitatory axons
     axonClasses = struct;
     axonClasses(1).axonIds = find( ...
