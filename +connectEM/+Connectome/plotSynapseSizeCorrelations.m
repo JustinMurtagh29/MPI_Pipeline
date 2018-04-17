@@ -40,24 +40,6 @@ conn.axonMeta.spineFrac = ...
 
 axonClasses = struct;
 
-%{
-% excitatory vs. thalamocortical
-axonClasses(1).axonIds = find( ...
-    conn.axonMeta.synCount >= 10 ...
-  & conn.axonMeta.spineFrac >= 0.5);
-axonClasses(1).synIds = find(ismember( ...
-    synT.preAggloId, axonClasses(1).axonIds));
-axonClasses(1).title = 'Excitatory axons';
-axonClasses(1).tag = 'Exc';
-
-axonClasses(2).axonIds = find(conn.axonMeta.isThalamocortical);
-axonClasses(2).synIds = find(ismember( ...
-    synT.preAggloId, axonClasses(2).axonIds));
-axonClasses(2).title = 'Thalamocortical axons';
-axonClasses(2).tag = 'TC';
-%}
-
-%{
 % spine vs. shaft synapses
 axonClasses(1).axonIds = find(conn.axonMeta.synCount);
 axonClasses(1).synIds = find(synT.isSpine);
@@ -68,16 +50,6 @@ axonClasses(2).axonIds = find(conn.axonMeta.synCount);
 axonClasses(2).synIds = find(~synT.isSpine & ~synT.isSoma);
 axonClasses(2).title = 'Shaft synapses';
 axonClasses(2).tag = 'Sh';
-%}
-
-% Excitatory axons
-axonClasses(1).axonIds = find( ...
-    conn.axonMeta.synCount >= 10 ...
-  & conn.axonMeta.spineFrac >= 0.5);
-axonClasses(1).synIds = find(synT.isSpine & ...
-    ismember(synT.preAggloId, axonClasses(1).axonIds));
-axonClasses(1).title = 'Excitatory axons';
-axonClasses(1).tag = 'Exc';
 
 %% plot distribution of synapse size
 binEdges = linspace(0, synAreaLim, 51);
