@@ -113,7 +113,11 @@ fig.Position(3:4) = [820, 475];
 
 %% plot histogram over no. of synapse per neurite pair
 fig = figure();
+fig.Color = 'white';
+fig.Position(3:4) = [495, 400];
+
 ax = axes(fig);
+axis(ax, 'square');
 hold(ax, 'on');
 
 ax.YScale = 'log';
@@ -129,7 +133,6 @@ for curClassIdx = 1:numel(axonClasses)
 
     histogram( ...
         ax, curCoupling, ...
-        'Normalization', 'probability', ...
         'DisplayStyle', 'stairs', ...
         'LineWidth', 2);
 end
@@ -137,12 +140,19 @@ end
 ylabel(ax, 'Probability');
 yticklabels(ax, arrayfun(@num2str, ...
     yticks(ax), 'UniformOutput', false));
+
+xMax = max(arrayfun( ...
+@(h) h.BinEdges(end), ax.Children));
+xlim(ax, [0.5, xMax]);
+xticks(ax, 1:(xMax - 0.5));
 xlabel(ax, 'Synapses per connection');
 
 title( ...
     ax, {info.filename; info.git_repos{1}.hash}, ...
     'FontWeight', 'normal', 'FontSize', 10);
-legend(ax, {axonClasses.title}, 'Location', 'NorthEast');
+legend( ...
+    ax, {axonClasses.title}, ...
+    'Location', 'NorthEast', 'Box', 'off');
 
 %% Synapse areas vs. degree of coupling
 asiAreas = zeros(0, 1);
