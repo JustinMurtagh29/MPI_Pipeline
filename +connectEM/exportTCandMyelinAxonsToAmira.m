@@ -37,7 +37,7 @@ load(fullfile(p.saveFolder,'aggloState','axons_18_a.mat'))
 connAxonSegIds = cell2mat(conn.axons);
 connAxonLUT = Agglo.buildLUT(numel(axonLUT),conn.axons);
 [ismem,ind] = ismember(connAxonSegIds,axonSegIds);
-connAxonIds = (accumarray(connAxonLUT(connAxonSegIds(ismem))',axonLUT(axonSegIds(ind(ismem)))',[],@mode));
+connAxonIds = (accumarray(connAxonLUT(connAxonSegIds(ismem)),axonLUT(axonSegIds(ind(ismem))),[],@mode));
 axons = axons(connAxonIds);
 
 disp('all data loaded')
@@ -48,11 +48,11 @@ isThalamocortical = conn.axonMeta.isThalamocortical;
 
 disp('Done calculating TC/myelinated axons, creating isos')
 %% export TC axons including myelin iso
-Visualization.exportAggloToAmira(p, axons(isThalamocortical), fullfile(mainOutDir,'TC'), isoParamAx{:})
+Visualization.exportAggloToAmira(p, Superagglos.transformAggloNewOldRepr(axons(isThalamocortical)), fullfile(mainOutDir,'TC'), isoParamAx{:})
 Visualization.exportAggloToAmira(p, myelinNeighSegments(isThalamocortical), fullfile(mainOutDir,'TCmyelin'), isoParamMy{:})
 
 
 %% export myelinated axons including myelin iso, excluding tc axons
-myAxNoTC = ~isThalamocortical & myelinFracAx > 0.2;
-Visualization.exportAggloToAmira(p, axons(myAxNoTC), fullfile(mainOutDir,'AxMy'), isoParamAx{:})
-Visualization.exportAggloToAmira(p, myelinNeighSegments(myAxNoTC), fullfile(mainOutDir,'AxMymyelin'), isoParamMy{:})
+myAxNoTC = ~isThalamocortical & myelinFracAx > 0.1;
+Visualization.exportAggloToAmira(p, Superagglos.transformAggloNewOldRepr(axons(myAxNoTC)), fullfile(mainOutDir,'AxMy_0.1b'), isoParamAx{:})
+Visualization.exportAggloToAmira(p, myelinNeighSegments(myAxNoTC), fullfile(mainOutDir,'AxMymyelin_0.1b'), isoParamMy{:})
