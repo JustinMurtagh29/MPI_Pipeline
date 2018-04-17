@@ -4,7 +4,7 @@ clear;
 
 %% configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-synFile = fullfile(rootDir, 'connectomeState', 'SynapseAgglos_v3_ax_spine_clustered.mat');
+synFile = fullfile(rootDir, 'connectomeState', 'SynapseAgglos_v3_ax_spine_clustered_classified.mat');
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a_ax_spine_syn_clust.mat');
 
 [interSynDir, interSynFile] = fileparts(connFile);
@@ -18,15 +18,15 @@ debugDir = '';
 info = Util.runInfo();
 
 %% loading data
+param = load(fullfile(rootDir, 'allParameter.mat'));
+param = param.p;
+
 % NOTE(amotta): Synapses sizes are contained in the `contactArea` field of 
 % `conn.connectomeMeta`. Each cell contains the synapses sizes of the
 % correponding entries in `conn.connectome`.
-syn = load(synFile);
 interSyn = load(interSynFile);
 
-[~, connName] = fileparts(connFile);
-conn = connectEM.Connectome.load( ...
-    struct('saveFolder', rootDir), connName);
+[conn, syn] = connectEM.Connectome.load(param, connFile, synFile);
 
 %% limit synapses
 synT = connectEM.Connectome.buildSynapseTable(conn, syn);
