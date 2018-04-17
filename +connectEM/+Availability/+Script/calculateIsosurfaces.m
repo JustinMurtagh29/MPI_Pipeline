@@ -18,7 +18,7 @@ connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a.mat');
 minSynCount = 10;
 
 distVol = struct;
-distVol.rootDir = '/tmpscratch/amotta/l4/2018-04-16-distance-volume-test/wkw';
+distVol.rootDir = '/tmpscratch/amotta/l4/2018-04-16-distance-volume-test/wkw-lz4';
 distVol.thresh = 5000;
 
 info = Util.runInfo();
