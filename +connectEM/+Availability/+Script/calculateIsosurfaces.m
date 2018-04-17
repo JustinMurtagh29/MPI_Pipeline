@@ -4,12 +4,22 @@ clear;
 
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-aggloFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a_ax_spine_syn_clust.mat');
-outDir = '/tmpscratch/amotta/l4/2018-04-16-distance-volume-test/20180417-isosurfaces';
+outDir = '/tmpscratch/amotta/l4/2018-04-16-distance-volume-test/20180417-all-dendrites';
+
+% NOTE(amotta): This is an older connectome. It has the same dendrite
+% agglomerates as `connectome_axons_18_a_ax_spine_syn_clust`, but different
+% synapses. I'm reusing this version, because we want to render exactly
+% the same subset of dendrites as shown in figure 1.
+%
+% For more details, see
+% `+connectEM/+Connectome/exportPostsynToAmira.m`
+% (commit hash 7f1fcc376674b03d7c4259d4cb2fe60a2ca5e636)
+connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a.mat');
+minSynCount = 10;
 
 distVol = struct;
 distVol.rootDir = '/tmpscratch/amotta/l4/2018-04-16-distance-volume-test/wkw';
-distVol.thresh = 10000;
+distVol.thresh = 5000;
 
 info = Util.runInfo();
 
@@ -22,20 +32,19 @@ param.seg = struct;
 param.seg.root = '/tmpscratch/amotta/l4/2012-09-28_ex145_07x2_ROI2017/segmentation/1';
 param.seg.backend = 'wkwrap';
 
-agglos = load(aggloFile);
-agglos = agglos.dendrites;
+conn = load(connFile);
 
-%% Render single soma for prototyping
-% TODO(amotta): Remove this section once it's working.
-maxSegId = Seg.Global.getMaxSegId(param);
-aggloLUT = Agglo.buildLUT(maxSegId, agglos);
+%% Select dendrite subset
+postSynCount = accumarray( ...
+    conn.connectome.edges(:, 2), ...
+    cellfun(@numel, conn.connectome.synIdx)', ...
+   [numel(conn.dendrites), 1]);
 
-aggloId = Seg.Global.getSegIds(param, [1950, 6423, 858]);
-aggloId = aggloLUT(aggloId);
-agglos = agglos(aggloId);
+postSynIds = find(postSynCount >= minSynCount);
+postSynAgglos = conn.dendrites(postSynIds);
 
 %% Building isosurface
 Visualization.exportAggloToAmira( ...
-    param, agglos, outDir, ...
+    param, postSynAgglos, outDir, ...
     'distVol', distVol, 'reduce', 0.05, ...
     'smoothSizeHalf', 4, 'smoothWidth', 8);
