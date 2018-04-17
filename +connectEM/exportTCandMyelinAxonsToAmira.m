@@ -5,7 +5,9 @@ isoParamMy = {'smoothWidth',2,'smoothSizeHalf',2,'reduce',0.15};
 
 %% load stuff
 load('/gaba/u/mberning/results/pipeline/20170217_ROI/allParameterWithSynapses.mat');
-p.backend = 'wkwrap';
+p.seg = struct;
+p.seg.root = '/tmpscratch/amotta/l4/2012-09-28_ex145_07x2_ROI2017/segmentation/1';
+p.seg.backend = 'wkwrap';
 disp('Parameters loaded');
 outputFolder = fullfile(p.saveFolder, 'aggloState');
 
