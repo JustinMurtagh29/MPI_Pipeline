@@ -34,7 +34,7 @@ if doNucleiDetection
 
     % nuclei mag1 masks (output files need to be copied to
     % /gaba/u/mberning/results/pipeline/20170217_ROI/soma/Nuclei/
-    MouseROI2017.detectNucleiinBoxes2();
+    MouseRoi2016.detectNucleiinBoxes2();
 
     % bboxes for nuclei (bugfix for wrong bbox in agglomeration)
     p = Gaba.getSegParameters('ex145_ROI2017');
@@ -72,6 +72,7 @@ gb = load(p.svg.borderMetaFile, 'borderCoM', 'borderSize');
 
 thisFolder = fileparts(mfilename('fullpath'));
 somaList = fullfile(thisFolder, 'somaDoc_BS.xlsx');
+% somaLIst = fullfile('+Soma/somaDoc_BS.xlsx');
 numNuclei = 125;
 
 % choose somaIds
