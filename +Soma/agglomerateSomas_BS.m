@@ -152,5 +152,5 @@ end
 p = Gaba.getSegParameters('ex145_ROI2017');
 outFile = fullfile(p.agglo.saveFolder, ['somata_', ver, '.mat']);
 assert(~exist(outFile, 'file'));
-Soma.agglosToSuperagglos(p);
+Soma.agglosToSuperagglos(p, outFile);
 
