@@ -18,20 +18,20 @@ centerSomaIdx = m.centerSomaIdx;
 
 Util.log('Loading supervoxel graph.');
 [graph, segmentMeta] = Seg.IO.loadGraph(p, false);
-pt = segmentMeta.point';
+pt = segmentMeta.point;
 maxId = max(graph.edges(:));
 
 somata = struct();
 Util.log('Converting soma agglos to superagglo format.');
 for i = 1:length(shAgglos)
     thisIds = shAgglos{i};
-    lut = L4.Agglo.buildLUT(thisIds, maxId);
-    idx = all(lut(edges), 2);
+    lut = L4.Agglo.buildLUT({thisIds}, maxId);
+    idx = all(lut(graph.edges), 2);
     thisEdges = graph.edges(idx, :);
     id2Idx = zeros(maxId, 1);
     id2Idx(thisIds) = 1:length(thisIds);
     thisEdges = id2Idx(thisEdges);
-    somata(i).nodes = [pt(thisIdx,:), thisIds];
+    somata(i).nodes = [pt(thisIds,:), thisIds];
     somata(i).edges = double(thisEdges);
 end
 
