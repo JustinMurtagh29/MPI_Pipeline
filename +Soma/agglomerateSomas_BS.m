@@ -145,3 +145,12 @@ if ~exist(outFile, 'file')
 else
     Util.log('File %s already exists and will not be overwritten.');
 end
+
+
+%% convert to superagglos
+
+p = Gaba.getSegParameters('ex145_ROI2017');
+outFile = fullfile(p.agglo.saveFolder, ['somata_', ver, '.mat']);
+assert(~exist(outFile, 'file'));
+Soma.agglosToSuperagglos(p);
+
