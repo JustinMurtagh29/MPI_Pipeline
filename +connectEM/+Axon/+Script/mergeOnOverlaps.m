@@ -21,6 +21,7 @@ clear;
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 cacheDir = '/tmpscratch/amotta/l4/2018-01-19-axon-17a-flight-paths';
 axonFile = fullfile(rootDir, 'aggloState', 'axons_17_a.mat');
+outFile = fullfile(rootDir, 'aggloState', 'axons_18_b.mat');
 
 % For now, let's use the same neighborhood size as in
 % `+connectEM/axonAggloStateVisualization.m`.
@@ -163,6 +164,8 @@ toc;
 
 out.axons = vertcat( ...
     out.axons(:), allAxons(smallAxonIds));
+SuperAgglo.check(out.axons);
+
 out.indBigAxons = false(numel(out.axons), 1);
 out.indBigAxons(1:compCount) = true;
 
@@ -173,6 +176,8 @@ out.parentIds(smallAxonIds) = ...
 
 out.info = info;
 
+Util.saveStruct(outFile, out);
+Util.protect(outFile);
     
 %% overlap between flights and segment-based agglomerates
 function overlap = flightAggloOverlaps(numAgglos, aggloLUT, aggloTable)
