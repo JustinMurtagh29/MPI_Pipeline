@@ -34,7 +34,7 @@ skelDescription = sprintf( ...
     '%s (%s)', info.filename, info.git_repos{1}.hash);
 numDigits = ceil(log10(1 + numel(aggloIds)));
 
-for curIdx = 1%:numel(aggloIds)
+for curIdx = 1:numel(aggloIds)
     curId = aggloIds(curIdx);
     curAgglo = agglos(curId);
     
