@@ -71,8 +71,8 @@ gb = load(p.svg.borderMetaFile, 'borderCoM', 'borderSize');
 %% select somata
 
 thisFolder = fileparts(mfilename('fullpath'));
-somaList = fullfile(thisFolder, 'somaDoc_BS.xlsx');
-% somaLIst = fullfile('+Soma/somaDoc_BS.xlsx');
+% somaList = fullfile(thisFolder, 'somaDoc_BS.xlsx');
+somaList = fullfile('+Soma/somaDoc_BS.xlsx');
 numNuclei = 125;
 
 % choose somaIds
@@ -123,10 +123,18 @@ somaAgglos = somaAgglos(:,[3 2]);
 
 
 %% add segments that are mostly surrounded by agglos
+% Note, that due the the treatment of correspondences in
+% Soma.addSurroundedSegments which basically merges all corresponding
+% segments, it can happen that segments that are not directt neighbors to
+% the soma on the supervoxelgraph are agglomerated. This can cause
+% disconnected regions on the svg.
+% An easy example is the case where a large dendrite exit is added to the
+% soma via correspondences. Then all segments that are sufficiently
+% enclosed by dendrite exit segment will be added to the soma.
 
 fractT = 0.8;
 iter = 10;
-toAddSingleSegs = Soma.addSurroundedSegments(somaAgglos(:,1), ...
+toAddSingleSegs = Soma.addSurroundedSegments(somaAgglos(16,1), ...
     graph.edges(~isnan(graph.borderIdx), :), gb.borderSize, fractT, ...
     graph.edges(isnan(graph.borderIdx), :), iter);
 
@@ -134,6 +142,7 @@ somaAgglos_woSurSegs = somaAgglos;
 for i = 1:size(somaAgglos, 1)
     somaAgglos{i,1} = cat(1, somaAgglos{i,1}(:), toAddSingleSegs{i}(:));
 end
+
 
 %% save the automated results
 
