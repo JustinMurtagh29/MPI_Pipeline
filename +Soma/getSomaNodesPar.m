@@ -27,7 +27,7 @@ function cells = getSomaNodesPar( p, graph, meta, rp, gb, probThreshold, sizeThr
     params = {p, graph, meta, rp, gb, probThreshold, sizeThreshold};
     job = Cluster.startJob(@Soma.getSomaNodes, inputCell,...
         'sharedInputs',params,'name','somaAgglo','numOutputs',3,'cluster',...
-        sprintf('-p -200 -l s_rt=99:59:30 -l h_rt=100:00:00 -l h_vmem=42G'));
+        {'priority',200,'time','100:00:00','memory',42});
     Cluster.waitForJob(job)
     cells = Cluster.fetchTaskOutputs(job,1:numel(inputCell));
     
