@@ -48,6 +48,8 @@ assert(numel(somaWcIds) == numel(unique(somaWcIds)));
 if ~isempty(nmlFile)
     skel = skeleton();
     skel = Skeleton.setParams4Pipeline(skel, param);
+    skel = skel.setDescription(sprintf( ...
+        '%s (%s)', info.filename, info.git_repos{1}.hash));
 
     nanSomaIds = find(isnan(somaWcIds));
     for curId = reshape(nanSomaIds, 1, [])
