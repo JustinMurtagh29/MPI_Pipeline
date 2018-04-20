@@ -40,8 +40,13 @@ end
 tempClass = struct;
 tempClass.root = [p.tempFolder 'classForMovie/'];
 tempClass.prefix = 'classForMovie';
+tempClass.backend = 'wkwrap';
 
 if doClass
+    if isfield(tempClass, 'backend') && strcmp(tempClass.backend,'wkwrap')
+        wkwInit('new', tempClass.root, 32, 32, 'single', 1);
+    end
+
     classificationStep(p, tempClass, bbox);
 else
     warning('> Skipping classification');
@@ -74,7 +79,7 @@ function segmentationStep(p, tempClass, tempSegFile, bbox)
     inputCell{1} = {tempClass, bbox, p.seg.func, tempSegFile};
     jobName = 'segForMovie';
 
-    job = startCPU(functionH, inputCell, jobName);
+    job = startCPU(functionH, inputCell, jobName, 48);
     Cluster.waitForJob(job);
 end
 
