@@ -23,13 +23,12 @@ dend = load(dendFile);
 
 %% Remove somata from dendrite super-agglomerates
 Util.log('Removing somata from dendrites');
-
 somaAgglos = Agglo.fromSuperAgglo(soma.somata);
-dendrites = SuperAgglo.removeSegIds( ...
-    param, dend.dendrites, cell2mat(somaAgglos));
 
-% TODO(amotta): Enable check if possible
-dendrites = SuperAgglo.clean(dendrites, false);
+out = struct;
+out.dendrites = SuperAgglo.removeSegIds( ...
+    param, dend.dendrites, cell2mat(somaAgglos));
+out.dendrites = SuperAgglo.clean(out.dendrites, false);
 
 %% Add somata to list of postsynaptic processes
 wcIds = dend.idxWholeCells(dend.indWholeCells);
