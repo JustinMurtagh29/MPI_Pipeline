@@ -6,7 +6,6 @@ function compressSegmentation(seg)
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     
     % configuration
-    resolutions = 2 .^ (0:9);
     taskCount = 50;
     
     % only WKW datasets can be compressed
@@ -31,7 +30,9 @@ function compressSegmentation(seg)
     resDirs(cellfun(@isempty, regexp( ...
         resDirs, '^\d+(-\d+-\d+)?$'))) = [];
     
-    for curRes = reshape(resDirs, 1, [])
+    for curIdx = 1:numel(resDirs)
+        curRes = resDirs{curIdx};
+        
         curInRoot = fullfile(inRoot, curRes);
         curOutRoot = fullfile(outRoot, curRes);
         
