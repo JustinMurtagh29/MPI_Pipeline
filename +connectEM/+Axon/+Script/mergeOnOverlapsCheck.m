@@ -15,6 +15,12 @@ rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 aFile = fullfile(rootDir, 'aggloState', 'axons_18_a.mat');
 bFile = fullfile(rootDir, 'aggloState', 'axons_18_b.mat');
 
+% Set to 
+nmlId = 281;
+nmlDir = '/home/amotta/Desktop';
+
+info = Util.runInfo();
+
 %% Loading data
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
@@ -49,3 +55,23 @@ assert(all(cellfun(@numel, bInA) <= 1));
 
 expIdsB = find(not(cellfun(@isempty, bInA)));
 assert(all(arrayfun(@(id) isequal(id, bInA{id}), expIdsB)));
+
+%% Export example to webKNOSSOS
+if ~isempty(nmlDir)
+    exportId = find(a.indBigAxons);
+    exportId = exportId(nmlId);
+
+    skel = skeleton();
+    skel = Skeleton.setParams4Pipeline(skel, param);
+    skel = skel.setDescription(sprintf( ...
+        '%s (%s)', info.filename, info.git_repos{1}.hash));
+
+    skel = skel.addTree( ...
+        sprintf('A. Agglomerate %d', exportId), ...
+        a.axons(exportId).nodes(:, 1:3), a.axons(exportId).edges);
+    skel = skel.addTree( ...
+        sprintf('B. Agglomerate %d', exportId), ...
+        b.axons(exportId).nodes(:, 1:3), b.axons(exportId).edges);
+    
+    skel.write(fullfile(nmlDir, sprintf('axon-%d.nml', exportId)));
+end
