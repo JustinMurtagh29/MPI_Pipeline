@@ -4,7 +4,7 @@
 
 info = Util.runInfo(false);
 doNucleiDetection = false; %#ok<*UNRCH>
-ver = '06';
+ver = '07';
 
 outputFolder = sprintf(['/gaba/u/mberning/results/pipeline/' ...
     '20170217_ROI/soma_BS/']);
@@ -162,4 +162,3 @@ p = Gaba.getSegParameters('ex145_ROI2017');
 outFile = fullfile(p.agglo.saveFolder, ['somata_', ver, '.mat']);
 assert(~exist(outFile, 'file'));
 Soma.agglosToSuperagglos(p, outFile);
-
