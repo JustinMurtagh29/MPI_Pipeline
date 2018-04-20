@@ -34,6 +34,13 @@ for i = 1:length(shAgglos)
     thisEdgesAgglo = unique(sort(thisEdgesAgglo, 2), 'rows');
     somata(i, 1).nodes = [pt(thisIds,:), thisIds];
     somata(i, 1).edges = double(thisEdgesAgglo);
+    cc = Graph.findConnectedComponents(somata(i, 1).edges);
+    if length(cc) > 1
+        % add random edges between components
+        conn = [repelem(cc{1}, length(cc) - 1)', ...
+            cellfun(@(x)x(1), cc(2:end))];
+        somata(i, 1).edges = cat(1, somata(i, 1).edges, conn);
+    end
 end
 
 if exist('outFile', 'var') && ischar(outFile)
