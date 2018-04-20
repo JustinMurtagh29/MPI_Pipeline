@@ -23,19 +23,22 @@ function compressSegmentation(seg)
     assert(not(exist(outRoot, 'dir')));
     mkdir(outRoot);
     
-    for curRes = resolutions
-        curInRoot = fullfile(inRoot, num2str(curRes));
-        curOutRoot = fullfile(outRoot, num2str(curRes));
-        
-        if ~exist(curInRoot, 'dir')
-            warning('Resolution %d not found → skipped');
-            continue;
-        end
+    resDirs = dir(inRoot);
+    resDirs = {resDirs([resDirs.isdir]).name};
+    
+    % Only keep directories with valid names:
+    % That is, either {:num:} or {:num:}-{:num:}-{:num:}
+    resDirs(cellfun(@isempty, regexp( ...
+        resDirs, '^\d+(-\d+-\d+)?$'))) = [];
+    
+    for curRes = reshape(resDirs, 1, [])
+        curInRoot = fullfile(inRoot, curRes);
+        curOutRoot = fullfile(outRoot, curRes);
         
         % prepare compressed WKW dataset
         wkwInit('compress', curInRoot, curOutRoot);
         
-        fprintf('Compressing resolution %d ... ', curRes);
+        fprintf('Compressing resolution %s ... ', curRes);
         wkwCompressDir(curInRoot, curOutRoot, taskCount);
         fprintf('✔\n');
     end
