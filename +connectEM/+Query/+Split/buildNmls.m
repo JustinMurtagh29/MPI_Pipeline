@@ -4,7 +4,7 @@ clear;
 
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-aggloFile = fullfile(rootDir, 'aggloState', 'axons_18_a.mat');
+aggloFile = fullfile(rootDir, 'aggloState', 'axons_18_b.mat');
 outDir = '/home/amotta/Desktop/axon-nmls';
 
 info = Util.runInfo();
