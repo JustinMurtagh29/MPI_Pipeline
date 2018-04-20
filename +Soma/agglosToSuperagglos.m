@@ -37,7 +37,7 @@ for i = 1:length(shAgglos)
     cc = Graph.findConnectedComponents(somata(i, 1).edges);
     if length(cc) > 1
         % add random edges between components
-        conn = [repelem(cc{1}, length(cc) - 1)', ...
+        conn = [repelem(cc{1}(1), length(cc) - 1)', ...
             cellfun(@(x)x(1), cc(2:end))];
         somata(i, 1).edges = cat(1, somata(i, 1).edges, conn);
     end
