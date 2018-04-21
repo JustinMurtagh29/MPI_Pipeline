@@ -37,9 +37,6 @@ shAgglos = shAgglos.shAgglos;
 % Dendrites + somata
 dend = load(dendFile);
 
-somaAgglos = dend.dendrites(dend.indSomata);
-somaAgglos = Agglo.fromSuperAgglo(somaAgglos);
-
 dendIds = dend.indAIS | dend.indSomata | dend.indWholeCells;
 dendIds = find(dend.indBigDends & ~dendIds);
 
@@ -53,13 +50,11 @@ syn = syn.synapses;
 %% Calculate spine density
 Util.log('Calculating spine density');
 
-trunkLensUm = ...
+trunkLens = ...
     connectEM.Dendrite.calculatePathLengths(param, dend, trunks);
-trunkLensUm = trunkLensUm / 1E3;
-
-spineDensity = ...
-    connectEM.Dendrite.calculateSpineDensity( ...
-        param, dend, trunkLensUm, shAgglos);
+spineCounts = ...
+    connectEM.Dendrite.calculateSpineCount(param, dend, shAgglos);
+spineDensity = spineCounts ./ (trunkLens / 1E3);
     
 %% Determine number of synapses per dendrite
 maxSegId = Seg.Global.getMaxSegId(param);
