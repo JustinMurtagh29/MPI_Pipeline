@@ -83,13 +83,15 @@ out.indBigDends = [out.indBigDends; true(size(somata))];
 
 % Add somata
 out.dendrites = [out.dendrites; somata];
-out.dendrites = SuperAgglo.clean(out.dendrites);
 out.parentIds = [out.parentIds; zeros(size(somata))];
 
 % Sanity checks
 sizes = structfun(@size, out, 'UniformOutput', false);
 sizes = cell2mat(struct2cell(sizes));
 assert(size(unique(sizes, 'rows'), 1) == 1);
+
+% TODO(amotta): Enable check when possible
+out.dendrites = SuperAgglo.clean(out.dendrites, false);
 
 %% Saving result
 out.info = info;
