@@ -14,10 +14,12 @@ trunkFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v2.mat');
 shFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v2_auto.mat');
 dendFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_03.mat');
 
+nmlFile = '/home/amotta/Desktop/sd-ad-conflicts.nml';
+
 % Very rough threshold based on table 2 from
 % Kawaguchi, Karuba, Kubota (2006) Cereb Cortex
 maxSpinesPerUm = 0.4;
-    
+
 info = Util.runInfo();
 
 %% Loading data
@@ -65,6 +67,23 @@ dendLUT = Agglo.buildLUT(maxSegId, dendAgglos, dendIds);
 adIds = cellfun(@(ids) mode(nonzeros(dendLUT(ids))), adAgglos);
 adIds = unique(adIds(~isnan(adIds)));
 
-%% Build output
+%% TODO(amotta): Build output
 % Sanity check
-assert(isempty(intersect(sdIds, adIds)));
+% assert(isempty(intersect(sdIds, adIds)));
+
+%% Export conflicts
+if ~isempty(nmlFile)
+    confIds = intersect(sdIds, adIds);
+
+    skel = skeleton();
+    skel = Skeleton.setParams4Pipeline(skel, param);
+
+    for curId = reshape(confIds, 1, [])
+        curAgglo = dend.dendrites(curId);
+        skel = skel.addTree( ...
+            sprintf('Dendrite %d', curId), ...
+            curAgglo.nodes(:, 1:3), curAgglo.edges);
+    end
+
+    skel.write(nmlFile);
+end
