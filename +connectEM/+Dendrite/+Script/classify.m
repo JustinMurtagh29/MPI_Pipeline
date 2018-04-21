@@ -77,6 +77,8 @@ if ~isempty(nmlFile)
 
     skel = skeleton();
     skel = Skeleton.setParams4Pipeline(skel, param);
+    skel = skel.setDescription(sprintf( ...
+        '%s (%s)', info.filename, info.git_repos{1}.hash));
 
     for curId = reshape(confIds, 1, [])
         curAgglo = dend.dendrites(curId);
