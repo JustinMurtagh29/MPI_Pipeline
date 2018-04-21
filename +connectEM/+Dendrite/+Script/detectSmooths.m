@@ -8,9 +8,10 @@ clear;
 
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-trunkFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_01_v2.mat');
-shFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_01_spine_attachment.mat');
-connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a_ax_spine_syn_clust.mat');
+trunkFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v2.mat');
+shFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v2_auto.mat');
+dendFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_03.mat');
+synFile = fullfile(rootDir, 'connectomeState', 'SynapseAgglos_v3_ax_spine_clustered.mat');
 
 % Very rough threshold based on table 2 from
 % Kawaguchi, Karuba, Kubota (2006) Cereb Cortex
@@ -24,41 +25,57 @@ Util.log('Loading data');
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 
-maxSegId = Seg.Global.getMaxSegId(param);
-
 % Dendrite prior to spine attachment
 trunks = load(trunkFile);
 trunks = trunks.dendrites(trunks.indBigDends);
 trunks = Agglo.fromSuperAgglo(trunks);
 
 % Spine heads
-shAgglos = load(shFile);
+shAgglos = load(shFile, 'shAgglos');
 shAgglos = shAgglos.shAgglos;
 
-% Connectome (and dendrites after spine attachment)
-conn = load(connFile);
-dendrites = conn.dendrites;
+% Dendrites + somata
+dend = load(dendFile);
 
-somaAgglos = conn.denMeta.targetClass == 'Somata';
-somaAgglos = conn.dendrites(somaAgglos);
+somaAgglos = dend.dendrites(dend.indSomata);
+somaAgglos = Agglo.fromSuperAgglo(somaAgglos);
+
+dendIds = dend.indAIS | dend.indSomata | dend.indWholeCells;
+dendIds = find(dend.indBigDends & ~dendIds);
+
+dend = dend.dendrites(dendIds);
+dend = Agglo.fromSuperAgglo(dend);
+
+% Synapses
+syn = load(synFile);
+syn = syn.synapses;
 
 %% Calculate spine density
 Util.log('Calculating spine density');
 
 trunkLensUm = ...
     connectEM.Dendrite.calculatePathLengths( ...
-        param, dendrites, trunks, shAgglos, somaAgglos);
+        param, dend, trunks, shAgglos, somaAgglos);
 trunkLensUm = trunkLensUm / 1E3;
 
 spineDensity = ...
     connectEM.Dendrite.calculateSpineDensity( ...
-        param, dendrites, trunkLensUm, shAgglos);
+        param, dend, trunkLensUm, shAgglos);
+    
+%% Determine number of synapses per dendrite
+maxSegId = Seg.Global.getMaxSegId(param);
+dendLUT = Agglo.buildLUT(maxSegId, dend);
+
+syn.dendIds = cellfun( ...
+    @(ids) reshape(setdiff(dendLUT(ids), 0), [], 1), ...
+    syn.postsynId, 'UniformOutput', false);
+dendSynCount = repelem( ...
+    transpose(1:size(syn, 1)), cellfun(@numel, syn.dendIds));
+dendSynCount = accumarray( ...
+    cell2mat(syn.dendIds), dendSynCount, size(dend));
 
 %% Plot spine densities
-candMask = ...
-    (conn.denMeta.targetClass ~= 'Somata') ...
-  & (conn.denMeta.targetClass ~= 'WholeCell') ...
-  & (conn.denMeta.synCount >= minSynCount);
+candMask = dendSynCount >= minSynCount;
 
 fig = figure();
 fig.Color = 'white';
