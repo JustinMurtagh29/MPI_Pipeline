@@ -6,6 +6,7 @@ clear;
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 somaFile = fullfile(rootDir, 'aggloState', 'somata_07.mat');
 dendFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v2_auto-and-manual.mat');
+outFile  = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_03.mat');
 
 % Set for debugging
 nmlFile = '';
@@ -13,8 +14,6 @@ nmlFile = '';
 info = Util.runInfo();
 
 %% Loading data
-Util.log('Loading data');
-
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 
@@ -22,28 +21,83 @@ soma = load(somaFile);
 dend = load(dendFile);
 
 %% Remove somata from dendrite super-agglomerates
-Util.log('Removing somata from dendrites');
-somaAgglos = Agglo.fromSuperAgglo(soma.somata);
+somata = reshape(soma.somata, [], 1);
+somaAgglos = Agglo.fromSuperAgglo(somata);
 
 out = struct;
 out.dendrites = SuperAgglo.removeSegIds( ...
     param, dend.dendrites, cell2mat(somaAgglos));
-out.dendrites = SuperAgglo.clean(out.dendrites, false);
 
-%% Add somata to list of postsynaptic processes
+%% Find whole cell for each soma
 wcIds = dend.idxWholeCells(dend.indWholeCells);
 wcAgglos = Agglo.fromSuperAgglo(dend.dendrites(dend.indWholeCells));
 
 maxSegId = Seg.Global.getMaxSegId(param);
 wcLUT = Agglo.buildLUT(maxSegId, wcAgglos);
-
 somaWcIds = cellfun(@(ids) mode(nonzeros(wcLUT(ids))), somaAgglos);
+
+% Sanity checks
+% NOTE(amotta): Somata without whole cell will be NaN. Because any test for
+% equality with NaN will be negative the assertion below will work even in
+% this degenerate case.
 assert(numel(somaWcIds) == numel(unique(somaWcIds)));
+assert(all(ismember(1:numel(wcAgglos), somaWcIds)));
 
-%% Completing and saving result
-% TODO(amotta): Remove empty super-agglomerates
+% Set whole cell ID to zero
+somaWcIds(isnan(somaWcIds)) = 0;
 
-%% Debug inconsistencies
+%% Copying over meta data
+out.parentIds = reshape(1:numel(out.dendrites), [], 1);
+
+% Copy over indices
+indFields = sort(fieldnames(dend));
+indFields = indFields( ...
+    startsWith(indFields, 'ind') ...
+  | startsWith(indFields, 'idx'));
+
+for curIdx = 1:numel(indFields)
+    curName = indFields{curIdx};
+    out.(curName) = dend.(curName);
+    clear curName curVal;
+end
+
+% Remove empty super-agglomerates
+mask = ~arrayfun(@(d) isempty(d.nodes), out.dendrites);
+out = structfun(@(v) v(mask), out, 'UniformOutput', false);
+
+%% Add somata
+% AIS
+out.indAIS = [out.indAIS; false(size(somata))];
+out.idxAIS = [out.idxAIS; zeros(size(somata))];
+
+% Whole cells
+out.indWholeCells = [out.indWholeCells; false(size(somata))];
+out.idxWholeCells = [out.idxWholeCells; zeros(size(somata))];
+
+% Somata
+out.indSomata = [false(size(out.dendrites)); true(size(somata))];
+out.idxSomata = [zeros(size(out.dendrites)); somaWcIds];
+
+% Big
+out.indBigDends = [out.indBigDends; true(size(somata))];
+
+% Add somata
+out.dendrites = [out.dendrites; somata];
+out.dendrites = SuperAgglo.clean(out.dendrites);
+out.parentIds = [out.parentIds; zeros(size(somata))];
+
+% Sanity checks
+sizes = structfun(@size, out, 'UniformOutput', false);
+sizes = cell2mat(struct2cell(sizes));
+assert(size(unique(sizes, 'rows'), 1) == 1);
+
+%% Saving result
+out.info = info;
+
+Util.saveStruct(outFile, out);
+Util.protect(outFile);
+
+%% Debugging facilities
 if ~isempty(nmlFile)
     skel = skeleton();
     skel = Skeleton.setParams4Pipeline(skel, param);
