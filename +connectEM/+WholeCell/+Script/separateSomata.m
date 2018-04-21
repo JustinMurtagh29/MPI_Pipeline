@@ -4,11 +4,11 @@ clear;
 
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-somaFile = fullfile(rootDir, 'aggloState', 'somata_06.mat');
+somaFile = fullfile(rootDir, 'aggloState', 'somata_07.mat');
 dendFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v2_auto-and-manual.mat');
 
 % Set for debugging
-nmlFile = '/home/amotta/Desktop/somata-debug.nml';
+nmlFile = '';
 
 info = Util.runInfo();
 
