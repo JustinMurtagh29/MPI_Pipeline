@@ -92,6 +92,7 @@ assert(size(unique(sizes, 'rows'), 1) == 1);
 
 % TODO(amotta): Enable check when possible
 out.dendrites = SuperAgglo.clean(out.dendrites, false);
+out.dendAgglos = Agglo.fromSuperAgglo(out.dendrites);
 
 %% Saving result
 out.info = info;
