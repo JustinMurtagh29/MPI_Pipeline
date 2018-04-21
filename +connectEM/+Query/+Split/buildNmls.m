@@ -24,7 +24,7 @@ segCount = arrayfun(@(a) sum(not(isnan(a.nodes(:, 4)))), agglos);
 segCount(1) = [];
 aggloIds(1) = [];
 
-aggloIds = aggloIds(1:50);
+aggloIds = aggloIds(51:100);
 
 %% Generate NML files
 skel = skeleton();
