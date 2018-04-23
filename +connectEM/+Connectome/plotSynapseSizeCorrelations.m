@@ -13,13 +13,6 @@ info = Util.runInfo();
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 
-[interSynDir, interSynFile] = fileparts(connFile);
-interSynFile = sprintf('%s_intersynapse.mat', interSynFile);
-interSynFile = fullfile(interSynDir, interSynFile);
-clear interSynDir;
-
-interSyn = load(interSynFile);
-
 conn = load(connFile);
 syn = load(synFile);
 
