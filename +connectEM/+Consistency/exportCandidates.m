@@ -17,7 +17,7 @@ outputDir = '/home/amotta/Desktop';
 synFile = fullfile(rootDir, 'connectomeState', 'SynapseAgglos_v3_ax_spine_clustered.mat');
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_b_linearized_ax_spine_syn_clust.mat');
 
-synCount = 2;
+synCount = 4;
 synType = 'spine';
 
 info = Util.runInfo();
