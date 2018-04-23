@@ -12,6 +12,8 @@ chiasmaFile = fullfile(...
     '20180423T105503-on-axons-18b', ...
     '20180423T105912_chiasmata.mat');
 
+info = Util.runInfo();
+
 %% Loading data
 % Parameter
 param = load(fullfile(rootDir, 'allParameter.mat'));
@@ -24,6 +26,10 @@ chiasmata = data.chiasmata;
 axonFile = data.info.param.axonFile;
 chiasmaParam = data.info.param.chiasmaParam;
 clear data;
+
+% Output file
+[outDir, outFile] = fileparts(axonFile);
+outFile = fullfile(outDir, sprintf('%s_linearized.mat', outFile));
 
 % Super-agglomerates
 axons = load(axonFile);
@@ -82,3 +88,7 @@ out.parentIds = [out.parentIds; smallAxonIds];
 % Completing
 out.indBigAxons = axons.indBigAxons(out.parentIds);
 out.info = info;
+
+%% Save result
+Util.saveStruct(outFile, out);
+Util.protect(outFile);
