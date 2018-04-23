@@ -41,6 +41,7 @@ axonClasses(1).tag = 'Sp';
 binEdges = linspace(0, synAreaLim, 51);
 
 fig = figure();
+fig.Color = 'white';
 ax = axes(fig);
 
 hold(ax, 'on');
@@ -147,6 +148,7 @@ groupIds = mod(asiGroups - 1, numel(axonClasses));
 
 % plot
 fig = figure();
+fig.Color = 'white';
 ax = axes(fig);
 
 boxplot( ...
@@ -201,6 +203,7 @@ groupIds = mod(cvGroups - 1, numel(axonClasses));
 
 % plot
 fig = figure();
+fig.Color = 'white';
 ax = axes(fig);
 
 boxplot( ...
