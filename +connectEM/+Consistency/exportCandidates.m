@@ -15,9 +15,9 @@ rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 outputDir = '/home/amotta/Desktop';
 
 synFile = fullfile(rootDir, 'connectomeState', 'SynapseAgglos_v3_ax_spine_clustered.mat');
-connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a_ax_spine_syn_clust.mat');
+connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_b_linearized_ax_spine_syn_clust.mat');
 
-synCount = 4;
+synCount = 2;
 synType = 'spine';
 
 info = Util.runInfo();
