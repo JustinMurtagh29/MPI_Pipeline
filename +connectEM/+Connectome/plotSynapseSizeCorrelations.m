@@ -7,26 +7,14 @@ rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 synFile = fullfile(rootDir, 'connectomeState', 'SynapseAgglos_v3_ax_spine_clustered_classified.mat');
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_b_linearized_ax_spine_syn_clust.mat');
 
-[interSynDir, interSynFile] = fileparts(connFile);
-interSynFile = sprintf('%s_intersynapse.mat', interSynFile);
-interSynFile = fullfile(interSynDir, interSynFile);
-clear interSynDir;
-
-% set this variable to debug
-debugDir = '';
-
 info = Util.runInfo();
 
 %% loading data
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 
-% NOTE(amotta): Synapses sizes are contained in the `contactArea` field of 
-% `conn.connectomeMeta`. Each cell contains the synapses sizes of the
-% correponding entries in `conn.connectome`.
-interSyn = load(interSynFile);
-
-[conn, syn] = connectEM.Connectome.load(param, connFile, synFile);
+conn = load(connFile);
+syn = load(synFile);
 
 %% limit synapses
 synT = connectEM.Connectome.buildSynapseTable(conn, syn);
@@ -34,10 +22,6 @@ synT.isSoma = (conn.denMeta.targetClass(synT.postAggloId) == 'Somata');
 synAreaLim = prctile(synT.area, 99.9);
 
 %% define axon classes
-conn.axonMeta.spineFrac = ...
-    conn.axonMeta.spineSynCount ...
-    ./ conn.axonMeta.synCount;
-
 axonClasses = struct;
 
 % spine vs. shaft synapses
@@ -45,11 +29,6 @@ axonClasses(1).axonIds = find(conn.axonMeta.synCount);
 axonClasses(1).synIds = find(synT.isSpine);
 axonClasses(1).title = 'Spine synapses';
 axonClasses(1).tag = 'Sp';
-
-axonClasses(2).axonIds = find(conn.axonMeta.synCount);
-axonClasses(2).synIds = find(~synT.isSpine & ~synT.isSoma);
-axonClasses(2).title = 'Shaft synapses';
-axonClasses(2).tag = 'Sh';
 
 %% plot distribution of synapse size
 binEdges = linspace(0, synAreaLim, 51);
@@ -234,7 +213,7 @@ title( ...
 ax.YLim(1) = 0;
 ax.TickDir = 'out';
 
-%% do comparisons again null hypothesis
+%% do comparisons against null hypothesis
 controlCouplings = 2:5;
 cvOf = @(d) std(d, 0, 2) ./ mean(d, 2);
 
