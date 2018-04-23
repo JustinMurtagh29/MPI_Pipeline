@@ -59,16 +59,9 @@ skel = Skeleton.setParams4Pipeline(skel, param);
 skelDesc = sprintf('%s (%s)', mfilename, info.git_repos{1}.hash);
 skel = skel.setDescription(skelDesc);
 
-openIds = 1:size(axonDendPair, 1);
-
-% First round
 rng(0);
-randIds = openIds(randperm(numel(openIds), 20));
-openIds = setdiff(openIds, randIds);
-
-% Second round
-rng(0);
-randIds = openIds(randperm(numel(openIds), 20));
+randIds = randperm(size(axonDendPair, 1));
+randIds = randIds(1:25);
 
 for curIdx = 1:numel(randIds)
     curId = randIds(curIdx);
