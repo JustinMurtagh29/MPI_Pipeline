@@ -27,24 +27,27 @@ clear data;
 
 % Super-agglomerates
 axons = load(axonFile);
-axons = axons.axons(axons.indBigAxons);
-assert(isequal(size(axons), size(chiasmata)));
+bigAxonIds = find(axons.indBigAxons);
+bigAxons = axons.axons(bigAxonIds);
+
+% Sanity check
+assert(isequal(size(bigAxons), size(chiasmata)));
 
 % NOTE(amotta): Endings and solved chiasmata were messed up in axons 18b.
 % So let's just replace them with correctly shaped null values.
-for curIdx = 1:numel(axons)
-    axons(curIdx).endings = zeros(0, 1);
-    axons(curIdx).solvedChiasma = ...
-        false(size(axons(curIdx).nodes, 1), 1);
+for curIdx = 1:numel(bigAxons)
+    bigAxons(curIdx).endings = zeros(0, 1);
+    bigAxons(curIdx).solvedChiasma = ...
+        false(size(bigAxons(curIdx).nodes, 1), 1);
 end
 
 %% Linearize axons
-aggloCount = numel(axons);
-out = cell(aggloCount, 1);
+aggloCount = numel(bigAxons);
+split = cell(aggloCount, 1);
 
 tic;
 for curIdx = 1:aggloCount
-    curAgglos = axons(curIdx);
+    curAgglos = bigAxons(curIdx);
     curChiasmata = chiasmata{curIdx};
     
     curNrExits = curChiasmata.ccCenterIdx;
@@ -60,6 +63,22 @@ for curIdx = 1:aggloCount
             param, chiasmaParam, curAgglos, curChiasmata, curOverlaps);
     end
     
-    out{curIdx} = curAgglos;
+    split{curIdx} = curAgglos;
     Util.progressBar(curIdx, aggloCount);
 end
+
+%% Build output structure
+out = struct;
+
+% Big axons
+out.axons = cat(1, split{:});
+out.parentIds = repelem(bigAxonIds, cellfun(@numel, split));
+
+% Small axons
+smallAxonIds = find(~axons.indBigAxons);
+out.axons = [out.axons; axons.axons(smallAxonIds)];
+out.parentIds = [out.parentIds; smallAxonIds];
+
+% Completing
+out.indBigAxons = axons.indBigAxons(out.parentIds);
+out.info = info;
