@@ -159,8 +159,8 @@ annotation( ...
 
 %% Utilities
 function [synT, synAreas] = loadSynapses(param, graph, nmlDir)
-    import connectEM.Consistency.loadAnnotations;
-    import connectEM.Consistency.calcSynapseAreas;
+    import connectEM.Consistency.Manual.loadAnnotations;
+    import connectEM.Consistency.Manual.calcSynapseAreas;
     
     nmlFiles = dir(fullfile(nmlDir, '*.nml'));
     nmlFiles = fullfile(nmlDir, {nmlFiles.name});
