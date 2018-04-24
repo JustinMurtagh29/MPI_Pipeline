@@ -23,8 +23,7 @@ segMeta = connectEM.addSegmentClassInformation(param, segMeta);
 axon = load(axonFile);
 
 %% Calculate per-axon glia score
-axonIds = find(axon.indBigAxons);
-axons = axon.axons(axonIds);
+axons = axon.axons;
 
 gliaScore = cellfun(@(ids) median( ...
     segMeta.gliaProb(ids), 'omitnan'), axons);
@@ -67,7 +66,7 @@ if ~isempty(sampleNmlFile)
    [~, randIds] = pdist2( ...
         gliaScore, randProbs, ...
         'euclidean', 'Smallest', 1);
-    randIds = axonIds(randIds(:));
+    randIds = reshape(randIds, [], 1);
 	
     numDigits = ceil(log10(1 + numel(randIds)));
     
@@ -81,12 +80,12 @@ if ~isempty(sampleNmlFile)
         curProb = randProbs(curIdx);
         curSegIds = axon.axons{curId};
         
-        curName = sprintf( ...
-            '%0*d. Axon %d (%.1f %% glia)', ...
-            numDigits, curIdx, curId, 100 * curProb);
         skel = Skeleton.fromMST( ...
             segMeta.points(curSegIds, :), ...
             param.raw.voxelSize, skel);
+        skel.names{end} = sprintf( ...
+            '%0*d. Axon %d (%.1f %% glia)', ...
+            numDigits, curIdx, curId, 100 * curProb);
     end
     
     skel.write(sampleNmlFile);
