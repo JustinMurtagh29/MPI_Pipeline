@@ -4,7 +4,7 @@ clear;
 
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-axonFile = fullfile(rootDir, 'aggloState', 'axons_18_b.mat');
+axonFile = fullfile(rootDir, 'aggloState', 'axons_18_b_large_mergedFlightPaths.mat');
 
 sampleNmlFile = '/home/amotta/Desktop/median-glia.nml';
 sampleNmlCount = 100;
@@ -15,20 +15,19 @@ info = Util.runInfo();
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 
-segmentMeta = struct;
-segmentMeta.maxSegId = Seg.Global.getMaxSegId(param);
-segmentMeta = connectEM.addSegmentClassInformation(param, segmentMeta);
+segMeta = struct;
+segMeta.maxSegId = Seg.Global.getMaxSegId(param);
+segMeta.points = Seg.Global.getSegToPointMap(param);
+segMeta = connectEM.addSegmentClassInformation(param, segMeta);
 
 axon = load(axonFile);
 
 %% Calculate per-axon glia score
 axonIds = find(axon.indBigAxons);
-
 axons = axon.axons(axonIds);
-axons = Agglo.fromSuperAgglo(axons);
 
-gliaScore = segmentMeta.gliaProb;
-gliaScore = cellfun(@(ids) median(gliaScore(ids), 'omitnan'), axons);
+gliaScore = cellfun(@(ids) median( ...
+    segMeta.gliaProb(ids), 'omitnan'), axons);
 
 %% Histogram of glia score
 binEdges = linspace(0, 1, 51);
@@ -80,13 +79,14 @@ if ~isempty(sampleNmlFile)
     for curIdx = 1:numel(randIds)
         curId = randIds(curIdx);
         curProb = randProbs(curIdx);
-        curAxon = axon.axons(curId);
+        curSegIds = axon.axons{curId};
         
         curName = sprintf( ...
-            'Axon %d (%.1f %% glia)', ...
-            curId, 100 * curProb);
-        skel = skel.addTree( ...
-            curName, curAxon.nodes(:, 1:3), curAxon.edges);
+            '%0*d. Axon %d (%.1f %% glia)', ...
+            numDigits, curIdx, curId, 100 * curProb);
+        skel = Skeleton.fromMST( ...
+            segMeta.points(curSegIds, :), ...
+            param.raw.voxelSize, skel);
     end
     
     skel.write(sampleNmlFile);
