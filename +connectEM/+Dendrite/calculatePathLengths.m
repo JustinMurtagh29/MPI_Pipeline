@@ -1,5 +1,4 @@
-function pathLens = calculatePathLengths( ...
-        param, dendrites, trunkAgglos, spineHeads, somata)
+function pathLens = calculatePathLengths(param, dendrites, trunkAgglos)
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     maxSegId = Seg.Global.getMaxSegId(param);
@@ -8,8 +7,6 @@ function pathLens = calculatePathLengths( ...
     %% Reduce to trunk
     mask = false(maxSegId, 1);
     mask(cell2mat(trunkAgglos)) = true;
-    mask(cell2mat(spineHeads)) = false;
-    mask(cell2mat(somata)) = false;
 
     dendrites = cellfun( ...
         @(segIds) segIds(mask(segIds)), ...
