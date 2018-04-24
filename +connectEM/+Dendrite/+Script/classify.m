@@ -14,6 +14,10 @@ trunkFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v2.mat');
 shFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v2_auto.mat');
 dendFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_03.mat');
 
+[outDir, outFile] = fileparts(dendFile);
+outFile = fullfile(outDir, sprintf('%s_classified.mat', outFile));
+clear outDir;
+
 % Set path to export NML file with conflicts
 confNmlFile = '';
 
@@ -103,6 +107,9 @@ trees.dendId = regexpi(trees.name, '^Dendrite\W+(\d+)', 'tokens', 'once');
 trees(cellfun(@isempty, trees.dendId), :) = [];
 trees.dendId = cellfun(@str2double, trees.dendId);
 
+% Sanity check
+assert(all(ismember(trees.dendId, dendIds)));
+
 trees.targetClass(:) = {'OtherDendrite'};
 trees.targetClass(contains( ...
     trees.name, 'mhSD', 'IgnoreCase', true)) = {'SmoothDendrite'};
@@ -113,6 +120,19 @@ trees.targetClass = categorical(trees.targetClass);
 sdIds = union(sdIds, trees.dendId(trees.targetClass == 'SmoothDendrite'));
 adIds = union(adIds, trees.dendId(trees.targetClass == 'ApicalDendrite'));
 
-%% TODO(amotta): Build output
 % Sanity check
 assert(isempty(intersect(sdIds, adIds)));
+
+%% Build output
+out = dend;
+out.indSmoothies = false(size(out.dendrites));
+out.indSmoothies(sdIds) = true;
+out.indApicals = false(size(out.dendrites));
+out.indApicals(adIds) = true;
+
+out = rmfield(out, 'info');
+out = orderfields(out);
+out.info = info;
+
+Util.saveStruct(outFile, out);
+Util.protect(outFile);
