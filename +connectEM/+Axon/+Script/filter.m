@@ -6,6 +6,9 @@ clear;
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 axonFile = fullfile(rootDir, 'aggloState', 'axons_18_b.mat');
 
+sampleNmlDir = '/home/amotta/Desktop/median-glia-nmls';
+sampleNmlCount = 100;
+
 info = Util.runInfo();
 
 %% Loading data
@@ -55,3 +58,37 @@ ylabel(ax, 'Axons');
 title(ax, ...
     {info.filename; info.git_repos{1}.hash}, ...
     'FontWeight', 'normal', 'FontSize', 10);
+
+%% Export examples
+if ~isempty(sampleNmlDir)
+    % Select axons to export
+    rng(0);
+    randProbs = rand(sampleNmlCount, 1);
+    
+   [~, randIds] = pdist2( ...
+        gliaScore, randProbs, ...
+        'euclidean', 'Smallest', 1);
+    randIds = axonIds(randIds(:));
+	
+    numDigits = ceil(log10(1 + numel(randIds)));
+    
+    skel = skeleton();
+    skel = Skeleton.setParams4Pipeline(skel, param);
+    skel = skel.setDescription(sprintf( ...
+        '%s (%s)', info.filename, info.git_repos{1}.hash));
+    
+    for curIdx = 1:numel(randIds)
+        curId = randIds(curIdx);
+        curProb = randProbs(curIdx);
+        curAxon = axon.axons(curId);
+        
+        curName = sprintf( ...
+            'Axon %d (%.1f %% glia)', ...
+            curId, 100 * curProb);
+        curSkel = skel.addTree( ...
+            curName, curAxon.nodes(:, 1:3), curAxon.edges);
+        
+        curSkel.write(fullfile(sampleNmlDir, sprintf( ...
+            '%0*d_axon-%d.nml', numDigits, curIdx, curId)));
+    end
+end
