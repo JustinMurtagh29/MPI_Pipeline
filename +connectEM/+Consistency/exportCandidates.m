@@ -15,7 +15,7 @@ rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 outputDir = '/home/amotta/Desktop';
 
 synFile = fullfile(rootDir, 'connectomeState', 'SynapseAgglos_v3_ax_spine_clustered.mat');
-connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a_ax_spine_syn_clust.mat');
+connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_b_linearized_ax_spine_syn_clust.mat');
 
 synCount = 4;
 synType = 'spine';
@@ -59,16 +59,9 @@ skel = Skeleton.setParams4Pipeline(skel, param);
 skelDesc = sprintf('%s (%s)', mfilename, info.git_repos{1}.hash);
 skel = skel.setDescription(skelDesc);
 
-openIds = 1:size(axonDendPair, 1);
-
-% First round
 rng(0);
-randIds = openIds(randperm(numel(openIds), 20));
-openIds = setdiff(openIds, randIds);
-
-% Second round
-rng(0);
-randIds = openIds(randperm(numel(openIds), 20));
+randIds = randperm(size(axonDendPair, 1));
+randIds = randIds(1:25);
 
 for curIdx = 1:numel(randIds)
     curId = randIds(curIdx);
