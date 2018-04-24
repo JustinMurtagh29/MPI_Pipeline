@@ -5,7 +5,7 @@ clear;
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a_ax_spine_syn_clust.mat');
-synFile = fullfile(rootDir, 'connectomeState', 'SynapseAgglos_v3_ax_spine_clustered.mat');
+synFile = fullfile(rootDir, 'connectomeState', 'SynapseAgglos_v3_ax_spine_clustered_classified.mat');
 shFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_01_spine_attachment.mat');
 outputDir = '/home/amotta/Desktop/thalamocortical';
 
@@ -18,9 +18,7 @@ param = param.p;
 maxSegId = Seg.Global.getMaxSegId(param);
 segPoints = Seg.Global.getSegToPointMap(param);
 
-[~, connName] = fileparts(connFile);
-conn = connectEM.Connectome.load(param, connName);
-syn = load(synFile);
+[conn, syn] = connectEM.Connectome.load(param, connFile, synFile);
 
 shAgglos = load(shFile, 'shAgglos');
 shAgglos = shAgglos.shAgglos;
@@ -35,11 +33,7 @@ synT.shId = cellfun( ...
 synT(~synT.shId, :) = [];
 
 %% Export to webKNOSSOS
-rng(0);
 axonIds = find(conn.axonMeta.axonClass == 'Thalamocortical');
-axonIds = axonIds(randperm(numel(axonIds)));
-axonIds = axonIds(1:20);
-
 numDigits = ceil(log10(1 + numel(axonIds)));
 
 skel = skeleton();
