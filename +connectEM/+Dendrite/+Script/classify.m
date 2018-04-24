@@ -14,7 +14,13 @@ trunkFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v2.mat');
 shFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v2_auto.mat');
 dendFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_03.mat');
 
-nmlFile = '/home/amotta/Desktop/sd-ad-conflicts.nml';
+% Set path to export NML file with conflicts
+confNmlFile = '';
+
+% NML file resolving conflicts
+annNmlFile = fullfile( ...
+    fileparts(mfilename('fullpath')), 'annotations', ...
+    '2012-09-28_ex145_07x2_ROI2017__explorational__mhelmstaedter__1547e7_ADs.nml');
 
 % Very rough threshold based on table 2 from
 % Kawaguchi, Karuba, Kubota (2006) Cereb Cortex
@@ -67,14 +73,12 @@ dendLUT = Agglo.buildLUT(maxSegId, dendAgglos, dendIds);
 adIds = cellfun(@(ids) mode(nonzeros(dendLUT(ids))), adAgglos);
 adIds = unique(adIds(~isnan(adIds)));
 
-%% TODO(amotta): Build output
-% Sanity check
-% assert(isempty(intersect(sdIds, adIds)));
-
 %% Export conflicts
-if ~isempty(nmlFile)
-    confIds = intersect(sdIds, adIds);
+confIds = intersect(sdIds, adIds);
+sdIds = setdiff(sdIds, confIds);
+adIds = setdiff(adIds, confIds);
 
+if ~isempty(confNmlFile)
     skel = skeleton();
     skel = Skeleton.setParams4Pipeline(skel, param);
     skel = skel.setDescription(sprintf( ...
@@ -87,5 +91,28 @@ if ~isempty(nmlFile)
             curAgglo.nodes(:, 1:3), curAgglo.edges);
     end
 
-    skel.write(nmlFile);
+    skel.write(confNmlFile);
 end
+
+%% Solve conflicts using MH's annotations
+nml = slurpNml(annNmlFile);
+trees = NML.buildTreeTable(nml);
+
+% Find agglomerate IDs and get rid of invalid trees
+trees.dendId = regexpi(trees.name, '^Dendrite\W+(\d+)', 'tokens', 'once');
+trees(cellfun(@isempty, trees.dendId), :) = [];
+trees.dendId = cellfun(@str2double, trees.dendId);
+
+trees.targetClass(:) = {'OtherDendrite'};
+trees.targetClass(contains( ...
+    trees.name, 'mhSD', 'IgnoreCase', true)) = {'SmoothDendrite'};
+trees.targetClass(contains( ...
+    trees.name, 'mhAD', 'IgnoreCase', true)) = {'ApicalDendrite'};
+trees.targetClass = categorical(trees.targetClass);
+
+sdIds = union(sdIds, trees.dendId(trees.targetClass == 'SmoothDendrite'));
+adIds = union(adIds, trees.dendId(trees.targetClass == 'ApicalDendrite'));
+
+%% TODO(amotta): Build output
+% Sanity check
+assert(isempty(intersect(sdIds, adIds)));
