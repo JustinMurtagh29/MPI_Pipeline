@@ -33,7 +33,11 @@ synT.shId = cellfun( ...
 synT(~synT.shId, :) = [];
 
 %% Export to webKNOSSOS
+rng(0);
 axonIds = find(conn.axonMeta.axonClass == 'Thalamocortical');
+axonIds = axonIds(randperm(numel(axonIds)));
+axonIds = axonIds(1:20);
+
 numDigits = ceil(log10(1 + numel(axonIds)));
 
 skel = skeleton();
@@ -67,3 +71,25 @@ for curIdx = 1:numel(axonIds)
         '%0*d_axon-%d.nml', numDigits, curIdx, curId);
     curSkel.write(fullfile(outputDir, curSkelName));
 end
+
+%% Export axons only for MH (but all of them)
+axonIds = find(conn.axonMeta.axonClass == 'Thalamocortical');
+numDigits = ceil(log10(1 + numel(axonIds)));
+
+skel = skeleton();
+skel = Skeleton.setParams4Pipeline(skel, param);
+skel = skel.setDescription(sprintf( ...
+    '%s (%s)', info.filename, info.git_repos{1}.hash));
+
+nodes = cellfun( ...
+	@(segIds) segPoints(segIds, :), ...
+	conn.axons(axonIds), 'UniformOutput', false);
+
+skel = Skeleton.fromMST( ...
+    nodes, param.raw.voxelSize, skel);
+skel.names = arrayfun( ...
+    @(id) sprintf('Axon %d', id), ...
+    axonIds, 'UniformOutput', false);
+
+skel.write(fullfile(outputDir, 'all.nml'));
+
