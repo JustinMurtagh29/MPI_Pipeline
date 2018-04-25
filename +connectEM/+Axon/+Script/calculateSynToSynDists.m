@@ -7,7 +7,6 @@ clear;
 %% configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_b_linearized_ax_spine_syn_clust.mat');
-synFile = fullfile(rootDir, 'connectomeState', 'SynapseAgglos_v3_ax_spine_clustered.mat');
 
 [interSynFile, interSynName] = fileparts(connFile);
 interSynName = sprintf('%s_intersynapse.mat', interSynName);
@@ -18,7 +17,7 @@ info = Util.runInfo();
 
 %% loading data
 conn = load(connFile);
-syn = load(synFile);
+syn = load(conn.info.param.synFile);
 
 % load dataset parameters
 param = load(fullfile(rootDir, 'allParameter.mat'), 'p');
