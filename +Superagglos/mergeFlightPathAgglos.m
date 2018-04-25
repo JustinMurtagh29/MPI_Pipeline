@@ -47,6 +47,8 @@ for i = 1:length(axonsBig)
 end
 
 if toAgglo
+    toDel = Superagglos.getPureFlightPathAgglos(axons);
+    axons(toDel) = [];
     axons = Superagglos.getSegIds(axons);
 end
 
