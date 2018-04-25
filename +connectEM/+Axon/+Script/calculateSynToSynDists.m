@@ -6,7 +6,7 @@ clear;
 
 %% configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_b_linearized_ax_spine_syn_clust.mat');
+connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites-wholeCells-03-classified_spine-syn-clust.mat');
 
 [interSynFile, interSynName] = fileparts(connFile);
 interSynName = sprintf('%s_intersynapse.mat', interSynName);
