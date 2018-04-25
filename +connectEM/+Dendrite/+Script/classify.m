@@ -130,6 +130,17 @@ out.indSmoothies(sdIds) = true;
 out.indApicals = false(size(out.dendrites));
 out.indApicals(adIds) = true;
 
+% Build `targetClass` categorical
+out.targetClass = cell(size(out.dendrites));
+out.targetClass(:) = {'Ignore'};
+out.targetClass(out.indBigDends) = {'OtherDendrite'};
+out.targetClass(out.indSomata) = {'Somata'};
+out.targetClass(out.indWholeCells) = {'WholeCell'};
+out.targetClass(out.indAIS) = {'AxonInitialSegment'};
+out.targetClass(out.indApicals) = {'ApicalDendrite'};
+out.targetClass(out.indSmoothies) = {'SmoothDendrite'};
+out.targetClass = categorical(out.targetClass);
+
 out = rmfield(out, 'info');
 out = orderfields(out);
 out.info = info;
