@@ -1,4 +1,5 @@
-function axons = mergeFlightPathAgglos( ov, axonsBig, axonsSmall, toAgglo )
+function [axons, parentIds] = ...
+        mergeFlightPathAgglos( ov, axonsBig, axonsSmall, toAgglo )
 %MERGEFLIGHTPATHAGGLOS Merge the small axon agglomerates that are picked up
 % by a flight path into the large axons class.
 % INPUT ov: [Nx1] cell
@@ -19,6 +20,8 @@ function axons = mergeFlightPathAgglos( ov, axonsBig, axonsSmall, toAgglo )
 %           (Default: true)
 % OUTPUT axons: [Nx1] struct
 %           Resulting axons in the superagglo format.
+%        parentIds: [Nx1] double
+%           Linear indices of the `axonBig` corresponding to `axons`.
 % Author: Benedikt Staffler <benedikt.staffler@brain.mpg.de>
 
 if ~exist('toAgglo', 'var') || isempty(toAgglo)
@@ -26,6 +29,8 @@ if ~exist('toAgglo', 'var') || isempty(toAgglo)
 end
 
 axons = axonsBig;
+parentIds = reshape(1:numel(axons), size(axons));
+
 for i = 1:length(axonsBig)
     if toAgglo
         if ~isempty(ov{i}) % simply concatenate nodes
@@ -49,6 +54,7 @@ end
 if toAgglo
     toDel = Superagglos.getPureFlightPathAgglos(axons);
     axons(toDel) = [];
+    parentIds(toDel) = [];
     axons = Superagglos.getSegIds(axons);
 end
 
