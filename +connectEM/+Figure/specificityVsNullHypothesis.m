@@ -57,7 +57,7 @@ ylim(ax, [0, 1]);
 xlabel(ax, 'Soma synapses');
 ylabel(ax, 'p');
 
-xTicks = union(xticks(ax), synCount);
+xTicks = union(xticks(ax), [somaSynCount, synCount]);
 xticklabels(ax, arrayfun( ...
     @num2str, xTicks, 'UniformOutput', false));
 xticks(ax, 0.5 + xTicks);
