@@ -31,6 +31,7 @@ somaProb = sum(classConnectome(nullAxonIds, :), 1);
 somaProb = somaProb(targetClasses == 'Somata') / sum(somaProb);
 
 nullProbs = binopdf(0:synCount, synCount, somaProb);
+nullPVals = fliplr(cumsum(fliplr(nullProbs)));
 
 %% Figure
 binEdges = 0:(synCount + 1);
@@ -48,6 +49,8 @@ histogram(ax, ...
 plot(ax, ...
     0.5 + repelem(somaSynCount, 1, 2), [0, 1], ...
     'Color', 'black', 'LineStyle', '--');
+plot(ax, ...
+    0.5 + (0:synCount), 1 - nullPVals, 'Color', 'black');
 
 ax.TickDir = 'out';
 
