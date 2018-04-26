@@ -7,7 +7,7 @@ rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 
 connFiles = { ...
     'connectome_axons_18_a_ax_spine_syn_clust.mat';
-    'connectome_ax18a_deWC01wSp.mat'};
+    'connectome_axons-19-a_dendrites-wholeCells-03-classified_spine-syn-clust.mat'};
 connFiles = fullfile(rootDir, 'connectomeState', connFiles);
 
 %% loading data
@@ -74,7 +74,7 @@ for idx = 1:numel(conns)
     tableData(rows, idx) = connVals{idx, 2};
 end
 
-colNames = tableData(1, :);
+colNames = {'Old', 'New'};
 tableData(1, :) = [];
 rowNames(1, :) = [];
 
