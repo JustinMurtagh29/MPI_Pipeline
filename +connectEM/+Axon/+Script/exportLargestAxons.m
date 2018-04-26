@@ -42,7 +42,7 @@ numDigits = ceil(log10(nmlStart + nmlCount));
 fileIdStart = ceil(nmlStart / nmlFileCount);
 fileIdEnd = ceil((nmlStart + nmlCount - 1) / nmlFileCount);
 
-for curId = 1:numFiles
+for curId = fileIdStart:fileIdEnd
     curOff = 1 + (curId - 1) * nmlFileCount;
     curIdStart = max(curOff, nmlStart);
     curIdsEnd = min(curOff + nmlFileCount, nmlStart + nmlCount) - 1;
