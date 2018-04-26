@@ -22,6 +22,19 @@ param = param.p;
 classConnectome = ...
     connectEM.Connectome.buildClassConnectome( ...
         conn, 'targetClasses', targetClasses);
+    
+%% generate a class with all axons
+allAxonClass = struct;
+allAxonClass.axonIds = find( ...
+    conn.axonMeta.synCount >= minSynPre);
+allAxonClass.nullAxonIds = find( ...
+    conn.axonMeta.synCount >= minSynPre);
+allAxonClass.title = sprintf( ...
+    'all axons with ≥ %d synapses (n = %d)', ...
+    minSynPre, numel(allAxonClass.axonIds));
+allAxonClass.specs = struct;
+
+axonClasses(end + 1) = allAxonClass;
 
 %% plot
 for curIdx = 1:numel(axonClasses)
