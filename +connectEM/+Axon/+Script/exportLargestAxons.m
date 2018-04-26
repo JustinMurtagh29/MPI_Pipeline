@@ -6,6 +6,7 @@ clear all; %#ok
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 axonFile = fullfile(rootDir, 'aggloState', 'axons_19_a.mat');
 
+nmlStart = 401;
 nmlCount = 400;
 nmlFileCount = 50;
 nmlDir = '/home/amotta/Desktop';
@@ -37,12 +38,15 @@ skel = Skeleton.setParams4Pipeline(skel, param);
 skel = skel.setDescription(sprintf( ...
     '%s (%s)', info.filename, info.git_repos{1}.hash));
 
-numDigits = ceil(log10(1 + nmlCount));
-numFiles = ceil(nmlCount / nmlFileCount);
+numDigits = ceil(log10(nmlStart + nmlCount));
+fileIdStart = ceil(nmlStart / nmlFileCount);
+fileIdEnd = ceil((nmlStart + nmlCount - 1) / nmlFileCount);
 
 for curId = 1:numFiles
-    curIds = 1 + (curId - 1) * nmlFileCount;
-    curIds = curIds:min(curIds + nmlFileCount - 1, nmlCount);
+    curOff = 1 + (curId - 1) * nmlFileCount;
+    curIdStart = max(curOff, nmlStart);
+    curIdsEnd = min(curOff + nmlFileCount, nmlStart + nmlCount) - 1;
+    curIds = curIdStart:curIdsEnd;
     
     curAxons = axons(curIds(:));
     curAxonIds = axonIds(curIds(:));
