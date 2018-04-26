@@ -6,8 +6,13 @@ clear;
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 axonFile = fullfile(rootDir, 'aggloState', 'axons_18_b_large_mergedFlightPaths.mat');
 
-sampleNmlFile = '/home/amotta/Desktop/median-glia.nml';
+sampleNmlFile = '';
 sampleNmlCount = 100;
+
+% Path to NML file with annotated agglomerates
+annNmlFile = fullfile( ...
+    fileparts(mfilename('fullpath')), ...
+    'annotations', 'axon-glia-classification.nml');
 
 info = Util.runInfo();
 
@@ -89,4 +94,41 @@ if ~isempty(sampleNmlFile)
     end
     
     skel.write(sampleNmlFile);
+end
+
+%% Parse annotations
+if ~isempty(annNmlFile)
+    nml = slurpNml(annNmlFile);
+    names = nml.things.name;
+    
+    aggloIds = regexpi(names, '^\d+\. Axon (\d+)', 'tokens', 'once');
+    tags = regexpi(names, '\((\w+)\)$', 'tokens', 'once');
+    
+    % Sanity check
+    assert(all(cellfun(@numel, aggloIds)));
+    
+    ann = table;
+    ann.id = cellfun(@str2double, cat(1, aggloIds{:}));
+    
+    ann(cellfun(@isempty, tags), :) = [];
+    ann.tag = categorical(lower(cat(1, tags{:})));
+    
+    ann.gliaScore = gliaScore(ann.id);
+    ann.isAxon = ann.tag == 'axon';
+    
+    fig = figure();
+    fig.Color = 'white';
+    
+    ax = axes(fig);
+    hold(ax, 'on');
+    
+    binEdges = linspace(0, 1, 11);
+    plotFunc = @(values, varargin) histogram( ...
+        ax, values, 'BinEdges', linspace(0, 1, 11), ...
+        'DisplayStyle', 'stairs', 'LineWidth', 2, varargin{:});
+    plotFunc(ann.gliaScore, 'EdgeColor', 'black');
+    plotFunc(ann.gliaScore(ann.isAxon));
+    
+    ax.TickDir = 'out';
+    xlim(ax, [0, 1]);
 end
