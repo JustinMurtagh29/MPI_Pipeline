@@ -15,6 +15,24 @@ function [conn, syn, axonClasses] = load(param, connFile, synFile)
     
     %% loading data
     conn = load(connFile);
+    
+    try
+        connSynFile = conn.info.param.synFile;
+    catch
+        % NOTE(amotta): `synFile` was not stored in connectome. So, let's
+        % use the user specified one. We expect the user to have specified
+        % a `synFile`.
+        connSynFile = synFile;
+    end
+    
+    if ~exist('synFile', 'var') || isempty(synFile)
+        synFile = connSynFile;
+    elseif ~strcmp(synFile, connSynFile)
+        % Show an error if the user-specified synapse file doesn't match
+        % the one used to generate the connectome.
+        error('Specified synapse file does not match connectome');
+    end
+    
     syn = load(synFile);
     
     % intersynapse distances (for detection of TC axons)
