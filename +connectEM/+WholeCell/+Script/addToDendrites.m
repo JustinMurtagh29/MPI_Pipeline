@@ -5,9 +5,9 @@ clear;
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 
-dendFile = fullfile(rootDir, 'aggloState', 'dendrites_18.mat');
+dendFile = fullfile(rootDir, 'aggloState', 'dendrites_18_b.mat');
 wcFile = fullfile(rootDir, 'aggloState', 'wholeCells_GTAxon_08_v4.mat');
-outFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v2.mat');
+outFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v3.mat');
 
 info = Util.runInfo();
 
