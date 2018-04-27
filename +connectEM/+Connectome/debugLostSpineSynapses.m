@@ -16,11 +16,14 @@ shFiles = { ...
     'dendrites_wholeCells_02_v2_auto.mat'};
 shFiles = fullfile(rootDir, 'aggloState', shFiles);
 
+info = Util.runInfo();
+
 %% Loading data
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 
 maxSegId = Seg.Global.getMaxSegId(param);
+segPoints = Seg.Global.getSegToPointMap(param);
 
 syn = load(synFile);
 connOld = load(connFiles{1});
@@ -51,3 +54,31 @@ sum(newMask2 & ~newMask)
 
 sum(oldMask & ~newMask)
 sum(newMask & ~oldMask)
+
+%% Export examples
+skel = skeleton();
+skel = Skeleton.setParams4Pipeline(skel, param);
+skel.setDescription(sprintf( ...
+    '%s (%s)', info.filename, info.git_repos{1}.hash));
+
+rng(0);
+randIds = find(oldMask & ~newMask);
+randIds = randIds(randperm(numel(randIds)));
+randIds = randIds(1:20);
+
+for curIdx = 1:numel(randIds)
+    curId = randIds(curIdx);
+    
+    curAgglos = [ ...
+        shOld.shAgglos(curId); ...
+        shOld.dendAgglos(shOld.attached(curId))];
+    curNodes = cellfun( ...
+        @(segIds) segPoints(segIds, :), ...
+        curAgglos, 'UniformOutput', false);
+    
+    curSkel = skel;
+    curSkel = Skeleton.fromMST(curNodes, param.raw.voxelSize, curSkel);
+    
+    curSkel.write(fullfile( ...
+        '/home/amotta/Desktop', sprintf('%d.nml', curIdx)));
+end
