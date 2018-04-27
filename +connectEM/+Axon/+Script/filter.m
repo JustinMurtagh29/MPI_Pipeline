@@ -14,6 +14,9 @@ annNmlFile = fullfile( ...
     fileparts(mfilename('fullpath')), ...
     'annotations', 'axon-glia-classification.nml');
 
+filterThresh = 0.3;
+filterNmlFile = '/home/amotta/Desktop/glia-in-axon-candidates.nml';
+
 info = Util.runInfo();
 
 %% Loading data
@@ -137,4 +140,31 @@ if ~isempty(annNmlFile)
     title(ax, ...
         {info.filename; info.git_repos{1}.hash}, ...
         'FontWeight', 'norma', 'FontSize', 10);
+end
+
+%% Export candidates
+if ~isempty(filterNmlFile)
+    skel = skeleton();
+    skel = Skeleton.setParams4Pipeline(skel, param);
+    skel.setDescription(sprintf( ...
+        '%s (%s)', info.filename, info.git_repos{1}.hash));
+    
+    candIds = find(gliaScore >= filterThresh);
+    numDigits = ceil(log10(1 + numel(candIds)));
+    candAgglos = axons(candIds);
+    
+    % sort by size
+   [~, sortIds] = sort(cellfun(@numel, candAgglos), 'descend');
+    candAgglos = candAgglos(sortIds);
+    candIds = candIds(sortIds);
+    
+    candAgglos = cellfun( ...
+        @(ids) segMeta.points(ids, :), ...
+        candAgglos, 'UniformOutput', false);
+    skel = Skeleton.fromMST(candAgglos, param.raw.voxelSize, skel);
+    
+    skel.names = arrayfun( ...
+        @(idx, id) sprintf('%0*d. Axon %d', numDigits, idx, id), ...
+        transpose(1:numel(candIds)), candIds(:), 'UniformOutput', false);
+    skel.write(filterNmlFile);
 end
