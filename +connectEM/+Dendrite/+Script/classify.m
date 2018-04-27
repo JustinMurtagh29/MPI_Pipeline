@@ -19,12 +19,12 @@ outFile = fullfile(outDir, sprintf('%s_classified.mat', outFile));
 clear outDir;
 
 % Set path to export NML file with conflicts
-confNmlFile = '/home/amotta/Desktop/ad-sd-conflicts.nml';
+confNmlFile = '';
 
 % NML file resolving conflicts
 annNmlFile = fullfile( ...
     fileparts(mfilename('fullpath')), 'annotations', ...
-    '2012-09-28_ex145_07x2_ROI2017__explorational__mhelmstaedter__1547e7_ADs.nml');
+    '2012-09-28_ex145_07x2_ROI2017__explorational__amotta__b3a207.nml');
 
 % Very rough threshold based on table 2 from
 % Kawaguchi, Karuba, Kubota (2006) Cereb Cortex
