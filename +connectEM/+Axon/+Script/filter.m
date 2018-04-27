@@ -118,8 +118,10 @@ if ~isempty(annNmlFile)
     
     fig = figure();
     fig.Color = 'white';
+    fig.Position(3:4) = [460, 430];
     
     ax = axes(fig);
+    axis(ax, 'square');
     hold(ax, 'on');
     
     binEdges = linspace(0, 1, 11);
@@ -131,4 +133,8 @@ if ~isempty(annNmlFile)
     
     ax.TickDir = 'out';
     xlim(ax, [0, 1]);
+    
+    title(ax, ...
+        {info.filename; info.git_repos{1}.hash}, ...
+        'FontWeight', 'norma', 'FontSize', 10);
 end
