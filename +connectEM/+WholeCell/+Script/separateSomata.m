@@ -5,8 +5,8 @@ clear;
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 somaFile = fullfile(rootDir, 'aggloState', 'somata_07.mat');
-dendFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v2_auto-and-manual.mat');
-outFile  = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_03.mat');
+dendFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v3_auto-and-manual.mat');
+outFile  = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_03_v2.mat');
 
 % Set for debugging
 nmlFile = '';
