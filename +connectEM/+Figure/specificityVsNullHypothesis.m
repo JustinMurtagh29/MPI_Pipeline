@@ -34,37 +34,41 @@ nullProbs = binopdf(0:synCount, synCount, somaProb);
 nullPVals = fliplr(cumsum(fliplr(nullProbs)));
 
 %% Figure
-binEdges = 0:(synCount + 1);
+binEdges = (0:(synCount + 1)) - 0.5;
 
 fig = figure();
 fig.Color = 'white';
-fig.Position(3:4) = [400, 250];
+fig.Position(3:4) = [425, 275];
 
 ax = axes(fig);
+yyaxis(ax, 'left');
 hold(ax, 'on');
 
 histogram(ax, ...
     'BinEdges', binEdges, 'BinCounts', nullProbs, ...
     'DisplayStyle', 'stairs', 'LineWidth', 2, 'FaceAlpha', 1);
 plot(ax, ...
-    0.5 + repelem(somaSynCount, 1, 2), [0, 1], ...
+    repelem(somaSynCount, 1, 2), [0, 1], ...
     'Color', 'black', 'LineStyle', '--');
-plot(ax, ...
-    0.5 + (0:synCount), 1 - nullPVals, 'Color', 'black');
 
 ax.TickDir = 'out';
 
-xlim(ax, binEdges([1, end]));
 ylim(ax, [0, 1]);
 
-xlabel(ax, 'Soma synapses');
 ylabel(ax, 'p');
+yticks(ax, [0, 0.5, 1]);
+
+yyaxis(ax, 'right');
+plot(ax, (0:synCount), nullPVals);
+ax.YAxis(2).Scale = 'log';
 
 xTicks = union(xticks(ax), [somaSynCount, synCount]);
 xticklabels(ax, arrayfun( ...
     @num2str, xTicks, 'UniformOutput', false));
-xticks(ax, 0.5 + xTicks);
-yticks(ax, [0, 0.5, 1]);
+xticks(ax, xTicks);
+
+xlim(ax, binEdges([1, end]));
+xlabel(ax, 'Soma synapses');
 
 title(ax, ...
     {info.filename; info.git_repos{1}.hash}, ...
