@@ -182,30 +182,51 @@ if ~isempty(debugDir)
     end
 end
 
+%% Try to find border cells
+somaPos = cell2mat(arrayfun( ...
+    @(s) mean(s.nodes(:, 1:3), 1), ...
+    wcT.somaAgglo, 'UniformOutput', false));
+
+voxelSize = param.raw.voxelSize;
+somaDistXY = voxelSize(3) * min(pdist2( ...
+    somaPos(:, 3), transpose(param.bbox(3, :))), [], 2);
+somaDistXZ = voxelSize(2) * min(pdist2( ...
+    somaPos(:, 2), transpose(param.bbox(2, :))), [], 2);
+somaDistYZ = voxelSize(1) * min(pdist2( ...
+    somaPos(:, 1), transpose(param.bbox(1, :))), [], 2);
+
+yzWcIds = find(somaDistYZ >= 10E3 & ...
+    (somaDistXY < 10E3 | somaDistXZ < 10E3));
+wcGroups = {yzWcIds};
+
 %% Generate queen neuron
-% build synapse table and fix `segIdx`
-nodeIdOff = cumsum(cellfun(@numel, wcT.nodeDists));
-nodeIdOff = [0; nodeIdOff(1:(end - 1))];
+for curIdx = 1:numel(wcGroups)
+    curWcIds = wcGroups{curIdx};
+    curWcT = wcT(curWcIds, :);
+    
+    nodeIdOff = cumsum(cellfun(@numel, curWcT.nodeDists));
+    nodeIdOff = [0; nodeIdOff(1:(end - 1))];
 
-lumpedSynapses = cat(1, wcT.synapses{:});
-lumpedSynapses.nodeId = lumpedSynapses.nodeId ...
-    + repelem(nodeIdOff, cellfun(@height, wcT.synapses));
+    lumpedSynapses = cat(1, curWcT.synapses{:});
+    lumpedSynapses.nodeId = lumpedSynapses.nodeId ...
+        + repelem(nodeIdOff, cellfun(@height, curWcT.synapses));
 
-queenWcT = table;
-queenWcT.id = size(wcT, 1) + 1;
+    curQueenWcT = table;
+    curQueenWcT.id = size(curWcT, 1) + 1;
 
-queenWcT.agglo = struct;
-queenWcT.agglo.nodes = cat(1, wcT.agglo.nodes);
-queenWcT.agglo.edges = zeros(0, 2);
+    curQueenWcT.agglo = struct;
+    curQueenWcT.agglo.nodes = cat(1, curWcT.agglo.nodes);
+    curQueenWcT.agglo.edges = zeros(0, 2);
 
-queenWcT.somaAgglo = struct;
-queenWcT.somaAgglo.nodes = cat(1, wcT.somaAgglo.nodes);
-queenWcT.somaAgglo.edges = zeros(0, 2);
+    curQueenWcT.somaAgglo = struct;
+    curQueenWcT.somaAgglo.nodes = cat(1, curWcT.somaAgglo.nodes);
+    curQueenWcT.somaAgglo.edges = zeros(0, 2);
 
-queenWcT.nodeDists = {cell2mat(wcT.nodeDists)};
-queenWcT.synapses = {lumpedSynapses};
+    curQueenWcT.nodeDists = {cell2mat(curWcT.nodeDists)};
+    curQueenWcT.synapses = {lumpedSynapses};
 
-wcT = cat(1, wcT, queenWcT);
+    wcT = cat(1, wcT, curQueenWcT);
+end
 
 %% plotting
 for curIdx = 1:size(wcT, 1)
