@@ -2,15 +2,15 @@
 %   Alessandro Motta <alessandro.motta@brain.mpg.de>
 clear;
 
-%% configuration
+%% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 
 % Set output directory to write figures to disk instead of displaying them.
 outputDir = '';
 
-synFile = fullfile(rootDir, 'connectomeState', 'SynapseAgglos_v3_ax_spine_clustered.mat');
-connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a_ax_spine_syn_clust.mat');
-dendFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_01_spine_attachment.mat');
+connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites-wholeCells-03-v2-classified_spine-syn-clust.mat');
+wcFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v3_auto-and-manual.mat');
+somaFile  = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_03_v2.mat');
 
 % debugging
 debugDir = '';
@@ -23,105 +23,77 @@ param = load(fullfile(rootDir, 'allParameter.mat'), 'p');
 param = param.p;
 
 maxSegId = Seg.Global.getMaxSegId(param);
-segMass = Seg.Global.getSegToSizeMap(param);
-segCentroids = Seg.Global.getSegToCentroidMap(param);
 
-syn = load(synFile);
-dend = load(dendFile);
+wcData = load(wcFile);
+somaData = load(somaFile);
 
-[~, connName] = fileparts(connFile);
-conn = connectEM.Connectome.load(param, connName);
+% [conn, syn] = connectEM.Connectome.load(param, connFile);
 
 %% split axons into exc. and inh.
+%{
 conn.axonMeta.spineSynFrac = ...
     conn.axonMeta.spineSynCount ...
  ./ conn.axonMeta.synCount;
 
-conn.axonMeta.isExc = (conn.axonMeta.spineSynFrac > 0.5);
+conn.axonMeta.isExc = (conn.axonMeta.priSpineSynFrac >= 0.5);
 conn.axonMeta.isInh = ~conn.axonMeta.isExc;
+%}
 
-%% establish correspondence between connectome and whole cells
-somaAggloIds = find(conn.denMeta.targetClass == 'Somata');
-somaAgglos = conn.dendrites(somaAggloIds);
-somaLUT = Agglo.buildLUT(maxSegId, somaAgglos);
-
-dendAggloIds = find(conn.denMeta.targetClass == 'WholeCell');
-dendAgglos = conn.dendrites(dendAggloIds);
-dendLUT = Agglo.buildLUT(maxSegId, dendAgglos);
-
+%% Complete whole cell somata
 wcT = table;
-wcT.aggloId = dend.indWholeCells;
-wcT.segIds = dend.dendAgglos(wcT.aggloId);
+wcT.id = wcData.idxWholeCells(wcData.indWholeCells);
+wcT.agglo = wcData.dendrites(wcData.indWholeCells);
+SuperAgglo.check(wcT.agglo);
 
-% find soma
-wcT.somaId = cellfun( ...
-    @(segIds) setdiff(somaLUT(segIds), 0), ...
-    wcT.segIds, 'UniformOutput', false);
+% Find corresponding somata
+[~, somaIds] = ismember(wcT.id, somaData.idxSomata);
+wcT.somaAgglo = somaData.dendrites(somaIds);
 
-wcT(~cellfun(@isscalar, wcT.somaId), :) = [];
-wcT.somaId = cell2mat(wcT.somaId);
+% NOTE(amotta): There is a bug in the soma super-agglomerates which allows
+% them to be disconnected. Let's fix this by introducing random edges. This
+% is not a problem since we do not care about distances within the soma.
+wcT.somaAgglo = SuperAgglo.connect(wcT.somaAgglo);
+SuperAgglo.check(wcT.somaAgglo);
 
-% find dendrite(s)
-wcT.dendId = cellfun( ...
-    @(segIds) setdiff(dendLUT(segIds), 0), ...
-    wcT.segIds, 'UniformOutput', false);
+% Merge somata with whole cells
+wcT.agglo = arrayfun(@SuperAgglo.merge, wcT.agglo, wcT.somaAgglo);
+wcT.agglo = SuperAgglo.clean(wcT.agglo);
 
-wcT(~cellfun(@isscalar, wcT.dendId), :) = [];
-wcT.dendId = cell2mat(wcT.dendId);
-
-% add soma to segment list
-wcT.segIds = cellfun( ...
-    @(segIds, somaSegIds) unique(cat(1, segIds, somaSegIds)), ...
-    wcT.segIds, somaAgglos(wcT.somaId), 'UniformOutput', false);
-
-%% calculate distance to soma surface
-wcT.edges = cell(size(wcT.segIds));
-wcT.nodeDists = cell(size(wcT.segIds));
+%% Calculate distance to soma surface
+wcT.nodeDists = cell(size(wcT.id));
 
 for curIdx = 1:size(wcT, 1)
-    curSegIds = wcT.segIds{curIdx};
+    curAgglo = wcT.agglo(curIdx);
+    curNodeCount = size(curAgglo.nodes, 1);
     
-    curSomaSegIds = somaAgglos{wcT.somaId(curIdx)};
-   [~, curSomaSegIds] = ismember(curSomaSegIds, curSegIds);
-    assert(all(curSomaSegIds));
+    curSomaSegIds = Agglo.fromSuperAgglo(wcT.somaAgglo(curIdx));
+    curSomaNodeMask = ismember(curAgglo.nodes(:, 4), curSomaSegIds);
     
-    % build weights
-    curDists = segCentroids(curSegIds, :);
+    curSomaNodeId = find(curSomaNodeMask, 1);
+    assert(~isempty(curSomaNodeId));
+    
+    curDists = ...
+        curAgglo.nodes(curAgglo.edges(:, 1), 1:3) ...
+      - curAgglo.nodes(curAgglo.edges(:, 2), 1:3);
     curDists = curDists .* param.raw.voxelSize;
-    curDists = pdist(curDists);
+    curDists = sqrt(sum(curDists .* curDists, 2));
     assert(all(curDists));
     
-    curDists = squareform(curDists);
+    % Travelling within soma is for free!
+    curDists(all(curSomaNodeMask(curAgglo.edges), 2)) = 0;
     
-    % NOTE(amotta): Set distance between somatic segments to zero.
-    %
-    % True zeros cannot be used (not even with the additional 'Weights'
-    % option of `graphminspantree`) since the output matrix will contain
-    % zeros for both absent and somatic edges.
-    curDists(curSomaSegIds, curSomaSegIds) = eps;
-    
-    curAdj = graphminspantree( ...
-        sparse(curDists), curSomaSegIds(1));
-    curAdj = logical(curAdj);
-    
-    curEdges = nan(nnz(curAdj), 2);
-   [curEdges(:, 2), curEdges(:, 1)] = find(curAdj);
-    wcT.edges{curIdx} = curEdges;
-    
-    % now we can use true zeros
-    curDists(curSomaSegIds, curSomaSegIds) = 0;
+    curAdj = sparse( ...
+        curAgglo.edges(:, 2), curAgglo.edges(:, 1), ...
+        true, curNodeCount, curNodeCount);
 
     curDists = graphshortestpath( ...
-        curAdj, curSomaSegIds(1), ...
-        'Weights', curDists(curAdj), ...
+        curAdj, curSomaNodeId, ...
+        'Weights', curDists, ...
         'Directed', false);
     
-    % sanity checks
-    curSomaMask = false(size(curSegIds));
-    curSomaMask(curSomaSegIds) = true;
-    
-    assert(~any(curDists(curSomaMask)));
-    assert(all(curDists(~curSomaMask)));
+    % Sanity checks
+    assert(~any(curDists(curSomaNodeMask)));
+    assert(all(curDists(~curSomaNodeMask)));
     
     curDists = reshape(curDists, [], 1);
     wcT.nodeDists{curIdx} = curDists;
