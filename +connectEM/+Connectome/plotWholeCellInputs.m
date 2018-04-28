@@ -4,7 +4,9 @@ clear;
 
 %% configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-outputDir = '/tmpscratch/amotta/l4/2018-02-23-whole-cell-input-distributions/20180223T132250-run';
+
+% Set output directory to write figures to disk instead of displaying them.
+outputDir = '';
 
 synFile = fullfile(rootDir, 'connectomeState', 'SynapseAgglos_v3_ax_spine_clustered.mat');
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a_ax_spine_syn_clust.mat');
@@ -360,9 +362,12 @@ for curIdx = 1:size(wcT, 1)
     xlim(curAx, curBinEdges([1, end]));
     
     % save figure
-    curFigName = sprintf('input-distribution_whole-cell-%d.png', curIdx);
-    export_fig(fullfile(outputDir, curFigName), curFig);
-    clear curFig;
+    if ~isempty(outputDir)
+        curFigFile = fullfile(outputDir, sprintf( ...
+            'input-distribution_whole-cell-%d.png', curIdx));
+        export_fig(curFigFile, curFig);
+        clear curFig;
+    end
 end
 
 %% load cached results
