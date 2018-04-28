@@ -6,7 +6,7 @@ clear;
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 
 % Set output directory to write figures to disk instead of displaying them.
-outputDir = '/home/amotta/Desktop/whole-cell-inputs';
+outputDir = '';
 
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites-wholeCells-03-v2-classified_spine-syn-clust.mat');
 wcFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v3_auto-and-manual.mat');
@@ -289,6 +289,7 @@ for curIdx = 1:size(wcT, 1)
     curPlot(curAx, curSyns.dist);
     curPlot(curAx, curSyns.dist(curSyns.isSpine));
     curPlot(curAx, curSyns.dist(curSyns.isSoma));
+    curPlot(curAx, curSyns.dist(curSyns.isSoma | ~curSyns.isSpine));
     
     curAx.TickDir = 'out';
     curAx.Position(3) = 0.8 - curAx.Position(1);
@@ -302,7 +303,8 @@ for curIdx = 1:size(wcT, 1)
         'FontWeight', 'normal', 'FontSize', 10);
     
     curLeg = legend(curAx, ...
-        'All', 'Onto spines', 'Onto soma', ...
+        'All', 'Onto spines', ...
+        'Onto soma', 'Onto shaft', ...
         'Location', 'EastOutside');
     curLeg.Position([1, 3]) = [0.82, (0.98 - 0.82)];
     
@@ -326,11 +328,7 @@ for curIdx = 1:size(wcT, 1)
         
     curPlot(curAx, curSyns.dist(curSyns.isExc));
     curPlot(curAx, curSyns.dist(curSyns.isTc));
-    
-    if ~isempty(curRepT)
-        % `histogram` fails if there are no synapses
-        curPlot(curAx, cell2mat(curRepT.synDist));
-    end
+    curPlot(curAx, curSyns.dist(~curSyns.isSpine));
     
     curAx.TickDir = 'out';
     curAx.Position(3) = 0.8 - curAx.Position(1);
@@ -342,7 +340,7 @@ for curIdx = 1:size(wcT, 1)
     curLeg = legend(curAx, ...
         'Excitatory', ...
         'Thalamocortical', ...
-        'Repeated', ...
+        'Shaft', ...
         'Location', 'EastOutside');
     curLeg.Position([1, 3]) = [0.82, (0.98 - 0.82)];
     
@@ -392,6 +390,7 @@ for curIdx = 1:size(wcT, 1)
     ylabel(curAx, 'Median ASI (µm²)');
     xlabel(curAx, 'Distance to soma (µm)');
     xlim(curAx, curBinEdges([1, end]));
+    ylim(curAx, [0, 0.4]);
     
     % save figure
     if ~isempty(outputDir)
