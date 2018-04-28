@@ -22,6 +22,8 @@ info = Util.runInfo();
 param = load(fullfile(rootDir, 'allParameter.mat'), 'p');
 param = param.p;
 
+segMass = Seg.Global.getSegToSizeMap(param);
+
 [conn, syn] = connectEM.Connectome.load(param, connFile);
 
 % Complete dendrite meta information
@@ -106,12 +108,13 @@ for curIdx = 1:size(wcT, 1)
 end
 
 %% collect input synapses
-wcT.synapses = cell(size(wcT.aggloId));
+wcT.synapses = cell(size(wcT.id));
 
 for curIdx = 1:size(wcT, 1)
-    curPostIds = [ ...
-        somaAggloIds(wcT.somaId(curIdx)), ...
-        dendAggloIds(wcT.dendId(curIdx))];
+    curAgglo = wcT.agglo(curIdx);
+    
+    curPostIds = conn.denMeta.wcId == wcT.id(curIdx);
+    curPostIds = conn.denMeta.id(curPostIds);
     
     curConnMask = ismember( ...
         conn.connectome.edges(:, 2), curPostIds);
@@ -122,20 +125,20 @@ for curIdx = 1:size(wcT, 1)
     curSynT.id = cell2mat(curConnRows.synIdx);
     curSynT.area = cell2mat(curAreaRows);
     
-    curSynT.segIdx = syn.synapses.postsynId(curSynT.id);
-    curSynT.segIdx = cellfun( ...
-        @(ids) intersect(ids, wcT.segIds{curIdx}), ...
-        curSynT.segIdx, 'UniformOutput', false);
+    curSynT.nodeId = cellfun( ...
+        @(ids) intersect(ids, curAgglo.nodes(:, 4)), ...
+        syn.synapses.postsynId(curSynT.id), ...
+        'UniformOutput', false);
     
     % assign synapse to largest segment
-   [~, curSegIdx] = cellfun( ...
-        @(ids) max(segMass(ids)), curSynT.segIdx);
-    curSegIds = arrayfun( ...
-        @(ids, idx) ids{1}(idx), curSynT.segIdx, curSegIdx);
+   [~, curNodeId] = cellfun( ...
+        @(ids) max(segMass(ids)), curSynT.nodeId);
+    curNodeIds = arrayfun( ...
+        @(ids, idx) ids{1}(idx), curSynT.nodeId, curNodeId);
     
     % translate to relative 
-   [~, curSynT.segIdx] = ismember( ...
-       double(curSegIds), wcT.segIds{curIdx});
+   [~, curSynT.curNodeId] = ismember( ...
+       double(curNodeIds), curAgglo.nodes(:, 4));
     
     curSynT.axonId = repelem( ...
         curConnRows.edges(:, 1), ...
@@ -155,20 +158,20 @@ if ~isempty(debugDir)
         curId = debugCellIds(curIdx);
         
         curEdges = wcT.edges{curId};
-        curSegIds = wcT.segIds{curId};
+        curNodeIds = wcT.segIds{curId};
         curDistsUm = wcT.nodeDists{curId} / 1E3;
         curSynIdx = wcT.synapses{curId}.segIdx;
 
         % generate skeleton
         curSkel = skel.addTree( ...
             sprintf('Whole cell %d', curId), ...
-            ceil(segCentroids(curSegIds, :)), curEdges);
+            ceil(segCentroids(curNodeIds, :)), curEdges);
 
         % add distance annotations
         curComments = arrayfun( ...
             @(segId, distUm) sprintf( ...
                 'Synapse. Segment %d. %.1f µm to soma.', segId, distUm), ...
-            curSegIds(curSynIdx), curDistsUm(curSynIdx), 'UniformOutput', false);
+            curNodeIds(curSynIdx), curDistsUm(curSynIdx), 'UniformOutput', false);
        [curSkel.nodesAsStruct{end}(curSynIdx).comment] = deal(curComments{:});
 
         % add branchpoints
