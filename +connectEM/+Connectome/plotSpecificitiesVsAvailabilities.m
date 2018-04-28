@@ -4,8 +4,8 @@ clear;
 
 %% configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-availFile = '/tmpscratch/amotta/l4/2018-02-02-surface-availability-connectome-axons-18-a/axon-avail-data.mat';
-connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a.mat');
+connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites-wholeCells-03-v2-classified_spine-syn-clust.mat');
+availFile = '/tmpscratch/amotta/l4/2018-04-27-surface-availability-connectome-v5/axon-availability.mat';
 
 minSynPre = 10;
 info = Util.runInfo();
@@ -44,7 +44,7 @@ availabilities = avail.axonAvail(classIds, :, :);
 availabilities = availabilities ./ sum(availabilities, 1);
 
 %% plot availability vs. distance
-axonIds = find(conn.axonMeta.synCount >= 10);
+axonIds = find(conn.axonMeta.synCount >= minSynPre);
 cmap = parula(101);
 
 fig = figure();
