@@ -4,8 +4,7 @@ clear;
 
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a_ax_spine_syn_clust.mat');
-synFile = fullfile(rootDir, 'connectomeState', 'SynapseAgglos_v3_ax_spine_clustered_classified.mat');
+connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites-wholeCells-03-v2-classified_spine-syn-clust.mat');
 
 minSynCount = 10;
 targetClasses = { ...
@@ -23,7 +22,7 @@ param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 
 [conn, ~, axonClasses] = ...
-    connectEM.Connectome.load(param, connFile, synFile);
+    connectEM.Connectome.load(param, connFile);
 
 %% Building class connectome
 [classConn, targetIds] = ...
