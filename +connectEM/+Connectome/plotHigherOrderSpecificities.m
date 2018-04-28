@@ -8,6 +8,7 @@ connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites
 
 % Threshold p-values
 % Chosen to be half of chance level.
+% TODO(amotta): Get rid of these...
 pTheta = struct;
 % Excitatory axons
 pTheta(1).WholeCell = 0.05;
