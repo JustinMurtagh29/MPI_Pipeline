@@ -4,7 +4,7 @@ clear;
 
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a_ax_spine_syn_clust.mat');
+connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites-wholeCells-03-v2-classified_spine-syn-clust.mat');
 
 minSynCount = 10;
 
@@ -14,9 +14,7 @@ info = Util.runInfo();
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 
-[~, connName] = fileparts(connFile);
-conn = connectEM.Connectome.load(param, connName);
-connBack = conn;
+conn = connectEM.Connectome.load(param, connFile);
 
 %%
 axonMeta = conn.axonMeta;
