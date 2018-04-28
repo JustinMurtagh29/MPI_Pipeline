@@ -6,7 +6,7 @@ clear;
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 
 % Set output directory to write figures to disk instead of displaying them.
-outputDir = '';
+outputDir = '/home/amotta/Desktop/whole-cell-inputs';
 
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites-wholeCells-03-v2-classified_spine-syn-clust.mat');
 wcFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v3_auto-and-manual.mat');
@@ -38,14 +38,12 @@ wcData = load(wcFile);
 somaData = load(somaFile);
 
 %% split axons into exc. and inh.
-%{
-conn.axonMeta.spineSynFrac = ...
-    conn.axonMeta.spineSynCount ...
- ./ conn.axonMeta.synCount;
+conn.axonMeta.fullPriSpineSynFrac = ...
+    conn.axonMeta.fullPriSpineSynCount ...
+ ./ conn.axonMeta.fullSynCount;
 
-conn.axonMeta.isExc = (conn.axonMeta.priSpineSynFrac >= 0.5);
+conn.axonMeta.isExc = (conn.axonMeta.fullPriSpineSynFrac >= 0.5);
 conn.axonMeta.isInh = ~conn.axonMeta.isExc;
-%}
 
 %% Complete whole cell somata
 wcT = table;
@@ -137,7 +135,7 @@ for curIdx = 1:size(wcT, 1)
         @(ids, idx) ids{1}(idx), curSynT.nodeId, curNodeId);
     
     % translate to relative 
-   [~, curSynT.curNodeId] = ismember( ...
+   [~, curSynT.nodeId] = ismember( ...
        double(curNodeIds), curAgglo.nodes(:, 4));
     
     curSynT.axonId = repelem( ...
@@ -189,18 +187,25 @@ for curIdx = 1:size(wcT, 1)
     curSyns = wcT.synapses{curIdx};
     if isempty(curSyns); continue; end
     
-    curFig = figure('visible', 'off');
+    if ~isempty(outputDir)
+        curFig = figure('visible', 'off');
+    else
+        curFig = figure();
+    end
+    
+    curFig.Color = 'white';
     curFig.Position(3:4) = [1075, 600];
     
     curSyns.isSpine = syn.isSpineSyn(curSyns.id);
-    curSyns.isSoma = logical(somaLUT( ...
-        wcT.segIds{curIdx}(curSyns.segIdx)));
+    curSyns.isSoma = ismember( ...
+        wcT.agglo(curIdx).nodes(curSyns.nodeId, 4), ...
+        wcT.somaAgglo(curIdx).nodes(:, 4));
     
     curSyns.isExc = conn.axonMeta.isExc(curSyns.axonId);
     curSyns.isInh = conn.axonMeta.isInh(curSyns.axonId);
     curSyns.isTc = conn.axonMeta.isThalamocortical(curSyns.axonId);
     
-    curSyns.dist = wcT.nodeDists{curIdx}(curSyns.segIdx);
+    curSyns.dist = wcT.nodeDists{curIdx}(curSyns.nodeId);
     curSyns.dist = curSyns.dist / 1E3;
     
     % move soma synapses to separate bin
@@ -223,7 +228,7 @@ for curIdx = 1:size(wcT, 1)
     curRepT = curRepT(curSortIds, :);
     
     curMaxDist = 10 * ceil(max(curSyns.dist) / 10);
-    curBinEdges = -10:10:curMaxDist;
+    curBinEdges = -5:5:curMaxDist;
     
     curPlot = @(ax, data) ...
         histogram( ...
