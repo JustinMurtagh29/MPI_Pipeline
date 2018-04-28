@@ -18,16 +18,22 @@ debugCellIds = [];
 
 info = Util.runInfo();
 
-%% loading data
+%% Loading data
 param = load(fullfile(rootDir, 'allParameter.mat'), 'p');
 param = param.p;
 
-maxSegId = Seg.Global.getMaxSegId(param);
+[conn, syn] = connectEM.Connectome.load(param, connFile);
+
+% Complete dendrite meta information
+denMeta = load(conn.info.param.dendriteFile);
+denMetaWcIdx = denMeta.idxWholeCells(conn.denMeta.parentId);
+denMetaSomaIdx = denMeta.idxSomata(conn.denMeta.parentId);
+
+assert(~any(denMetaWcIdx & denMetaSomaIdx));
+conn.denMeta.wcId = max(denMetaWcIdx, denMetaSomaIdx);
 
 wcData = load(wcFile);
 somaData = load(somaFile);
-
-% [conn, syn] = connectEM.Connectome.load(param, connFile);
 
 %% split axons into exc. and inh.
 %{
