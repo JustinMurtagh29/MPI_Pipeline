@@ -4,23 +4,21 @@ clear;
 
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a_ax_spine_syn_clust.mat');
-synFile = fullfile(rootDir, 'connectomeState', 'SynapseAgglos_v3_ax_spine_clustered_classified.mat');
+connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites-wholeCells-03-v2-classified_spine-syn-clust.mat');
 
 % Threshold p-values
 % Chosen to be half of chance level.
 pTheta = struct;
 % Excitatory axons
 pTheta(1).WholeCell = 0.05;
-pTheta(1).ApicalDendrite = 0.04;
+pTheta(1).ApicalDendrite = 0.035;
 % Inhibitory axons
-pTheta(2).Somata = 0.11;
+pTheta(2).Somata = 0.115;
 pTheta(2).WholeCell = 0.12;
-pTheta(2).ApicalDendrite = 0.05;
-pTheta(2).SmoothDendrite = 0.03;
+pTheta(2).ApicalDendrite = 0.06;
+pTheta(2).SmoothDendrite = 0.055;
 % Thalamocortical axons
-pTheta(3).Somata = 0.015;
-pTheta(3).WholeCell = 0.195;
+pTheta(3).WholeCell = 0.215;
 pTheta(3).ApicalDendrite = 0.025;
 % Corticocortical axons
 pTheta(4).WholeCell = 0.04;
@@ -33,7 +31,7 @@ param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 
 [conn, ~, axonClasses] = ...
-    connectEM.Connectome.load(param, connFile, synFile);
+    connectEM.Connectome.load(param, connFile);
 [classConnectome, targetClasses] = ...
 	connectEM.Connectome.buildClassConnectome(conn);
 
