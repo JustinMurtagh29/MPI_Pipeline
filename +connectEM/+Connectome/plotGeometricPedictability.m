@@ -38,6 +38,7 @@ synCounts = sum(classConn, 2);
 % Approach: Let's use an axons observed specificities for a multinomial
 % distribution and calculate its variance. Sum this up over all axons to
 % get the expected sum of squares.
+axonClassMaxRsq = nan(size(axonClasses));
 for curAxonClassId = 1:numel(axonClasses)
     curAxonClass = axonClasses(curAxonClassId);
     curAxonIds = curAxonClass.axonIds;
@@ -58,12 +59,15 @@ for curAxonClassId = 1:numel(axonClasses)
     curMnVar = curClassConn .* (1 - curClassConn) ./ curSynCount;
     curMnVar = sum(curMnVar(:)) / curAxonCount;
     
+    % Calculate maximum fraction of variance explainable
+    curMaxRsq = (1 - curMnVar / curVar);
+    axonClassMaxRsq(curAxonClassId) = curMaxRsq;
+    
     % Show result
     fprintf('%s\n', curAxonClass.title);
     fprintf('* Variance: %g\n', curVar);
     fprintf('* Multinomial variance: %g\n', curMnVar);
-    fprintf('* Maximum explainable: %.2f %%\n', ...
-        100 * (1 - curMnVar / curVar));
+    fprintf('* Maximum explainable: %.2f %%\n', 100 * curMaxRsq);
     fprintf('\n');
 end
 
@@ -297,6 +301,7 @@ rSq = nan( ...
 for curAxonClassIdx = 1:numel(plotAxonClasses)
     curAxonClassId = plotAxonClasses(curAxonClassIdx);
     curAxonIds = axonClasses(curAxonClassId).axonIds;
+    curMaxRsq = axonClassMaxRsq(curAxonClassId);
 
     % Fractional connectome
     curClassConn = classConn(curAxonIds, :);
@@ -317,7 +322,7 @@ for curAxonClassIdx = 1:numel(plotAxonClasses)
         curSsRes = sum((curPreds(:) - curClassConn(:)) .^ 2);
         curRSq = 1 - (curSsRes ./ curSsTot);
         
-        rSq(curDistIdx, curAxonClassIdx) = curRSq;
+        rSq(curDistIdx, curAxonClassIdx) = curRSq / curMaxRsq;
     end
 end
 
