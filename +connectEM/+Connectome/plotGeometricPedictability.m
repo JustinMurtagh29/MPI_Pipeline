@@ -18,6 +18,12 @@ param = param.p;
     connectEM.Connectome.load(param, connFile);
 avail = load(availFile);
 
+% add axon class tags
+axonClasses(1).tag = 'Exc';
+axonClasses(2).tag = 'Inh';
+axonClasses(3).tag = 'TC';
+axonClasses(4).tag = 'CC';
+
 %% Prepare data
 [classConn, targetClasses] = ...
     connectEM.Connectome.buildClassConnectome(conn);
@@ -243,3 +249,43 @@ annotation(fig, ...
     'String', { ...
         'Prediction by linear combination of availabilities'; ...
         info.filename; info.git_repos{1}.hash});
+
+%% Plot synapse data
+axonTargetClassMean = nan(numel(axonClasses), numel(targetClasses)); 
+axonTargetClassVar = nan(numel(axonClasses), numel(targetClasses));
+
+for curAxonClassId = 1:numel(axonClasses)
+    curAxonClass = axonClasses(curAxonClassId);
+    curAxonIds = curAxonClass.axonIds;
+    
+    curClassConn = classConn(curAxonIds, :);
+    curClassConn = curClassConn ./ sum(curClassConn, 2);
+    
+    curMean = mean(curClassConn, 1);
+    curVar = (curClassConn - curMean) .^ 2;
+    curVar = sum(curVar, 1) ./ numel(curAxonIds);
+    
+    axonTargetClassMean(curAxonClassId, :) = curMean;
+    axonTargetClassVar(curAxonClassId, :) = curVar;
+end    
+
+legends = arrayfun(@char, targetClasses, 'UniformOutput', false);
+
+fig = figure();
+fig.Color = 'white';
+
+ax = subplot(2, 1, 1);
+bar(ax, axonTargetClassMean, 'stacked');
+
+ax.TickDir = 'out';
+legend(ax, legends, 'Location', 'EastOutside');
+xticklabels(ax, {axonClasses.tag});
+ylabel(ax, 'Synapse fraction');
+
+ax = subplot(2, 1, 2);
+bar(ax, axonTargetClassVar, 'stacked');
+
+ax.TickDir = 'out';
+legend(ax, legends, 'Location', 'EastOutside');
+xticklabels(ax, {axonClasses.tag});
+ylabel(ax, 'Variance');
