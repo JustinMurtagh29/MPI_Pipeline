@@ -34,7 +34,11 @@ availabilities = availabilities ./ sum(availabilities, 1);
 % conn.axonMeta.synCount.
 synCounts = sum(classConn, 2);
 
-%% Calculate 
+% More configuration
+plotAxonClasses = 1:2;
+plotTargetClasses = targetClasses;
+
+%% Calculate R² per axon-dendrite pair
 % Approach: Let's use an axons observed specificities for a multinomial
 % distribution and calculate its variance. Sum this up over all axons to
 % get the expected sum of squares.
@@ -91,7 +95,6 @@ end
 
 %% Plot R² per axon and dendrite class
 % Model: Linear combination of all availabilities
-plotAxonClasses = 1:2;
 
 % Prepare output
 rSq = nan( ...
@@ -103,9 +106,7 @@ rSq = nan( ...
 for curAxonClassIdx = 1:numel(plotAxonClasses)
     curAxonClassId = plotAxonClasses(curAxonClassIdx);
     curAxonIds = axonClasses(curAxonClassId).axonIds;
-    
     curMaxRsq = axonTargetClassMaxRsq(curAxonClassId, :);
-    curMaxRsq = reshape(curMaxRsq, [], 1);
 
     % Fractional connectome
     curClassConn = classConn(curAxonIds, :);
