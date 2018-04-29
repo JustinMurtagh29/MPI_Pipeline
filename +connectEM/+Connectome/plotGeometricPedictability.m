@@ -89,7 +89,7 @@ for curAxonClassId = 1:numel(axonClasses)
         curVar = curTargetSynCount ./ curSynCount;
         curVar = sum((curVar - mean(curVar)) .^ 2) / curAxonCount;
         
-        curBinoVar = curSpec * (1 - curSpec) ./ curSynCount;
+        curBinoVar = curSpec .* (1 - curSpec) ./ curSynCount;
         curBinoVar = sum(curBinoVar) / curAxonCount;
         
         curMaxRsq = 1 - curBinoVar / curVar;
