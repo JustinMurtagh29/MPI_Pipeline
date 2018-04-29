@@ -267,7 +267,7 @@ for curAxonClassId = 1:numel(axonClasses)
     
     axonTargetClassMean(curAxonClassId, :) = curMean;
     axonTargetClassVar(curAxonClassId, :) = curVar;
-end    
+end
 
 legends = arrayfun(@char, targetClasses, 'UniformOutput', false);
 
@@ -289,3 +289,56 @@ ax.TickDir = 'out';
 legend(ax, legends, 'Location', 'EastOutside');
 xticklabels(ax, {axonClasses.tag});
 ylabel(ax, 'Variance');
+
+annotation( ...
+    fig, 'textbox', [0, 0.9, 1, 0.1], ...
+    'String', {info.filename; info.git_repos{1}.hash}, ...
+    'EdgeColor', 'none', 'HorizontalAlignment', 'center');
+
+%% Plot availability data
+curLimY = 0.25;
+curVarGain = 1;
+curDists = avail.dists(:)' / 1E3;
+curLegends = arrayfun( ...
+    @char, targetClasses, ...
+    'UniformOutput', false);
+
+fig = figure();
+fig.Color = 'white';
+
+for curAxonClassId = 1:numel(axonClasses)
+    curAxonClass = axonClasses(curAxonClassId);
+    curAxonIds = curAxonClass.axonIds;
+    
+    curAvails = availabilities(:, :, curAxonIds);
+    curMean = mean(curAvails, 3);
+    curVar = (curAvails - curMean) .^ 2;
+    curVar = sum(curVar, 3) / numel(curAxonIds);
+    
+    curAx = subplot(numel(axonClasses), 1, curAxonClassId);
+    hold(curAx, 'on');
+    
+    curMasterPlot = plot( ...
+        curAx, curDists, curMean, 'LineWidth', 2);
+    curPlot = plot(curAx, curDists, ...
+        curMean + curVarGain * curVar, 'LineWidth', 0.5);
+   [curPlot.Color] = deal(curMasterPlot.Color);
+    curPlot = plot(curAx, curDists, ...
+        curMean - curVarGain * curVar, 'LineWidth', 0.5);
+   [curPlot.Color] = deal(curMasterPlot.Color);
+   
+   
+    legend(curMasterPlot, curLegends, 'Location', 'EastOutside');
+   
+    curAx.TickDir = 'out';
+    xlim(curAx, [0, maxRadius]);
+    ylim(curAx, [0, curLimY]);
+end
+
+xlabel(curAx, 'Radius (µm)');
+ylabel(curAx, 'Availabilities (mean ± std)');
+
+annotation( ...
+    fig, 'textbox', [0, 0.9, 1, 0.1], ...
+    'String', {info.filename; info.git_repos{1}.hash}, ...
+    'EdgeColor', 'none', 'HorizontalAlignment', 'center');
