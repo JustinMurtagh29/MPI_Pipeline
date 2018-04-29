@@ -341,7 +341,8 @@ for curAxonClassId = 1:numel(axonClasses)
    
    
     legend(curMasterPlot, curLegends, 'Location', 'EastOutside');
-   
+    title(curAx, curAxonClass.title, 'FontWeight', 'normal', 'FontSize', 10);
+    
     curAx.TickDir = 'out';
     xlim(curAx, [0, maxRadius]);
     ylim(curAx, [0, curLimY]);
