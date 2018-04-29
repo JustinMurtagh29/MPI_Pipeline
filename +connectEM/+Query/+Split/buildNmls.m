@@ -38,19 +38,7 @@ for curIdx = 1:numel(aggloIds)
     curId = aggloIds(curIdx);
     curAgglo = agglos(curId);
     
-    curTreeName = sprintf('Agglomerate %d', curId);
-    curDescription = sprintf('%s. %s', skelDescription, curTreeName);
-    
-    curComments = arrayfun( ...
-        @num2str, 1:size(curAgglo.nodes, 1), 'UniformOutput', false);
-    curComments = strcat({'Node '}, curComments(:));
-    
-    curSkel = skel;
-    curSkel = curSkel.addTree( ...
-        curTreeName, curAgglo.nodes(:, 1:3), ...
-        curAgglo.edges, [], [], curComments);
-    curSkel = curSkel.setDescription(curDescription);
-    
+    curSkel = connectEM.Query.buildNml(curAgglo, curId, skel);
     curSkelName = sprintf('%0*d_axon-%d.nml', numDigits, curIdx, curId);
     curSkel.write(fullfile(outDir, curSkelName));
 end
