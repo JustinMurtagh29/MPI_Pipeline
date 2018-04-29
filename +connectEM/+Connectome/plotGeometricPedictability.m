@@ -34,6 +34,39 @@ availabilities = availabilities ./ sum(availabilities, 1);
 % conn.axonMeta.synCount.
 synCounts = sum(classConn, 2);
 
+%% Calculate 
+% Approach: Let's use an axons observed specificities for a multinomial
+% distribution and calculate its variance. Sum this up over all axons to
+% get the expected sum of squares.
+for curAxonClassId = 1:numel(axonClasses)
+    curAxonClass = axonClasses(curAxonClassId);
+    curAxonIds = curAxonClass.axonIds;
+    curAxonCount = numel(curAxonIds);
+    
+    curClassConn = classConn(curAxonIds, :);
+    curSynCount = sum(curClassConn, 2);
+    curClassConn = curClassConn ./ curSynCount;
+    
+    % The observed variance
+    curVar = mean(curClassConn, 1);
+    curVar = (curClassConn - curVar) .^ 2;
+    curVar = sum(curVar(:)) / curAxonCount;
+    
+    % The variance of output variable i in a multinomail distribution is
+    % n * p * (1 - p). The variance of the specificity (i.e., after
+    % normalization) is thus p * (1 - p) / n.
+    curMnVar = curClassConn .* (1 - curClassConn) ./ curSynCount;
+    curMnVar = sum(curMnVar(:)) / curAxonCount;
+    
+    % Show result
+    fprintf('%s\n', curAxonClass.title);
+    fprintf('* Variance: %g\n', curVar);
+    fprintf('* Multinomial variance: %g\n', curMnVar);
+    fprintf('* Maximum explainable: %.2f %%\n', ...
+        100 * (1 - curMnVar / curVar));
+    fprintf('\n');
+end
+
 %% Plot R² per axon and dendrite class
 % Model: Availability is synapse fraction
 plotAxonClasses = 1:2;
