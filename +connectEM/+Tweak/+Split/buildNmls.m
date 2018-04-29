@@ -38,7 +38,7 @@ for curIdx = 1:numel(aggloIds)
     curId = aggloIds(curIdx);
     curAgglo = agglos(curId);
     
-    curSkel = connectEM.Query.buildNml(curAgglo, curId, skel);
+    curSkel = connectEM.Tweak.buildNml(curAgglo, curId, skel);
     curSkelName = sprintf('%0*d_axon-%d.nml', numDigits, curIdx, curId);
     curSkel.write(fullfile(outDir, curSkelName));
 end

@@ -29,7 +29,7 @@ for curIdx = 1:numel(nmlFiles)
     curAggloId = aggloIdFromNml(curNml);
     assert(curAggloId == curAggloIdName);
     
-    curOut = connectEM.Query.applyNml(agglos(curAggloId), curNml);
+    curOut = connectEM.Tweak.applyNml(agglos(curAggloId), curNml);
     curOut = SuperAgglo.clean(curOut);
 end
 
