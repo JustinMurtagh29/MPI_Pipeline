@@ -355,3 +355,48 @@ annotation( ...
     fig, 'textbox', [0, 0.9, 1, 0.1], ...
     'String', {info.filename; info.git_repos{1}.hash}, ...
     'EdgeColor', 'none', 'HorizontalAlignment', 'center');
+
+%% Synapse fraction vs. binomial variance scatter plot
+curFigSize = [numel(axonClasses), numel(targetClasses)];
+
+fig = figure();
+fig.Color = 'white';
+
+for curAxonClassId = 1:numel(axonClasses)
+    curAxonClass = axonClasses(curAxonClassId);
+    curAxonIds = curAxonClass.axonIds;
+    
+    curClassConn = classConn(curAxonIds, :);
+    curSynCount = sum(curClassConn, 2);
+    curClassConn = curClassConn ./ curSynCount;
+    
+    for curTargetClassId = 1:numel(targetClasses)
+        curProb = curClassConn(:, curTargetClassId);
+        curVar = curProb .* (1 - curProb) ./ curSynCount;
+        
+        curAx = subplot( ...
+            curFigSize(1), curFigSize(2), ...
+            (curAxonClassId - 1) * curFigSize(2) + curTargetClassId);
+        
+        hold(curAx, 'on');
+        scatter(curAx, curProb, curVar, '.');
+        plot(curAx, [0, 1], repelem(mean(curVar), 1, 2));
+        
+        if curAxonClassId == 1
+            title( ...
+                curAx, char(targetClasses(curTargetClassId)), ...
+                'FontWeight', 'normal', 'FontSize', 10);
+        end
+        
+        axis(curAx, 'square');
+    end
+end
+
+[fig.Children.YLim] = deal([0, 0.03]);
+[fig.Children.XLim] = deal([0, 1]);
+
+curAx = subplot( ...
+    curFigSize(1), curFigSize(2), ...
+    prod(curFigSize) - (curFigSize(2) - 1));
+xlabel(curAx, 'Synapse probability');
+ylabel(curAx, 'Binomial variance');
