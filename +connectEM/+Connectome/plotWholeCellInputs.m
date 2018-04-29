@@ -229,6 +229,7 @@ for curIdx = 1:numel(wcGroups)
 end
 
 %% plotting
+%{
 for curIdx = 1:size(wcT, 1)
     curSyns = wcT.synapses{curIdx};
     if isempty(curSyns); continue; end
@@ -400,3 +401,69 @@ for curIdx = 1:size(wcT, 1)
         clear curFig;
     end
 end
+%}
+
+%% Quantitative comparison of whole cells
+synTypes = {'CC', 'TC', 'Inh'};
+wcSynTypes = zeros(size(wcT, 1), numel(synTypes));
+
+for curIdx = 1:size(wcT, 1)
+    curSyns = wcT.synapses{curIdx};
+    
+    curSyns.isSpine = syn.isSpineSyn(curSyns.id);
+    curSyns.isSoma = ismember( ...
+        wcT.agglo(curIdx).nodes(curSyns.nodeId, 4), ...
+        wcT.somaAgglo(curIdx).nodes(:, 4));
+    
+    curSyns.type(:) = {'CC'};
+    curSyns.type(conn.axonMeta.isInh(curSyns.axonId)) = {'Inh'};
+    curSyns.type(conn.axonMeta.isThalamocortical(curSyns.axonId)) = {'TC'};
+    
+   [~, curSynTypeCount] = ismember(curSyns.type, synTypes);
+    curSynTypeCount = accumarray(curSynTypeCount, 1, size(synTypes(:)));
+    wcSynTypes(curIdx, :) = curSynTypeCount;
+end
+
+%% Plot results
+binEdges = linspace(0, 1, 21);
+
+data = wcSynTypes;
+% TODO(amotta): Make more flexible
+% Remove fake aggregate whole cells
+data(end, :) = [];
+% Remove whole cells without synapses
+data(~any(data, 2), :) = [];
+data = data ./ sum(data, 2);
+
+fig = figure();
+fig.Color = 'white';
+fig.Position(3:4) = [520, 700];
+
+for curIdx = 1:numel(synTypes)
+    curAx = subplot(numel(synTypes), 1, curIdx);
+    
+    histogram( ...
+        curAx, data(:, curIdx), ...
+        'BinEdges', binEdges, ...
+        'DisplayStyle', 'stairs', ...
+        'LineWidth', 2, ...
+        'FaceAlpha', 1);
+    
+    curAx.XLim = binEdges([1, end]);
+    curAx.YLim = [0, size(data, 1)];
+    curAx.TickDir = 'out';
+    curAx.Box = 'off';
+    
+    title( ...
+        curAx, synTypes{curIdx}, ...
+        'FontWeight', 'normal', ...
+        'FontSize', 10);
+end
+
+xlabel('Fraction of input synapses');
+ylabel('Cells');
+
+annotation(fig, ...
+    'textbox', [0, 0.9, 1, 0.1], ...
+    'String', {info.filename; info.git_repos{1}.hash}, ...
+    'EdgeColor', 'none', 'HorizontalAlignment', 'center');
