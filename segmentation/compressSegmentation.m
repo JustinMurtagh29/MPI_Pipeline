@@ -6,7 +6,6 @@ function compressSegmentation(seg)
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     
     % configuration
-    resolutions = 2 .^ (0:9);
     taskCount = 50;
     
     % only WKW datasets can be compressed
@@ -23,19 +22,24 @@ function compressSegmentation(seg)
     assert(not(exist(outRoot, 'dir')));
     mkdir(outRoot);
     
-    for curRes = resolutions
-        curInRoot = fullfile(inRoot, num2str(curRes));
-        curOutRoot = fullfile(outRoot, num2str(curRes));
+    resDirs = dir(inRoot);
+    resDirs = {resDirs([resDirs.isdir]).name};
+    
+    % Only keep directories with valid names:
+    % That is, either {:num:} or {:num:}-{:num:}-{:num:}
+    resDirs(cellfun(@isempty, regexp( ...
+        resDirs, '^\d+(-\d+-\d+)?$'))) = [];
+    
+    for curIdx = 1:numel(resDirs)
+        curRes = resDirs{curIdx};
         
-        if ~exist(curInRoot, 'dir')
-            warning('Resolution %d not found → skipped');
-            continue;
-        end
+        curInRoot = fullfile(inRoot, curRes);
+        curOutRoot = fullfile(outRoot, curRes);
         
         % prepare compressed WKW dataset
         wkwInit('compress', curInRoot, curOutRoot);
         
-        fprintf('Compressing resolution %d ... ', curRes);
+        fprintf('Compressing resolution %s ... ', curRes);
         wkwCompressDir(curInRoot, curOutRoot, taskCount);
         fprintf('✔\n');
     end
@@ -55,3 +59,4 @@ function inRoot = buildInRoot(inParam)
     dirParts(end) = [];
     inRoot = strjoin(dirParts, filesep);
 end
+
