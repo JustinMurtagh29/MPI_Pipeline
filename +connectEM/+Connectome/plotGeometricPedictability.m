@@ -33,142 +33,67 @@ availabilities = availabilities ./ sum(availabilities, 1);
 % conn.axonMeta.synCount.
 synCounts = sum(classConn, 2);
 
-%% Plot R² per axon and dendrite class
-% Model: Availability is synapse fraction
+% More configuration
 plotAxonClasses = 1:2;
 plotTargetClasses = targetClasses;
 
-fig = figure();
-fig.Color = 'white';
-fig.Position(3:4) = [1100, 550];
+%% Calculate R² per axon-dendrite pair
+% Approach: Let's use an axons observed specificities for a multinomial
+% distribution and calculate its variance. Sum this up over all axons to
+% get the expected sum of squares.
+axonClassMaxRsq = nan(numel(axonClasses), 1);
+axonTargetClassMaxRsq = nan(numel(axonClasses), numel(targetClasses));
 
-for curAxonClassIdx = 1:numel(plotAxonClasses)
-    curAxonClassId = plotAxonClasses(curAxonClassIdx);
+for curAxonClassId = 1:numel(axonClasses)
     curAxonClass = axonClasses(curAxonClassId);
     curAxonIds = curAxonClass.axonIds;
+    curAxonCount = numel(curAxonIds);
     
-    % Fractional class connectome
     curClassConn = classConn(curAxonIds, :);
-    curClassConn = curClassConn ./ sum(curClassConn, 2);
+    curSynCount = sum(curClassConn, 2);
+    curSpecs = curClassConn ./ curSynCount;
     
-    % Variance
-    curSsTot = mean(curClassConn, 1);
-    curSsTot = sum((curClassConn - curSsTot) .^ 2, 1);
+    % The observed variance
+    curVar = mean(curSpecs, 1);
+    curVar = (curSpecs - curVar) .^ 2;
+    curVar = sum(curVar(:)) / curAxonCount;
     
-    % Residuals
-    curSsRes = availabilities(:, :, curAxonIds);
-    curSsRes = permute(curSsRes, [3, 1, 2]);
-    curSsRes = sum((curClassConn - curSsRes) .^ 2, 1);
-    curSsRes = transpose(squeeze(curSsRes));
+    % The variance of output variable i in a multinomail distribution is
+    % n * p * (1 - p). The variance of the specificity (i.e., after
+    % normalization) is thus p * (1 - p) / n.
+    curMnVar = curSpecs .* (1 - curSpecs) ./ curSynCount;
+    curMnVar = sum(curMnVar(:)) / curAxonCount;
     
-    % R²
-    curRsq = 1 - (curSsRes ./ curSsTot);
+    % Calculate maximum fraction of variance explainable
+    curMaxRsq = (1 - curMnVar / curVar);
+    axonClassMaxRsq(curAxonClassId) = curMaxRsq;
     
-    % Plotting
-    curAx = subplot(1, numel(plotAxonClasses), curAxonClassIdx);
-    curAx.TickDir = 'out';
-    axis(curAx, 'square');
-    hold(curAx, 'on');
+    % Show result
+    fprintf('%s\n', curAxonClass.title);
+    fprintf('* Variance: %g\n', curVar);
+    fprintf('* Multinomial variance: %g\n', curMnVar);
+    fprintf('* Maximum explainable: %.2f %%\n', 100 * curMaxRsq);
+    fprintf('\n');
     
-    for curTargetClassIdx = 1:numel(plotTargetClasses)
-        plot( ...
-            curAx, avail.dists / 1E3, ...
-            curRsq(:, curTargetClassIdx), ...
-            'LineWidth', 2);
+    % Calculate per class
+    for curTargetClassId = 1:numel(targetClasses)
+        curSpec = curSpecs(curTargetClassId);
+        curTargetSynCount = curClassConn(:, curTargetClassId);
+        
+        curVar = curTargetSynCount ./ curSynCount;
+        curVar = sum((curVar - curSpec) .^ 2) / curAxonCount;
+        
+        curBinoVar = curSpec * (1 - curSpec) ./ curSynCount;
+        curBinoVar = sum(curBinoVar) / curAxonCount;
+        
+        curMaxRsq = 1 - curBinoVar / curVar;
+        axonTargetClassMaxRsq( ...
+            curAxonClassId, curTargetClassId) = curMaxRsq;
     end
-    
-    % Hint zero line
-    plot(curAx, avail.dists([1, end]) / 1E3, [0, 0], 'k--');
-    
-    title( ...
-        curAx, curAxonClass.title, ...
-        'FontWeight', 'normal', 'FontSize', 10);
 end
-
-[fig.Children.XLim] = deal([0, maxRadius]);
-[fig.Children.YLim] = deal([-0.3, 0.5]);
-xlabel(fig.Children(end), 'Radius (µm)');
-ylabel(fig.Children(end), 'R²');
-
-legend(fig.Children(1), ...
-    arrayfun( ...
-        @char, plotTargetClasses, ...
-        'UniformOutput', false), ...
-	'Location', 'NorthEast', ...
-    'Box', 'off');
-
-annotation(fig, ...
-    'textbox', [0, 0.9, 1, 0.1], ...
-    'EdgeColor', 'none', ...
-    'HorizontalAlignment', 'center', ...
-    'String', { ...
-        'Prediction is availability'; ...
-        info.filename; info.git_repos{1}.hash});
-
-%% Plot R² per axon class
-% Model: Availability is synapse fraction
-plotAxonClasses = 1:2;
-
-fig = figure();
-fig.Color = 'white';
-fig.Position(3:4) = [600, 590];
-
-ax = axes(fig);
-ax.TickDir = 'out';
-axis(ax, 'square');
-hold(ax, 'on');
-
-for curAxonClassIdx = 1:numel(plotAxonClasses)
-    curAxonClassId = plotAxonClasses(curAxonClassIdx);
-    curAxonClass = axonClasses(curAxonClassId);
-    curAxonIds = curAxonClass.axonIds;
-    
-    % Fractional class connectome
-    curClassConn = classConn(curAxonIds, :);
-    curClassConn = curClassConn ./ sum(curClassConn, 2);
-    
-    % Variance
-    curSsTot = mean(curClassConn, 1);
-    curSsTot = sum(sum((curClassConn - curSsTot) .^ 2));
-    
-    % Residuals
-    curSsRes = availabilities(:, :, curAxonIds);
-    curSsRes = permute(curSsRes, [3, 1, 2]);
-    curSsRes = (curClassConn - curSsRes) .^ 2;
-    curSsRes = reshape(sum(sum(curSsRes, 1), 2), [], 1);
-    
-    % R²
-    curRsq = 1 - (curSsRes ./ curSsTot);
-    
-    % Plotting
-    plot( ...
-        ax, avail.dists / 1E3, ...
-        curRsq, 'LineWidth', 2);
-end
-
-plot(ax, ...
-    avail.dists([1, end]) / 1E3, [0, 0], ...
-    'Color', 'black', 'LineStyle', '--');
-legend(ax, ...
-    {axonClasses(plotAxonClasses).title}, ...
-    'Location', 'North', 'Box', 'off');
-
-xlabel(ax, 'Radius (µm)');
-xlim(ax, [0, maxRadius]);
-ylabel(ax, 'R²');
-ylim(ax, [-0.3, 0.5]);
-
-annotation(fig, ...
-    'textbox', [0, 0.9, 1, 0.1], ...
-    'EdgeColor', 'none', ...
-    'HorizontalAlignment', 'center', ...
-    'String', { ...
-        'Prediction is availability'; ...
-        info.filename; info.git_repos{1}.hash});
 
 %% Plot R² per axon and dendrite class
 % Model: Linear combination of all availabilities
-plotAxonClasses = 1:2;
 
 % Prepare output
 rSq = nan( ...
@@ -180,6 +105,7 @@ rSq = nan( ...
 for curAxonClassIdx = 1:numel(plotAxonClasses)
     curAxonClassId = plotAxonClasses(curAxonClassIdx);
     curAxonIds = axonClasses(curAxonClassId).axonIds;
+    curMaxRsq = axonTargetClassMaxRsq(curAxonClassId, :);
 
     % Fractional connectome
     curClassConn = classConn(curAxonIds, :);
@@ -200,7 +126,8 @@ for curAxonClassIdx = 1:numel(plotAxonClasses)
         curSsRes = sum((curPreds - curClassConn) .^ 2, 1);
         curRSq = 1 - (curSsRes ./ curSsTot);
         
-        rSq(:, curDistIdx, curAxonClassIdx) = curRSq;
+        % Calculate relative to possibly explainable fraction
+        rSq(:, curDistIdx, curAxonClassIdx) = curRSq ./ curMaxRsq;
     end
 end
 
@@ -263,6 +190,7 @@ rSq = nan( ...
 for curAxonClassIdx = 1:numel(plotAxonClasses)
     curAxonClassId = plotAxonClasses(curAxonClassIdx);
     curAxonIds = axonClasses(curAxonClassId).axonIds;
+    curMaxRsq = axonClassMaxRsq(curAxonClassId);
 
     % Fractional connectome
     curClassConn = classConn(curAxonIds, :);
@@ -283,7 +211,7 @@ for curAxonClassIdx = 1:numel(plotAxonClasses)
         curSsRes = sum((curPreds(:) - curClassConn(:)) .^ 2);
         curRSq = 1 - (curSsRes ./ curSsTot);
         
-        rSq(curDistIdx, curAxonClassIdx) = curRSq;
+        rSq(curDistIdx, curAxonClassIdx) = curRSq / curMaxRsq;
     end
 end
 
