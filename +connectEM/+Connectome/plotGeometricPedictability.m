@@ -61,8 +61,7 @@ for curAxonClassId = 1:numel(axonClasses)
     curSpecs = curClassConn ./ curSynCount;
     
     % The observed variance
-    curVar = mean(curSpecs, 1);
-    curVar = (curSpecs - curVar) .^ 2;
+    curVar = (curSpecs - mean(curSpecs, 1)) .^ 2;
     curVar = sum(curVar(:)) / curAxonCount;
     
     % The variance of output variable i in a multinomail distribution is
@@ -84,11 +83,11 @@ for curAxonClassId = 1:numel(axonClasses)
     
     % Calculate per class
     for curTargetClassId = 1:numel(targetClasses)
-        curSpec = curSpecs(curTargetClassId);
+        curSpec = curSpecs(:, curTargetClassId);
         curTargetSynCount = curClassConn(:, curTargetClassId);
         
         curVar = curTargetSynCount ./ curSynCount;
-        curVar = sum((curVar - curSpec) .^ 2) / curAxonCount;
+        curVar = sum((curVar - mean(curVar)) .^ 2) / curAxonCount;
         
         curBinoVar = curSpec * (1 - curSpec) ./ curSynCount;
         curBinoVar = sum(curBinoVar) / curAxonCount;
