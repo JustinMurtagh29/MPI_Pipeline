@@ -49,6 +49,7 @@ plotTargetClasses = targetClasses;
 % get the expected sum of squares.
 axonClassMaxRsq = nan(numel(axonClasses), 1);
 axonTargetClassMaxRsq = nan(numel(axonClasses), numel(targetClasses));
+axonTargetClassBinoVar = nan(numel(axonClasses), numel(targetClasses));
 
 for curAxonClassId = 1:numel(axonClasses)
     curAxonClass = axonClasses(curAxonClassId);
@@ -93,8 +94,11 @@ for curAxonClassId = 1:numel(axonClasses)
         curBinoVar = sum(curBinoVar) / curAxonCount;
         
         curMaxRsq = 1 - curBinoVar / curVar;
+        
         axonTargetClassMaxRsq( ...
             curAxonClassId, curTargetClassId) = curMaxRsq;
+        axonTargetClassBinoVar( ...
+            curAxonClassId, curTargetClassId) = curBinoVar;
     end
 end
 
@@ -274,7 +278,7 @@ legends = arrayfun(@char, targetClasses, 'UniformOutput', false);
 fig = figure();
 fig.Color = 'white';
 
-ax = subplot(2, 1, 1);
+ax = subplot(3, 1, 1);
 bar(ax, axonTargetClassMean, 'stacked');
 
 ax.TickDir = 'out';
@@ -282,13 +286,21 @@ legend(ax, legends, 'Location', 'EastOutside');
 xticklabels(ax, {axonClasses.tag});
 ylabel(ax, 'Synapse fraction');
 
-ax = subplot(2, 1, 2);
+ax = subplot(3, 1, 2);
 bar(ax, axonTargetClassVar, 'stacked');
 
 ax.TickDir = 'out';
 legend(ax, legends, 'Location', 'EastOutside');
 xticklabels(ax, {axonClasses.tag});
 ylabel(ax, 'Variance');
+
+ax = subplot(3, 1, 3);
+bar(ax, axonTargetClassBinoVar, 'stacked');
+
+ax.TickDir = 'out';
+legend(ax, legends, 'Location', 'EastOutside');
+xticklabels(ax, {axonClasses.tag});
+ylabel(ax, 'Binomial variance');
 
 annotation( ...
     fig, 'textbox', [0, 0.9, 1, 0.1], ...
