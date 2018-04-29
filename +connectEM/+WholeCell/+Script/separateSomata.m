@@ -22,6 +22,7 @@ dend = load(dendFile);
 
 %% Remove somata from dendrite super-agglomerates
 somata = reshape(soma.somata, [], 1);
+somata = SuperAgglo.clean(somata);
 somaAgglos = Agglo.fromSuperAgglo(somata);
 
 out = struct;

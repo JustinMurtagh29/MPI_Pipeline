@@ -2,13 +2,15 @@
 %   Alessandro Motta <alessandro.motta@brain.mpg.de>
 clear;
 
-%% configuration
+%% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-outputDir = '/tmpscratch/amotta/l4/2018-02-23-whole-cell-input-distributions/20180223T132250-run';
 
-synFile = fullfile(rootDir, 'connectomeState', 'SynapseAgglos_v3_ax_spine_clustered.mat');
-connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a_ax_spine_syn_clust.mat');
-dendFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_01_spine_attachment.mat');
+% Set output directory to write figures to disk instead of displaying them.
+outputDir = '';
+
+connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites-wholeCells-03-v2-classified_spine-syn-clust.mat');
+wcFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v3_auto-and-manual.mat');
+somaFile  = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_03_v2.mat');
 
 % debugging
 debugDir = '';
@@ -16,122 +18,101 @@ debugCellIds = [];
 
 info = Util.runInfo();
 
-%% loading data
+%% Loading data
 param = load(fullfile(rootDir, 'allParameter.mat'), 'p');
 param = param.p;
 
-maxSegId = Seg.Global.getMaxSegId(param);
 segMass = Seg.Global.getSegToSizeMap(param);
-segCentroids = Seg.Global.getSegToCentroidMap(param);
 
-syn = load(synFile);
-dend = load(dendFile);
+[conn, syn] = connectEM.Connectome.load(param, connFile);
 
-[~, connName] = fileparts(connFile);
-conn = connectEM.Connectome.load(param, connName);
+% Complete dendrite meta information
+denMeta = load(conn.info.param.dendriteFile);
+denMetaWcIdx = denMeta.idxWholeCells(conn.denMeta.parentId);
+denMetaSomaIdx = denMeta.idxSomata(conn.denMeta.parentId);
+
+assert(~any(denMetaWcIdx & denMetaSomaIdx));
+conn.denMeta.wcId = max(denMetaWcIdx, denMetaSomaIdx);
+
+wcData = load(wcFile);
+somaData = load(somaFile);
 
 %% split axons into exc. and inh.
-conn.axonMeta.spineSynFrac = ...
-    conn.axonMeta.spineSynCount ...
- ./ conn.axonMeta.synCount;
+conn.axonMeta.fullPriSpineSynFrac = ...
+    conn.axonMeta.fullPriSpineSynCount ...
+ ./ conn.axonMeta.fullSynCount;
 
-conn.axonMeta.isExc = (conn.axonMeta.spineSynFrac > 0.5);
+conn.axonMeta.isExc = (conn.axonMeta.fullPriSpineSynFrac >= 0.5);
 conn.axonMeta.isInh = ~conn.axonMeta.isExc;
 
-%% establish correspondence between connectome and whole cells
-somaAggloIds = find(conn.denMeta.targetClass == 'Somata');
-somaAgglos = conn.dendrites(somaAggloIds);
-somaLUT = Agglo.buildLUT(maxSegId, somaAgglos);
-
-dendAggloIds = find(conn.denMeta.targetClass == 'WholeCell');
-dendAgglos = conn.dendrites(dendAggloIds);
-dendLUT = Agglo.buildLUT(maxSegId, dendAgglos);
-
+%% Complete whole cell somata
 wcT = table;
-wcT.aggloId = dend.indWholeCells;
-wcT.segIds = dend.dendAgglos(wcT.aggloId);
+wcT.id = wcData.idxWholeCells(wcData.indWholeCells);
+wcT.agglo = wcData.dendrites(wcData.indWholeCells);
+SuperAgglo.check(wcT.agglo);
 
-% find soma
-wcT.somaId = cellfun( ...
-    @(segIds) setdiff(somaLUT(segIds), 0), ...
-    wcT.segIds, 'UniformOutput', false);
+% Find corresponding somata
+[~, somaIds] = ismember(wcT.id, somaData.idxSomata);
+wcT.somaAgglo = somaData.dendrites(somaIds);
 
-wcT(~cellfun(@isscalar, wcT.somaId), :) = [];
-wcT.somaId = cell2mat(wcT.somaId);
+% NOTE(amotta): There is a bug in the soma super-agglomerates which allows
+% them to be disconnected. Let's fix this by introducing random edges. This
+% is not a problem since we do not care about distances within the soma.
+wcT.somaAgglo = SuperAgglo.connect(wcT.somaAgglo);
+SuperAgglo.check(wcT.somaAgglo);
 
-% find dendrite(s)
-wcT.dendId = cellfun( ...
-    @(segIds) setdiff(dendLUT(segIds), 0), ...
-    wcT.segIds, 'UniformOutput', false);
+% Merge somata with whole cells
+wcT.agglo = arrayfun(@SuperAgglo.merge, wcT.agglo, wcT.somaAgglo);
+wcT.agglo = SuperAgglo.clean(wcT.agglo);
 
-wcT(~cellfun(@isscalar, wcT.dendId), :) = [];
-wcT.dendId = cell2mat(wcT.dendId);
-
-% add soma to segment list
-wcT.segIds = cellfun( ...
-    @(segIds, somaSegIds) unique(cat(1, segIds, somaSegIds)), ...
-    wcT.segIds, somaAgglos(wcT.somaId), 'UniformOutput', false);
-
-%% calculate distance to soma surface
-wcT.edges = cell(size(wcT.segIds));
-wcT.nodeDists = cell(size(wcT.segIds));
+%% Calculate distance to soma surface
+wcT.nodeDists = cell(size(wcT.id));
 
 for curIdx = 1:size(wcT, 1)
-    curSegIds = wcT.segIds{curIdx};
+    curAgglo = wcT.agglo(curIdx);
+    curNodeCount = size(curAgglo.nodes, 1);
     
-    curSomaSegIds = somaAgglos{wcT.somaId(curIdx)};
-   [~, curSomaSegIds] = ismember(curSomaSegIds, curSegIds);
-    assert(all(curSomaSegIds));
+    curSomaSegIds = Agglo.fromSuperAgglo(wcT.somaAgglo(curIdx));
+    curSomaNodeMask = ismember(curAgglo.nodes(:, 4), curSomaSegIds);
     
-    % build weights
-    curDists = segCentroids(curSegIds, :);
+    curSomaNodeId = find(curSomaNodeMask, 1);
+    assert(~isempty(curSomaNodeId));
+    
+    curDists = ...
+        curAgglo.nodes(curAgglo.edges(:, 1), 1:3) ...
+      - curAgglo.nodes(curAgglo.edges(:, 2), 1:3);
     curDists = curDists .* param.raw.voxelSize;
-    curDists = pdist(curDists);
+    curDists = sqrt(sum(curDists .* curDists, 2));
     assert(all(curDists));
     
-    curDists = squareform(curDists);
+    % Travelling within soma is for free!
+    curDists(all(curSomaNodeMask(curAgglo.edges), 2)) = 0;
     
-    % NOTE(amotta): Set distance between somatic segments to zero.
-    %
-    % True zeros cannot be used (not even with the additional 'Weights'
-    % option of `graphminspantree`) since the output matrix will contain
-    % zeros for both absent and somatic edges.
-    curDists(curSomaSegIds, curSomaSegIds) = eps;
-    
-    curAdj = graphminspantree( ...
-        sparse(curDists), curSomaSegIds(1));
-    curAdj = logical(curAdj);
-    
-    curEdges = nan(nnz(curAdj), 2);
-   [curEdges(:, 2), curEdges(:, 1)] = find(curAdj);
-    wcT.edges{curIdx} = curEdges;
-    
-    % now we can use true zeros
-    curDists(curSomaSegIds, curSomaSegIds) = 0;
+    curAdj = sparse( ...
+        curAgglo.edges(:, 2), curAgglo.edges(:, 1), ...
+        true, curNodeCount, curNodeCount);
 
     curDists = graphshortestpath( ...
-        curAdj, curSomaSegIds(1), ...
-        'Weights', curDists(curAdj), ...
+        curAdj, curSomaNodeId, ...
+        'Weights', curDists, ...
         'Directed', false);
     
-    % sanity checks
-    curSomaMask = false(size(curSegIds));
-    curSomaMask(curSomaSegIds) = true;
-    
-    assert(~any(curDists(curSomaMask)));
-    assert(all(curDists(~curSomaMask)));
+    % Sanity checks
+    assert(~any(curDists(curSomaNodeMask)));
+    assert(all(curDists(~curSomaNodeMask)));
     
     curDists = reshape(curDists, [], 1);
     wcT.nodeDists{curIdx} = curDists;
 end
 
 %% collect input synapses
-wcT.synapses = cell(size(wcT.aggloId));
+wcT.synapses = cell(size(wcT.id));
 
 for curIdx = 1:size(wcT, 1)
-    curPostIds = [ ...
-        somaAggloIds(wcT.somaId(curIdx)), ...
-        dendAggloIds(wcT.dendId(curIdx))];
+    curAgglo = wcT.agglo(curIdx);
+    
+    curPostIds = conn.denMeta.wcId == wcT.id(curIdx);
+    curPostIds = conn.denMeta.id(curPostIds);
     
     curConnMask = ismember( ...
         conn.connectome.edges(:, 2), curPostIds);
@@ -142,20 +123,20 @@ for curIdx = 1:size(wcT, 1)
     curSynT.id = cell2mat(curConnRows.synIdx);
     curSynT.area = cell2mat(curAreaRows);
     
-    curSynT.segIdx = syn.synapses.postsynId(curSynT.id);
-    curSynT.segIdx = cellfun( ...
-        @(ids) intersect(ids, wcT.segIds{curIdx}), ...
-        curSynT.segIdx, 'UniformOutput', false);
+    curSynT.nodeId = cellfun( ...
+        @(ids) intersect(ids, curAgglo.nodes(:, 4)), ...
+        syn.synapses.postsynId(curSynT.id), ...
+        'UniformOutput', false);
     
     % assign synapse to largest segment
-   [~, curSegIdx] = cellfun( ...
-        @(ids) max(segMass(ids)), curSynT.segIdx);
-    curSegIds = arrayfun( ...
-        @(ids, idx) ids{1}(idx), curSynT.segIdx, curSegIdx);
+   [~, curNodeId] = cellfun( ...
+        @(ids) max(segMass(ids)), curSynT.nodeId);
+    curNodeIds = arrayfun( ...
+        @(ids, idx) ids{1}(idx), curSynT.nodeId, curNodeId);
     
     % translate to relative 
-   [~, curSynT.segIdx] = ismember( ...
-       double(curSegIds), wcT.segIds{curIdx});
+   [~, curSynT.nodeId] = ismember( ...
+       double(curNodeIds), curAgglo.nodes(:, 4));
     
     curSynT.axonId = repelem( ...
         curConnRows.edges(:, 1), ...
@@ -175,20 +156,20 @@ if ~isempty(debugDir)
         curId = debugCellIds(curIdx);
         
         curEdges = wcT.edges{curId};
-        curSegIds = wcT.segIds{curId};
+        curNodeIds = wcT.segIds{curId};
         curDistsUm = wcT.nodeDists{curId} / 1E3;
         curSynIdx = wcT.synapses{curId}.segIdx;
 
         % generate skeleton
         curSkel = skel.addTree( ...
             sprintf('Whole cell %d', curId), ...
-            ceil(segCentroids(curSegIds, :)), curEdges);
+            ceil(segCentroids(curNodeIds, :)), curEdges);
 
         % add distance annotations
         curComments = arrayfun( ...
             @(segId, distUm) sprintf( ...
                 'Synapse. Segment %d. %.1f µm to soma.', segId, distUm), ...
-            curSegIds(curSynIdx), curDistsUm(curSynIdx), 'UniformOutput', false);
+            curNodeIds(curSynIdx), curDistsUm(curSynIdx), 'UniformOutput', false);
        [curSkel.nodesAsStruct{end}(curSynIdx).comment] = deal(curComments{:});
 
         % add branchpoints
@@ -201,23 +182,76 @@ if ~isempty(debugDir)
     end
 end
 
+%% Try to find border cells
+somaPos = cell2mat(arrayfun( ...
+    @(s) mean(s.nodes(:, 1:3), 1), ...
+    wcT.somaAgglo, 'UniformOutput', false));
+
+voxelSize = param.raw.voxelSize;
+somaDistXY = voxelSize(3) * min(pdist2( ...
+    somaPos(:, 3), transpose(param.bbox(3, :))), [], 2);
+somaDistXZ = voxelSize(2) * min(pdist2( ...
+    somaPos(:, 2), transpose(param.bbox(2, :))), [], 2);
+somaDistYZ = voxelSize(1) * min(pdist2( ...
+    somaPos(:, 1), transpose(param.bbox(1, :))), [], 2);
+
+yzWcIds = find(somaDistYZ >= 10E3 & ...
+    (somaDistXY < 10E3 | somaDistXZ < 10E3));
+wcGroups = {yzWcIds};
+
+%% Generate queen neuron
+for curIdx = 1:numel(wcGroups)
+    curWcIds = wcGroups{curIdx};
+    curWcT = wcT(curWcIds, :);
+    
+    nodeIdOff = cumsum(cellfun(@numel, curWcT.nodeDists));
+    nodeIdOff = [0; nodeIdOff(1:(end - 1))];
+
+    lumpedSynapses = cat(1, curWcT.synapses{:});
+    lumpedSynapses.nodeId = lumpedSynapses.nodeId ...
+        + repelem(nodeIdOff, cellfun(@height, curWcT.synapses));
+
+    curQueenWcT = table;
+    curQueenWcT.id = size(curWcT, 1) + 1;
+
+    curQueenWcT.agglo = struct;
+    curQueenWcT.agglo.nodes = cat(1, curWcT.agglo.nodes);
+    curQueenWcT.agglo.edges = zeros(0, 2);
+
+    curQueenWcT.somaAgglo = struct;
+    curQueenWcT.somaAgglo.nodes = cat(1, curWcT.somaAgglo.nodes);
+    curQueenWcT.somaAgglo.edges = zeros(0, 2);
+
+    curQueenWcT.nodeDists = {cell2mat(curWcT.nodeDists)};
+    curQueenWcT.synapses = {lumpedSynapses};
+
+    wcT = cat(1, wcT, curQueenWcT);
+end
+
 %% plotting
 for curIdx = 1:size(wcT, 1)
     curSyns = wcT.synapses{curIdx};
     if isempty(curSyns); continue; end
     
-    curFig = figure('visible', 'off');
+    if ~isempty(outputDir)
+        curFig = figure('visible', 'off');
+    else
+        curFig = figure();
+    end
+    
+    curFig.Color = 'white';
     curFig.Position(3:4) = [1075, 600];
     
     curSyns.isSpine = syn.isSpineSyn(curSyns.id);
-    curSyns.isSoma = logical(somaLUT( ...
-        wcT.segIds{curIdx}(curSyns.segIdx)));
+    curSyns.isSoma = ismember( ...
+        wcT.agglo(curIdx).nodes(curSyns.nodeId, 4), ...
+        wcT.somaAgglo(curIdx).nodes(:, 4));
     
     curSyns.isExc = conn.axonMeta.isExc(curSyns.axonId);
     curSyns.isInh = conn.axonMeta.isInh(curSyns.axonId);
     curSyns.isTc = conn.axonMeta.isThalamocortical(curSyns.axonId);
     
-    curSyns.dist = wcT.nodeDists{curIdx}(curSyns.segIdx);
+    curSyns.dist = wcT.nodeDists{curIdx}(curSyns.nodeId);
     curSyns.dist = curSyns.dist / 1E3;
     
     % move soma synapses to separate bin
@@ -240,7 +274,7 @@ for curIdx = 1:size(wcT, 1)
     curRepT = curRepT(curSortIds, :);
     
     curMaxDist = 10 * ceil(max(curSyns.dist) / 10);
-    curBinEdges = -10:10:curMaxDist;
+    curBinEdges = -5:5:curMaxDist;
     
     curPlot = @(ax, data) ...
         histogram( ...
@@ -255,6 +289,7 @@ for curIdx = 1:size(wcT, 1)
     curPlot(curAx, curSyns.dist);
     curPlot(curAx, curSyns.dist(curSyns.isSpine));
     curPlot(curAx, curSyns.dist(curSyns.isSoma));
+    curPlot(curAx, curSyns.dist(curSyns.isSoma | ~curSyns.isSpine));
     
     curAx.TickDir = 'out';
     curAx.Position(3) = 0.8 - curAx.Position(1);
@@ -268,7 +303,8 @@ for curIdx = 1:size(wcT, 1)
         'FontWeight', 'normal', 'FontSize', 10);
     
     curLeg = legend(curAx, ...
-        'All', 'Onto spines', 'Onto soma', ...
+        'All', 'Onto spines', ...
+        'Onto soma', 'Onto shaft', ...
         'Location', 'EastOutside');
     curLeg.Position([1, 3]) = [0.82, (0.98 - 0.82)];
     
@@ -292,11 +328,7 @@ for curIdx = 1:size(wcT, 1)
         
     curPlot(curAx, curSyns.dist(curSyns.isExc));
     curPlot(curAx, curSyns.dist(curSyns.isTc));
-    
-    if ~isempty(curRepT)
-        % `histogram` fails if there are no synapses
-        curPlot(curAx, cell2mat(curRepT.synDist));
-    end
+    curPlot(curAx, curSyns.dist(~curSyns.isSpine));
     
     curAx.TickDir = 'out';
     curAx.Position(3) = 0.8 - curAx.Position(1);
@@ -308,7 +340,7 @@ for curIdx = 1:size(wcT, 1)
     curLeg = legend(curAx, ...
         'Excitatory', ...
         'Thalamocortical', ...
-        'Repeated', ...
+        'Shaft', ...
         'Location', 'EastOutside');
     curLeg.Position([1, 3]) = [0.82, (0.98 - 0.82)];
     
@@ -358,166 +390,13 @@ for curIdx = 1:size(wcT, 1)
     ylabel(curAx, 'Median ASI (µm²)');
     xlabel(curAx, 'Distance to soma (µm)');
     xlim(curAx, curBinEdges([1, end]));
+    ylim(curAx, [0, 0.4]);
     
     % save figure
-    curFigName = sprintf('input-distribution_whole-cell-%d.png', curIdx);
-    export_fig(fullfile(outputDir, curFigName), curFig);
-    clear curFig;
+    if ~isempty(outputDir)
+        curFigFile = fullfile(outputDir, sprintf( ...
+            'input-distribution_whole-cell-%d.png', curIdx));
+        export_fig(curFigFile, curFig);
+        clear curFig;
+    end
 end
-
-%% load cached results
-%{
-% TODO(amotta): remove this
-wcT = load(fullfile(outputDir, 'whole-cell-table.mat'));
-wcT = wcT.wcT;
-%}
-
-%% lump inputs
-% build synapse table and fix `segIdx`
-segIdxOff = cumsum(cellfun(@numel, wcT.segIds));
-segIdxOff = [0; segIdxOff(1:(end - 1))];
-
-lumpedSynapses = cat(1, wcT.synapses{:});
-lumpedSynapses.segIdx = lumpedSynapses.segIdx ...
-    + repelem(segIdxOff, cellfun(@height, wcT.synapses));
-
-lumpedWcT = struct;
-lumpedWcT.segIds = cell2mat(wcT.segIds);
-lumpedWcT.nodeDists = cell2mat(wcT.nodeDists);
-lumpedWcT.synapses = lumpedSynapses;
-
-%% plot lumped inputs
-curFig = figure();
-curFig.Position(3:4) = [860, 480];
-
-curSyns = lumpedWcT.synapses;
-curSyns.isSpine = syn.isSpineSyn(curSyns.id);
-curSyns.isSoma = logical(somaLUT(lumpedWcT.segIds(curSyns.segIdx)));
-
-curSyns.isExc = conn.axonMeta.isExc(curSyns.axonId);
-curSyns.isInh = conn.axonMeta.isInh(curSyns.axonId);
-curSyns.isTc  = conn.axonMeta.isThalamocortical(curSyns.axonId);
-
-curSyns.dist = lumpedWcT.nodeDists(curSyns.segIdx);
-curSyns.dist = curSyns.dist / 1E3;
-
-% move soma synapses to separate bin
-curSyns.dist(curSyns.isSoma) = -eps;
-
-curMaxDist = 10 * ceil(max(curSyns.dist) / 10);
-curBinEdges = -10:10:curMaxDist;
-
-curPlot = @(ax, data) ...
-    histogram( ...
-        ax, data, ...
-        'BinEdges', curBinEdges, ...
-        'DisplayStyle', 'stairs', ...
-        'LineWidth', 2);
-
-curAx = subplot(3, 1, 1);
-hold(curAx, 'on');
-
-curPlot(curAx, curSyns.dist);
-curPlot(curAx, curSyns.dist(curSyns.isSpine));
-curPlot(curAx, curSyns.dist(curSyns.isSoma));
-
-curAx.TickDir = 'out';
-curAx.Position(3) = 0.8 - curAx.Position(1);
-
-xlim(curAx, curBinEdges([1, end]));
-ylabel(curAx, 'Synapses');
-
-title(curAx, { ...
-    'Lumped inputs onto soma-based reconstructions'; ...
-    sprintf('%s (%s)', info.filename, info.git_repos{1}.hash)}, ...
-    'FontWeight', 'normal', 'FontSize', 10);
-
-curLeg = legend(curAx, ...
-    'All', 'Onto spines', 'Onto soma', ...
-    'Location', 'EastOutside');
-curLeg.Position([1, 3]) = [0.82, (0.98 - 0.82)];
-
-% plot fraction of axon types
-curAx = subplot(3, 1, 2);
-hold(curAx, 'on');
-
-curDiscretize = ...
-    @(data) accumarray( ...
-        discretize(data, curBinEdges), ...
-        1, [numel(curBinEdges) - 1, 1]);
-curBinAll = curDiscretize(curSyns.dist);
-
-curSpineFrac = curDiscretize(curSyns.dist(curSyns.isSpine));
-curExcFrac = curDiscretize(curSyns.dist(curSyns.isExc));
-curTcFrac = curDiscretize(curSyns.dist(curSyns.isTc));
-
-curPlot = ...
-    @(ax, data) histogram(ax, ...
-        'BinEdges', curBinEdges, ...
-        'BinCounts', data, ...
-        'DisplayStyle', 'stairs', ...
-        'LineWidth', 2);
-
-curPlot(curAx, curExcFrac ./ curBinAll);
-curPlot(curAx, curSpineFrac ./ curBinAll);
-curPlot(curAx, curTcFrac ./ curBinAll);
-
-curLeg = legend(curAx, ...
-    'Excitatory', ...
-    'Spine', ...
-    'Thalamocortical', ...
-    'Location', 'EastOutside');
-curLeg.Position([1, 3]) = [0.82, (0.98 - 0.82)];
-
-curAx.TickDir = 'out';
-curAx.Position(3) = 0.8 - curAx.Position(1);
-
-xlim(curAx, curBinEdges([1, end]));
-ylabel(curAx, 'Fraction of synapses');
-
-% plot axon types
-curAx = subplot(3, 1, 3);
-hold(curAx, 'on');
-
-curPlot = @(ax, data) ...
-    histogram( ...
-        ax, data, ...
-        'Normalization', 'probability', ...
-        'BinEdges', curBinEdges, ...
-        'DisplayStyle', 'stairs', ...
-        'LineWidth', 2);
-
-curPlot(curAx, curSyns.dist(curSyns.isExc));
-curPlot(curAx, curSyns.dist(curSyns.isInh));
-curPlot(curAx, curSyns.dist(curSyns.isTc));
-
-curAx.TickDir = 'out';
-curAx.Position(3) = 0.8 - curAx.Position(1);
-
-xlim(curAx, curBinEdges([1, end]));
-ylabel(curAx, 'Synapse probability');
-
-curLeg = legend(curAx, ...
-    'Excitatory', ...
-    'Inhibitory', ...
-    'Thalamocortical', ...
-    'Location', 'EastOutside');
-curLeg.Position([1, 3]) = [0.82, (0.98 - 0.82)];
-
-xlabel(curAx, 'Distance to soma (µm)');
-
-%% calculate fraction of spine synapses from TC axons
-allWcSyns = cat(1, wcT.synapses{:});
-
-% only consider spine synapses
-allWcSyns.isSpine = syn.isSpineSyn(allWcSyns.id);
-allWcSyns(~allWcSyns.isSpine, :) = [];
-
-% check if from TC axon
-allWcSyns.isTc = conn.axonMeta.isThalamocortical(allWcSyns.axonId);
-allWcTcSpineFrac = mean(allWcSyns.isTc);
-
-fprintf( ...
-   ['Fraction of spine synapses ', ...
-    'from TC axons: %.1f %%\n'], ...
-    100 * allWcTcSpineFrac);
