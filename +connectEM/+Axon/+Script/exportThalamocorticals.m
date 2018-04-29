@@ -4,9 +4,8 @@ clear;
 
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a_ax_spine_syn_clust.mat');
-synFile = fullfile(rootDir, 'connectomeState', 'SynapseAgglos_v3_ax_spine_clustered_classified.mat');
-shFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_01_spine_attachment.mat');
+connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites-wholeCells-03-v2-classified_spine-syn-clust.mat');
+shFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v3_auto-and-manual.mat');
 outputDir = '/home/amotta/Desktop/thalamocortical';
 
 info = Util.runInfo();
@@ -18,7 +17,7 @@ param = param.p;
 maxSegId = Seg.Global.getMaxSegId(param);
 segPoints = Seg.Global.getSegToPointMap(param);
 
-[conn, syn] = connectEM.Connectome.load(param, connFile, synFile);
+[conn, syn] = connectEM.Connectome.load(param, connFile);
 
 shAgglos = load(shFile, 'shAgglos');
 shAgglos = shAgglos.shAgglos;
@@ -97,4 +96,3 @@ skel.names = arrayfun( ...
     transpose(1:numel(axonIds)), axonIds, 'UniformOutput', false);
 
 skel.write(fullfile(outputDir, 'all.nml'));
-
