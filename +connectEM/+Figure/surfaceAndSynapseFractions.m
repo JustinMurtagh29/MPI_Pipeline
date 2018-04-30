@@ -4,10 +4,8 @@ clear;
 
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-availBlockFile = '/tmpscratch/amotta/l4/2018-02-02-surface-availability-connectome-axons-18-a/block-data.mat';
-
-synFile = fullfile(rootDir, 'connectomeState', 'SynapseAgglos_v3_ax_spine_clustered.mat');
-connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a_ax_spine_syn_clust.mat');
+availBlockFile = '/tmpscratch/amotta/l4/2018-04-27-surface-availability-connectome-v5/block-data.mat';
+connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites-wholeCells-03-v2-classified_spine-syn-clust.mat');
 
 boxCount = 100;
 boxSizeVx = [480, 480, 240];
@@ -31,8 +29,7 @@ param = param.p;
 maxSegId = Seg.Global.getMaxSegId(param);
 segPoints = Seg.Global.getSegToPointMap(param);
 
-syn = load(synFile);
-conn = load(connFile);
+[conn, syn] = connectEM.Connectome.load(param, connFile);
 
 availBlock = load(availBlockFile);
 availBlockSize = availBlock.info.param.blockSize;
