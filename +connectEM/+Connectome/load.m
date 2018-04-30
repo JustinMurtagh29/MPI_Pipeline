@@ -46,6 +46,9 @@ function [conn, syn, axonClasses] = load(param, connFile, synFile)
     conn.axonMeta.pathLen(interSyn.axonIds) = interSyn.axonPathLens / 1E3;
     conn.axonMeta = connectEM.Axon.completeSynapseMeta(param, conn, syn);
     
+    %% label dendrites
+    conn.denMeta = connectEM.Dendrite.completeCellMeta(param, conn);
+    
     %% label all axon classes
     axonClasses = ...
         connectEM.Connectome.buildAxonClasses(conn, 'minSynPre', 10);
