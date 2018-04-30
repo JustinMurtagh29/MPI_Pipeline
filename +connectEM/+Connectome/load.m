@@ -39,13 +39,12 @@ function [conn, syn, axonClasses] = load(param, connFile, synFile)
    [connDir, connName] = fileparts(connFile);
     interSynFile = sprintf('%s_intersynapse.mat', connName);
     interSynFile = fullfile(connDir, interSynFile);
-    interSyn = load(interSynFile);
+    interSyn = load(interSynFile, 'axonIds', 'axonPathLens');
     
-    %% mark thalamocortical axons
-    conn.axonMeta.isThalamocortical = ...
-        connectEM.Axon.detectThalamocorticals(conn, interSyn);
-    conn.axonMeta = ...
-        connectEM.Axon.completeSynapseMeta(param, conn, syn);
+    %% complete axon meta data
+    conn.axonMeta.pathLen = nan(size(conn.axons));
+    conn.axonMeta.pathLen(interSyn.axonIds) = interSyn.axonPathLens / 1E3;
+    conn.axonMeta = connectEM.Axon.completeSynapseMeta(param, conn, syn);
     
     %% label all axon classes
     axonClasses = ...
@@ -54,8 +53,12 @@ function [conn, syn, axonClasses] = load(param, connFile, synFile)
         connectEM.Connectome.buildSpecificityClasses(conn, axonClasses);
     
     conn.axonMeta.axonClass(:) = {'Other'};
-    conn.axonMeta.axonClass(axonClasses(2).axonIds) = {'Inhibitory'};
-    conn.axonMeta.axonClass(axonClasses(1).axonIds) = {'Corticocortical'};
+    conn.axonMeta.axonClass(axonClasses(4).axonIds) = {'Corticocortical'};
     conn.axonMeta.axonClass(axonClasses(3).axonIds) = {'Thalamocortical'};
-    conn.axonMeta.axonClass = categorical(conn.axonMeta.axonClass);
+    conn.axonMeta.axonClass(axonClasses(2).axonIds) = {'Inhibitory'};
+    
+    axonClassOrder = { ...
+        'Corticocortical', 'Thalamocortical', 'Inhibitory', 'Other'};
+    conn.axonMeta.axonClass = categorical( ...
+        conn.axonMeta.axonClass, axonClassOrder, 'Ordinal', true);
 end
