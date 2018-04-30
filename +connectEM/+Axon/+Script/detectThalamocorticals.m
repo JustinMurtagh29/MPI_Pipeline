@@ -27,6 +27,9 @@ interSynFile = fullfile(connDir, sprintf('%s_intersynapse.mat', connName));
 
 conn = load(connFile);
 interSyn = load(interSynFile);
+
+syn = load(conn.info.param.synFile);
+conn.axonMeta = connectEM.Axon.completeSynapseMeta(param, conn, syn);
     
 %% calculate inter-synapse distances
 % Previously we've calculate the synapse-to-synapse distances along the
@@ -100,4 +103,3 @@ ylabel(ax, 'Axons');
 title( ...
     ax, {info.filename, info.git_repos{1}.hash}, ...
     'FontWeight', 'normal', 'FontSize', 10);
-
