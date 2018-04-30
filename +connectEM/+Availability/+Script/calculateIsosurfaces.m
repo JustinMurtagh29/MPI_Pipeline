@@ -4,7 +4,7 @@ clear;
 
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-outDir = '/tmpscratch/amotta/l4/2018-04-16-distance-volume-test/20180417-all-dendrites';
+outDir = '/tmpscratch/amotta/l4/2018-04-30-availabilities-soma-axon/iso';
 
 % NOTE(amotta): This is an older connectome. It has the same dendrite
 % agglomerates as `connectome_axons_18_a_ax_spine_syn_clust`, but different
@@ -18,7 +18,7 @@ connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a.mat');
 minSynCount = 10;
 
 distVol = struct;
-distVol.rootDir = '/tmpscratch/amotta/l4/2018-04-16-distance-volume-test/wkw-lz4';
+distVol.rootDir = '/tmpscratch/amotta/l4/2018-04-30-availabilities-soma-axon/iso/wkw-lz4';
 distVol.thresh = 5000;
 
 info = Util.runInfo();
