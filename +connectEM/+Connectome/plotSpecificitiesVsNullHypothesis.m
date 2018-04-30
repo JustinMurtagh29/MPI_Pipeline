@@ -77,7 +77,6 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
         
         axonClassSpecs = axonSpecs(:, classIdx);
         axonClassNullProbs = axonNullProbs(:, classIdx);
-        isSpecific = axonClassNullProbs < 0.01;
         
         % Null hypothesis
        [nullSynFrac, nullAxonCount] = ...
@@ -92,12 +91,7 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
         ax = subplot(2, numel(targetClasses), classIdx);
         axis(ax, 'square');
         hold(ax, 'on');
-
-        histogram(ax, ...
-            axonClassSpecs(isSpecific), ...
-            'BinEdges', binEdges, ...
-            'EdgeColor', 'none', ...
-            'FaceAlpha', 1);
+        
         histogram(ax, ...
             axonClassSpecs, ...
             'BinEdges', binEdges, ...
@@ -111,33 +105,16 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
             'LineWidth', 2, ...
             'FaceAlpha', 1);
 
-        xlabel(ax, className);
+        xlabel(ax, 'Synapse fraction');
         ax.XAxis.TickDirection = 'out';
         ax.XAxis.Limits = [0, 1];
-
+        
+        ylabel(ax, 'Axons');
         ax.YAxis.TickDirection = 'out';
         ax.YAxis.Limits(1) = 10 ^ (-0.1);
         ax.YAxis.Scale = 'log';
         
-        % Show number of overly specific axons. Two approaches are used:
-        % 1. Find a synapse fraction threshold above which less than one
-        %    axon is expected under the null hypothesis. Then count the
-        %    number of axons above this threshold.
-        % 2. Count the number of axons which are above the null hypothesis
-        %    distribution. This does not truly represent overly-specific
-        %    axons.
-        overBinId = 1 + find(nullBinCount > 1, 1, 'last');
-        
-        obsBinCount = histcounts(axonClassSpecs, binEdges);
-        overThreshCount = sum(obsBinCount(overBinId:end));
-        specificCount = sum(isSpecific);
-        
-        title(ax, { ...
-            sprintf('%d with S ≥ %.1f', ...
-                overThreshCount, binEdges(overBinId)); ...
-            sprintf('%d with p ≤ 1 %%', specificCount)}, ...
-            'FontWeight', 'normal', 'FontSize', 10);
-        
+        title(ax, className, 'FontWeight', 'normal', 'FontSize', 10);
         axes{classIdx} = ax;
         
         %% p-values
@@ -206,7 +183,6 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
     ax = axes{end};
     axPos = ax.Position;
     leg = legend(ax, ...
-        'p < 1 %', ...
         'Observed', ...
         'Binomial model', ...
         'Location', 'East');
