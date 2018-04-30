@@ -69,7 +69,7 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
     %% plotting
     fig = figure;
     fig.Color = 'white';
-    fig.Position(3:4) = [1850, 800];
+    fig.Position(3:4) = [1850, 885];
     
     binEdges = linspace(0, 1, 21);
     axes = cell(size(targetClasses));
@@ -92,7 +92,7 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
         nullBinCount = accumarray(nullBinId, nullAxonCount);
 
         % Measured
-        ax = subplot(2, numel(targetClasses), classIdx);
+        ax = subplot(3, numel(targetClasses), classIdx);
         axis(ax, 'square');
         hold(ax, 'on');
         
@@ -123,7 +123,7 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
         
         %% p-values
         ax = subplot( ...
-            2, numel(targetClasses), ...
+            3, numel(targetClasses), ...
             numel(targetClasses) + classIdx);
         axis(ax, 'square');
         hold(ax, 'on');
@@ -181,6 +181,27 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
        [ax.YAxis.TickDirection] = deal('out');
         
         pValAxes{classIdx} = ax;
+        
+        %% alternative visualization
+        ax = subplot( ...
+            3, numel(targetClasses), ...
+            2 * numel(targetClasses) + classIdx);
+        axis(ax, 'square');
+        hold(ax, 'on');
+        
+        curPAxonFrac = linspace(0, 1, numel(curPVal));
+        
+        plot(curPVal, curPAxonFrac);
+        plot([0, 1], [0, 1]);
+        
+        if ~isempty(curThetaIdx)
+            plot(ax, ...
+                curPVal([curThetaIdx, curThetaIdx]), ax.YLim, ...
+                'Color', 'black', 'LineStyle', '--');
+        end
+        
+        xlabel(ax, 'p-value');
+        ylabel(ax, {'Fraction of axons'; 'with p < x'});
     end
     
     % Legend
