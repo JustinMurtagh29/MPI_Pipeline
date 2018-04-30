@@ -69,6 +69,7 @@ for curIdx = 1:numel(targetClasses)
 end
 
 ax.TickDir = 'out';
+ax.YScale = 'log';
 xlim(binEdges([1, end]));
 xlabel('Length (µm)');
 ylabel('Neurites');
