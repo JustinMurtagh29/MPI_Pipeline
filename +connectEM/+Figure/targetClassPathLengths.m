@@ -6,7 +6,6 @@ clear;
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 trunkFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v3.mat');
-shFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v3_auto-and-manual.mat');
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites-wholeCells-03-v2-classified_spine-syn-clust.mat');
 
 targetClasses = { ...
@@ -31,16 +30,9 @@ trunks = load(trunkFile);
 trunks = trunks.dendrites(trunks.indBigDends);
 trunks = Agglo.fromSuperAgglo(trunks);
 
-% Spine heads
-shAgglos = load(shFile);
-shAgglos = shAgglos.shAgglos;
-
 % Connectome (and dendrites after spine attachment)
 conn = load(connFile);
 dendrites = conn.dendrites;
-
-somaAgglos = conn.denMeta.targetClass == 'Somata';
-somaAgglos = conn.dendrites(somaAgglos);
 
 %% Calculate path lengths
 Util.log('Calculating path length');
@@ -52,8 +44,7 @@ dendMeta(~dendMeta.targetClassIdx, :) = [];
 
 trunkLensUm = ...
     connectEM.Dendrite.calculatePathLengths( ...
-        param, dendrites(dendMeta.id), ...
-        trunks, shAgglos, somaAgglos);
+        param, dendrites(dendMeta.id), trunks);
 trunkLensUm = trunkLensUm / 1E3;
 
 %% Plot histogram
