@@ -26,47 +26,24 @@ param = param.p;
 interSynFile = fullfile(connDir, sprintf('%s_intersynapse.mat', connName));
 
 conn = load(connFile);
-interSyn = load(interSynFile);
 
 syn = load(conn.info.param.synFile);
 conn.axonMeta = connectEM.Axon.completeSynapseMeta(param, conn, syn);
-    
-%% calculate inter-synapse distances
-% Previously we've calculate the synapse-to-synapse distances along the
-% axon. To calculate the inter-synapse distances we now need to construct a
-% tree-like representation of the axon. Let's do this by calculating the
-% minimal spanning-tree over the synapses.
-conn.axonMeta.pathLen = nan(size(conn.axonMeta.id));
-conn.axonMeta.interSynDists = cell(size(conn.axonMeta.id));
 
-for curIdx = 1:numel(interSyn.axonIds)
-    curAxonId = interSyn.axonIds(curIdx);
-    curPathLen = interSyn.axonPathLens(curIdx) / 1E3;
-    
-    curSynToSynDists = interSyn.synToSynDists{curIdx};
-    curSynToSynDists = curSynToSynDists ./ 1E3;
-    
-    % NOTE(amotta): Zeros in the adjacency matrix are interpreted as
-    % missing edge. This is a problem since synapse-to-synapse distance
-    % zero occurs naturally when multiple synapses originate from the same
-    % segment. Let's instead set these zeros to the smallest possible
-    % non-zero value.
-    curSynToSynDists(~curSynToSynDists) = eps;
-    
-    % claculate inter-synapse distances
-    curInterSynDists = graphminspantree(sparse(curSynToSynDists));
-    curInterSynDists = nonzeros(curInterSynDists);
-    
-    conn.axonMeta.pathLen(curAxonId) = curPathLen;
-    conn.axonMeta.interSynDists{curAxonId} = curInterSynDists;
-end
+interSyn = load(interSynFile);
+conn.axonMeta.pathLen = nan(size(conn.axons));
+conn.axonMeta.pathLen(interSyn.axonIds) = interSyn.axonPathLens / 1E3;
+
+% Precompute useful quantities
+conn.axonMeta.fullPriSpineSynDens = ...
+    conn.axonMeta.fullPriSpineSynCount ...
+ ./ conn.axonMeta.pathLen;
+conn.axonMeta.fullPriSpineSynFrac = ...
+    conn.axonMeta.fullPriSpineSynCount ...
+ ./ conn.axonMeta.fullSynCount;
 
 %% Plot synapse densities for GT axons
 binEdges = linspace(0, 0.4, 21);
-
-priSpineDens = ...
-    conn.axonMeta.fullPriSpineSynCount ...
- ./ conn.axonMeta.pathLen;
 
 fig = figure();
 fig.Color = 'white';
@@ -77,17 +54,13 @@ hold(ax, 'on');
 axis(ax, 'square');
 
 histogram( ...
-    ax, priSpineDens(tcAxonIds), ...
-    'BinEdges', binEdges, ...
-    'DisplayStyle', 'stairs', ...
-    'LineWidth', 2, ...
-    'FaceAlpha', 1);
+    ax, conn.axonMeta.fullPriSpineSynDens(tcAxonIds), ...
+    'BinEdges', binEdges, 'DisplayStyle', 'stairs', ...
+    'LineWidth', 2, 'FaceAlpha', 1);
 histogram( ...
-    ax, priSpineDens(ccAxonIds), ...
-    'BinEdges', binEdges, ...
-    'DisplayStyle', 'stairs', ...
-    'LineWidth', 2, ...
-    'FaceAlpha', 1);
+    ax, conn.axonMeta.fullPriSpineSynDens(ccAxonIds), ...
+    'BinEdges', binEdges, 'DisplayStyle', 'stairs', ...
+    'LineWidth', 2, 'FaceAlpha', 1);
 
 ax.TickDir = 'out';
 xlim(ax, binEdges([1, end]));
@@ -101,6 +74,38 @@ leg.Box = 'off';
 
 xlabel(ax, 'Spine synapse density (µm^{-1})');
 ylabel(ax, 'Axons');
+
+title( ...
+    ax, {info.filename, info.git_repos{1}.hash}, ...
+    'FontWeight', 'normal', 'FontSize', 10);
+
+%% Extrapolate to all excitatory axons
+thresh = 0.19;
+excAxonIds = find( ...
+    conn.axonMeta.synCount >= 10 ...
+  & conn.axonMeta.fullPriSpineSynFrac >= 0.5);
+
+fig = figure();
+fig.Color = 'white';
+fig.Position(3:4) = [400, 400];
+
+ax = axes(fig);
+axis(ax, 'square');
+hold(ax, 'on');
+
+histogram( ...
+    ax, conn.axonMeta.fullPriSpineSynDens(excAxonIds), ...
+    'BinEdges', binEdges, 'DisplayStyle', 'stairs', ...
+    'LineWidth', 2, 'FaceAlpha', 1);
+plot( ...
+    ax, [thresh, thresh], ax.YLim, ...
+    'Color', 'black', 'LineStyle', '--');
+
+ax.TickDir = 'out';
+xlim(ax, binEdges([1, end]));
+
+xlabel(ax, 'Spine synapse density (µm^{-1})');
+ylabel(ax, 'Excitatory axons');
 
 title( ...
     ax, {info.filename, info.git_repos{1}.hash}, ...
