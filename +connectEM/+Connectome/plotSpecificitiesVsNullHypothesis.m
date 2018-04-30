@@ -20,9 +20,13 @@ param = param.p;
 [conn, ~, axonClasses] = ...
     connectEM.Connectome.load(param, connFile);
 
-% Rename "whole cells" to proximal dendrites
-proxDendMask = conn.denMeta.targetClass == 'WholeCell';
-conn.denMeta.targetClass(proxDendMask) = 'ProximalDendrite';
+% Inhibitory whole cell → smooth dendrite
+% Excitatory whole cell → proximal dendrite
+wcMask = conn.denMeta.targetClass == 'WholeCell';
+inMask = conn.denMeta.isInterneuron;
+
+conn.denMeta.targetClass(wcMask &  inMask) = 'SmoothDendrite';
+conn.denMeta.targetClass(wcMask & ~inMask) = 'ProximalDendrite';
 
 classConnectome = ...
     connectEM.Connectome.buildClassConnectome( ...
