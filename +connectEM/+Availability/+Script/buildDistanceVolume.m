@@ -4,11 +4,11 @@ clear;
 
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-outDir = '/tmpscratch/amotta/l4/2018-04-16-distance-volume-test/wkw';
+outDir = '/tmpscratch/amotta/l4/2018-04-30-availabilities-soma-axon/wkw';
 
 % Use axon #23325 as reference
 % This is the AD-specific axon from panel 4c
-distRefIsoFile = '/tmpscratch/amotta/l4/2018-01-24-axons-18a-isosurfaces/mat/iso-23325.mat';
+distRefIsoFile = '/tmpscratch/amotta/l4/2018-01-24-axons-18a-isosurfaces/mat/iso-630.mat';
 
 boxSize = [256, 256, 256];
 
