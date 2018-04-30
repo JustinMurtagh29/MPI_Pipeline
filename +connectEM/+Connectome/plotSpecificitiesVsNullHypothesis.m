@@ -7,7 +7,7 @@ rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites-wholeCells-03-v2-classified_spine-syn-clust.mat');
 
 targetClasses = { ...
-    'Somata', 'WholeCell', 'ApicalDendrite', ...
+    'Somata', 'ProximalDendrite', 'ApicalDendrite', ...
     'SmoothDendrite', 'AxonInitialSegment', 'OtherDendrite'};
 
 minSynPre = 10;
@@ -19,6 +19,11 @@ param = param.p;
 
 [conn, ~, axonClasses] = ...
     connectEM.Connectome.load(param, connFile);
+
+% Rename "whole cells" to proximal dendrites
+proxDendMask = conn.denMeta.targetClass == 'WholeCell';
+conn.denMeta.targetClass(proxDendMask) = 'ProximalDendrite';
+
 classConnectome = ...
     connectEM.Connectome.buildClassConnectome( ...
         conn, 'targetClasses', targetClasses);
