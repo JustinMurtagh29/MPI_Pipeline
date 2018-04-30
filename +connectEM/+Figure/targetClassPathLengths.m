@@ -8,6 +8,8 @@ rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 trunkFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v3.mat');
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites-wholeCells-03-v2-classified_spine-syn-clust.mat');
 
+minSynPost = 10;
+
 targetClasses = { ...
     'SmoothDendrite', 'SD'; ...
     'ApicalDendrite', 'AD'; ...
@@ -42,6 +44,9 @@ dendMeta = conn.denMeta;
     conn.denMeta.targetClass, targetClasses);
 dendMeta(~dendMeta.targetClassIdx, :) = [];
 
+% Ignore targets with less than 10 synapses
+dendMeta(dendMeta.synCount < minSynPost, :) = [];
+
 trunkLensUm = ...
     connectEM.Dendrite.calculatePathLengths( ...
         param, dendrites(dendMeta.id), trunks);
@@ -70,7 +75,6 @@ for curIdx = 1:numel(targetClasses)
 end
 
 ax.TickDir = 'out';
-ax.YScale = 'log';
 xlim(binEdges([1, end]));
 xlabel('Length (µm)');
 ylabel('Neurites');
