@@ -5,9 +5,9 @@ clear;
 
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-trunkFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_01_v2.mat');
-shFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_01_spine_attachment.mat');
-connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a_ax_spine_syn_clust.mat');
+trunkFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v3.mat');
+shFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v3_auto-and-manual.mat');
+connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites-wholeCells-03-v2-classified_spine-syn-clust.mat');
 
 targetClasses = { ...
     'AxonInitialSegment', 'AIS'; ...
