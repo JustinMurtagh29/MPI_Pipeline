@@ -18,7 +18,7 @@ connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a.mat');
 minSynCount = 10;
 
 distVol = struct;
-distVol.rootDir = '/tmpscratch/amotta/l4/2018-04-30-availabilities-soma-axon/iso/wkw-lz4';
+distVol.rootDir = '/tmpscratch/amotta/l4/2018-04-30-availabilities-soma-axon/wkw-lz4';
 distVol.thresh = 5000;
 
 info = Util.runInfo();
