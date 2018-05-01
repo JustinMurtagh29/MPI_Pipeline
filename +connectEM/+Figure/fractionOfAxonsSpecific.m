@@ -25,97 +25,93 @@ param = param.p;
     connectEM.Connectome.load(param, connFile);
 
 %% Preparing data
+axonClasses(1).tag = 'Exc';
+axonClasses(2).tag = 'Inh';
+axonClasses(3).tag = 'TC';
+axonClasses(4).tag = 'CC';
+
 conn = ...
     connectEM.Connectome.prepareForSpecificityAnalysis(conn);
 axonClasses = ...
     connectEM.Connectome.buildAxonSpecificityClasses(conn, axonClasses);
 
 %% Plotting
-for curIdx = 1:numel(axonClasses)
-    curAxonClass = axonClasses(curIdx);
+plotClasses = [4, 3, 2];
+plotData = nan(numel(plotClasses), 2 * numel(targetClasses) + 1);
+
+for curIdx = 1:numel(plotClasses)
+    curId = plotClasses(curIdx);
+    curAxonClass = axonClasses(curId);
     curAxonIds = curAxonClass.axonIds;
     curSpecs = curAxonClass.specs;
     
-    curIds = fieldnames(curSpecs);
-   [~, curIds] = ismember(curIds, targetClasses);
-   
-    curIds = nonzeros(curIds);
-    curSpecClasses = targetClasses(curIds);
-    curSpecLabels = targetLabels(curIds);
+    curSpecClasses = fieldnames(curSpecs);
+   [~, curIds] = ismember(curSpecClasses, targetClasses);
+    assert(all(curIds));
     
     curSpecAxonIds = cellfun( ...
         @(name) curSpecs.(name).axonIds, ...
         curSpecClasses, 'UniformOutput', false);
     
-    curSpecMat = 1:numel(curSpecLabels);
-   [curA, curB] = ndgrid(curSpecMat, curSpecMat);
-    
-    curSpecMat = zeros(1 + numel(curSpecLabels));
-    curSpecMat(1:(end - 1), 1:(end - 1)) = cellfun( ...
+   [curA, curB] = ndgrid(1:numel(curIds), 1:numel(curIds));
+    curSpecMat = zeros(1 + numel(targetClasses));
+    curSpecMat(curIds, curIds) = cellfun( ...
         @(idsOne, idsTwo) numel(intersect(idsOne, idsTwo)), ...
         curSpecAxonIds(curA), curSpecAxonIds(curB));
     
     curNonSpecAxonIds = setdiff(curAxonIds, cell2mat(curSpecAxonIds));
     curSpecMat(end, end) = numel(curNonSpecAxonIds);
     
-    plotIt(info, curAxonClass, curSpecLabels, curSpecMat)
+    % Prepare stacked bars
+    curDiag = diag(curSpecMat, 0);
+    curOff = diag(curSpecMat, 1);
+    
+    curDiag(1:(end - 1)) = curDiag(1:(end - 1)) - curOff;
+    curDiag(2:end) = curDiag(2:end) - curOff;
+    
+    curDiag = reshape(curDiag, 1, []);
+    curOff = reshape(curOff, 1, []);
+    
+    curProbs = cat(1, curDiag, cat(2, curOff, 0));
+    curProbs = curProbs(1:(end - 1));
+    curProbs = curProbs / sum(curProbs);
+    
+    plotData(curIdx, :) = curProbs;
 end
 
-%% Utility
-function plotIt(info, axonClass, specLabels, specMat)
-    axonClassTitle = axonClass.title;
-    axonCount = numel(axonClass.axonIds);
-    specLabels{end + 1} = 'None';
-    
-    %% Plot matrix
-    fig = figure();
-    ax = axes(fig);
-    
-    specMatRel = specMat / axonCount;
-    imshow(specMatRel, 'Parent', ax, 'Colormap', parula);
+fig = figure();
+fig.Color = 'white';
 
-    fig.Color = 'white';
-    fig.Position(3:4) = [660, 660];
+ax = axes(fig);
+plotScaled = plotData ./ sum(plotData, 2);
+allBars = bar(ax, plotScaled, 'stacked');
 
-    ax.Visible = 'on';
-    ax.Box = 'off';
-    ax.TickDir = 'out';
-    
-    ax.XAxisLocation = 'top';
-    ax.XTick = 1:numel(specLabels);
-    ax.XTickLabel = specLabels;
-    ax.XTickLabelRotation = 90;
+colors = ax.ColorOrder(1:(numel(targetClasses) + 1), :);
+mixedColors = (colors(1:(end - 1), :) + colors(2:end, :)) ./ 2;
+mixedColors = cat(1, mixedColors, zeros(1, 3));
 
-    ax.YTick = 1:numel(specLabels);
-    ax.YTickLabel = specLabels;
+colors = cat(1, transpose(colors), transpose(mixedColors));
+colors = transpose(reshape(colors, 3, []));
+colors = num2cell(colors(1:(end - 1), :), 2);
 
-    axis(ax, 'square');
-    ax.Position = [0.1, 0.05, 0.8, 0.8];
-    
-    for curIdx = 1:numel(specMat)
-       [curRow, curCol] = ind2sub(size(specMat), curIdx);
+[allBars.FaceColor] = deal(colors{:});
+[allBars.EdgeColor] = deal('none');
 
-        curBoxSize = ax.Position(3:4) / numel(specLabels);
-        curOff = [curCol, numel(specLabels) - curRow + 1];
-        curOff = ax.Position(1:2) + (curOff - 1) .* curBoxSize;
+xlim(ax, [0.25, numel(plotClasses) + 0.75]);
+xticklabels(ax, {axonClasses(plotClasses).tag});
+ylabel('Fraction of specific axons');
 
-        annotation(fig, ...
-            'textbox', [curOff, curBoxSize], ...
-            'String', { ...
-                sprintf('%d', specMat(curIdx)); ...
-                sprintf('%.1f %%', 100 * specMatRel(curIdx))}, ...
-            'HorizontalAlignment', 'center', ...
-            'VerticalAlignment', 'middle', ...
-            'EdgeColor', 'none', ...
-            'Color', 'white', ...
-            'FontSize', 12);
-    end
-    
-    cbar = colorbar('peer', ax);
-    cbar.TickDirection = 'out';
-    cbar.Position = [0.925, 0.05, 0.02, 0.8];
-    
-    title(ax, ...
-        {info.filename; info.git_repos{1}.hash; axonClassTitle}, ...
-        'FontWeight', 'normal', 'FontSize', 10);
-end
+legends = targetLabels;
+legends{end + 1} = 'None';
+
+leg = legend( ...
+    allBars(1:2:end), legends, ...
+    'Location', 'EastOutside');
+leg.Box = 'off';
+
+ax.Box = 'off';
+ax.TickDir = 'out';
+
+title( ...
+    ax, {info.filename; info.git_repos{1}.hash}, ...
+    'FontWeight', 'normal', 'FontSize', 10);
