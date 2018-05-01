@@ -48,7 +48,7 @@ for curIdx = 1:numel(targetClasses)
         try
             curSpecs = curAxonClass.specs;
             curSpecs = curSpecs.(curTargetClass);
-            curAxonIds = [curAxonIds; curSpecs.axonIds];
+            curAxonIds = [curAxonIds; curSpecs.axonIds]; %#ok
         catch
             % Yes, I'm abusing exceptions for control flow.
             % Whatcha gonna do 'bout it, ha? - amotta
