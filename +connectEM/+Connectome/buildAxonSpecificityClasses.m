@@ -5,7 +5,7 @@ function axonClasses = buildAxonSpecificityClasses(conn, axonClasses)
     %% Add specificity thresholds
     % Excitatory axons
     axonClasses(1).specs = struct;
-    axonClasses(1).specs.ProximalDendrite.pThresh = 0.05;
+    axonClasses(1).specs.ProximalDendrite.pThresh = 0.045;
     axonClasses(1).specs.ApicalDendrite.pThresh = 0.035;
     
     % Inhibitory axons
@@ -13,17 +13,18 @@ function axonClasses = buildAxonSpecificityClasses(conn, axonClasses)
     axonClasses(2).specs.Somata.pThresh = 0.115;
     axonClasses(2).specs.ProximalDendrite.pThresh = 0.12;
     axonClasses(2).specs.ApicalDendrite.pThresh = 0.06;
-    axonClasses(2).specs.SmoothDendrite.pThresh = 0.055;
+    axonClasses(2).specs.SmoothDendrite.pThresh = 0.06;
     
     % Thalamocortical axons
     axonClasses(3).specs = struct;
-    axonClasses(3).specs.ProximalDendrite.pThresh = 0.215;
-    axonClasses(3).specs.ApicalDendrite.pThresh = 0.025;
+    axonClasses(3).specs.ProximalDendrite.pThresh = 0.195;
+    axonClasses(3).specs.ApicalDendrite.pThresh = 0.015;
     
     % Corticocortical axons
     axonClasses(4).specs = struct;
-    axonClasses(4).specs.ProximalDendrite.pThresh = 0.04;
+    axonClasses(4).specs.ProximalDendrite.pThresh = 0.03;
     axonClasses(4).specs.ApicalDendrite.pThresh = 0.04;
+    axonClasses(4).specs.SmoothDendrite.pThresh = 0.04;
     
     %% Find specific axons
    [classConn, targetClasses] = ...
