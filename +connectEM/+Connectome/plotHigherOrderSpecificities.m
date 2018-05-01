@@ -11,19 +11,20 @@ connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites
 % TODO(amotta): Get rid of these...
 pTheta = struct;
 % Excitatory axons
-pTheta(1).WholeCell = 0.05;
+pTheta(1).ProximalDendrite = 0.045;
 pTheta(1).ApicalDendrite = 0.035;
 % Inhibitory axons
 pTheta(2).Somata = 0.115;
-pTheta(2).WholeCell = 0.12;
+pTheta(2).ProximalDendrite = 0.12;
 pTheta(2).ApicalDendrite = 0.06;
-pTheta(2).SmoothDendrite = 0.055;
+pTheta(2).SmoothDendrite = 0.06;
 % Thalamocortical axons
-pTheta(3).WholeCell = 0.215;
-pTheta(3).ApicalDendrite = 0.025;
+pTheta(3).ProximalDendrite = 0.195;
+pTheta(3).ApicalDendrite = 0.015;
 % Corticocortical axons
-pTheta(4).WholeCell = 0.04;
+pTheta(4).ProximalDendrite = 0.03;
 pTheta(4).ApicalDendrite = 0.04;
+pTheta(4).SmoothDendrite = 0.04;
 
 info = Util.runInfo();
 
@@ -33,6 +34,15 @@ param = param.p;
 
 [conn, ~, axonClasses] = ...
     connectEM.Connectome.load(param, connFile);
+
+% Inhibitory whole cell → smooth dendrite
+% Excitatory whole cell → proximal dendrite
+wcMask = conn.denMeta.targetClass == 'WholeCell';
+inMask = conn.denMeta.isInterneuron;
+
+conn.denMeta.targetClass(wcMask &  inMask) = 'SmoothDendrite';
+conn.denMeta.targetClass(wcMask & ~inMask) = 'ProximalDendrite';
+
 [classConnectome, targetClasses] = ...
 	connectEM.Connectome.buildClassConnectome(conn);
 
