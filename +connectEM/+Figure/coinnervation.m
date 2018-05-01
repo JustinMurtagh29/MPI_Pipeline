@@ -6,9 +6,9 @@ clear;
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites-wholeCells-03-v2-classified_spine-syn-clust.mat');
 
-minSynCount = 10;
 targetClasses = { ...
     'Somata', 'SO'; ...
+    'ProximalDendrite', 'PD'; ...
     'ApicalDendrite', 'AD'; ...
     'SmoothDendrite', 'SD'; ...
     'AxonInitialSegment', 'AIS'};
@@ -34,84 +34,90 @@ axonClasses = ...
 [~, targetIds] = ismember(targetClasses, targetIds);
 assert(all(targetIds));
 
-%% Calculate coinnervation matrix
-axonIds = find(conn.axonMeta.synCount >= minSynCount);
-coinMat = nan(numel(targetClasses));
+synCount = sum(classConn, 2);
+classConn = classConn(:, targetIds);
+classConn(:, end + 1) = synCount - sum(classConn, 2);
+classConn = classConn ./ sum(classConn, 2);
 
-for curIdx = 1:numel(targetClasses)
-    curTargetClass = targetClasses{curIdx};
-    curTargetId = targetIds(curIdx);
+%% Calculate coinnervation matrix
+for curAxonClass = axonClasses
+    curSpecs = curAxonClass.specs;
+    curSpecClasses = fieldnames(curSpecs);
     
-    % Collect specific axons
-    curAxonIds = zeros(0, 1);
-    for curAxonClass = reshape(axonClasses, 1, [])
-        try
-            curSpecs = curAxonClass.specs;
-            curSpecs = curSpecs.(curTargetClass);
-            curAxonIds = [curAxonIds; curSpecs.axonIds]; %#ok
-        catch
-            % Yes, I'm abusing exceptions for control flow.
-            % Whatcha gonna do 'bout it, ha? - amotta
-        end
+   [~, curSpecClasses] = ismember(curSpecClasses, targetClasses);
+    curSpecLabels = targetLabels(sort(curSpecClasses));
+    curSpecClasses = targetClasses(sort(curSpecClasses));
+    
+    curCoinMat = nan(1 + numel(curSpecClasses), 1 + numel(targetClasses));
+    
+    for curSpecIdx = 1:numel(curSpecClasses)
+        curSpecClass = curSpecClasses{curSpecIdx};
+        curAxonIds = curSpecs.(curSpecClass).axonIds;
+        
+        curCoinVec = mean(classConn(curAxonIds, :), 1);
+        curCoinMat(curSpecIdx, :) = curCoinVec;
     end
     
-    % Calculate co-innervation
-    % After removal of seed synapse
-    curClassConn = classConn(curAxonIds, :);
-    curClassConn(:, curTargetId) = curClassConn(:, curTargetId) - 1;
+    % Other axons
+    curAxonIds = structfun(@(curSpec) {curSpec.axonIds}, curSpecs);
+    curAxonIds = setdiff(curAxonClass.axonIds, cell2mat(curAxonIds));
+    curCoinMat(end, :) = mean(classConn(curAxonIds, :), 1);
     
-    curClassConn = curClassConn ./ sum(curClassConn, 2);
-    curClassConn = curClassConn(:, targetIds);
-    curClassConn = mean(curClassConn, 1);
-    
-    coinMat(curIdx, :) = curClassConn;
+    plotIt(info, targetLabels, curAxonClass, curSpecLabels, curCoinMat);
 end
 
-%% Plot matrix
-% TODO(amotta): color
-fig = figure();
-ax = axes(fig);
-imshow(coinMat, 'Parent', ax, 'Colormap', parula);
-
-fig.Color = 'white';
-fig.Position(3:4) = [660, 660];
-
-ax.Visible = 'on';
-ax.Box = 'off';
-ax.TickDir = 'out';
-
-ax.XAxisLocation = 'top';
-ax.XTick = 1:numel(targetClasses);
-ax.XTickLabel = targetLabels;
-ax.XTickLabelRotation = 90;
-
-ax.YTick = 1:numel(targetClasses);
-ax.YTickLabel = targetLabels;
-
-axis(ax, 'square');
-ax.Position = [0.1, 0.1, 0.8, 0.8];
-
-for curIdx = 1:numel(coinMat)
-   [curRow, curCol] = ind2sub(size(coinMat), curIdx);
+%% Utilities
+function plotIt(info, targetClasses, axonClass, specClasses, coinMat)
+    targetClasses{end + 1} = 'Other';
+    specClasses{end + 1} = 'None';
     
-    curBoxSize = ax.Position(3:4) / numel(targetClasses);
-    curOff = [curCol, numel(targetClasses) - curRow + 1];
-    curOff = ax.Position(1:2) + (curOff - 1) .* curBoxSize;
+    rows = numel(specClasses);
+    cols = numel(targetClasses);
+    frac = rows / cols;
     
-    curAnn = annotation( ...
-        'textbox', [curOff, curBoxSize], ...
-        'String', sprintf('%.1f %%', 100 * coinMat(curIdx)));
-    curAnn.HorizontalAlignment = 'center';
-	curAnn.VerticalAlignment = 'middle';
-	curAnn.EdgeColor = 'none';
-	curAnn.Color = 'white';
-    curAnn.FontSize = 12;
+    fig = figure();
+    ax = axes(fig);
+    imshow(coinMat, 'Parent', ax, 'Colormap', parula);
+
+    fig.Color = 'white';
+    fig.Position(3:4) = 750 .* [1, frac];
+
+    ax.Visible = 'on';
+    ax.Box = 'off';
+    ax.TickDir = 'out';
+
+    ax.XAxisLocation = 'top';
+    ax.XTick = 1:size(coinMat, 2);
+    ax.XTickLabel = targetClasses;
+    ax.XTickLabelRotation = 90;
+
+    ax.YTick = 1:size(coinMat, 1);
+    ax.YTickLabel = specClasses;
+    ax.Position = [0.1, 0.01, 0.75, 0.75];
+    
+    for curIdx = 1:numel(coinMat)
+       [curRow, curCol] = ind2sub(size(coinMat), curIdx);
+
+        curBoxSize = ax.Position(3:4) ./ [cols, rows];
+        curOff = [curCol, numel(specClasses) - curRow + 1];
+        curOff = ax.Position(1:2) + (curOff - 1) .* curBoxSize;
+
+        curAnn = annotation( ...
+            'textbox', [curOff, curBoxSize], ...
+            'String', sprintf('%.1f %%', 100 * coinMat(curIdx)));
+        curAnn.HorizontalAlignment = 'center';
+        curAnn.VerticalAlignment = 'middle';
+        curAnn.EdgeColor = 'none';
+        curAnn.Color = 'white';
+        curAnn.FontSize = 12;
+    end
+    
+    cbar = colorbar('peer', ax);
+    cbar.TickDirection = 'out';
+    cbar.Position = [0.925, 0.1, 0.02, 0.8];
+    cbar.Position([2, 4]) = ax.Position([2, 4]);
+
+    title(ax, ...
+        {info.filename; info.git_repos{1}.hash; axonClass.title}, ...
+        'FontWeight', 'normal', 'FontSize', 10);
 end
-
-cbar = colorbar('peer', ax);
-cbar.TickDirection = 'out';
-cbar.Position = [0.925, 0.1, 0.02, 0.8];
-
-title(ax, ...
-    {info.filename; info.git_repos{1}.hash}, ...
-    'FontWeight', 'normal', 'FontSize', 10);
