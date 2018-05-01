@@ -52,8 +52,6 @@ function [conn, syn, axonClasses] = load(param, connFile, synFile)
     %% label all axon classes
     axonClasses = ...
         connectEM.Connectome.buildAxonClasses(conn, 'minSynPre', 10);
-    axonClasses = ...
-        connectEM.Connectome.buildSpecificityClasses(conn, axonClasses);
     
     conn.axonMeta.axonClass(:) = {'Other'};
     conn.axonMeta.axonClass(axonClasses(4).axonIds) = {'Corticocortical'};

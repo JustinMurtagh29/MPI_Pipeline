@@ -29,10 +29,6 @@ function axonClasses = buildAxonClasses(conn, varargin)
     axonClasses(1).title = sprintf( ...
         'excitatory axons with ≥ %d synapses (n = %d)', ...
         opts.minSynPre, numel(axonClasses(end).axonIds));
-    
-    axonClasses(1).specs = struct;
-    axonClasses(1).specs.WholeCell.pThresh = 0.05;
-    axonClasses(1).specs.ApicalDendrite.pThresh = 0.035;
 
     % Inhibitory axons
     axonClasses(2).axonIds = find( ...
@@ -44,12 +40,6 @@ function axonClasses = buildAxonClasses(conn, varargin)
         'inhibitory axons with ≥ %d synapses (n = %d)', ...
         opts.minSynPre, numel(axonClasses(end).axonIds));
     
-    axonClasses(2).specs = struct;
-    axonClasses(2).specs.Somata.pThresh = 0.115;
-    axonClasses(2).specs.WholeCell.pThresh = 0.12;
-    axonClasses(2).specs.ApicalDendrite.pThresh = 0.06;
-    axonClasses(2).specs.SmoothDendrite.pThresh = 0.055;
-    
     % Thalamocortical axons
     axonClasses(3).axonIds = intersect( ...
         axonClasses(1).axonIds, tcCandIds);
@@ -58,10 +48,6 @@ function axonClasses = buildAxonClasses(conn, varargin)
         'thalamocortical axons (n = %d)', ...
         numel(axonClasses(end).axonIds));
     
-    axonClasses(3).specs = struct;
-    axonClasses(3).specs.WholeCell.pThresh = 0.215;
-    axonClasses(3).specs.ApicalDendrite.pThresh = 0.025;
-    
     % Corticocortical axons
     axonClasses(4).axonIds = setdiff( ...
         axonClasses(1).axonIds, tcCandIds);
@@ -69,8 +55,4 @@ function axonClasses = buildAxonClasses(conn, varargin)
     axonClasses(4).title = sprintf( ...
         'corticocortical axons (n = %d)', ...
         numel(axonClasses(end).axonIds));
-
-    axonClasses(4).specs = struct;
-    axonClasses(4).specs.WholeCell.pThresh = 0.04;
-    axonClasses(4).specs.ApicalDendrite.pThresh = 0.04;
 end

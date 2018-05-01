@@ -21,10 +21,14 @@ info = Util.runInfo();
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 
-[conn, ~, axonClasses] = ...
-    connectEM.Connectome.load(param, connFile);
+[conn, ~, axonClasses] = connectEM.Connectome.load(param, connFile);
 
-%% Building class connectome
+%% Prepare connectome
+conn = ...
+    connectEM.Connectome.prepareForSpecificityAnalysis(conn);
+axonClasses = ...
+    connectEM.Connectome.buildAxonSpecificityClasses(conn, axonClasses);
+
 [classConn, targetIds] = ...
     connectEM.Connectome.buildClassConnectome(conn);
 [~, targetIds] = ismember(targetClasses, targetIds);
