@@ -53,7 +53,7 @@ Seg.Global.applyMappingToSegmentation(param, mapping, outParam);
 
 % Create resolution pyramid
 thisBBox = [1, 1, 1; (ceil(param.bbox(:, 2) ./ 1024) .* 1024)']';
-createResolutionPyramid(seg, thisBBox, [], true);
+createResolutionPyramid(outParam, thisBBox, [], true);
 
 % Compress segmentation
 compressSegmentation(outParam);
