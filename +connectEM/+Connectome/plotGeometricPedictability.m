@@ -10,7 +10,7 @@ availFile = '/tmpscratch/amotta/l4/2018-04-27-surface-availability-connectome-v5
 maxRadius = 50;
 maxAvail = 0.7;
 plotAxonClasses = 1:2;
-plotTargetClasses = { ...
+targetClasses = { ...
     'Somata', ...
     'ProximalDendrite', ...
     'SmoothDendrite', ...
@@ -43,13 +43,12 @@ axonClasses(2).tag = 'Inh';
 axonClasses(3).tag = 'TC';
 axonClasses(4).tag = 'CC';
 
-[classConn, targetClasses] = ...
+[classConn, classIds] = ...
     connectEM.Connectome.buildClassConnectome(conn);
 
 % Fix order of target classes
-[~, classIds] = ismember(plotTargetClasses, targetClasses);
+[~, classIds] = ismember(targetClasses, classIds);
 classConn = classConn(:, classIds);
-targetClasses = targetClasses(classIds);
 
 % Determine relative availabilities of target classes
 [~, classIds] = ismember(targetClasses, avail.targetClasses);
@@ -125,22 +124,21 @@ ax = axes(fig);
 hold(ax, 'on');
 axis(ax, 'square');
 
-for curIdx = 1:numel(targetClasses)
-    curSpecs = classConn(curAxonIds, :);
-    curSpecs = curSpecs ./ sum(curSpecs, 2);
-    
-    curAvail = availabilities(curIdx, :, curAxonIds);
-    curAvail = transpose(shiftdim(curAvail, 1));
-    
-    plot(ax, avail.dists / 1E3, curAvail);
-end
+curAvail = availabilities(:, :, curAxonIds);
+curAvail = permute(curAvail, [2, 3, 1]);
+curAvail = reshape(curAvail, size(curAvail, 1), []);
+curAvail = transpose(curAvail);
+
+plot(ax, avail.dists / 1E3, curAvail);
 
 colors = ax.ColorOrder(1:numel(targetClasses), :);
 colors = num2cell(colors, 2);
 
-[ax.Children(1:2:end).LineStyle] = deal('--');
-[ax.Children(1:2:end).Color] = deal(colors{:});
-[ax.Children(2:2:end).Color] = deal(colors{:});
+lines = flip([ax.Children]);
+[lines.LineWidth] = deal(2);
+[lines(1:2:end).LineStyle] = deal('--');
+[lines(1:2:end).Color] = deal(colors{:});
+[lines(2:2:end).Color] = deal(colors{:});
 
 xlabel(ax, 'r_{pred} (µm)');
 ylabel(ax, 'Availability');
@@ -150,8 +148,7 @@ ax.YLim = [0, maxAvail];
 ax.TickDir = 'out';
 
 leg = legend( ...
-    ax.Children(2:2:end), ...
-    plotTargetClasses, ...
+    lines(2:2:end), targetClasses, ...
     'Location', 'EastOutside');
 leg.Box = 'off';
 
@@ -265,7 +262,7 @@ for curAxonClassIdx = 1:numel(plotAxonClasses)
     axis(curAx, 'square');
     hold(curAx, 'on');
     
-    for curTargetClassIdx = 1:numel(plotTargetClasses)
+    for curTargetClassIdx = 1:numel(targetClasses)
         plot( ...
             curAx, avail.dists / 1E3, ...
             rSq(curTargetClassIdx, :, curAxonClassIdx), ...
@@ -284,9 +281,9 @@ ylabel(fig.Children(end), 'R²');
 
 legend(fig.Children(1), ...
     arrayfun( ...
-        @char, plotTargetClasses, ...
+        @char, targetClasses, ...
         'UniformOutput', false), ...
-	'Location', 'NorthEast', ...
+    'Location', 'NorthEast', ...
     'Box', 'off');
 
 annotation(fig, ...
