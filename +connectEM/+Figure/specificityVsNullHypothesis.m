@@ -59,7 +59,7 @@ ylabel(ax, 'p');
 yticks(ax, [0, 0.5, 1]);
 
 yyaxis(ax, 'right');
-plot(ax, (0:synCount), nullPVals);
+plot(ax, (0:synCount), nullPVals, 'LineWidth', 2);
 ax.YAxis(2).Scale = 'log';
 
 xTicks = union(xticks(ax), [somaSynCount, synCount]);
