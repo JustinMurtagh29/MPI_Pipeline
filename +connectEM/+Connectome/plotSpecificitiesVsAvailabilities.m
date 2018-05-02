@@ -8,6 +8,9 @@ connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites
 availFile = '/tmpscratch/amotta/l4/2018-04-27-surface-availability-connectome-v5/axon-availability_v2.mat';
 
 minSynPre = 10;
+maxAvail = 0.7;
+maxDist = 50;
+
 targetClasses = { ...
     'Somata', ...
     'ProximalDendrite', ...
@@ -79,18 +82,17 @@ for classIdx = 1:numel(targetClasses)
 
         plot(ax, avail.dists / 1E3, curAvails, 'Color', curColor);
     end
-
-    xlabel(ax, {className; 'r_{pred} (µm)'});
-    xlim(ax, [0, avail.dists(end)] / 1E3);
+    
+    xlabel(ax, 'r_{pred} (µm)');
+    title(ax, className, 'FontWeight', 'normal', 'FontSize', 10);
 end
 
 % Y axis
-yMax = max(arrayfun(@(a) a.YLim(end), fig.Children));
-[fig.Children.YLim] = deal([0, yMax]);
+[fig.Children.YLim] = deal([0, maxAvail]);
 ylabel(fig.Children(end), 'Availability');
 
 % X axis (as for panel 4c)
-[fig.Children.XLim] = deal([0, 50]);
+[fig.Children.XLim] = deal([0, maxDist]);
 
 % colorbar
 oldPos = ax.Position;
