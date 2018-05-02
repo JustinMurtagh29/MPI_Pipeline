@@ -2,46 +2,52 @@
 %   Alessandro Motta <alessandro.motta@brain.mpg.de>
 clear;
 
-%% configuration
+%% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites-wholeCells-03-v2-classified_spine-syn-clust.mat');
 availFile = '/tmpscratch/amotta/l4/2018-04-27-surface-availability-connectome-v5/axon-availability_v2.mat';
 
 minSynPre = 10;
+targetClasses = { ...
+    'Somata', ...
+    'ProximalDendrite', ...
+    'SmoothDendrite', ...
+    'ApicalDendrite', ...
+    'AxonInitialSegment'};
+    
 info = Util.runInfo();
 
-%% loading data
+%% Loading data
+param = load(fullfile(rootDir, 'allParameter.mat'));
+param = param.p;
+
+conn = connectEM.Connectome.load(param, connFile);
 avail = load(availFile);
-conn = load(connFile);
 
-%% build class connectome
-% try to replicate cass connectome
-connectome = conn.connectome;
+%% Prepare data
+% Rename whole cells to proximal dendrites
+% TODO(amotta): Use `connectEM.Connectome.prepareForSpecificityAnalysis`
+% once availability calculation was updated accordingly!
+wcMask = conn.denMeta.targetClass == 'WholeCell';
+conn.denMeta.targetClass(wcMask) = 'ProximalDendrite';
 
-% count synapses
-connectome.synCount = cellfun(@numel, connectome.synIdx);
-connectome.synIdx = [];
+wcMask = avail.targetClasses == 'WholeCell';
+avail.targetClasses(wcMask) = 'ProximalDendrite';
 
-% add target class to connectome
-[~, denMetaRow] = ismember(connectome.edges(:, 2), conn.denMeta.id);
-connectome.targetClass = conn.denMeta.targetClass(denMetaRow);
+[specificities, allTargetClasses] = ...
+    connectEM.Connectome.buildClassConnectome(conn);
 
-% renumber classes alphabetically
-conn.denMeta.targetClass = reordercats(conn.denMeta.targetClass);
-targetClasses = unique(conn.denMeta.targetClass);
-
-[~, connectome.targetClassId] = ...
-    ismember(connectome.targetClass, targetClasses);
-
-classConnectome = accumarray( ...
-    cat(2, connectome.edges(:, 1), connectome.targetClassId), ...
-    connectome.synCount, [numel(conn.axons), numel(targetClasses)]);
-specificities = classConnectome ./ sum(classConnectome, 2);
-
-%% build availabilities
-[~, classIds] = ismember(targetClasses, avail.targetClasses);
+[~, classIds] = ismember(allTargetClasses, avail.targetClasses);
 availabilities = avail.axonAvail(classIds, :, :);
+
+% Calculat fraction
 availabilities = availabilities ./ sum(availabilities, 1);
+specificities = specificities ./ sum(specificities, 2);
+
+% Restrict to target classes to plot
+[~, classIds] = ismember(targetClasses, allTargetClasses);
+availabilities = availabilities(classIds, :, :);
+specificities = specificities(:, classIds);
 
 %% plot availability vs. distance
 axonIds = find(conn.axonMeta.synCount >= minSynPre);
@@ -51,8 +57,9 @@ fig = figure();
 fig.Color = 'white';
 
 for classIdx = 1:numel(targetClasses)
-    className = char(targetClasses(classIdx));
+    className = targetClasses{classIdx};
     
+    % Sort axons (most specific axons will be shown in front)
    [~, sortIds] = sort(specificities(axonIds, classIdx), 'ascend');
     axonIds = axonIds(sortIds);
     
