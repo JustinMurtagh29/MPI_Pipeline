@@ -7,8 +7,7 @@ clear;
 
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a_ax_spine_syn_clust.mat');
-synFile = fullfile(rootDir, 'connectomeState', 'SynapseAgglos_v3_ax_spine_clustered_classified.mat');
+connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites-wholeCells-03-v2-classified_spine-syn-clust.mat');
 
 minSynPre = 10;
 
@@ -19,7 +18,11 @@ param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 
 [conn, syn, axonClasses] = ...
-    connectEM.Connectome.load(param, connFile, synFile);
+    connectEM.Connectome.load(param, connFile);
+
+%% Prepare data
+conn = ...
+    connectEM.Connectome.prepareForSpecificityAnalysis(conn);
 [classConn, targetClasses] = ...
     connectEM.Connectome.buildClassConnectome(conn);
 
@@ -28,27 +31,27 @@ synT = connectEM.Connectome.buildSynapseTable(conn, syn);
 synT.ontoTargetClass = conn.denMeta.targetClass(synT.postAggloId);
 
 %% Seed synapses
-seedConfigs = struct;
-seedConfigs(1).synIds = synT.id( ...
-    ~synT.isSpine & synT.ontoTargetClass == 'ApicalDendrite');
-seedConfigs(1).title = 'Axons seeded at shaft synapse onto apical dendrite';
+excSeedConfigs = { ...
+    'ProximalDendrite', 'ApicalDendrite'};
+excSeedConfigs = cellfun(@(t) struct( ...
+    'synIds', synT.id(synT.isSpine & synT.ontoTargetClass == t), ...
+    'title', sprintf('Axons seeded at spine synapse onto %s', t)), ...
+    reshape(excSeedConfigs, [], 1));
 
-seedConfigs(2).synIds = synT.id( ...
-    ~synT.isSpine & synT.ontoTargetClass == 'Somata');
-seedConfigs(2).title = 'Axons seeded at soma synapse';
+inhSeedConfigs = { ...
+    'Somata', 'ProximalDendrite', ...
+    'ApicalDendrite', 'SmoothDendrite'};
+inhSeedConfigs = cellfun(@(t) struct( ...
+    'synIds', synT.id(~synT.isSpine & synT.ontoTargetClass == t), ...
+    'title', sprintf('Axons seeded at shaft synapse onto %s', t)), ...
+    reshape(inhSeedConfigs, [], 1));
 
 %% Axon populations
-plotConfigs = struct;
-plotConfigs(1).axonIds = find( ...
-    conn.axonMeta.synCount >= minSynPre);
-plotConfigs(1).seedConfigs = seedConfigs;
-plotConfigs(1).title = sprintf( ...
-    'All axons with ≥ %d synapses', minSynPre);
+plotConfigs = axonClasses([4, 3, 2]);
+plotConfigs = rmfield(plotConfigs, 'nullAxonIds');
 
-plotConfigs(2).axonIds = axonClasses(2).axonIds;
-plotConfigs(2).seedConfigs = seedConfigs;
-plotConfigs(2).title = sprintf( ...
-    'Inhibitory axons with ≥ %d synapses', minSynPre);
+[plotConfigs(1:2).seedConfigs] = deal(excSeedConfigs);
+[plotConfigs(3).seedConfigs] = deal(inhSeedConfigs);
 
 %% Plot
 for curIdx = 1:numel(plotConfigs)
@@ -117,11 +120,8 @@ function withConfig(synT, classConn, targetClasses, info, config)
         'UniformOutput', false);
     legend(legends, 'Location', 'North', 'Box', 'off');
     
-    titleString = sprintf( ...
-        '%s (n = %d)', config.title, ...
-        numel(config.axonIds));
     title(ax, ....
-       {info.filename; info.git_repos{1}.hash; titleString}, ...
+       {info.filename; info.git_repos{1}.hash; config.title}, ...
         'FontWeight', 'normal', 'FontSize', 10);
 end
 
