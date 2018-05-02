@@ -113,6 +113,55 @@ for curAxonClassId = 1:numel(axonClasses)
     end
 end
 
+%% Scatter plot and linear regression
+% Demonstrate how synapse fraction is predicted from availabilities
+curSynCount = 10;
+curRadius = 10;
+
+curAxonIds = conn.axonMeta.synCount >= curSynCount;
+curRadiusId = find(avail.dists == 1E3 * curRadius);
+
+fig = figure();
+fig.Color = 'white';
+fig.Position(3:4) = [1150, 350];
+
+for curIdx = 1:numel(targetClasses)
+    curSpecs = classConn(curAxonIds, :);
+    curSpecs = curSpecs(:, curIdx) ./ sum(curSpecs, 2);
+    curAvail = availabilities(curIdx, curRadiusId, curAxonIds);
+    
+   [curFit, curGof] = fit(curAvail(:), curSpecs(:), 'poly1');
+   
+    curTitle = { ...
+        char(targetClasses(curIdx)); ...
+        sprintf('r² = %g', curGof.rsquare)};
+    
+    curAx = subplot(1, numel(targetClasses), curIdx);
+    axis(curAx, 'square');
+    hold(curAx, 'on');
+    
+    scatter(curAx, curAvail(:), curSpecs(:), '.');
+    plot(curAx, [0, 1], curFit([0, 1]), 'Color', 'black');
+    
+    curAx.XLim = [0, 1];
+    curAx.YLim = [0, 1];
+    curAx.TickDir = 'out';
+    title(curAx, curTitle, 'FontWeight', 'normal', 'FontSize', 10);
+end
+
+curAx = fig.Children(end);
+xlabel(curAx, 'Availability');
+ylabel(curAx, 'Synapse fraction');
+
+curTitle = sprintf( ...
+	'All axons with ≥ %d synapses. r_{pred} = %d µm', ...
+    curSynCount, curRadius);
+
+annotation(fig, ...
+    'textbox', [0, 0.9, 1, 0.1], ...
+    'EdgeColor', 'none', 'HorizontalAlignment', 'center', ...
+    'String', {info.filename; info.git_repos{1}.hash; curTitle});
+
 %% Plot R² per axon and dendrite class
 % Model: Linear combination of all availabilities
 
