@@ -8,6 +8,7 @@ connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites
 availFile = '/tmpscratch/amotta/l4/2018-04-27-surface-availability-connectome-v5/axon-availability_v2.mat';
 
 maxRadius = 50;
+maxAvail = 0.7;
 plotAxonClasses = 1:2;
 plotTargetClasses = { ...
     'Somata', ...
@@ -112,6 +113,54 @@ for curAxonClassId = 1:numel(axonClasses)
             curAxonClassId, curTargetClassId) = curBinoVar;
     end
 end
+
+%% Show availabilities for two axons
+% AD- and soma-specific axon, respectively
+curAxonIds = [23314, 628];
+
+fig = figure();
+fig.Color = 'white';
+
+ax = axes(fig);
+hold(ax, 'on');
+axis(ax, 'square');
+
+for curIdx = 1:numel(targetClasses)
+    curSpecs = classConn(curAxonIds, :);
+    curSpecs = curSpecs ./ sum(curSpecs, 2);
+    
+    curAvail = availabilities(curIdx, :, curAxonIds);
+    curAvail = transpose(shiftdim(curAvail, 1));
+    
+    plot(ax, avail.dists / 1E3, curAvail);
+end
+
+colors = ax.ColorOrder(1:numel(targetClasses), :);
+colors = num2cell(colors, 2);
+
+[ax.Children(1:2:end).LineStyle] = deal('--');
+[ax.Children(1:2:end).Color] = deal(colors{:});
+[ax.Children(2:2:end).Color] = deal(colors{:});
+
+xlabel(ax, 'r_{pred} (µm)');
+ylabel(ax, 'Availability');
+
+ax.XLim = [0, maxRadius];
+ax.YLim = [0, maxAvail];
+ax.TickDir = 'out';
+
+leg = legend( ...
+    ax.Children(2:2:end), ...
+    plotTargetClasses, ...
+    'Location', 'EastOutside');
+leg.Box = 'off';
+
+annotation(fig, ...
+    'textbox', [0, 0.9, 1, 0.1], ...
+    'EdgeColor', 'none', 'HorizontalAlignment', 'center', ...
+    'String', { ...
+        info.filename; info.git_repos{1}.hash; ...
+        'AD- (dashed) vs. soma-specific (solid) axon'});
 
 %% Scatter plot and linear regression
 % Demonstrate how synapse fraction is predicted from availabilities
