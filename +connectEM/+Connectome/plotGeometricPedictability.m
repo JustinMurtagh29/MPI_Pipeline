@@ -8,40 +8,52 @@ connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites
 availFile = '/tmpscratch/amotta/l4/2018-04-27-surface-availability-connectome-v5/axon-availability_v2.mat';
 
 maxRadius = 50;
+plotAxonClasses = 1:2;
+plotTargetClasses = { ...
+    'Somata', ...
+    'ProximalDendrite', ...
+    'SmoothDendrite', ...
+    'ApicalDendrite', ...
+    'AxonInitialSegment', ...
+    'OtherDendrite'};
+
 info = Util.runInfo();
 
 %% Loading data
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 
-[conn, ~, axonClasses] = ...
-    connectEM.Connectome.load(param, connFile);
+[conn, ~, axonClasses] = connectEM.Connectome.load(param, connFile);
 avail = load(availFile);
 
-% add axon class tags
+%% Prepare data
+% Rename whole cells to proximal dendrites
+% TODO(amotta): Use `connectEM.Connectome.prepareForSpecificityAnalysis`
+% once availability calculation was updated accordingly!
+wcMask = conn.denMeta.targetClass == 'WholeCell';
+conn.denMeta.targetClass(wcMask) = 'ProximalDendrite';
+
+wcMask = avail.targetClasses == 'WholeCell';
+avail.targetClasses(wcMask) = 'ProximalDendrite';
+
+% Add axon class tags
 axonClasses(1).tag = 'Exc';
 axonClasses(2).tag = 'Inh';
 axonClasses(3).tag = 'TC';
 axonClasses(4).tag = 'CC';
 
-%% Prepare data
 [classConn, targetClasses] = ...
     connectEM.Connectome.buildClassConnectome(conn);
+
+% Fix order of target classes
+[~, classIds] = ismember(plotTargetClasses, targetClasses);
+classConn = classConn(:, classIds);
+targetClasses = targetClasses(classIds);
 
 % Determine relative availabilities of target classes
 [~, classIds] = ismember(targetClasses, avail.targetClasses);
 availabilities = avail.axonAvail(classIds, :, :);
 availabilities = availabilities ./ sum(availabilities, 1);
-
-% Count synapses per axon
-% NOTE(amotta): Depending on the crazy stuff we're doing (e.g., excluding
-% 'OtherDendrites') this value might be different from what's stored in
-% conn.axonMeta.synCount.
-synCounts = sum(classConn, 2);
-
-% More configuration
-plotAxonClasses = 1:2;
-plotTargetClasses = targetClasses;
 
 %% Calculate R² per axon-dendrite pair
 % Approach: Let's use an axons observed specificities for a multinomial
