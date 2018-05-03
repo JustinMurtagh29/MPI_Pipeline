@@ -26,10 +26,20 @@ function pairConfigs = buildPairConfigs(synT, plotConfig)
         uniSynT.postAggloId, uniSynT.id, [], @(ids) { ...
         reshape(ids(1:(2 * floor(numel(ids) / 2))), [], 2)}));
     
+    % Different-axon different-dendrite
+    rng(0);
+    diffDiffIds = randperm(2 * floor(height(synT) / 2));
+    diffDiffIds = reshape(diffDiffIds, [], 2);
+    
+    diffDiffIds = diffDiffIds( ...
+        diff(synT.preAggloId(diffDiffIds), 1, 2) ...
+      & diff(synT.postAggloId(diffDiffIds), 1, 2), :);
+    diffDiffIds = synT.id(diffDiffIds);
+    
     % Random pairs
     rng(0);
-    randIds = randperm(2 * floor(size(synT, 1) / 2));
-    randIds = reshape(synT.id(randIds), [], 2);
+    randPairIds = randperm(2 * floor(height(synT) / 2));
+    randPairIds = synT.id(reshape(randPairIds, [], 2));
     
     % Build output
     pairConfigs = struct;
@@ -42,8 +52,11 @@ function pairConfigs = buildPairConfigs(synT, plotConfig)
     pairConfigs(3).synIdPairs = diffSameIds;
     pairConfigs(3).title = 'Different-axon same-dendrite';
     
-    pairConfigs(4).synIdPairs = randIds;
-    pairConfigs(4).title = 'Random pairs';
+    pairConfigs(4).synIdPairs = diffDiffIds;
+    pairConfigs(4).title = 'Different-axon different-dendrite';
+    
+    pairConfigs(5).synIdPairs = randPairIds;
+    pairConfigs(5).title = 'Random pairs';
     
     titles = arrayfun(@(c) sprintf( ...
         '%s (n = %d)', c.title, size(c.synIdPairs, 1)), ...
