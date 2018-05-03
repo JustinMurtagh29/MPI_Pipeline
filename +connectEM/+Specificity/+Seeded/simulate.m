@@ -63,11 +63,12 @@ plotConfigs = rmfield(plotConfigs, 'nullAxonIds');
 %% Plot
 for curIdx = 1:numel(plotConfigs)
     curConfig = plotConfigs(curIdx);
-    withConfig(synT, classConn, targetClasses, info, curConfig);
+    withConfig(synT, classConn, targetClasses, info, false, curConfig);
+    withConfig(synT, classConn, targetClasses, info, true, curConfig);
 end
 
 %% Functions
-function withConfig(synT, classConn, targetClasses, info, config)
+function withConfig(synT, classConn, targetClasses, info, weighted, config)
     fig = figure;
     fig.Color = 'white';
     fig.Position(3:4) = [600, 610];
@@ -94,10 +95,16 @@ function withConfig(synT, classConn, targetClasses, info, config)
         % Calculate and plot fractional synapses
         obsConn = obsConn ./ sum(obsConn, 2);
         
-        % Calculate (weighted) mean and standard deviation. Axons are
-        % weighted by the probability of being reconstructed in sparse
-        % synapse-seeded reconstructions.
-        curWeights = obsWeights ./ sum(obsWeights);
+        if weighted
+            % Calculate weighted mean and standard deviation. Axons are
+            % weighted by the probability of being reconstructed in sparse
+            % synapse-seeded reconstructions.
+            curWeights = obsWeights ./ sum(obsWeights);
+        else
+            % Calculate unweighted mean and standard deviation.
+            curWeights = ones(size(obsWeights)) / numel(obsWeights);
+        end
+        
         curMu = sum(curWeights .* obsConn, 1);
         curSigma = std(obsConn, curWeights, 1);
 
@@ -128,8 +135,12 @@ function withConfig(synT, classConn, targetClasses, info, config)
         'UniformOutput', false);
     legend(legends, 'Location', 'North', 'Box', 'off');
     
+    weightStr = {'unweighted', 'weighted'};
+    weightStr = weightStr{1 + weighted};
+    
     title(ax, ....
-       {info.filename; info.git_repos{1}.hash; config.title}, ...
+       {info.filename; info.git_repos{1}.hash; ...
+        sprintf('%s (%s)', config.title, weightStr)}, ...
         'FontWeight', 'normal', 'FontSize', 10);
 end
 
