@@ -12,53 +12,35 @@ info = Util.runInfo();
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 
-[conn, syn] = connectEM.Connectome.load(param, connFile);
+[conn, syn, connAxonClasses] = ...
+    connectEM.Connectome.load(param, connFile);
 
 %% Prepare data
 synT = connectEM.Connectome.buildSynapseTable(conn, syn);
+allAxonIds = find(conn.axonMeta.synCount);
 
 axonClasses = struct;
-% Let's only look at spine synapses for now
-axonClasses(1).axonIds = find(conn.axonMeta.synCount);
-axonClasses(1).synIds = find(synT.isSpine);
-axonClasses(1).title = 'Spine synapses';
-axonClasses(1).tag = 'Sp';
+axonClasses(1).synIds = find( ...
+    synT.isSpine & ismember( ...
+    synT.preAggloId, allAxonIds));
+axonClasses(1).title = 'spine synapses';
+axonClasses(1).tag = 'sp';
+
+axonClasses(2).synIds = find( ...
+    synT.isSpine & ismember( ...
+    synT.preAggloId, connAxonClasses(3).axonIds));
+axonClasses(2).title = 'thalamocortical spine synapses';
+axonClasses(2).tag = 'tc sp';
+
+axonClasses(3).synIds = find( ...
+    synT.isSpine & ismember( ...
+    synT.preAggloId, connAxonClasses(4).axonIds));
+axonClasses(3).title = 'corticocortical spine synapses';
+axonClasses(3).tag = 'cc sp';
 
 %% Plot distribution of synapse size
-binEdges = linspace(0, 1.2, 61);
-
-fig = figure();
-fig.Color = 'white';
-fig.Position(3:4) = [820, 475];
-
-ax = axes(fig);
-hold(ax, 'on');
-ax.TickDir = 'out';
-
-for curClassIdx = 1:numel(axonClasses)
-    curAxonIds = axonClasses(curClassIdx).axonIds;
-    curSynIds = axonClasses(curClassIdx).synIds;
-    
-    histogram( ...
-        ax, synT.area(curSynIds), ...
-        'BinEdges', binEdges, ...
-        'Normalization', 'probability', ...
-        'DisplayStyle', 'stairs', ...
-        'LineWidth', 2, ...
-        'FaceAlpha', 1);
-end
-
-xlim(ax, binEdges([1, end]));
-xlabel(ax, 'Synapse area (µm²)');
-ylabel(ax, 'Probability');
-
-legend( ...
-    ax, {axonClasses.title}, ...
-    'Location', 'NorthEast', ...
-    'Box', 'off');
-title( ...
-   {info.filename, info.git_repos{1}.hash}, ...
-    'FontWeight', 'norma', 'FontSize', 10);
+connectEM.Consistency.plotSynapseSizeHistogram(info, synT, axonClasses(1));
+connectEM.Consistency.plotSynapseSizeHistogram(info, synT, axonClasses(2:3));
 
 %% Plot histogram over no. of synapse per neurite pair
 fig = figure();
