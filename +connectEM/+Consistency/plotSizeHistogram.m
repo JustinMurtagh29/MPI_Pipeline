@@ -1,4 +1,4 @@
-function fig = plotSynapseSizeHistogram(info, synT, axonClasses, varargin)
+function fig = plotSizeHistogram(info, synT, axonClasses, varargin)
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     opt = struct;
@@ -26,7 +26,7 @@ function fig = plotSynapseSizeHistogram(info, synT, axonClasses, varargin)
             'FaceAlpha', 1);
     end
 
-    xlim(ax, binEdges([1, end]));
+    xlim(ax, opt.binEdges([1, end]));
     xlabel(ax, 'Synapse area (µm²)');
     ylabel(ax, 'Probability');
 

@@ -39,8 +39,8 @@ axonClasses(3).title = 'corticocortical spine synapses';
 axonClasses(3).tag = 'cc sp';
 
 %% Plot distribution of synapse size
-connectEM.Consistency.plotSynapseSizeHistogram(info, synT, axonClasses(1));
-connectEM.Consistency.plotSynapseSizeHistogram(info, synT, axonClasses(2:3));
+connectEM.Consistency.plotSizeHistogram(info, synT, axonClasses(1));
+connectEM.Consistency.plotSizeHistogram(info, synT, axonClasses(2:3));
 
 %% Plot histogram over no. of synapse per neurite pair
 connectEM.Consistency.plotCouplingHistogram( ...
