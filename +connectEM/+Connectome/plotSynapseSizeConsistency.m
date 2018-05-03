@@ -23,7 +23,7 @@ axonClasses = struct;
 axonClasses(1).synIds = find( ...
     synT.isSpine & ismember( ...
     synT.preAggloId, allAxonIds));
-axonClasses(1).title = 'spine synapses';
+axonClasses(1).title = 'all spine synapses';
 axonClasses(1).tag = 'sp';
 
 axonClasses(2).synIds = find( ...
@@ -43,48 +43,10 @@ connectEM.Consistency.plotSynapseSizeHistogram(info, synT, axonClasses(1));
 connectEM.Consistency.plotSynapseSizeHistogram(info, synT, axonClasses(2:3));
 
 %% Plot histogram over no. of synapse per neurite pair
-fig = figure();
-fig.Color = 'white';
-fig.Position(3:4) = [495, 400];
-
-ax = axes(fig);
-axis(ax, 'square');
-hold(ax, 'on');
-
-ax.YScale = 'log';
-ax.TickDir = 'out';
-
-for curClassIdx = 1:numel(axonClasses)
-    curAxonIds = axonClasses(curClassIdx).axonIds;
-    curSynIds = axonClasses(curClassIdx).synIds;
-    
-   [~, ~, curCoupling] = unique(synT( ...
-        curSynIds, {'preAggloId', 'postAggloId'}), 'rows');
-    curCoupling = accumarray(curCoupling, 1);
-
-    histogram( ...
-        ax, curCoupling, ...
-        'DisplayStyle', 'stairs', ...
-        'LineWidth', 2, ...
-        'FaceAlpha', 1);
-end
-
-ylabel(ax, 'Probability');
-yticklabels(ax, arrayfun(@num2str, ...
-    yticks(ax), 'UniformOutput', false));
-
-xMax = max(arrayfun( ...
-@(h) h.BinEdges(end), ax.Children));
-xlim(ax, [0.5, xMax]);
-xticks(ax, 1:(xMax - 0.5));
-xlabel(ax, 'Synapses per connection');
-
-legend( ...
-    ax, {axonClasses.title}, ...
-    'Location', 'NorthEast', 'Box', 'off');
-title( ...
-    ax, {info.filename; info.git_repos{1}.hash}, ...
-    'FontWeight', 'normal', 'FontSize', 10);
+connectEM.Consistency.plotCouplingHistogram( ...
+    info, synT, axonClasses(1), 'normalization', 'count');
+connectEM.Consistency.plotCouplingHistogram( ...
+    info, synT, axonClasses(2:3), 'normalization', 'probability');
 
 %% Synapse areas vs. degree of coupling histograms
 binEdges = linspace(0, 1.2, 61);
