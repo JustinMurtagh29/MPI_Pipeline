@@ -75,6 +75,23 @@ for curPlotConfig = plotConfigs
         info, synT, curPlotConfig, curPairConfigs);
 end
 
+%% Variability of largest two synapses
+curPlotCouplings = 2:5;
+
+for curPlotConfig = plotConfigs
+    curPlotConfig.rawTitle = curPlotConfig.title;
+    
+    for curCoupling = curPlotCouplings
+        curPairConfigs = ...
+            connectEM.Consistency.buildLargestPairConfigs( ...
+            synT, curPlotConfig, curCoupling);
+        curPlotConfig.title = sprintf( ...
+            '%d-fold %s', curCoupling, curPlotConfig.rawTitle);
+        connectEM.Consistency.plotVariabilityHistogram( ...
+            info, synT, curPlotConfig, curPairConfigs);
+    end
+end
+
 %% ASI sizes (in log scale)
 plotCouplings = 2:5;
 fig = figure();
