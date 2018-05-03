@@ -19,42 +19,41 @@ param = param.p;
 synT = connectEM.Connectome.buildSynapseTable(conn, syn);
 allAxonIds = find(conn.axonMeta.synCount);
 
-axonClasses = struct;
-axonClasses(1).synIds = find( ...
+s = struct;
+plotConfigs(1).synIds = find( ...
     synT.isSpine & ismember( ...
     synT.preAggloId, allAxonIds));
-axonClasses(1).title = 'all spine synapses';
-axonClasses(1).tag = 'sp';
+plotConfigs(1).title = 'all spine synapses';
+plotConfigs(1).tag = 'sp';
 
-axonClasses(2).synIds = find( ...
+plotConfigs(2).synIds = find( ...
     synT.isSpine & ismember( ...
     synT.preAggloId, connAxonClasses(3).axonIds));
-axonClasses(2).title = 'thalamocortical spine synapses';
-axonClasses(2).tag = 'tc sp';
+plotConfigs(2).title = 'thalamocortical spine synapses';
+plotConfigs(2).tag = 'tc sp';
 
-axonClasses(3).synIds = find( ...
+plotConfigs(3).synIds = find( ...
     synT.isSpine & ismember( ...
     synT.preAggloId, connAxonClasses(4).axonIds));
-axonClasses(3).title = 'corticocortical spine synapses';
-axonClasses(3).tag = 'cc sp';
+plotConfigs(3).title = 'corticocortical spine synapses';
+plotConfigs(3).tag = 'cc sp';
 
 %% Plot distribution of synapse size
-connectEM.Consistency.plotSizeHistogram(info, synT, axonClasses(1));
-connectEM.Consistency.plotSizeHistogram(info, synT, axonClasses(2:3));
+connectEM.Consistency.plotSizeHistogram(info, synT, plotConfigs(1));
+connectEM.Consistency.plotSizeHistogram(info, synT, plotConfigs(2:3));
 
-%% Plot histogram over no. of synapse per neurite pair
+%% Plot histogram of degree of coupling
 connectEM.Consistency.plotCouplingHistogram( ...
-    info, synT, axonClasses(1), 'normalization', 'count');
+    info, synT, plotConfigs(1), 'normalization', 'count');
 connectEM.Consistency.plotCouplingHistogram( ...
-    info, synT, axonClasses(2:3), 'normalization', 'probability');
+    info, synT, plotConfigs(2:3), 'normalization', 'probability');
 
 %% Synapse areas vs. degree of coupling histograms
 binEdges = linspace(0, 1.2, 61);
 plotCouplings = 1:5;
 
-for curAxonClass = axonClasses
-    curAxonIds = curAxonClass.axonIds;
-    curSynIds = curAxonClass.synIds;
+for curPlotConfig = plotConfigs
+    curSynIds = curPlotConfig.synIds;
     
    [~, ~, curCouplings] = unique(synT( ...
         curSynIds, {'preAggloId', 'postAggloId'}), 'rows');
@@ -89,7 +88,7 @@ for curAxonClass = axonClasses
     end
     
     curLeg = arrayfun(@num2str, plotCouplings, 'UniformOutput', false);
-    curLeg = strcat(curLeg, {' '}, curAxonClass.title);
+    curLeg = strcat(curLeg, {' '}, curPlotConfig.title);
     legend(curAx, curLeg, 'Box', 'off');
     
     curAx.XLim = binEdges([1, end]);
@@ -105,9 +104,9 @@ end
 asiAreas = zeros(0, 1);
 asiGroups = zeros(0, 1);
 
-for curClassIdx = 1:numel(axonClasses)
-    curAxonIds = axonClasses(curClassIdx).axonIds;
-    curSynIds = axonClasses(curClassIdx).synIds;
+for curClassIdx = 1:numel(plotConfigs)
+    curAxonIds = plotConfigs(curClassIdx).axonIds;
+    curSynIds = plotConfigs(curClassIdx).synIds;
     
    [~, ~, curAsiGroups] = unique(synT( ...
         curSynIds, {'preAggloId', 'postAggloId'}), 'rows');
@@ -121,17 +120,17 @@ for curClassIdx = 1:numel(axonClasses)
     
     % translate group id
     curAsiGroups = (curAsiGroups - 1) ...
-        * numel(axonClasses) + curClassIdx;
+        * numel(plotConfigs) + curClassIdx;
     
     asiAreas = [asiAreas; curAsiAreas]; %#ok
     asiGroups = [asiGroups; curAsiGroups]; %#ok
 end
 
 groupLabels = arrayfun(@(i) sprintf( ...
-    '%d (%s)', ceil(i / numel(axonClasses)), ...
-    axonClasses(1 + mod(i - 1, numel(axonClasses))).tag), ...
+    '%d (%s)', ceil(i / numel(plotConfigs)), ...
+    plotConfigs(1 + mod(i - 1, numel(plotConfigs))).tag), ...
     unique(asiGroups), 'UniformOutput', false);
-groupIds = mod(asiGroups - 1, numel(axonClasses));
+groupIds = mod(asiGroups - 1, numel(plotConfigs));
 
 % plot
 fig = figure();
@@ -159,9 +158,9 @@ ax.TickDir = 'out';
 cvVals = zeros(0, 1);
 cvGroups = zeros(0, 1);
 
-for curClassIdx = 1:numel(axonClasses)
-    curAxonIds = axonClasses(curClassIdx).axonIds;
-    curSynIds = axonClasses(curClassIdx).synIds;
+for curClassIdx = 1:numel(plotConfigs)
+    curAxonIds = plotConfigs(curClassIdx).axonIds;
+    curSynIds = plotConfigs(curClassIdx).synIds;
     
    [~, ~, curCvGroups] = unique(synT( ...
         curSynIds, {'preAggloId', 'postAggloId'}), 'rows');
@@ -176,17 +175,17 @@ for curClassIdx = 1:numel(axonClasses)
     
     % translate group id
     curCvGroups = (curCvGroups - 2) ...
-        * numel(axonClasses) + curClassIdx;
+        * numel(plotConfigs) + curClassIdx;
     
     cvVals = [cvVals; curCvVals]; %#ok
     cvGroups = [cvGroups; curCvGroups]; %#ok
 end
 
 groupLabels = arrayfun(@(i) sprintf( ...
-    '%d (%s)', 1 + ceil(i / numel(axonClasses)), ...
-    axonClasses(1 + mod(i - 1, numel(axonClasses))).tag), ...
+    '%d (%s)', 1 + ceil(i / numel(plotConfigs)), ...
+    plotConfigs(1 + mod(i - 1, numel(plotConfigs))).tag), ...
     unique(cvGroups), 'UniformOutput', false);
-groupIds = mod(cvGroups - 1, numel(axonClasses));
+groupIds = mod(cvGroups - 1, numel(plotConfigs));
 
 % plot
 fig = figure();
@@ -219,9 +218,9 @@ for curCoupling = controlCouplings
     curFig.Color = 'white';
     curFig.Position(3:4) = [520, 530];
     
-    for curClassIdx = 1:numel(axonClasses)
-        curAxonIds = axonClasses(curClassIdx).axonIds;
-        curSynIds = axonClasses(curClassIdx).synIds;
+    for curClassIdx = 1:numel(plotConfigs)
+        curAxonIds = plotConfigs(curClassIdx).axonIds;
+        curSynIds = plotConfigs(curClassIdx).synIds;
         
         % actual CVs
        [~, ~, curSynCoupling] = unique(synT( ...
@@ -248,7 +247,7 @@ for curCoupling = controlCouplings
         curCtrlVals = sort(curCtrlVals, 2, 'descend');
         curCtrlVals = cvOf(curCtrlVals(:, 1:2));
         
-        curAx = subplot(numel(axonClasses), 1, curClassIdx);
+        curAx = subplot(numel(plotConfigs), 1, curClassIdx);
         axis(curAx, 'square');
         hold(curAx, 'on');
         
@@ -266,7 +265,7 @@ for curCoupling = controlCouplings
             'FaceAlpha', 1);
         
         title( ...
-            curAx, axonClasses(curClassIdx).title, ...
+            curAx, plotConfigs(curClassIdx).title, ...
             'FontWeight', 'normal', 'FontSize', 10);
         curAx.TickDir = 'out';
     end
@@ -296,9 +295,9 @@ for curCouplingIdx = 1:numel(plotCouplings)
     synAreas = zeros(0, 1);
     synGroups = zeros(0, 1);
 
-    for curClassIdx = 1:numel(axonClasses)
-        curAxonIds = axonClasses(curClassIdx).axonIds;
-        curSynIds = axonClasses(curClassIdx).synIds;
+    for curClassIdx = 1:numel(plotConfigs)
+        curAxonIds = plotConfigs(curClassIdx).axonIds;
+        curSynIds = plotConfigs(curClassIdx).synIds;
         
         curSynGroups = synT(curSynIds, {'preAggloId', 'postAggloId'});
        [~, ~, curSynGroups] = unique(curSynGroups, 'rows');
@@ -313,7 +312,7 @@ for curCouplingIdx = 1:numel(plotCouplings)
         curSynGroups = transpose(repmat( ...
             1:curCoupling, 1, numel(curSynAreas)));
         curSynGroups = (curSynGroups - 1) ...
-            * numel(axonClasses) + curClassIdx;
+            * numel(plotConfigs) + curClassIdx;
         curSynAreas = cell2mat(curSynAreas);
         
         synAreas = [synAreas; curSynAreas(:)]; %#ok
@@ -322,10 +321,10 @@ for curCouplingIdx = 1:numel(plotCouplings)
     
     curGroupLabels = arrayfun(@(i) sprintf( ...
         '(%d) (%s)', ...
-        ceil(i / numel(axonClasses)), ...
-        axonClasses(1 + mod(i - 1, numel(axonClasses))).tag), ...
+        ceil(i / numel(plotConfigs)), ...
+        plotConfigs(1 + mod(i - 1, numel(plotConfigs))).tag), ...
         unique(synGroups), 'UniformOutput', false);
-    curGroupIds = mod(synGroups - 1, numel(axonClasses));
+    curGroupIds = mod(synGroups - 1, numel(plotConfigs));
     
     figure(fig);
     curAx = subplot(numel(plotCouplings), 1, curCouplingIdx);
@@ -378,9 +377,9 @@ for curCouplingIdx = 1:numel(plotCouplings)
     cvVals = zeros(0, 1);
     cvGroups = zeros(0, 1);
 
-    for curClassIdx = 1:numel(axonClasses)
-        curAxonIds = axonClasses(curClassIdx).axonIds;
-        curSynIds = axonClasses(curClassIdx).synIds;
+    for curClassIdx = 1:numel(plotConfigs)
+        curAxonIds = plotConfigs(curClassIdx).axonIds;
+        curSynIds = plotConfigs(curClassIdx).synIds;
 
        [~, ~, curCvGroups] = unique(synT( ...
             curSynIds, {'preAggloId', 'postAggloId'}), 'rows');
@@ -399,7 +398,7 @@ for curCouplingIdx = 1:numel(plotCouplings)
         curCvGroups = repelem( ...
             1:size(curPairs, 1), size(curCvVals, 1));
         curCvGroups = (curCvGroups - 1) ...
-            * numel(axonClasses) + curClassIdx;
+            * numel(plotConfigs) + curClassIdx;
         
         cvVals = [cvVals; curCvVals(:)]; %#ok
         cvGroups = [cvGroups; curCvGroups(:)]; %#ok
@@ -407,10 +406,10 @@ for curCouplingIdx = 1:numel(plotCouplings)
     
     curGroupLabels = arrayfun(@(i) sprintf( ...
         '(%d, %d) (%s)', ...
-        curPairs(ceil(i / numel(axonClasses)), :), ...
-        axonClasses(1 + mod(i - 1, numel(axonClasses))).tag), ...
+        curPairs(ceil(i / numel(plotConfigs)), :), ...
+        plotConfigs(1 + mod(i - 1, numel(plotConfigs))).tag), ...
         unique(cvGroups), 'UniformOutput', false);
-    curGroupIds = mod(cvGroups - 1, numel(axonClasses));
+    curGroupIds = mod(cvGroups - 1, numel(plotConfigs));
     
     figure(fig);
     curAx = subplot(numel(plotCouplings), 1, curCouplingIdx);

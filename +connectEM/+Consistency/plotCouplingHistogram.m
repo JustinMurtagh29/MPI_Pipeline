@@ -1,4 +1,4 @@
-function fig = plotCouplingHistogram(info, synT, axonClasses, varargin)
+function fig = plotCouplingHistogram(info, synT, plotConfigs, varargin)
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     opt = struct;
@@ -16,9 +16,8 @@ function fig = plotCouplingHistogram(info, synT, axonClasses, varargin)
     ax.YScale = 'log';
     ax.TickDir = 'out';
 
-    for curClassIdx = 1:numel(axonClasses)
-        curSynT = axonClasses(curClassIdx).synIds;
-        curSynT = synT(curSynT, :);
+    for curPlotConfig = reshape(plotConfigs, 1, [])
+        curSynT = synT(curPlotConfig.synIds, :);
         
        [~, ~, curCoupling] = unique(curSynT( ...
             :, {'preAggloId', 'postAggloId'}), 'rows');
@@ -31,9 +30,10 @@ function fig = plotCouplingHistogram(info, synT, axonClasses, varargin)
             'LineWidth', 2, ...
             'FaceAlpha', 1);
     end
-
-    xMax = max(arrayfun( ...
-        @(h) h.BinEdges(end), ax.Children));
+    
+    xMax = cat(1, ax.Children.BinEdges);
+    xMax = max(xMax(:));
+    
     xlim(ax, [0.5, xMax]);
     xticks(ax, 1:(xMax - 0.5));
     xlabel(ax, 'Synapses per connection');
@@ -46,11 +46,10 @@ function fig = plotCouplingHistogram(info, synT, axonClasses, varargin)
     end
     
     yticklabels(ax, arrayfun( ...
-        @num2str, yticks(ax), ...
-        'UniformOutput', false));
+        @num2str, yticks(ax), 'UniformOutput', false));
     
     legend( ...
-        ax, {axonClasses.title}, ...
+        ax, {plotConfigs.title}, ...
         'Location', 'NorthEast', 'Box', 'off');
     title( ...
         ax, {info.filename; info.git_repos{1}.hash}, ...

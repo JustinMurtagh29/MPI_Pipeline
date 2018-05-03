@@ -1,4 +1,4 @@
-function fig = plotSizeHistogram(info, synT, axonClasses, varargin)
+function fig = plotSizeHistogram(info, synT, plotConfigs, varargin)
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     opt = struct;
@@ -13,9 +13,8 @@ function fig = plotSizeHistogram(info, synT, axonClasses, varargin)
     hold(ax, 'on');
     ax.TickDir = 'out';
 
-    for curClassIdx = 1:numel(axonClasses)
-        curSynAreas = axonClasses(curClassIdx).synIds;
-        curSynAreas = synT.area(curSynAreas);
+    for curPlotConfig = reshape(plotConfigs, 1, [])
+        curSynAreas = synT.area(curPlotConfig.synIds);
 
         histogram( ...
             ax, curSynAreas, ...
@@ -31,7 +30,7 @@ function fig = plotSizeHistogram(info, synT, axonClasses, varargin)
     ylabel(ax, 'Probability');
 
     legend( ...
-        ax, {axonClasses.title}, ...
+        ax, {plotConfigs.title}, ...
         'Location', 'NorthEast', ...
         'Box', 'off');
     title( ...
