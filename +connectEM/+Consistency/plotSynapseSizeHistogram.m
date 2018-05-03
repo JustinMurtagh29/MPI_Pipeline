@@ -36,5 +36,5 @@ function fig = plotSynapseSizeHistogram(info, synT, axonClasses, varargin)
         'Box', 'off');
     title( ...
        {info.filename, info.git_repos{1}.hash}, ...
-        'FontWeight', 'norma', 'FontSize', 10);
+        'FontWeight', 'normal', 'FontSize', 10);
 end
