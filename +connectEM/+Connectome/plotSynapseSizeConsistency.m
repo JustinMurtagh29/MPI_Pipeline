@@ -53,8 +53,8 @@ curPlotCouplings = 1:5;
 curPlotConfig = plotConfigs(1);
 
 curSynT = synT(curPlotConfig.synIds, :);
-[~, ~, curSynT.pairId] = unique( ...
-    curSynT(:, {'preAggloId', 'postAggloId'}), 'rows');
+[~, ~, curSynT.pairId] = unique(curSynT(:, ...
+    {'preAggloId', 'postAggloId'}), 'rows');
 
 curCouplings = accumarray(curSynT.pairId, 1);
 curSynT.coupling = curCouplings(curSynT.pairId);
@@ -66,6 +66,51 @@ curPlotConfigs = arrayfun( ...
 	curPlotCouplings);
 
 connectEM.Consistency.plotSizeHistogram(info, synT, curPlotConfigs);
+
+%% Synapse area variability
+curPlotConfig = plotConfigs(1);
+
+curSynT = synT;
+curSynT.id = reshape(1:size(curSynT, 1), [], 1);
+curSynT = curSynT(curPlotConfig.synIds, :);
+
+[~, curUniSynT, curSynT.pairId] = unique( ...
+    curSynT(:, {'preAggloId', 'postAggloId'}), 'rows');
+curUniSynT = curSynT(curUniSynT, :);
+
+% Same-axon same-dendrite
+curSaSdIds = curSynT;
+curSaSdIds.coupling = curCouplings(curSaSdIds.pairId);
+curSaSdIds(curSaSdIds.coupling ~= 2, :) = [];
+curSaSdIds = reshape(curSaSdIds.id, 2, [])';
+
+% Same-axon different-dendrite
+curSaDdIds = cell2mat(accumarray( ...
+    curUniSynT.preAggloId, curUniSynT.id, [], @(ids) { ...
+    reshape(ids(1:(2 * floor(numel(ids) / 2))), [], 2)}));
+
+% Different-axon same-dendrite
+curDaSdIds = cell2mat(accumarray( ...
+    curUniSynT.postAggloId, curUniSynT.id, [], @(ids) { ...
+    reshape(ids(1:(2 * floor(numel(ids) / 2))), [], 2)}));
+
+% Random pairs
+rng(0);
+curRandIds = randperm(2 * floor(size(curSynT, 1) / 2));
+curRandIds = reshape(curSynT.id(curRandIds), [], 2);
+
+curPlotConfigs = struct;
+curPlotConfigs(1).synPairIds = curSaSdIds;
+curPlotConfigs(1).title = 'Same-axon same-dendrite';
+
+curPlotConfigs(2).synPairIds = curSaDdIds;
+curPlotConfigs(2).title = 'Same-axon different-dendrite';
+
+curPlotConfigs(3).synPairIds = curDaSdIds;
+curPlotConfigs(3).title = 'Same-axon different-dendrite';
+
+curPlotConfigs(4).synPairIds = curRandIds;
+curPlotConfigs(4).title = 'Random pairs';
 
 %% Synapse area variability
 cvVals = zeros(0, 1);
