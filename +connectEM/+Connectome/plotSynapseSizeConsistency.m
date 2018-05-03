@@ -12,14 +12,14 @@ info = Util.runInfo();
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 
-[conn, syn, connAxonClasses] = ...
+[conn, syn, axonClasses] = ...
     connectEM.Connectome.load(param, connFile);
 
 %% Prepare data
 synT = connectEM.Connectome.buildSynapseTable(conn, syn);
 allAxonIds = find(conn.axonMeta.synCount);
 
-s = struct;
+plotConfigs = struct;
 plotConfigs(1).synIds = find( ...
     synT.isSpine & ismember( ...
     synT.preAggloId, allAxonIds));
@@ -28,13 +28,13 @@ plotConfigs(1).tag = 'sp';
 
 plotConfigs(2).synIds = find( ...
     synT.isSpine & ismember( ...
-    synT.preAggloId, connAxonClasses(3).axonIds));
+    synT.preAggloId, axonClasses(3).axonIds));
 plotConfigs(2).title = 'thalamocortical spine synapses';
 plotConfigs(2).tag = 'tc sp';
 
 plotConfigs(3).synIds = find( ...
     synT.isSpine & ismember( ...
-    synT.preAggloId, connAxonClasses(4).axonIds));
+    synT.preAggloId, axonClasses(4).axonIds));
 plotConfigs(3).title = 'corticocortical spine synapses';
 plotConfigs(3).tag = 'cc sp';
 
