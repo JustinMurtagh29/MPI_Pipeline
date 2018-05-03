@@ -104,6 +104,59 @@ title( ...
     ax, {info.filename; info.git_repos{1}.hash}, ...
     'FontWeight', 'normal', 'FontSize', 10);
 
+%% Synapse areas vs. degree of coupling histograms
+binEdges = linspace(0, 1.2, 61);
+plotCouplings = 1:5;
+
+for curAxonClass = axonClasses
+    curAxonIds = curAxonClass.axonIds;
+    curSynIds = curAxonClass.synIds;
+    
+   [~, ~, curCouplings] = unique(synT( ...
+        curSynIds, {'preAggloId', 'postAggloId'}), 'rows');
+    curAreas = accumarray( ...
+        curCouplings, synT.area(curSynIds), [], @(areas) {areas});
+    curCouplings = accumarray(curCouplings, 1);
+    
+    curCouplings = repelem(curCouplings, cellfun(@numel, curAreas));
+    curAreas = cell2mat(curAreas);
+    
+    curFig = figure();
+    curFig.Color = 'white';
+    curFig.Position(3:4) = [820, 475];
+    
+    curAx = axes(curFig); %#ok
+    curAx.TickDir = 'out';
+    hold(curAx, 'on');
+    
+    for curCoupling = plotCouplings
+        curPlotAreas = (curCouplings == curCoupling);
+        curPlotAreas = curAreas(curPlotAreas);
+        
+        curMean = exp(mean(log(curPlotAreas)));
+        
+        histogram( ...
+            curAx, curPlotAreas, ...
+            'BinEdges', binEdges, ...
+            'Normalization', 'probability', ...
+            'DisplayStyle', 'stairs', ...
+            'LineWidth', 2);
+            
+    end
+    
+    curLeg = arrayfun(@num2str, plotCouplings, 'UniformOutput', false);
+    curLeg = strcat(curLeg, {' '}, curAxonClass.title);
+    legend(curAx, curLeg, 'Box', 'off');
+    
+    curAx.XLim = binEdges([1, end]);
+    xlabel(curAx, 'Synapse area (µm²)');
+    ylabel(curAx, 'Probability');
+    
+    title( ...
+        curAx, {info.filename; info.git_repos{1}.hash}, ...
+        'FontWeight', 'normal', 'FontSize', 10);
+end
+
 %% Synapse areas vs. degree of coupling
 asiAreas = zeros(0, 1);
 asiGroups = zeros(0, 1);
