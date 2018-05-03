@@ -101,58 +101,23 @@ for curPlotConfig = plotConfigs
 end
 
 %% Synapse areas vs. degree of coupling
-asiAreas = zeros(0, 1);
-asiGroups = zeros(0, 1);
+curPlotCouplings = 1:5;
+curPlotConfig = plotConfigs(1);
 
-for curClassIdx = 1:numel(plotConfigs)
-    curAxonIds = plotConfigs(curClassIdx).axonIds;
-    curSynIds = plotConfigs(curClassIdx).synIds;
-    
-   [~, ~, curAsiGroups] = unique(synT( ...
-        curSynIds, {'preAggloId', 'postAggloId'}), 'rows');
-    curAsiAreas = accumarray( ...
-        curAsiGroups, synT.area(curSynIds), [], @(areas) {areas});
-    curAsiGroups = accumarray(curAsiGroups, 1);
-    
-    curAsiGroups = repelem( ...
-        curAsiGroups, cellfun(@numel, curAsiAreas));
-    curAsiAreas = cell2mat(curAsiAreas);
-    
-    % translate group id
-    curAsiGroups = (curAsiGroups - 1) ...
-        * numel(plotConfigs) + curClassIdx;
-    
-    asiAreas = [asiAreas; curAsiAreas]; %#ok
-    asiGroups = [asiGroups; curAsiGroups]; %#ok
-end
+curSynT = synT(curPlotConfig.synIds, :);
+[~, ~, curSynT.pairId] = unique( ...
+    curSynT(:, {'preAggloId', 'postAggloId'}), 'rows');
 
-groupLabels = arrayfun(@(i) sprintf( ...
-    '%d (%s)', ceil(i / numel(plotConfigs)), ...
-    plotConfigs(1 + mod(i - 1, numel(plotConfigs))).tag), ...
-    unique(asiGroups), 'UniformOutput', false);
-groupIds = mod(asiGroups - 1, numel(plotConfigs));
+curCouplings = accumarray(curSynT.pairId, 1);
+curSynT.coupling = curCouplings(curSynT.pairId);
 
-% plot
-fig = figure();
-fig.Color = 'white';
-ax = axes(fig);
+curPlotConfigs = arrayfun( ...
+    @(c) struct( ...
+        'synIds', curPlotConfig.synIds(curSynT.coupling == c), ...
+        'title', sprintf('%d-fold %s', c, curPlotConfig.title)), ...
+	curPlotCouplings);
 
-boxplot( ...
-    ax, asiAreas, asiGroups, ...
-    'Labels', groupLabels, ....
-    'Colors', ax.ColorOrder, ...
-    'ColorGroup', groupIds, ...
-    'Symbol', '.');
-
-xlabel(ax, 'Synapses per connection');
-ylabel(ax, 'Synapse area (µm²)');
-ylim(ax, [0, synAreaLim]);
-
-title( ...
-    ax, {info.filename; info.git_repos{1}.hash}, ...
-    'FontWeight', 'normal', 'FontSize', 10);
-
-ax.TickDir = 'out';
+connectEM.Consistency.plotSizeHistogram(info, synT, curPlotConfigs);
 
 %% Synapse area variability
 cvVals = zeros(0, 1);
