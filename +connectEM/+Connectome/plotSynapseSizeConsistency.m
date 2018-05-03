@@ -2,41 +2,36 @@
 %   Alessandro Motta <alessandro.motta@brain.mpg.de>
 clear;
 
-%% configuration
+%% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-synFile = fullfile(rootDir, 'connectomeState', 'SynapseAgglos_v3_ax_spine_clustered_classified.mat');
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites-wholeCells-03-v2-classified_spine-syn-clust.mat');
 
 info = Util.runInfo();
 
-%% loading data
+%% Loading data
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 
-conn = load(connFile);
-syn = load(synFile);
+[conn, syn] = connectEM.Connectome.load(param, connFile);
 
-%% limit synapses
+%% Prepare data
 synT = connectEM.Connectome.buildSynapseTable(conn, syn);
-synT.isSoma = (conn.denMeta.targetClass(synT.postAggloId) == 'Somata');
-synAreaLim = prctile(synT.area, 99.9);
 
-%% define axon classes
 axonClasses = struct;
-
-% spine vs. shaft synapses
+% Let's only look at spine synapses for now
 axonClasses(1).axonIds = find(conn.axonMeta.synCount);
 axonClasses(1).synIds = find(synT.isSpine);
 axonClasses(1).title = 'Spine synapses';
 axonClasses(1).tag = 'Sp';
 
-%% plot distribution of synapse size
-binEdges = linspace(0, synAreaLim, 51);
+%% Plot distribution of synapse size
+binEdges = linspace(0, 1.2, 61);
 
 fig = figure();
 fig.Color = 'white';
-ax = axes(fig);
+fig.Position(3:4) = [820, 475];
 
+ax = axes(fig);
 hold(ax, 'on');
 ax.TickDir = 'out';
 
@@ -57,14 +52,15 @@ xlim(ax, binEdges([1, end]));
 xlabel(ax, 'Synapse area (µm²)');
 ylabel(ax, 'Probability');
 
+legend( ...
+    ax, {axonClasses.title}, ...
+    'Location', 'NorthEast', ...
+    'Box', 'off');
 title( ...
-   {'Synapse area distribution'; info.git_repos{1}.hash}, ...
+   {info.filename, info.git_repos{1}.hash}, ...
     'FontWeight', 'norma', 'FontSize', 10);
-legend(ax, {axonClasses.title}, 'Location', 'NorthEast');
-    
-fig.Position(3:4) = [820, 475];
 
-%% plot histogram over no. of synapse per neurite pair
+%% Plot histogram over no. of synapse per neurite pair
 fig = figure();
 fig.Color = 'white';
 fig.Position(3:4) = [495, 400];
@@ -101,12 +97,12 @@ xlim(ax, [0.5, xMax]);
 xticks(ax, 1:(xMax - 0.5));
 xlabel(ax, 'Synapses per connection');
 
-title( ...
-    ax, {info.filename; info.git_repos{1}.hash}, ...
-    'FontWeight', 'normal', 'FontSize', 10);
 legend( ...
     ax, {axonClasses.title}, ...
     'Location', 'NorthEast', 'Box', 'off');
+title( ...
+    ax, {info.filename; info.git_repos{1}.hash}, ...
+    'FontWeight', 'normal', 'FontSize', 10);
 
 %% Synapse areas vs. degree of coupling
 asiAreas = zeros(0, 1);
