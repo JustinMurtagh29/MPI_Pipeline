@@ -428,10 +428,9 @@ end
 binEdges = linspace(0, 1, 21);
 
 data = wcSynTypes;
-% TODO(amotta): Make more flexible
-% Remove fake aggregate whole cells
-data(end, :) = [];
-% Remove whole cells without synapses
+% Restrict to cells in 5a
+data = data(yzWcIds, :);
+% Remove cells without synapses
 data(~any(data, 2), :) = [];
 data = data ./ sum(data, 2);
 
