@@ -404,7 +404,7 @@ end
 %}
 
 %% Quantitative comparison of whole cells
-synTypes = {'CC', 'TC', 'Inh'};
+synTypes = categories(conn.axonMeta.axonClass);
 wcSynTypes = zeros(size(wcT, 1), numel(synTypes));
 
 for curIdx = 1:size(wcT, 1)
@@ -414,10 +414,7 @@ for curIdx = 1:size(wcT, 1)
     curSyns.isSoma = ismember( ...
         wcT.agglo(curIdx).nodes(curSyns.nodeId, 4), ...
         wcT.somaAgglo(curIdx).nodes(:, 4));
-    
-    curSyns.type(:) = {'CC'};
-    curSyns.type(conn.axonMeta.isInh(curSyns.axonId)) = {'Inh'};
-    curSyns.type(conn.axonMeta.isThalamocortical(curSyns.axonId)) = {'TC'};
+    curSyns.type = conn.axonMeta.axonClass(curSyns.axonId);
     
    [~, curSynTypeCount] = ismember(curSyns.type, synTypes);
     curSynTypeCount = accumarray(curSynTypeCount, 1, size(synTypes(:)));
