@@ -6,6 +6,10 @@ clear;
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites-wholeCells-03-v2-classified_spine-syn-clust.mat');
 
+% Control with linearized axons
+ctrlConnFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_b_linearized_ax_spine_syn_clust.mat');
+ctrlSynFile = fullfile(rootDir, 'connectomeState', 'SynapseAgglos_v3_ax_spine_clustered.mat');
+
 info = Util.runInfo();
 
 %% Loading data
@@ -14,6 +18,9 @@ param = param.p;
 
 [conn, syn, axonClasses] = ...
     connectEM.Connectome.load(param, connFile);
+
+ctrlConn = load(ctrlConnFile);
+ctrlSyn = load(ctrlSynFile);
 
 %% Prepare data
 synT = connectEM.Connectome.buildSynapseTable(conn, syn);
@@ -38,6 +45,16 @@ plotConfigs(3).synIds = find( ...
 plotConfigs(3).title = 'corticocortical spine synapses';
 plotConfigs(3).tag = 'cc sp';
 
+ctrlSynT = connectEM.Connectome.buildSynapseTable(ctrlConn, ctrlSyn);
+ctrlAllAxonIds = find(ctrlConn.axonMeta.synCount);
+
+ctrlPlotConfigs = struct;
+ctrlPlotConfigs(1).synIds = find( ...
+    ctrlSynT.isSpine & ismember( ...
+    ctrlSynT.preAggloId, ctrlAllAxonIds));
+ctrlPlotConfigs(1).title = 'all spine synapses (control)';
+ctrlPlotConfigs(1).tag = 'sp (ctrl)';
+
 %% Plot distribution of synapse size
 connectEM.Consistency.plotSizeHistogram(info, synT, plotConfigs(1));
 connectEM.Consistency.plotSizeHistogram(info, synT, plotConfigs(2:3));
@@ -45,6 +62,8 @@ connectEM.Consistency.plotSizeHistogram(info, synT, plotConfigs(2:3));
 %% Plot histogram of degree of coupling
 connectEM.Consistency.plotCouplingHistogram( ...
     info, synT, plotConfigs(1), 'normalization', 'count');
+connectEM.Consistency.plotCouplingHistogram( ...
+    info, ctrlSynT, ctrlPlotConfigs(1), 'normalization', 'count');
 connectEM.Consistency.plotCouplingHistogram( ...
     info, synT, plotConfigs(2:3), 'normalization', 'probability');
 
