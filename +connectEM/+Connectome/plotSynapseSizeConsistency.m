@@ -67,6 +67,18 @@ curPlotConfigs = arrayfun( ...
 
 connectEM.Consistency.plotSizeHistogram(info, synT, curPlotConfigs);
 
+%% Illustrate synapse size similarity
+curPlotConfig = plotConfigs(1);
+curPairConfigs = ...
+    connectEM.Consistency.buildPairConfigs(synT, curPlotConfig);
+
+for curPairConfig = curPairConfigs(1:(end - 1))
+    curPairConfig(2) = curPairConfigs(end); %#ok
+    curFig = connectEM.Consistency.plotVariabilityPaired( ...
+        info, synT, curPlotConfig, curPairConfig, 'lineCount', 10);
+    curFig.Position(3:4) = [700, 330];
+end
+
 %% Synapse area variability
 for curPlotConfig = plotConfigs
     curPairConfigs = ...
