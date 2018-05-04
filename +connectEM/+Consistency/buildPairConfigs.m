@@ -58,8 +58,22 @@ function pairConfigs = buildPairConfigs(synT, plotConfig)
     pairConfigs(5).synIdPairs = randPairIds;
     pairConfigs(5).title = 'Random pairs';
     
+    % Sort synapse by size
+    synIdPairs = arrayfun( ...
+        @(p) sortByArea(synT, p.synIdPairs), ...
+        pairConfigs, 'UniformOutput', false);
+   [pairConfigs.synIdPairs] = deal(synIdPairs{:});
+    
     titles = arrayfun(@(c) sprintf( ...
         '%s (n = %d)', c.title, size(c.synIdPairs, 1)), ...
         pairConfigs, 'UniformOutput', false);
    [pairConfigs.title] = deal(titles{:});
+end
+
+function idPairs = sortByArea(synT, idPairs)
+    idPairs = transpose(idPairs);
+   [~, sortIds] = ismember(idPairs, synT.id);
+   [~, sortIds] = sort(synT.area(sortIds), 1, 'descend');
+    sortIds = sortIds + 2 * ((1:size(sortIds, 2)) - 1);
+    idPairs = transpose(idPairs(sortIds));
 end
