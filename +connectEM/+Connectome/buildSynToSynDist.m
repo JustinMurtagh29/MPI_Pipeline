@@ -35,7 +35,7 @@ function [synToSynDists, synIds] = ...
     for curId = 1:numel(agglos)
         agglo = agglos(curId);
         
-        % find synapses for dend
+        % Find synapses
         curSynIds = connAggloIds == curId;
         curSynIds = conn.connectome.synIdx(curSynIds);
         curSynIds = cell2mat(curSynIds);
@@ -53,7 +53,6 @@ function [synToSynDists, synIds] = ...
         curSynToSynDist = SuperAgglo.pairwiseDist( ...
             agglo, curSynNodeIds, 'voxelSize', opt.voxelSize);
         
-        % store output
         synToSynDists{curId} = curSynToSynDist;
         synIds{curId} = curSynIds(:);
         
