@@ -171,8 +171,11 @@ end
 
 %% Plot average over all axons with 10 or more synapses
 wcGroups = struct;
-wcGroups(1).wcIds = find(cellfun(@height, wcT.synapses) >= 10);
-wcGroups(1).title = 'axons with ≥ 10 synapses';
+wcGroups(1).wcIds = find( ...
+    cellfun(@height, wcT.synapses) >= 10);
+wcGroups(1).title = sprintf( ...
+    'axons with ≥ 10 synapses (n = %d)', ...
+    numel(wcGroups(1).wcIds));
 wcGroups(1).tag = 'min-10-syn';
 
 %% Generate extended whole cell table with queen axons
