@@ -57,6 +57,11 @@ SuperAgglo.check(wcT.somaAgglo);
 wcT.agglo = arrayfun(@SuperAgglo.merge, wcT.agglo, wcT.somaAgglo);
 wcT.agglo = SuperAgglo.clean(wcT.agglo);
 
+wcT.title = arrayfun( ...
+    @(id) sprintf('whole cell %d', id), ...
+    wcT.id, 'UniformOutput', false);
+wcT.tag = strrep(wcT.title, ' ', '-');
+
 %% Calculate distance to soma surface
 wcT.nodeDists = cell(size(wcT.id));
 
@@ -97,13 +102,15 @@ for curIdx = 1:size(wcT, 1)
     wcT.nodeDists{curIdx} = curDists;
 end
 
-%% collect input synapses
+%% Collect input synapses
 wcT.synapses = cell(size(wcT.id));
 
 for curIdx = 1:size(wcT, 1)
     curAgglo = wcT.agglo(curIdx);
     
-    curPostIds = conn.denMeta.cellId == wcT.id(curIdx);
+    curPostIds = ...
+        conn.denMeta.cellId == wcT.id(curIdx) ...
+      & ismember(conn.denMeta.targetClass, {'Somata', 'WholeCell'});
     curPostIds = conn.denMeta.id(curPostIds);
     
     curConnMask = ismember( ...
@@ -189,12 +196,19 @@ somaDistYZ = voxelSize(1) * min(pdist2( ...
 
 yzWcIds = find(somaDistYZ >= 10E3 & ...
     (somaDistXY < 10E3 | somaDistXZ < 10E3));
-wcGroups = {yzWcIds};
+
+wcGroups = struct;
+wcGroups(1).wcIds = yzWcIds;
+wcGroups(1).title = sprintf( ...
+    'whole cells in YZ view (n = %d)', ...
+    numel(wcGroups(1).wcIds));
+wcGroups(1).tag = 'yz-view';
 
 %% Generate queen neuron
+extWcT = wcT;
 for curIdx = 1:numel(wcGroups)
-    curWcIds = wcGroups{curIdx};
-    curWcT = wcT(curWcIds, :);
+    curWcGroup = wcGroups(curIdx);
+    curWcT = extWcT(curWcGroup.wcIds, :);
     
     nodeIdOff = cumsum(cellfun(@numel, curWcT.nodeDists));
     nodeIdOff = [0; nodeIdOff(1:(end - 1))];
@@ -204,7 +218,7 @@ for curIdx = 1:numel(wcGroups)
         + repelem(nodeIdOff, cellfun(@height, curWcT.synapses));
 
     curQueenWcT = table;
-    curQueenWcT.id = size(curWcT, 1) + 1;
+    curQueenWcT.id = 0;
 
     curQueenWcT.agglo = struct;
     curQueenWcT.agglo.nodes = cat(1, curWcT.agglo.nodes);
@@ -216,14 +230,16 @@ for curIdx = 1:numel(wcGroups)
 
     curQueenWcT.nodeDists = {cell2mat(curWcT.nodeDists)};
     curQueenWcT.synapses = {lumpedSynapses};
+    
+    curQueenWcT.title = curWcGroup.title;
+    curQueenWcT.tag = curWcGroup.tag;
 
-    wcT = cat(1, wcT, curQueenWcT);
+    extWcT = cat(1, extWcT, curQueenWcT);
 end
 
-%% plotting
-%{
-for curIdx = 1:size(wcT, 1)
-    curSyns = wcT.synapses{curIdx};
+%% Plotting
+for curIdx = size(extWcT, 1)
+    curSyns = extWcT.synapses{curIdx};
     if isempty(curSyns); continue; end
     
     if ~isempty(outputDir)
@@ -233,18 +249,20 @@ for curIdx = 1:size(wcT, 1)
     end
     
     curFig.Color = 'white';
-    curFig.Position(3:4) = [1075, 600];
+    curFig.Position(3:4) = [1120, 660];
     
     curSyns.isSpine = syn.isSpineSyn(curSyns.id);
     curSyns.isSoma = ismember( ...
-        wcT.agglo(curIdx).nodes(curSyns.nodeId, 4), ...
-        wcT.somaAgglo(curIdx).nodes(:, 4));
+        extWcT.agglo(curIdx).nodes(curSyns.nodeId, 4), ...
+        extWcT.somaAgglo(curIdx).nodes(:, 4));
     
     curSyns.isExc = conn.axonMeta.isExc(curSyns.axonId);
     curSyns.isInh = conn.axonMeta.isInh(curSyns.axonId);
-    curSyns.isTc = conn.axonMeta.isThalamocortical(curSyns.axonId);
     
-    curSyns.dist = wcT.nodeDists{curIdx}(curSyns.nodeId);
+    curSyns.isTc = conn.axonMeta.axonClass(curSyns.axonId);
+    curSyns.isTc = curSyns.isTc == 'Thalamocortical';
+    
+    curSyns.dist = extWcT.nodeDists{curIdx}(curSyns.nodeId);
     curSyns.dist = curSyns.dist / 1E3;
     
     % move soma synapses to separate bin
@@ -274,7 +292,8 @@ for curIdx = 1:size(wcT, 1)
             ax, data, ...
             'BinEdges', curBinEdges, ...
             'DisplayStyle', 'stairs', ...
-            'LineWidth', 2);
+            'LineWidth', 2, ...
+            'FaceAlpha', 1);
         
     curAx = subplot(4, 1, 1);
     hold(curAx, 'on');
@@ -291,7 +310,7 @@ for curIdx = 1:size(wcT, 1)
     ylabel(curAx, 'Synapses');
     
     title(curAx, { ...
-        sprintf('Inputs onto whole cell %d', curIdx); ...
+        sprintf('Inputs onto %s', extWcT.title{curIdx}); ...
         sprintf('%s (%s)', info.filename, info.git_repos{1}.hash)}, ...
         'FontWeight', 'normal', 'FontSize', 10);
     
@@ -300,6 +319,7 @@ for curIdx = 1:size(wcT, 1)
         'Onto soma', 'Onto shaft', ...
         'Location', 'EastOutside');
     curLeg.Position([1, 3]) = [0.82, (0.98 - 0.82)];
+    curLeg.Box = 'off';
     
     curAx = subplot(4, 1, 2);
     hold(curAx, 'on');
@@ -317,7 +337,8 @@ for curIdx = 1:size(wcT, 1)
                 ./ curBinsAll, 1), ...
             'BinEdges', curBinEdges, ...
             'DisplayStyle', 'stairs', ...
-            'LineWidth', 2);
+            'LineWidth', 2, ...
+            'FaceAlpha', 1);
         
     curPlot(curAx, curSyns.dist(curSyns.isExc));
     curPlot(curAx, curSyns.dist(curSyns.isTc));
@@ -336,6 +357,7 @@ for curIdx = 1:size(wcT, 1)
         'Shaft', ...
         'Location', 'EastOutside');
     curLeg.Position([1, 3]) = [0.82, (0.98 - 0.82)];
+    curLeg.Box = 'off';
     
     % plot synaptic clustering
     curAx = subplot(4, 1, 3);
@@ -375,7 +397,8 @@ for curIdx = 1:size(wcT, 1)
         'BinCount', curSpineSynArea, ...
         'BinEdges', curBinEdges, ...
         'DisplayStyle', 'stairs', ...
-        'LineWidth', 2);
+        'LineWidth', 2, ...
+        'FaceAlpha', 1);
     
     curAx.TickDir = 'out';
     curAx.Position(3) = 0.8 - curAx.Position(1);
@@ -387,13 +410,14 @@ for curIdx = 1:size(wcT, 1)
     
     % save figure
     if ~isempty(outputDir)
-        curFigFile = fullfile(outputDir, sprintf( ...
-            'input-distribution_whole-cell-%d.png', curIdx));
-        export_fig(curFigFile, curFig);
+        curFigFile = sprintf('input-distribution_%s', extWcT.tag{curIdx});
+        curFigFile = fullfile(outputDir, curFigFile);
+        
+        export_fig(strcat(curFigFile, '.png'), curFig);
+        export_fig(strcat(curFigFile, '.eps'), curFig);
         clear curFig;
     end
 end
-%}
 
 %% Quantitative comparison of whole cells
 synTypes = categories(conn.axonMeta.axonClass);
