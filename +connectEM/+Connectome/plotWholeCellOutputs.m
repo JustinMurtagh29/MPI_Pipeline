@@ -163,8 +163,7 @@ for curIdx = 1:size(wcT, 1)
     wcT.synapses{curIdx} = curSynT;
 end
 
-%% plotting
-conn.denMeta.targetClass = reordercats(conn.denMeta.targetClass);
+%% Plotting
 [targetClasses, ~, conn.denMeta.targetClassId] = unique(conn.denMeta.targetClass);
 
 targetClasses(targetClasses == 'ApicalDendrite')     = 'AD';
@@ -176,9 +175,8 @@ targetClasses(targetClasses == 'Somata')             = 'Soma';
 targetClasses = arrayfun( ...
     @char, targetClasses, 'UniformOutput', false);
 
-
 for curIdx = 1:size(wcT, 1)
-    curWcId = wcT.id(curIdx);
+    curCellId = wcT.id(curIdx);
     curSyns = wcT.synapses{curIdx};
     if isempty(curSyns); continue; end
     
@@ -189,16 +187,22 @@ for curIdx = 1:size(wcT, 1)
     curSyns.dist = curSyns.dist / 1E3;
     
     curMaxDist = 10 * ceil(max(curSyns.dist) / 10);
-    curBinEdges = 0:10:curMaxDist;
+    curBinEdges = 0:5:curMaxDist;
     
     curPlot = @(ax, data) ...
         histogram( ...
             ax, data, ...
             'BinEdges', curBinEdges, ...
             'DisplayStyle', 'stairs', ...
-            'LineWidth', 2);
-        
-    curFig = figure();
+            'LineWidth', 2, ...
+            'FaceAlpha', 1);
+    
+    if ~isempty(outputDir)
+        curFig = figure('visible', 'off');
+    else
+        curFig = figure();
+    end
+    
     curFig.Color = 'white';
     curFig.Position(3:4) = [960, 1100];
     
@@ -221,7 +225,7 @@ for curIdx = 1:size(wcT, 1)
         'Location', 'West');
     
     title(curAx, { ...
-        sprintf('Outputs from whole cell %d', curWcId); ...
+        sprintf('Outputs from whole cell %d', curCellId); ...
         sprintf('%s (%s)', info.filename, info.git_repos{1}.hash)}, ...
         'FontWeight', 'normal', 'FontSize', 10);
     
@@ -246,5 +250,11 @@ for curIdx = 1:size(wcT, 1)
    
     xlabel(curAx, 'Distance to soma (µm)');
    
-    curFigName = sprintf('output-distribution_whole-cell-%d.png', curWcId);
+    if ~isempty(outputDir)
+        curFigFile = fullfile(outputDir, sprintf( ...
+            'output-distribution_whole-cell-%d', curCellId));
+        export_fig(strcat(curFigFile, '.png'), curFig);
+        export_fig(strcat(curFigFile, '.eps'), curFig);
+        clear curFig;
+    end
 end
