@@ -63,6 +63,12 @@ wcT.axonNodeIds = arrayfun( ...
     @(wc) reshape(find(wc.axon), [], 1), ...
     wcAgglos, 'UniformOutput', false);
 
+% Add meta data for plotting
+wcT.title = arrayfun( ...
+    @(id) sprintf('whole cell %d', id), ...
+    wcT.id, 'UniformOutput', false);
+wcT.tag = strrep(wcT.title, ' ', '-');
+
 %% Calculate distance to soma surface
 wcT.nodeDists = cell(size(wcT.id));
 
@@ -156,11 +162,55 @@ for curIdx = 1:size(wcT, 1)
     curSynT.dendId = cell2mat(syn.synapses.dendId(curSynT.id));
     
     % Discard false positive synapses from the axon onto soma and / or axon
-    % initial segment agglomerates of the same cell.
+    % initial segment of the same cell.
     curOwnDendIds = conn.denMeta.id(conn.denMeta.cellId == curCellId);
     curSynT(ismember(curSynT.dendId, curOwnDendIds), :) = [];
     
     wcT.synapses{curIdx} = curSynT;
+end
+
+%% Plot average over all axons with 10 or more synapses
+wcGroups = struct;
+wcGroups(1).wcIds = find(cellfun(@height, wcT.synapses) >= 10);
+wcGroups(1).title = 'axons with ≥ 10 synapses';
+wcGroups(1).tag = 'min-10-syn';
+
+%% Generate extended whole cell table with queen axons
+extWcT = wcT;
+for curIdx = 1:numel(wcGroups)
+    curWcGroup = wcGroups(curIdx);
+    curWcT = extWcT(curWcGroup.wcIds, :);
+    
+    nodeIdOff = cumsum(cellfun(@numel, curWcT.nodeDists));
+    nodeIdOff = [0; nodeIdOff(1:(end - 1))];
+    
+    axonNodeIds = cat(1, curWcT.axonNodeIds{:});
+    axonNodeIds = axonNodeIds + repelem(nodeIdOff, ...
+        cellfun(@(ids) size(ids, 1), curWcT.axonNodeIds));
+
+    lumpedSynapses = cat(1, curWcT.synapses{:});
+    lumpedSynapses.nodeId = lumpedSynapses.nodeId ...
+        + repelem(nodeIdOff, cellfun(@height, curWcT.synapses));
+
+    curQueenWcT = table;
+    curQueenWcT.id = 0;
+    curQueenWcT.axonNodeIds = {axonNodeIds};
+
+    curQueenWcT.agglo = struct;
+    curQueenWcT.agglo.nodes = cat(1, curWcT.agglo.nodes);
+    curQueenWcT.agglo.edges = zeros(0, 2);
+
+    curQueenWcT.somaAgglo = struct;
+    curQueenWcT.somaAgglo.nodes = cat(1, curWcT.somaAgglo.nodes);
+    curQueenWcT.somaAgglo.edges = zeros(0, 2);
+
+    curQueenWcT.nodeDists = {cell2mat(curWcT.nodeDists)};
+    curQueenWcT.synapses = {lumpedSynapses};
+    
+    curQueenWcT.title = curWcGroup.title;
+    curQueenWcT.tag = curWcGroup.tag;
+
+    extWcT = cat(1, extWcT, curQueenWcT);
 end
 
 %% Plotting
@@ -176,14 +226,15 @@ targetClasses = arrayfun( ...
     @char, targetClasses, 'UniformOutput', false);
 
 for curIdx = 1:size(wcT, 1)
-    curCellId = wcT.id(curIdx);
-    curSyns = wcT.synapses{curIdx};
+    curTag = extWcT.tag{curIdx};
+    curTitle = extWcT.title{curIdx};
+    curSyns = extWcT.synapses{curIdx};
     if isempty(curSyns); continue; end
     
     curSyns.isSpine = syn.isSpineSyn(curSyns.id);
     curSyns.targetClassId = conn.denMeta.targetClassId(curSyns.dendId);
     
-    curSyns.dist = wcT.nodeDists{curIdx}(curSyns.nodeId);
+    curSyns.dist = extWcT.nodeDists{curIdx}(curSyns.nodeId);
     curSyns.dist = curSyns.dist / 1E3;
     
     curMaxDist = 10 * ceil(max(curSyns.dist) / 10);
@@ -225,7 +276,7 @@ for curIdx = 1:size(wcT, 1)
         'Location', 'West');
     
     title(curAx, { ...
-        sprintf('Outputs from whole cell %d', curCellId); ...
+        sprintf('Outputs from %s', curTitle); ...
         sprintf('%s (%s)', info.filename, info.git_repos{1}.hash)}, ...
         'FontWeight', 'normal', 'FontSize', 10);
     
@@ -251,8 +302,9 @@ for curIdx = 1:size(wcT, 1)
     xlabel(curAx, 'Distance to soma (µm)');
    
     if ~isempty(outputDir)
-        curFigFile = fullfile(outputDir, sprintf( ...
-            'output-distribution_whole-cell-%d', curCellId));
+        curFigFile = sprintf('output-distribution_%s', curTag);
+        curFigFile = fullfile(outputDir, curFigFile);
+        
         export_fig(strcat(curFigFile, '.png'), curFig);
         export_fig(strcat(curFigFile, '.eps'), curFig);
         clear curFig;
