@@ -26,14 +26,6 @@ segMass = Seg.Global.getSegToSizeMap(param);
 
 [conn, syn] = connectEM.Connectome.load(param, connFile);
 
-% Complete dendrite meta information
-denMeta = load(conn.info.param.dendriteFile);
-denMetaWcIdx = denMeta.idxWholeCells(conn.denMeta.parentId);
-denMetaSomaIdx = denMeta.idxSomata(conn.denMeta.parentId);
-
-assert(~any(denMetaWcIdx & denMetaSomaIdx));
-conn.denMeta.wcId = max(denMetaWcIdx, denMetaSomaIdx);
-
 wcData = load(wcFile);
 somaData = load(somaFile);
 
@@ -111,7 +103,7 @@ wcT.synapses = cell(size(wcT.id));
 for curIdx = 1:size(wcT, 1)
     curAgglo = wcT.agglo(curIdx);
     
-    curPostIds = conn.denMeta.wcId == wcT.id(curIdx);
+    curPostIds = conn.denMeta.cellId == wcT.id(curIdx);
     curPostIds = conn.denMeta.id(curPostIds);
     
     curConnMask = ismember( ...
