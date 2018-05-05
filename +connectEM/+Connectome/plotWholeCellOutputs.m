@@ -2,109 +2,108 @@
 %   Alessandro Motta <alessandro.motta@brain.mpg.de>
 clear;
 
-%% configuration
+%% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 outputDir = '/home/amotta/Desktop/whole-cell-output-distributions';
 
-wcFile = fullfile(rootDir, 'aggloState', 'wholeCells_08.mat');
-synFile = fullfile(rootDir, 'connectomeState', 'SynapseAgglos_v3_ax_spine_clustered.mat');
-connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a_ax_spine_syn_clust.mat');
+wcFile = fullfile(rootDir, 'aggloState', 'wholeCells_GTAxon_08_v4.mat');
+somaFile  = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_03_v2.mat');
+connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites-wholeCells-03-v2-classified_spine-syn-clust.mat');
 
 info = Util.runInfo();
 
-%% loading data
+%% Loading data
 param = load(fullfile(rootDir, 'allParameter.mat'), 'p');
 param = param.p;
 
+[conn, syn] = connectEM.Connectome.load(param, connFile);
+
+wcData = load(wcFile);
+somaData = load(somaFile);
+
 maxSegId = Seg.Global.getMaxSegId(param);
-segMass = Seg.Global.getSegToSizeMap(param);
-segCentroids = Seg.Global.getSegToCentroidMap(param);
+segSizes = Seg.Global.getSegToSizeMap(param);
 
-syn = load(synFile);
+%% Build whole cell table
+wcAgglos = SuperAgglo.clean(wcData.wholeCells);
+[wcAgglos.axon] = deal(wcData.wholeCells.axon);
+wcSegEqs = Agglo.fromSuperAgglo(wcAgglos);
 
-wc = load(wcFile);
-wc = wc.wholeCells;
-
-[~, connName] = fileparts(connFile);
-conn = connectEM.Connectome.load(param, connName);
-
-%% find soma for whole cells
-somaAggloIds = find(conn.denMeta.targetClass == 'Somata');
-somaAgglos = conn.dendrites(somaAggloIds);
-somaLUT = Agglo.buildLUT(maxSegId, somaAgglos);
+wcCellIds = ...
+    conn.denMeta.targetClass == 'WholeCell';
+wcCellIds = Agglo.buildLUT( ...
+    maxSegId, ...
+    conn.dendrites(wcCellIds), ...
+    conn.denMeta.cellId(wcCellIds));
+wcCellIds = cellfun(@(segIds) mode( ...
+    nonzeros(wcCellIds(segIds))), wcSegEqs);
 
 wcT = table;
-wcT.id = reshape(1:numel(wc), [], 1);
+wcT.id = wcCellIds;
+wcT.agglo = wcAgglos;
 
-% all segment IDs
-wcT.allSegIds = arrayfun( ...
-    @Agglo.fromSuperAgglo, ...
-    wc, 'UniformOutput', false);
+% Fix and prepare soma super-agglomerates
+somaAgglos = somaData.dendrites(somaData.indSomata);
+somaAgglos = SuperAgglo.connect(somaAgglos);
+SuperAgglo.check(somaAgglos);
 
-% axon segments
-wcT.segIds = arrayfun( ...
-    @(a) unique(a.nodes(a.axon ...
-        & ~isnan(a.nodes(:, 4)), 4)), ...
-    wc, 'UniformOutput', false);
+% Find soma agglomerate
+somaLUT = Agglo.buildLUT( ...
+    maxSegId, Agglo.fromSuperAgglo(somaAgglos));
+somaIds = cellfun(@(segIds) mode( ...
+    nonzeros(somaLUT(segIds))), wcSegEqs);
+assert(numel(somaIds) == numel(unique(somaIds)));
 
-% get rid of cells without axon segments
-wcT(cellfun(@isempty, wcT.segIds), :) = [];
+% Fix soma agglomerate
+wcT.somaAgglo = somaAgglos(somaIds);
+wcT.agglo = arrayfun(@SuperAgglo.merge, wcT.agglo, wcT.somaAgglo);
 
-% find soma
-wcT.somaId = cellfun( ...
-    @(segIds) setdiff(somaLUT(segIds), 0), ...
-    wcT.allSegIds, 'UniformOutput', false);
-wcT.allSegIds = [];
+% Axon nodes by size
+wcT.axonNodeIds = arrayfun( ...
+    @(wc) reshape(find(wc.axon), [], 1), ...
+    wcAgglos, 'UniformOutput', false);
 
-wcT(~cellfun(@isscalar, wcT.somaId), :) = [];
-wcT.somaId = cell2mat(wcT.somaId);
-
-%% calculate distance to soma surface
-% from `+connectEM/+Connectome/plotWholeCellInputs.m`
-wcT.nodeDists = cell(size(wcT.segIds));
+%% Calculate distance to soma surface
+wcT.nodeDists = cell(size(wcT.id));
 
 for curIdx = 1:size(wcT, 1)
-    curAxonSegIds = wcT.segIds{curIdx};
-    curSomaSegIds = somaAgglos{wcT.somaId(curIdx)};
+    curAgglo = wcT.agglo(curIdx);
+    curNodeCount = size(curAgglo.nodes, 1);
     
-    curSegIds = unique(cat(1, curAxonSegIds, curSomaSegIds));
-   [~, curAxonSegIds] = ismember(curAxonSegIds, curSegIds);
-   [~, curSomaSegIds] = ismember(curSomaSegIds, curSegIds);
-    assert(all(curAxonSegIds) && all(curSomaSegIds));
+    curSomaSegIds = Agglo.fromSuperAgglo(wcT.somaAgglo(curIdx));
+    curSomaNodeMask = ismember(curAgglo.nodes(:, 4), curSomaSegIds);
     
-    % build weights
-    curDists = segCentroids(curSegIds, :);
+    curSomaNodeId = find(curSomaNodeMask, 1);
+    assert(~isempty(curSomaNodeId));
+    
+    curDists = ...
+        curAgglo.nodes(curAgglo.edges(:, 1), 1:3) ...
+      - curAgglo.nodes(curAgglo.edges(:, 2), 1:3);
     curDists = curDists .* param.raw.voxelSize;
-    curDists = pdist(curDists);
+    curDists = sqrt(sum(curDists .* curDists, 2));
     assert(all(curDists));
     
-    curDists = squareform(curDists);
+    % Travelling within soma is for free!
+    curDists(all(curSomaNodeMask(curAgglo.edges), 2)) = 0;
     
-    % NOTE(amotta): Set distance between somatic segments to zero.
-    %
-    % True zeros cannot be used (not even with the additional 'Weights'
-    % option of `graphminspantree`) since the output matrix will contain
-    % zeros for both absent and somatic edges.
-    curDists(curSomaSegIds, curSomaSegIds) = eps;
-    
-    curAdj = graphminspantree( ...
-        sparse(curDists), curSomaSegIds(1));
-    curAdj = logical(curAdj);
-    
-    % now we can use true zeros
-    curDists(curSomaSegIds, curSomaSegIds) = 0;
+    curAdj = sparse( ...
+        curAgglo.edges(:, 2), curAgglo.edges(:, 1), ...
+        true, curNodeCount, curNodeCount);
 
     curDists = graphshortestpath( ...
-        curAdj, curSomaSegIds(1), ...
-        'Weights', curDists(curAdj), ...
+        curAdj, curSomaNodeId, ...
+        'Weights', curDists, ...
         'Directed', false);
     
-    curDists = curDists(curAxonSegIds);
+    % Sanity checks
+    assert(~any(curDists(curSomaNodeMask)));
+    assert(all(curDists(~curSomaNodeMask)));
+    
     curDists = reshape(curDists, [], 1);
     wcT.nodeDists{curIdx} = curDists;
 end
 
-%% build presynapse table
+%% Build presynapse table
 preSynT = table;
 preSynT.id = repelem( ...
     reshape(1:size(syn.synapses, 1), [], 1), ...
@@ -117,32 +116,37 @@ syn.synapses.dendId = cellfun( ...
     @(ids) reshape(setdiff(dendLUT(ids), 0), [], 1), ...
     syn.synapses.postsynId, 'UniformOutput', false);
 
-%% collect output synapses
+%% Collect output synapses
+last = @(vals) vals(end);
 wcT.synapses = cell(size(wcT.id));
 
 for curIdx = 1:size(wcT, 1)
-    curSegIds = wcT.segIds{curIdx};
+    curSegIds = wcT.agglo(curIdx).nodes(:, 4);
     
-    % find synapses
-   [~, curSynIds] = ismember(curSegIds, preSynT.segId);
-    curSynIds = setdiff(preSynT.id(setdiff(curSynIds, 0)), 0);
+    curAxonNodeIds = wcT.axonNodeIds{curIdx};
+    curAxonNodeIds(isnan(curSegIds(curAxonNodeIds))) = [];
     
-    % build table
+    % NOTE(amotta): Sort axon nodes by increasing size. This will make it
+    % much easier to assign synapses to the largest presynaptic segment.
+    curAxonNodeIds = Util.sortBy( ...
+        curAxonNodeIds, segSizes(curSegIds(curAxonNodeIds)));
+    curAxonSegIds = curSegIds(curAxonNodeIds);
+    
+    % Find synapses
+   [~, curSynIds] = ismember(curAxonSegIds, preSynT.segId);
+    curSynIds = unique(preSynT.id(setdiff(curSynIds, 0)));
+    
+    % Build table
     curSynT = table;
     curSynT.id = curSynIds;
     
-    curSynT.segIdx = cellfun( ...
-        @(ids) intersect(ids, wcT.segIds{curIdx}), ...
+   [~, curSynT.nodeId] = cellfun( ...
+        @(ids) intersect(curAxonSegIds, ids, 'stable'), ...
         syn.synapses.presynId(curSynT.id), 'UniformOutput', false);
+    curSynT.nodeId = cellfun( ...
+        @(ids) curAxonNodeIds(ids(end)), curSynT.nodeId);
     
-    % assign synapse to largest segment
-   [~, curSegIdx] = cellfun(@(ids) max(segMass(ids)), curSynT.segIdx);
-    curSegIds = arrayfun(@(ids, idx) ids{1}(idx), curSynT.segIdx, curSegIdx);
-    
-    % translate to relative
-   [~, curSynT.segIdx] = ismember(curSegIds, wcT.segIds{curIdx});
-   
-    % add dendrite IDs
+    % Add dendrite IDs
     curSynReps = repelem( ...
         reshape(1:size(curSynT, 1), [], 1), ...
         cellfun(@numel, syn.synapses.dendId(curSynT.id)));
@@ -166,7 +170,6 @@ targetClasses(targetClasses == 'Somata')             = 'Soma';
 targetClasses = arrayfun( ...
     @char, targetClasses, 'UniformOutput', false);
 
-mkdir(outputDir);
 
 for curIdx = 1:size(wcT, 1)
     curWcId = wcT.id(curIdx);
@@ -176,7 +179,7 @@ for curIdx = 1:size(wcT, 1)
     curSyns.isSpine = syn.isSpineSyn(curSyns.id);
     curSyns.targetClassId = conn.denMeta.targetClassId(curSyns.dendId);
     
-    curSyns.dist = wcT.nodeDists{curIdx}(curSyns.segIdx);
+    curSyns.dist = wcT.nodeDists{curIdx}(curSyns.nodeId);
     curSyns.dist = curSyns.dist / 1E3;
     
     curMaxDist = 10 * ceil(max(curSyns.dist) / 10);
@@ -189,7 +192,8 @@ for curIdx = 1:size(wcT, 1)
             'DisplayStyle', 'stairs', ...
             'LineWidth', 2);
         
-    curFig = figure('visible', 'off');
+    curFig = figure();
+    curFig.Color = 'white';
     curFig.Position(3:4) = [960, 1100];
     
     curAx = subplot(1 + numel(targetClasses), 1, 1);
@@ -237,6 +241,4 @@ for curIdx = 1:size(wcT, 1)
     xlabel(curAx, 'Distance to soma (µm)');
    
     curFigName = sprintf('output-distribution_whole-cell-%d.png', curWcId);
-    export_fig('-r172', fullfile(outputDir, curFigName), curFig);
-    clear curFig;
 end
