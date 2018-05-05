@@ -6,7 +6,7 @@ clear;
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 
 % Set output directory to write figures to disk instead of displaying them.
-outputDir = '';
+outputDir = '/home/amotta/Desktop/whole-cell-input-distributions';
 
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites-wholeCells-03-v2-classified_spine-syn-clust.mat');
 wcFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v3_auto-and-manual.mat');
@@ -238,7 +238,7 @@ for curIdx = 1:numel(wcGroups)
 end
 
 %% Plotting
-for curIdx = size(extWcT, 1)
+for curIdx = 1:size(extWcT, 1)
     curSyns = extWcT.synapses{curIdx};
     if isempty(curSyns); continue; end
     
