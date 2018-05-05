@@ -121,7 +121,7 @@ last = @(vals) vals(end);
 wcT.synapses = cell(size(wcT.id));
 
 for curIdx = 1:size(wcT, 1)
-    curCellId = wcT.cellId(curIdx);
+    curCellId = wcT.id(curIdx);
     curSegIds = wcT.agglo(curIdx).nodes(:, 4);
     
     curAxonNodeIds = wcT.axonNodeIds{curIdx};
