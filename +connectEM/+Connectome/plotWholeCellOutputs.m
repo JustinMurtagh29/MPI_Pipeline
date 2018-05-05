@@ -228,7 +228,7 @@ targetClasses(targetClasses == 'Somata')             = 'Soma';
 targetClasses = arrayfun( ...
     @char, targetClasses, 'UniformOutput', false);
 
-for curIdx = 1:size(wcT, 1)
+for curIdx = 1:size(extWcT, 1)
     curTag = extWcT.tag{curIdx};
     curTitle = extWcT.title{curIdx};
     curSyns = extWcT.synapses{curIdx};
