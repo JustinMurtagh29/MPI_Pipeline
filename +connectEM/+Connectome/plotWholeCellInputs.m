@@ -440,42 +440,50 @@ end
 %% Plot results
 binEdges = linspace(0, 1, 21);
 
-data = wcSynTypes;
-% Restrict to cells in 5a
-data = data(yzWcIds, :);
-% Remove cells without synapses
-data(~any(data, 2), :) = [];
-data = data ./ sum(data, 2);
+for curWcGroup = wcGroups
+    curData = wcSynTypes;
+    curData = curData(curWcGroup.wcIds, :);
+    
+    % Remove cells without synapses
+    curData(~any(curData, 2), :) = [];
+    curData = curData ./ sum(curData, 2);
 
-fig = figure();
-fig.Color = 'white';
-fig.Position(3:4) = [520, 700];
+    curFig = figure();
+    curFig.Color = 'white';
+    curFig.Position(3:4) = [520, 900];
 
-for curIdx = 1:numel(synTypes)
-    curAx = subplot(numel(synTypes), 1, curIdx);
+    for curIdx = 1:numel(synTypes)
+        curAx = subplot(numel(synTypes), 1, curIdx);
+
+        histogram( ...
+            curAx, curData(:, curIdx), ...
+            'BinEdges', binEdges, ...
+            'DisplayStyle', 'stairs', ...
+            'LineWidth', 2, ...
+            'FaceAlpha', 1);
+        
+        curAx.XLim = binEdges([1, end]);
+        curAx.YLim = [0, size(curData, 1)];
+        curAx.TickDir = 'out';
+        curAx.Box = 'off';
+
+        title( ...
+            curAx, synTypes{curIdx}, ...
+            'FontWeight', 'normal', ...
+            'FontSize', 10);
+    end
     
-    histogram( ...
-        curAx, data(:, curIdx), ...
-        'BinEdges', binEdges, ...
-        'DisplayStyle', 'stairs', ...
-        'LineWidth', 2, ...
-        'FaceAlpha', 1);
-    
-    curAx.XLim = binEdges([1, end]);
-    curAx.YLim = [0, size(data, 1)];
-    curAx.TickDir = 'out';
-    curAx.Box = 'off';
-    
-    title( ...
-        curAx, synTypes{curIdx}, ...
-        'FontWeight', 'normal', ...
-        'FontSize', 10);
+    curMaxY = [curFig.Children.Children];
+    curMaxY = max(arrayfun(@(h) max(h.Values), curMaxY));
+   [curFig.Children.YLim] = deal([0, curMaxY]);
+   
+    xlabel(curAx, 'Fraction of input synapses');
+    ylabel(curAx, 'Cells');
+
+    annotation(curFig, ...
+        'textbox', [0, 0.9, 1, 0.1], ...
+        'String', { ...
+            info.filename; info.git_repos{1}.hash; ...
+            sprintf('Variability across %s', curWcGroup.title)}, ...
+        'EdgeColor', 'none', 'HorizontalAlignment', 'center');
 end
-
-xlabel('Fraction of input synapses');
-ylabel('Cells');
-
-annotation(fig, ...
-    'textbox', [0, 0.9, 1, 0.1], ...
-    'String', {info.filename; info.git_repos{1}.hash}, ...
-    'EdgeColor', 'none', 'HorizontalAlignment', 'center');
