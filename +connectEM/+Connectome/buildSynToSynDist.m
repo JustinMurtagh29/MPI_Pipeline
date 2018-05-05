@@ -10,7 +10,7 @@ function [synToSynDists, synIds] = ...
     
     switch preOrPost
         case 'pre'
-            assert(isequale(size(conn.axons), size(agglos)));
+            assert(isequal(size(conn.axons), size(agglos)));
             connAggloIds = conn.connectome.edges(:, 1);
             synAgglos = syn.synapses.presynId;
         case 'post'
