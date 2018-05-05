@@ -121,6 +121,7 @@ last = @(vals) vals(end);
 wcT.synapses = cell(size(wcT.id));
 
 for curIdx = 1:size(wcT, 1)
+    curCellId = wcT.cellId(curIdx);
     curSegIds = wcT.agglo(curIdx).nodes(:, 4);
     
     curAxonNodeIds = wcT.axonNodeIds{curIdx};
@@ -153,6 +154,11 @@ for curIdx = 1:size(wcT, 1)
     
     curSynT = curSynT(curSynReps, :);
     curSynT.dendId = cell2mat(syn.synapses.dendId(curSynT.id));
+    
+    % Discard false positive synapses from the axon onto soma and / or axon
+    % initial segment agglomerates of the same cell.
+    curOwnDendIds = conn.denMeta.id(conn.denMeta.cellId == curCellId);
+    curSynT(ismember(curSynT.dendId, curOwnDendIds), :) = [];
     
     wcT.synapses{curIdx} = curSynT;
 end
