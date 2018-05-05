@@ -5,11 +5,13 @@ function dendMeta = completeCellMeta(param, conn)
     
     %% Add information about whole cells
     dend = conn.info.param.dendriteFile;
-    dend = load(dend, 'idxWholeCells', 'idxSomata');
+    dend = load(dend, 'idxWholeCells', 'idxSomata', 'idxAIS');
     
-    dendMeta.cellId = max( ...
+    dendMeta.cellId = horzcat( ...
         dend.idxWholeCells(dendMeta.parentId), ...
-        dend.idxSomata(dendMeta.parentId));
+        dend.idxSomata(dendMeta.parentId), ...
+        dend.idxAIS(dendMeta.parentId));
+    dendMeta.cellId = max(dendMeta.cellId, [], 2);
     
     %% Add flag if part of interneuron
     segPoints = Seg.Global.getSegToPointMap(param);
