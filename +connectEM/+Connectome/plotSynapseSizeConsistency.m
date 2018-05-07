@@ -135,8 +135,8 @@ connectEM.Consistency.plotVariabilityHistogram( ...
 %% Variability vs. distance
 curPlotConfig = plotConfigs(1);
 curPairConfig = connectEM.Consistency.buildPairConfigs(synT, curPlotConfig);
-
 curPairConfig = curPairConfig(1);
+
 curT = struct2table(rmfield(curPairConfig, 'title'));
 curT.preAggloId = synT.preAggloId(curT.synIdPairs(:, 1));
 curT.postAggloId = synT.postAggloId(curT.synIdPairs(:, 1));
@@ -173,7 +173,7 @@ curFitPost = fit(curT.postDist / 1E3, curT.cv, 'poly1');
 % Plot
 fig = figure();
 fig.Color = 'white';
-fig.Position(3:4) = [560, 320];
+fig.Position(3:4) = [560, 360];
 
 % Presynaptic side
 ax = subplot(1, 2, 1);
@@ -202,7 +202,10 @@ ylabel(ax, 'Coefficient of variation');
 
 annotation(fig, ...
     'textbox', [0, 0.9, 1, 0.1], ...
-    'String', {info.filename; info.git_repos{1}.hash}, ...
+    'String', { ...
+        info.filename; ...
+        info.git_repos{1}.hash; ...
+        curPairConfig.title}, ...
     'EdgeColor', 'none', 'HorizontalAlignment', 'center');
 
 %% ASI sizes (in log scale)
