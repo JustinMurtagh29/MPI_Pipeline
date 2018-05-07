@@ -19,6 +19,11 @@ param = param.p;
 [conn, syn, axonClasses] = ...
     connectEM.Connectome.load(param, connFile);
 
+[~, synToSynFile] = fileparts(connFile);
+synToSynFile = sprintf('%s_synToSynDists.mat', synToSynFile);
+synToSynFile = fullfile(fileparts(connFile), synToSynFile);
+synToSyn = load(synToSynFile);
+
 ctrlConn = load(ctrlConnFile);
 ctrlSyn = load(ctrlSynFile);
 
@@ -126,6 +131,79 @@ curTitles = arrayfun( ...
 
 connectEM.Consistency.plotVariabilityHistogram( ...
     info, synT, curPlotConfigs, curPairConfigs);
+
+%% Variability vs. distance
+curPlotConfig = plotConfigs(1);
+curPairConfig = connectEM.Consistency.buildPairConfigs(synT, curPlotConfig);
+
+curPairConfig = curPairConfig(1);
+curT = struct2table(rmfield(curPairConfig, 'title'));
+curT.preAggloId = synT.preAggloId(curT.synIdPairs(:, 1));
+curT.postAggloId = synT.postAggloId(curT.synIdPairs(:, 1));
+
+curT.preDist = zeros(size(curT.preAggloId));
+curT.postDist = zeros(size(curT.postAggloId));
+for curIdx = 1:numel(curT.preDist)
+    curPreAggloId = curT.preAggloId(curIdx);
+    curPostAggloId = curT.postAggloId(curIdx);
+    curSynIds = synT.id(curT.synIdPairs(curIdx, :));
+    
+    % Distance along axonal side
+    curPreSynIds = synToSyn.axonSynIds{curPreAggloId};
+   [~, curPreSynIds] = ismember(curSynIds, curPreSynIds);
+    curPreDist = synToSyn.axonSynToSynDists{curPreAggloId};
+    curPreDist = curPreDist(curPreSynIds(1), curPreSynIds(2));
+    
+    % Distance along axonal side
+    curPostSynIds = synToSyn.dendSynIds{curPostAggloId};
+   [~, curPostSynIds] = ismember(curSynIds, curPostSynIds);
+    curPostDist = synToSyn.dendSynToSynDists{curPostAggloId};
+    curPostDist = curPostDist(curPostSynIds(1), curPostSynIds(2));
+    
+    curT.preDist(curIdx) = curPreDist;
+    curT.postDist(curIdx) = curPostDist;
+end
+
+curT.cv = synT.area(curT.synIdPairs);
+curT.cv = std(curT.cv, 0, 2) ./ mean(curT.cv, 2);
+
+curFitPre = fit(curT.preDist / 1E3, curT.cv, 'poly1');
+curFitPost = fit(curT.postDist / 1E3, curT.cv, 'poly1');
+
+% Plot
+fig = figure();
+fig.Color = 'white';
+fig.Position(3:4) = [560, 320];
+
+% Presynaptic side
+ax = subplot(1, 2, 1);
+axis(ax, 'square');
+hold(ax, 'on');
+
+plot(ax, curT.preDist / 1E3, curT.cv, '.');
+plot(ax, ax.XLim, curFitPre(ax.XLim));
+title(ax, 'Presynaptic', 'FontWeight', 'normal', 'FontSize', 10);
+
+% Postsynaptic side
+ax = subplot(1, 2, 2);
+axis(ax, 'square');
+hold(ax, 'on');
+
+plot(ax, curT.postDist / 1E3, curT.cv, '.');
+plot(ax, ax.XLim, curFitPost(ax.XLim));
+    title(ax, 'Postsynaptic', 'FontWeight', 'normal', 'FontSize', 10);
+
+axes = fig.Children;
+[ax.TickDir] = deal('out');
+
+ax = axes(end);
+xlabel(ax, 'Intersynapse distance (µm)');
+ylabel(ax, 'Coefficient of variation');
+
+annotation(fig, ...
+    'textbox', [0, 0.9, 1, 0.1], ...
+    'String', {info.filename; info.git_repos{1}.hash}, ...
+    'EdgeColor', 'none', 'HorizontalAlignment', 'center');
 
 %% ASI sizes (in log scale)
 plotCouplings = 2:5;
