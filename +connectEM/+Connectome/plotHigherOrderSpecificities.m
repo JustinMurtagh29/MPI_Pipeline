@@ -11,20 +11,20 @@ connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites
 % TODO(amotta): Get rid of these...
 pTheta = struct;
 % Excitatory axons
-pTheta(1).ProximalDendrite = 0.045;
-pTheta(1).ApicalDendrite = 0.035;
+pTheta(1).ProximalDendrite = 0.09;
+pTheta(1).ApicalDendrite = 0.07;
 % Inhibitory axons
-pTheta(2).Somata = 0.115;
-pTheta(2).ProximalDendrite = 0.12;
-pTheta(2).ApicalDendrite = 0.06;
-pTheta(2).SmoothDendrite = 0.06;
+pTheta(2).Somata = 0.23;
+pTheta(2).ProximalDendrite = 0.24;
+pTheta(2).ApicalDendrite = 0.12;
+pTheta(2).SmoothDendrite = 0.12;
 % Thalamocortical axons
-pTheta(3).ProximalDendrite = 0.195;
-pTheta(3).ApicalDendrite = 0.015;
+pTheta(3).ProximalDendrite = 0.39;
+pTheta(3).ApicalDendrite = 0.03;
 % Corticocortical axons
-pTheta(4).ProximalDendrite = 0.03;
-pTheta(4).ApicalDendrite = 0.04;
-pTheta(4).SmoothDendrite = 0.04;
+pTheta(4).ProximalDendrite = 0.06;
+pTheta(4).ApicalDendrite = 0.08;
+pTheta(4).SmoothDendrite = 0.08;
 
 info = Util.runInfo();
 
