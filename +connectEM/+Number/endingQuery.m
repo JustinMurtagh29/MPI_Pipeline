@@ -13,6 +13,8 @@ param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 
 %% Find nml Files
+Util.log('Finding NML files');
+
 skelDirs = connectEM.setQueryState('6.0');
 skelDirs = fullfile('/gaba', reshape(skelDirs, [], 1));
 
@@ -24,6 +26,8 @@ nmlFiles = arrayfun( ...
     cat(1, nmlFiles{:}), 'UniformOutput', false);
 
 %% Processing
+Util.log('Processing NML files');
+
 nmlT = table;
 nmlT.filePath = nmlFiles;
 nmlT.pathLenNm = nan(height(nmlT), 1);
