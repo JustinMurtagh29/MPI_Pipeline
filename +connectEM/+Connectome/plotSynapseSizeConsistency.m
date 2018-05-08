@@ -133,6 +133,8 @@ connectEM.Consistency.plotVariabilityHistogram( ...
     info, synT, curPlotConfigs, curPairConfigs);
 
 %% Variability vs. distance
+curMaxDistUm = 20;
+
 curPlotConfig = plotConfigs(1);
 curPairConfig = connectEM.Consistency.buildPairConfigs(synT, curPlotConfig);
 curPairConfig = curPairConfig(1);
@@ -167,8 +169,11 @@ end
 curT.cv = synT.area(curT.synIdPairs);
 curT.cv = std(curT.cv, 0, 2) ./ mean(curT.cv, 2);
 
-curFitPre = fit(curT.preDist / 1E3, curT.cv, 'poly1');
-curFitPost = fit(curT.postDist / 1E3, curT.cv, 'poly1');
+curPreT = curT(curT.preDist / 1E3 < curMaxDistUm, :);
+curFitPre = fit(curPreT.preDist / 1E3, curPreT.cv, 'poly1');
+
+curPostT = curT(curT.postDist / 1E3 < curMaxDistUm, :);
+curFitPost = fit(curPostT.postDist / 1E3, curPostT.cv, 'poly1');
 
 % Plot
 fig = figure();
@@ -180,18 +185,22 @@ ax = subplot(1, 2, 1);
 axis(ax, 'square');
 hold(ax, 'on');
 
-plot(ax, curT.preDist / 1E3, curT.cv, '.');
-plot(ax, ax.XLim, curFitPre(ax.XLim));
-title(ax, 'Presynaptic', 'FontWeight', 'normal', 'FontSize', 10);
+plot(ax, curPreT.preDist / 1E3, curPreT.cv, '.');
+plot(ax, ax.XLim, curFitPre(ax.XLim), 'Color', 'black');
+title(ax, {'Presynaptic', sprintf( ...
+    'CV = %.2f + %.4fd', curFitPre.p2, curFitPre.p1)}, ...
+    'FontWeight', 'normal', 'FontSize', 10);
 
 % Postsynaptic side
 ax = subplot(1, 2, 2);
 axis(ax, 'square');
 hold(ax, 'on');
 
-plot(ax, curT.postDist / 1E3, curT.cv, '.');
-plot(ax, ax.XLim, curFitPost(ax.XLim));
-    title(ax, 'Postsynaptic', 'FontWeight', 'normal', 'FontSize', 10);
+plot(ax, curPostT.postDist / 1E3, curPostT.cv, '.');
+plot(ax, ax.XLim, curFitPost(ax.XLim), 'Color', 'black');
+title(ax, {'Postsynaptic', sprintf( ...
+    'CV = %.2f + %.4fd', curFitPost.p2, curFitPost.p1)}, ...
+    'FontWeight', 'normal', 'FontSize', 10);
 
 axes = fig.Children;
 [ax.TickDir] = deal('out');
