@@ -716,6 +716,7 @@ if  ~existentWC(9)
     skelsNotFound = [];
     for f = 1:numel(filenames)
         skel = skeleton(filenames{f});
+        PL(f) = skel.pathLength/1000;
         numSkelNodes = cellfun(@(x) size(x,1),skel.nodes);
         skelLUT = repelem(1:numel(skel.nodes),numSkelNodes);
         warning('off')
@@ -781,6 +782,7 @@ if  ~existentWC(9)
             wholeCells(ind).axon(mask) = true;
         end
     end
+    fprintf('Total path length of all whole Cells (GT based) is %g micron\n',sum(PL(usedCells)));
     if ~isempty(skelsNotFound)
         warning('Skeletons of files \n%s\n did not have a whole cell partner!',filenames{skelsNotFound})
     end
