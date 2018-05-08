@@ -47,15 +47,18 @@ Util.log('Calculating dendritic trunk path lengths');
 
 trunkIds = Agglo.buildLUT(maxSegId, Agglo.fromSuperAgglo(trunks));
 trunkIds = cellfun(@(ids) mode(nonzeros(trunkIds(ids))), conn.dendrites);
-trunkIds = unique(trunkIds(~isnan(trunkIds)));
+trunkMask = ~isnan(trunkIds);
 
-trunkPathLengths = SuperAgglo.pathLength(trunks(trunkIds), voxelSize);
+trunkPathLengths = nan(size(trunkIds));
+trunkPathLengths(trunkMask) = ...
+    SuperAgglo.pathLength(trunks(trunkIds(trunkMask)), voxelSize);
 
 %% Writing results
 out = struct;
 out.axonPathLengths = axonPathLengths;
 out.dendritePathLengths = dendritePathLengths;
 out.trunkPathLengths = trunkPathLengths;
+out.trunkIds = trunkIds;
 out.info = info;
 
 Util.saveStruct(outFile, out);
