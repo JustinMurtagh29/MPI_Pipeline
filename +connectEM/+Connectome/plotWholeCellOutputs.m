@@ -264,9 +264,11 @@ for curIdx = 1:size(extWcT, 1)
     curAx.TickDir = 'out';
     hold(curAx, 'on');
     
-	curPlot(curAx, curSyns.dist);
     curHist = curPlot(curAx, curSyns.dist(curSyns.isSpine));
-    curHist.LineStyle = '--';
+    curHist.EdgeColor = 'magenta';
+    
+    curHist = curPlot(curAx, curSyns.dist(~curSyns.isSpine));
+    curHist.EdgeColor = 'black';
     
     xlim(curAx, curBinEdges([1, end]));
     ylabel(curAx, 'All');
@@ -274,9 +276,11 @@ for curIdx = 1:size(extWcT, 1)
     curAx.YLim(1) = 0;
     curYlim = curAx.YLim;
     
-    legend(curAx, ...
-        'All', 'Onto spines', ...
+    curLeg = legend(curAx, ...
+        'Spine', ...
+        'Non-spine', ...
         'Location', 'West');
+    curLeg.Box = 'off';
     
     title(curAx, { ...
         sprintf('Outputs from %s', curTitle); ...
@@ -291,11 +295,14 @@ for curIdx = 1:size(extWcT, 1)
         hold(curAx, 'on');
         
         curClassMask = (curSyns.targetClassId == curClassIdx);
-        curPlot(curAx, curSyns.dist(curClassMask));
         
         curHist = curPlot(curAx, ...
-            curSyns.dist(curClassMask & curSyns.isSpine));
-        curHist.LineStyle = '--';
+            curSyns.dist(curClassMask &  curSyns.isSpine));
+        curHist.EdgeColor = 'magenta';
+        
+        curHist = curPlot(curAx, ...
+            curSyns.dist(curClassMask & ~curSyns.isSpine));
+        curHist.EdgeColor = 'black';
         
         ylim(curYlim);
         xlim(curAx, curBinEdges([1, end]));
