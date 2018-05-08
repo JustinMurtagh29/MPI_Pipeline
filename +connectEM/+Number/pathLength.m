@@ -5,6 +5,7 @@ clear;
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites-wholeCells-03-v2-classified_spine-syn-clust.mat');
+trunkFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v3.mat');
 
 [~, outFile] = fileparts(connFile);
 outFile = sprintf('%s_pathLengths.mat', outFile);
@@ -21,7 +22,11 @@ conn = connectEM.Connectome.load(param, connFile);
 dendrites = load(conn.info.param.dendriteFile);
 dendrites = dendrites.dendrites;
 
+trunks = load(trunkFile);
+trunks = trunks.dendrites(trunks.indBigDends);
+
 voxelSize = param.raw.voxelSize;
+maxSegId = Seg.Global.getMaxSegId(param);
 segPoints = Seg.Global.getSegToPointMap(param);
 
 %% Axons
@@ -37,10 +42,20 @@ Util.log('Calculating dendrite path lengths');
 dendritePathLengths = SuperAgglo.pathLength( ...
     dendrites(conn.denMeta.parentId), voxelSize);
 
+%% Dendrite trunks (prior to spine attachment)
+Util.log('Calculating dendritic trunk path lengths');
+
+trunkIds = Agglo.buildLUT(maxSegId, Agglo.fromSuperAgglo(trunks));
+trunkIds = cellfun(@(ids) mode(nonzeros(trunkIds(ids))), conn.dendrites);
+trunkIds = unique(trunkIds(~isnan(trunkIds)));
+
+trunkPathLengths = SuperAgglo.pathLength(trunks(trunkIds), voxelSize);
+
 %% Writing results
 out = struct;
 out.axonPathLengths = axonPathLengths;
 out.dendritePathLengths = dendritePathLengths;
+out.trunkPathLengths = trunkPathLengths;
 out.info = info;
 
 Util.saveStruct(outFile, out);
