@@ -240,8 +240,8 @@ for curIdx = 1:size(extWcT, 1)
     curSyns.dist = extWcT.nodeDists{curIdx}(curSyns.nodeId);
     curSyns.dist = curSyns.dist / 1E3;
     
-    curMaxDist = 10 * ceil(max(curSyns.dist) / 10);
-    curBinEdges = 0:5:curMaxDist;
+    curMaxDist = 20 * ceil(max(curSyns.dist) / 20);
+    curBinEdges = 0:20:curMaxDist;
     
     curPlot = @(ax, data) ...
         histogram( ...
