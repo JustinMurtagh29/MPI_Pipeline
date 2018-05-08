@@ -23,6 +23,7 @@ dendrites = load(conn.info.param.dendriteFile);
 dendrites = dendrites.dendrites;
 
 trunks = load(trunkFile);
+trunkIsWholeCell = trunks.indWholeCells(trunks.indBigDends);
 trunks = trunks.dendrites(trunks.indBigDends);
 
 voxelSize = param.raw.voxelSize;
@@ -45,20 +46,14 @@ dendritePathLengths = SuperAgglo.pathLength( ...
 %% Dendrite trunks (prior to spine attachment)
 Util.log('Calculating dendritic trunk path lengths');
 
-trunkIds = Agglo.buildLUT(maxSegId, Agglo.fromSuperAgglo(trunks));
-trunkIds = cellfun(@(ids) mode(nonzeros(trunkIds(ids))), conn.dendrites);
-trunkMask = ~isnan(trunkIds);
-
-trunkPathLengths = nan(size(trunkIds));
-trunkPathLengths(trunkMask) = ...
-    SuperAgglo.pathLength(trunks(trunkIds(trunkMask)), voxelSize);
+trunkPathLengths = SuperAgglo.pathLength(trunks, voxelSize);
 
 %% Writing results
 out = struct;
 out.axonPathLengths = axonPathLengths;
 out.dendritePathLengths = dendritePathLengths;
 out.trunkPathLengths = trunkPathLengths;
-out.trunkIds = trunkIds;
+out.trunkIsWholeCell = trunkIsWholeCell;
 out.info = info;
 
 Util.saveStruct(outFile, out);
