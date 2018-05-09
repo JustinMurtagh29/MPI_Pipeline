@@ -9,6 +9,7 @@ availFile = '/tmpscratch/amotta/l4/2018-04-27-surface-availability-connectome-v5
 
 maxRadius = 50;
 maxAvail = 0.7;
+minSynPre = 10;
 plotAxonClasses = 1:2;
 targetClasses = { ...
     'Somata', ...
@@ -37,11 +38,24 @@ conn.denMeta.targetClass(wcMask) = 'ProximalDendrite';
 wcMask = avail.targetClasses == 'WholeCell';
 avail.targetClasses(wcMask) = 'ProximalDendrite';
 
+% Generate a class with all axons
+allAxonClass = struct;
+allAxonClass.axonIds = find( ...
+    conn.axonMeta.synCount >= minSynPre);
+allAxonClass.nullAxonIds = find( ...
+    conn.axonMeta.synCount >= minSynPre);
+allAxonClass.title = sprintf( ...
+    'all axons with ≥ %d synapses (n = %d)', ...
+    minSynPre, numel(allAxonClass.axonIds));
+
+axonClasses(end + 1) = allAxonClass;
+
 % Add axon class tags
 axonClasses(1).tag = 'Exc';
 axonClasses(2).tag = 'Inh';
 axonClasses(3).tag = 'TC';
 axonClasses(4).tag = 'CC';
+axonClasses(5).tag = 'All';
 
 [classConn, classIds] = ...
     connectEM.Connectome.buildClassConnectome(conn);
@@ -295,7 +309,7 @@ annotation(fig, ...
         info.filename; info.git_repos{1}.hash});
 
 %% Plot R² over all classes
-plotAxonClasses = 1:2;
+plotAxonClasses = [1:2, 5];
 
 % Prepare output
 rSq = nan( ...
