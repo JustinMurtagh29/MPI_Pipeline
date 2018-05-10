@@ -117,8 +117,11 @@ function plotIt(info, targetClasses, axonClass, specClasses, coinMat)
     end
     
     cbar = colorbar('peer', ax);
+    cbar.TickLabels = arrayfun( ...
+        @(f) sprintf('%+g %%', 100 * f), ...
+        cbar.Ticks, 'UniformOutput', false);
     cbar.TickDirection = 'out';
-    cbar.Position = [0.925, 0.1, 0.02, 0.8];
+    cbar.Position = [0.91, 0.1, 0.02, 0.8];
     cbar.Position([2, 4]) = ax.Position([2, 4]);
 
     title(ax, ...
