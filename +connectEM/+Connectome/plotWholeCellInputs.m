@@ -263,30 +263,13 @@ for curIdx = 1:size(extWcT, 1)
     curSyns.isExc = conn.axonMeta.isExc(curSyns.axonId);
     curSyns.isInh = conn.axonMeta.isInh(curSyns.axonId);
     
-    curSyns.isTc = conn.axonMeta.axonClass(curSyns.axonId);
-    curSyns.isTc = curSyns.isTc == 'Thalamocortical';
+    curSyns.axonClass = conn.axonMeta.axonClass(curSyns.axonId);
     
     curSyns.dist = extWcT.nodeDists{curIdx}(curSyns.nodeId);
     curSyns.dist = curSyns.dist / 1E3;
     
     % move soma synapses to separate bin
     curSyns.dist(curSyns.isSoma) = -eps;
-    
-    % find repeated synapses
-    curRepT = table;
-   [curRepT.axonId, ~, curSynCount] = unique(curSyns.axonId);
-    curRepT.synDist = accumarray( ...
-        curSynCount, curSyns.dist, [], ...
-        @(dist) {sort(dist, 'ascend')});
-    
-    curRepT.synCount = accumarray(curSynCount, 1);
-    curRepT(curRepT.synCount < 2, :) = [];
-    clear curSynCount;
-    
-    % sorting
-   [~, curSortIds] = sort(cellfun( ...
-       @median, curRepT.synDist), 'descend');
-    curRepT = curRepT(curSortIds, :);
     
     curMaxDist = 10 * ceil(max(curSyns.dist) / 10);
     curBinEdges = -5:5:curMaxDist;
@@ -304,7 +287,6 @@ for curIdx = 1:size(extWcT, 1)
     
     curPlot(curAx, curSyns.dist);
     curPlot(curAx, curSyns.dist(curSyns.isSpine));
-    curPlot(curAx, curSyns.dist(curSyns.isSoma));
     curPlot(curAx, curSyns.dist(curSyns.isSoma | ~curSyns.isSpine));
     
     curAx.TickDir = 'out';
@@ -319,8 +301,7 @@ for curIdx = 1:size(extWcT, 1)
         'FontWeight', 'normal', 'FontSize', 10);
     
     curLeg = legend(curAx, ...
-        'All', 'Onto spines', ...
-        'Onto soma', 'Onto shaft', ...
+        'All', 'Onto spines', 'Onto shaft', ...
         'Location', 'EastOutside');
     curLeg.Position([1, 3]) = [0.82, (0.98 - 0.82)];
     curLeg.Box = 'off';
@@ -343,10 +324,9 @@ for curIdx = 1:size(extWcT, 1)
             'DisplayStyle', 'stairs', ...
             'LineWidth', 2, ...
             'FaceAlpha', 1);
-        
+	
+    curPlot(curAx, curSyns.dist(curSyns.isSpine & ~curSyns.isSoma));
     curPlot(curAx, curSyns.dist(curSyns.isExc));
-    curPlot(curAx, curSyns.dist(curSyns.isTc));
-    curPlot(curAx, curSyns.dist(~curSyns.isSpine));
     
     curAx.TickDir = 'out';
     curAx.Position(3) = 0.8 - curAx.Position(1);
@@ -356,36 +336,46 @@ for curIdx = 1:size(extWcT, 1)
     ylim(curAx, [0, 1]);
     
     curLeg = legend(curAx, ...
+        'Onto spines', ...
         'Excitatory', ...
-        'Thalamocortical', ...
-        'Shaft', ...
         'Location', 'EastOutside');
     curLeg.Position([1, 3]) = [0.82, (0.98 - 0.82)];
     curLeg.Box = 'off';
     
-    % plot synaptic clustering
+    % TC vs CC
     curAx = subplot(4, 1, 3);
     hold(curAx, 'on');
     
-    for curRepIdx = 1:size(curRepT, 1)
-        % randomize soma synapse locations
-        curRepSynDists = curRepT.synDist{curRepIdx};
-        curRepSynDists(curRepSynDists < 0) = curBinEdges(1) + ...
-            diff(curBinEdges(1:2)) * rand(sum(curRepSynDists < 0), 1);
-        
-        plot( ...
-            curAx, curRepSynDists, ...
-            repelem(curRepIdx, curRepT.synCount(curRepIdx)), ...
-            'k.-', 'MarkerSize', 12);
-    end
+    curDiscretize = ...
+        @(data) accumarray( ...
+            discretize(data, curBinEdges), ...
+            1, [numel(curBinEdges) - 1, 1]);
+    curBinsAll = curDiscretize(curSyns.dist);
+    
+    curPlot = ...
+        @(ax, data) histogram(ax, ...
+            'BinCount', curDiscretize(data), ...
+            'BinEdges', curBinEdges, ...
+            'Normalization', 'probability', ...
+            'DisplayStyle', 'stairs', ...
+            'LineWidth', 2, ...
+            'FaceAlpha', 1);
+	
+    curPlot(curAx, curSyns.dist(curSyns.axonClass == 'Thalamocortical'));
+    curPlot(curAx, curSyns.dist(curSyns.axonClass == 'Corticocortical'));
     
     curAx.TickDir = 'out';
     curAx.Position(3) = 0.8 - curAx.Position(1);
     
     xlim(curAx, curBinEdges([1, end]));
-    ylim(curAx, [0, max(1, size(curRepT, 1))]);
-    yticks(curAx, curAx.YLim);
-    ylabel(curAx, 'Axons');
+    ylabel(curAx, 'Probability');
+    
+    curLeg = legend(curAx, ...
+        'Thalamocortical', ...
+        'Corticocortical', ...
+        'Location', 'EastOutside');
+    curLeg.Position([1, 3]) = [0.82, (0.98 - 0.82)];
+    curLeg.Box = 'off';
     
     % plot (spine) synapse sizes
     curAx = subplot(4, 1, 4);
