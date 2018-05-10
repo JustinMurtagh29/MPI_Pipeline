@@ -58,18 +58,19 @@ for curAxonClass = axonClasses
         curCoinMat(curSpecIdx, :) = curCoinVec;
     end
     
-    % Other axons
-    curAxonIds = structfun(@(curSpec) {curSpec.axonIds}, curSpecs);
-    curAxonIds = setdiff(curAxonClass.axonIds, cell2mat(curAxonIds));
-    curCoinMat(end, :) = mean(classConn(curAxonIds, :), 1);
-    
+    % All axons
+    curCoinMat(end, :) = mean(classConn(curAxonClass.axonIds, :), 1);
     plotIt(info, targetLabels, curAxonClass, curSpecLabels, curCoinMat);
 end
 
 %% Utilities
 function plotIt(info, targetClasses, axonClass, specClasses, coinMat)
+    nullProbs = coinMat(end, :);
+    deltaMat = coinMat - nullProbs;
+    maxDelta = 0.25;
+
     targetClasses{end + 1} = 'Other';
-    specClasses{end + 1} = 'None';
+    specClasses{end + 1} = 'All axons';
     
     rows = numel(specClasses);
     cols = numel(targetClasses);
@@ -77,13 +78,16 @@ function plotIt(info, targetClasses, axonClass, specClasses, coinMat)
     
     fig = figure();
     ax = axes(fig);
-    imshow(coinMat, 'Parent', ax, 'Colormap', parula);
+    
+    imshow( ...
+        deltaMat, [-maxDelta, +maxDelta], ...
+        'Colormap', connectEM.Figure.redBlue(128), ...
+        'Parent', ax);
 
     fig.Color = 'white';
     fig.Position(3:4) = 750 .* [1, frac];
 
     ax.Visible = 'on';
-    ax.Box = 'off';
     ax.TickDir = 'out';
 
     ax.XAxisLocation = 'top';
@@ -103,12 +107,12 @@ function plotIt(info, targetClasses, axonClass, specClasses, coinMat)
         curOff = ax.Position(1:2) + (curOff - 1) .* curBoxSize;
 
         curAnn = annotation( ...
-            'textbox', [curOff, curBoxSize], ...
+            fig, 'textbox', [curOff, curBoxSize], ...
             'String', sprintf('%.1f %%', 100 * coinMat(curIdx)));
         curAnn.HorizontalAlignment = 'center';
         curAnn.VerticalAlignment = 'middle';
         curAnn.EdgeColor = 'none';
-        curAnn.Color = 'white';
+        curAnn.Color = 'black';
         curAnn.FontSize = 12;
     end
     
