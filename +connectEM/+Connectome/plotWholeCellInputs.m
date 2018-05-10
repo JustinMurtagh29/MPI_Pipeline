@@ -6,7 +6,8 @@ clear;
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 
 % Set output directory to write figures to disk instead of displaying them.
-outputDir = '/home/amotta/Desktop/whole-cell-input-distributions';
+plotDir = '';
+plotShow = false;
 
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites-wholeCells-03-v2-classified_spine-syn-clust.mat');
 wcFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v3_auto-and-manual.mat');
@@ -242,10 +243,13 @@ for curIdx = 1:size(extWcT, 1)
     curSyns = extWcT.synapses{curIdx};
     if isempty(curSyns); continue; end
     
-    if ~isempty(outputDir)
+    if plotShow
+        curFig = figure(); %#ok
+    elseif ~isempyt(plotDir)
         curFig = figure('visible', 'off');
     else
-        curFig = figure();
+        % No need to build plot
+        continue;
     end
     
     curFig.Color = 'white';
@@ -409,9 +413,9 @@ for curIdx = 1:size(extWcT, 1)
     ylim(curAx, [0, 0.4]);
     
     % save figure
-    if ~isempty(outputDir)
+    if ~isempty(plotDir)
         curFigFile = sprintf('input-distribution_%s', extWcT.tag{curIdx});
-        curFigFile = fullfile(outputDir, curFigFile);
+        curFigFile = fullfile(plotDir, curFigFile);
         
         export_fig(strcat(curFigFile, '.png'), curFig);
         export_fig(strcat(curFigFile, '.eps'), curFig);
