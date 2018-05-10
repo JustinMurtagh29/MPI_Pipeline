@@ -245,7 +245,7 @@ for curIdx = 1:size(extWcT, 1)
     
     if plotShow
         curFig = figure(); %#ok
-    elseif ~isempyt(plotDir)
+    elseif ~isempty(plotDir)
         curFig = figure('visible', 'off');
     else
         % No need to build plot
