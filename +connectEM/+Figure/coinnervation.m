@@ -89,6 +89,7 @@ function plotIt(info, targetClasses, axonClass, specClasses, coinMat)
 
     ax.Visible = 'on';
     ax.TickDir = 'out';
+    ax.Box = 'off';
 
     ax.XAxisLocation = 'top';
     ax.XTick = 1:size(coinMat, 2);
