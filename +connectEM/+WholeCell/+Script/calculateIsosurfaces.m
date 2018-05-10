@@ -75,5 +75,38 @@ for curFile = dendFiles
         'reduce', 0.05);
 end
 
+%% Extract tracings for manual annotations
+curFile = dendFiles(end);
+curDend = load(curFile.file);
+
+curWcT = table;
+curWcT.id = curDend.idxWholeCells;
+curWcT.agglo = curDend.dendrites;
+
+% Only keep whole cells
+curWcT(~curWcT.id, :) = [];
+curWcT = sortrows(curWcT, 'id');
+
+[~, curWcT.tracings] = ...
+    Superagglos.splitIntoAgglosAndFlights(curWcT.agglo);
+
+skel = skeleton();
+skel = Skeleton.setParams4Pipeline(skel, param);
+skel = skel.setDescription(sprintf( ...
+    '%s (%s)', info.filename, info.git_repos{1}.hash));
+
+for curIdx = 1:height(curWcT)
+    curSkel = curWcT.tracings{curIdx};
+    curSkel = Superagglos.toSkel(curSkel, skel);
+    
+    % NOTE(amotta): Work around issue in skeleton class.
+    % https://gitlab.mpcdf.mpg.de/connectomics/auxiliaryMethods/issues/15
+    if isempty(curSkel.nodes); continue; end
+    
+    curSkelFile = sprintf('%d.nml', curIdx);
+    curSkelFile = fullfile(outputDir, 'nml', curSkelFile);
+    curSkel.write(curSkelFile);
+end
+
 %% Done
 Util.log('Done');
