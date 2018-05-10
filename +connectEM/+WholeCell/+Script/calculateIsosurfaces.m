@@ -25,7 +25,7 @@ dendFiles(2).file = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v3_
 dendFiles(2).tag = 'auto';
 % After automated + manual spine attachment
 dendFiles(3).file = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v3_auto-and-manual.mat');
-dendFiles(4).tag = 'full';
+dendFiles(3).tag = 'full';
 
 % Segmentation
 segParam = struct;
