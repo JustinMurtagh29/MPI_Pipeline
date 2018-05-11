@@ -216,6 +216,20 @@ for curIdx = 1:numel(wcGroups)
     extWcT = cat(1, extWcT, curQueenWcT);
 end
 
+%% Determine bin edges
+binSize = 20;
+
+% Find farthest synapse
+binEdges = cellfun( ...
+    @(syns, nodeDists) max(nodeDists(syns.nodeId)), ...
+    extWcT.synapses, extWcT.nodeDists, 'UniformOutput', false);
+binEdges(cellfun(@isempty, binEdges)) = [];
+binEdges = max(cell2mat(binEdges)) / 1E3;
+
+% Build bin edges
+binEdges = binSize * ceil(binEdges / binSize);
+binEdges = 0:binSize:binEdges;
+
 %% Plotting
 [targetClasses, ~, conn.denMeta.targetClassId] = unique(conn.denMeta.targetClass);
 
@@ -240,13 +254,10 @@ for curIdx = 1:size(extWcT, 1)
     curSyns.dist = extWcT.nodeDists{curIdx}(curSyns.nodeId);
     curSyns.dist = curSyns.dist / 1E3;
     
-    curMaxDist = 20 * ceil(max(curSyns.dist) / 20);
-    curBinEdges = 0:20:curMaxDist;
-    
     curPlot = @(ax, data) ...
         histogram( ...
             ax, data, ...
-            'BinEdges', curBinEdges, ...
+            'BinEdges', binEdges, ...
             'DisplayStyle', 'stairs', ...
             'LineWidth', 2, ...
             'FaceAlpha', 1);
@@ -270,7 +281,7 @@ for curIdx = 1:size(extWcT, 1)
     curHist = curPlot(curAx, curSyns.dist(~curSyns.isSpine));
     curHist.EdgeColor = 'black';
     
-    xlim(curAx, curBinEdges([1, end]));
+    xlim(curAx, binEdges([1, end]));
     ylabel(curAx, 'All');
     
     curAx.YLim(1) = 0;
@@ -305,7 +316,7 @@ for curIdx = 1:size(extWcT, 1)
         curHist.EdgeColor = 'black';
         
         ylim(curYlim);
-        xlim(curAx, curBinEdges([1, end]));
+        xlim(curAx, binEdges([1, end]));
         ylabel(curAx, targetClasses{curClassIdx});
     end
    
