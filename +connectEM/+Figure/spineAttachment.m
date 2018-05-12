@@ -22,6 +22,7 @@ param = load(fullfile(rootDir, 'allParameter.mat'), 'p');
 param = param.p;
 
 %% Process cells
+tic;
 for curCellId = 1:isoCount
     curIsos = cell(size(isoTags));
     for curIdx = 1:numel(isoTags)
@@ -38,6 +39,7 @@ for curCellId = 1:isoCount
     end
 
     renderCell(param, info, isoTags, outFile, curCellId, curIsos);
+    Util.showProgress(curCellId, isoCount);
 end
 
 %% Utility
