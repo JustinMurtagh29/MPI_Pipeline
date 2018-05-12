@@ -85,7 +85,7 @@ conn.coord = nan(size(conn.edges));
 conn = sortrows(conn, 'synCount', 'ascend');
 
 fig = figure();
-fig.Color = 'white';
+fig.Color = 'black';
 fig.Position(3:4) = 1200;
 
 ax = axes(fig);
@@ -110,6 +110,7 @@ xTicks = ...
   + xMinorTicks(2:end);
 xTicks = xTicks / 2;
 
+ax.XAxis.Color = 'white';
 ax.XAxis.MinorTick = 'on';
 ax.XAxis.MinorTickValues = xMinorTicks;
 
@@ -130,6 +131,7 @@ yTicks = ...
   + yMinorTicks(2:end);
 yTicks = yTicks / 2;
 
+ax.YAxis.Color = 'white';
 ax.YAxis.MinorTick = 'on';
 ax.YAxis.MinorTickValues = yMinorTicks;
 
@@ -139,73 +141,7 @@ ylim(ax, yMinorTicks([1, end]));
 
 ax.Position = [0.15, 0.15, 0.7, 0.7];
 
-% Histogram over incoming synapses
-axDend = axes(fig);
-axDend.Position = ax.Position;
-axDend.Position(2:2:end) = [0.05, ax.Position(2) - 0.05];
-
-dendSynCount = accumarray( ...
-    conn.coord(:, 2), conn.synCount, size(dendMeta.id));
-histogram(axDend, ...
-    'BinCount', dendSynCount, ...
-    'BinEdges', 0:1:numel(dendSynCount), ...
-    'EdgeColor', ax.ColorOrder(1, :), ...
-    'FaceAlpha', 1);
-
-axDend.YScale = 'log';
-axDend.YDir = 'reverse';
-axDend.TickDir = 'out';
-axDend.YMinorTick = 'off';
-
-axDend.YLim(1) = minSynCount;
-yTicks = log10(axDend.YLim);
-yTicks = 10 .^ (yTicks(1):yTicks(2));
-
-yticks(axDend, yTicks);
-yticklabels(axDend, arrayfun( ...
-    @(d) sprintf('%d', d), ...
-    yTicks, 'UniformOutput', false));
-
-xlim(axDend, [0, numel(dendSynCount)]);
-xticks(axDend, [xticks(axDend), axDend.XLim(2)]);
-ylabel(axDend, 'Synapses');
-
-% Histogram over outgoing synapses
-axAxon = axes(fig);
-axAxon.Position = ax.Position;
-axAxon.Position(1) = sum(ax.Position(1:2:end));
-axAxon.Position(3) = 0.95 - axAxon.Position(1);
-
-axonSynCount = accumarray( ...
-    conn.coord(:, 1), conn.synCount, size(axonMeta.id));
-histogram(axAxon, ...
-    'BinCounts', axonSynCount, ...
-    'BinEdges', 0:1:numel(axonSynCount), ...
-    'Orientation', 'horizontal', ...
-    'EdgeColor', ax.ColorOrder(1, :), ...
-    'FaceAlpha', 1);
-
-axAxon.TickDir = 'out';
-axAxon.XScale = 'log';
-axAxon.XAxisLocation = 'top';
-axAxon.XMinorTick = 'off';
-axAxon.YDir = 'reverse';
-axAxon.YAxisLocation = 'right';
-
-axAxon.XLim(1) = minSynCount;
-xTicks = log10(axAxon.XLim);
-xTicks = 10 .^ (xTicks(1):xTicks(2));
-
-xticks(axAxon, xTicks);
-xticklabels(axAxon, arrayfun( ...
-    @(d) sprintf('%d', d), ...
-    xTicks, 'UniformOutput', false));
-
-ylim(axAxon, [0, numel(axonSynCount)]);
-yticks(axAxon, [yticks(axAxon), numel(axonSynCount)]);
-xlabel('Synapses');
-
 annotation( ...
-    fig, 'textbox', [0, 0.9, 1, 0.1], ...
+    fig, 'textbox', [0, 0.9, 1, 0.1], 'Color', 'white', ...
     'String', {info.filename; info.git_repos{1}.hash}, ...
     'EdgeColor', 'none', 'HorizontalAlignment', 'center');
