@@ -124,14 +124,16 @@ ax = axes(fig);
 hold(ax, 'on');
 axis(ax, 'square');
 
-curAvail = availabilities(:, :, curAxonIds);
+curAvail = availabilities(1:(end - 1), :, curAxonIds);
 curAvail = permute(curAvail, [2, 3, 1]);
 curAvail = reshape(curAvail, size(curAvail, 1), []);
 curAvail = transpose(curAvail);
 
-plot(ax, avail.dists / 1E3, curAvail);
+plot(ax, ...
+    avail.dists / 1E3, curAvail, ...
+    'MarkerIndices', 1:5:size(curAvail, 2));
 
-colors = ax.ColorOrder(1:numel(targetClasses), :);
+colors = ax.ColorOrder(1:(numel(targetClasses) - 1), :);
 colors = num2cell(colors, 2);
 
 lines = flip([ax.Children]);
@@ -144,11 +146,11 @@ xlabel(ax, 'r_{pred} (µm)');
 ylabel(ax, 'Availability');
 
 ax.XLim = [0, maxRadius];
-ax.YLim = [0, maxAvail];
+ax.YLim = [0, 0.25];
 ax.TickDir = 'out';
 
 leg = legend( ...
-    lines(2:2:end), targetClasses, ...
+    lines(2:2:end), targetClasses(1:(end - 1)), ...
     'Location', 'EastOutside');
 leg.Box = 'off';
 
