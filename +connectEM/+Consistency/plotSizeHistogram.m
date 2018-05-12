@@ -2,8 +2,18 @@ function fig = plotSizeHistogram(info, synT, plotConfigs, varargin)
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     opt = struct;
+    opt.scale = 'linear';
     opt.binEdges = linspace(0, 1.2, 61);
     opt = Util.modifyStruct(opt, varargin{:});
+    
+    switch opt.scale
+        case 'log10'
+            synT.area = log10(synT.area);
+        case 'linear'
+            % nothing to do
+        otherwise
+            error('Invalid scale "%s"', opt.scale);
+    end
 
     fig = figure();
     fig.Color = 'white';
