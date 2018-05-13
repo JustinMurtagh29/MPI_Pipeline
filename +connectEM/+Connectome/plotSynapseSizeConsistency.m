@@ -137,6 +137,7 @@ connectEM.Consistency.plotVariabilityHistogram( ...
 
 %% Variability vs. distance
 curMaxDistUm = 20;
+curMaxPlotDistUm = 200;
 
 curPlotConfig = plotConfigs(1);
 curPairConfig = connectEM.Consistency.buildPairConfigs(synT, curPlotConfig);
@@ -188,7 +189,7 @@ ax = subplot(1, 2, 1);
 axis(ax, 'square');
 hold(ax, 'on');
 
-plot(ax, curPreT.preDist / 1E3, curPreT.cv, '.');
+plot(ax, curT.preDist / 1E3, curT.cv, '.');
 plot(ax, ax.XLim, curFitPre(ax.XLim), 'Color', 'black');
 title(ax, {'Presynaptic', sprintf( ...
     'CV = %.2f + %.4fd', curFitPre.p2, curFitPre.p1)}, ...
@@ -199,14 +200,15 @@ ax = subplot(1, 2, 2);
 axis(ax, 'square');
 hold(ax, 'on');
 
-plot(ax, curPostT.postDist / 1E3, curPostT.cv, '.');
+plot(ax, curT.postDist / 1E3, curT.cv, '.');
 plot(ax, ax.XLim, curFitPost(ax.XLim), 'Color', 'black');
 title(ax, {'Postsynaptic', sprintf( ...
     'CV = %.2f + %.4fd', curFitPost.p2, curFitPost.p1)}, ...
     'FontWeight', 'normal', 'FontSize', 10);
 
 axes = fig.Children;
-[ax.TickDir] = deal('out');
+[axes.TickDir] = deal('out');
+[axes.XLim] = deal([0, curMaxPlotDistUm]);
 
 ax = axes(end);
 xlabel(ax, 'Intersynapse distance (µm)');
