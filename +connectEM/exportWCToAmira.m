@@ -1,5 +1,5 @@
 aggloName = 'dendrites_wholeCells_03_v2.mat';
-mainOutDir = ['/tmpscratch/mbeining/isos/',connName(1:end-4)];
+mainOutDir = ['/tmpscratch/mbeining/isos/',aggloName(1:end-4)];
 isoParam = {'smoothWidth',5,'smoothSizeHalf',5,'reduce',0.1};  % heiko suggests 9 , 9 , 0.2
 
 %% load stuff
