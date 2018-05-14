@@ -271,7 +271,7 @@ if ~existentDendrites(6) || ~existentWC(1)
     axons = connectEM.applyAggloCorrections(axons,p,fullfile(outputFolder,correctionFolder,'checkedBeforeAdd'),1,sMpoints);
     
     [ wholeCells,dendrites,indBigDends,myelinDend ] = connectEM.wcApplyManualAnnotation(cat(1,wholeCells,dendrites), correctionFolder, axons,somaSegIds,somaLUT, sMpoints );
-
+    
     save(fullfile(outputFolder,'wholeCells_01.mat'),'wholeCells');
     save(fullfile(outputFolder,'dendrites_05.mat'),'dendrites','WholeCellId','myelinDend','indBigDends','info');
 elseif ~existentDendrites(7) || ~existentWC(2)
@@ -293,7 +293,7 @@ if  ~existentWC(2) || ~existentDendrites(7)
     %     connectEM.applyAggloCorrections(cat(1,wholeCells,dendrites),p,fullfile(outputFolder,correctionFolder),2,sMpoints,axons,1);
     % no correction was necessary
     [ wholeCells,dendrites,indBigDends,myelinDend ] = connectEM.wcApplyManualAnnotation(cat(1,wholeCells,dendrites), correctionFolder, axons,somaSegIds,somaLUT, sMpoints );
-
+    
     save(fullfile(outputFolder,'wholeCells_02.mat'),'wholeCells');
     save(fullfile(outputFolder,'dendrites_06.mat'),'dendrites','myelinDend','indBigDends')%,'info');
 elseif ~existentDendrites(8) || ~existentWC(3)
@@ -304,7 +304,7 @@ end
 disp('State 06 dendrites loaded/generated')
 %% next round of manual whole cell fixes
 if ~existentWC(3) || ~existentDendrites(8)
-       
+    
     load(fullfile(outputFolder,'axons_07_b.mat'),'axons')
     % ending detection done by christian!
     correctionFolder = fullfile(outputFolder,'WholeCellCorrections_06');
@@ -560,7 +560,7 @@ if  ~existentWC(5) || ~existentDendrites(15)
     correctionFolder = fullfile(outputFolder,'WholeCellCorrections_14');
     fprintf('Folder with correction nmls for dendrites_13 is %s\n',correctionFolder);
     [ wholeCells,dendrites,indBigDends,myelinDend ] = connectEM.wcApplyManualAnnotation(cat(1,wholeCells,dendrites), correctionFolder, axons,somaSegIds,somaLUT, sMpoints );
-
+    
     save(fullfile(outputFolder,'wholeCells_05.mat'),'wholeCells');
     save(fullfile(outputFolder,'dendrites_14.mat'),'dendrites','myelinDend','indBigDends')%,'info');
 elseif ~existentDendrites(16) || ~existentWC(6)
@@ -678,10 +678,10 @@ if  ~existentWC(8)
         else
             wholeCellsNoAxon(n) = tmp;
         end
-%         tmp = rmfield(Superagglos.removeNodesFromAgglo(wholeCells(n),~wholeCells(n).axon),'axon'); % get the whole cells without the axon
-%         ix = max(arrayfun(@(x) size(x.nodes,1),tmp));
-%         tmp = tmp(ix);
-%         AIS(n) = tmp;
+        %         tmp = rmfield(Superagglos.removeNodesFromAgglo(wholeCells(n),~wholeCells(n).axon),'axon'); % get the whole cells without the axon
+        %         ix = max(arrayfun(@(x) size(x.nodes,1),tmp));
+        %         tmp = tmp(ix);
+        %         AIS(n) = tmp;
     end
     % remove all branches that have been labeled axonic from all wholeCells
     
@@ -696,7 +696,7 @@ if  ~existentWC(8)
     
     save(fullfile(outputFolder,'dendrites_wholeCells_01.mat'),'dendrites','myelinDend','indBigDends','indWholeCells','indAIS')%,'info');
 end
-    
+
 if  ~existentWC(9)
     % now comes the manual axon detection part
     clear wholeCellsNoAxon
@@ -711,7 +711,7 @@ if  ~existentWC(9)
         wholeCells(n).axon = NaN(size(wholeCells(n).nodes,1),1);
     end
     wcLUT = Superagglos.buildLUT(wholeCells,segmentMeta.maxSegId);
-
+    
     usedCells = zeros(numel(wholeCells),1);
     skelsNotFound = [];
     for f = 1:numel(filenames)
@@ -803,9 +803,9 @@ if  ~existentWC(9)
         end
         wholeCellsNoAxon(n) = rmfield(tmp(ind),'axon');
     end
-    save(fullfile(outputFolder,'wholeCells_GTAxon_08_v4.mat'),'wholeCells');  
- 
-   load(fullfile(outputFolder,'dendrites_16.mat'))
+    save(fullfile(outputFolder,'wholeCells_GTAxon_08_v4.mat'),'wholeCells');
+    
+    load(fullfile(outputFolder,'dendrites_16.mat'))
     % concatenate truncated whole cells with dendrite class and make new state
     indWholeCells = cat(1,false(numel(dendrites),1),true(numel(wholeCellsNoAxon),1));
     dendrites = cat(1,dendrites,wholeCellsNoAxon');
@@ -813,6 +813,6 @@ if  ~existentWC(9)
     indAIS = cat(1,indAIS,false(numel(wholeCellsNoAxon),1));
     [ myelinDend ] = connectEM.calculateSurfaceMyelinScore( dendrites, graph, borderMeta, heuristics ); % calculate myelin score for the dendrite class
     save(fullfile(outputFolder,'dendrites_wholeCells_01_v5.mat'),'dendrites','myelinDend','indBigDends','indWholeCells','indAIS')%,'info');
-   
+    
 end
 %%
