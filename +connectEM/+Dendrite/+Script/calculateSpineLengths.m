@@ -30,16 +30,47 @@ dendrites = dendrites.dendrites(dendrites.indBigDends);
 
 [conn, syn] = connectEM.Connectome.load(param, connFile);
 
+%% Map synapses onto spine heads (if possible)
+maxSegId = Seg.Global.getMaxSegId(param);
+spineLUT = Agglo.buildLUT(maxSegId, spineHeads);
+
+syn.synapses.spineId = cellfun( ...
+    @(segIds) mode(nonzeros(spineLUT(segIds))), ...
+    syn.synapses.postsynId);
+    
+%% Export random spine heads for ground-truth
+segPoints = Seg.Global.getSegToPointMap(param);
+
+rng(0);
+randSpineIds = rmmissing(syn.synapses.spineId);
+randSpineIds = randSpineIds(randperm(numel(randSpineIds)));
+randSpineIds = randSpineIds(1:25);
+
+numDigits = ceil(log10(1 + numel(randSpineIds)));
+
+skel = skeleton();
+skel = Skeleton.setParams4Pipeline(skel, param);
+skel.setDescription(sprintf( ...
+    '%s (%s)', info.filename, info.git_repos{1}.hash));
+skel = Skeleton.fromMST( ...
+    cellfun( ...
+        @(segIds) segPoints(segIds, :), ...
+        spineHeads(randSpineIds), ...
+        'UniformOutput', false), ...
+	param.raw.voxelSize, skel);
+skel.names = arrayfun( ...
+    @(idx, id) sprintf('%0*d. Spine head %d', numDigits, idx, id), ...
+	(1:numel(randSpineIds))', randSpineIds, 'UniformOutput', false);
+skel.write('/home/amotta/Desktop/random-spine-heads.nml');
+
 %% Calculate spine lengths
 spineLengths = ...
     connectEM.Dendrite.calculateSpineLengths( ...
         param, trunks, dendrites, spineHeads);
-
+    
 %% Prepare analysis
-maxSegId = Seg.Global.getMaxSegId(param);
-spineLUT = Agglo.buildLUT(maxSegId, spineHeads);
-
 synT = connectEM.Connectome.buildSynapseTable(conn, syn);
+synT.spineId = syn.synapses.spineId(synT.id);
 synT.type = syn.synapses.type(synT.id);
 synT(~synT.isSpine, :) = [];
 
@@ -47,10 +78,6 @@ synT(~synT.isSpine, :) = [];
     {'preAggloId', 'postAggloId'}), 'rows');
 fold = accumarray(synT.fold, 1);
 synT.fold = fold(synT.fold);
-
-synT.spineId = cellfun( ...
-    @(segIds) mode(nonzeros(spineLUT(segIds))), ...
-    syn.synapses.postsynId(synT.id));
 
 synT.spineLength = spineLengths(synT.spineId);
 synT.spineLength = synT.spineLength / 1E3;
