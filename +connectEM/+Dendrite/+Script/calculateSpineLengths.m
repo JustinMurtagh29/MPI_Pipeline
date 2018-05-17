@@ -12,6 +12,10 @@ connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites
 % https://gitlab.mpcdf.mpg.de/connectomics/amotta/blob/534c026acd534957b84e395d697ac48b3cc6a7ad/matlab/+L4/+Spine/buildDendriteTrunkMask.m
 trunkMinSize = 10 ^ 5.5;
 
+calibNml = fullfile( ...
+    fileparts(mfilename('fullpath')), 'annotations', ...
+    '2012-09-28_ex145_07x2_ROI2017__explorational__amotta__da37a8.nml');
+
 binEdges = linspace(0, 7, 71);
 
 info = Util.runInfo();
@@ -67,7 +71,42 @@ skel.write('/home/amotta/Desktop/random-spine-heads.nml');
 spineLengths = ...
     connectEM.Dendrite.calculateSpineLengths( ...
         param, trunks, dendrites, spineHeads);
-    
+
+%% Use manual annotations for calibration
+calib = skeleton(calibNml);
+
+calibT = table;
+calibT.spineId = regexpi( ...
+    calib.names, 'Spine head (\d+)$', 'tokens', 'once');
+calibT.spineId = str2double(vertcat(calibT.spineId{:}));
+calibT.calibLength = calib.pathLength([], param.raw.voxelSize);
+calibT.autoLength = spineLengths(calibT.spineId);
+
+fig = figure();
+fig.Color = 'white';
+
+ax = axes(fig);
+ax.TickDir = 'out';
+axis(ax, 'square');
+hold(ax, 'on');
+
+scatter(ax, calibT.calibLength / 1E3, calibT.autoLength / 1E3, 128, '.');
+
+limits = [0, max(ax.XLim(2), ax.YLim(2))];
+ax.XLim = limits; ax.YLim = limits;
+
+plot(ax, limits, limits, 'Color', 'black', 'LineStyle', '--');
+
+ticks = union(0, intersect(xticks(ax), yticks(ax)));
+xticks(ax, ticks); yticks(ax, ticks);
+
+xlabel(ax, 'True spine length (µm)');
+ylabel(ax, 'Calculated spine length (µm)');
+
+title( ...
+    ax, {info.filename; info.git_repos{1}.hash}, ...
+    'FontWeight', 'normal', 'FontSize', 10);
+
 %% Prepare analysis
 synT = connectEM.Connectome.buildSynapseTable(conn, syn);
 synT.spineId = syn.synapses.spineId(synT.id);
