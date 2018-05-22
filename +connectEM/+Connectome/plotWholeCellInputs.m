@@ -287,6 +287,12 @@ for curIdx = 1:numel(wcGroups)
     extWcT = cat(1, extWcT, curQueenWcT);
 end
 
+extWcT.dendId = zeros(size(extWcT.id));
+extWcT = extWcT(:, [1, end, 2:(end - 1)]);
+
+dendT = connectEM.WholeCell.splitWholeCellInputs(wcT, splitNmlT);
+extWcT = cat(1, extWcT, dendT);
+
 %% Plotting
 for curIdx = 1:size(extWcT, 1)
     curSyns = extWcT.synapses{curIdx};
