@@ -76,7 +76,9 @@ for curIdx = 1:numel(splitNmlT.dendNodes)
     
    [~, ~, curNodes.dendId] = unique(curNodes.treeId);
     splitNmlT.dendNodes{curIdx} = accumarray( ...
-        curNodes.dendId, curNodes.nodeId, [], @(ids) {ids});
+        curNodes.dendId, curNodes.nodeId, ...
+        [max([1; curNodes.dendId(:)]), 1], ...
+        @(ids) {ids}, {zeros(0, 1)});
 end
 
 %% Split axons into exc. and inh.

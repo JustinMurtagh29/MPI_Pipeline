@@ -15,7 +15,15 @@ function dendT = splitWholeCellInputs(wcT, splitNmlT)
 end
 
 function dendT = forCell(wcT, splitNmlT)
-    dendNodeIds = splitNmlT.dendNodes{1};
+    somaNodeIds = find(ismember( ...
+        wcT.agglo.nodes(:, 4), ...
+        wcT.somaAgglo.nodes(:, 4)));
+
+    dendNodeIds = cellfun( ...
+        @(ids) setdiff(ids, somaNodeIds), ...
+        splitNmlT.dendNodes{1}, 'UniformOutput', false);
+    dendNodeIds(cellfun(@isempty, dendNodeIds)) = [];
+    
     dendT = wcT(ones(numel(dendNodeIds), 1), :);
     
     dendT.dendId(:) = 1:numel(dendNodeIds);
@@ -23,7 +31,7 @@ function dendT = forCell(wcT, splitNmlT)
     
     for curId = reshape(dendT.dendId, 1, [])
         curNodeIds = dendNodeIds{curId};
-        curNodeIds = unique(curNodeIds);
+        curNodeIds = setdiff(curNodeIds, somaNodeIds);
         
         dendT.title{curId} = sprintf( ...
             '%s, dendrite %d', dendT.title{curId}, curId);
