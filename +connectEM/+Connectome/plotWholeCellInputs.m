@@ -6,7 +6,7 @@ clear;
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 
 % Set output directory to write figures to disk instead of displaying them.
-plotDir = '';
+plotDir = '/home/amotta/Desktop/whole-cell-inputs';
 plotShow = false;
 
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites-wholeCells-03-v2-classified_spine-syn-clust.mat');
@@ -289,12 +289,6 @@ for curIdx = 1:numel(wcGroups)
     extWcT = cat(1, extWcT, curQueenWcT);
 end
 
-extWcT.dendId = zeros(size(extWcT.id));
-extWcT = extWcT(:, [1, end, 2:(end - 1)]);
-
-dendT = connectEM.WholeCell.splitWholeCellInputs(wcT, splitNmlT);
-extWcT = cat(1, extWcT, dendT);
-
 %% Plotting
 for curIdx = 1:size(extWcT, 1)
     curSyns = extWcT.synapses{curIdx};
@@ -499,16 +493,6 @@ for curWcGroup = wcGroups
     curData(~any(curData, 2), :) = [];
     curData = curData ./ sum(curData, 2);
 
-    
-    if plotShow
-        curFig = figure(); %#ok
-    elseif ~isempty(plotDir)
-        curFig = figure('visible', 'off');
-    else
-        % No need to build plot
-        continue;
-    end
-    
     curFig.Color = 'white';
     curFig.Position(3:4) = [520, 900];
 
@@ -555,6 +539,13 @@ synTypes = categories(conn.axonMeta.axonClass);
 [~, conn.axonMeta.axonClassId] = ...
     ismember(conn.axonMeta.axonClass, synTypes);
 
+dendT = connectEM.WholeCell.splitWholeCellInputs(wcT, splitNmlT);
+
+extWcT = wcT;
+extWcT.dendId(:) = 0;
+extWcT = extWcT(:, [1, end, 2:(end - 1)]);
+extWcT = cat(1, extWcT, dendT);
+
 curWcIds = unique(extWcT.id);
 for curId = reshape(curWcIds, 1, [])
     curDendT = extWcT(extWcT.id == curId, :);
@@ -573,7 +564,15 @@ for curId = reshape(curWcIds, 1, [])
     curDendT(sum(curDendT.synData, 2) < 50, :) = [];
     if size(curDendT, 1) < 2; continue; end
     
-    curFig = figure();
+    if plotShow
+        curFig = figure(); %#ok
+    elseif ~isempty(plotDir)
+        curFig = figure('visible', 'off');
+    else
+        % No need to build plot
+        continue;
+    end
+    
     curFig.Color = 'white';
     curFig.Position(3:4) = [720, 410];
     
