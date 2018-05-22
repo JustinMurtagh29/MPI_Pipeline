@@ -256,6 +256,13 @@ wcGroups(1).title = sprintf( ...
     numel(wcGroups(1).wcIds));
 wcGroups(1).tag = 'yz-view';
 
+wcGroups(2).wcIds = wcT.id( ...
+    cellfun(@height, wcT.synapses) > 100);
+wcGroups(2).title = sprintf( ...
+    'whole cells with > 100 synapses (n = %d)', ...
+    numel(wcGroups(2).wcIds));
+wcGroups(2).tag = '100-syn';
+
 %% Generate queen neuron
 extWcT = wcT;
 for curIdx = 1:numel(wcGroups)
@@ -483,7 +490,7 @@ for curIdx = 1:size(wcT, 1)
 end
 
 %% Plot results
-binEdges = linspace(0, 1, 21);
+binEdges = linspace(0, 1, 41);
 
 for curWcGroup = wcGroups
     curData = wcSynTypes;
@@ -492,7 +499,8 @@ for curWcGroup = wcGroups
     % Remove cells without synapses
     curData(~any(curData, 2), :) = [];
     curData = curData ./ sum(curData, 2);
-
+    
+    curFig = figure();
     curFig.Color = 'white';
     curFig.Position(3:4) = [520, 900];
 
