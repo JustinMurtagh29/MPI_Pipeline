@@ -4,8 +4,7 @@ clear;
 
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a_ax_spine_syn_clust.mat');
-synFile = fullfile(rootDir, 'connectomeState', 'SynapseAgglos_v3_ax_spine_clustered_classified.mat');
+connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites-wholeCells-03-v2-classified_spine-syn-clust.mat');
 outputDir = '/home/amotta/Desktop/spine-shaft-axons';
 
 minSynCount = 10;
@@ -18,34 +17,27 @@ param = param.p;
 
 segPoints = Seg.Global.getSegToPointMap(param);
 
-[conn, syn] = ...
-    connectEM.Connectome.load( ...
-        param, connFile, synFile);
+[conn, syn] = connectEM.Connectome.load(param, connFile);
 
 %% Complete axon meta data
 synT = connectEM.Connectome.buildSynapseTable(conn, syn);
-synT.type = syn.synapses.type(synT.id);
 
 axonMeta = conn.axonMeta;
-axonMeta.priSpineSynCount = accumarray( ...
-    synT.preAggloId, synT.type == 'PrimarySpine', size(conn.axons));
-axonMeta.priSpineSynFrac = axonMeta.priSpineSynCount ./ axonMeta.synCount;
-
-axonMeta.shaftSynCount = accumarray( ...
-    synT.preAggloId, synT.type == 'Shaft', size(conn.axons));
-axonMeta.shaftSynFrac = axonMeta.shaftSynCount ./ axonMeta.synCount;
+axonMeta.priSpineSynFrac = ...
+    axonMeta.fullPriSpineSynCount ...
+ ./ axonMeta.fullSynCount;
 
 % Get rid of axons with too few synapses
 axonMeta(axonMeta.synCount < minSynCount, :) = [];
 
 %% Export examples
 rng(0);
-spineAxonIds = find(axonMeta.priSpineSynFrac >= 0.7);
+spineAxonIds = find(axonMeta.priSpineSynFrac >= 0.5);
 spineAxonIds = spineAxonIds(randperm(numel(spineAxonIds)));
 spineAxonIds = reshape(spineAxonIds(1:25), [], 1);
 
 rng(0);
-shaftAxonIds = find(axonMeta.shaftSynFrac >= 0.7);
+shaftAxonIds = find(axonMeta.priSpineSynFrac < 0.5);
 shaftAxonIds = shaftAxonIds(randperm(numel(shaftAxonIds)));
 shaftAxonIds = reshape(shaftAxonIds(1:25), [], 1);
 
