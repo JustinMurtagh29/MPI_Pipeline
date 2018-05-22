@@ -13,6 +13,9 @@ connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites
 wcFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v3_auto-and-manual.mat');
 somaFile  = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_03_v2.mat');
 
+splitNmlDir = fileparts(fileparts(mfilename('fullpath')));
+splitNmlDir = fullfile(splitNmlDir, '+WholeCell', '+Script', 'annotations');
+
 % debugging
 debugDir = '';
 debugCellIds = [];
@@ -30,7 +33,53 @@ segMass = Seg.Global.getSegToSizeMap(param);
 wcData = load(wcFile);
 somaData = load(somaFile);
 
-%% split axons into exc. and inh.
+%% NML files for whole cell splitting
+splitNmlT = table;
+splitNmlT.path = dir(fullfile(splitNmlDir, '*.nml'));
+splitNmlT.path = reshape({splitNmlT.path.name}, [], 1);
+splitNmlT.path = fullfile(splitNmlDir, splitNmlT.path);
+
+splitNmlT.nml = cellfun(@slurpNml, splitNmlT.path);
+
+splitNmlT.cellId = arrayfun( ...
+    @(nml) regexp( ...
+        nml.parameters.experiment.description, ...
+        'Agglomerate (\d+)$', 'tokens', 'once'), ...
+    splitNmlT.nml);
+splitNmlT.cellId = str2double(splitNmlT.cellId);
+splitNmlT.cellId = wcData.idxWholeCells(splitNmlT.cellId);
+assert(all(splitNmlT.cellId));
+
+splitNmlT.dendNodes = cell(size(splitNmlT.path));
+for curIdx = 1:numel(splitNmlT.dendNodes)
+    curNml = splitNmlT.nml(curIdx);
+    curTrees = NML.buildTreeTable(curNml);
+    curNodes = NML.buildNodeTable(curNml);
+    curComments = NML.buildCommentTable(curNml);
+    
+    curNodes.nodeId(:) = {''};
+   [curMask, curIds] = ismember(curNodes.id, curComments.node);
+    curNodes.nodeId(curMask) = curComments.comment(curIds(curMask));
+    
+    curNodes.nodeId = cellfun( ...
+        @(nodeId) regexp( ...
+            nodeId, 'Node (\d+)$', 'tokens', 'once'), ...
+        curNodes.nodeId, 'UniformOutput', false);
+    curNodes.nodeId(cellfun(@isempty, curNodes.nodeId)) = {{'0'}};
+    curNodes.nodeId = str2double(vertcat(curNodes.nodeId{:}));
+    curNodes(~curNodes.nodeId, :) = [];
+    
+    % Remove soma tree(s)
+    curSomaTreeIds = curTrees.id(contains( ...
+        curTrees.name, 'soma', 'IgnoreCase', true));
+    curNodes(ismember(curNodes.treeId, curSomaTreeIds), :) = [];
+    
+   [~, ~, curNodes.dendId] = unique(curNodes.treeId);
+    splitNmlT.dendNodes{curIdx} = accumarray( ...
+        curNodes.dendId, curNodes.nodeId, [], @(ids) {ids});
+end
+
+%% Split axons into exc. and inh.
 conn.axonMeta.fullPriSpineSynFrac = ...
     conn.axonMeta.fullPriSpineSynCount ...
  ./ conn.axonMeta.fullSynCount;
