@@ -536,3 +536,57 @@ for curWcGroup = wcGroups
             sprintf('Variability across %s', curWcGroup.title)}, ...
         'EdgeColor', 'none', 'HorizontalAlignment', 'center');
 end
+
+%% Plot intra-cell variability
+binEdges = linspace(0, 1, 21);
+
+synTypes = categories(conn.axonMeta.axonClass);
+[~, conn.axonMeta.axonClassId] = ...
+    ismember(conn.axonMeta.axonClass, synTypes);
+
+curWcIds = unique(extWcT.id);
+for curId = reshape(curWcIds(1:10), 1, [])
+    curDendT = extWcT(extWcT.id == curId, :);
+    curDendT = sortrows(curDendT, 'dendId');
+    
+    curDendT.synData = cell2mat(cellfun(@(s) ...
+        transpose(accumarray( ...
+            conn.axonMeta.axonClassId(s.axonId), ...
+            1, [numel(synTypes), 1])), ...
+        curDendT.synapses, 'UniformOutput', false));
+    
+    curWcT = curDendT(1, :);
+    assert(~curWcT.dendId);
+    
+    curDendT(1, :) = [];
+    curDendT(sum(curDendT.synData, 2) < 10, :) = [];
+    if ~size(curDendT, 1); continue; end
+    
+    curFig = figure();
+    curFig.Color = 'white';
+    
+    for curTypeId = 1:numel(synTypes)
+        curData = curDendT.synData;
+        curData = curData(:, curTypeId) ./ sum(curData, 2);
+        
+        curAx = subplot( ...
+            numel(synTypes), 1, curTypeId);
+        histogram( ...
+            curAx, curData, ...
+            'BinEdges', binEdges, ...
+            'DisplayStyle', 'stairs', ...
+            'LineWidth', 2);
+        
+        curAx.TickDir = 'out';
+        curAx.Box = 'off';
+
+        title( ...
+            curAx, synTypes{curTypeId}, ...
+            'FontWeight', 'normal', ...
+            'FontSize', 10);
+    end
+    
+    curMaxY = [curFig.Children.Children];
+    curMaxY = max(arrayfun(@(h) max(h.Values), curMaxY));
+   [curFig.Children.YLim] = deal([0, curMaxY]);
+end
