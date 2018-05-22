@@ -499,7 +499,16 @@ for curWcGroup = wcGroups
     curData(~any(curData, 2), :) = [];
     curData = curData ./ sum(curData, 2);
 
-    curFig = figure();
+    
+    if plotShow
+        curFig = figure(); %#ok
+    elseif ~isempty(plotDir)
+        curFig = figure('visible', 'off');
+    else
+        % No need to build plot
+        continue;
+    end
+    
     curFig.Color = 'white';
     curFig.Position(3:4) = [520, 900];
 
@@ -547,7 +556,7 @@ synTypes = categories(conn.axonMeta.axonClass);
     ismember(conn.axonMeta.axonClass, synTypes);
 
 curWcIds = unique(extWcT.id);
-for curId = reshape(curWcIds(1:10), 1, [])
+for curId = reshape(curWcIds, 1, [])
     curDendT = extWcT(extWcT.id == curId, :);
     curDendT = sortrows(curDendT, 'dendId');
     
@@ -561,34 +570,69 @@ for curId = reshape(curWcIds(1:10), 1, [])
     assert(~curWcT.dendId);
     
     curDendT(1, :) = [];
-    curDendT(sum(curDendT.synData, 2) < 10, :) = [];
-    if ~size(curDendT, 1); continue; end
+    curDendT(sum(curDendT.synData, 2) < 50, :) = [];
+    if size(curDendT, 1) < 2; continue; end
     
     curFig = figure();
     curFig.Color = 'white';
+    curFig.Position(3:4) = [720, 410];
     
-    for curTypeId = 1:numel(synTypes)
-        curData = curDendT.synData;
-        curData = curData(:, curTypeId) ./ sum(curData, 2);
-        
-        curAx = subplot( ...
-            numel(synTypes), 1, curTypeId);
-        histogram( ...
-            curAx, curData, ...
-            'BinEdges', binEdges, ...
-            'DisplayStyle', 'stairs', ...
-            'LineWidth', 2);
-        
-        curAx.TickDir = 'out';
-        curAx.Box = 'off';
-
-        title( ...
-            curAx, synTypes{curTypeId}, ...
-            'FontWeight', 'normal', ...
-            'FontSize', 10);
+    curAx = axes(curFig); %#ok
+    hold(curAx, 'on');
+    
+    curData = ...
+        curDendT.synData ...
+     ./ sum(curDendT.synData, 2);
+ 
+    for curDendIdx = 1:size(curData, 1)
+        plot( ...
+            curAx, 1:size(curData, 2), curData(curDendIdx, :), ...
+            'LineWidth', 2, 'Marker', '.', 'MarkerSize', 24);
     end
     
-    curMaxY = [curFig.Children.Children];
-    curMaxY = max(arrayfun(@(h) max(h.Values), curMaxY));
-   [curFig.Children.YLim] = deal([0, curMaxY]);
+    plot( ...
+        curAx, 1:size(curData, 2), ...
+        curWcT.synData ./ sum(curWcT.synData, 2), ...
+        'Color', 'black', 'LineStyle', '--', 'LineWidth', 2, ...
+        'Marker', '.', 'MarkerSize', 24);
+    
+    curAx.Box = 'off';
+    curAx.TickDir = 'out';
+    
+    curAx.YLim = [0, 1];
+    curAx.XLim = [1 - 0.1, size(curData, 2) + 0.1];
+    
+    curLeg = cell(size(curDendT, 1) + 1, 1);
+    curLeg(1:(end - 1)) = arrayfun( ...
+        @(id, nSyn) sprintf('Dendrite %d (n = %d synapses)', id, nSyn), ...
+        curDendT.dendId, sum(curDendT.synData, 2), 'UniformOutput', false);
+    curLeg{end} = sprintf( ...
+        'Full reconstruction (n = %d synapses)', sum(curWcT.synData, 2));
+    
+    curLeg = legend(curAx, curLeg, 'Location', 'EastOutside');
+    curLeg.Box = 'off';
+    
+    axis(curAx, 'square');
+    xticks(curAx, 1:size(curData, 2));
+    xticklabels(curAx, synTypes);
+    
+    xlabel('Synapse type');
+    ylabel('Fraction of input synapses');
+    
+    annotation( ...
+        curFig, ...
+        'textbox', [0, 0.9, 1, 0.1], ...
+    	'String', { ...
+            info.filename; info.git_repos{1}.hash; ...
+            sprintf('Cell %d', curWcT.id)}, ...
+        'EdgeColor', 'none', 'HorizontalAlignment', 'center');
+    
+    if ~isempty(plotDir)
+        curFigFile = sprintf('input-variability_%s', curWcT.tag{1});
+        curFigFile = fullfile(plotDir, curFigFile);
+        
+        export_fig(strcat(curFigFile, '.png'), curFig);
+        export_fig(strcat(curFigFile, '.eps'), curFig);
+        clear curFig;
+    end
 end
