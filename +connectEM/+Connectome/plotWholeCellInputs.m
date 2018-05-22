@@ -6,7 +6,7 @@ clear;
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 
 % Set output directory to write figures to disk instead of displaying them.
-plotDir = '/home/amotta/Desktop/whole-cell-inputs';
+plotDir = '';
 plotShow = false;
 
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites-wholeCells-03-v2-classified_spine-syn-clust.mat');
