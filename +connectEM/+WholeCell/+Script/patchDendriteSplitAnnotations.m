@@ -7,7 +7,8 @@ clear;
 
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-dendFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v3_auto-and-manual.mat');
+dendFile = fullfile(rootDir, 'aggloState', ...
+    'dendrites_wholeCells_02_v3_auto-and-manual.mat');
 nmlDir = fullfile(fileparts(mfilename('fullpath')), 'annotations');
 
 info = Util.runInfo();
@@ -41,11 +42,24 @@ for curFileIdx = 1:numel(nmlFiles)
         curNodes.coord(curNodes.id == 1, :);
 end
 
-[~, wcSplitFile] = pdist2( ...
-    param.raw.voxelSize .* nmlFirstNodes, ...
+[~, nmlAggloIds] = pdist2( ...
     param.raw.voxelSize .* aggloFirstNodes, ...
+    param.raw.voxelSize .* nmlFirstNodes, ...
     'squaredeuclidean', 'Smallest', 1);
+nmlAggloIds = aggloIds(nmlAggloIds);
 
 % Make sure this crap is bijective
-assert(numel(wcSplitFile) == numel(unique(wcSplitFile)));
-wcSplitFile = nmlFiles(wcSplitFile);
+assert(numel(nmlAggloIds) ...
+    == numel(unique(nmlAggloIds)));
+
+%% Patch NML files
+for curIdx = 1:numel(nmlFiles)
+    curNmlFile = nmlFiles{curIdx};
+    curAggloId = nmlAggloIds(curIdx);
+    
+    curDesc = sprintf('Agglomerate %d', curAggloId);
+    curRegexp = sprintf('s/description=".*"/description="%s"/g', curDesc);
+    curCommand = sprintf('sed -i ''%s'' "%s"', curRegexp, curNmlFile);
+    curError = system(curCommand);
+    assert(~curError);
+end
