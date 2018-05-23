@@ -643,3 +643,24 @@ for curId = reshape(curWcIds, 1, [])
         clear curFig;
     end
 end
+
+%% Export interesting cells
+exportCellIds = [];
+exportDir = '/home/amotta/Desktop';
+
+skel = skeleton();
+skel = Skeleton.setParams4Pipeline(skel, param);
+skel = skel.setDescription(sprintf( ...
+    '%s (%s)', info.filename, info.git_repos{1}.hash));
+
+for curCellId = reshape(exportCellIds, 1, [])
+    curDendT = extWcT(extWcT.id == curCellId & extWcT.dendId ~= 0, :);
+    curDendT.agglo = SuperAgglo.connect(curDendT.agglo);
+    
+    curSkel = ...
+        connectEM.WholeCell.inputsOutputsToSkel( ...
+            param, curDendT, syn.synapses, segPoints, skel);
+        
+	curSkelFile = sprintf('cell-%d.nml', curCellId);
+    curSkel.write(fullfile(exportDir, curSkelFile));
+end
