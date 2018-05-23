@@ -27,6 +27,7 @@ param = load(fullfile(rootDir, 'allParameter.mat'), 'p');
 param = param.p;
 
 segMass = Seg.Global.getSegToSizeMap(param);
+segPoint = Seg.Global.getSegToPointMap(param);
 
 [conn, syn] = connectEM.Connectome.load(param, connFile);
 
@@ -99,6 +100,13 @@ SuperAgglo.check(wcT.agglo);
 [~, somaIds] = ismember(wcT.id, somaData.idxSomata);
 wcT.somaAgglo = somaData.dendrites(somaIds);
 
+calcSomaPos = @(n) ...
+    sum(segMass(n(:, 4)) .* n(:, 1:3), 1) ....
+    ./ sum(segMass(n(:, 4)));
+wcT.somaPos = cell2mat(arrayfun( ...
+    @(a) calcSomaPos(a.nodes), ...
+    wcT.somaAgglo, 'UniformOutput', false));
+
 % NOTE(amotta): There is a bug in the soma super-agglomerates which allows
 % them to be disconnected. Let's fix this by introducing random edges. This
 % is not a problem since we do not care about distances within the soma.
@@ -114,7 +122,9 @@ wcT.title = arrayfun( ...
     wcT.id, 'UniformOutput', false);
 wcT.tag = strrep(wcT.title, ' ', '-');
 
-%% Calculate distance to soma surface
+%% Calculate node distances
+%  * to soma surface, and
+%  * orthogonal to soma
 wcT.nodeDists = cell(size(wcT.id));
 
 for curIdx = 1:size(wcT, 1)
@@ -151,7 +161,13 @@ for curIdx = 1:size(wcT, 1)
     assert(all(curDists(~curSomaNodeMask)));
     
     curDists = reshape(curDists, [], 1);
+    
+    % Orthogonal distance
+    curOrthoDists = curAgglo.nodes(:, 1:3) - wcT.somaPos(curIdx, :);
+    curOrthoDists = curOrthoDists .* param.raw.voxelSize;
+    
     wcT.nodeDists{curIdx} = curDists;
+    wcT.nodeOrthoDists{curIdx} = curOrthoDists;
 end
 
 %% Collect input synapses
@@ -263,6 +279,13 @@ wcGroups(2).title = sprintf( ...
     numel(wcGroups(2).wcIds));
 wcGroups(2).tag = '100-syn';
 
+wcGroups(3).wcIds = wcT.id( ...
+    cellfun(@height, wcT.synapses) > 1);
+wcGroups(3).title = sprintf( ...
+    'whole cells with > 1 synapses (n = %d)', ...
+    numel(wcGroups(3).wcIds));
+wcGroups(3).tag = '1-syn';
+
 %% Generate queen neuron
 extWcT = wcT;
 for curIdx = 1:numel(wcGroups)
@@ -286,8 +309,11 @@ for curIdx = 1:numel(wcGroups)
     curQueenWcT.somaAgglo = struct;
     curQueenWcT.somaAgglo.nodes = cat(1, curWcT.somaAgglo.nodes);
     curQueenWcT.somaAgglo.edges = zeros(0, 2);
+    
+    curQueenWcT.somaPos = nan(1, 3);
 
     curQueenWcT.nodeDists = {cell2mat(curWcT.nodeDists)};
+    curQueenWcT.nodeOrthoDists = {cell2mat(curWcT.nodeOrthoDists)};
     curQueenWcT.synapses = {lumpedSynapses};
     
     curQueenWcT.title = curWcGroup.title;
@@ -297,7 +323,7 @@ for curIdx = 1:numel(wcGroups)
 end
 
 %% Plotting
-for curIdx = 1:size(extWcT, 1)
+for curIdx = size(extWcT, 1)
     curSyns = extWcT.synapses{curIdx};
     if isempty(curSyns); continue; end
     
@@ -469,6 +495,119 @@ for curIdx = 1:size(extWcT, 1)
         export_fig(strcat(curFigFile, '.eps'), curFig);
         clear curFig;
     end
+end
+
+%% Orthogonal distance plots
+binEdges = linspace(-100, +100, 51);
+
+dimLabels = {'X', 'Y', 'Z'};
+synTypes = categories(conn.axonMeta.axonClass);
+synTypes = synTypes(1:(end - 1));
+
+for curIdx = size(extWcT, 1)
+    curSyns = extWcT.synapses{curIdx};
+    if isempty(curSyns); continue; end
+    
+    curSyns.axonClass = conn.axonMeta.axonClass(curSyns.axonId);
+   [~, curSyns.axonClassId] = ismember(curSyns.axonClass, synTypes);
+    curSyns(~curSyns.axonClassId, :) = [];
+    
+    curSyns.dist = extWcT.nodeOrthoDists{curIdx}(curSyns.nodeId, :);
+    curSyns.dist = curSyns.dist / 1E3;
+    
+    curFig = figure();
+    curFig.Color = 'white';
+    
+    for curDimIdx = 1:3
+        curData = accumarray( ...
+            curSyns.axonClassId, curSyns.dist(:, curDimIdx), ...
+            [3, 1], @(dists) {dists}, {zeros(0, 1)});
+        curData = cellfun( ...
+            @(d) histcounts(d, binEdges), ...
+            curData, 'UniformOutput', false);
+        curData = transpose(cell2mat(curData));
+        
+        for curTypeIdx = 1:size(curData, 2)
+            curBins = curData(:, curTypeIdx);
+            curBinsPerClass = curBins / sum(curBins);
+            curBinsPerSyn = curBins / sum(curData(:));
+            
+            curAx = subplot(3, 3, curDimIdx);
+            axis(curAx, 'square');
+            hold(curAx, 'on');
+            
+            histogram(curAx, ...
+                'BinEdges', binEdges, ...
+                'BinCounts', curBinsPerClass, ...
+                'DisplayStyle', 'stairs', ...
+                'LineWidth', 2);
+            
+            curAx = subplot(3, 3, curDimIdx + 3);
+            axis(curAx, 'square');
+            hold(curAx, 'on');
+            
+            histogram(curAx, ...
+                'BinEdges', binEdges, ...
+                'BinCounts', curBinsPerSyn, ...
+                'DisplayStyle', 'stairs', ...
+                'LineWidth', 2);
+        end
+        
+        curAx = subplot(3, 3, curDimIdx + 2 * 3);
+        axis(curAx, 'square');
+        hold(curAx, 'on');
+        
+        curTcEx = curData(:, 2) ./ sum(curData(:, 1:2), 2);
+        curTcEx(isnan(curTcEx) | isinf(curTcEx)) = 0;
+        curInhEx = curData(:, 3) ./ sum(curData, 2);
+        curInhEx(isnan(curInhEx) | isinf(curInhEx)) = 0;
+        
+        histogram(curAx, ...
+            'BinEdges', binEdges, ...
+            'BinCounts', curInhEx, ...
+            'DisplayStyle', 'stairs', ...
+            'LineWidth', 2);
+        histogram(curAx, ...
+            'BinEdges', binEdges, ...
+            'BinCounts', curTcEx, ...
+            'DisplayStyle', 'stairs', ...
+            'LineWidth', 2);
+        
+        curAx.Children = flip(curAx.Children);
+        
+        xlabel(curAx, sprintf( ...
+            'Synapse location relative to soma (µm along %s)', ...
+            dimLabels{curDimIdx}));
+    end
+    
+    curAxes = flip(curFig.Children);
+   [curAxes(1:3:end).YLim] = deal([0, max( ...
+       arrayfun(@(ax) ax.YLim(end), curAxes(1:3:end)))]);
+   [curAxes(2:3:end).YLim] = deal([0, max( ...
+       arrayfun(@(ax) ax.YLim(end), curAxes(2:3:end)))]);
+   [curAxes(3:3:end).YLim] = deal([0, max( ...
+       arrayfun(@(ax) ax.YLim(end), curAxes(3:3:end)))]);
+   [curAxes.TickDir] = deal('out');
+   
+    ylabel(curAxes(1), 'Synapse probability (per axon type)');
+    ylabel(curAxes(2), 'Fraction of synaptic input');
+    ylabel(curAxes(3), 'Ratio');
+   
+    curLeg = legend( ...
+        curAxes(end - 1), flip(synTypes), ...
+        'Location', 'NorthEast');
+    curLeg.Box = 'off';
+    
+    curLeg = legend( ...
+        curAxes(end), {'Inh / (Inh + Exc)', 'TC / (TC + CC)'}, ...
+        'Location', 'NorthEast');
+    curLeg.Box = 'off';
+
+    annotation(curFig, ...
+        'textbox', [0, 0.9, 1, 0.1], ...
+        'String', { ...
+            info.filename; info.git_repos{1}.hash; extWcT.title{curIdx}}, ...
+        'EdgeColor', 'none', 'HorizontalAlignment', 'center');
 end
 
 %% Quantitative comparison of whole cells
