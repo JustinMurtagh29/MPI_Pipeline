@@ -553,6 +553,8 @@ for curIdx = size(extWcT, 1)
                 'LineWidth', 2);
         end
         
+        curAx.Children = flip(curAx.Children);
+        
         curAx = subplot(3, 3, curDimIdx + 2 * 3);
         axis(curAx, 'square');
         hold(curAx, 'on');
@@ -572,8 +574,6 @@ for curIdx = size(extWcT, 1)
             'BinCounts', curTcEx, ...
             'DisplayStyle', 'stairs', ...
             'LineWidth', 2);
-        
-        curAx.Children = flip(curAx.Children);
         
         xlabel(curAx, sprintf( ...
             'Synapse location relative to soma (µm along %s)', ...
