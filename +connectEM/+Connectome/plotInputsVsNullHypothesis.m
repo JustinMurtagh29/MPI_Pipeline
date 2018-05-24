@@ -10,16 +10,18 @@
 clear;
 
 %% configuration
-param = struct;
-param.saveFolder = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-connName = 'connectome_axons_18_a_ax_spine_syn_clust';
+rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
+connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites-wholeCells-03-v2-classified_spine-syn-clust.mat');
 
 minSynPost = 10;
 info = Util.runInfo();
 
 %% loading data
-conn = ...
-    connectEM.Connectome.load(param, connName);
+param = load(fullfile(rootDir, 'allParameter.mat'));
+param = param.p;
+
+conn = connectEM.Connectome.load(param, connFile);
+conn = connectEM.Connectome.prepareForSpecificityAnalysis(conn);
 axonClasses = unique(conn.axonMeta.axonClass);
 
 %% build class connectome
@@ -67,7 +69,7 @@ function plotAxonClass(info, dendMeta, classConn, targetClasses, dendClass)
     fig.Color = 'white';
     fig.Position(3:4) = [1850, 900];
     
-    binEdges = linspace(0, 1, 21);
+    binEdges = linspace(0, 1, 51);
     axes = cell(size(targetClasses));
     pValAxes = cell(size(targetClasses));
 
@@ -77,7 +79,6 @@ function plotAxonClass(info, dendMeta, classConn, targetClasses, dendClass)
         
         dendClassSynFracs = dendSynFracs(:, classIdx);
         dendClassNullProbs = nullProbs(:, classIdx);
-        isSpecific = dendClassNullProbs < 0.01;
         
         % Null hypothesis
        [nullSynFrac, nullDendCount] = ...
@@ -92,12 +93,6 @@ function plotAxonClass(info, dendMeta, classConn, targetClasses, dendClass)
         ax = subplot(2, numel(targetClasses), classIdx);
         axis(ax, 'square');
         hold(ax, 'on');
-        
-        histogram(ax, ...
-            dendClassSynFracs(isSpecific), ...
-            'BinEdges', binEdges, ...
-            'EdgeColor', 'none', ...
-            'FaceAlpha', 1);
         histogram(ax, ...
             dendClassSynFracs, ...
             'BinEdges', binEdges, ...
@@ -116,10 +111,6 @@ function plotAxonClass(info, dendMeta, classConn, targetClasses, dendClass)
         ax.YAxis.TickDirection = 'out';
         ax.YAxis.Limits(1) = 10 ^ (-0.1);
         ax.YAxis.Scale = 'log';
-        
-        title(ax, { ...
-            sprintf('%d with p ≤ 1 %%', sum(isSpecific))}, ...
-            'FontWeight', 'normal', 'FontSize', 10);
         
         axes{classIdx} = ax;
         
@@ -189,7 +180,6 @@ function plotAxonClass(info, dendMeta, classConn, targetClasses, dendClass)
     ax = axes{end};
     axPos = ax.Position;
     leg = legend(ax, ...
-        'p < 1 %', ...
         'Observed', ...
         'Expected (binomial)', ...
         'Location', 'East');
