@@ -688,6 +688,12 @@ annotation( ...
     'String', {info.filename; info.git_repos{1}.hash}, ...
     'EdgeColor', 'none', 'HorizontalAlignment', 'center');
 
+tcExcCorr = arrayfun(@(i) corr(dendT.dir(:, i), dendT.tcExcRatio), 1:3);
+tcExcDir = tcExcCorr ./ sqrt(sum(tcExcCorr .^ 2));
+
+inhExcCorr = arrayfun(@(i) corr(dendT.dir(:, i), dendT.inhExcRatio), 1:3);
+inhExcDir = inhExcCorr ./ sqrt(sum(inhExcCorr .^ 2));
+
 %% Quantitative comparison of whole cells
 synTypes = categories(conn.axonMeta.axonClass);
 wcSynTypes = zeros(size(wcT, 1), numel(synTypes));
