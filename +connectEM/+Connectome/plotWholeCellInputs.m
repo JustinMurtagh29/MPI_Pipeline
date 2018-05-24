@@ -35,52 +35,9 @@ wcData = load(wcFile);
 somaData = load(somaFile);
 
 %% NML files for whole cell splitting
-splitNmlT = table;
-splitNmlT.path = dir(fullfile(splitNmlDir, '*.nml'));
-splitNmlT.path = reshape({splitNmlT.path.name}, [], 1);
-splitNmlT.path = fullfile(splitNmlDir, splitNmlT.path);
-
-splitNmlT.nml = cellfun(@slurpNml, splitNmlT.path);
-
-splitNmlT.cellId = arrayfun( ...
-    @(nml) regexp( ...
-        nml.parameters.experiment.description, ...
-        'Agglomerate (\d+)$', 'tokens', 'once'), ...
-    splitNmlT.nml);
-splitNmlT.cellId = str2double(splitNmlT.cellId);
-splitNmlT.cellId = wcData.idxWholeCells(splitNmlT.cellId);
+splitNmlT = connectEM.WholeCell.loadSplitNmls(splitNmlDir);
+splitNmlT.cellId = wcData.idxWholeCells(splitNmlT.aggloId);
 assert(all(splitNmlT.cellId));
-
-splitNmlT.dendNodes = cell(size(splitNmlT.path));
-for curIdx = 1:numel(splitNmlT.dendNodes)
-    curNml = splitNmlT.nml(curIdx);
-    curTrees = NML.buildTreeTable(curNml);
-    curNodes = NML.buildNodeTable(curNml);
-    curComments = NML.buildCommentTable(curNml);
-    
-    curNodes.nodeId(:) = {''};
-   [curMask, curIds] = ismember(curNodes.id, curComments.node);
-    curNodes.nodeId(curMask) = curComments.comment(curIds(curMask));
-    
-    curNodes.nodeId = cellfun( ...
-        @(nodeId) regexp( ...
-            nodeId, 'Node (\d+)$', 'tokens', 'once'), ...
-        curNodes.nodeId, 'UniformOutput', false);
-    curNodes.nodeId(cellfun(@isempty, curNodes.nodeId)) = {{'0'}};
-    curNodes.nodeId = str2double(vertcat(curNodes.nodeId{:}));
-    curNodes(~curNodes.nodeId, :) = [];
-    
-    % Remove soma tree(s)
-    curSomaTreeIds = curTrees.id(contains( ...
-        curTrees.name, 'soma', 'IgnoreCase', true));
-    curNodes(ismember(curNodes.treeId, curSomaTreeIds), :) = [];
-    
-   [~, ~, curNodes.dendId] = unique(curNodes.treeId);
-    splitNmlT.dendNodes{curIdx} = accumarray( ...
-        curNodes.dendId, curNodes.nodeId, ...
-        [max([1; curNodes.dendId(:)]), 1], ...
-        @(ids) {ids}, {zeros(0, 1)});
-end
 
 %% Split axons into exc. and inh.
 conn.axonMeta.fullPriSpineSynFrac = ...
