@@ -111,7 +111,18 @@ for curIdx = 1:numel(dendClasses)
     plotAxonClass(info, classConnectome, axonClasses, dendClasses(curIdx));
 end
 
+%%
+curDendClass = struct;
+curDendClass.ids = transpose(1:height(dendT));
+curDendClass.nullIds = curDendClass.ids;
+curDendClass.title = sprintf( ...
+    'Dendrites with ≥ 50 synapses (n = %d)', ...
+    numel(curDendClass.ids));
+    
+plotAxonClass(info, dendT.classConn, axonClasses, curDendClass);
+
 %% plot variability across dendrites of a cell
+%{
 for curId = reshape(unique(dendT.cellId), 1, [])
     curDendT = dendT(dendT.cellId == curId, :);
     if height(curDendT) < 2; continue; end
@@ -125,7 +136,7 @@ for curId = reshape(unique(dendT.cellId), 1, [])
     
     plotAxonClass(info, curDendT.classConn, axonClasses, curDendClass);
 end
-
+%}
 
 %% plotting
 function plotAxonClass(info, classConn, axonClasses, dendClass)

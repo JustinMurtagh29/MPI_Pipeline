@@ -6,6 +6,11 @@ clear;
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites-wholeCells-03-v2-classified_spine-syn-clust.mat');
 
+wcFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v3_auto-and-manual.mat');
+
+splitNmlDir = fileparts(fileparts(mfilename('fullpath')));
+splitNmlDir = fullfile(splitNmlDir, '+WholeCell', '+Script', 'annotations');
+
 minSynPost = 10;
 info = Util.runInfo();
 
@@ -16,6 +21,51 @@ param = param.p;
 conn = connectEM.Connectome.load(param, connFile);
 conn = connectEM.Connectome.prepareForSpecificityAnalysis(conn);
 axonClasses = unique(conn.axonMeta.axonClass);
+
+wcData = load(wcFile);
+splitNmlT = connectEM.WholeCell.loadSplitNmls(splitNmlDir);
+
+%% split whole cells
+dendT = table;
+dendT.cellId = repelem( ...
+    splitNmlT.aggloId, cellfun(@numel, splitNmlT.dendNodes));
+dendT.dendId = cell2mat(cellfun( ...
+    @(dendNodes) transpose(1:numel(dendNodes)), ...
+    splitNmlT.dendNodes, 'UniformOutput', false));
+
+dendT.agglo = wcData.dendrites(dendT.cellId);
+dendT.cellId = wcData.idxWholeCells(dendT.cellId);
+dendT.agglo = arrayfun( ...
+    @(a, nC) unique(rmmissing(a.nodes(nC{1}, 4))), ...
+    dendT.agglo, cat(1, splitNmlT.dendNodes{:}), ...
+    'UniformOutput', false);
+
+synIds = repelem( ...
+    transpose(1:height(syn.synapses)), ...
+    cellfun(@numel, syn.synapses.postsynId));
+synSegIds = cell2mat(syn.synapses.postsynId);
+
+dendT.classConn = cellfun( ...
+    @(segIds) unique(synIds(ismember(synSegIds, segIds))), ...
+    dendT.agglo, 'UniformOutput', false);
+clear synIds synSegIds;
+
+synAxonIds = repelem( ...
+    conn.connectome.edges(:, 1), ...
+    cellfun(@numel, conn.connectome.synIdx));
+synAxonIds = double(conn.axonMeta.axonClass(synAxonIds));
+synIds = cell2mat(conn.connectome.synIdx);
+
+synAxonIds = cell2mat(accumarray( ...
+    synIds, synAxonIds, [size(syn.synapses, 1), 1], ...
+    @(axonIds) {accumarray(axonIds, 1, [4, 1])'}, {zeros(1, 4)}));
+dendT.classConn = cell2mat(cellfun( ...
+    @(ids) sum(synAxonIds(ids, :), 1), ...
+    dendT.classConn, 'UniformOutput', false));
+clear synIds synAxonIds;
+
+% Get rid of dendrites with less than 50 synapses
+dendT(sum(dendT.classConn, 2) < 50, :) = [];
 
 %% build class connectome
 classConnectome = ...
@@ -55,6 +105,16 @@ for curIdx = 1:numel(dendClasses)
         info, classConnectome, ...
         axonClasses, dendClasses(curIdx));
 end
+
+%%
+curDendClass = struct;
+curDendClass.ids = transpose(1:height(dendT));
+curDendClass.nullIds = curDendClass.ids;
+curDendClass.title = sprintf( ...
+    'Dendrites with ≥ 50 synapses (n = %d)', ...
+    numel(curDendClass.ids));
+    
+plotAxonClass(info, dendT.classConn, axonClasses, curDendClass);
 
 %% plotting
 function plotAxonClass(info, classConn, axonClasses, dendClass)
@@ -106,8 +166,6 @@ function plotAxonClass(info, classConn, axonClasses, dendClass)
     xlabel(ax, 'Inh / (Exc + Inh)');
     xlim(ax, binEdges([1, end]));
     
-    ax.YAxis.Limits(1) = 10 ^ (-0.1);
-    ax.YScale = 'log';
     ax.TickDir = 'out';
     histAxes{end + 1} = ax;
     
@@ -190,8 +248,6 @@ function plotAxonClass(info, classConn, axonClasses, dendClass)
     xlabel(ax, 'TC / (TC + CC)');
     xlim(ax, binEdges([1, end]));
     
-    ax.YAxis.Limits(1) = 10 ^ (-0.1);
-    ax.YScale = 'log';
     ax.TickDir = 'out';
     histAxes{end + 1} = ax;
     
