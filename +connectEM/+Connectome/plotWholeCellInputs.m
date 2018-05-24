@@ -610,6 +610,84 @@ for curIdx = size(extWcT, 1)
         'EdgeColor', 'none', 'HorizontalAlignment', 'center');
 end
 
+%% Correlation between ratios and dendrite direction
+curMinSyn = 50;
+dimLabels = {'X', 'Y', 'Z'};
+synTypes = categories(conn.axonMeta.axonClass);
+
+dendT = connectEM.WholeCell.splitWholeCellInputs(wcT, splitNmlT);
+
+dendT.dir = nan(size(dendT.somaPos));
+dendT.tcExcRatio = nan(size(dendT.id));
+dendT.inhExcRatio = nan(size(dendT.id));
+
+% Let's not analyse dendrites with too few synapses
+dendT(cellfun(@height, dendT.synapses) < curMinSyn, :) = [];
+
+for curIdx = 1:size(dendT, 1)
+    curSyns = dendT.synapses{curIdx};
+    curSomaPos = dendT.somaPos(curIdx, :);
+    
+    curNodes = dendT.agglo(curIdx).nodes;
+    curNodes(isnan(curNodes(:, 4)), :) = [];
+    
+   [curSegIds, curSegPos] = unique(curNodes(:, 4));
+    curSegPos = curNodes(curSegPos, 1:3) - curSomaPos;
+    curSegPos = curSegPos .* param.raw.voxelSize;
+    
+    curSegMass = segMass(curSegIds);
+    curSegMass = curSegMass / sum(curSegMass);
+    
+    curDendDir = curSegPos ./ sqrt(sum(curSegPos .^ 2, 2));
+    curDendDir = sum(curSegMass .* curDendDir, 1);
+    curDendDir = curDendDir / sqrt(sum(curDendDir .^ 2));
+    
+    curSynData = accumarray( ...
+        double(conn.axonMeta.axonClass(curSyns.axonId)), ...
+        1, [numel(synTypes), 1], @sum, 0);
+    
+    dendT.dir(curIdx, :) = curDendDir;
+    dendT.tcExcRatio(curIdx) = curSynData(2) / sum(curSynData(1:2));
+    dendT.inhExcRatio(curIdx) = curSynData(3) / sum(curSynData(1:3));
+end
+
+curFig = figure();
+curFig.Color = 'white';
+curFig.Position(3:4) = [690, 510];
+
+for curDimIdx = 1:3
+    % TC
+    curFit = fit(dendT.dir(:, curDimIdx), dendT.tcExcRatio, 'poly1');
+    curAx = subplot(2, 3, curDimIdx);
+    
+    hold(curAx, 'on');
+    scatter(curAx, dendT.dir(:, curDimIdx), dendT.tcExcRatio, 60, '.');
+    plot(curAx, [-1, 1], curFit([-1, 1]), 'Color', 'black', 'LineWidth', 2);
+    
+    % Inh
+    curFit = fit(dendT.dir(:, curDimIdx), dendT.inhExcRatio, 'poly1');
+    curAx = subplot(2, 3, curDimIdx + 3);
+    
+    hold(curAx, 'on');
+    scatter(curAx, dendT.dir(:, curDimIdx), dendT.inhExcRatio, 60, '.');
+    plot(curAx, [-1, 1], curFit([-1, 1]), 'Color', 'black', 'LineWidth', 2);
+    
+    xlabel(curAx, sprintf('%s-polarity of dendrite', dimLabels{curDimIdx}));
+end
+
+curAxes = flip(curFig.Children);
+ylabel(curAxes(1), 'TC / (TC + CC)');
+ylabel(curAxes(2), 'Inh / (Inh + Exc)');
+
+[curAxes.XLim] = deal([-1, +1]);
+[curAxes.PlotBoxAspectRatio] = deal([1, 1, 1]);
+[curAxes.DataAspectRatioMode] = deal('auto');
+
+annotation( ...
+    curFig, 'textbox', [0, 0.9, 1, 0.1], ...
+    'String', {info.filename; info.git_repos{1}.hash}, ...
+    'EdgeColor', 'none', 'HorizontalAlignment', 'center');
+
 %% Quantitative comparison of whole cells
 synTypes = categories(conn.axonMeta.axonClass);
 wcSynTypes = zeros(size(wcT, 1), numel(synTypes));
