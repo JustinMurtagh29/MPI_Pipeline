@@ -18,7 +18,7 @@ info = Util.runInfo();
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 
-conn = connectEM.Connectome.load(param, connFile);
+[conn, syn] = connectEM.Connectome.load(param, connFile);
 conn = connectEM.Connectome.prepareForSpecificityAnalysis(conn);
 axonClasses = unique(conn.axonMeta.axonClass);
 
