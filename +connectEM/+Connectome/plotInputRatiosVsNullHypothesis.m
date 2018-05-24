@@ -3,16 +3,18 @@
 clear;
 
 %% configuration
-param = struct;
-param.saveFolder = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-connName = 'connectome_axons_18_a_ax_spine_syn_clust';
+rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
+connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites-wholeCells-03-v2-classified_spine-syn-clust.mat');
 
 minSynPost = 10;
 info = Util.runInfo();
 
 %% loading data
-conn = ...
-    connectEM.Connectome.load(param, connName);
+param = load(fullfile(rootDir, 'allParameter.mat'));
+param = param.p;
+
+conn = connectEM.Connectome.load(param, connFile);
+conn = connectEM.Connectome.prepareForSpecificityAnalysis(conn);
 axonClasses = unique(conn.axonMeta.axonClass);
 
 %% build class connectome
@@ -20,22 +22,35 @@ classConnectome = ...
     connectEM.Connectome.buildClassConnectome( ...
         conn, 'targetClasses', [], 'axonClasses', axonClasses);
 
+[dendMeta, classConnectome] = ...
+    connectEM.Connectome.prepareForFullCellInputAnalysis( ...
+        conn.denMeta, classConnectome);
+
 classConnectome = transpose(classConnectome);
 axonClasses = reshape(axonClasses, 1, []);
 
 %% build dendrite class(es)
 dendClasses = struct;
 dendClasses(1).ids = find( ...
-    conn.denMeta.targetClass ~= 'Somata' ...
-  & conn.denMeta.targetClass ~= 'AxonInitialSegment' ...
-  & conn.denMeta.synCount >= minSynPost);
+    dendMeta.targetClass ~= 'Somata' ...
+  & dendMeta.targetClass ~= 'AxonInitialSegment' ...
+  & dendMeta.targetClass ~= 'FullInput' ...
+  & dendMeta.synCount >= minSynPost);
 dendClasses(1).nullIds = dendClasses(1).ids;
 dendClasses(1).title = sprintf( ...
     'Dendrites with ≥ %d synapses (n = %d)', ...
     minSynPost, numel(dendClasses(1).ids));
+
+dendClasses(2).ids = find( ...
+    dendMeta.targetClass == 'FullInput' ...
+  & dendMeta.synCount >= 500);
+dendClasses(2).nullIds = dendClasses(2).ids;
+dendClasses(2).title = sprintf( ...
+    'Whole cells with ≥ %d synapses (n = %d)', ...
+    500, numel(dendClasses(2).ids));
     
 %% plot
-for curIdx = 1:numel(dendClasses)
+for curIdx = 2%1:numel(dendClasses)
     plotAxonClass( ...
         info, classConnectome, ...
         axonClasses, dendClasses(curIdx));
@@ -56,19 +71,19 @@ function plotAxonClass(info, classConn, axonClasses, dendClass)
     fig.Color = 'white';
     fig.Position(3:4) = [840, 440];
     
-    binEdges = linspace(0, 1, 21);
+    binEdges = linspace(0, 1, 51);
     histAxes = cell(0);
     pValAxes = cell(0);
     
-    %% Plot exc / (exc + inh)
+    %% Plot inh / (exc + inh)
     obsFrac = classConn(:, [ccId, tcId, inhId]);
-    obsFrac = sum(obsFrac(:, 1:2), 2) ./ sum(obsFrac, 2);
+    obsFrac = sum(obsFrac(:, 3), 2) ./ sum(obsFrac, 2);
     obsFrac(isnan(obsFrac)) = 0;
     
    [expFrac, expCount] = calcExpectedFractionDist( ...
-        classConn, [ccId, tcId], [ccId, tcId, inhId]);
+        classConn, inhId, [ccId, tcId, inhId]);
    [probLow, probHigh] = calcFractionChanceProbs( ...
-        classConn, [ccId, tcId], [ccId, tcId, inhId]);
+        classConn, inhId, [ccId, tcId, inhId]);
     
     binId = discretize(expFrac, binEdges);
     binCount = accumarray(binId, expCount);
@@ -88,7 +103,7 @@ function plotAxonClass(info, classConn, axonClasses, dendClass)
         'DisplayStyle', 'stairs', ...
         'LineWidth', 2);
     
-    xlabel(ax, 'Exc / (Exc + Inh)');
+    xlabel(ax, 'Inh / (Exc + Inh)');
     xlim(ax, binEdges([1, end]));
     
     ax.YAxis.Limits(1) = 10 ^ (-0.1);
