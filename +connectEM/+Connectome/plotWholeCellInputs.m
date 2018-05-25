@@ -47,6 +47,8 @@ conn.axonMeta.fullPriSpineSynFrac = ...
 conn.axonMeta.isExc = (conn.axonMeta.fullPriSpineSynFrac >= 0.5);
 conn.axonMeta.isInh = ~conn.axonMeta.isExc;
 
+synTypes = unique(conn.axonMeta.axonClass);
+
 %% Complete whole cell somata
 wcT = table;
 wcT.id = wcData.idxWholeCells(wcData.indWholeCells);
@@ -458,15 +460,14 @@ end
 binEdges = linspace(-100, +100, 51);
 
 dimLabels = {'X', 'Y', 'Z'};
-synTypes = categories(conn.axonMeta.axonClass);
-synTypes = synTypes(1:(end - 1));
+curSynTypes = synTypes(1:(end - 1));
 
 for curIdx = size(extWcT, 1)
     curSyns = extWcT.synapses{curIdx};
     if isempty(curSyns); continue; end
     
     curSyns.axonClass = conn.axonMeta.axonClass(curSyns.axonId);
-   [~, curSyns.axonClassId] = ismember(curSyns.axonClass, synTypes);
+   [~, curSyns.axonClassId] = ismember(curSyns.axonClass, curSynTypes);
     curSyns(~curSyns.axonClassId, :) = [];
     
     curSyns.dist = extWcT.nodeOrthoDists{curIdx}(curSyns.nodeId, :);
@@ -551,7 +552,7 @@ for curIdx = size(extWcT, 1)
     ylabel(curAxes(3), 'Ratio');
    
     curLeg = legend( ...
-        curAxes(end - 1), flip(synTypes), ...
+        curAxes(end - 1), flip(char(curSynTypes)), ...
         'Location', 'NorthEast');
     curLeg.Box = 'off';
     
@@ -570,7 +571,6 @@ end
 %% Correlation between ratios and dendrite direction
 curMinSyn = 50;
 dimLabels = {'X', 'Y', 'Z'};
-synTypes = categories(conn.axonMeta.axonClass);
 
 dendT = connectEM.WholeCell.splitWholeCellInputs(wcT, splitNmlT);
 
@@ -660,7 +660,7 @@ curWcT(cellfun(@height, curWcT.synapses) < curMinSyn, :) = [];
 
 curWcT.classConn = cell2mat(cellfun( ...
     @(syn) transpose(accumarray( ...
-        conn.axonMeta.axonClassId(syn.axonId), ...
+        double(conn.axonMeta.axonClass(syn.axonId)), ...
         1, [numel(curSynTypes), 1])), ...
 	curWcT.synapses, 'UniformOutput', false));
 
@@ -702,7 +702,6 @@ title(curAx, ...
     'FontWeight', 'normal', 'FontSize', 10);
 
 %% Quantitative comparison of whole cells
-synTypes = categories(conn.axonMeta.axonClass);
 wcSynTypes = zeros(size(wcT, 1), numel(synTypes));
 
 for curIdx = 1:size(wcT, 1)
@@ -750,7 +749,7 @@ for curWcGroup = wcGroups
         curAx.Box = 'off';
 
         title( ...
-            curAx, synTypes{curIdx}, ...
+            curAx, char(synTypes(curIdx)), ...
             'FontWeight', 'normal', ...
             'FontSize', 10);
     end
@@ -773,10 +772,6 @@ end
 %% Plot intra-cell variability
 binEdges = linspace(0, 1, 21);
 
-synTypes = categories(conn.axonMeta.axonClass);
-[~, conn.axonMeta.axonClassId] = ...
-    ismember(conn.axonMeta.axonClass, synTypes);
-
 dendT = connectEM.WholeCell.splitWholeCellInputs(wcT, splitNmlT);
 
 extWcT = wcT;
@@ -791,7 +786,7 @@ for curId = reshape(curWcIds, 1, [])
     
     curDendT.synData = cell2mat(cellfun(@(s) ...
         transpose(accumarray( ...
-            conn.axonMeta.axonClassId(s.axonId), ...
+            double(conn.axonMeta.axonClass(s.axonId)), ...
             1, [numel(synTypes), 1])), ...
         curDendT.synapses, 'UniformOutput', false));
     
