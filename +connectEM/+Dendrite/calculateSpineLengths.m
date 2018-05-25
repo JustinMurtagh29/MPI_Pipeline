@@ -60,7 +60,6 @@ function spineLengths = forAgglo(param, trunkLUT, dendrite, spineHeads)
       - dendrite.nodes(dendrite.edges(:, 2), 1:3);
     edgeLengths = param.raw.voxelSize .* edgeLengths;
     edgeLengths = sqrt(sum(edgeLengths .* edgeLengths, 2));
-    edgeLengths(~edgeLengths) = eps;
     
     spineLengths = graph( ...
         dendrite.edges(:, 1), dendrite.edges(:, 2), ...
