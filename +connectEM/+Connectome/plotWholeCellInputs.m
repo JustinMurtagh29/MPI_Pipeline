@@ -651,6 +651,56 @@ tcExcDir = tcExcCorr ./ sqrt(sum(tcExcCorr .^ 2));
 inhExcCorr = arrayfun(@(i) corr(dendT.dir(:, i), dendT.inhExcRatio), 1:3);
 inhExcDir = inhExcCorr ./ sqrt(sum(inhExcCorr .^ 2));
 
+%% Correlation between inhibition and dendrite length
+curMinSyn = 500;
+curSynTypes = unique(conn.axonMeta.axonClass);
+
+curWcT = wcT;
+curWcT(cellfun(@height, curWcT.synapses) < curMinSyn, :) = [];
+
+curWcT.classConn = cell2mat(cellfun( ...
+    @(syn) transpose(accumarray( ...
+        conn.axonMeta.axonClassId(syn.axonId), ...
+        1, [numel(curSynTypes), 1])), ...
+	curWcT.synapses, 'UniformOutput', false));
+
+curWcT.inhFrac = ...
+    curWcT.classConn(:, curSynTypes == 'Inhibitory') ...
+ ./ sum(curWcT.classConn(:, curSynTypes ~= 'Other'), 2);
+
+curWcT.meanSynDist = cellfun( ...
+    @(dists, syn) mean(dists(syn.nodeId)), ...
+    curWcT.nodeDists, curWcT.synapses) / 1E3;
+
+curFit = fit(curWcT.meanSynDist, curWcT.inhFrac, 'poly1');
+
+curFig = figure();
+curFig.Color = 'white';
+
+curAx = axes(curFig);
+
+hold(curAx, 'on');
+scatter(curAx, ...
+    curWcT.meanSynDist, curWcT.inhFrac, 60, '.');
+
+curAx.XLim(1) = 0;
+curAx.YLim(1) = 0;
+
+plot(curAx, ...
+    curAx.XLim, curFit(curAx.XLim), ...
+    'Color', 'black', 'LineWidth', 2);
+
+curAx.TickDir = 'out';
+xlabel(curAx, 'Mean synapse-to-soma distance (µm)');
+ylabel(curAx, 'Inh / (Inh + Exc) ratio');
+
+curTitle = sprintf( ...
+	'Whole cells with ≥ %d synapses (n = %d)', ...
+    curMinSyn, height(curWcT));
+title(curAx, ...
+    {info.filename; info.git_repos{1}.hash; curTitle}, ...
+    'FontWeight', 'normal', 'FontSize', 10);
+
 %% Quantitative comparison of whole cells
 synTypes = categories(conn.axonMeta.axonClass);
 wcSynTypes = zeros(size(wcT, 1), numel(synTypes));
