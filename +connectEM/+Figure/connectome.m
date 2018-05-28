@@ -162,6 +162,7 @@ axDend.TickDir = 'out';
 axDend.YMinorTick = 'off';
 
 axDend.YLim(1) = minSynCount;
+axDend.YLim(2) = 10 ^ ceil(log10(max(dendSynCount)));
 yTicks = log10(axDend.YLim);
 yTicks = 10 .^ (yTicks(1):yTicks(2));
 
@@ -197,6 +198,7 @@ axAxon.YDir = 'reverse';
 axAxon.YAxisLocation = 'right';
 
 axAxon.XLim(1) = minSynCount;
+axAxon.XLim(2) = 10 ^ ceil(log10(max(axonSynCount)));
 xTicks = log10(axAxon.XLim);
 xTicks = 10 .^ (xTicks(1):xTicks(2));
 
