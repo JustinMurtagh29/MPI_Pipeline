@@ -12,9 +12,13 @@ shFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v3_auto.mat');
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites-wholeCells-03-v2-classified_spine-syn-clust.mat');
 
 plotTargetClasses = { ...
-    'ApicalDendrite', ...
-    'OtherDendrite', ...
-    'SmoothDendrite'};
+    'AxonInitialSegment', 'AIS'; ...
+    'ApicalDendrite', 'AD'; ...
+    'SmoothDendrite', 'SD'; ...
+    'OtherDendrite', 'Other'};
+
+plotLabels = plotTargetClasses(:, 2);
+plotTargetClasses = plotTargetClasses(:, 1);
 
 % Very rough threshold based on table 2 from
 % Kawaguchi, Karuba, Kubota (2006) Cereb Cortex
@@ -41,7 +45,9 @@ shAgglos = shAgglos.shAgglos;
 
 %% Calculating data
 dendT = conn.denMeta;
-dendT(dendT.synCount < minSynPost, :) = [];
+dendT = dendT( ...
+    dendT.targetClass == 'AxonInitialSegment' ...
+  | dendT.synCount >= minSynPost, :);
 dendT = dendT(ismember(dendT.targetClass, plotTargetClasses), :);
 
 dendAgglos = conn.dendrites(dendT.id);
@@ -72,10 +78,12 @@ plotHist = @(data) ...
         'DisplayStyle', 'stairs', ...
         'LineWidth', 2, ...
         'FaceAlpha', 1);
-    
-plotHist(dendT.spineDensity);
-plotHist(dendT.spineDensity(dendT.targetClass == 'ApicalDendrite', :));
-plotHist(dendT.spineDensity(dendT.targetClass == 'SmoothDendrite', :));
+
+for curTargetClass = reshape(plotTargetClasses, 1, [])
+    curData = dendT.targetClass == curTargetClass;
+    curData = dendT.spineDensity(curData, :);
+    plotHist(curData);
+end
 
 plot( ...
     ax, repelem(maxSpinesPerUm, 1, 2), ax.YLim, ...
@@ -85,11 +93,7 @@ ax.TickDir = 'out';
 xlabel(ax, 'Spine density (µm^{-1})');
 ylabel(ax, 'Dendrites');
 
-leg = { ...
-    'All dendrites', ...
-    'Apical dendrites', ...
-    'Smooth dendrites'};
-leg = legend(ax, leg, 'Location', 'NorthEast');
+leg = legend(ax, plotLabels, 'Location', 'East');
 leg.Box = 'off';
 
 title( ...
