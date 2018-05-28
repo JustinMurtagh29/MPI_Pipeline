@@ -34,10 +34,8 @@ axonClasses = ...
 [~, targetIds] = ismember(targetClasses, targetIds);
 assert(all(targetIds));
 
-synCount = sum(classConn, 2);
-classConn = classConn(:, targetIds);
-classConn(:, end + 1) = synCount - sum(classConn, 2);
-classConn = classConn ./ sum(classConn, 2);
+classConn = horzcat(classConn(:, targetIds), sum(classConn, 2));
+classConn(:, end) = classConn(:, end) - sum(classConn(:, 1:(end - 1)), 2);
 
 %% Calculate coinnervation matrix
 for curAxonClass = axonClasses
@@ -45,36 +43,46 @@ for curAxonClass = axonClasses
     curSpecClasses = fieldnames(curSpecs);
     
    [~, curSpecClasses] = ismember(curSpecClasses, targetClasses);
-    curSpecLabels = targetLabels(sort(curSpecClasses));
-    curSpecClasses = targetClasses(sort(curSpecClasses));
+    curSpecClasses = sort(curSpecClasses);
     
     curCoinMat = nan(1 + numel(curSpecClasses), 1 + numel(targetClasses));
     
     for curSpecIdx = 1:numel(curSpecClasses)
-        curSpecClass = curSpecClasses{curSpecIdx};
-        curAxonIds = curSpecs.(curSpecClass).axonIds;
+        curSpecClass = curSpecClasses(curSpecIdx);
+        curAxonIds = curSpecs.(targetClasses{curSpecClass}).axonIds;
         
-        curCoinVec = mean(classConn(curAxonIds, :), 1);
+        curCoinVec = classConn(curAxonIds, :);
+        curCoinVec(:, curSpecClass) = 0;
+        curCoinVec = mean(curCoinVec ./ sum(curCoinVec, 2), 1);
         curCoinMat(curSpecIdx, :) = curCoinVec;
     end
     
     % All axons
-    curCoinMat(end, :) = mean(classConn(curAxonClass.axonIds, :), 1);
-    plotIt(info, targetLabels, curAxonClass, curSpecLabels, curCoinMat);
+    curCoinVec = classConn(curAxonClass.axonIds, :);
+    curCoinVec = mean(curCoinVec ./ sum(curCoinVec, 2), 1);
+    curCoinMat(end, :) = curCoinVec;
+    
+    plotIt(info, targetLabels, curAxonClass, curSpecClasses, curCoinMat);
 end
 
 %% Utilities
 function plotIt(info, targetClasses, axonClass, specClasses, coinMat)
-    nullProbs = coinMat(end, :);
-    deltaMat = coinMat - nullProbs;
     maxDelta = 0.25;
-
-    targetClasses{end + 1} = 'Other';
-    specClasses{end + 1} = 'All axons';
     
-    rows = numel(specClasses);
+    targetClasses{end + 1} = 'Other';
+    specLabels = targetClasses(specClasses);
+    specLabels{end + 1} = 'All';
+    
+    rows = numel(specLabels);
     cols = numel(targetClasses);
     frac = rows / cols;
+    
+    diagIds = arrayfun( ...
+        @(idx, id) sub2ind(size(coinMat), idx, id), ...
+        reshape(1:numel(specClasses), size(specClasses)), specClasses);
+    
+    deltaMat = coinMat - coinMat(end, :);
+    deltaMat(diagIds) = 0;
     
     fig = figure();
     ax = axes(fig);
@@ -97,16 +105,22 @@ function plotIt(info, targetClasses, axonClass, specClasses, coinMat)
     ax.XTickLabelRotation = 90;
 
     ax.YTick = 1:size(coinMat, 1);
-    ax.YTickLabel = specClasses;
+    ax.YTickLabel = specLabels;
     ax.Position = [0.1, 0.01, 0.75, 0.75];
     
     for curIdx = 1:numel(coinMat)
        [curRow, curCol] = ind2sub(size(coinMat), curIdx);
+        
+        if curRow <= numel(specClasses) ...
+                && specClasses(curRow) == curCol
+            % Do not label "diagonals"
+            continue;
+        end
 
         curBoxSize = ax.Position(3:4) ./ [cols, rows];
-        curOff = [curCol, numel(specClasses) - curRow + 1];
+        curOff = [curCol, numel(specLabels) - curRow + 1];
         curOff = ax.Position(1:2) + (curOff - 1) .* curBoxSize;
-
+        
         curAnn = annotation( ...
             fig, 'textbox', [curOff, curBoxSize], ...
             'String', sprintf('%.1f %%', 100 * coinMat(curIdx)));
