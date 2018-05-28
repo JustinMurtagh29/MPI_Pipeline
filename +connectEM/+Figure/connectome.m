@@ -16,12 +16,16 @@ param = param.p;
 
 conn = connectEM.Connectome.load(param, connFile);
 
-%%
+%% Filter neurites
+% Only plot neurites with at least `minSynCount` synapses. Notable
+% exception are AIS, which we plot irrespectively of their synapse number.
 axonMeta = conn.axonMeta;
 axonMeta(axonMeta.synCount < minSynCount, :) = [];
 
 dendMeta = conn.denMeta;
-dendMeta(dendMeta.synCount < minSynCount, :) = [];
+dendMeta( ...
+    dendMeta.targetClass ~= 'AxonInitialSegment' ...
+  & dendMeta.synCount < minSynCount, :) = [];
 
 % Separate between exc. and inh. cells
 inMask = dendMeta.isInterneuron;
