@@ -211,6 +211,23 @@ title( ...
     ax, {info.filename; info.git_repos{1}.hash}, ...
     'FontWeight', 'normal', 'FontSize', 10);
 
+%% Slightly off-topic analysis
+% Are TC spine synapses more likely to be co-innervated by an IN axon?
+curSynT = sortrows(synT, {'spineId', 'type'});
+[~, uniRows] = unique(curSynT.spineId);
+curSynT = curSynT(uniRows, :);
+
+curSynT.hasInh = ismember(curSynT.spineId, ...
+    synT.spineId(synT.type == 'SecondarySpine'));
+
+curResT = table;
+curResT.synType = unique(curSynT.preClass);
+curResT.inhFrac = accumarray( ...
+    double(curSynT.preClass), curSynT.hasInh, ...
+    size(curResT.synType), @mean);
+
+disp(curResT);
+
 %% Dendrite type
 fig = figure();
 fig.Color = 'white';
