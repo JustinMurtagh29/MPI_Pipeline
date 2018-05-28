@@ -333,6 +333,17 @@ for curFold = plotFolds
         'DisplayStyle', 'stairs', 'LineWidth', 2);
 end
 
+% Plot mean values
+for curFoldIdx = 1:numel(plotFolds)
+    curFold = plotFolds(curFoldIdx);
+    curMean = mean(synT.spineLength(synT.fold == curFold));
+    
+    plot( ...
+        ax, [curMean, curMean], ax.YLim, ...
+        'Color', ax.ColorOrder(curFoldIdx, :), ...
+        'LineStyle', '--');
+end
+
 ax.TickDir = 'out';
 ax.XLim = binEdges([1, end]);
 xlabel(ax, 'Spine length (µm)');
