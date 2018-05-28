@@ -6,13 +6,15 @@ clear;
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites-wholeCells-03-v2-classified_spine-syn-clust.mat');
 
+minSyn = 10;
+
 % Use WKW segmentation for speed
 inParam = struct;
 inParam.root = '/tmpscratch/amotta/l4/2012-09-28_ex145_07x2_ROI2017/segmentation/1';
 inParam.backend = 'wkwrap';
 
 outParam = struct;
-outParam.root = '/tmpscratch/amotta/l4/2018-05-01-reconstruction-segmentation/wkw/1';
+outParam.root = '/tmpscratch/amotta/l4/2018-05-28-reconstruction-segmentation/wkw/1';
 outParam.backend = 'wkwrap';
 
 info = Util.runInfo();
@@ -23,11 +25,11 @@ param = param.p;
 param.seg = inParam;
 
 maxSegId = Seg.Global.getMaxSegId(param);
-conn = load(connFile);
+conn = connectEM.Connectome.load(param, connFile);
 
 %% Build mapping
-axons = conn.axons;
-dends = conn.dendrites;
+axons = conn.axons(conn.axonMeta.synCount >= minSyn);
+dends = conn.dendrites(conn.denMeta.synCount >= minSyn);
 
 confSegIds = intersect( ...
     cell2mat(axons), cell2mat(dends));
