@@ -9,6 +9,7 @@ availFile = '/tmpscratch/amotta/l4/2018-04-27-surface-availability-connectome-v5
 
 minSynPre = 10;
 maxAvail = 0.7;
+maxSpec = 0.7;
 maxDist = 50;
 
 targetClasses = { ...
@@ -78,7 +79,8 @@ for classIdx = 1:numel(targetClasses)
         curAvails = shiftdim(availabilities(classIdx, :, curAxonId));
 
         curColor = specificities(curAxonId, classIdx);
-        curColor = cmap(round(100 * curColor) + 1, :);
+        curColor = (size(cmap, 1) - 1) * min(curColor, maxSpec) / maxSpec;
+        curColor = cmap(round(curColor) + 1, :);
 
         plot(ax, avail.dists / 1E3, curAvails, 'Color', curColor);
     end
@@ -94,10 +96,16 @@ ylabel(fig.Children(end), 'Availability');
 % X axis (as for panel 4c)
 [fig.Children.XLim] = deal([0, maxDist]);
 
-% colorbar
+% Colorbar
 oldPos = ax.Position;
 cbar = colorbar(ax);
-cbar.Label.String = 'Specificity';
+
+cbar.Ticks = (0:0.1:maxSpec) / maxSpec;
+cbar.TickLabels = arrayfun( ...
+    @num2str, 0:0.1:maxSpec, ...
+    'UniformOutput', false);
+cbar.Label.String = 'Synapse fraction';
+
 ax.Position = oldPos;
 
 annotation( ...
