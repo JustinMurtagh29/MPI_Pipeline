@@ -10,6 +10,11 @@ availFile = '/tmpscratch/amotta/l4/2018-04-27-surface-availability-connectome-v5
 maxRadius = 50;
 maxAvail = 0.7;
 plotAxonClasses = 1:2;
+
+% Set to radius (in µm) to run forward model to generate fake connectome
+% and calibrate the geometric predictability analysis.
+fakeRadius = [];
+
 targetClasses = { ...
     'Somata', ...
     'ProximalDendrite', ...
@@ -54,6 +59,27 @@ classConn = classConn(:, classIds);
 [~, classIds] = ismember(targetClasses, avail.targetClasses);
 availabilities = avail.axonAvail(classIds, :, :);
 availabilities = availabilities ./ sum(availabilities, 1);
+
+%% Build fake connectome for testing
+if ~isempty(fakeRadius)
+    fakeRadiusId = find(avail.dists == 1E3 * fakeRadius);
+    fakeConn = availabilities(:, fakeRadiusId, :);
+    fakeConn = transpose(squeeze(fakeConn));
+    
+    % Build fake connectome by multinomial sampling
+    rng(0);
+    fakeConn = cell2mat(cellfun( ...
+        @(n, probs) mnrnd(n, probs), ...
+        num2cell(sum(classConn, 2)), ...
+        num2cell(fakeConn, 2), ...
+        'UniformOutput', false));
+    classConn = fakeConn;
+    
+    fakeAxonClassTitles = strcat( ...
+        {'fake '}, {axonClasses.title}, ...
+        sprintf(' (r_{fake} = %d µm)', fakeRadius));
+   [axonClasses.title] = deal(fakeAxonClassTitles{:});
+end
 
 %% Calculate R² per axon-dendrite pair
 % Approach: Let's use an axons observed specificities for a multinomial
