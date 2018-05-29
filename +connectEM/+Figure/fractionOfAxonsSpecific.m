@@ -87,8 +87,8 @@ plotScaled = plotData ./ sum(plotData, 2);
 allBars = bar(ax, plotScaled, 'stacked');
 
 colors = ax.ColorOrder(1:(numel(targetClasses) + 1), :);
-mixedColors = (colors(1:(end - 1), :) + colors(2:end, :)) ./ 2;
-mixedColors = cat(1, mixedColors, zeros(1, 3));
+mixedColors = (colors(1:(end - 1), :) .^ 2 + colors(2:end, :) .^ 2) / 2;
+mixedColors = cat(1, sqrt(mixedColors), zeros(1, 3));
 
 colors = cat(1, transpose(colors), transpose(mixedColors));
 colors = transpose(reshape(colors, 3, []));
