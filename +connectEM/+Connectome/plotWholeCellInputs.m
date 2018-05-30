@@ -208,6 +208,89 @@ if ~isempty(debugDir)
     end
 end
 
+%% Correlation between ratios and dendrite direction
+curMinSyn = 50;
+dimLabels = {'X', 'Y', 'Z'};
+
+dendT = connectEM.WholeCell.splitWholeCellInputs(wcT, splitNmlT);
+
+dendT.dir = nan(size(dendT.somaPos));
+dendT.tcExcRatio = nan(size(dendT.id));
+dendT.inhExcRatio = nan(size(dendT.id));
+
+% Let's not analyse dendrites with too few synapses
+dendT(cellfun(@height, dendT.synapses) < curMinSyn, :) = [];
+
+for curIdx = 1:size(dendT, 1)
+    curSyns = dendT.synapses{curIdx};
+    curSomaPos = dendT.somaPos(curIdx, :);
+    
+    curNodes = dendT.agglo(curIdx).nodes;
+    curNodes(isnan(curNodes(:, 4)), :) = [];
+    
+   [curSegIds, curSegPos] = unique(curNodes(:, 4));
+    curSegPos = curNodes(curSegPos, 1:3) - curSomaPos;
+    curSegPos = curSegPos .* param.raw.voxelSize;
+    
+    curSegMass = segMass(curSegIds);
+    curSegMass = curSegMass / sum(curSegMass);
+    
+    curDendDir = curSegPos ./ sqrt(sum(curSegPos .^ 2, 2));
+    curDendDir = sum(curSegMass .* curDendDir, 1);
+    curDendDir = curDendDir / sqrt(sum(curDendDir .^ 2));
+    
+    curSynData = accumarray( ...
+        double(conn.axonMeta.axonClass(curSyns.axonId)), ...
+        1, [numel(synTypes), 1], @sum, 0);
+    
+    dendT.dir(curIdx, :) = curDendDir;
+    dendT.tcExcRatio(curIdx) = curSynData(2) / sum(curSynData(1:2));
+    dendT.inhExcRatio(curIdx) = curSynData(3) / sum(curSynData(1:3));
+end
+
+curFig = figure();
+curFig.Color = 'white';
+curFig.Position(3:4) = [690, 510];
+
+for curDimIdx = 1:3
+    % TC
+    curFit = fit(dendT.dir(:, curDimIdx), dendT.tcExcRatio, 'poly1');
+    curAx = subplot(2, 3, curDimIdx);
+    
+    hold(curAx, 'on');
+    scatter(curAx, dendT.dir(:, curDimIdx), dendT.tcExcRatio, 60, '.');
+    plot(curAx, [-1, 1], curFit([-1, 1]), 'Color', 'black', 'LineWidth', 2);
+    
+    % Inh
+    curFit = fit(dendT.dir(:, curDimIdx), dendT.inhExcRatio, 'poly1');
+    curAx = subplot(2, 3, curDimIdx + 3);
+    
+    hold(curAx, 'on');
+    scatter(curAx, dendT.dir(:, curDimIdx), dendT.inhExcRatio, 60, '.');
+    plot(curAx, [-1, 1], curFit([-1, 1]), 'Color', 'black', 'LineWidth', 2);
+    
+    xlabel(curAx, sprintf('%s-polarity of dendrite', dimLabels{curDimIdx}));
+end
+
+curAxes = flip(curFig.Children);
+ylabel(curAxes(1), 'TC / (TC + CC)');
+ylabel(curAxes(2), 'Inh / (Inh + Exc)');
+
+[curAxes.XLim] = deal([-1, +1]);
+[curAxes.PlotBoxAspectRatio] = deal([1, 1, 1]);
+[curAxes.DataAspectRatioMode] = deal('auto');
+
+annotation( ...
+    curFig, 'textbox', [0, 0.9, 1, 0.1], ...
+    'String', {info.filename; info.git_repos{1}.hash}, ...
+    'EdgeColor', 'none', 'HorizontalAlignment', 'center');
+
+tcExcCorr = arrayfun(@(i) corr(dendT.dir(:, i), dendT.tcExcRatio), 1:3);
+tcExcDir = tcExcCorr ./ sqrt(sum(tcExcCorr .^ 2));
+
+inhExcCorr = arrayfun(@(i) corr(dendT.dir(:, i), dendT.inhExcRatio), 1:3);
+inhExcDir = inhExcCorr ./ sqrt(sum(inhExcCorr .^ 2));
+
 %% Try to find border cells
 somaPos = cell2mat(arrayfun( ...
     @(s) mean(s.nodes(:, 1:3), 1), ...
@@ -282,7 +365,15 @@ for curIdx = 1:numel(wcGroups)
 end
 
 %% Plotting
-for curIdx = size(extWcT, 1)
+globalRatios = connectEM.Connectome.buildSynapseTable(conn, syn);
+globalRatios.axonClass = conn.axonMeta.axonClass(globalRatios.preAggloId);
+globalRatios = accumarray(double(globalRatios.axonClass), 1, [4, 1]);
+
+globalRatios = [ ...
+    globalRatios(3) / sum(globalRatios(1:3)), ...
+    globalRatios(2) / sum(globalRatios(1:2))];
+
+for curIdx = 1:height(extWcT)
     curSyns = extWcT.synapses{curIdx};
     if isempty(curSyns); continue; end
     
@@ -298,44 +389,50 @@ for curIdx = size(extWcT, 1)
     curFig.Color = 'white';
     curFig.Position(3:4) = [1120, 660];
     
-    curSyns.isSpine = syn.isSpineSyn(curSyns.id);
-    curSyns.isSoma = ismember( ...
-        extWcT.agglo(curIdx).nodes(curSyns.nodeId, 4), ...
-        extWcT.somaAgglo(curIdx).nodes(:, 4));
-    
-    curSyns.isExc = conn.axonMeta.isExc(curSyns.axonId);
-    curSyns.isInh = conn.axonMeta.isInh(curSyns.axonId);
-    
-    curSyns.axonClass = conn.axonMeta.axonClass(curSyns.axonId);
+    curSyns.isSpine = syn.synapses.type(curSyns.id);
+    curSyns.isSpine = curSyns.isSpine == 'PrimarySpine';
     
     curSyns.dist = extWcT.nodeDists{curIdx}(curSyns.nodeId);
     curSyns.dist = curSyns.dist / 1E3;
     
-    % move soma synapses to separate bin
+    % Move soma synapses to separate bin
+    curSyns.isSoma = ismember( ...
+        extWcT.agglo(curIdx).nodes(curSyns.nodeId, 4), ...
+        extWcT.somaAgglo(curIdx).nodes(:, 4));
     curSyns.dist(curSyns.isSoma) = -eps;
     
     curMaxDist = 10 * ceil(max(curSyns.dist) / 10);
     curBinEdges = -5:5:curMaxDist;
     
-    curPlot = @(ax, data) ...
+    curPlotRange = 10 * ceil(prctile(curSyns.dist, 99) / 10);
+    curPlotRange = [curBinEdges(1), curPlotRange]; %#ok
+    
+    curSyns.axonClass = conn.axonMeta.axonClass(curSyns.axonId);
+    
+    curSynTypeData = accumarray( ...
+        horzcat( ...
+            discretize(curSyns.dist, curBinEdges), ...
+            double(curSyns.axonClass)), ...
+        1, [numel(curBinEdges) - 1, 4]);
+    
+    curPlot = @(ax, varargin) ...
         histogram( ...
-            ax, data, ...
+            ax, varargin{:}, ...
             'BinEdges', curBinEdges, ...
             'DisplayStyle', 'stairs', ...
             'LineWidth', 2, ...
             'FaceAlpha', 1);
         
-    curAx = subplot(4, 1, 1);
+    curAx = subplot(3, 1, 1);
     hold(curAx, 'on');
     
     curPlot(curAx, curSyns.dist);
     curPlot(curAx, curSyns.dist(curSyns.isSpine));
-    curPlot(curAx, curSyns.dist(curSyns.isSoma | ~curSyns.isSpine));
     
     curAx.TickDir = 'out';
     curAx.Position(3) = 0.8 - curAx.Position(1);
     
-    xlim(curAx, curBinEdges([1, end]));
+    xlim(curAx, curPlotRange);
     ylabel(curAx, 'Synapses');
     
     title(curAx, { ...
@@ -344,106 +441,64 @@ for curIdx = size(extWcT, 1)
         'FontWeight', 'normal', 'FontSize', 10);
     
     curLeg = legend(curAx, ...
-        'All', 'Onto spines', 'Onto shaft', ...
+        'All', 'Onto spines', ...
         'Location', 'EastOutside');
     curLeg.Position([1, 3]) = [0.82, (0.98 - 0.82)];
     curLeg.Box = 'off';
     
-    curAx = subplot(4, 1, 2);
+    curAx = subplot(3, 1, 2);
     hold(curAx, 'on');
-    
-    curDiscretize = ...
-        @(data) accumarray( ...
-            discretize(data, curBinEdges), ...
-            1, [numel(curBinEdges) - 1, 1]);
-    curBinsAll = curDiscretize(curSyns.dist);
-    
-    curPlot = ...
-        @(ax, data) histogram(ax, ...
-            'BinCount', min( ...
-                curDiscretize(data) ...
-                ./ curBinsAll, 1), ...
-            'BinEdges', curBinEdges, ...
-            'DisplayStyle', 'stairs', ...
-            'LineWidth', 2, ...
-            'FaceAlpha', 1);
-	
-    curPlot(curAx, curSyns.dist(curSyns.isSpine & ~curSyns.isSoma));
-    curPlot(curAx, curSyns.dist(curSyns.isExc));
+        
+	curPlot(curAx, curSyns.dist(curSyns.axonClass == 'Corticocortical'));
+	curPlot(curAx, curSyns.dist(curSyns.axonClass == 'Thalamocortical'));
+	curPlot(curAx, curSyns.dist(curSyns.axonClass == 'Inhibitory'));
     
     curAx.TickDir = 'out';
     curAx.Position(3) = 0.8 - curAx.Position(1);
     
-    xlim(curAx, curBinEdges([1, end]));
-    ylabel(curAx, 'Fraction of synapses');
-    ylim(curAx, [0, 1]);
+    xlim(curAx, curPlotRange);
+    ylabel(curAx, 'Synapses');
     
     curLeg = legend(curAx, ...
-        'Onto spines', ...
-        'Excitatory', ...
-        'Location', 'EastOutside');
-    curLeg.Position([1, 3]) = [0.82, (0.98 - 0.82)];
-    curLeg.Box = 'off';
-    
-    % TC vs CC
-    curAx = subplot(4, 1, 3);
-    hold(curAx, 'on');
-    
-    curDiscretize = ...
-        @(data) accumarray( ...
-            discretize(data, curBinEdges), ...
-            1, [numel(curBinEdges) - 1, 1]);
-    curBinsAll = curDiscretize(curSyns.dist);
-    
-    curPlot = ...
-        @(ax, data) histogram(ax, ...
-            'BinCount', curDiscretize(data), ...
-            'BinEdges', curBinEdges, ...
-            'Normalization', 'probability', ...
-            'DisplayStyle', 'stairs', ...
-            'LineWidth', 2, ...
-            'FaceAlpha', 1);
-	
-    curPlot(curAx, curSyns.dist(curSyns.axonClass == 'Thalamocortical'));
-    curPlot(curAx, curSyns.dist(curSyns.axonClass == 'Corticocortical'));
-    
-    curAx.TickDir = 'out';
-    curAx.Position(3) = 0.8 - curAx.Position(1);
-    
-    xlim(curAx, curBinEdges([1, end]));
-    ylabel(curAx, 'Probability');
-    
-    curLeg = legend(curAx, ...
-        'Thalamocortical', ...
         'Corticocortical', ...
+        'Thalamocortical', ...
+        'Inhibitory', ...
         'Location', 'EastOutside');
     curLeg.Position([1, 3]) = [0.82, (0.98 - 0.82)];
     curLeg.Box = 'off';
     
-    % plot (spine) synapse sizes
-    curAx = subplot(4, 1, 4);
+    % Synapse ratios
+    curAx = subplot(3, 1, 3);
+    hold(curAx, 'on');
+	
+    curTemp = curSynTypeData(:, 3) ./ sum(curSynTypeData(:, 1:3), 2);
+    curTemp(isnan(curTemp)) = 0;
+    curPlot(curAx, 'BinCount', curTemp);
     
-    curSpineSyns = curSyns(curSyns.isSpine, :);
-    curSpineSyns.binId = discretize( ...
-        curSpineSyns.dist, curBinEdges);
-    curSpineSynArea = accumarray( ...
-        curSpineSyns.binId, curSpineSyns.area, ...
-       [numel(curBinEdges) - 1, 1], @median, 0);
-   
-    histogram(curAx, ...
-        'BinCount', curSpineSynArea, ...
-        'BinEdges', curBinEdges, ...
-        'DisplayStyle', 'stairs', ...
-        'LineWidth', 2, ...
-        'FaceAlpha', 1);
+    curTemp = curSynTypeData(:, 2) ./ sum(curSynTypeData(:, 1:2), 2);
+    curTemp(isnan(curTemp)) = 0;
+    curPlot(curAx, 'BinCount', curTemp);
     
     curAx.TickDir = 'out';
     curAx.Position(3) = 0.8 - curAx.Position(1);
     
-    ylabel(curAx, 'Median ASI (µm²)');
-    xlabel(curAx, 'Distance to soma (µm)');
-    xlim(curAx, curBinEdges([1, end]));
-    ylim(curAx, [0, 0.4]);
+    ylim(curAx, [0, 1]);
+    xlim(curAx, curPlotRange);
+    ylabel(curAx, 'Ratio');
+    
+    plot(curAx, ...
+        curAx.XLim, repmat(globalRatios(1), 1, 2), ...
+        'Color', curAx.ColorOrder(1, :), 'LineStyle', '--');
+    plot(curAx, ...
+        curAx.XLim, repmat(globalRatios(2), 1, 2), ...
+        'Color', curAx.ColorOrder(2, :), 'LineStyle', '--');
+    
+    curLeg = legend(curAx, ...
+        'Inh / (Inh + Exc)', ...
+        'TC / (TC + CC)', ...
+        'Location', 'EastOutside');
+    curLeg.Position([1, 3]) = [0.82, (0.98 - 0.82)];
+    curLeg.Box = 'off';
     
     % save figure
     if ~isempty(plotDir)
@@ -567,89 +622,6 @@ for curIdx = size(extWcT, 1)
             info.filename; info.git_repos{1}.hash; extWcT.title{curIdx}}, ...
         'EdgeColor', 'none', 'HorizontalAlignment', 'center');
 end
-
-%% Correlation between ratios and dendrite direction
-curMinSyn = 50;
-dimLabels = {'X', 'Y', 'Z'};
-
-dendT = connectEM.WholeCell.splitWholeCellInputs(wcT, splitNmlT);
-
-dendT.dir = nan(size(dendT.somaPos));
-dendT.tcExcRatio = nan(size(dendT.id));
-dendT.inhExcRatio = nan(size(dendT.id));
-
-% Let's not analyse dendrites with too few synapses
-dendT(cellfun(@height, dendT.synapses) < curMinSyn, :) = [];
-
-for curIdx = 1:size(dendT, 1)
-    curSyns = dendT.synapses{curIdx};
-    curSomaPos = dendT.somaPos(curIdx, :);
-    
-    curNodes = dendT.agglo(curIdx).nodes;
-    curNodes(isnan(curNodes(:, 4)), :) = [];
-    
-   [curSegIds, curSegPos] = unique(curNodes(:, 4));
-    curSegPos = curNodes(curSegPos, 1:3) - curSomaPos;
-    curSegPos = curSegPos .* param.raw.voxelSize;
-    
-    curSegMass = segMass(curSegIds);
-    curSegMass = curSegMass / sum(curSegMass);
-    
-    curDendDir = curSegPos ./ sqrt(sum(curSegPos .^ 2, 2));
-    curDendDir = sum(curSegMass .* curDendDir, 1);
-    curDendDir = curDendDir / sqrt(sum(curDendDir .^ 2));
-    
-    curSynData = accumarray( ...
-        double(conn.axonMeta.axonClass(curSyns.axonId)), ...
-        1, [numel(synTypes), 1], @sum, 0);
-    
-    dendT.dir(curIdx, :) = curDendDir;
-    dendT.tcExcRatio(curIdx) = curSynData(2) / sum(curSynData(1:2));
-    dendT.inhExcRatio(curIdx) = curSynData(3) / sum(curSynData(1:3));
-end
-
-curFig = figure();
-curFig.Color = 'white';
-curFig.Position(3:4) = [690, 510];
-
-for curDimIdx = 1:3
-    % TC
-    curFit = fit(dendT.dir(:, curDimIdx), dendT.tcExcRatio, 'poly1');
-    curAx = subplot(2, 3, curDimIdx);
-    
-    hold(curAx, 'on');
-    scatter(curAx, dendT.dir(:, curDimIdx), dendT.tcExcRatio, 60, '.');
-    plot(curAx, [-1, 1], curFit([-1, 1]), 'Color', 'black', 'LineWidth', 2);
-    
-    % Inh
-    curFit = fit(dendT.dir(:, curDimIdx), dendT.inhExcRatio, 'poly1');
-    curAx = subplot(2, 3, curDimIdx + 3);
-    
-    hold(curAx, 'on');
-    scatter(curAx, dendT.dir(:, curDimIdx), dendT.inhExcRatio, 60, '.');
-    plot(curAx, [-1, 1], curFit([-1, 1]), 'Color', 'black', 'LineWidth', 2);
-    
-    xlabel(curAx, sprintf('%s-polarity of dendrite', dimLabels{curDimIdx}));
-end
-
-curAxes = flip(curFig.Children);
-ylabel(curAxes(1), 'TC / (TC + CC)');
-ylabel(curAxes(2), 'Inh / (Inh + Exc)');
-
-[curAxes.XLim] = deal([-1, +1]);
-[curAxes.PlotBoxAspectRatio] = deal([1, 1, 1]);
-[curAxes.DataAspectRatioMode] = deal('auto');
-
-annotation( ...
-    curFig, 'textbox', [0, 0.9, 1, 0.1], ...
-    'String', {info.filename; info.git_repos{1}.hash}, ...
-    'EdgeColor', 'none', 'HorizontalAlignment', 'center');
-
-tcExcCorr = arrayfun(@(i) corr(dendT.dir(:, i), dendT.tcExcRatio), 1:3);
-tcExcDir = tcExcCorr ./ sqrt(sum(tcExcCorr .^ 2));
-
-inhExcCorr = arrayfun(@(i) corr(dendT.dir(:, i), dendT.inhExcRatio), 1:3);
-inhExcDir = inhExcCorr ./ sqrt(sum(inhExcCorr .^ 2));
 
 %% Correlation between inhibition and dendrite length
 curMinSyn = 500;
