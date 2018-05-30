@@ -6,7 +6,7 @@ clear;
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites-wholeCells-03-v2-classified_spine-syn-clust.mat');
 
-binEdges = linspace(-50, 50, 11);
+binEdges = linspace(-50, 50, 51);
 
 synTypes = { ...
     'Corticocortical', ...
