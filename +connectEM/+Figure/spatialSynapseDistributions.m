@@ -107,6 +107,9 @@ axes = flip(fig.Children);
 xlabel(axes(1), 'Probability');
 xlabel(axes(2), 'Ratio');
 
+[axes(1:2:end).XLim] = deal([0, 0.06]);
+[axes(2:2:end).XLim] = deal([0, 0.4]);
+
 % Legends
 curLeg = addLegend(axes(end - 1), synTypes, 'Location', 'EastOutside');
 curLeg.Box = 'off';
