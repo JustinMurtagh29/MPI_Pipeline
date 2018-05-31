@@ -310,7 +310,6 @@ annotation( ...
 
 %% Correlation between ratios and dendrite direction
 curMinSyn = 50;
-dimLabels = {'X', 'Y', 'Z'};
 
 % Multivariate linear regression to compensate for soma location effect
 curInhCoefs = [curWcT.somaPosRel, ones(height(curWcT), 1)];
@@ -386,7 +385,6 @@ end
 % Plotting
 curFig = figure();
 curFig.Color = 'white';
-%curFig.Position(3:4) = [690, 510];
 
 for curDimIdx = 1:3
     % Inh / (Inh + Exc) ratio
