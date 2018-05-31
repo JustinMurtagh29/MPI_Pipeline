@@ -213,7 +213,7 @@ curMinSyn = 100;
 curDimLabels = {'X', 'Y', 'Z'};
 
 curWcT = wcT;
-curWcT(cellfun(@height, curWcT.synapses) < 100, :) = [];
+curWcT(cellfun(@height, curWcT.synapses) < curMinSyn, :) = [];
 
 curWcT.inhRatio = nan(height(curWcT), 1);
 curWcT.tcRatio = nan(height(curWcT), 1);
@@ -312,19 +312,37 @@ annotation( ...
 curMinSyn = 50;
 dimLabels = {'X', 'Y', 'Z'};
 
-dendT = connectEM.WholeCell.splitWholeCellInputs(wcT, splitNmlT);
+% Multivariate linear regression to compensate for soma location effect
+curInhCoefs = [curWcT.somaPosRel, ones(height(curWcT), 1)];
+curInhCoefs = curInhCoefs \ (curWcT.inhRatio - mean(curWcT.inhRatio));
+curInhFit = @(c) curInhCoefs(end) + c * curInhCoefs(1:(end - 1));
 
-dendT.dir = nan(size(dendT.somaPos));
-dendT.tcExcRatio = nan(size(dendT.id));
-dendT.inhExcRatio = nan(size(dendT.id));
+curTcCoefs = [curWcT.somaPosRel, ones(height(curWcT), 1)];
+curTcCoefs = curTcCoefs \ (curWcT.tcRatio - mean(curWcT.tcRatio));
+curTcFit = @(c) curTcCoefs(end) + c * curTcCoefs(1:(end - 1));
+
+dendT = connectEM.WholeCell.splitWholeCellInputs(wcT, splitNmlT);
 
 % Let's not analyse dendrites with too few synapses
 dendT(cellfun(@height, dendT.synapses) < curMinSyn, :) = [];
 
+% Find corresponding cell
+[~, dendT.cellRow] = ismember(dendT.id, curWcT.id);
+dendT(~dendT.cellRow, :) = [];
+
+
+dendT.dir = nan(size(dendT.somaPos));
+dendT.inhExcRatio = nan(size(dendT.id));
+dendT.corrInhExcRatio = nan(size(dendT.id));
+dendT.tcExcRatio = nan(size(dendT.id));
+dendT.corrTcExcRatio = nan(size(dendT.id));
+
 for curIdx = 1:size(dendT, 1)
     curSyns = dendT.synapses{curIdx};
-    curSomaPos = dendT.somaPos(curIdx, :);
     
+    
+    % Calculate dendrite orientation
+    curSomaPos = dendT.somaPos(curIdx, :);
     curNodes = dendT.agglo(curIdx).nodes;
     curNodes(isnan(curNodes(:, 4)), :) = [];
     
@@ -344,52 +362,84 @@ for curIdx = 1:size(dendT, 1)
         1, [numel(synTypes), 1], @sum, 0);
     
     dendT.dir(curIdx, :) = curDendDir;
-    dendT.tcExcRatio(curIdx) = curSynData(2) / sum(curSynData(1:2));
     dendT.inhExcRatio(curIdx) = curSynData(3) / sum(curSynData(1:3));
+    dendT.tcExcRatio(curIdx) = curSynData(2) / sum(curSynData(1:2));
+    
+    
+    % Correct for soma location
+    curSomaPosRel = curWcT.somaPosRel(dendT.cellRow(curIdx), :);
+    dendT.corrInhExcRatio(curIdx) = ...
+        dendT.inhExcRatio(curIdx) - curInhFit(curSomaPosRel);
+    dendT.corrTcExcRatio(curIdx) = ...
+        dendT.tcExcRatio(curIdx) - curTcFit(curSomaPosRel);
 end
 
+
+% Plotting
 curFig = figure();
 curFig.Color = 'white';
-curFig.Position(3:4) = [690, 510];
+%curFig.Position(3:4) = [690, 510];
 
 for curDimIdx = 1:3
-    % TC
-    curFit = fit(dendT.dir(:, curDimIdx), dendT.tcExcRatio, 'poly1');
-    curAx = subplot(2, 3, curDimIdx);
+    % Inh / (Inh + Exc) ratio
+    curFit = fit(dendT.dir(:, curDimIdx), dendT.inhExcRatio, 'poly1');
     
+    curAx = subplot(4, 3, curDimIdx + 0);
     hold(curAx, 'on');
+    
+    scatter(curAx, dendT.dir(:, curDimIdx), dendT.inhExcRatio, 60, '.');
+    plot(curAx, [-1, 1], curFit([-1, 1]), 'Color', 'black', 'LineWidth', 2);
+    
+    
+    % Inh / (Inh + Exc) ratio, corrected for soma location
+    curFit = fit(dendT.dir(:, curDimIdx), dendT.corrInhExcRatio, 'poly1');
+    
+    curAx = subplot(4, 3, curDimIdx + 3);
+    hold(curAx, 'on');
+    
+    scatter(curAx, dendT.dir(:, curDimIdx), dendT.corrInhExcRatio, 60, '.');
+    plot(curAx, [-1, 1], curFit([-1, 1]), 'Color', 'black', 'LineWidth', 2);
+    
+    
+    % TC / (TC + CC) ratio
+    curFit = fit(dendT.dir(:, curDimIdx), dendT.tcExcRatio, 'poly1');
+    
+    curAx = subplot(4, 3, curDimIdx + 2 * 3);
+    hold(curAx, 'on');
+    
     scatter(curAx, dendT.dir(:, curDimIdx), dendT.tcExcRatio, 60, '.');
     plot(curAx, [-1, 1], curFit([-1, 1]), 'Color', 'black', 'LineWidth', 2);
     
-    % Inh
-    curFit = fit(dendT.dir(:, curDimIdx), dendT.inhExcRatio, 'poly1');
-    curAx = subplot(2, 3, curDimIdx + 3);
     
+    % TC / (TC + CC) ratio, corrected for soma location
+    curFit = fit(dendT.dir(:, curDimIdx), dendT.corrTcExcRatio, 'poly1');
+    
+    curAx = subplot(4, 3, curDimIdx + 3 * 3);
     hold(curAx, 'on');
-    scatter(curAx, dendT.dir(:, curDimIdx), dendT.inhExcRatio, 60, '.');
+    
+    scatter(curAx, dendT.dir(:, curDimIdx), dendT.corrTcExcRatio, 60, '.');
     plot(curAx, [-1, 1], curFit([-1, 1]), 'Color', 'black', 'LineWidth', 2);
+    
     
     xlabel(curAx, sprintf('%s-polarity of dendrite', dimLabels{curDimIdx}));
 end
 
 curAxes = flip(curFig.Children);
-ylabel(curAxes(1), 'TC / (TC + CC)');
-ylabel(curAxes(2), 'Inh / (Inh + Exc)');
+ylabel(curAxes(1), 'Inh / (Inh + Exc)');
+ylabel(curAxes(2), {'Soma corrected'; 'Inh / (Inh + Exc)'});
+ylabel(curAxes(3), 'TC / (TC + CC)');
+ylabel(curAxes(4), {'Soma corrected'; 'TC / (TC + CC)'});
 
-[curAxes.XLim] = deal([-1, +1]);
-[curAxes.PlotBoxAspectRatio] = deal([1, 1, 1]);
-[curAxes.DataAspectRatioMode] = deal('auto');
+set(curAxes, ...
+    'TickDir', 'out', ...
+    'XLim', [-1, +1], ...
+    'PlotBoxAspectRatio', [1, 1, 1], ...
+    'DataAspectRatioMode', 'auto');
 
 annotation( ...
     curFig, 'textbox', [0, 0.9, 1, 0.1], ...
     'String', {info.filename; info.git_repos{1}.hash}, ...
     'EdgeColor', 'none', 'HorizontalAlignment', 'center');
-
-tcExcCorr = arrayfun(@(i) corr(dendT.dir(:, i), dendT.tcExcRatio), 1:3);
-tcExcDir = tcExcCorr ./ sqrt(sum(tcExcCorr .^ 2));
-
-inhExcCorr = arrayfun(@(i) corr(dendT.dir(:, i), dendT.inhExcRatio), 1:3);
-inhExcDir = inhExcCorr ./ sqrt(sum(inhExcCorr .^ 2));
 
 %% Try to find border cells
 somaPos = cell2mat(arrayfun( ...
