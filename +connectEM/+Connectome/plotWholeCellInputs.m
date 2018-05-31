@@ -314,11 +314,11 @@ dimLabels = {'X', 'Y', 'Z'};
 
 % Multivariate linear regression to compensate for soma location effect
 curInhCoefs = [curWcT.somaPosRel, ones(height(curWcT), 1)];
-curInhCoefs = curInhCoefs \ (curWcT.inhRatio - mean(curWcT.inhRatio));
+curInhCoefs = curInhCoefs \ curWcT.inhRatio;
 curInhFit = @(c) curInhCoefs(end) + c * curInhCoefs(1:(end - 1));
 
 curTcCoefs = [curWcT.somaPosRel, ones(height(curWcT), 1)];
-curTcCoefs = curTcCoefs \ (curWcT.tcRatio - mean(curWcT.tcRatio));
+curTcCoefs = curTcCoefs \ curWcT.tcRatio;
 curTcFit = @(c) curTcCoefs(end) + c * curTcCoefs(1:(end - 1));
 
 dendT = connectEM.WholeCell.splitWholeCellInputs(wcT, splitNmlT);
@@ -387,8 +387,8 @@ for curDimIdx = 1:3
     curAx = subplot(4, 3, curDimIdx + 0);
     hold(curAx, 'on');
     
-    scatter(curAx, dendT.dir(:, curDimIdx), dendT.inhExcRatio, 60, '.');
-    plot(curAx, [-1, 1], curFit([-1, 1]), 'Color', 'black', 'LineWidth', 2);
+    scatter(curAx, dendT.inhExcRatio, dendT.dir(:, curDimIdx), 60, '.');
+    plot(curAx, curFit([-1, 1]), [-1, 1], 'Color', 'black', 'LineWidth', 2);
     
     
     % Inh / (Inh + Exc) ratio, corrected for soma location
@@ -397,8 +397,8 @@ for curDimIdx = 1:3
     curAx = subplot(4, 3, curDimIdx + 3);
     hold(curAx, 'on');
     
-    scatter(curAx, dendT.dir(:, curDimIdx), dendT.corrInhExcRatio, 60, '.');
-    plot(curAx, [-1, 1], curFit([-1, 1]), 'Color', 'black', 'LineWidth', 2);
+    scatter(curAx, dendT.corrInhExcRatio, dendT.dir(:, curDimIdx), 60, '.');
+    plot(curAx, curFit([-1, 1]), [-1, 1], 'Color', 'black', 'LineWidth', 2);
     
     
     % TC / (TC + CC) ratio
@@ -407,8 +407,8 @@ for curDimIdx = 1:3
     curAx = subplot(4, 3, curDimIdx + 2 * 3);
     hold(curAx, 'on');
     
-    scatter(curAx, dendT.dir(:, curDimIdx), dendT.tcExcRatio, 60, '.');
-    plot(curAx, [-1, 1], curFit([-1, 1]), 'Color', 'black', 'LineWidth', 2);
+    scatter(curAx, dendT.tcExcRatio, dendT.dir(:, curDimIdx), 60, '.');
+    plot(curAx, curFit([-1, 1]), [-1, 1], 'Color', 'black', 'LineWidth', 2);
     
     
     % TC / (TC + CC) ratio, corrected for soma location
@@ -417,24 +417,29 @@ for curDimIdx = 1:3
     curAx = subplot(4, 3, curDimIdx + 3 * 3);
     hold(curAx, 'on');
     
-    scatter(curAx, dendT.dir(:, curDimIdx), dendT.corrTcExcRatio, 60, '.');
-    plot(curAx, [-1, 1], curFit([-1, 1]), 'Color', 'black', 'LineWidth', 2);
+    scatter(curAx, dendT.corrTcExcRatio, dendT.dir(:, curDimIdx), 60, '.');
+    plot(curAx, curFit([-1, 1]), [-1, 1], 'Color', 'black', 'LineWidth', 2);
     
-    
-    xlabel(curAx, sprintf('%s-polarity of dendrite', dimLabels{curDimIdx}));
+    ylabel(curAx, sprintf( ...
+        '%s orientation of dendrite', dimLabels{curDimIdx}));
 end
 
 curAxes = flip(curFig.Children);
-ylabel(curAxes(1), 'Inh / (Inh + Exc)');
-ylabel(curAxes(2), {'Soma corrected'; 'Inh / (Inh + Exc)'});
-ylabel(curAxes(3), 'TC / (TC + CC)');
-ylabel(curAxes(4), {'Soma corrected'; 'TC / (TC + CC)'});
+xlabel(curAxes(1), 'Inh / (Inh + Exc)');
+xlabel(curAxes(2), {'Soma corrected'; 'Inh / (Inh + Exc)'});
+xlabel(curAxes(3), 'TC / (TC + CC)');
+xlabel(curAxes(4), {'Soma corrected'; 'TC / (TC + CC)'});
 
 set(curAxes, ...
     'TickDir', 'out', ...
-    'XLim', [-1, +1], ...
+    'YLim', [-1, +1], ...
+    'YDir', 'reverse', ...
+    'YTick', [-1, 0, +1], ...
     'PlotBoxAspectRatio', [1, 1, 1], ...
     'DataAspectRatioMode', 'auto');
+
+curAxes(4).YTickLabel{1} = '(Pia) -1';
+curAxes(4).YTickLabel{end} = '(WM) 1';
 
 annotation( ...
     curFig, 'textbox', [0, 0.9, 1, 0.1], ...
