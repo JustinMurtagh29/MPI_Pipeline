@@ -208,6 +208,106 @@ if ~isempty(debugDir)
     end
 end
 
+%% Plot soma position versus input ratios
+curMinSyn = 100;
+curDimLabels = {'X', 'Y', 'Z'};
+
+curWcT = wcT;
+curWcT(cellfun(@height, curWcT.synapses) < 100, :) = [];
+
+curWcT.inhRatio = nan(height(curWcT), 1);
+curWcT.tcRatio = nan(height(curWcT), 1);
+
+for curIdx = 1:height(curWcT)
+    curSynapses = curWcT.synapses{curIdx};
+    curSynapses.axonClass = conn.axonMeta.axonClass(curSynapses.axonId);
+    curSynapses = accumarray(double(curSynapses.axonClass), 1, [4, 1]);
+    
+    curWcT.inhRatio(curIdx) = curSynapses(3) / sum(curSynapses(1:3));
+    curWcT.tcRatio(curIdx) = curSynapses(2) / sum(curSynapses(1:2));
+end
+
+curWcT.somaPosRel = curWcT.somaPos - mean(param.bbox, 2)';
+curWcT.somaPosRel = curWcT.somaPosRel .* param.raw.voxelSize / 1E3;
+
+
+% Correct for YZ changes
+curFitYZ = fit(curWcT.somaPosRel(:, 2:3), ...
+    curWcT.inhRatio - mean(curWcT.inhRatio), 'poly11');
+curWcT.corrInhRatio = curWcT.inhRatio - curFitYZ(curWcT.somaPosRel(:, 2:3));
+
+curFitYZ = fit(curWcT.somaPosRel(:, 2:3), ...
+    curWcT.tcRatio - mean(curWcT.tcRatio), 'poly11');
+curWcT.corrTcRatio = curWcT.tcRatio - curFitYZ(curWcT.somaPosRel(:, 2:3));
+
+
+curFig = figure();
+curFig.Color = 'white';
+curFig.Position(3:4) = [1400, 700];
+
+% Correct for YZ
+curAx = subplot(2, 4, 1);
+hold(curAx, 'on');
+
+scatter(curWcT.corrInhRatio, curWcT.somaPosRel(:, 1), 60, '.');
+curFit = fit(curWcT.somaPosRel(:, 1), curWcT.corrInhRatio, 'poly1');
+plot(curFit(curAx.YLim), curAx.YLim, 'Color', 'black');
+
+
+curAx = subplot(2, 4, 1 + 4);
+hold(curAx, 'on');
+
+scatter(curWcT.corrTcRatio, curWcT.somaPosRel(:, 1), 60, '.');
+curFit = fit(curWcT.somaPosRel(:, 1), curWcT.corrTcRatio, 'poly1');
+plot(curFit(curAx.YLim), curAx.YLim, 'Color', 'black');
+
+
+for curDim = 1:3
+    curAx = subplot(2, 4, 1 + curDim);
+    hold(curAx, 'on');
+
+    scatter(curWcT.inhRatio, curWcT.somaPosRel(:, curDim), 60, '.');
+    curFit = fit(curWcT.somaPosRel(:, curDim), curWcT.inhRatio, 'poly1');
+    plot(curFit(curAx.YLim), curAx.YLim, 'Color', 'black');
+    
+
+    curAx = subplot(2, 4, 1 + 4 + curDim);
+    hold(curAx, 'on');
+
+    scatter(curWcT.tcRatio, curWcT.somaPosRel(:, curDim), 60, '.');
+    curFit = fit(curWcT.somaPosRel(:, curDim), curWcT.tcRatio, 'poly1');
+    plot(curFit(curAx.YLim), curAx.YLim, 'Color', 'black');
+end
+
+
+curAxes = flip(curFig.Children);
+
+set(curAxes, ...
+    'TickDir', 'out', ...
+    'YDir', 'reverse', ...
+	'DataAspectRatioMode', 'auto', ...
+    'PlotBoxAspectRatio', [1, 1, 1]);
+
+xlabel(curAxes(1), {'YZ corrected'; 'Inh / (Inh + Exc)'});
+xlabel(curAxes(3), 'Inh / (Inh + Exc)');
+xlabel(curAxes(2), {'YZ corrected'; 'TC / (TC + CC)'});
+xlabel(curAxes(4), 'TC / (TC + CC)');
+
+[curAxes(1:2:end).YLim] = deal(prctile( ...
+    cat(2, curAxes(1:2:end).YLim), [0, 100]));
+[curAxes(2:2:end).YLim] = deal(prctile( ...
+    cat(2, curAxes(2:2:end).YLim), [0, 100]));
+
+for curDim = 1:3
+    ylabel(curAxes(2 * (curDim + 1)), sprintf( ...
+        'Soma position along %s (µm)', char(char('X') + (curDim - 1))));
+end
+
+annotation( ...
+    curFig, 'textbox', [0, 0.9, 1, 0.1], ...
+	'String', {info.filename; info.git_repos{1}.hash}, ...
+    'EdgeColor', 'none', 'HorizontalAlignment', 'center');
+
 %% Correlation between ratios and dendrite direction
 curMinSyn = 50;
 dimLabels = {'X', 'Y', 'Z'};
