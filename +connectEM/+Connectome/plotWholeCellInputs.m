@@ -323,11 +323,11 @@ curMinSyn = 50;
 
 % Multivariate linear regression to compensate for soma location effect
 curInhCoefs = [curWcT.somaPosRel, ones(height(curWcT), 1)];
-curInhCoefs = curInhCoefs \ curWcT.inhRatio;
+curInhCoefs = curInhCoefs \ (curWcT.inhRatio - mean(curWcT.inhRatio));
 curInhFit = @(c) curInhCoefs(end) + c * curInhCoefs(1:(end - 1));
 
 curTcCoefs = [curWcT.somaPosRel, ones(height(curWcT), 1)];
-curTcCoefs = curTcCoefs \ curWcT.tcRatio;
+curTcCoefs = curTcCoefs \ (curWcT.tcRatio - mean(curWcT.tcRatio));
 curTcFit = @(c) curTcCoefs(end) + c * curTcCoefs(1:(end - 1));
 
 dendT = connectEM.WholeCell.splitWholeCellInputs(wcT, splitNmlT);
@@ -390,7 +390,6 @@ for curIdx = 1:size(dendT, 1)
     dendT.wcCorrTcExcRatio(curIdx) = ...
         dendT.tcExcRatio(curIdx) - curCell.tcRatio;
 end
-
 
 % Plotting
 curFig = figure();
@@ -484,6 +483,82 @@ annotation( ...
     curFig, 'textbox', [0, 0.9, 1, 0.1], ...
     'String', {info.filename; info.git_repos{1}.hash}, ...
     'EdgeColor', 'none', 'HorizontalAlignment', 'center');
+
+%% Two dimensional polar plot
+curValNames = { ...
+    'somaPosCorrInhExcRatio', 'Inh / (Inh + Exc)'; ...
+    'somaPosCorrTcExcRatio', 'TC / (TC + CC)'};
+curLabels = curValNames(:, 2);
+curValNames = curValNames(:, 1);
+
+for curValIdx = 1:numel(curValNames)
+    curValName = curValNames{curValIdx};
+
+    curFig = figure();
+    curFig.Color = 'white';
+    curFig.Position(3:4) = [900, 600];
+    
+    for curDim = 1:3
+        curData = table;
+        curData.dir = dendT.dir(:, curDim);
+        curData.theta = asin(curData.dir);
+        curData.val = dendT.(curValName);
+
+        curTheta = pi / 2 * linspace(-1, +1, 51);
+        curFit = fit(curData.theta, curData.val, 'poly1');
+        curCirc = repmat(curFit(0), size(curTheta));
+        curInterpolation = curFit(curTheta);
+
+        curMaxVal = max(curData.val);
+        
+        curAxWidth = 1 / 5;
+        curPad = (1 - 3 * curAxWidth) / 4;
+        curAxPos = curPad + (curDim - 1) * (curAxWidth + curPad);
+        curAxPos = [curAxPos, 0.05, curAxWidth, 0.9]; %#ok
+        
+        curAx = polaraxes(curFig, 'Position', curAxPos);
+        curAx.ThetaDir = 'clockwise';
+        curAx.ThetaLim = [-90, +90];
+        hold(curAx, 'on');
+
+        polarplot( ...
+            curAx, curTheta, curInterpolation, ...
+            'Color', 'red', 'LineWidth', 2);
+
+        for curIdx = 1:height(curData)
+            polarplot( ...
+                curAx, repelem(curData.theta(curIdx), 1, 2), ...
+                [0, curData.val(curIdx)], ...
+                'Color', curAx.ColorOrder(1, :));
+        end
+
+        for curIdx = 1:height(curData)
+            polarplot( ...
+                curAx, curData.theta(curIdx), ...
+                curData.val(curIdx), '.', ...
+                'MarkerEdgeColor', 'black');
+        end
+        
+        curDimChar = char(char('X') + (curDim - 1));
+        curAx.ThetaAxis.TickLabels{1} = sprintf( ...
+            '(-%s) %s', curDimChar, curAx.ThetaAxis.TickLabels{1});
+        curAx.ThetaAxis.TickLabels{(1 + end) / 2} = sprintf( ...
+            '(%s) %s', setdiff('XYZ', curDimChar), ...
+            curAx.ThetaAxis.TickLabels{(1 + end) / 2});
+        curAx.ThetaAxis.TickLabels{end} = sprintf( ...
+            '(+%s) %s', curDimChar, curAx.ThetaAxis.TickLabels{end});
+    end
+    
+    curAxes = flip(curFig.Children);
+    set(curAxes, 'TickDir', 'out');
+    
+    curAxes(1).RAxis.Label.String = curLabels{curValIdx};
+
+    annotation( ...
+        curFig, 'textbox', [0, 0.9, 1, 0.1], ...
+        'String', {info.filename; info.git_repos{1}.hash}, ...
+        'EdgeColor', 'none', 'HorizontalAlignment', 'center');
+end
 
 %% Try to find border cells
 somaPos = cell2mat(arrayfun( ...
