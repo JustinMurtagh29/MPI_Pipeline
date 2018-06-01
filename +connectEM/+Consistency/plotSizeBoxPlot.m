@@ -4,15 +4,19 @@ function fig = plotSizeBoxPlot(info, synT, plotConfigs, varargin)
     opt = struct;
     opt.scale = 'log';
     opt.boxWidth = 0.75;
+    opt.barWidth = 0.9;
     opt.markerSize = 12;
     opt.markerType = '.';
     opt = Util.modifyStruct(opt, varargin{:});
+    
+    yLabelText = 'Synapse area (µm²)';
     
     switch opt.scale
         case 'linear'
             % nothing to do
         case 'log'
             synT.area = log10(synT.area);
+            yLabelText = sprintf('log_{10}(%s)', yLabelText);
         otherwise
             error('Invalid scale "%s"', opt.scale);
     end
@@ -44,12 +48,26 @@ function fig = plotSizeBoxPlot(info, synT, plotConfigs, varargin)
     
     ax.XLim = prctile(coupling, [0, 100]) + [-0.5, +0.5];
     
+    % Means
+    for curConfig = reshape(plotConfigs, 1, [])
+        curCoupling = curConfig.coupling;
+        
+        curX = curCoupling + opt.barWidth * [-0.5, +0.5];
+        curY = mean(dataT.synArea(dataT.coupling == curCoupling));
+        
+        plot( ...
+            ax, curX, [curY, curY], ...
+            'Color', ax.ColorOrder(2, :), ...
+            'LineWidth', 2);
+    end
+    
+    % Interpolation
     plot( ...
         ax, ax.XLim, synAreaFit(ax.XLim), ...
         'Color', 'black', 'LineWidth', 2);
     
     ax.TickDir = 'out';
-    ylabel(ax, 'Synapse area (µm²)');
+    ylabel(ax, yLabelText);
     xlabel(ax, 'Degree of coupling');
     
     title( ...
