@@ -1,0 +1,19 @@
+function pos = calculatePositions(param, syn)
+    % pos = calculatePosition(param, syn)
+    %
+    % Written by
+    %   Alessandro Motta <alessandro.motta@brain.mpg.de>
+    points = Seg.Global.getSegToCentroidMap(param);
+    weights = Seg.Global.getSegToSizeMap(param);
+
+    pos = cellfun( ...
+        @vertcat, ...
+        syn.synapses.presynId, ...
+        syn.synapses.postsynId, ...
+        'UniformOutput', false);
+
+    wmean = @(w, d) sum((w ./ sum(w)) .* d);
+    pos = cell2mat(cellfun( ...
+        @(ids) wmean(weights(ids), points(ids, :)), ...
+        pos, 'UniformOutput', false));
+end

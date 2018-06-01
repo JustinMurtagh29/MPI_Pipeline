@@ -19,9 +19,6 @@ info = Util.runInfo();
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 
-segPoints = Seg.Global.getSegToCentroidMap(param);
-segWeights = Seg.Global.getSegToSizeMap(param);
-
 [conn, syn] = connectEM.Connectome.load(param, connFile);
 
 %% Preparing data
@@ -31,17 +28,11 @@ synT.synType = conn.axonMeta.axonClass(synT.preAggloId);
 [~, synT.synType] = ismember(synT.synType, synTypes);
 synT(~synT.synType, :) = [];
 
-synT.pos = cellfun( ...
-    @vertcat, ...
-    syn.synapses.presynId(synT.id), ...
-    syn.synapses.postsynId(synT.id), ...
-    'UniformOutput', false);
+synPos = connectEM.Synapse.calculatePositions(param, syn);
+synT.pos = synPos(synT.id, :);
+clear synPos;
 
-wmean = @(w, d) sum((w ./ sum(w)) .* d);
-synT.pos = cell2mat(cellfun( ...
-    @(ids) wmean(segWeights(ids), segPoints(ids, :)), ...
-    synT.pos, 'UniformOutput', false));
-
+% Physical units, relative to center
 synT.pos = synT.pos - mean(param.bbox, 2)';
 synT.pos = synT.pos .* param.raw.voxelSize ./ 1E3;
 
