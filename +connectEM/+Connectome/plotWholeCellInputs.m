@@ -253,6 +253,10 @@ scatter(curWcT.corrInhRatio, curWcT.somaPosRel(:, 1), 60, '.');
 curFit = fit(curWcT.somaPosRel(:, 1), curWcT.corrInhRatio, 'poly1');
 plot(curFit(curAx.YLim), curAx.YLim, 'Color', 'black');
 
+curVar = sum((curWcT.corrInhRatio - curFit(curWcT.somaPosRel(:, 1))) .^ 2);
+title( ...
+    curAx, sprintf('Var = %.3f', curVar), ...
+    'FontWeight', 'normal', 'FontSize', 10);
 
 curAx = subplot(2, 4, 1 + 4);
 hold(curAx, 'on');
@@ -260,6 +264,11 @@ hold(curAx, 'on');
 scatter(curWcT.corrTcRatio, curWcT.somaPosRel(:, 1), 60, '.');
 curFit = fit(curWcT.somaPosRel(:, 1), curWcT.corrTcRatio, 'poly1');
 plot(curFit(curAx.YLim), curAx.YLim, 'Color', 'black');
+
+curVar = sum((curWcT.corrTcRatio - curFit(curWcT.somaPosRel(:, 1))) .^ 2);
+title( ...
+    curAx, sprintf('Var = %.3f', curVar), ...
+    'FontWeight', 'normal', 'FontSize', 10);
 
 
 for curDim = 1:3
@@ -284,8 +293,9 @@ curAxes = flip(curFig.Children);
 
 set(curAxes, ...
     'TickDir', 'out', ...
+    'XLim', [0, 1], ...
     'YDir', 'reverse', ...
-	'DataAspectRatioMode', 'auto', ...
+    'DataAspectRatioMode', 'auto', ...
     'PlotBoxAspectRatio', [1, 1, 1]);
 
 xlabel(curAxes(1), {'YZ corrected'; 'Inh / (Inh + Exc)'});
