@@ -2,8 +2,26 @@ function fig = plotSizeHistogram(info, synT, plotConfigs, varargin)
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     opt = struct;
-    opt.binEdges = linspace(0, 1.2, 61);
+    opt.scale = 'linear';
+    opt.binEdges = [];
     opt = Util.modifyStruct(opt, varargin{:});
+    
+    xLabelText = 'Synapse area (µm²)';
+    
+    switch opt.scale
+        case 'linear'
+            defaultBinEdges = linspace(0, 1.2, 61);
+        case 'log'
+            synT.area = log10(synT.area);
+            defaultBinEdges = linspace(-2, 1, 61);
+            xLabelText = sprintf('log_{10}(%s)', xLabelText);
+        otherwise
+            error('Invalid scale "%s"', opt.scale);
+    end
+    
+    if isempty(opt.binEdges)
+        opt.binEdges = defaultBinEdges;
+    end
 
     fig = figure();
     fig.Color = 'white';
@@ -26,7 +44,7 @@ function fig = plotSizeHistogram(info, synT, plotConfigs, varargin)
     end
 
     xlim(ax, opt.binEdges([1, end]));
-    xlabel(ax, 'Synapse area (µm²)');
+    xlabel(ax, xLabelText);
     ylabel(ax, 'Probability');
 
     legend( ...
