@@ -36,6 +36,7 @@ targetClasses = unique(dendMeta.targetClass);
 
 fig = figure();
 fig.Color = 'white';
+fig.Position(3:4) = [800, 1100];
 
 for curIdx = 1:numel(targetClasses)
     curTargetClass = targetClasses(curIdx);
@@ -68,6 +69,9 @@ set(axes, ...
     'Box', 'off', ...
     'TickDir', 'out', ...
     'XLim', binEdges([1, end]));
+
+xlabel(axes(end - 1), 'Inh / (Inh + Exc)');
+xlabel(axes(end - 0), 'TC / (TC + CC)');
 
 annotation(fig, ...
     'textbox', [0, 0.9, 1, 0.1], ...
