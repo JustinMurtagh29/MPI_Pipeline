@@ -1,4 +1,4 @@
-function job = startCPU(fH, iC, jN, requiredMemory, group, priority, rt);
+function job = startCPU(fH, iC, jN, requiredMemory, group, priority, rt)
     % Wrapper function for startJob.m used for backward compability
     if nargin < 7 || isempty(rt)
 	rt = 29;
@@ -11,11 +11,11 @@ function job = startCPU(fH, iC, jN, requiredMemory, group, priority, rt);
         group = 1;
     end
     if nargin < 6 || isempty(priority)
-        priority = 500;
+        priority = 50;
     end
     
     clusterCPU = Cluster.config( ...
-        'priority',priority,...
+        'priority', priority, ...
         'memory', requiredMemory, ...
 	    'time',[num2str(floor(rt),'%02d') ':' num2str(round((rt-floor(rt))*60),'%02d') ':' num2str(0,'%02d')]);
     job = Cluster.startJob(fH, iC, 'cluster', clusterCPU, 'name', jN, 'taskGroupSize', group);
