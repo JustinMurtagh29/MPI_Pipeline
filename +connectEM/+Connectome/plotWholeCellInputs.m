@@ -513,12 +513,15 @@ for curValIdx = 1:numel(curValNames)
         curData.dir = dendT.dir(:, curDim);
         curData.theta = asin(curData.dir);
         curData.val = dendT.(curValName);
+        curData.syns = cellfun( ...
+            @height, dendT.synapses);
 
         curKernBw = (pi / 5);
         curKern = @(p, r) (1 - min(1, abs(p - r) / curKernBw)) / curKernBw;
         
         curTheta = pi / 2 * linspace(-1, +1, 51);
         curMean = curKern(curData.theta, curTheta);
+        curMean = curData.syns .* curMean;
         curMean = sum(curData.val .* curMean, 1) ./ sum(curMean, 1);
 
         curMaxVal = max(curData.val);
