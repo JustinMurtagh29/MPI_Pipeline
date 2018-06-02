@@ -514,10 +514,12 @@ for curValIdx = 1:numel(curValNames)
         curData.theta = asin(curData.dir);
         curData.val = dendT.(curValName);
 
+        curKernBw = (pi / 5);
+        curKern = @(p, r) (1 - min(1, abs(p - r) / curKernBw)) / curKernBw;
+        
         curTheta = pi / 2 * linspace(-1, +1, 51);
-        curFit = fit(curData.theta, curData.val, 'poly1');
-        curCirc = repmat(curFit(0), size(curTheta));
-        curInterpolation = curFit(curTheta);
+        curMean = curKern(curData.theta, curTheta);
+        curMean = sum(curData.val .* curMean, 1) ./ sum(curMean, 1);
 
         curMaxVal = max(curData.val);
         
@@ -530,11 +532,7 @@ for curValIdx = 1:numel(curValNames)
         curAx.ThetaDir = 'clockwise';
         curAx.ThetaLim = [-90, +90];
         hold(curAx, 'on');
-
-        polarplot( ...
-            curAx, curTheta, curInterpolation, ...
-            'Color', 'red', 'LineWidth', 2);
-
+        
         for curIdx = 1:height(curData)
             polarplot( ...
                 curAx, repelem(curData.theta(curIdx), 1, 2), ...
@@ -548,6 +546,10 @@ for curValIdx = 1:numel(curValNames)
                 curData.val(curIdx), '.', ...
                 'MarkerEdgeColor', 'black');
         end
+        
+        polarplot( ...
+            curAx, curTheta, curMean, ...
+            'Color', 'black', 'LineWidth', 2);
         
         curDimChar = char(char('X') + (curDim - 1));
         curAx.ThetaAxis.TickLabels{1} = sprintf( ...
