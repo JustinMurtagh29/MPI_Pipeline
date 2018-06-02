@@ -565,7 +565,7 @@ for curValIdx = 1:numel(curValNames)
     end
     
     curAxes = flip(curFig.Children);
-    set(curAxes, 'TickDir', 'out');
+    set(curAxes, 'TickDir', 'out', 'GridAlpha', 0.5);
     
     curAxes(1).RAxis.Label.String = curLabels{curValIdx};
 
