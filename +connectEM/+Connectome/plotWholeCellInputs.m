@@ -212,6 +212,9 @@ end
 curMinSyn = 100;
 curDimLabels = {'X', 'Y', 'Z'};
 
+[curInhRatioFit, curTcRatioFit] = ...
+    connectEM.Synapse.calculateCorticalRatioGradients(param, conn, syn);
+
 curWcT = wcT;
 curWcT(cellfun(@height, curWcT.synapses) < curMinSyn, :) = [];
 
@@ -243,7 +246,7 @@ curWcT.corrTcRatio = curWcT.tcRatio - curFitYZ(curWcT.somaPosRel(:, 2:3));
 
 curFig = figure();
 curFig.Color = 'white';
-curFig.Position(3:4) = [1400, 700];
+curFig.Position(3:4) = [1650, 850];
 
 % Correct for YZ
 curAx = subplot(2, 4, 1);
@@ -251,7 +254,8 @@ hold(curAx, 'on');
 
 scatter(curWcT.corrInhRatio, curWcT.somaPosRel(:, 1), 60, '.');
 curFit = fit(curWcT.somaPosRel(:, 1), curWcT.corrInhRatio, 'poly1');
-plot(curFit(curAx.YLim), curAx.YLim, 'Color', 'black');
+plot(curInhRatioFit(curAx.YLim), curAx.YLim', 'Color', 'red', 'LineWidth', 2);
+plot(curFit(curAx.YLim), curAx.YLim, 'Color', 'black', 'LineWidth', 2);
 
 curVar = sum((curWcT.corrInhRatio - curFit(curWcT.somaPosRel(:, 1))) .^ 2);
 title( ...
@@ -263,7 +267,8 @@ hold(curAx, 'on');
 
 scatter(curWcT.corrTcRatio, curWcT.somaPosRel(:, 1), 60, '.');
 curFit = fit(curWcT.somaPosRel(:, 1), curWcT.corrTcRatio, 'poly1');
-plot(curFit(curAx.YLim), curAx.YLim, 'Color', 'black');
+plot(curTcRatioFit(curAx.YLim), curAx.YLim', 'Color', 'red', 'LineWidth', 2);
+plot(curFit(curAx.YLim), curAx.YLim, 'Color', 'black', 'LineWidth', 2);
 
 curVar = sum((curWcT.corrTcRatio - curFit(curWcT.somaPosRel(:, 1))) .^ 2);
 title( ...
@@ -277,7 +282,7 @@ for curDim = 1:3
 
     scatter(curWcT.inhRatio, curWcT.somaPosRel(:, curDim), 60, '.');
     curFit = fit(curWcT.somaPosRel(:, curDim), curWcT.inhRatio, 'poly1');
-    plot(curFit(curAx.YLim), curAx.YLim, 'Color', 'black');
+    plot(curFit(curAx.YLim), curAx.YLim, 'Color', 'black', 'LineWidth', 2);
     
 
     curAx = subplot(2, 4, 1 + 4 + curDim);
@@ -285,7 +290,7 @@ for curDim = 1:3
 
     scatter(curWcT.tcRatio, curWcT.somaPosRel(:, curDim), 60, '.');
     curFit = fit(curWcT.somaPosRel(:, curDim), curWcT.tcRatio, 'poly1');
-    plot(curFit(curAx.YLim), curAx.YLim, 'Color', 'black');
+    plot(curFit(curAx.YLim), curAx.YLim, 'Color', 'black', 'LineWidth', 2);
 end
 
 
@@ -312,6 +317,11 @@ for curDim = 1:3
     ylabel(curAxes(2 * (curDim + 1)), sprintf( ...
         'Soma position along %s (µm)', char(char('X') + (curDim - 1))));
 end
+
+curLeg = legend(curAxes(1), ...
+    'Neurons', 'Synapse gradient', 'Fit', ...
+    'Location', 'SouthEast');
+curLeg.Box = 'off';
 
 annotation( ...
     curFig, 'textbox', [0, 0.9, 1, 0.1], ...
