@@ -560,6 +560,45 @@ for curValIdx = 1:numel(curValNames)
         'EdgeColor', 'none', 'HorizontalAlignment', 'center');
 end
 
+%% Three-dimensional plot
+curValNames = { ...
+    'somaPosCorrInhExcRatio', 'Inh / (Inh + Exc)'; ...
+    'somaPosCorrTcExcRatio', 'TC / (TC + CC)'};
+curLabels = curValNames(:, 2);
+curValNames = curValNames(:, 1);
+
+for curValIdx = 1:numel(curValNames)
+    curValName = curValNames{curValIdx};
+    
+    curData = dendT.dir;
+    curData = dendT.(curValName) .* curData;
+    
+    curFig = figure();
+    curFig.Color = 'white';
+    
+    curAx = axes(curFig); %#ok
+    axis(curAx, 'equal');
+    hold(curAx, 'on');
+    
+    for curIdx = 1:size(curData, 1)
+        plot3(curAx, ...
+            [0, curData(curIdx, 1)], ...
+            [0, curData(curIdx, 2)], ...
+            [0, curData(curIdx, 3)], ...
+            'Color', curAx.ColorOrder(1, :));
+    end
+    
+    for curIdx = 1:size(curData, 1)
+        plot3(curAx, ...
+            [0, curData(curIdx, 1)], ...
+            [0, curData(curIdx, 2)], ...
+            [0, curData(curIdx, 3)], ...
+            '.', 'MarkerEdgeColor', 'black');
+    end
+    
+    view(curAx, 3);
+end
+
 %% Try to find border cells
 somaPos = cell2mat(arrayfun( ...
     @(s) mean(s.nodes(:, 1:3), 1), ...
