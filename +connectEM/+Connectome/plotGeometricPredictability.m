@@ -81,7 +81,7 @@ if ~isempty(fakeRadius)
    [axonClasses.title] = deal(fakeAxonClassTitles{:});
 end
 
-%% Calculate amount of variance introduced by multinomial model
+%% Calculate variance introduced by multinomial model
 targetDistAxonMnVar = nan( ...
     numel(targetClasses), ...
     numel(avail.dists), ...
@@ -105,63 +105,61 @@ end
 
 assert(~any(isnan(targetDistAxonMnVar(:))));
 
-%% Testing
-%{
-fakeRadius = 20;
+%% Calculate explainability
+prevWarning = warning('off', 'MATLAB:rankDeficientMatrix');
 
-fakeRadiusId = find(avail.dists == 1E3 * fakeRadius);
-fakeConn = availabilities(:, fakeRadiusId, :);
-fakeConn = permute(fakeConn, [3, 1, 2]);
+axonClassExplainability = nan( ...
+    numel(avail.dists), numel(axonClasses));
+axonTargetClassExplainability = nan( ...
+    numel(targetClasses), numel(avail.dists), numel(axonClasses));
 
-% Build fake connectome by multinomial sampling
-rng(0);
-fakeConn = cell2mat(cellfun( ...
-    @(n, p) mnrnd(n, p), ...
-    num2cell(sum(classConn, 2)), ...
-    num2cell(fakeConn, 2), ...
-    'UniformOutput', false));
-fakeConn = fakeConn ./ sum(fakeConn, 2);
-
-%% Single-target test case
-curAxonClassId = 1;
-curAxonClass = axonClasses(curAxonClassId);
-curAxonIds = curAxonClass.axonIds;
-
-curConn = fakeConn(curAxonIds, :);
-curVar = (curConn - mean(curConn, 2)) .^ 2;
-curVar = mean(curVar(:));
-
-curVarFracsExplained = nan(size(avail.dists));
-for curDistId = 1:numel(avail.dists)
-    curAvails = availabilities(:, curDistId, curAxonIds);
-    curAvails = transpose(squeeze(curAvails));
-    curAvails(:, end + 1) = 1; %#ok
+for curAxonClassId = 1:numel(axonClasses)
+    curAxonClass = axonClasses(curAxonClassId);
+    curAxonIds = curAxonClass.axonIds;
     
-    curFit = curAvails \ curConn;
-    curPred = curAvails * curFit;
+    curConn = classConn(curAxonIds, :);
+    curConn = curConn ./ sum(curConn, 2);
     
-    curVarLeft = mean(sum((curPred - curConn) .^ 2, 2), 1);
-    curVarExplained = curVar - curVarLeft;
+    curVar = mean((curConn - mean(curConn, 1)) .^ 2, 1);
     
-    curVarUnexplainable = sum( ...
-        targetDistAxonMnVar(:, curDistId, curAxonClassId));
-    curVarExplainable = curVar - curVarUnexplainable;
-    
-    curVarFracExplained = curVarExplained / curVarExplainable;
-    curVarFracsExplained(curDistId) = curVarFracExplained;
+    for curDistId = 1:numel(avail.dists)
+        curAvails = availabilities(:, curDistId, curAxonIds);
+        curAvails = transpose(squeeze(curAvails));
+        curAvails(:, end + 1) = 1; %#ok
+        
+        curFit = curAvails \ curConn;
+        curPred = curAvails * curFit;
+        
+        
+        % Per axon and target class
+        curVarLeft = mean((curPred - curConn) .^ 2, 1);
+        curVarExplained = curVar - curVarLeft;
+        
+        curVarUnexplainable = ...
+            targetDistAxonMnVar(:, curDistId, curAxonClassId);
+        curVarUnexplainable = reshape(curVarUnexplainable, 1, []);
+        
+        curVarExplainable = curVar - curVarUnexplainable;
+        curVarFracExplained = curVarExplained ./ curVarExplainable;
+        
+        axonTargetClassExplainability(:, ...
+            curDistId, curAxonClassId) = curVarFracExplained;
+        
+        % Per axon class
+        curVarLeft = sum(curVarLeft);
+        curVarExplained = sum(curVar) - curVarLeft;
+        
+        curVarUnexplainable = sum(curVarUnexplainable);
+        curVarExplainable = sum(curVar) - curVarUnexplainable;
+        curVarFracExplained = curVarExplained / curVarExplainable;
+        
+        axonClassExplainability( ...
+            curDistId, curAxonClassId) = curVarFracExplained;
+    end
 end
 
-fig = figure;
-fig.Color = 'white';
-
-ax = axes(fig);
-hold(ax, 'on');
-
-plot(avail.dists / 1E3, curVarFracsExplained);
-
-legend('Actual variance', 'Binomial variance');
-ax.YLim(1) = 0;
-%}
+warning(prevWarning);
+clear prevWarning;
 
 %% Show availabilities for two axons
 % AD- and soma-specific axon, respectively
@@ -260,59 +258,6 @@ annotation(fig, ...
 
 %% Plot R² per axon and dendrite class
 % Model: Linear combination of all availabilities
-axonClassExplainability = nan( ...
-    numel(avail.dists), numel(axonClasses));
-axonTargetClassExplainability = nan( ...
-    numel(targetClasses), numel(avail.dists), numel(axonClasses));
-
-for curAxonClassId = 1:numel(axonClasses)
-    curAxonClass = axonClasses(curAxonClassId);
-    curAxonIds = curAxonClass.axonIds;
-    
-    curConn = classConn(curAxonIds, :);
-    curConn = curConn ./ sum(curConn, 2);
-    
-    curVar = mean((curConn - mean(curConn, 1)) .^ 2, 1);
-    
-    for curDistId = 1:numel(avail.dists)
-        curAvails = availabilities(:, curDistId, curAxonIds);
-        curAvails = transpose(squeeze(curAvails));
-        curAvails(:, end + 1) = 1; %#ok
-        
-        curFit = curAvails \ curConn;
-        curPred = curAvails * curFit;
-        
-        
-        % Per axon and target class
-        curVarLeft = mean((curPred - curConn) .^ 2, 1);
-        curVarExplained = curVar - curVarLeft;
-        
-        curVarUnexplainable = ...
-            targetDistAxonMnVar(:, curDistId, curAxonClassId);
-        curVarUnexplainable = reshape(curVarUnexplainable, 1, []);
-        
-        curVarExplainable = curVar - curVarUnexplainable;
-        curVarFracExplained = curVarExplained ./ curVarExplainable;
-        
-        axonTargetClassExplainability(:, ...
-            curDistId, curAxonClassId) = curVarFracExplained;
-        
-        
-        % Per axon class
-        curVarLeft = sum(curVarLeft);
-        curVarExplained = sum(curVar) - curVarLeft;
-        
-        curVarUnexplainable = sum(curVarUnexplainable);
-        curVarExplainable = sum(curVar) - curVarUnexplainable;
-        curVarFracExplained = curVarExplained / curVarExplainable;
-        
-        axonClassExplainability( ...
-            curDistId, curAxonClassId) = curVarFracExplained;
-    end
-end
-
-%%
-% Plotting
 fig = figure();
 fig.Color = 'white';
 fig.Position(3:4) = [1100, 550];
@@ -339,7 +284,7 @@ for curAxonClassIdx = 1:numel(plotAxonClasses)
 end
 
 [fig.Children.XLim] = deal([0, maxRadius]);
-[fig.Children.YLim] = deal([0, 1]);
+[fig.Children.YLim] = deal([-0.2, 1.2]);
 xlabel(fig.Children(end), 'Radius (µm)');
 ylabel(fig.Children(end), 'R²');
 
@@ -358,7 +303,8 @@ annotation(fig, ...
         'Prediction by linear combination of availabilities'; ...
         info.filename; info.git_repos{1}.hash});
 
-%% Plot R² over all classes
+%% Plot R² over classes
+% Model: Linear combination of all availabilities
 plotAxonClasses = 1:2;
 
 % Plotting
@@ -379,7 +325,7 @@ end
 xlabel(ax, 'Radius (µm)');
 xlim(ax, [0, maxRadius]);
 ylabel(ax, 'R²');
-ylim(ax, [0, 1]);
+ylim(ax, [-0.2, 1.2]);
 
 legend(ax, ...
     {axonClasses(plotAxonClasses).title}, ...
