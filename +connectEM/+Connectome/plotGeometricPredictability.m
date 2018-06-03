@@ -81,63 +81,85 @@ if ~isempty(fakeRadius)
    [axonClasses.title] = deal(fakeAxonClassTitles{:});
 end
 
-%% Calculate R² per axon-dendrite pair
-% Approach: Let's use an axons observed specificities for a multinomial
-% distribution and calculate its variance. Sum this up over all axons to
-% get the expected sum of squares.
-axonClassMaxRsq = nan(numel(axonClasses), 1);
-axonTargetClassMaxRsq = nan(numel(axonClasses), numel(targetClasses));
-axonTargetClassBinoVar = nan(numel(axonClasses), numel(targetClasses));
+%% Calculate variance introduced by multinomial model
+targetDistAxonMnVar = nan( ...
+    numel(targetClasses), ...
+    numel(avail.dists), ...
+    numel(axonClasses));
 
 for curAxonClassId = 1:numel(axonClasses)
     curAxonClass = axonClasses(curAxonClassId);
     curAxonIds = curAxonClass.axonIds;
-    curAxonCount = numel(curAxonIds);
+
+    curSynCount = classConn(curAxonIds, :);
+    curSynCount = sum(curSynCount, 2);
     
-    curClassConn = classConn(curAxonIds, :);
-    curSynCount = sum(curClassConn, 2);
-    curSpecs = curClassConn ./ curSynCount;
+    curAvails = availabilities(:, :, curAxonIds);
+    curAvails = permute(curAvails, [3, 1, 2]);
     
-    % The observed variance
-    curVar = (curSpecs - mean(curSpecs, 1)) .^ 2;
-    curVar = sum(curVar(:)) / curAxonCount;
+    curMnVar = curAvails .* (1 - curAvails) ./ curSynCount;
+    curMnVar = shiftdim(mean(curMnVar, 1), 1);
     
-    % The variance of output variable i in a multinomail distribution is
-    % n * p * (1 - p). The variance of the specificity (i.e., after
-    % normalization) is thus p * (1 - p) / n.
-    curMnVar = curSpecs .* (1 - curSpecs) ./ curSynCount;
-    curMnVar = sum(curMnVar(:)) / curAxonCount;
+    targetDistAxonMnVar(:, :, curAxonClassId) = curMnVar;
+end
+
+assert(~any(isnan(targetDistAxonMnVar(:))));
+
+%% Calculate explainability
+prevWarning = warning('off', 'MATLAB:rankDeficientMatrix');
+
+axonClassExplainability = nan( ...
+    numel(avail.dists), numel(axonClasses));
+axonTargetClassExplainability = nan( ...
+    numel(targetClasses), numel(avail.dists), numel(axonClasses));
+
+for curAxonClassId = 1:numel(axonClasses)
+    curAxonClass = axonClasses(curAxonClassId);
+    curAxonIds = curAxonClass.axonIds;
     
-    % Calculate maximum fraction of variance explainable
-    curMaxRsq = (1 - curMnVar / curVar);
-    axonClassMaxRsq(curAxonClassId) = curMaxRsq;
+    curConn = classConn(curAxonIds, :);
+    curConn = curConn ./ sum(curConn, 2);
     
-    % Show result
-    fprintf('%s\n', curAxonClass.title);
-    fprintf('* Variance: %g\n', curVar);
-    fprintf('* Multinomial variance: %g\n', curMnVar);
-    fprintf('* Maximum explainable: %.2f %%\n', 100 * curMaxRsq);
-    fprintf('\n');
+    curVar = mean((curConn - mean(curConn, 1)) .^ 2, 1);
     
-    % Calculate per class
-    for curTargetClassId = 1:numel(targetClasses)
-        curSpec = curSpecs(:, curTargetClassId);
-        curTargetSynCount = curClassConn(:, curTargetClassId);
+    for curDistId = 1:numel(avail.dists)
+        curAvails = availabilities(:, curDistId, curAxonIds);
+        curAvails = transpose(squeeze(curAvails));
+        curAvails(:, end + 1) = 1; %#ok
         
-        curVar = curTargetSynCount ./ curSynCount;
-        curVar = sum((curVar - mean(curVar)) .^ 2) / curAxonCount;
+        curFit = curAvails \ curConn;
+        curPred = curAvails * curFit;
         
-        curBinoVar = curSpec .* (1 - curSpec) ./ curSynCount;
-        curBinoVar = sum(curBinoVar) / curAxonCount;
         
-        curMaxRsq = 1 - curBinoVar / curVar;
+        % Per axon and target class
+        curVarLeft = mean((curPred - curConn) .^ 2, 1);
+        curVarExplained = curVar - curVarLeft;
         
-        axonTargetClassMaxRsq( ...
-            curAxonClassId, curTargetClassId) = curMaxRsq;
-        axonTargetClassBinoVar( ...
-            curAxonClassId, curTargetClassId) = curBinoVar;
+        curVarUnexplainable = ...
+            targetDistAxonMnVar(:, curDistId, curAxonClassId);
+        curVarUnexplainable = reshape(curVarUnexplainable, 1, []);
+        
+        curVarExplainable = curVar - curVarUnexplainable;
+        curVarFracExplained = curVarExplained ./ curVarExplainable;
+        
+        axonTargetClassExplainability(:, ...
+            curDistId, curAxonClassId) = curVarFracExplained;
+        
+        % Per axon class
+        curVarLeft = sum(curVarLeft);
+        curVarExplained = sum(curVar) - curVarLeft;
+        
+        curVarUnexplainable = sum(curVarUnexplainable);
+        curVarExplainable = sum(curVar) - curVarUnexplainable;
+        curVarFracExplained = curVarExplained / curVarExplainable;
+        
+        axonClassExplainability( ...
+            curDistId, curAxonClassId) = curVarFracExplained;
     end
 end
+
+warning(prevWarning);
+clear prevWarning;
 
 %% Show availabilities for two axons
 % AD- and soma-specific axon, respectively
@@ -236,44 +258,6 @@ annotation(fig, ...
 
 %% Plot R² per axon and dendrite class
 % Model: Linear combination of all availabilities
-
-% Prepare output
-rSq = nan( ...
-    numel(targetClasses), ...
-    numel(avail.dists), ...
-    numel(plotAxonClasses));
-
-% Calculate all R² values
-for curAxonClassIdx = 1:numel(plotAxonClasses)
-    curAxonClassId = plotAxonClasses(curAxonClassIdx);
-    curAxonIds = axonClasses(curAxonClassId).axonIds;
-    curMaxRsq = axonTargetClassMaxRsq(curAxonClassId, :);
-
-    % Fractional connectome
-    curClassConn = classConn(curAxonIds, :);
-    curClassConn = curClassConn ./ sum(curClassConn, 2);
-
-    curSsTot = mean(curClassConn, 1);
-    curSsTot = sum((curClassConn - curSsTot) .^ 2, 1);
-
-    for curDistIdx = 1:numel(avail.dists)
-        curAvail = availabilities(:, curDistIdx, curAxonIds);
-        curAvail = transpose(squeeze(curAvail));
-        curAvail(:, end + 1) = 1; %#ok
-        
-        curCoefs = curAvail \ curClassConn;
-        curPreds = curAvail * curCoefs;
-
-        % Calculate sum of squares of residuals
-        curSsRes = sum((curPreds - curClassConn) .^ 2, 1);
-        curRSq = 1 - (curSsRes ./ curSsTot);
-        
-        % Calculate relative to possibly explainable fraction
-        rSq(:, curDistIdx, curAxonClassIdx) = curRSq ./ curMaxRsq;
-    end
-end
-
-% Plotting
 fig = figure();
 fig.Color = 'white';
 fig.Position(3:4) = [1100, 550];
@@ -289,10 +273,9 @@ for curAxonClassIdx = 1:numel(plotAxonClasses)
     hold(curAx, 'on');
     
     for curTargetClassIdx = 1:numel(targetClasses)
-        plot( ...
-            curAx, avail.dists / 1E3, ...
-            rSq(curTargetClassIdx, :, curAxonClassIdx), ...
-            'LineWidth', 2);
+        curData = axonTargetClassExplainability( ...
+            curTargetClassIdx, :, curAxonClassIdx);
+        plot(curAx, avail.dists / 1E3, curData, 'LineWidth', 2);
     end
     
     title( ...
@@ -301,7 +284,7 @@ for curAxonClassIdx = 1:numel(plotAxonClasses)
 end
 
 [fig.Children.XLim] = deal([0, maxRadius]);
-[fig.Children.YLim] = deal([0, 1]);
+[fig.Children.YLim] = deal([-0.2, 1.2]);
 xlabel(fig.Children(end), 'Radius (µm)');
 ylabel(fig.Children(end), 'R²');
 
@@ -320,42 +303,9 @@ annotation(fig, ...
         'Prediction by linear combination of availabilities'; ...
         info.filename; info.git_repos{1}.hash});
 
-%% Plot R² over all classes
+%% Plot R² over classes
+% Model: Linear combination of all availabilities
 plotAxonClasses = 1:2;
-
-% Prepare output
-rSq = nan( ...
-    numel(avail.dists), ...
-    numel(plotAxonClasses));
-
-% Calculate all R² values
-for curAxonClassIdx = 1:numel(plotAxonClasses)
-    curAxonClassId = plotAxonClasses(curAxonClassIdx);
-    curAxonIds = axonClasses(curAxonClassId).axonIds;
-    curMaxRsq = axonClassMaxRsq(curAxonClassId);
-
-    % Fractional connectome
-    curClassConn = classConn(curAxonIds, :);
-    curClassConn = curClassConn ./ sum(curClassConn, 2);
-
-    curSsTot = mean(curClassConn, 1);
-    curSsTot = sum(sum((curClassConn - curSsTot) .^ 2));
-
-    for curDistIdx = 1:numel(avail.dists)
-        curAvail = availabilities(:, curDistIdx, curAxonIds);
-        curAvail = transpose(squeeze(curAvail));
-        curAvail(:, end + 1) = 1; %#ok
-        
-        curCoefs = curAvail \ curClassConn;
-        curPreds = curAvail * curCoefs;
-
-        % Calculate sum of squares of residuals
-        curSsRes = sum((curPreds(:) - curClassConn(:)) .^ 2);
-        curRSq = 1 - (curSsRes ./ curSsTot);
-        
-        rSq(curDistIdx, curAxonClassIdx) = curRSq / curMaxRsq;
-    end
-end
 
 % Plotting
 fig = figure();
@@ -367,12 +317,15 @@ ax.TickDir = 'out';
 axis(ax, 'square');
 hold(ax, 'on');
 
-plot(ax, avail.dists / 1E3, rSq, 'LineWidth', 2);
+for curAxonClassId = plotAxonClasses
+    curData = axonClassExplainability(:, curAxonClassId);
+    plot(ax, avail.dists / 1E3, curData, 'LineWidth', 2);
+end
 
 xlabel(ax, 'Radius (µm)');
 xlim(ax, [0, maxRadius]);
 ylabel(ax, 'R²');
-ylim(ax, [0, 1]);
+ylim(ax, [-0.2, 1.2]);
 
 legend(ax, ...
     {axonClasses(plotAxonClasses).title}, ...
@@ -394,11 +347,11 @@ for curAxonClassId = 1:numel(axonClasses)
     curAxonClass = axonClasses(curAxonClassId);
     curAxonIds = curAxonClass.axonIds;
     
-    curClassConn = classConn(curAxonIds, :);
-    curClassConn = curClassConn ./ sum(curClassConn, 2);
+    curSynCount = classConn(curAxonIds, :);
+    curSynCount = curSynCount ./ sum(curSynCount, 2);
     
-    curMean = mean(curClassConn, 1);
-    curVar = (curClassConn - curMean) .^ 2;
+    curMean = mean(curSynCount, 1);
+    curVar = (curSynCount - curMean) .^ 2;
     curVar = sum(curVar, 1) ./ numel(curAxonIds);
     
     axonTargetClassMean(curAxonClassId, :) = curMean;
@@ -498,12 +451,12 @@ for curAxonClassId = 1:numel(axonClasses)
     curAxonClass = axonClasses(curAxonClassId);
     curAxonIds = curAxonClass.axonIds;
     
-    curClassConn = classConn(curAxonIds, :);
-    curSynCount = sum(curClassConn, 2);
-    curClassConn = curClassConn ./ curSynCount;
+    curSynCount = classConn(curAxonIds, :);
+    curSynCount = sum(curSynCount, 2);
+    curSynCount = curSynCount ./ curSynCount;
     
     for curTargetClassId = 1:numel(targetClasses)
-        curProb = curClassConn(:, curTargetClassId);
+        curProb = curSynCount(:, curTargetClassId);
         curVar = curProb .* (1 - curProb) ./ curSynCount;
         
         curAx = subplot( ...
