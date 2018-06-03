@@ -81,7 +81,95 @@ if ~isempty(fakeRadius)
    [axonClasses.title] = deal(fakeAxonClassTitles{:});
 end
 
+%% Calculate amount of variance introduced by multinomial model
+distTargetAxonMnVar = nan( ...
+    numel(avail.dists), ...
+    numel(targetClasses), ...
+    numel(axonClasses));
+
+for curAxonClassId = 1:numel(axonClasses)
+
+    curAxonClass = axonClasses(curAxonClassId);
+    curAxonIds = curAxonClass.axonIds;
+
+    curSynCount = classConn(curAxonIds, :);
+    curSynCount = transpose(sum(curSynCount, 2));
+    
+    for curTargetClassId = 1:numel(targetClasses)
+        curAvails = availabilities(curTargetClassId, :, curAxonIds);
+        curAvails = reshape(curAvails, [], numel(curAxonIds));
+
+        % This is the variance of the fractional synapses under a multinomial
+        % distribution **around the axons's mean value**.
+        curMnVar = mean(curAvails .* (1 - curAvails) ./ curSynCount, 2);
+        distTargetAxonMnVar(:, curTargetClassId, curAxonClassId) = curMnVar;
+    end
+end
+
+assert(~any(isnan(distTargetAxonMnVar(:))));
+
+%% Testing
+fakeRadius = 20;
+curTargetClassId = 1;
+
+fakeRadiusId = find(avail.dists == 1E3 * fakeRadius);
+fakeConn = availabilities(curTargetClassId, fakeRadiusId, :);
+fakeConn = squeeze(fakeConn);
+
+% Build fake connectome by multinomial sampling
+rng(0);
+fakeConn = cell2mat(cellfun( ...
+    @(n, p) mnrnd(n, [p, (1 - p)]), ...
+    num2cell(sum(classConn, 2)), ...
+    num2cell(fakeConn, 2), ...
+    'UniformOutput', false));
+fakeConn = fakeConn(:, 1) ./ sum(fakeConn, 2);
+
+%% Single-target test case
+curAxonClassId = 1;
+curAxonClass = axonClasses(curAxonClassId);
+curAxonIds = curAxonClass.axonIds;
+
+curConn = fakeConn(curAxonIds);
+
+curVarFracsExplained = nan(size(avail.dists));
+for curDistId = 1:numel(avail.dists)
+    % curVar = availabilities(curTargetClassId, curDist, curAxonIds);
+    curVar = reshape(fakeConn(curAxonIds), 1, []);
+    curVar = mean((curVar - mean(curVar)) .^ 2);
+    
+    curAvails = availabilities(:, curDistId, curAxonIds);
+    curAvails = transpose(squeeze(curAvails));
+    curAvails(:, end + 1) = 1;
+    
+    curFit = curAvails \ curConn;
+    curPred = curAvails * curFit;
+    
+    curVarLeft = mean((curPred - curConn) .^ 2);
+    curVarExplained = curVar - curVarLeft + ...
+        distTargetAxonMnVar(curDistId, curTargetClassId, curAxonClassId);
+    
+    curVarFracExplained = curVarExplained / curVar
+    curVarFracsExplained(curDistId) = curVarFracExplained;
+end
+
+%%
+fig = figure;
+fig.Color = 'white';
+
+ax = axes(fig);
+hold(ax, 'on');
+
+plot(avail.dists / 1E3, curVarFracsExplained);
+%{
+plot(avail.dists / 1E3, distTargetAxonMnVar( ...
+    :, curTargetClassId, curAxonClassId));
+%}
+ax.YLim(1) = 0;
+legend('Actual variance', 'Binomial variance');
+
 %% Calculate R² per axon-dendrite pair
+%{
 % Approach: Let's use an axons observed specificities for a multinomial
 % distribution and calculate its variance. Sum this up over all axons to
 % get the expected sum of squares.
@@ -138,6 +226,7 @@ for curAxonClassId = 1:numel(axonClasses)
             curAxonClassId, curTargetClassId) = curBinoVar;
     end
 end
+%}
 
 %% Show availabilities for two axons
 % AD- and soma-specific axon, respectively
@@ -250,22 +339,22 @@ for curAxonClassIdx = 1:numel(plotAxonClasses)
     curMaxRsq = axonTargetClassMaxRsq(curAxonClassId, :);
 
     % Fractional connectome
-    curClassConn = classConn(curAxonIds, :);
-    curClassConn = curClassConn ./ sum(curClassConn, 2);
+    curSynCount = classConn(curAxonIds, :);
+    curSynCount = curSynCount ./ sum(curSynCount, 2);
 
-    curSsTot = mean(curClassConn, 1);
-    curSsTot = sum((curClassConn - curSsTot) .^ 2, 1);
+    curSsTot = mean(curSynCount, 1);
+    curSsTot = sum((curSynCount - curSsTot) .^ 2, 1);
 
     for curDistIdx = 1:numel(avail.dists)
         curAvail = availabilities(:, curDistIdx, curAxonIds);
         curAvail = transpose(squeeze(curAvail));
         curAvail(:, end + 1) = 1; %#ok
         
-        curCoefs = curAvail \ curClassConn;
+        curCoefs = curAvail \ curSynCount;
         curPreds = curAvail * curCoefs;
 
         % Calculate sum of squares of residuals
-        curSsRes = sum((curPreds - curClassConn) .^ 2, 1);
+        curSsRes = sum((curPreds - curSynCount) .^ 2, 1);
         curRSq = 1 - (curSsRes ./ curSsTot);
         
         % Calculate relative to possibly explainable fraction
@@ -335,22 +424,22 @@ for curAxonClassIdx = 1:numel(plotAxonClasses)
     curMaxRsq = axonClassMaxRsq(curAxonClassId);
 
     % Fractional connectome
-    curClassConn = classConn(curAxonIds, :);
-    curClassConn = curClassConn ./ sum(curClassConn, 2);
+    curSynCount = classConn(curAxonIds, :);
+    curSynCount = curSynCount ./ sum(curSynCount, 2);
 
-    curSsTot = mean(curClassConn, 1);
-    curSsTot = sum(sum((curClassConn - curSsTot) .^ 2));
+    curSsTot = mean(curSynCount, 1);
+    curSsTot = sum(sum((curSynCount - curSsTot) .^ 2));
 
     for curDistIdx = 1:numel(avail.dists)
         curAvail = availabilities(:, curDistIdx, curAxonIds);
         curAvail = transpose(squeeze(curAvail));
         curAvail(:, end + 1) = 1; %#ok
         
-        curCoefs = curAvail \ curClassConn;
+        curCoefs = curAvail \ curSynCount;
         curPreds = curAvail * curCoefs;
 
         % Calculate sum of squares of residuals
-        curSsRes = sum((curPreds(:) - curClassConn(:)) .^ 2);
+        curSsRes = sum((curPreds(:) - curSynCount(:)) .^ 2);
         curRSq = 1 - (curSsRes ./ curSsTot);
         
         rSq(curDistIdx, curAxonClassIdx) = curRSq / curMaxRsq;
@@ -394,11 +483,11 @@ for curAxonClassId = 1:numel(axonClasses)
     curAxonClass = axonClasses(curAxonClassId);
     curAxonIds = curAxonClass.axonIds;
     
-    curClassConn = classConn(curAxonIds, :);
-    curClassConn = curClassConn ./ sum(curClassConn, 2);
+    curSynCount = classConn(curAxonIds, :);
+    curSynCount = curSynCount ./ sum(curSynCount, 2);
     
-    curMean = mean(curClassConn, 1);
-    curVar = (curClassConn - curMean) .^ 2;
+    curMean = mean(curSynCount, 1);
+    curVar = (curSynCount - curMean) .^ 2;
     curVar = sum(curVar, 1) ./ numel(curAxonIds);
     
     axonTargetClassMean(curAxonClassId, :) = curMean;
@@ -498,12 +587,12 @@ for curAxonClassId = 1:numel(axonClasses)
     curAxonClass = axonClasses(curAxonClassId);
     curAxonIds = curAxonClass.axonIds;
     
-    curClassConn = classConn(curAxonIds, :);
-    curSynCount = sum(curClassConn, 2);
-    curClassConn = curClassConn ./ curSynCount;
+    curSynCount = classConn(curAxonIds, :);
+    curSynCount = sum(curSynCount, 2);
+    curSynCount = curSynCount ./ curSynCount;
     
     for curTargetClassId = 1:numel(targetClasses)
-        curProb = curClassConn(:, curTargetClassId);
+        curProb = curSynCount(:, curTargetClassId);
         curVar = curProb .* (1 - curProb) ./ curSynCount;
         
         curAx = subplot( ...
