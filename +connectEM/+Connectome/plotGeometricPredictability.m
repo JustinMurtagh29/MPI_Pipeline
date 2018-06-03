@@ -109,51 +109,48 @@ end
 assert(~any(isnan(distTargetAxonMnVar(:))));
 
 %% Testing
-fakeRadius = 20;
-curTargetClassId = 1;
+fakeRadius = 30;
 
 fakeRadiusId = find(avail.dists == 1E3 * fakeRadius);
-fakeConn = availabilities(curTargetClassId, fakeRadiusId, :);
-fakeConn = squeeze(fakeConn);
+fakeConn = availabilities(:, fakeRadiusId, :);
+fakeConn = permute(fakeConn, [3, 1, 2]);
 
 % Build fake connectome by multinomial sampling
 rng(0);
 fakeConn = cell2mat(cellfun( ...
-    @(n, p) mnrnd(n, [p, (1 - p)]), ...
+    @(n, p) mnrnd(n, p), ...
     num2cell(sum(classConn, 2)), ...
     num2cell(fakeConn, 2), ...
     'UniformOutput', false));
-fakeConn = fakeConn(:, 1) ./ sum(fakeConn, 2);
+fakeConn = fakeConn ./ sum(fakeConn, 2);
 
 %% Single-target test case
-curAxonClassId = 1;
+curAxonClassId = 2;
 curAxonClass = axonClasses(curAxonClassId);
 curAxonIds = curAxonClass.axonIds;
 
-curConn = fakeConn(curAxonIds);
+curConn = fakeConn(curAxonIds, :);
+curVar = (curConn - mean(curConn, 2)) .^ 2;
+curVar = mean(curVar(:));
 
 curVarFracsExplained = nan(size(avail.dists));
 for curDistId = 1:numel(avail.dists)
-    % curVar = availabilities(curTargetClassId, curDist, curAxonIds);
-    curVar = reshape(fakeConn(curAxonIds), 1, []);
-    curVar = mean((curVar - mean(curVar)) .^ 2);
-    
     curAvails = availabilities(:, curDistId, curAxonIds);
     curAvails = transpose(squeeze(curAvails));
-    curAvails(:, end + 1) = 1;
+    curAvails(:, end + 1) = 1; %#ok
     
     curFit = curAvails \ curConn;
     curPred = curAvails * curFit;
     
-    curVarLeft = mean((curPred - curConn) .^ 2);
-    curVarExplained = curVar - curVarLeft + ...
-        distTargetAxonMnVar(curDistId, curTargetClassId, curAxonClassId);
+    curVarLeft = mean(sum((curPred - curConn) .^ 2, 2), 1);
+    curVarExplained = curVar - curVarLeft;
+    curVarExplainable = curVar - sum( ...
+        distTargetAxonMnVar(curDistId, :, curAxonClassId));
     
-    curVarFracExplained = curVarExplained / curVar
+    curVarFracExplained = curVarExplained / curVarExplainable;
     curVarFracsExplained(curDistId) = curVarFracExplained;
 end
 
-%%
 fig = figure;
 fig.Color = 'white';
 
