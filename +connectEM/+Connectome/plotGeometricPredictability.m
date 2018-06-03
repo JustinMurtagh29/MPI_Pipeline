@@ -63,7 +63,7 @@ availabilities = availabilities ./ sum(availabilities, 1);
 %% Build fake connectome for testing
 if ~isempty(fakeRadius)
     fakeRadiusId = find(avail.dists == 1E3 * fakeRadius);
-    fakeConn = availabilities(:, fakeRadiusId, :); %#ok
+    fakeConn = availabilities(:, fakeRadiusId, :);
     fakeConn = transpose(squeeze(fakeConn));
     
     % Build fake connectome by multinomial sampling
@@ -106,6 +106,7 @@ end
 assert(~any(isnan(targetDistAxonMnVar(:))));
 
 %% Testing
+%{
 fakeRadius = 20;
 
 fakeRadiusId = find(avail.dists == 1E3 * fakeRadius);
@@ -160,6 +161,7 @@ plot(avail.dists / 1E3, curVarFracsExplained);
 
 legend('Actual variance', 'Binomial variance');
 ax.YLim(1) = 0;
+%}
 
 %% Show availabilities for two axons
 % AD- and soma-specific axon, respectively
@@ -258,6 +260,58 @@ annotation(fig, ...
 
 %% Plot R² per axon and dendrite class
 % Model: Linear combination of all availabilities
+axonClassExplainability = nan( ...
+    numel(avail.dists), numel(axonClasses));
+axonTargetClassExplainability = nan( ...
+    numel(targetClasses), numel(avail.dists), numel(axonClasses));
+
+for curAxonClassId = 1:numel(axonClasses)
+    curAxonClass = axonClasses(curAxonClassId);
+    curAxonIds = curAxonClass.axonIds;
+    
+    curConn = classConn(curAxonIds, :);
+    curConn = curConn ./ sum(curConn, 2);
+    
+    curVar = mean((curConn - mean(curConn, 1)) .^ 2, 1);
+    
+    for curDistId = 1:numel(avail.dists)
+        curAvails = availabilities(:, curDistId, curAxonIds);
+        curAvails = transpose(squeeze(curAvails));
+        curAvails(:, end + 1) = 1; %#ok
+        
+        curFit = curAvails \ curConn;
+        curPred = curAvails * curFit;
+        
+        
+        % Per axon and target class
+        curVarLeft = mean((curPred - curConn) .^ 2, 1);
+        curVarExplained = curVar - curVarLeft;
+        
+        curVarUnexplainable = ...
+            targetDistAxonMnVar(:, curDistId, curAxonClassId);
+        curVarUnexplainable = reshape(curVarUnexplainable, 1, []);
+        
+        curVarExplainable = curVar - curVarUnexplainable;
+        curVarFracExplained = curVarExplained ./ curVarExplainable;
+        
+        axonTargetClassExplainability(:, ...
+            curDistId, curAxonClassId) = curVarFracExplained;
+        
+        
+        % Per axon class
+        curVarLeft = sum(curVarLeft);
+        curVarExplained = sum(curVar) - curVarLeft;
+        
+        curVarUnexplainable = sum(curVarUnexplainable);
+        curVarExplainable = sum(curVar) - curVarUnexplainable;
+        curVarFracExplained = curVarExplained / curVarExplainable;
+        
+        axonClassExplainability( ...
+            curDistId, curAxonClassId) = curVarFracExplained;
+    end
+end
+
+%%
 % Plotting
 fig = figure();
 fig.Color = 'white';
@@ -274,10 +328,9 @@ for curAxonClassIdx = 1:numel(plotAxonClasses)
     hold(curAx, 'on');
     
     for curTargetClassIdx = 1:numel(targetClasses)
-        plot( ...
-            curAx, avail.dists / 1E3, ...
-            rSq(curTargetClassIdx, :, curAxonClassIdx), ...
-            'LineWidth', 2);
+        curData = axonTargetClassExplainability( ...
+            curTargetClassIdx, :, curAxonClassIdx);
+        plot(curAx, avail.dists / 1E3, curData, 'LineWidth', 2);
     end
     
     title( ...
@@ -308,40 +361,6 @@ annotation(fig, ...
 %% Plot R² over all classes
 plotAxonClasses = 1:2;
 
-% Prepare output
-rSq = nan( ...
-    numel(avail.dists), ...
-    numel(plotAxonClasses));
-
-% Calculate all R² values
-for curAxonClassIdx = 1:numel(plotAxonClasses)
-    curAxonClassId = plotAxonClasses(curAxonClassIdx);
-    curAxonIds = axonClasses(curAxonClassId).axonIds;
-    curMaxRsq = axonClassMaxRsq(curAxonClassId);
-
-    % Fractional connectome
-    curSynCount = classConn(curAxonIds, :);
-    curSynCount = curSynCount ./ sum(curSynCount, 2);
-
-    curSsTot = mean(curSynCount, 1);
-    curSsTot = sum(sum((curSynCount - curSsTot) .^ 2));
-
-    for curDistIdx = 1:numel(avail.dists)
-        curAvail = availabilities(:, curDistIdx, curAxonIds);
-        curAvail = transpose(squeeze(curAvail));
-        curAvail(:, end + 1) = 1; %#ok
-        
-        curCoefs = curAvail \ curSynCount;
-        curPreds = curAvail * curCoefs;
-
-        % Calculate sum of squares of residuals
-        curSsRes = sum((curPreds(:) - curSynCount(:)) .^ 2);
-        curRSq = 1 - (curSsRes ./ curSsTot);
-        
-        rSq(curDistIdx, curAxonClassIdx) = curRSq / curMaxRsq;
-    end
-end
-
 % Plotting
 fig = figure();
 fig.Color = 'white';
@@ -352,7 +371,10 @@ ax.TickDir = 'out';
 axis(ax, 'square');
 hold(ax, 'on');
 
-plot(ax, avail.dists / 1E3, rSq, 'LineWidth', 2);
+for curAxonClassId = plotAxonClasses
+    curData = axonClassExplainability(:, curAxonClassId);
+    plot(ax, avail.dists / 1E3, curData, 'LineWidth', 2);
+end
 
 xlabel(ax, 'Radius (µm)');
 xlim(ax, [0, maxRadius]);
