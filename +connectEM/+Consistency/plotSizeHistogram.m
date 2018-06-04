@@ -2,6 +2,7 @@ function fig = plotSizeHistogram(info, synT, plotConfigs, varargin)
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     opt = struct;
+    opt.title = {};
     opt.scale = 'linear';
     opt.binEdges = [];
     opt = Util.modifyStruct(opt, varargin{:});
@@ -22,6 +23,9 @@ function fig = plotSizeHistogram(info, synT, plotConfigs, varargin)
     if isempty(opt.binEdges)
         opt.binEdges = defaultBinEdges;
     end
+    
+    if ~iscell(opt.title); opt.title = {opt.title}; end
+    opt.title = cat(1, {info.filename; info.git_repos{1}.hash}, opt.title);
 
     fig = figure();
     fig.Color = 'white';
@@ -47,11 +51,6 @@ function fig = plotSizeHistogram(info, synT, plotConfigs, varargin)
     xlabel(ax, xLabelText);
     ylabel(ax, 'Probability');
 
-    legend( ...
-        ax, {plotConfigs.title}, ...
-        'Location', 'NorthEast', ...
-        'Box', 'off');
-    title( ...
-       {info.filename, info.git_repos{1}.hash}, ...
-        'FontWeight', 'normal', 'FontSize', 10);
+    legend(ax, {plotConfigs.title}, 'Location', 'NorthEast', 'Box', 'off');
+    title(opt.title, 'FontWeight', 'normal', 'FontSize', 10);
 end

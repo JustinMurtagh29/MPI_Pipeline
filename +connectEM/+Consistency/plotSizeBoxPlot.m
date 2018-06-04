@@ -2,6 +2,7 @@ function fig = plotSizeBoxPlot(info, synT, plotConfigs, varargin)
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     opt = struct;
+    opt.title = {};
     opt.scale = 'log';
     opt.boxWidth = 0.75;
     opt.barWidth = 0.75;
@@ -20,6 +21,9 @@ function fig = plotSizeBoxPlot(info, synT, plotConfigs, varargin)
         otherwise
             error('Invalid scale "%s"', opt.scale);
     end
+    
+    if ~iscell(opt.title); opt.title = {opt.title}; end
+    opt.title = cat(1, {info.filename; info.git_repos{1}.hash}, opt.title);
     
     %% Preparing data
     coupling = vertcat(plotConfigs.coupling);
@@ -84,7 +88,5 @@ function fig = plotSizeBoxPlot(info, synT, plotConfigs, varargin)
     ylabel(ax, yLabelText);
     xlabel(ax, 'Degree of coupling');
     
-    title( ...
-       {info.filename, info.git_repos{1}.hash}, ...
-        'FontWeight', 'normal', 'FontSize', 10);
+    title(ax, opt.title,'FontWeight', 'normal', 'FontSize', 10);
 end
