@@ -86,24 +86,82 @@ targetDistAxonMnVar = nan( ...
     numel(targetClasses), ...
     numel(avail.dists), ...
     numel(axonClasses));
+targetAxonConnMnVar = nan( ...
+    numel(targetClasses), ...
+    numel(axonClasses));
 
 for curAxonClassId = 1:numel(axonClasses)
     curAxonClass = axonClasses(curAxonClassId);
     curAxonIds = curAxonClass.axonIds;
 
-    curSynCount = classConn(curAxonIds, :);
-    curSynCount = sum(curSynCount, 2);
+    curClassConn = classConn(curAxonIds, :);
+    curSynCount = sum(curClassConn, 2);
     
+    % Multinomial variability according to availabilities
     curAvails = availabilities(:, :, curAxonIds);
     curAvails = permute(curAvails, [3, 1, 2]);
     
-    curMnVar = curAvails .* (1 - curAvails) ./ curSynCount;
-    curMnVar = shiftdim(mean(curMnVar, 1), 1);
+    curAvailMnVar = curAvails .* (1 - curAvails) ./ curSynCount;
+    curAvailMnVar = shiftdim(mean(curAvailMnVar, 1), 1);
     
-    targetDistAxonMnVar(:, :, curAxonClassId) = curMnVar;
+    % Multinomial variability according to specificities
+    curSpecs = curClassConn ./ curSynCount;
+    curSpecMnVar = curSpecs .* (1 - curSpecs) ./ curSynCount;
+    curSpecMnVar = shiftdim(mean(curSpecMnVar, 1), 1);
+    
+    targetDistAxonMnVar(:, :, curAxonClassId) = curAvailMnVar;
+    targetAxonConnMnVar(:, curAxonClassId) = curSpecMnVar;
 end
 
 assert(~any(isnan(targetDistAxonMnVar(:))));
+assert(~any(isnan(targetAxonConnMnVar(:))));
+
+%% Plot multinomial variability
+plotAxonClasses = 1:2;
+
+fig = figure();
+fig.Color = 'white';
+
+ax = axes(fig);
+hold(ax, 'on');
+axis(ax, 'square');
+
+for curAxonClassId = plotAxonClasses
+    curAxonClass = axonClasses(curAxonClassId);
+    
+    curAvailMnVar = sum(targetDistAxonMnVar(:, :, curAxonClassId), 1);
+    curSpecMnVar = sum(targetAxonConnMnVar(:, curAxonClassId));
+    
+    plot(ax, ...
+        [0, maxRadius], [curSpecMnVar, curSpecMnVar], ...
+        'Color', ax.ColorOrder(curAxonClassId, :), ...
+        'LineWidth', 2, 'LineStyle', '--');
+    plot(ax, ...
+        avail.dists / 1E3, curAvailMnVar, ...
+        'Color', ax.ColorOrder(curAxonClassId, :), ...
+        'LineWidth', 2);
+end
+
+xlabel(ax, 'Radius (µm)');
+ylabel(ax, { ...
+    'Unexplainable variance'; ...
+    'due to multinomial model'});
+
+ax.TickDir = 'out';
+ax.XLim(end) = maxRadius;
+ax.YLim(1) = 0;
+
+leg = legend(ax, { ...
+    'Excitatory axons. Synapse-based variance', ...
+    'Excitatory axons. Availability-based variance', ...
+    'Inhibitory axons. Synapse-based variance', ...
+    'Inhibitory axons. Availability-based variance'}, ...
+    'Location', 'SouthEast');
+leg.Box = 'off';
+
+title(ax, ...
+    {info.filename; info.git_repos{1}.hash}, ...
+    'FontWeight', 'normal', 'FontSize', 10);
 
 %% Calculate explainability
 prevWarning = warning('off', 'MATLAB:rankDeficientMatrix');
