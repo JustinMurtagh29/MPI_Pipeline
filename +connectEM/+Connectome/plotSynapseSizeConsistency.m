@@ -71,6 +71,7 @@ connectEM.Consistency.plotCouplingHistogram( ...
     info, ctrlSynT, ctrlPlotConfigs(1), 'normalization', 'count');
 
 %% Synapse areas vs. degree of coupling
+clear cur*;
 curPlotCouplings = 1:5;
 curConfigs = [ ...
     struct('synT', synT, 'plotConfig', plotConfigs(1)), ...
@@ -104,8 +105,8 @@ for curConfig = reshape(curConfigs, 1, [])
     fig.Position(3:4) = [250, 420];
 end
 
-
 %% Illustrate synapse size similarity
+clear cur*;
 curPlotConfig = plotConfigs(1);
 curPairConfigs = ...
     connectEM.Consistency.buildPairConfigs(synT, curPlotConfig);
@@ -118,15 +119,27 @@ for curPairConfig = curPairConfigs(1:(end - 1))
 end
 
 %% Synapse area variability
+clear cur*;
 for curPlotConfig = plotConfigs
     curPairConfigs = ...
         connectEM.Consistency.buildPairConfigs(synT, curPlotConfig);
+    
     curFig = ...
         connectEM.Consistency.plotVariabilityHistogram( ...
             info, synT, curPlotConfig, curPairConfigs(:));
     curFig.Position(3:4) = [370, 540];
+	
+   [curLearnedFrac, curUnlearnedFrac, curCvThresh] = ...
+        connectEM.Consistency.calculateLearnedFraction( ...
+            synT, curPairConfigs(1), curPairConfigs(end));
+	
+    fprintf('%s\n', curPlotConfig.title);
+    fprintf('→ Learned fraction: %.1f %%\n', 100 * curLearnedFrac);
+    fprintf('→ Unlearned fraction: %.1f %%\n', 100 * curUnlearnedFrac);
+    fprintf('→ CV threshold: %.2f\n', curCvThresh);
+    fprintf('\n');
 end
-
+            
 %% Variability of largest two synapses
 curPlotCouplings = 2:5;
 [~, curCouplings, curPlotConfigs] = ...
