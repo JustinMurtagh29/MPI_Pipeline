@@ -4,7 +4,7 @@ function fig = plotSizeBoxPlot(info, synT, plotConfigs, varargin)
     opt = struct;
     opt.scale = 'log';
     opt.boxWidth = 0.75;
-    opt.barWidth = 0.9;
+    opt.barWidth = 0.75;
     opt.markerSize = 12;
     opt.markerType = '.';
     opt = Util.modifyStruct(opt, varargin{:});
@@ -49,16 +49,30 @@ function fig = plotSizeBoxPlot(info, synT, plotConfigs, varargin)
     ax.XLim = prctile(coupling, [0, 100]) + [-0.5, +0.5];
     
     % Means
+    dup = @(x) [x, x];
     for curConfig = reshape(plotConfigs, 1, [])
         curCoupling = curConfig.coupling;
         
         curX = curCoupling + opt.barWidth * [-0.5, +0.5];
-        curY = mean(dataT.synArea(dataT.coupling == curCoupling));
+        curY = dataT.synArea(dataT.coupling == curCoupling);
+        curBox = prctile(curY, [0, 25, 50, 75, 100]);
+        
+        rectangle(ax, 'Position', [ ...
+            curX(1), curBox(2), ...
+            curX(end) - curX(1), ...
+            curBox(4) - curBox(2)]);
+        plot(ax, curX, dup(curBox(3)), 'Color', 'black', 'LineWidth', 2);
+        
+        curWhiskerX = curCoupling + 0.5 * opt.barWidth * [-0.5, +0.5];
+        plot(ax, curWhiskerX, dup(curBox(1)), 'Color', 'black');
+        plot(ax, curWhiskerX, dup(curBox(end)), 'Color', 'black');
         
         plot( ...
-            ax, curX, [curY, curY], ...
-            'Color', ax.ColorOrder(2, :), ...
-            'LineWidth', 2);
+            ax, dup(curCoupling), [curBox(4), curBox(end)], ...
+            'Color', 'black', 'LineStyle', '--');
+        plot( ...
+            ax, dup(curCoupling), [curBox(1), curBox(2)], ...
+            'Color', 'black', 'LineStyle', '--');
     end
     
     % Interpolation
