@@ -138,6 +138,17 @@ for curPlotConfig = plotConfigs
     fprintf('→ Unlearned fraction: %.1f %%\n', 100 * curUnlearnedFrac);
     fprintf('→ CV threshold: %.2f\n', curCvThresh);
     fprintf('\n');
+    
+    fprintf('* Significance tests\n');
+    fprintf('  p-values for unexpected synapse size similarity\n');
+    for curPairConfig = curPairConfigs(1:(end - 1))
+        curPValue = ...
+            connectEM.Consistency.testVariability( ...
+                synT, curPairConfig, curPairConfigs(end));
+        fprintf('→ %s: %g\n', curPairConfig.title, curPValue);
+    end
+    
+    fprintf('\n');
 end
             
 %% Variability of largest two synapses
