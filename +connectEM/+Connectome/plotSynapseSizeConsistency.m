@@ -120,35 +120,42 @@ end
 
 %% Synapse area variability
 clear cur*;
-for curPlotConfig = plotConfigs
-    curPairConfigs = ...
-        connectEM.Consistency.buildPairConfigs(synT, curPlotConfig);
-    
-    curFig = ...
-        connectEM.Consistency.plotVariabilityHistogram( ...
-            info, synT, curPlotConfig, curPairConfigs(:));
-    curFig.Position(3:4) = [370, 540];
-	
-   [curLearnedFrac, curUnlearnedFrac, curCvThresh] = ...
-        connectEM.Consistency.calculateLearnedFraction( ...
-            synT, curPairConfigs(1), curPairConfigs(end));
-	
-    fprintf('%s\n', curPlotConfig.title);
-    fprintf('→ Learned fraction: %.1f %%\n', 100 * curLearnedFrac);
-    fprintf('→ Unlearned fraction: %.1f %%\n', 100 * curUnlearnedFrac);
-    fprintf('→ CV threshold: %.2f\n', curCvThresh);
-    fprintf('\n');
-    
-    fprintf('* Significance tests\n');
-    fprintf('  p-values for unexpected synapse size similarity\n');
-    for curPairConfig = curPairConfigs(1:(end - 1))
-        curPValue = ...
-            connectEM.Consistency.testVariability( ...
-                synT, curPairConfig, curPairConfigs(end));
-        fprintf('→ %s: %g\n', curPairConfig.title, curPValue);
+curConfigs = [ ...
+    struct('synT', synT, 'plotConfigs', plotConfigs), ...
+    struct('synT', ctrlSynT, 'plotConfigs', ctrlPlotConfigs)];
+
+for curConfig = reshape(curConfigs, 1, [])
+    for curPlotConfig = curConfig.plotConfigs
+        curPairConfigs = ...
+            connectEM.Consistency.buildPairConfigs( ...
+                curConfig.synT, curPlotConfig);
+
+        curFig = ...
+            connectEM.Consistency.plotVariabilityHistogram( ...
+                info, curConfig.synT, curPlotConfig, curPairConfigs(:));
+        curFig.Position(3:4) = [370, 540];
+
+       [curLearnedFrac, curUnlearnedFrac, curCvThresh] = ...
+            connectEM.Consistency.calculateLearnedFraction( ...
+                curConfig.synT, curPairConfigs(1), curPairConfigs(end));
+
+        fprintf('%s\n', curPlotConfig.title);
+        fprintf('→ Learned fraction: %.1f %%\n', 100 * curLearnedFrac);
+        fprintf('→ Unlearned fraction: %.1f %%\n', 100 * curUnlearnedFrac);
+        fprintf('→ CV threshold: %.2f\n', curCvThresh);
+        fprintf('\n');
+
+        fprintf('* Significance tests\n');
+        fprintf('  p-values for unexpected synapse size similarity\n');
+        for curPairConfig = curPairConfigs(1:(end - 1))
+            curPValue = ...
+                connectEM.Consistency.testVariability( ...
+                    curConfig.synT, curPairConfig, curPairConfigs(end));
+            fprintf('→ %s: %g\n', curPairConfig.title, curPValue);
+        end
+
+        fprintf('\n');
     end
-    
-    fprintf('\n');
 end
             
 %% Variability of largest two synapses
