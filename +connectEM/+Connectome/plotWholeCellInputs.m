@@ -426,7 +426,7 @@ for curDimIdx = 1:3
     % Inh / (Inh + Exc) ratio
     curFit = fit(dendT.dir(:, curDimIdx), dendT.inhExcRatio, 'poly1');
     
-    curAx = subplot(3, 6, (curDimIdx - 1) * 6 + 1);
+    curAx = subplot(3, 8, (curDimIdx - 1) * 8 + 1);
     hold(curAx, 'on');
     
     scatter(curAx, dendT.inhExcRatio, dendT.dir(:, curDimIdx), 60, '.');
@@ -436,7 +436,7 @@ for curDimIdx = 1:3
     % Inh / (Inh + Exc) ratio, corrected for soma location
     curFit = fit(dendT.dir(:, curDimIdx), dendT.somaPosCorrInhExcRatio, 'poly1');
     
-    curAx = subplot(3, 6, (curDimIdx - 1) * 6 + 2);
+    curAx = subplot(3, 8, (curDimIdx - 1) * 8 + 2);
     hold(curAx, 'on');
     
     scatter(curAx, dendT.somaPosCorrInhExcRatio, dendT.dir(:, curDimIdx), 60, '.');
@@ -446,17 +446,26 @@ for curDimIdx = 1:3
     % Inh / (Inh + Exc) ratio, corrected for whole cell-wide average
     curFit = fit(dendT.dir(:, curDimIdx), dendT.wcCorrInhExcRatio, 'poly1');
     
-    curAx = subplot(3, 6, (curDimIdx - 1) * 6 + 3);
+    curAx = subplot(3, 8, (curDimIdx - 1) * 8 + 3);
     hold(curAx, 'on');
     
     scatter(curAx, dendT.wcCorrInhExcRatio, dendT.dir(:, curDimIdx), 60, '.');
+    plot(curAx, curFit([-1, 1]), [-1, 1], 'Color', 'black', 'LineWidth', 2);
+    
+    % Dendrite(inh ratio) / Neuron(inh ratio)
+    curFit = fit(dendT.dir(:, curDimIdx), dendT.wcRelInhExcRatio, 'poly1');
+    
+    curAx = subplot(3, 8, (curDimIdx - 1) * 8 + 4);
+    hold(curAx, 'on');
+    
+    scatter(curAx, dendT.wcRelInhExcRatio, dendT.dir(:, curDimIdx), 60, '.');
     plot(curAx, curFit([-1, 1]), [-1, 1], 'Color', 'black', 'LineWidth', 2);
     
     
     % TC / (TC + CC) ratio
     curFit = fit(dendT.dir(:, curDimIdx), dendT.tcExcRatio, 'poly1');
     
-    curAx = subplot(3, 6, (curDimIdx - 1) * 6 + 4);
+    curAx = subplot(3, 8, (curDimIdx - 1) * 8 + 5);
     hold(curAx, 'on');
     
     scatter(curAx, dendT.tcExcRatio, dendT.dir(:, curDimIdx), 60, '.');
@@ -466,7 +475,7 @@ for curDimIdx = 1:3
     % TC / (TC + CC) ratio, corrected for soma location
     curFit = fit(dendT.dir(:, curDimIdx), dendT.somaPosCorrTcExcRatio, 'poly1');
     
-    curAx = subplot(3, 6, (curDimIdx - 1) * 6 + 5);
+    curAx = subplot(3, 8, (curDimIdx - 1) * 8 + 6);
     hold(curAx, 'on');
     
     scatter(curAx, dendT.somaPosCorrTcExcRatio, dendT.dir(:, curDimIdx), 60, '.');
@@ -476,24 +485,35 @@ for curDimIdx = 1:3
     % TC / (TC + CC) ratio, corrected for whole cell-wide average
     curFit = fit(dendT.dir(:, curDimIdx), dendT.wcCorrTcExcRatio, 'poly1');
     
-    curAx = subplot(3, 6, (curDimIdx - 1) * 6 + 6);
+    curAx = subplot(3, 8, (curDimIdx - 1) * 8 + 7);
     hold(curAx, 'on');
     
     scatter(curAx, dendT.wcCorrTcExcRatio, dendT.dir(:, curDimIdx), 60, '.');
     plot(curAx, curFit([-1, 1]), [-1, 1], 'Color', 'black', 'LineWidth', 2);
+    
+    % Dendrite(inh ratio) / Neuron(inh ratio)
+    curFit = fit(dendT.dir(:, curDimIdx), dendT.wcRelTcExcRatio, 'poly1');
+    
+    curAx = subplot(3, 8, (curDimIdx - 1) * 8 + 8);
+    hold(curAx, 'on');
+    
+    scatter(curAx, dendT.wcRelTcExcRatio, dendT.dir(:, curDimIdx), 60, '.');
+    plot(curAx, curFit([-1, 1]), [-1, 1], 'Color', 'black', 'LineWidth', 2);
 end
 
 curAxes = flip(curFig.Children);
-xlabel(curAxes(end - 5), 'Inh / (Inh + Exc)');
-xlabel(curAxes(end - 4), {'Soma position corrected'; 'Inh / (Inh + Exc)'});
-xlabel(curAxes(end - 3), {'Whole cell corrected'; 'Inh / (Inh + Exc)'});
-xlabel(curAxes(end - 2), 'TC / (TC + CC)');
-xlabel(curAxes(end - 1), {'Soma position corrected'; 'TC / (TC + CC)'});
-xlabel(curAxes(end - 0), {'Whole cell corrected'; 'TC / (TC + CC)'});
+xlabel(curAxes(end - 7), 'Inh / (Inh + Exc)');
+xlabel(curAxes(end - 6), {'Soma position corrected'; 'Inh / (Inh + Exc)'});
+xlabel(curAxes(end - 5), {'Whole cell corrected'; 'Inh / (Inh + Exc)'});
+xlabel(curAxes(end - 4), {'Dendrites / Neuron'; 'Inh / (Inh + Exc)'});
+xlabel(curAxes(end - 3), 'TC / (TC + CC)');
+xlabel(curAxes(end - 2), {'Soma position corrected'; 'TC / (TC + CC)'});
+xlabel(curAxes(end - 1), {'Whole cell corrected'; 'TC / (TC + CC)'});
+xlabel(curAxes(end - 0), {'Dendrites / Neuron'; 'TC / (TC + CC)'});
 
-ylabel(curAxes(1 + 0 * 6), 'Orientation along X');
-ylabel(curAxes(1 + 1 * 6), 'Orientation along Y');
-ylabel(curAxes(1 + 2 * 6), 'Orientation along Z');
+ylabel(curAxes(1 + 0 * 8), 'Orientation along X');
+ylabel(curAxes(1 + 1 * 8), 'Orientation along Y');
+ylabel(curAxes(1 + 2 * 8), 'Orientation along Z');
 
 set(curAxes, ...
     'TickDir', 'out', ...
@@ -510,6 +530,19 @@ annotation( ...
     curFig, 'textbox', [0, 0.9, 1, 0.1], ...
     'String', {info.filename; info.git_repos{1}.hash}, ...
     'EdgeColor', 'none', 'HorizontalAlignment', 'center');
+
+% Statistical significance tests
+fprintf([ ...
+    'Significance test for dendrites / neuron ', ...
+    'inh / (inh + exc) ratio\n']);
+curFit = fitlm(dendT.dir(:, 1), dendT.wcRelInhExcRatio);
+disp(curFit);
+
+fprintf([ ...
+    'Significance test for dendrite / neuron ', ...
+    'tc / (tc + cc) ratio\n']);
+curFit = fitlm(dendT.dir(:, 1), dendT.wcRelTcExcRatio);
+disp(curFit);
 
 %% Two dimensional polar plot
 curValNames = { ...
