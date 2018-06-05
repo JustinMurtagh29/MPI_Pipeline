@@ -328,6 +328,16 @@ annotation( ...
 	'String', {info.filename; info.git_repos{1}.hash}, ...
     'EdgeColor', 'none', 'HorizontalAlignment', 'center');
 
+
+% Significance tests
+fprintf('Significance test for inh / (inh + exc)\n');
+curFit = fitlm(curWcT.somaPosRel(:, 1), curWcT.corrInhRatio);
+disp(curFit);
+
+fprintf('Significance test for tc / (tc + cc)\n');
+curFit = fitlm(curWcT.somaPosRel(:, 1), curWcT.corrTcRatio);
+disp(curFit);
+
 %% Correlation between ratios and dendrite direction
 curMinSyn = 50;
 
