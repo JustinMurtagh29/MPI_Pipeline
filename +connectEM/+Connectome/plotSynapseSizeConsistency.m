@@ -200,6 +200,17 @@ for curConfig = curConfigs
         connectEM.Consistency.plotVariabilityHistogram( ...
             info, curConfig.synT, curPlotConfigs, curPlotPairs);
     curFig.Position(3:4) = [1300, 500];
+    
+    fprintf('* Significance tests\n');
+    fprintf('  p-values for unexpected synapse size similarity\n');
+    for curPairConfig = curPlotPairs
+        curPValue = ...
+            connectEM.Consistency.testVariability( ...
+                curConfig.synT, curPairConfig(1), curPairConfig(2));
+        fprintf('→ %s: %g\n', curPairConfig(1).title, curPValue);
+    end
+    
+    fprintf('\n');
 end
             
 %% Variability of largest two synapses
