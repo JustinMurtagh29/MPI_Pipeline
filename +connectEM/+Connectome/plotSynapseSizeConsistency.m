@@ -285,7 +285,7 @@ for curConfig = curConfigs
         curT.postDist(curIdx) = curPostDist;
     end
 
-    curT.cv = synT.area(curT.synIdPairs);
+    curT.cv = curSynT.area(curT.synIdPairs);
     curT.cv = std(curT.cv, 0, 2) ./ mean(curT.cv, 2);
     
     if ~isempty(curConfig.maxDistUm)
