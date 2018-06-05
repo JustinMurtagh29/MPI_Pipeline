@@ -257,7 +257,7 @@ for curConfig = curConfigs
     curPairConfig = ...
         connectEM.Consistency.buildPairConfigs(curSynT, curPlotConfig);
     curPairConfig = curPairConfig(1);
-
+    
     curT = struct2table(rmfield(curPairConfig, 'title'));
     curT.preAggloId = curSynT.preAggloId(curT.synIdPairs(:, 1));
     curT.postAggloId = curSynT.postAggloId(curT.synIdPairs(:, 1));
@@ -302,7 +302,7 @@ for curConfig = curConfigs
     % Plot
     fig = figure();
     fig.Color = 'white';
-    fig.Position(3:4) = [560, 390];
+    fig.Position(3:4) = [720, 480];
 
     % Presynaptic side
     ax = subplot(1, 2, 1);
@@ -327,7 +327,7 @@ for curConfig = curConfigs
         'FontWeight', 'normal', 'FontSize', 10);
 
     axes = fig.Children;
-    [ax.TickDir] = deal('out');
+   [ax.TickDir] = deal('out');
 
     ax = axes(end);
     xlabel(ax, 'Intersynapse distance (µm)');
@@ -338,6 +338,7 @@ for curConfig = curConfigs
         'String', { ...
             info.filename; ...
             info.git_repos{1}.hash; ...
+            curPlotConfig.title; ...
             curPairConfig.title}, ...
         'EdgeColor', 'none', 'HorizontalAlignment', 'center');
 end
