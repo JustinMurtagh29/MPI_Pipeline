@@ -568,7 +568,7 @@ fprintf('\n');
 
 %% Calculate expected dendrite / neuron ratio for TC / (TC + CC)
 clear cur*;
-curBinEdges = linspace(0, 2, 51);
+curBinEdges = linspace(0, 2, 11);
 
 curDendT = dendT;
 curDendT.wcTcProb = ...
