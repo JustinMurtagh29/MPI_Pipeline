@@ -131,6 +131,7 @@ end
 
 %% Collect input synapses
 wcT.synapses = cell(size(wcT.id));
+wcT.classConn = nan(height(wcT), numel(synTypes));
 
 for curIdx = 1:size(wcT, 1)
     curAgglo = wcT.agglo(curIdx);
@@ -167,8 +168,12 @@ for curIdx = 1:size(wcT, 1)
     curSynT.axonId = repelem( ...
         curConnRows.edges(:, 1), ...
         cellfun(@numel, curConnRows.synIdx));
+    curClassConn = accumarray( ...
+        double(conn.axonMeta.axonClass(curSynT.axonId)), ...
+        1, [numel(synTypes), 1]);
     
     wcT.synapses{curIdx} = curSynT;
+    wcT.classConn(curIdx, :) = curClassConn;
 end
 
 %% debugging
@@ -222,10 +227,7 @@ curWcT.inhRatio = nan(height(curWcT), 1);
 curWcT.tcRatio = nan(height(curWcT), 1);
 
 for curIdx = 1:height(curWcT)
-    curSynapses = curWcT.synapses{curIdx};
-    curSynapses.axonClass = conn.axonMeta.axonClass(curSynapses.axonId);
-    curSynapses = accumarray(double(curSynapses.axonClass), 1, [4, 1]);
-    
+    curSynapses = curWcT.classConn(curIdx, :);
     curWcT.inhRatio(curIdx) = curSynapses(3) / sum(curSynapses(1:3));
     curWcT.tcRatio(curIdx) = curSynapses(2) / sum(curSynapses(1:2));
 end
@@ -361,6 +363,7 @@ dendT(~dendT.cellRow, :) = [];
 
 
 dendT.dir = nan(size(dendT.somaPos));
+dendT.classConn = nan(height(dendT), numel(synTypes));
 dendT.inhExcRatio = nan(size(dendT.id));
 dendT.somaPosCorrInhExcRatio = nan(size(dendT.id));
 dendT.wcCorrInhExcRatio = nan(size(dendT.id));
@@ -395,6 +398,7 @@ for curIdx = 1:size(dendT, 1)
         1, [numel(synTypes), 1], @sum, 0);
     
     dendT.dir(curIdx, :) = curDendDir;
+    dendT.classConn(curIdx, :) = curSynData;
     dendT.inhExcRatio(curIdx) = curSynData(3) / sum(curSynData(1:3));
     dendT.tcExcRatio(curIdx) = curSynData(2) / sum(curSynData(1:2));
     
@@ -561,6 +565,81 @@ curFit = fitlm(dendT.dir(:, 1), dendT.wcRelTcExcRatio);
 disp(curFit);
 fprintf('\n');
 fprintf('\n');
+
+%% Calculate expected dendrite / neuron ratio for TC / (TC + CC)
+clear cur*;
+curBins = linspace(0, 1, 1001);
+
+[curExpDendRatio, curExpDendCount] = ...
+    connectEM.Specificity.calcExpectedRatioDist( ...
+        dendT.classConn, 2, [1, 2]);
+    
+curCellIds = unique(dendT.id);
+[curExpCellRatio, curExpCellCount] = ...
+    connectEM.Specificity.calcExpectedRatioDist( ...
+        wcT.classConn(curCellIds, :), 2, [1, 2]);
+    
+% Discretize this stuff, so we're not running out of RAM
+curBinIds = discretize(curExpDendRatio, curBins);
+curExpDendRatio = (curBins(1:(end - 1)) + curBins(2:end)) ./ 2;
+curExpDendCount = curExpDendCount ./ sum(curExpDendCount);
+curExpDendCount = accumarray(curBinIds, curExpDendCount);
+
+curBinIds = discretize(curExpCellRatio, curBins);
+curExpCellRatio = (curBins(1:(end - 1)) + curBins(2:end)) ./ 2;
+curExpCellCount = curExpCellCount ./ sum(curExpCellCount);
+curExpCellCount = accumarray(curBinIds, curExpCellCount);
+
+% Combine dendrite and neuron data
+curExpDendCellRatio = reshape( ...
+    curExpDendRatio(:) ./ curExpCellRatio(:)', [], 1);
+curExpDendCellCount = reshape( ...
+    curExpDendCount(:) .* curExpCellCount(:)', [], 1);
+
+curBins = linspace(0, 2, 51);
+curBinIds = discretize(curExpDendCellRatio, curBins);
+
+% Get rid of data outside range
+curMask = (curBinIds > 0) & (curBinIds <= numel(curBins));
+curExpDendCellRatio(~curMask) = []; %#ok
+curExpDendCellCount(~curMask) = [];
+curBinIds(~curMask) = [];
+
+curExpDendCellRatio = (curBins(1:(end - 1)) + curBins(2:end)) ./ 2;
+curExpDendCellCount = accumarray(curBinIds(:), curExpDendCellCount(:));
+
+curObsDendCellRatio = dendT.wcRelTcExcRatio;
+
+fig = figure();
+fig.Color = 'white';
+fig.Position(3:4) = [400, 400];
+
+ax = axes(fig);
+axis(ax, 'square');
+hold(ax, 'on');
+
+histogram(ax, ...
+    curObsDendCellRatio, ...
+    'BinEdges', curBins, ...
+    'DisplayStyle', 'stairs', ...
+    'LineWidth', 2);
+histogram(ax, ...
+    'BinEdges', curBins, ...
+    'BinCounts', height(dendT) * curExpDendCellCount, ...
+    'DisplayStyle', 'stairs', ...
+    'LineWidth', 2);
+
+ax.TickDir = 'out';
+ax.XLim = curBins([1, end]);
+xlabel(ax, 'Dendrite / neuron TC / (TC + CC) ratio');
+ylabel(ax, 'Dendrites');
+
+leg = legend(ax, {'Observed', 'Expected'}, 'Location', 'NorthEast');
+leg.Box = 'off';
+
+title( ...
+    ax, {info.filename; info.git_repos{1}.hash}, ...
+    'FontWeight', 'normal', 'FontSize', 10);
 
 %% Two dimensional polar plot
 curValNames = { ...
