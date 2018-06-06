@@ -5,13 +5,14 @@
 %   Benedikt Staffler <benedikt.staffler@brain.mpg.de>
 %
 % Differences to connectEM.Axon.Script.calculateSynToSynDists:
-%   - new synapse agglo version
+%   - new synapse agglo version and the corresponding connectome
 
 clear;
 
 %% configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v6-somaH.mat');
+connFile = fullfile(rootDir, 'connectomeState', ...
+    'connectome_axons-19-a_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v6-somaH.mat');
 
 [interSynFile, interSynName] = fileparts(connFile);
 interSynName = sprintf('%s_intersynapse.mat', interSynName);
