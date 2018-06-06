@@ -49,8 +49,6 @@ function plotRatioDist(info, classConn, axonClasses, dendClass)
     xlabel(ax, 'Inh / (Exc + Inh)');
     xlim(ax, binEdges([1, end]));
     
-    ax.YAxis.Limits(1) = 10 ^ (-0.1);
-    ax.YScale = 'log';
     ax.TickDir = 'out';
     histAxes{end + 1} = ax;
     
@@ -133,8 +131,6 @@ function plotRatioDist(info, classConn, axonClasses, dendClass)
     xlabel(ax, 'TC / (TC + CC)');
     xlim(ax, binEdges([1, end]));
     
-    ax.YAxis.Limits(1) = 10 ^ (-0.1);
-    ax.YScale = 'log';
     ax.TickDir = 'out';
     histAxes{end + 1} = ax;
     
