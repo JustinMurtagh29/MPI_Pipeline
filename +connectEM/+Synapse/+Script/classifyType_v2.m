@@ -7,14 +7,15 @@
 
 clear;
 
+
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 shFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_01_spine_attachment.mat');
 connFile = fullfile(rootDir, 'connectomeState', ...
     'connectome_axons-19-a_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v6-somaH.mat');
-synFile = fullfile(rootDir, 'connectomeState', 'SynapseAgglos_v3_ax_spine_clustered.mat');
+synFile = fullfile(rootDir, 'connectomeState', 'SynapseAgglos-v6-somaH.mat');
 
-outDir = '/home/amotta/Desktop';
+outDir = fullfile(rootDir, 'connectomeState');
 
 [~, outFile] = fileparts(synFile);
 outFile = sprintf('%s_classified.mat', outFile);
@@ -26,6 +27,7 @@ graphFile = fullfile(rootDir, 'graphNew.mat');
 synScoreFile = fullfile(rootDir, 'globalSynScores.mat');
 
 info = Util.runInfo();
+
 
 %% Loading data
 param = load(fullfile(rootDir, 'allParameter.mat'));
@@ -47,6 +49,7 @@ shAgglos = shAgglos.shAgglos;
 conn = load(connFile);
 syn = load(synFile);
 
+
 %% Classify synapses
 somaAgglos = conn.denMeta.targetClass == 'Somata';
 somaAgglos = conn.dendrites(somaAgglos);
@@ -56,9 +59,15 @@ syn.synapses.type = ...
         param, syn.synapses, graph.synScores, ...
         shAgglos, somaAgglos, conn.axons);
 
+    
 %% Generate output
 out = syn;
 out.info = info;
 
-Util.saveStruct(outFile, out);
-Util.protect(outFile);
+if ~exist(outFile, 'file')
+    Util.saveStruct(outFile, out);
+    Util.protect(outFile);
+    Util.log('Saving output to %s.', outFile);
+else
+    Util.log('File %s already exists.', outFile);
+end
