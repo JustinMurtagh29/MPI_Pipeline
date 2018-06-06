@@ -7,7 +7,7 @@ function [expFrac, expCount] = ...
     %
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
-    import connectEM.Specificity.calcFractionProbs;
+    import connectEM.Specificity.calcRatioProbs;
     
     % Sanity check
     assert(all(ismember(numClassIds, denomClassIds)));
@@ -36,7 +36,7 @@ function [expFrac, expCount] = ...
         curSyns = uniSyns(curIdx);
         curNeurites = uniSynNeurites(curIdx);
         
-       [curExpFrac, curExpCount] = calcFractionProbs(mnProbs, curSyns);
+       [curExpFrac, curExpCount] = calcRatioProbs(mnProbs, curSyns);
         curExpCount = curNeurites * curExpCount;
         
         expFrac{curIdx} = curExpFrac;

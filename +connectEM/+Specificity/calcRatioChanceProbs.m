@@ -8,7 +8,7 @@ function [probLower, probHigher] = ...
     %
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
-    import connectEM.Specificity.calcFractionProbs;
+    import connectEM.Specificity.calcRatioProbs;
     
     % Sanity check
     assert(all(ismember(numClassIds, denomClassIds)));
@@ -44,7 +44,7 @@ function [probLower, probHigher] = ...
         curSynCount = uniSynCounts(curIdx);
         
        [curFracs, curProbs] = ...
-            calcFractionProbs(mnProbs, curSynCount);
+            calcRatioProbs(mnProbs, curSynCount);
         
         % Calculate probabilities
        [~, curThreshIdx] = ...

@@ -1,5 +1,5 @@
-function [fracs, probs] = calcFractionProbs(mnProbs, n)
-    % [fracs, probs] = calcFractionProbs(mnProbs, n)
+function [fracs, probs] = calcRatioProbs(mnProbs, n)
+    % [fracs, probs] = calcRatioProbs(mnProbs, n)
     %   Given the probabilities of three classes (A, B, and C) and a number
     %   of events (n), this function returns the probability distribution
     %   over the fraction A / (A + B) assuming a multinomial distribution
