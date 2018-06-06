@@ -59,15 +59,11 @@ syn.synapses.type = ...
         param, syn.synapses, graph.synScores, ...
         shAgglos, somaAgglos, conn.axons);
 
-    
-%% Generate output
-out = syn;
-out.info = info;
 
-if ~exist(outFile, 'file')
-    Util.saveStruct(outFile, out);
-    Util.protect(outFile);
-    Util.log('Saving output to %s.', outFile);
-else
-    Util.log('File %s already exists.', outFile);
-end
+%% add type to original synapse file output
+
+m = load(synFile);
+assert(isequal(m.synapses, syn.synapses(:,1:3));
+m.synapses = syn.synapses;
+m.synapseTypeInfo = info;
+save(synFile, '-struct', 'm')
