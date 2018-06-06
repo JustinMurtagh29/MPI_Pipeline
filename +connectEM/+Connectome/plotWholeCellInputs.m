@@ -403,6 +403,7 @@ curBinEdges = [-1, -0.5, 0.5, 1];
 
 fig = figure();
 fig.Color = 'white';
+fig.Position(3:4) = 700;
 
 for curVarIdx = 1:numel(curVars)
     curVar = curVars{curVarIdx};
