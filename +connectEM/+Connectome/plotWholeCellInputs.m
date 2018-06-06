@@ -625,6 +625,63 @@ title( ...
     ax, {info.filename; info.git_repos{1}.hash}, ...
     'FontWeight', 'normal', 'FontSize', 10);
 
+%% Plot soma-aligned neurons
+% Projection matrix
+curProjMat = [0, 1, 0; 1, 0, 0];
+curProjMat = transpose(curProjMat);
+
+curWcT = wcT;
+curWcT.tcExcFrac = ...
+    curWcT.classConn(:, 2) ...
+ ./ sum(curWcT.classConn(:, 1:2), 2);
+curWcT.nodeCount = arrayfun(@(a) size(a.nodes, 1), curWcT.agglo);
+curWcT = sortrows(curWcT, 'nodeCount');
+curWcT = curWcT(ismember(curWcT.id, curDendT.id), :);
+
+fig = figure;
+fig.Color = 'white';
+
+ax = axes(fig);
+hold(ax, 'on');
+axis(ax, 'equal');
+
+for curCellId = 1:height(curWcT)
+    curAgglo = curWcT.agglo(curCellId);
+    curSomaPos = curWcT.somaPos(curCellId, :);
+    
+    curCoords = curAgglo.nodes(:, 1:3) - curSomaPos;
+    curCoords = curCoords .* param.raw.voxelSize / 1E3;
+    curCoords = curCoords * curProjMat;
+    
+    curEdges = transpose(curAgglo.edges);
+    
+    % NOTE(amotta): Here, I'm concatenating the X and Y values of all
+    % edges, respectively. To break up the chain, we have to intersperse
+    % NaNs between each pair of X or Y values. This allows us to use the
+    % `plot` command despite the coordinate sequence to be disconnected.
+    % This is important because calling and displaying the results of the
+    % `plot` command is dramatically faster than creating `lines` for each
+    % edge.
+    curX = reshape(curCoords(curEdges(:), 1), 2, []);
+    curX = reshape(cat(1, curX, nan(1, size(curX, 2))), 1, []);
+    curY = reshape(curCoords(curEdges(:), 2), 2, []);
+    curY = reshape(cat(1, curY, nan(1, size(curY, 2))), 1, []);
+    
+    plot(curX, curY);
+end
+
+ax.TickDir = 'out';
+xlabel(ax, '"Radial" distance from soma (µm)');
+ylabel(ax, 'Cortical depth relative to soma (µm)');
+
+ax.YDir = 'reverse';
+ax.YTickLabel(1) = strcat({'(Pia) '}, ax.YTickLabel(1));
+ax.YTickLabel(end) = strcat({'(WM) '}, ax.YTickLabel(end));
+
+title(ax, ...
+    {info.filename; info.git_repos{1}.hash}, ...
+    'FontWeight', 'normal', 'FontSize', 10);
+
 %% Two dimensional polar plot
 curValNames = { ...
     'somaPosCorrInhExcRatio', 'Inh / (Inh + Exc)'; ...
