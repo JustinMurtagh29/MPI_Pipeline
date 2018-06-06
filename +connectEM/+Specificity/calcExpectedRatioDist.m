@@ -1,6 +1,6 @@
 function [expFrac, expCount] = ...
-        calcExpectedFractionDist(classConn, numClassIds, denomClassIds)
-    % calcExpectedFractionDist(classConn, numClassIds, denumClassIds)
+        calcExpectedRatioDist(classConn, numClassIds, denomClassIds)
+    % calcExpectedRatioDist(classConn, numClassIds, denumClassIds)
     %   Given a class connectome and two sets of classes (A and B, with A
     %   being a subset of B), this function calculates the expected
     %   distribution of A / B.

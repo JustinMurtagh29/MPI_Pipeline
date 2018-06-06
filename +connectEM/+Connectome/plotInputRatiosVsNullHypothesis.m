@@ -58,7 +58,7 @@ end
 
 %% plotting
 function plotAxonClass(info, classConn, axonClasses, dendClass)
-    import connectEM.Specificity.calcExpectedFractionDist;
+    import connectEM.Specificity.calcExpectedRatioDist;
     import connectEM.Specificity.calcFractionChanceProbs;
     classConn = classConn(dendClass.nullIds, :);
     
@@ -80,7 +80,7 @@ function plotAxonClass(info, classConn, axonClasses, dendClass)
     obsFrac = sum(obsFrac(:, 3), 2) ./ sum(obsFrac, 2);
     obsFrac(isnan(obsFrac)) = 0;
     
-   [expFrac, expCount] = calcExpectedFractionDist( ...
+   [expFrac, expCount] = calcExpectedRatioDist( ...
         classConn, inhId, [ccId, tcId, inhId]);
    [probLow, probHigh] = calcFractionChanceProbs( ...
         classConn, inhId, [ccId, tcId, inhId]);
@@ -165,7 +165,7 @@ function plotAxonClass(info, classConn, axonClasses, dendClass)
     obsFrac(isnan(obsFrac)) = 0;
     
    [expFrac, expCount] = ...
-        calcExpectedFractionDist(classConn, tcId, [tcId, ccId]);
+        calcExpectedRatioDist(classConn, tcId, [tcId, ccId]);
    [probLow, probHigh] = ...
         calcFractionChanceProbs(classConn, tcId, [tcId, ccId]);
     
