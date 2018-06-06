@@ -568,47 +568,31 @@ fprintf('\n');
 
 %% Calculate expected dendrite / neuron ratio for TC / (TC + CC)
 clear cur*;
-curBins = linspace(0, 1, 1001);
+curBinEdges = linspace(0, 2, 51);
 
-[curExpDendRatio, curExpDendCount] = ...
-    connectEM.Specificity.calcExpectedRatioDist( ...
-        dendT.classConn, 2, [1, 2]);
-    
-curCellIds = unique(dendT.id);
-[curExpCellRatio, curExpCellCount] = ...
-    connectEM.Specificity.calcExpectedRatioDist( ...
-        wcT.classConn(curCellIds, :), 2, [1, 2]);
-    
-% Discretize this stuff, so we're not running out of RAM
-curBinIds = discretize(curExpDendRatio, curBins);
-curExpDendRatio = (curBins(1:(end - 1)) + curBins(2:end)) ./ 2;
-curExpDendCount = curExpDendCount ./ sum(curExpDendCount);
-curExpDendCount = accumarray(curBinIds, curExpDendCount);
+curDendT = dendT;
+curDendT.wcTcProb = ...
+    wcT.classConn(curDendT.id, 2) ...
+ ./ sum(wcT.classConn(curDendT.id, 1:2), 2);
+curDendT.excSynCount = ...
+    sum(curDendT.classConn(:, 1:2), 2);
 
-curBinIds = discretize(curExpCellRatio, curBins);
-curExpCellRatio = (curBins(1:(end - 1)) + curBins(2:end)) ./ 2;
-curExpCellCount = curExpCellCount ./ sum(curExpCellCount);
-curExpCellCount = accumarray(curBinIds, curExpCellCount);
+[curRatios, curCounts] = arrayfun(@(nSyn, tcProb) ...
+    connectEM.Specificity.calcExpectedDist( ...
+        nSyn, tcProb, 'distribution', 'binomial'), ...
+	curDendT.excSynCount, curDendT.wcTcProb, ...
+    'UniformOutput', false);
+curRatios = arrayfun( ...
+    @(dendRatios, wcRatio) dendRatios{1} / wcRatio, ...
+    curRatios, curDendT.wcTcProb, 'UniformOutput', false);
 
-% Combine dendrite and neuron data
-curExpDendCellRatio = reshape( ...
-    curExpDendRatio(:) ./ curExpCellRatio(:)', [], 1);
-curExpDendCellCount = reshape( ...
-    curExpDendCount(:) .* curExpCellCount(:)', [], 1);
+curRatios = cell2mat(curRatios);
+curCounts = cell2mat(curCounts);
 
-curBins = linspace(0, 2, 51);
-curBinIds = discretize(curExpDendCellRatio, curBins);
-
-% Get rid of data outside range
-curMask = (curBinIds > 0) & (curBinIds <= numel(curBins));
-curExpDendCellRatio(~curMask) = []; %#ok
-curExpDendCellCount(~curMask) = [];
-curBinIds(~curMask) = [];
-
-curExpDendCellRatio = (curBins(1:(end - 1)) + curBins(2:end)) ./ 2;
-curExpDendCellCount = accumarray(curBinIds(:), curExpDendCellCount(:));
-
-curObsDendCellRatio = dendT.wcRelTcExcRatio;
+% Discretize
+curBinIds = discretize(curRatios, curBinEdges);
+curMask = (curBinIds > 0) & (curBinIds <= numel(curBinEdges));
+curBinCounts = accumarray(curBinIds(curMask), curCounts(curMask));
 
 fig = figure();
 fig.Color = 'white';
@@ -619,18 +603,18 @@ axis(ax, 'square');
 hold(ax, 'on');
 
 histogram(ax, ...
-    curObsDendCellRatio, ...
-    'BinEdges', curBins, ...
+    curDendT.wcRelTcExcRatio, ...
+    'BinEdges', curBinEdges, ...
     'DisplayStyle', 'stairs', ...
     'LineWidth', 2);
 histogram(ax, ...
-    'BinEdges', curBins, ...
-    'BinCounts', height(dendT) * curExpDendCellCount, ...
+    'BinEdges', curBinEdges, ...
+    'BinCounts', curBinCounts, ...
     'DisplayStyle', 'stairs', ...
     'LineWidth', 2);
 
 ax.TickDir = 'out';
-ax.XLim = curBins([1, end]);
+ax.XLim = curBinEdges([1, end]);
 xlabel(ax, 'Dendrite / neuron TC / (TC + CC) ratio');
 ylabel(ax, 'Dendrites');
 
