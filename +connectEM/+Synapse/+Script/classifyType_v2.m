@@ -63,7 +63,7 @@ syn.synapses.type = ...
 %% add type to original synapse file output
 
 m = load(synFile);
-assert(isequal(m.synapses, syn.synapses(:,1:3));
+assert(isequal(m.synapses, syn.synapses(:,1:3)));
 m.synapses = syn.synapses;
 m.synapseTypeInfo = info;
 save(synFile, '-struct', 'm')
