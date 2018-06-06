@@ -120,6 +120,7 @@ end
 if ~exist(interSynFile, 'file')
     Util.log('Saving output to %s.', interSynFile);
     Util.saveStruct(interSynFile, out);
+    Util.protect(outFile);
 else
     Util.log('File %s already exists and will not be overwritten.', ...
         interSynFile);
