@@ -13,7 +13,7 @@ rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 shFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_01_spine_attachment.mat');
 connFile = fullfile(rootDir, 'connectomeState', ...
     'connectome_axons-19-a_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v6-somaH.mat');
-synFile = fullfile(rootDir, 'connectomeState', 'SynapseAgglos-v6-somaH.mat');
+synFile = fullfile(rootDir, 'connectomeState', 'SynapseAgglos_v6_somaH.mat');
 
 outDir = fullfile(rootDir, 'connectomeState');
 
