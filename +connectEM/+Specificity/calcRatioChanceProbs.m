@@ -1,6 +1,6 @@
 function [probLower, probHigher] = ...
-        calcFractionChanceProbs(classConn, numClassIds, denomClassIds)
-    % calcFractionChanceProbs(classConn, numClassIds, denomClassIds)
+        calcRatioChanceProbs(classConn, numClassIds, denomClassIds)
+    % calcRatioChanceProbs(classConn, numClassIds, denomClassIds)
     %   Given a class connectome and two sets of classes (A and B, with A
     %   being a subset of B), this function calculates for each neurite the
     %   probability of seeing a value A / B equally or more extreme than
