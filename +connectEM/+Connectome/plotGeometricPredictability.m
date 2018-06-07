@@ -81,6 +81,80 @@ if ~isempty(fakeRadius)
    [axonClasses.title] = deal(fakeAxonClassTitles{:});
 end
 
+%% Poking at geometric predictability model
+fig = figure();
+fig.Color = 'white';
+
+for curAxonClassId = 1:numel(axonClasses)
+    curAxonClass = axonClasses(curAxonClassId);
+    curAxonIds = curAxonClass.axonIds;
+
+    curClassConn = classConn(curAxonIds, :);
+    curSynCounts = sum(curClassConn, 2);
+
+    for curTargetClassId = 1:numel(targetClasses)
+        curAvails = availabilities(curTargetClassId, :, curAxonIds);
+        curAvails = shiftdim(curAvails, 1);
+
+        curAvailBinoVar = curAvails .* (1 - curAvails);
+        curAvailBinoVar = curAvailBinoVar ./ curSynCounts(:)';
+        curAvailBinoVar = mean(curAvailBinoVar, 2);
+        
+        curSpecs = curClassConn(:, curTargetClassId);
+        curSpecs = curSpecs ./ sum(curClassConn, 2);
+        curConnVar = mean((curSpecs - mean(curSpecs)) .^ 2);
+        
+        curExplainedVar = nan(size(avail.dists));
+        for curDistId = 1:numel(avail.dists)
+            curPredIn = availabilities(:, curDistId, curAxonIds);
+            curPredIn = transpose(squeeze(curPredIn));
+            curPredIn(:, end + 1) = 1; %#ok
+            
+            curWarn = warning('off', 'MATLAB:rankDeficientMatrix');
+            curPredParams = curPredIn \ curSpecs;
+            warning(curWarn);
+            
+            curPreds = curPredIn * curPredParams;
+            curPostPredVar = mean((curPreds - curSpecs) .^ 2);
+            curDistExplainedVar = curConnVar - curPostPredVar;
+            curExplainedVar(curDistId) = curDistExplainedVar;
+        end
+        
+        curExplainableVar = curConnVar - curAvailBinoVar;
+        
+        curAx = subplot( ...
+            numel(axonClasses), numel(targetClasses), ...
+            numel(targetClasses) * (curAxonClassId - 1) ...
+          + curTargetClassId);
+        hold(curAx, 'on');
+        
+        plot(curAx, curAvailBinoVar, 'LineWidth', 2);
+        plot(curAx, xlim(curAx), [curConnVar, curConnVar], 'LineWidth', 2);
+        plot(curAx, curExplainableVar, 'LineWidth', 2);
+        plot(curAx, curExplainedVar, 'LineWidth', 2);
+        
+        curAx.YLim(1) = 0;
+        curAx.XLim = [0, 50];
+    end
+end
+
+ax = flip(cat(1, fig.Children));
+axPos = ax(end).Position;
+
+leg = legend(ax(end), { ...
+    'Binomial variance', ...
+    'Connectomic variance', ...
+    'Explainable variance', ...
+    'Explained variance'}, ...
+    'Location', 'EastOutside');
+leg.Box = 'off';
+ax(end).Position = axPos;
+
+annotation(fig, ...
+    'textbox', [0, 0.9, 1, 0.1], ...
+    'EdgeColor', 'none', 'HorizontalAlignment', 'center', ...
+    'String', {info.filename; info.git_repos{1}.hash});
+
 %% Calculate variance introduced by multinomial model
 targetDistAxonMnVar = nan( ...
     numel(targetClasses), ...
