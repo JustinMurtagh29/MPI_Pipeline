@@ -85,6 +85,8 @@ end
 fig = figure();
 fig.Color = 'white';
 
+curDists = avail.dists / 1E3;
+
 for curAxonClassId = 1:numel(axonClasses)
     curAxonClass = axonClasses(curAxonClassId);
     curAxonIds = curAxonClass.axonIds;
@@ -104,8 +106,8 @@ for curAxonClassId = 1:numel(axonClasses)
         curSpecs = curSpecs ./ sum(curClassConn, 2);
         curConnVar = mean((curSpecs - mean(curSpecs)) .^ 2);
         
-        curExplainedVar = nan(size(avail.dists));
-        for curDistId = 1:numel(avail.dists)
+        curExplainedVar = nan(size(curDists));
+        for curDistId = 1:numel(curDists)
             curPredIn = availabilities(:, curDistId, curAxonIds);
             curPredIn = transpose(squeeze(curPredIn));
             curPredIn(:, end + 1) = 1; %#ok
@@ -128,21 +130,30 @@ for curAxonClassId = 1:numel(axonClasses)
           + curTargetClassId);
         hold(curAx, 'on');
         
-        plot(curAx, curAvailBinoVar, 'LineWidth', 2);
-        plot(curAx, xlim(curAx), [curConnVar, curConnVar], 'LineWidth', 2);
-        plot(curAx, curExplainableVar, 'LineWidth', 2);
-        plot(curAx, curExplainedVar, 'LineWidth', 2);
+        plot(curAx, curDists, curAvailBinoVar);
+        plot(curAx, [0, maxRadius], repelem(curConnVar, 2));
+        plot(curAx, curDists, curExplainableVar);
+        plot(curAx, curDists, curExplainedVar);
         
         curAx.YLim(1) = 0;
-        curAx.XLim = [0, 50];
+        curAx.XLim = [0, maxRadius];
     end
 end
 
 ax = flip(cat(1, fig.Children));
-axPos = ax(end).Position;
+set(ax, 'TickDir', 'out');
 
+for curIdx = 1:numel(targetClasses)
+    title(ax(curIdx), targetClasses{curIdx}, ...
+        'FontWeight', 'normal', 'FontSize', 10);
+end
+
+plots = cat(1, ax.Children);
+set(plots, 'LineWidth', 2);
+
+axPos = ax(end).Position;
 leg = legend(ax(end), { ...
-    'Binomial variance', ...
+    'Binomial geometric variance', ...
     'Connectomic variance', ...
     'Explainable variance', ...
     'Explained variance'}, ...
@@ -190,53 +201,6 @@ end
 assert(~any(isnan(targetDistAxonMnVar(:))));
 assert(~any(isnan(targetAxonConnMnVar(:))));
 
-%% Plot multinomial variability
-plotAxonClasses = 1:2;
-
-fig = figure();
-fig.Color = 'white';
-
-ax = axes(fig);
-hold(ax, 'on');
-axis(ax, 'square');
-
-for curAxonClassId = plotAxonClasses
-    curAxonClass = axonClasses(curAxonClassId);
-    
-    curAvailMnVar = sum(targetDistAxonMnVar(:, :, curAxonClassId), 1);
-    curSpecMnVar = sum(targetAxonConnMnVar(:, curAxonClassId));
-    
-    plot(ax, ...
-        [0, maxRadius], [curSpecMnVar, curSpecMnVar], ...
-        'Color', ax.ColorOrder(curAxonClassId, :), ...
-        'LineWidth', 2, 'LineStyle', '--');
-    plot(ax, ...
-        avail.dists / 1E3, curAvailMnVar, ...
-        'Color', ax.ColorOrder(curAxonClassId, :), ...
-        'LineWidth', 2);
-end
-
-xlabel(ax, 'Radius (µm)');
-ylabel(ax, { ...
-    'Unexplainable variance'; ...
-    'due to multinomial model'});
-
-ax.TickDir = 'out';
-ax.XLim(end) = maxRadius;
-ax.YLim(1) = 0;
-
-leg = legend(ax, { ...
-    'Excitatory axons. Synapse-based variance', ...
-    'Excitatory axons. Availability-based variance', ...
-    'Inhibitory axons. Synapse-based variance', ...
-    'Inhibitory axons. Availability-based variance'}, ...
-    'Location', 'SouthEast');
-leg.Box = 'off';
-
-title(ax, ...
-    {info.filename; info.git_repos{1}.hash}, ...
-    'FontWeight', 'normal', 'FontSize', 10);
-
 %% Calculate explainability
 prevWarning = warning('off', 'MATLAB:rankDeficientMatrix');
 
@@ -261,7 +225,6 @@ for curAxonClassId = 1:numel(axonClasses)
         
         curFit = curAvails \ curConn;
         curPred = curAvails * curFit;
-        
         
         % Per axon and target class
         curVarLeft = mean((curPred - curConn) .^ 2, 1);
@@ -470,155 +433,3 @@ annotation(fig, ...
     'String', { ...
         'Prediction by linear combination of availabilities'; ...
         info.filename; info.git_repos{1}.hash});
-
-%% Plot synapse data
-axonTargetClassMean = nan(numel(axonClasses), numel(targetClasses)); 
-axonTargetClassVar = nan(numel(axonClasses), numel(targetClasses));
-
-for curAxonClassId = 1:numel(axonClasses)
-    curAxonClass = axonClasses(curAxonClassId);
-    curAxonIds = curAxonClass.axonIds;
-    
-    curSynCount = classConn(curAxonIds, :);
-    curSynCount = curSynCount ./ sum(curSynCount, 2);
-    
-    curMean = mean(curSynCount, 1);
-    curVar = (curSynCount - curMean) .^ 2;
-    curVar = sum(curVar, 1) ./ numel(curAxonIds);
-    
-    axonTargetClassMean(curAxonClassId, :) = curMean;
-    axonTargetClassVar(curAxonClassId, :) = curVar;
-end
-
-legends = arrayfun(@char, targetClasses, 'UniformOutput', false);
-
-fig = figure();
-fig.Color = 'white';
-
-ax = subplot(3, 1, 1);
-bar(ax, axonTargetClassMean, 'stacked');
-
-ax.TickDir = 'out';
-legend(ax, legends, 'Location', 'EastOutside');
-xticklabels(ax, {axonClasses.tag});
-ylabel(ax, 'Synapse fraction');
-
-ax = subplot(3, 1, 2);
-bar(ax, axonTargetClassVar, 'stacked');
-
-ax.TickDir = 'out';
-legend(ax, legends, 'Location', 'EastOutside');
-xticklabels(ax, {axonClasses.tag});
-ylabel(ax, 'Variance');
-
-ax = subplot(3, 1, 3);
-bar(ax, axonTargetClassBinoVar, 'stacked');
-
-ax.TickDir = 'out';
-legend(ax, legends, 'Location', 'EastOutside');
-xticklabels(ax, {axonClasses.tag});
-ylabel(ax, 'Binomial variance');
-
-annotation( ...
-    fig, 'textbox', [0, 0.9, 1, 0.1], ...
-    'String', {info.filename; info.git_repos{1}.hash}, ...
-    'EdgeColor', 'none', 'HorizontalAlignment', 'center');
-
-%% Plot availability data
-curLimY = 0.25;
-curVarGain = 1;
-curDists = avail.dists(:)' / 1E3;
-curLegends = arrayfun( ...
-    @char, targetClasses, ...
-    'UniformOutput', false);
-
-fig = figure();
-fig.Color = 'white';
-
-for curAxonClassId = 1:numel(axonClasses)
-    curAxonClass = axonClasses(curAxonClassId);
-    curAxonIds = curAxonClass.axonIds;
-    
-    curAvails = availabilities(:, :, curAxonIds);
-    curMean = mean(curAvails, 3);
-    curVar = (curAvails - curMean) .^ 2;
-    curVar = sum(curVar, 3) / numel(curAxonIds);
-    
-    curAx = subplot(numel(axonClasses), 1, curAxonClassId);
-    hold(curAx, 'on');
-    
-    curMasterPlot = plot( ...
-        curAx, curDists, curMean, 'LineWidth', 2);
-    curPlot = plot(curAx, curDists, ...
-        curMean + curVarGain * curVar, 'LineWidth', 0.5);
-   [curPlot.Color] = deal(curMasterPlot.Color);
-    curPlot = plot(curAx, curDists, ...
-        curMean - curVarGain * curVar, 'LineWidth', 0.5);
-   [curPlot.Color] = deal(curMasterPlot.Color);
-   
-   
-    legend(curMasterPlot, curLegends, 'Location', 'EastOutside');
-    title(curAx, curAxonClass.title, 'FontWeight', 'normal', 'FontSize', 10);
-    
-    curAx.TickDir = 'out';
-    xlim(curAx, [0, maxRadius]);
-    ylim(curAx, [0, curLimY]);
-end
-
-xlabel(curAx, 'Radius (µm)');
-ylabel(curAx, 'Availabilities (mean ± std)');
-
-annotation( ...
-    fig, 'textbox', [0, 0.9, 1, 0.1], ...
-    'String', {info.filename; info.git_repos{1}.hash}, ...
-    'EdgeColor', 'none', 'HorizontalAlignment', 'center');
-
-%% Synapse fraction vs. binomial variance scatter plot
-curFigSize = [numel(axonClasses), numel(targetClasses)];
-
-fig = figure();
-fig.Color = 'white';
-
-for curAxonClassId = 1:numel(axonClasses)
-    curAxonClass = axonClasses(curAxonClassId);
-    curAxonIds = curAxonClass.axonIds;
-    
-    curSynCount = classConn(curAxonIds, :);
-    curSynCount = sum(curSynCount, 2);
-    curSynCount = curSynCount ./ curSynCount;
-    
-    for curTargetClassId = 1:numel(targetClasses)
-        curProb = curSynCount(:, curTargetClassId);
-        curVar = curProb .* (1 - curProb) ./ curSynCount;
-        
-        curAx = subplot( ...
-            curFigSize(1), curFigSize(2), ...
-            (curAxonClassId - 1) * curFigSize(2) + curTargetClassId);
-        
-        hold(curAx, 'on');
-        scatter(curAx, curProb, curVar, '.');
-        plot(curAx, [0, 1], repelem(mean(curVar), 1, 2));
-        
-        if curAxonClassId == 1
-            title( ...
-                curAx, char(targetClasses(curTargetClassId)), ...
-                'FontWeight', 'normal', 'FontSize', 10);
-        end
-        
-        axis(curAx, 'square');
-    end
-end
-
-[fig.Children.YLim] = deal([0, 0.03]);
-[fig.Children.XLim] = deal([0, 1]);
-
-curAx = subplot( ...
-    curFigSize(1), curFigSize(2), ...
-    prod(curFigSize) - (curFigSize(2) - 1));
-xlabel(curAx, 'Synapse probability');
-ylabel(curAx, 'Binomial variance');
-
-annotation( ...
-    fig, 'textbox', [0, 0.9, 1, 0.1], ...
-    'String', {info.filename; info.git_repos{1}.hash}, ...
-    'EdgeColor', 'none', 'HorizontalAlignment', 'center');
