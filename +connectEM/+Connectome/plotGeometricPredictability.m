@@ -81,7 +81,75 @@ if ~isempty(fakeRadius)
    [axonClasses.title] = deal(fakeAxonClassTitles{:});
 end
 
-%% Poking at geometric predictability model
+%% Plot mean availabilities / specificities
+fig = figure();
+fig.Color = 'white';
+
+curDists = avail.dists / 1E3;
+
+for curAxonClassId = 1:numel(axonClasses)
+    curAxonClass = axonClasses(curAxonClassId);
+    curAxonIds = curAxonClass.axonIds;
+
+    curClassConn = classConn(curAxonIds, :);
+    curSynCounts = sum(curClassConn, 2);
+
+    for curTargetClassId = 1:numel(targetClasses)
+        curAvails = availabilities(curTargetClassId, :, curAxonIds);
+        curAvails = shiftdim(curAvails, 1);
+        curMeanAvail = mean(curAvails, 2);
+        
+        curSpecs = curClassConn(:, curTargetClassId);
+        curSpecs = curSpecs ./ sum(curClassConn, 2);
+        curMeanSpec = mean(curSpecs);
+        
+        curAx = subplot( ...
+            numel(axonClasses), numel(targetClasses), ...
+            numel(targetClasses) * (curAxonClassId - 1) ...
+          + curTargetClassId);
+        hold(curAx, 'on');
+        
+        plot(curAx, curDists, curMeanAvail);
+        plot(curAx, [0, maxRadius], repelem(curMeanSpec, 2));
+        
+        curAx.YLim(1) = 0;
+        curAx.XLim = [0, maxRadius];
+    end
+end
+
+ax = flip(cat(1, fig.Children));
+set(ax, 'TickDir', 'out');
+
+for curIdx = 1:numel(targetClasses)
+    title(ax(curIdx), targetClasses{curIdx}, ...
+        'FontWeight', 'normal', 'FontSize', 10);
+end
+
+for curIdx = 1:numel(axonClasses)
+    ylabel( ...
+        ax(numel(targetClasses) * (curIdx - 1) + 1), ...
+        {'Mean fraction of '; 'surface / synapses'});
+end
+
+xlabel(ax(end - numel(targetClasses) + 1), 'Radius (µm)');
+
+plots = cat(1, ax.Children);
+set(plots, 'LineWidth', 2);
+
+axPos = ax(end).Position;
+leg = legend(ax(end), { ...
+    'Availability', ...
+    'Specificity'}, ...
+    'Location', 'EastOutside');
+leg.Box = 'off';
+ax(end).Position = axPos;
+
+annotation(fig, ...
+    'textbox', [0, 0.9, 1, 0.1], ...
+    'EdgeColor', 'none', 'HorizontalAlignment', 'center', ...
+    'String', {info.filename; info.git_repos{1}.hash});
+
+%% Plot variances
 fig = figure();
 fig.Color = 'white';
 
@@ -147,6 +215,14 @@ for curIdx = 1:numel(targetClasses)
     title(ax(curIdx), targetClasses{curIdx}, ...
         'FontWeight', 'normal', 'FontSize', 10);
 end
+
+for curIdx = 1:numel(axonClasses)
+    ylabel( ...
+        ax(numel(targetClasses) * (curIdx - 1) + 1), ...
+        'Variance');
+end
+
+xlabel(ax(end - numel(targetClasses) + 1), 'Radius (µm)');
 
 plots = cat(1, ax.Children);
 set(plots, 'LineWidth', 2);
