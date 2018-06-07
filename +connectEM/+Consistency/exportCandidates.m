@@ -12,7 +12,7 @@ clear;
 
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-outputDir = '/tmpscratch/amotta/l4/2018-06-07-distance-dependence-of-synaptic-consistency-check/farther-than-40um';
+outputDir = '/tmpscratch/amotta/l4/2018-06-07-distance-dependence-of-synaptic-consistency-check/closer-than-5um';
 
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites-wholeCells-03-v2-classified_spine-syn-clust.mat');
 
@@ -20,8 +20,8 @@ synCount = 2;
 synType = 'spine';
 
 distType = 'preDist';
-minDist = 40E3;
-maxDist = [];
+minDist = [];
+maxDist = 5E3;
 
 info = Util.runInfo();
 
