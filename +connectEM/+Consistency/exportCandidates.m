@@ -12,7 +12,7 @@ clear;
 
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-outputDir = '/home/amotta/Desktop';
+outputDir = '/tmpscratch/amotta/l4/2018-06-07-distance-dependence-of-synaptic-consistency-check/farther-than-40um';
 
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites-wholeCells-03-v2-classified_spine-syn-clust.mat');
 
