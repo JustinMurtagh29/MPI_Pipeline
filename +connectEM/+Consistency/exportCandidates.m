@@ -12,24 +12,41 @@ clear;
 
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-outputDir = '/home/amotta/Desktop';
+outputDir = '/home/amotta/Desktop/closer-than-5um';
 
-synFile = fullfile(rootDir, 'connectomeState', 'SynapseAgglos_v3_ax_spine_clustered.mat');
-connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_b_linearized_ax_spine_syn_clust.mat');
+connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-linearized_dendrites-wholeCells-03-v2-classified_spine-syn-clust.mat');
 
-synCount = 4;
+synCount = 2;
 synType = 'spine';
 
+distType = 'preDist';
+minDist = [];
+maxDist = 5E3;
+
 info = Util.runInfo();
+
+%% Check and complete configuration
+calcDist = false;
+if ~isempty(minDist) || ~isempty(maxDist)
+    % Distance calculation only works for synapse pairs
+    assert(ismember(distType, {'preDist', 'postDist'}));
+    assert(synCount == 2);
+    calcDist = true;
+end
 
 %% Loading data
 param = load(fullfile(rootDir, 'allParameter.mat'), 'p');
 param = param.p;
 
 points = Seg.Global.getSegToPointMap(param);
+[conn, syn] = connectEM.Connectome.load(param, connFile);
 
-syn = load(synFile);
-conn = load(connFile);
+if calcDist
+   [~, synToSynFile] = fileparts(connFile);
+    synToSynFile = sprintf('%s_synToSynDists.mat', synToSynFile);
+    synToSynFile = fullfile(fileparts(connFile), synToSynFile);
+    synToSyn = load(synToSynFile);
+end
 
 %% Restrict to N-fold coupled neurites
 synT = connectEM.Connectome.buildSynapseTable(conn, syn);
@@ -45,12 +62,51 @@ switch lower(synType)
         error('Unknown type "%s"', synType)
 end
 
-[axonDendPair, ~, pairSynCount] = unique( ...
-    synT(:, {'preAggloId', 'postAggloId'}), 'rows');
+pairT = synT(:, {'preAggloId', 'postAggloId'});
+[~, pairIds, pairSynCount] = unique(pairT, 'rows');
 
-pairSynCount = accumarray(pairSynCount, 1);
-axonDendPair(pairSynCount ~= synCount, :) = [];
+pairT = pairT(pairIds, :);
+pairT.synCount = accumarray(pairSynCount, 1);
+pairT(pairT.synCount ~= synCount, :) = [];
+pairT.synCount = [];
 clear pairSynCount;
+
+[~, synT.axonDendPairId] = ismember( ...
+	synT(:, {'preAggloId', 'postAggloId'}), pairT, 'rows');
+synT(~synT.axonDendPairId, :) = [];
+
+synT = sortrows(synT, 'axonDendPairId');
+pairT.synIds = transpose(reshape(synT.id, synCount, []));
+
+%% Calculate pair-wise distances
+if calcDist
+    pairT.preDist = zeros(size(pairT.preAggloId));
+    pairT.postDist = zeros(size(pairT.postAggloId));
+    
+    for curIdx = 1:height(pairT)
+        curPreAggloId = pairT.preAggloId(curIdx);
+        curPostAggloId = pairT.postAggloId(curIdx);
+        curSynIds = pairT.synIds(curIdx, :);
+
+        % Distance along axonal side
+        curPreSynIds = synToSyn.axonSynIds{curPreAggloId};
+       [~, curPreSynIds] = ismember(curSynIds, curPreSynIds);
+        curPreDist = synToSyn.axonSynToSynDists{curPreAggloId};
+        curPreDist = curPreDist(curPreSynIds(1), curPreSynIds(2));
+
+        % Distance along axonal side
+        curPostSynIds = synToSyn.dendSynIds{curPostAggloId};
+       [~, curPostSynIds] = ismember(curSynIds, curPostSynIds);
+        curPostDist = synToSyn.dendSynToSynDists{curPostAggloId};
+        curPostDist = curPostDist(curPostSynIds(1), curPostSynIds(2));
+
+        pairT.preDist(curIdx) = curPreDist;
+        pairT.postDist(curIdx) = curPostDist;
+    end
+    
+    if ~isempty(maxDist); pairT(pairT.(distType) > maxDist, :) = []; end
+    if ~isempty(minDist); pairT(pairT.(distType) < minDist, :) = []; end
+end
 
 %% Generate NML files
 skel = skeleton();
@@ -60,17 +116,14 @@ skelDesc = sprintf('%s (%s)', mfilename, info.git_repos{1}.hash);
 skel = skel.setDescription(skelDesc);
 
 rng(0);
-randIds = randperm(size(axonDendPair, 1));
+randIds = randperm(height(pairT));
 randIds = randIds(1:25);
 
 for curIdx = 1:numel(randIds)
     curId = randIds(curIdx);
-    curAxonId = axonDendPair.preAggloId(curId);
-    curDendId = axonDendPair.postAggloId(curId);
-    
-    curSynIds = synT.id( ...
-        synT.preAggloId == curAxonId ...
-      & synT.postAggloId == curDendId);
+    curAxonId = pairT.preAggloId(curId);
+    curDendId = pairT.postAggloId(curId);
+    curSynIds = pairT.synIds(curId, :);
     
     curAxon = conn.axons{curAxonId};
     curDend = conn.dendrites{curDendId};
