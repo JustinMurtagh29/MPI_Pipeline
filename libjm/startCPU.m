@@ -11,7 +11,7 @@ function job = startCPU(fH, iC, jN, requiredMemory, group, priority, rt);
         group = 1;
     end
     if nargin < 6 || isempty(priority)
-        priority = 500;
+        priority = 50;
     end
     
     clusterCPU = Cluster.config( ...
