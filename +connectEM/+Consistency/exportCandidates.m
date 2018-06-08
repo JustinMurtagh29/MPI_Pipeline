@@ -12,7 +12,7 @@ clear;
 
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-outputDir = '/home/amotta/Desktop/farther-than-20um';
+outputDir = '/home/amotta/Desktop/closer-than-5um';
 
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-linearized_dendrites-wholeCells-03-v2-classified_spine-syn-clust.mat');
 
@@ -20,8 +20,8 @@ synCount = 2;
 synType = 'spine';
 
 distType = 'preDist';
-minDist = 20E3;
-maxDist = [];
+minDist = [];
+maxDist = 5E3;
 
 info = Util.runInfo();
 
