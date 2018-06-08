@@ -18,6 +18,12 @@ pairNames = { ...
     '13_axon-4270_dendrite_5796';
     '14_axon-40081_dendrite_11257';
     '15_axon-48021_dendrite_4468';
+    '16_axon-28048_dendrite_5315';
+    '17_axon-5057_dendrite_2836';
+    '18_axon-25201_dendrite_1093';
+    '20_axon-16318_dendrite_2417';
+    '23_axon-50921_dendrite_5179';
+    '24_axon-67244_dendrite_11270';
     % closer than 5 µm
     '01_axon-55107_dendrite_272';
     '02_axon-65041_dendrite_962';
