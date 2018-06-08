@@ -81,7 +81,12 @@ function plotVariabilityVsDistance( ...
     fitlm(curPostT.postDist / 1E3, curPostT.cv)
 
     axes = fig.Children;
-   [ax.TickDir] = deal('out');
+    maxX = max(cat(2, axes.XLim));
+    
+    set(axes, ...
+        'TickDir', 'out', ...
+        'XLim', [0, maxX], ...
+        'YLim', [0, sqrt(2)]);
 
     ax = axes(end);
     xlabel(ax, 'Intersynapse distance (µm)');
