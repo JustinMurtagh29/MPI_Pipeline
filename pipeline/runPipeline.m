@@ -14,14 +14,16 @@ function p = runPipeline(p, startStep, endStep,runlocal)
 %           be run on the interactive node or on a worker (default)
 
     % store run info in hidden folder of pipeline
-    runInfo = Util.runInfo(); %#ok<NASGU>
+    runInfo = Util.runInfo();
     runInfoFolder = fullfile(p.saveFolder, '.runInfo');
+    
     if ~exist(runInfoFolder, 'dir')
         mkdir(runInfoFolder);
     end
+    
     outFile = fullfile(runInfoFolder, datestr(now, 30));
     Util.log('Storing run info at %s', outFile);
-    save(outFile, 'runInfo');
+    Util.save(outFile, runInfo);
 
     %check whether pipelineStep is specified else start with classification
     if ~exist('startStep','var') || isempty(startStep)
