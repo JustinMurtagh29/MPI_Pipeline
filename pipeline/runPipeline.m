@@ -38,8 +38,8 @@ function p = runPipeline(p, startStep, endStep,runlocal)
     % Because CNN is translation invariant, saved as KNOSSOS hierachy again
     % Pass bounding box as well as tileSize will be added in bigFwdPass otherwise (legacy stuff)
     % This uses CNN subfolder in code repository
-    if startStep <= PipelineStep.Classification && ...
-       endStep >= PipelineStep.Classification
+    if startStep <= PipelineStep.Classification ...
+            && endStep >= PipelineStep.Classification
         job = bigFwdPass(p, p.bbox);
         Cluster.waitForJob(job);
     end
@@ -47,8 +47,10 @@ function p = runPipeline(p, startStep, endStep,runlocal)
     % If you set p.myelin.isUsed = true in configuration.m, the result of a myelin detection is
     % used to ensure a voxel detected as myelin will not be in one segment with voxel not detected
     % as myelin
-    if isfield(p,'myelin') && p.myelin.isUsed && startStep <= PipelineStep.MyelinFix && ...
-        endStep >= PipelineStep.MyelinFix
+    if isfield(p, 'myelin') ...
+            && p.myelin.isUsed ...
+            && startStep <= PipelineStep.MyelinFix ...
+            && endStep >= PipelineStep.MyelinFix
 
         %define new classification prefix (NOTE: This will not be saved, but temporary files anyway)
         newPrefix = [p.class.prefix, '_mod'];
