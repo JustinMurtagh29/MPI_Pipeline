@@ -22,6 +22,14 @@ function enforceMyelinSegments(p, newPrefix, bbox)
     
     % Load myelin detection
     myelin = loadSegDataGlobal(p.myelin, bbox);
+    
+    if isfield(p.myelin, 'segId')
+        % NOTE(amotta): Manuel used to generate segmentations with the
+        % heuristically detected blood vessels, nuclei, and myelin.
+        myelin = myelin == p.myelin.segId;
+    end
+    
+    myelin = logical(myelin);
     border = bwdist(~myelin, 'euclidean');
     border = (border > 0) & (border < 2);
 
