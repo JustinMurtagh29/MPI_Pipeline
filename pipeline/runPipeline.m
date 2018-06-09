@@ -49,19 +49,16 @@ function p = runPipeline(p, startStep, endStep,runlocal)
     % If you set p.myelin.isUsed = true in configuration.m, the result of a myelin detection is
     % used to ensure a voxel detected as myelin will not be in one segment with voxel not detected
     % as myelin
-    if isfield(p, 'myelin') ...
-            && p.myelin.isUsed ...
-            && startStep <= PipelineStep.MyelinFix ...
-            && endStep >= PipelineStep.MyelinFix
-
-        %define new classification prefix (NOTE: This will not be saved, but temporary files anyway)
-        newPrefix = [p.class.prefix, '_mod'];
-
-        % run myelin detection
-        job = Myelin.runFix(p, newPrefix);
-        Cluster.waitForJob(job);
-
-        % use modified classification in subsequent steps
+    if isfield(p, 'myelin') && p.myelin.isUsed
+        newPrefix = strcat(p.class.prefix, '_mod');
+        
+        if startStep <= PipelineStep.MyelinFix ...
+                && endStep >= PipelineStep.MyelinFix
+            % run myelin detection
+            job = Myelin.runFix(p, newPrefix);
+            Cluster.waitForJob(job);
+        end
+        
         p.class.prefix = newPrefix;
         clear newPrefix;
     end
@@ -70,9 +67,8 @@ function p = runPipeline(p, startStep, endStep,runlocal)
     % Because watershed segmentation has FOV effects (no translation invariance), processed with large
     % overlap and later joined together (see correspondences)
     % Uses segmentation subfolder in code repository
-
-    if startStep <= PipelineStep.Segmentation && ...
-       endStep >= PipelineStep.Segmentation
+    if startStep <= PipelineStep.Segmentation ...
+            && endStep >= PipelineStep.Segmentation
         job = miniSegmentation(p);
         Cluster.waitForJob(job);
     end
