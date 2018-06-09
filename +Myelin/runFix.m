@@ -7,6 +7,12 @@ function job = runFix(p, newPrefix)
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     
+    % TODO(amotta): This hack exploited the prefix of webKONSSOS cubes, and
+    % is thus incompatible with the WKW format.
+    validBackend = ...
+       ~isfield(p.class, 'backend') || strcmp(p.class.backend, 'wkcube');
+    assert(validBackend, 'Cannot run %s with this backend', mfilename);
+    
     taskInputArguments = arrayfun( ...
         @(local) {newPrefix, local.bboxSmall}, ...
         p.local(:), 'UniformOutput', false);
