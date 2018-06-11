@@ -99,10 +99,9 @@ function p = runPipeline(p, startStep, endStep,runlocal)
     end
 
     % Build segment meta data
-    if startStep <= PipelineStep.BuildSegmentMetaData && ...
-       endStep >= PipelineStep.BuildSegmentMetaData
-        job = buildSegmentMetaData(p);
-        Cluster.waitForJob(job);
+    if startStep <= PipelineStep.BuildSegmentMetaData ...
+            && endStep >= PipelineStep.BuildSegmentMetaData
+        buildSegmentMetaData(p);
     end
 
     if startStep <= PipelineStep.SegmentationPyramid && ...

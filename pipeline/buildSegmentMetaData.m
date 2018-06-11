@@ -1,4 +1,4 @@
-function job = buildSegmentMetaData(param)
+function buildSegmentMetaData(param)
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     
@@ -6,17 +6,22 @@ function job = buildSegmentMetaData(param)
     rootDir = param.saveFolder;
     
     jobSharedInputs = {param};
-    jobInputs = arrayfun(@(curIdx) {{curIdx}}, 1:numel(cubes));
+    jobInputs = arrayfun( ...
+        @(curIdx) {curIdx}, 1:numel(cubes), ...
+        'UniformOutput', false);
 
     % run job
-    cluster = Cluster.getCluster('-l h_vmem=12G -l s_rt=00:29:30 -l h_rt=00:29:55');
     job = Cluster.startJob( ...
         @buildInCube, jobInputs, ...
         'sharedInputs', jobSharedInputs, ...
-        'cluster', cluster, 'name', mfilename());
+        'name', mfilename(), ...
+        'cluster', { ...
+            'memory', 12, ...
+            'time', '00:30:00'});
     Cluster.waitForJob(job);
     
     % collect all local results
+    Util.log('Building global segment meta data file');
     loadMeta = @(p) load(fullfile(p.saveFolder, 'segmentMeta.mat'));
     meta = arrayfun(loadMeta, cubes, 'UniformOutput', false);
     meta = Util.concatStructs('last', meta{:});
