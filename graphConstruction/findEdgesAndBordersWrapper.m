@@ -1,9 +1,8 @@
 function findEdgesAndBordersWrapper(segFile, edgeFile, borderFile, segmentFile, maskPar, bbox)
     % Computation of edges and borders optimized for 512x512x256
-
-    % Load *SMALL* cube of global segmentation IDs
-    load(segFile);
-
+    seg = load(segFile);
+    seg = seg.seg;
+    
     % Use new function from SynEM for calculation of svg data
     if nargin > 4
         mask = readKnossosRoi(maskPar.root,maskPar.prefix,bbox);
