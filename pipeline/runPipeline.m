@@ -104,13 +104,11 @@ function p = runPipeline(p, startStep, endStep,runlocal)
         buildSegmentMetaData(p);
     end
 
-    if startStep <= PipelineStep.SegmentationPyramid && ...
-       endStep >= PipelineStep.SegmentationPyramid
+    if startStep <= PipelineStep.SegmentationPyramid ...
+            && endStep >= PipelineStep.SegmentationPyramid
         % Create resolution pyramid for the segmentation
-        tic; fprintf('Downsampling segmentation... ');
         thisBBox = [1, 1, 1; (ceil(p.bbox(:, 2) ./ 1024) .* 1024)']';
         createResolutionPyramid(p.seg, thisBBox, [], true);
-        fprintf('done!\n'); toc;
     end
 
     if startStep <= PipelineStep.CompressSegmentation && ...
