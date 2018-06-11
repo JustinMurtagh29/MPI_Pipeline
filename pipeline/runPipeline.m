@@ -12,7 +12,7 @@ function p = runPipeline(p, startStep, endStep,runlocal)
 %       runlocal: (Optional) boolean to switch if
 %           some main functions of the pipeline should
 %           be run on the interactive node or on a worker (default)
-
+    
     % store run info in hidden folder of pipeline
     runInfo = Util.runInfo();
     runInfoFolder = fullfile(p.saveFolder, '.runInfo');
@@ -35,6 +35,11 @@ function p = runPipeline(p, startStep, endStep,runlocal)
     if ~exist('runlocal','var') || isempty(runlocal)
         runlocal = 0;
     end
+    
+    % NOTE(amotta): SynEM generate a modified parameter structure which
+    % will be written to the following file. For all later steps of the
+    % pipeline we will make sure that this parameter structure is used.
+    synParamFile = fullfile(p.saveFolder, 'allParameterWithSynapses.mat');
 
     % Runs CNN based forward pass for region defined in p.bbox,p.raw and saves as p.class
     % Because CNN is translation invariant, saved as KNOSSOS hierachy again
@@ -128,18 +133,23 @@ function p = runPipeline(p, startStep, endStep,runlocal)
 
     % Run synapse detection as presented in Staffler et. al, 2017
     % see: http://biorxiv.org/content/early/2017/01/22/099994
-    if startStep <= PipelineStep.SynapseDetection && ...
-       endStep >= PipelineStep.SynapseDetection
-        classifierPath = fullfile(fileparts(fileparts( ...
-            mfilename('fullpath'))), ...
+    if startStep <= PipelineStep.SynapseDetection ...
+            && endStep >= PipelineStep.SynapseDetection
+        classifierPath = fullfile( ...
+            fileparts(fileparts(mfilename('fullpath'))), ...
             '+SynEM', 'data', 'SynEMPaperClassifier.mat');
         [p, job] = SynEM.Seg.pipelineRun(p, classifierPath);
+        
         % Save parameter file to new
-        Util.save([p.saveFolder 'allParameterWithSynapses.mat'], p);
-        disp('SynEM modified parameter file. Load allParameterWithSynapses.mat for the next steps.')
+        Util.save(synParamFile, p);
+            
         % Wait for completion of job
         Cluster.waitForJob(job);
+        clear classifierPath outPath;
     end
+    
+    p = load(synParamFile);
+    p = p.p;
 
     % Calculate raw features on smaller (wrt SynEM) borders (down to 10 voxel)
     if startStep <= PipelineStep.RawFeatures && ...
