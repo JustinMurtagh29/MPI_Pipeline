@@ -11,6 +11,21 @@ maxRadius = 50;
 maxAvail = 0.7;
 plotAxonClasses = 1:2;
 
+% Valid prediction methods are
+% * predictTargetClassAvailability: The predicted innervation of a target
+%   class (in fractional synapses) is equal to the fraction of the
+%   available postsynaptic membranes being of the given target class.
+%
+% * predictUsingLinearRegressionOnTargetClassAvailability: The predicted
+%   innervation of a target class is the result of a linear regression
+%   based on the fractional surface availability of the given target class.
+%
+% * predictUsingLinearRegressionOnAllTargetClassAvailabilities: The
+%   predicted innervation of a target class is the result of a multivariate
+%   linear regression based on the fractional surface availability of all
+%   target classes.
+predictionMethod = 'predictTargetClassAvailability';
+
 % Set to radius (in µm) to run forward model to generate fake connectome
 % and calibrate the geometric predictability analysis.
 fakeRadius = [];
@@ -41,12 +56,6 @@ conn.denMeta.targetClass(wcMask) = 'ProximalDendrite';
 
 wcMask = avail.targetClasses == 'WholeCell';
 avail.targetClasses(wcMask) = 'ProximalDendrite';
-
-% Add axon class tags
-axonClasses(1).tag = 'Exc';
-axonClasses(2).tag = 'Inh';
-axonClasses(3).tag = 'TC';
-axonClasses(4).tag = 'CC';
 
 [classConn, classIds] = ...
     connectEM.Connectome.buildClassConnectome(conn);
@@ -82,8 +91,10 @@ if ~isempty(fakeRadius)
 end
 
 %% Plot mean availabilities / specificities
-fig = figure();
-fig.Color = 'white';
+clear cur*;
+
+curFig = figure();
+curFig.Color = 'white';
 
 curDists = avail.dists / 1E3;
 
@@ -117,41 +128,41 @@ for curAxonClassId = 1:numel(axonClasses)
     end
 end
 
-ax = flip(cat(1, fig.Children));
-set(ax, 'TickDir', 'out');
+curAx = flip(cat(1, curFig.Children));
+set(curAx, 'TickDir', 'out');
 
 for curIdx = 1:numel(targetClasses)
-    title(ax(curIdx), targetClasses{curIdx}, ...
+    title(curAx(curIdx), targetClasses{curIdx}, ...
         'FontWeight', 'normal', 'FontSize', 10);
 end
 
 for curIdx = 1:numel(axonClasses)
     ylabel( ...
-        ax(numel(targetClasses) * (curIdx - 1) + 1), ...
+        curAx(numel(targetClasses) * (curIdx - 1) + 1), ...
         {'Mean fraction of '; 'surface / synapses'});
 end
 
-xlabel(ax(end - numel(targetClasses) + 1), 'Radius (µm)');
+xlabel(curAx(end - numel(targetClasses) + 1), 'Radius (µm)');
+set(cat(1, curAx.Children), 'LineWidth', 2);
 
-plots = cat(1, ax.Children);
-set(plots, 'LineWidth', 2);
-
-axPos = ax(end).Position;
-leg = legend(ax(end), { ...
+curAxPos = curAx(end).Position;
+curLeg = legend(curAx(end), { ...
     'Availability', ...
     'Specificity'}, ...
     'Location', 'EastOutside');
-leg.Box = 'off';
-ax(end).Position = axPos;
+curLeg.Box = 'off';
+curAx(end).Position = curAxPos;
 
-annotation(fig, ...
+annotation(curFig, ...
     'textbox', [0, 0.9, 1, 0.1], ...
     'EdgeColor', 'none', 'HorizontalAlignment', 'center', ...
     'String', {info.filename; info.git_repos{1}.hash});
 
 %% Plot variances
-fig = figure();
-fig.Color = 'white';
+clear cur*;
+
+curFig = figure();
+curFig.Color = 'white';
 
 curDists = avail.dists / 1E3;
 
@@ -208,41 +219,41 @@ for curAxonClassId = 1:numel(axonClasses)
     end
 end
 
-ax = flip(cat(1, fig.Children));
-set(ax, 'TickDir', 'out');
+curAx = flip(cat(1, curFig.Children));
+set(curAx, 'TickDir', 'out');
 
 for curIdx = 1:numel(targetClasses)
-    title(ax(curIdx), targetClasses{curIdx}, ...
+    title(curAx(curIdx), targetClasses{curIdx}, ...
         'FontWeight', 'normal', 'FontSize', 10);
 end
 
 for curIdx = 1:numel(axonClasses)
     ylabel( ...
-        ax(numel(targetClasses) * (curIdx - 1) + 1), ...
+        curAx(numel(targetClasses) * (curIdx - 1) + 1), ...
         'Variance');
 end
 
-xlabel(ax(end - numel(targetClasses) + 1), 'Radius (µm)');
+xlabel(curAx(end - numel(targetClasses) + 1), 'Radius (µm)');
+set(cat(1, curAx.Children), 'LineWidth', 2);
 
-plots = cat(1, ax.Children);
-set(plots, 'LineWidth', 2);
-
-axPos = ax(end).Position;
-leg = legend(ax(end), { ...
+curAxPos = curAx(end).Position;
+curLeg = legend(curAx(end), { ...
     'Binomial geometric variance', ...
     'Connectomic variance', ...
     'Explainable variance', ...
     'Explained variance'}, ...
     'Location', 'EastOutside');
-leg.Box = 'off';
-ax(end).Position = axPos;
+curLeg.Box = 'off';
+curAx(end).Position = curAxPos;
 
-annotation(fig, ...
+annotation(curFig, ...
     'textbox', [0, 0.9, 1, 0.1], ...
     'EdgeColor', 'none', 'HorizontalAlignment', 'center', ...
     'String', {info.filename; info.git_repos{1}.hash});
 
 %% Calculate variance introduced by multinomial model
+clear cur*;
+
 targetDistAxonMnVar = nan( ...
     numel(targetClasses), ...
     numel(avail.dists), ...
@@ -278,7 +289,10 @@ assert(~any(isnan(targetDistAxonMnVar(:))));
 assert(~any(isnan(targetAxonConnMnVar(:))));
 
 %% Calculate explainability
-prevWarning = warning('off', 'MATLAB:rankDeficientMatrix');
+clear cur*;
+
+curPredFunc = str2func(predictionMethod);
+curWarnConf = warning('off', 'MATLAB:rankDeficientMatrix');
 
 axonClassExplainability = nan( ...
     numel(avail.dists), numel(axonClasses));
@@ -299,8 +313,7 @@ for curAxonClassId = 1:numel(axonClasses)
         curAvails = transpose(squeeze(curAvails));
         curAvails(:, end + 1) = 1; %#ok
         
-        curFit = curAvails \ curConn;
-        curPred = curAvails * curFit;
+        curPred = curPredFunc(curConn, curAvails);
         
         % Per axon and target class
         curVarLeft = mean((curPred - curConn) .^ 2, 1);
@@ -329,49 +342,51 @@ for curAxonClassId = 1:numel(axonClasses)
     end
 end
 
-warning(prevWarning);
+warning(curWarnConf);
 clear prevWarning;
 
 %% Show availabilities for two axons
+clear cur*;
+
 % AD- and soma-specific axon, respectively
 curAxonIds = [23314, 628];
 
-fig = figure();
-fig.Color = 'white';
+curFig = figure();
+curFig.Color = 'white';
 
-ax = axes(fig);
-hold(ax, 'on');
-axis(ax, 'square');
+curAx = axes(curFig);
+hold(curAx, 'on');
+axis(curAx, 'square');
 
 curAvail = availabilities(:, :, curAxonIds);
 curAvail = permute(curAvail, [2, 3, 1]);
 curAvail = reshape(curAvail, size(curAvail, 1), []);
 curAvail = transpose(curAvail);
 
-plot(ax, avail.dists / 1E3, curAvail);
+plot(curAx, avail.dists / 1E3, curAvail);
 
-colors = ax.ColorOrder(1:numel(targetClasses), :);
-colors = num2cell(colors, 2);
+curColors = curAx.ColorOrder(1:numel(targetClasses), :);
+curColors = num2cell(curColors, 2);
 
-lines = flip([ax.Children]);
-[lines.LineWidth] = deal(2);
-[lines(1:2:end).LineStyle] = deal('--');
-[lines(1:2:end).Color] = deal(colors{:});
-[lines(2:2:end).Color] = deal(colors{:});
+curLines = flip(cat(1, curAx.Children));
+[curLines.LineWidth] = deal(2);
+[curLines(1:2:end).LineStyle] = deal('--');
+[curLines(1:2:end).Color] = deal(curColors{:});
+[curLines(2:2:end).Color] = deal(curColors{:});
 
-xlabel(ax, 'r_{pred} (µm)');
-ylabel(ax, 'Availability');
+xlabel(curAx, 'r_{pred} (µm)');
+ylabel(curAx, 'Availability');
 
-ax.XLim = [0, maxRadius];
-ax.YLim = [0, maxAvail];
-ax.TickDir = 'out';
+curAx.XLim = [0, maxRadius];
+curAx.YLim = [0, maxAvail];
+curAx.TickDir = 'out';
 
-leg = legend( ...
-    lines(2:2:end), targetClasses, ...
+curLeg = legend( ...
+    curLines(2:2:end), targetClasses, ...
     'Location', 'EastOutside');
-leg.Box = 'off';
+curLeg.Box = 'off';
 
-annotation(fig, ...
+annotation(curFig, ...
     'textbox', [0, 0.9, 1, 0.1], ...
     'EdgeColor', 'none', 'HorizontalAlignment', 'center', ...
     'String', { ...
@@ -379,6 +394,8 @@ annotation(fig, ...
         'AD- (dashed) vs. soma-specific (solid) axon'});
 
 %% Scatter plot and linear regression
+clear cur*;
+
 % Demonstrate how synapse fraction is predicted from availabilities
 curSynCount = 10;
 curRadius = 10;
@@ -386,9 +403,9 @@ curRadius = 10;
 curAxonIds = conn.axonMeta.synCount >= curSynCount;
 curRadiusId = find(avail.dists == 1E3 * curRadius);
 
-fig = figure();
-fig.Color = 'white';
-fig.Position(3:4) = [1150, 350];
+curFig = figure();
+curFig.Color = 'white';
+curFig.Position(3:4) = [1150, 350];
 
 for curIdx = 1:numel(targetClasses)
     curSpecs = classConn(curAxonIds, :);
@@ -414,7 +431,7 @@ for curIdx = 1:numel(targetClasses)
     title(curAx, curTitle, 'FontWeight', 'normal', 'FontSize', 10);
 end
 
-curAx = fig.Children(end);
+curAx = curFig.Children(end);
 xlabel(curAx, 'Availability');
 ylabel(curAx, 'Synapse fraction');
 
@@ -422,16 +439,18 @@ curTitle = sprintf( ...
     'All axons with ≥ %d synapses. r_{pred} = %d µm', ...
     curSynCount, curRadius);
 
-annotation(fig, ...
+annotation(curFig, ...
     'textbox', [0, 0.9, 1, 0.1], ...
     'EdgeColor', 'none', 'HorizontalAlignment', 'center', ...
     'String', {info.filename; info.git_repos{1}.hash; curTitle});
 
 %% Plot R² per axon and dendrite class
+clear cur*;
+
 % Model: Linear combination of all availabilities
-fig = figure();
-fig.Color = 'white';
-fig.Position(3:4) = [1100, 550];
+curFig = figure();
+curFig.Color = 'white';
+curFig.Position(3:4) = [1100, 550];
 
 for curAxonClassIdx = 1:numel(plotAxonClasses)
     curAxonClassId = plotAxonClasses(curAxonClassIdx);
@@ -454,58 +473,77 @@ for curAxonClassIdx = 1:numel(plotAxonClasses)
         'FontWeight', 'normal', 'FontSize', 10);
 end
 
-[fig.Children.XLim] = deal([0, maxRadius]);
-[fig.Children.YLim] = deal([-0.2, 1.2]);
-xlabel(fig.Children(end), 'Radius (µm)');
-ylabel(fig.Children(end), 'R²');
+curAxes = cat(1, curFig.Children);
+set(curAxes, ...
+    'XLim', [0, maxRadius], ...
+    'YLim', [-0.2, 1.2]);
+xlabel(curAxes(end), 'Radius (µm)');
+ylabel(curAxes(end), 'R²');
 
-legend(fig.Children(1), ...
+legend(curFig.Children(1), ...
     arrayfun( ...
         @char, targetClasses, ...
         'UniformOutput', false), ...
     'Location', 'NorthEast', ...
     'Box', 'off');
 
-annotation(fig, ...
+annotation(curFig, ...
     'textbox', [0, 0.9, 1, 0.1], ...
     'EdgeColor', 'none', ...
     'HorizontalAlignment', 'center', ...
-    'String', { ...
-        'Prediction by linear combination of availabilities'; ...
-        info.filename; info.git_repos{1}.hash});
+    'String', {predictionMethod; info.filename; info.git_repos{1}.hash});
 
 %% Plot R² over classes
+clear cur*;
+
 % Model: Linear combination of all availabilities
 plotAxonClasses = 1:2;
 
 % Plotting
-fig = figure();
-fig.Color = 'white';
-fig.Position(3:4) = [600, 590];
+curFig = figure();
+curFig.Color = 'white';
+curFig.Position(3:4) = [600, 590];
 
-ax = axes(fig);
-ax.TickDir = 'out';
-axis(ax, 'square');
-hold(ax, 'on');
+curAx = axes(curFig);
+curAx.TickDir = 'out';
+axis(curAx, 'square');
+hold(curAx, 'on');
 
 for curAxonClassId = plotAxonClasses
     curData = axonClassExplainability(:, curAxonClassId);
-    plot(ax, avail.dists / 1E3, curData, 'LineWidth', 2);
+    plot(curAx, avail.dists / 1E3, curData, 'LineWidth', 2);
 end
 
-xlabel(ax, 'Radius (µm)');
-xlim(ax, [0, maxRadius]);
-ylabel(ax, 'R²');
-ylim(ax, [-0.2, 1.2]);
+xlabel(curAx, 'Radius (µm)');
+xlim(curAx, [0, maxRadius]);
+ylabel(curAx, 'R²');
+ylim(curAx, [-0.2, 1.2]);
 
-legend(ax, ...
+legend(curAx, ...
     {axonClasses(plotAxonClasses).title}, ...
     'Location', 'North', 'Box', 'off');
 
-annotation(fig, ...
+annotation(curFig, ...
     'textbox', [0, 0.9, 1, 0.1], ...
     'EdgeColor', 'none', ...
     'HorizontalAlignment', 'center', ...
-    'String', { ...
-        'Prediction by linear combination of availabilities'; ...
-        info.filename; info.git_repos{1}.hash});
+    'String', {predictionMethod; info.filename; info.git_repos{1}.hash});
+    
+%% Geometric prediction models
+function preds = predictTargetClassAvailability(~, avails) %#ok
+    preds = avails(:, 1:(end - 1));
+end
+
+function preds = predictUsingLinearRegressionOnTargetClassAvailability(conn, avails) %#ok
+    preds = nan(size(conn));
+    for curIdx = 1:size(conn, 2)
+        curAvails = avails(:, [curIdx, end]);
+        curFit = curAvails \ conn(:, curIdx);
+        preds(:, curIdx) = curAvails * curFit;
+    end
+end
+
+function preds = predictUsingLinearRegressionOnAllTargetClassAvailabilities(conn, avails) %#ok
+    fit = avails \ conn;
+    preds = avails * fit;
+end
