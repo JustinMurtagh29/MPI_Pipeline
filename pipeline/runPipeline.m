@@ -132,7 +132,7 @@ function p = runPipeline(p, startStep, endStep,runlocal)
     end
 
     % Run synapse detection as presented in Staffler et. al, 2017
-    % see: http://biorxiv.org/content/early/2017/01/22/099994
+    % See: https://doi.org/10.7554/eLife.26414
     if startStep <= PipelineStep.SynapseDetection ...
             && endStep >= PipelineStep.SynapseDetection
         classifierPath = fullfile( ...
