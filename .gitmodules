@@ -4,3 +4,6 @@
 [submodule "CNN"]
 	path = CNN
 	url = git@gitlab.mpcdf.mpg.de:connectomics/CNN.git
+[submodule "benedikt"]
+	path = benedikt
+	url = git@gitlab.mpcdf.mpg.de:connectomics/Benedikt.git
