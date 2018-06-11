@@ -13,7 +13,7 @@ end
 adjCubes = getOverlaps(p.tiles);
 
 % For every tuple of adjacent cubes: calculate correspondences of segmentation IDs between cube
-inputCell = cell(numel(adjCubes), 1);
+inputCell = cell(size(adjCubes, 1), 1);
 for i = 1:size(adjCubes, 1)
     curIdsOne = adjCubes(i, 1:3);
     curIdsTwo = adjCubes(i, 4:6);
