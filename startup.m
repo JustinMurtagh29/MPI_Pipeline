@@ -10,6 +10,8 @@ benePath = genpath(beneDir);
 rmpath(benePath);
 addpath(benePath, '-end');
 
+SynEM.setup();
+
 % Mark as ready
 global PIPELINE_READY;
 PIPELINE_READY = true;
