@@ -24,6 +24,17 @@ pairNames = { ...
     '20_axon-16318_dendrite_2417';
     '23_axon-50921_dendrite_5179';
     '24_axon-67244_dendrite_11270';
+    % farther than 30 µm
+    '01_axon-48151_dendrite_5060';
+    '02_axon-38752_dendrite_1553';
+    '03_axon-66427_dendrite_11256';
+    '05_axon-17401_dendrite_922';
+    '06_axon-9223_dendrite_11252';
+    '07_axon-67330_dendrite_1466';
+    '09_axon-56545_dendrite_11270';
+    '12_axon-34919_dendrite_3295';
+    '13_axon-53705_dendrite_11234';
+    '14_axon-44868_dendrite_7904';
     % closer than 5 µm
     '01_axon-55107_dendrite_272';
     '02_axon-65041_dendrite_962';
@@ -84,7 +95,7 @@ distantPairsConfig = pairConfig(1:(end - 10), :);
 distantPairsConfig = table2struct(distantPairsConfig, 'ToScalar', true);
 distantPairsConfig.title = sprintf([ ...
     'Proofread synapse pairs with ', ...
-    '≥ 20 intersynapse distance (n = %d)'], ...
+    '≥ 20 µm intersynapse distance (n = %d)'], ...
     size(distantPairsConfig.synIdPairs, 1));
 connectEM.Consistency.plotVariabilityVsDistance( ...
     synT, synToSyn, distantPairsConfig, 'info', info);
