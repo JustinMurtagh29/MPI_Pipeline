@@ -1,16 +1,16 @@
 function job = startCPU(fH, iC, jN, requiredMemory, group, priority, rt)
     % Wrapper function for startJob.m used for backward compability
     % Set default values for additional input arguments
-    if ~exists('requiredMemory', 'var') || isempty(requiredMemory)
+    if ~exist('requiredMemory', 'var') || isempty(requiredMemory)
         requiredMemory = 12;
     end
-    if ~exists('group', 'var') || isempty(group)
+    if ~exist('group', 'var') || isempty(group)
         group = 1;
     end
-    if ~exists('priority', 'var') || isempty(priority)
+    if ~exist('priority', 'var') || isempty(priority)
         priority = -500;
     end
-    if ~exists('rt', 'var') || isempty(rt)
+    if ~exist('rt', 'var') || isempty(rt)
         rt = 29;
     end
     
