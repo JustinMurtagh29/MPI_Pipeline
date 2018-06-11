@@ -76,8 +76,8 @@ function p = runPipeline(p, startStep, endStep,runlocal)
     % Transfer segmentation from p.local(X).tempSegFile to p.local(X).segFile and drop overlaps
     % Also in correspondences subfolder
     % Added routine to renumber CC of segments after cutting to non-overlapping region
-    if startStep <= PipelineStep.OverlapRemoval && ...
-       endStep >= PipelineStep.OverlapRemoval
+    if startStep <= PipelineStep.OverlapRemoval ...
+            && endStep >= PipelineStep.OverlapRemoval
         removeOverlaps(p);
     end
 
