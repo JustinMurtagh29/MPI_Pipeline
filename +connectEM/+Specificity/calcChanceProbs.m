@@ -61,5 +61,5 @@ function probs = calcChanceProbs( ...
                 opts.distribution);
     end
     
-    probs = reshape(probs, horzcat(size(axonIds), size(classConn, 2)));
+    probs = reshape(probs, horzcat(size(axonIds, 1), size(classConn, 2)));
 end

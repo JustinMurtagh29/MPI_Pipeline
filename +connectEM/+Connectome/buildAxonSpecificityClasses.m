@@ -1,4 +1,9 @@
 function axonClasses = buildAxonSpecificityClasses(conn, axonClasses)
+    % Determines specific axons for which the probability of having a
+    % synapse fraction under a null model (binomial) equal or higher than
+    % the observed fraction onto a specific target class is below a
+    % threshold (see pThres below).
+    %
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     
