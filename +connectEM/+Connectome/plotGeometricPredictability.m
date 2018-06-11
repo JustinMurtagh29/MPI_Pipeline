@@ -11,6 +11,21 @@ maxRadius = 50;
 maxAvail = 0.7;
 plotAxonClasses = 1:2;
 
+% Valid prediction methods are
+% * predictTargetClassAvailability: The predicted innervation of a target
+%   class (in fractional synapses) is equal to the fraction of the
+%   available postsynaptic membranes being of the given target class.
+%
+% * predictUsingLinearRegressionOnTargetClassAvailability: The predicted
+%   innervation of a target class is the result of a linear regression
+%   based on the fractional surface availability of the given target class.
+%
+% * predictUsingLinearRegressionOnAllTargetClassAvailabilities: The
+%   predicted innervation of a target class is the result of a multivariate
+%   linear regression based on the fractional surface availability of all
+%   target classes.
+predictionMethod = 'predictTargetClassAvailability';
+
 % Set to radius (in µm) to run forward model to generate fake connectome
 % and calibrate the geometric predictability analysis.
 fakeRadius = [];
@@ -275,7 +290,9 @@ assert(~any(isnan(targetAxonConnMnVar(:))));
 
 %% Calculate explainability
 clear cur*;
-prevWarning = warning('off', 'MATLAB:rankDeficientMatrix');
+
+curPredFunc = str2func(predictionMethod);
+curWarnConf = warning('off', 'MATLAB:rankDeficientMatrix');
 
 axonClassExplainability = nan( ...
     numel(avail.dists), numel(axonClasses));
@@ -296,8 +313,7 @@ for curAxonClassId = 1:numel(axonClasses)
         curAvails = transpose(squeeze(curAvails));
         curAvails(:, end + 1) = 1; %#ok
         
-        curFit = curAvails \ curConn;
-        curPred = curAvails * curFit;
+        curPred = curPredFunc(curConn, curAvails);
         
         % Per axon and target class
         curVarLeft = mean((curPred - curConn) .^ 2, 1);
@@ -326,7 +342,7 @@ for curAxonClassId = 1:numel(axonClasses)
     end
 end
 
-warning(prevWarning);
+warning(curWarnConf);
 clear prevWarning;
 
 %% Show availabilities for two axons
@@ -475,9 +491,7 @@ annotation(curFig, ...
     'textbox', [0, 0.9, 1, 0.1], ...
     'EdgeColor', 'none', ...
     'HorizontalAlignment', 'center', ...
-    'String', { ...
-        'Prediction by linear combination of availabilities'; ...
-        info.filename; info.git_repos{1}.hash});
+    'String', {predictionMethod; info.filename; info.git_repos{1}.hash});
 
 %% Plot R² over classes
 clear cur*;
@@ -513,6 +527,23 @@ annotation(curFig, ...
     'textbox', [0, 0.9, 1, 0.1], ...
     'EdgeColor', 'none', ...
     'HorizontalAlignment', 'center', ...
-    'String', { ...
-        'Prediction by linear combination of availabilities'; ...
-        info.filename; info.git_repos{1}.hash});
+    'String', {predictionMethod; info.filename; info.git_repos{1}.hash});
+    
+%% Geometric prediction models
+function preds = predictTargetClassAvailability(~, avails) %#ok
+    preds = avails(:, 1:(end - 1));
+end
+
+function preds = predictUsingLinearRegressionOnTargetClassAvailability(conn, avails) %#ok
+    preds = nan(size(conn));
+    for curIdx = 1:size(conn, 2)
+        curAvails = avails(:, [curIdx, end]);
+        curFit = curAvails \ conn(:, curIdx);
+        preds(:, curIdx) = curAvails * curFit;
+    end
+end
+
+function preds = predictUsingLinearRegressionOnAllTargetClassAvailabilities(conn, avails) %#ok
+    fit = avails \ conn;
+    preds = avails * fit;
+end
