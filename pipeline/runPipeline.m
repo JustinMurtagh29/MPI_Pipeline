@@ -84,8 +84,8 @@ function p = runPipeline(p, startStep, endStep,runlocal)
     % Make segmentation IDs unique over dataset (were only unique in each
     % tile before), this will be called global IDs from time to time
     % will work on segmentation see globalization subfolder
-    if startStep <= PipelineStep.GlobalSegmentID && ...
-       endStep >= PipelineStep.GlobalSegmentID
+    if startStep <= PipelineStep.GlobalSegmentID ...
+            && endStep >= PipelineStep.GlobalSegmentID
         job = globalizeSegmentation(p);
         Cluster.waitForJob(job);
     end

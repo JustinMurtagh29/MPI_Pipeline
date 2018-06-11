@@ -1,5 +1,5 @@
 function job = globalizeSegmentation(p)
-    display('Collecting segment ID offsets...');
+    Util.log('Collecting segment ID offsets...');
 
     % collect number of segments per cube
     cumNum = uint32(0);
@@ -22,26 +22,20 @@ function job = globalizeSegmentation(p)
 
     % collect parameters
     inputCell = cell(numel(p.local), 1);
-
     for curIdx = 1:numel(p.local)
-        [curI, curJ, curK] = ind2sub( ...
-            size(p.local), curIdx);
-        inputCell{curIdx} = {p.saveFolder, curI, curJ, curK};
+       [curI, curJ, curK] = ind2sub(size(p.local), curIdx);
+        inputCell{curIdx} = {curI, curJ, curK};
     end
     
     % init wkw dataset, if needed
     if isfield(p.seg, 'backend') && strcmp(p.seg.backend,'wkwrap')
         wkwInit('new', p.seg.root, 32, 32, 'uint32', 1);
     end
-
-    % Globalize segmentation and save as KNOSSOS hierachy for Oxalis
-    job = startCPU(@globalizeSegmentationJobWrapper, inputCell, ...
-        'globalSegmentID', 12, 10);
+    
+    job = Cluster.startJob( ...
+        @globalSegId, inputCell, ...
+        'sharedInputs', {p}, ...
+        'name', mfilename(), ...
+        'taskGroupSize', 10, ...
+        'cluster', {'memory', 12});
 end
-
-function globalizeSegmentationJobWrapper(segFolder, i, j ,k)
-m = load(fullfile(segFolder, 'allParameter.mat'));
-p = m.p;
-globalSegId(p, i, j, k);
-end
-
