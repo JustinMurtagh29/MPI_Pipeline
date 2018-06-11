@@ -1,27 +1,31 @@
-function job = startCPU(fH, iC, jN, requiredMemory, group, priority, rt);
+function job = startCPU(fH, iC, jN, requiredMemory, group, priority, rt)
     % Wrapper function for startJob.m used for backward compability
-    if nargin < 7 || isempty(rt)
-	rt = 29;
-    end
     % Set default values for additional input arguments
-    if nargin < 4 || isempty(requiredMemory)
+    if ~exists('requiredMemory', 'var') || isempty(requiredMemory)
         requiredMemory = 12;
     end
-    if nargin < 5 || isempty(group)
+    if ~exists('group', 'var') || isempty(group)
         group = 1;
     end
-    if nargin < 6 || isempty(priority)
+    if ~exists('priority', 'var') || isempty(priority)
         priority = -500;
     end
+    if ~exists('rt', 'var') || isempty(rt)
+        rt = 29;
+    end
     
-    clusterCPU = Cluster.getCluster( ...
-        '-pe openmp 1', ...
-        ['-p ' num2str(priority)], ...
-        ['-l h_vmem=' num2str(requiredMemory) 'G'], ...
-	sprintf('-l s_rt=%02d:%02d:00',floor(rt),round((rt-floor(rt))*60)), ...
-	sprintf('-l h_rt=%02d:%02d:30',floor(rt),round((rt-floor(rt))*60)));
+    % Translate parameters for `Cluster` module
+    memory = ceil(requiredMemory);
+    priority = ceil((priority + 1000) / 10);
+    time = sprintf('%02d:%02d:00', floor(rt), ceil(60 * mod(rt, 1)));
 
-    job = Cluster.startJob(fH, iC, 'cluster', clusterCPU, 'name', jN, 'taskGroupSize', group);
-
+    job = Cluster.startJob( ...
+        fH, iC, ...
+        'name', jN, ...
+        'cluster', { ...
+            'time', time, ...
+            'memory', memory, ...
+            'priority', priority}, ...
+        'taskGroupSize', group);
 end
 
