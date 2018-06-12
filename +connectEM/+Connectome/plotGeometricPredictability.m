@@ -24,7 +24,7 @@ plotAxonClasses = 1:2;
 %   predicted innervation of a target class is the result of a multivariate
 %   linear regression based on the fractional surface availability of all
 %   target classes.
-predictionMethod = 'predictTargetClassAvailability';
+predictionMethod = 'predictUsingLinearRegressionOnAllTargetClassAvailabilities';
 
 % Set to radius (in µm) to run forward model to generate fake connectome
 % and calibrate the geometric predictability analysis.
