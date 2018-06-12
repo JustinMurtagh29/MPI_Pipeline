@@ -172,6 +172,10 @@ for curAxonClassId = 1:numel(axonClasses)
 
     curClassConn = classConn(curAxonIds, :);
     curSynCounts = sum(curClassConn, 2);
+    
+    curTotalConnVar = 0;
+    curTotalAvailBinoVar = zeros(size(curDists(:)));
+    curTotalExplainedVar = zeros(size(curDists(:)));
 
     for curTargetClassId = 1:numel(targetClasses)
         curAvails = availabilities(curTargetClassId, :, curAxonIds);
@@ -203,9 +207,14 @@ for curAxonClassId = 1:numel(axonClasses)
         
         curExplainableVar = curConnVar - curAvailBinoVar;
         
+        % Accumulation
+        curTotalConnVar = curTotalConnVar + curConnVar;
+        curTotalAvailBinoVar = curTotalAvailBinoVar + curAvailBinoVar(:);
+        curTotalExplainedVar = curTotalExplainedVar + curExplainedVar(:);
+        
         curAx = subplot( ...
-            numel(axonClasses), numel(targetClasses), ...
-            numel(targetClasses) * (curAxonClassId - 1) ...
+            numel(axonClasses), numel(targetClasses) + 1, ...
+            (numel(targetClasses) + 1) * (curAxonClassId - 1) ...
           + curTargetClassId);
         hold(curAx, 'on');
         
@@ -213,23 +222,37 @@ for curAxonClassId = 1:numel(axonClasses)
         plot(curAx, [0, maxRadius], repelem(curConnVar, 2));
         plot(curAx, curDists, curExplainableVar);
         plot(curAx, curDists, curExplainedVar);
-        
-        curAx.YLim(1) = 0;
-        curAx.XLim = [0, maxRadius];
     end
+    
+    curAxes = curFig.Children(1:numel(targetClasses));
+    curMaxY = max(cat(2, curAxes.YLim));
+    set(curAxes, 'YLim', [0, curMaxY]);
+    
+    % Plot total
+    curAx = subplot( ...
+        numel(axonClasses), numel(targetClasses) + 1, ...
+        (numel(targetClasses) + 1) * (curAxonClassId - 1) ...
+        + numel(targetClasses) + 1);
+    hold(curAx, 'on');
+    
+    plot(curAx, curDists, curTotalAvailBinoVar);
+    plot(curAx, [0, maxRadius], repelem(curTotalConnVar, 2));
+    plot(curAx, curDists, curTotalConnVar(1) - curTotalAvailBinoVar);
+    plot(curAx, curDists, curTotalExplainedVar);
 end
 
 curAx = flip(cat(1, curFig.Children));
-set(curAx, 'TickDir', 'out');
+set(curAx, 'XLim', [0, maxRadius], 'TickDir', 'out');
 
-for curIdx = 1:numel(targetClasses)
-    title(curAx(curIdx), targetClasses{curIdx}, ...
+curTitles = cat(1, targetClasses(:), {'Total'});
+for curIdx = 1:numel(curTitles)
+    title(curAx(curIdx), curTitles{curIdx}, ...
         'FontWeight', 'normal', 'FontSize', 10);
 end
 
 for curIdx = 1:numel(axonClasses)
     ylabel( ...
-        curAx(numel(targetClasses) * (curIdx - 1) + 1), ...
+        curAx((numel(targetClasses) + 1) * (curIdx - 1) + 1), ...
         'Variance');
 end
 
