@@ -166,8 +166,8 @@ function p = runPipeline(p, startStep, endStep,runlocal)
     end
 
     % Calculate neurite continuity predictions
-    if startStep <= PipelineStep.NeuriteContinuityPrediction && ...
-       endStep >= PipelineStep.NeuriteContinuityPrediction
+    if startStep <= PipelineStep.NeuriteContinuityPrediction ...
+            && endStep >= PipelineStep.NeuriteContinuityPrediction
         job = connectEM.predictDataset(p);
         Cluster.waitForJob(job);
     end

@@ -1,32 +1,36 @@
 function predictLocalCube(saveFolder, classifierFile, outputFilenameInLocalFolder)
-
-    if nargin < 3
-        outputFilenameInLocalFolder = 'neuriteContinuityProb.mat';
-    end
-
-    if nargin < 2
+    if ~exist('classifierFile', 'var') || isempty(classifierFile)
         classifierFile = '/gaba/u/mberning/results/edgeClassifier/20170729T131244.mat';
     end
-    if exist([saveFolder 'InterfaceRawFeatures.mat'],'file')
-        % Load needed data
-        load(classifierFile);
-        load([saveFolder 'borders.mat']);
-        rawF = load([saveFolder 'InterfaceRawFeatures.mat']);
-        classF = load([saveFolder 'InterfaceClassFeatures.mat']);
-        features = cat(2, rawF.features, classF.features);
-        clear rawF classF;
-        % set all edges that are not classified to 0 probability
-        classifiedBorderIdx = cat(1,borders(:).Area) > 10;
-        prob = zeros(length(classifiedBorderIdx), 1);
-        if isempty(features)
-            save([saveFolder outputFilenameInLocalFolder],'prob');
-            display('new prob saved')
-            return
-        end
-        [~,scores] = classifier.predict(features);
-        sigmoid = @(x)1./(1+exp(-1.*x));
-        prob(classifiedBorderIdx) = sigmoid(scores(:,1));
-        save([saveFolder outputFilenameInLocalFolder], 'prob');
+    
+    if ~exist('outputFilenameInLocalFolder', 'var') ...
+            || isempty(outputFilenameInLocalFolder)
+        outputFilenameInLocalFolder = 'neuriteContinuityProb.mat';
     end
+    
+    % Load needed data
+    classifier = load(classifierFile);
+    classifier = classifier.classifier;
+    
+    borders = load(fullfile(saveFolder, 'borders.mat'));
+    borders = borders.borders;
+    
+    rawF = load(fullfile(saveFolder, 'InterfaceRawFeatures.mat'));
+    classF = load(fullfile(saveFolder, 'InterfaceClassFeatures.mat'));
+    features = cat(2, rawF.features, classF.features);
+    clear rawF classF;
+    
+    % set all edges that are not classified to 0 probability
+    classifiedBorderIdx = cat(1, borders.Area) > 10;
+    prob = zeros(size(classifiedBorderIdx));
+    
+    if ~isempty(features)
+        [~, scores] = classifier.predict(features);
+        sigmoid = @(x) 1 ./ (1 + exp(-x));
+        prob(classifiedBorderIdx) = sigmoid(scores(:, 1));
+    end
+    
+    outFile = fullfile(saveFolder, outputFilenameInLocalFolder);
+    Util.save(outFile, prob);
 end
 
