@@ -55,6 +55,33 @@ function probs = calcChanceProbs( ...
                     classProbs);
             end
             
+        case 'drmn' % dirichlet-multinomial
+            % requires input 'alpha' and the drmn parameter vector
+            
+            assert(isfield(opts, 'alpha'), ...
+                'Specify the drml alpha parameter.');
+            probs = nan(size(axonSynCounts));
+            % calculates the null probs separately for each target class
+            % using the marginal distribution
+            alpha = opts.alpha;
+            n_syn_tot = sum(axonSynCounts, 2);
+            for i = 1:length(alpha)
+                a = alpha(i);
+                b = sum(alpha(setdiff(1:length(alpha), i)));
+                n_syn_class = axonSynCounts(:, i);
+                for n = unique(n_syn_tot(:)')
+                    % marginal is beta binomial
+                    warning('off', 'all');
+                    pdf = Math.Prob.bbinopdf(0:n, n, a, b);
+                    warning('on', 'all');
+                    ucdf = flip(cumsum(flip(pdf)));
+                    thisAx = n_syn_tot == n;
+                    probs(thisAx, i) = ucdf(n_syn_class(thisAx) + 1);
+                end
+                
+            end
+            assert(~any(isnan(probs(:))));
+            
         otherwise
             error( ...
                 'Unknown probability distribution "%s"', ...
