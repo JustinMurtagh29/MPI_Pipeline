@@ -69,6 +69,15 @@ classConn = classConn(:, classIds);
 availabilities = avail.axonAvail(classIds, :, :);
 availabilities = availabilities ./ sum(availabilities, 1);
 
+% Define target classes we want to predict
+[axonClasses.predictClasses] = deal(targetClasses);
+
+% NOTE(amotta): As discussed in the phone call with MH on 13.06.2018, let's
+% note predict targets that are not innervated by excitatory axons. The
+% skipped classes can still be used to make predictions.
+axonClasses(1).predictClasses = setdiff( ...
+    axonClasses(1).predictClasses, {'Somata', 'AxonInitialSegment'});
+
 %% Build fake connectome for testing
 if ~isempty(fakeRadius)
     fakeRadiusId = find(avail.dists == 1E3 * fakeRadius);
@@ -326,7 +335,10 @@ for curAxonClassId = 1:numel(axonClasses)
     curAxonClass = axonClasses(curAxonClassId);
     curAxonIds = curAxonClass.axonIds;
     
-    curConn = classConn(curAxonIds, :);
+    curPredictClasses = curAxonClass.predictClasses;
+   [~, curPredictClassIds] = ismember(curPredictClasses, targetClasses);
+    
+    curConn = classConn(curAxonIds, curPredictClassIds);
     curConn = curConn ./ sum(curConn, 2);
     
     curVar = mean((curConn - mean(curConn, 1)) .^ 2, 1);
@@ -342,14 +354,14 @@ for curAxonClassId = 1:numel(axonClasses)
         curVarLeft = mean((curPred - curConn) .^ 2, 1);
         curVarExplained = curVar - curVarLeft;
         
-        curVarUnexplainable = ...
-            targetDistAxonMnVar(:, curDistId, curAxonClassId);
+        curVarUnexplainable = targetDistAxonMnVar( ...
+            curPredictClassIds, curDistId, curAxonClassId);
         curVarUnexplainable = reshape(curVarUnexplainable, 1, []);
         
         curVarExplainable = curVar - curVarUnexplainable;
         curVarFracExplained = curVarExplained ./ curVarExplainable;
         
-        axonTargetClassExplainability(:, ...
+        axonTargetClassExplainability(curPredictClassIds, ...
             curDistId, curAxonClassId) = curVarFracExplained;
         
         % Per axon class
@@ -479,16 +491,24 @@ for curAxonClassIdx = 1:numel(plotAxonClasses)
     curAxonClassId = plotAxonClasses(curAxonClassIdx);
     curAxonClass = axonClasses(curAxonClassId);
     
+    curPredictClasses = curAxonClass.predictClasses;
+   [~, curPredictClassIds] = ismember(curPredictClasses, targetClasses);
+    
     curAx = subplot(1, numel(plotAxonClasses), curAxonClassIdx);
     curAx.TickDir = 'out';
     
     axis(curAx, 'square');
     hold(curAx, 'on');
     
-    for curTargetClassIdx = 1:numel(targetClasses)
+    for curTargetClassIdx = 1:numel(curPredictClassIds)
+        curTargetClassId = curPredictClassIds(curTargetClassIdx);
+        curColor = curAx.ColorOrder(curTargetClassId, :);
+        
         curData = axonTargetClassExplainability( ...
-            curTargetClassIdx, :, curAxonClassIdx);
-        plot(curAx, avail.dists / 1E3, curData, 'LineWidth', 2);
+            curTargetClassId, :, curAxonClassIdx);
+        plot(curAx, ...
+            avail.dists / 1E3, curData, ...
+            'LineWidth', 2, 'Color', curColor);
     end
     
     title( ...
