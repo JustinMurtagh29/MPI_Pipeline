@@ -133,6 +133,30 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
         axis(ax, 'square');
         hold(ax, 'on');
         
+        % p-value distribution under null hypothesis (binomial)
+        ax_stat = tabulate(sum(classConn(axonClass.axonIds, :), 2));
+        ax_stat = ax_stat(ax_stat(:,2) > 0, :);
+        tP = cell(size(ax_stat, 1), 1);
+        p_vals_h0 = cell(size(ax_stat, 1), 1);
+        ax_count_h0 = cell(size(ax_stat, 1), 1);
+        for i = 1:size(ax_stat, 1)
+            n = ax_stat(i, 1);
+            pdf = binopdf(0: n, n, classProb);
+%             cdf = binocdf((0:n) - 1, n, classProb, 'upper');
+            cdf = flip(cumsum(flip(pdf))); % consistent with
+            p_vals_h0{i} = cdf(:);
+            N_ax = round(pdf .* ax_stat(i, 2));
+            tP{i} = repelem(cdf(N_ax > 0), N_ax(N_ax > 0))';
+            ax_count_h0{i} = pdf(:) .* ax_stat(i, 2);
+        end
+        tP = cell2mat(tP);
+        p_vals_h0 = cell2mat(p_vals_h0);
+        ax_count_h0 = cell2mat(ax_count_h0);
+        [p_vals_h0, sI] = sort(p_vals_h0, 'ascend');
+        ax_count_h0 = ax_count_h0(sI);
+        ax_count_h0 = cumsum(ax_count_h0);
+        ax_count_h0 = ax_count_h0 ./ ax_count_h0(end);
+        
         % Compare p-value distribution against expectation:
         % We'd expect there to be `theta` percent of axons with a p-value
         % below `theta`. If there are, however, significantly more axons
@@ -192,7 +216,8 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
         curPAxonFrac = linspace(0, 1, numel(curPVal));
         
         plot(curPVal, curPAxonFrac);
-        plot([0, 1], [0, 1]);
+        plot(p_vals_h0, ax_count_h0);
+%         plot([0, 1], [0, 1]);
         
         if ~isempty(curThetaIdx)
             plot(ax, ...
