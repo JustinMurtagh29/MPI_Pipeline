@@ -52,13 +52,14 @@ axonClasses(end + 1) = allAxonClass;
 
 %% plot
 for curIdx = 1:numel(axonClasses)
-    plotAxonClass( ...
+    outlier = plotAxonClass( ...
         info, conn.axonMeta, classConnectome, ...
         targetClasses, axonClasses(curIdx));
 end
 
+
 %% plotting
-function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
+function outlier = plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
     axonSpecs = classConn(axonClass.axonIds, :);
     axonSpecs = axonSpecs ./ sum(axonSpecs, 2);
     
@@ -91,13 +92,17 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
         
 %         % fit for axons that actually do innervate a target class
 %         figure;
-%         i = 6;
+%         i = 1;
 %         histogram(axonSpecs(axonSpecs(:,i) > 0, 1), -0.025:0.05:1.25)
 %         hold on
 %         histogram(pol_s(pol_s(:,i) > 0, 1), -0.025:0.05:1.25)
 %         histogram(mn_s(mn_s(:,i) > 0, 1), -0.025:0.05:1.25)
 %         legend('Observed', 'Polya', 'Multinomial');
 %         title(sprintf('Synapse fraction histogram (target %d - innervations only)', i))
+
+        axonNullProbs = connectEM.Specificity.calcChanceProbs( ...
+            classConn, axonClass.axonIds, axonClass.nullAxonIds, ...
+            'distribution', 'drmn', 'alpha', a);
     end
     
     %% plotting
@@ -108,6 +113,8 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
     binEdges = linspace(0, 1, 21);
     axes = cell(size(targetClasses));
     pValAxes = cell(size(targetClasses));
+    
+    outlier = cell(length(targetClasses), 1);
 
     for classIdx = 1:numel(targetClasses)
         className = targetClasses{classIdx};
@@ -180,8 +187,8 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
             n = ax_stat(i, 1);
             pdf = binopdf(0: n, n, classProb);
 %             cdf = binocdf((0:n) - 1, n, classProb, 'upper');
-            cdf = flip(cumsum(flip(pdf)));
-            p_vals_h0{i} = cdf(:);
+            ucdf = flip(cumsum(flip(pdf)));
+            p_vals_h0{i} = ucdf(:);
             ax_count_h0{i} = pdf(:) .* ax_stat(i, 2);
         end
         p_vals_h0 = cell2mat(p_vals_h0);
@@ -205,8 +212,8 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
                 pdf = Math.Prob.bbinopdf(0:n, n, p1, p2);
                 warning('on', 'all');
     %             cdf = binocdf((0:n) - 1, n, classProb, 'upper');
-                cdf = flip(cumsum(flip(pdf))); % consistent with
-                p_vals_h0_bb{i} = cdf(:);
+                ucdf = flip(cumsum(flip(pdf))); % consistent with
+                p_vals_h0_bb{i} = ucdf(:);
                 ax_count_h0_bb{i} = pdf(:) .* ax_stat(i, 2);
             end
             p_vals_h0_bb = cell2mat(p_vals_h0_bb);
@@ -215,6 +222,25 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
             ax_count_h0_bb = ax_count_h0_bb(sI);
             ax_count_h0_bb = cumsum(ax_count_h0_bb);
             ax_count_h0_bb = ax_count_h0_bb ./ ax_count_h0_bb(end);
+            
+            % get outliers defined as axons for which the upper cdf is
+            % smaller than some threshold out_t according to the null model
+            % which is equivalent to saying that the p-value is smaller
+            % than out_t
+            out_t = 0.001;
+            axons = classConn(axonClass.axonIds, :);
+            syn_per_axon = sum(axons, 2);
+            outlier_idx = cell(size(ax_stat, 1), 1);
+            for i = 1:size(ax_stat, 1)
+                n = ax_stat(i, 1);
+                warning('off', 'all');
+                pdf = Math.Prob.bbinopdf(0:n, n, p1, p2);
+                warning('on', 'all');
+                ucdf = flip(cumsum(flip(pdf)));
+                syn_t = find(ucdf < out_t, 1, 'first') - 1;
+                outlier_idx{i} = find(syn_per_axon == n & axons(:, classIdx) >= syn_t);
+            end
+            outlier{classIdx} = unique(cell2mat(outlier_idx));
         end
         
         % Compare p-value distribution against expectation:
@@ -328,3 +354,4 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
             'Observed synapse fractions vs. null hypothesis'; ...
             axonClass.title; info.git_repos{1}.hash});
 end
+
