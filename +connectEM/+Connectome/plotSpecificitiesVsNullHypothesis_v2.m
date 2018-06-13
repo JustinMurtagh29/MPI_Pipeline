@@ -88,6 +88,16 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
         % multinomial samples (maximum likelihood)
         mn_s = mnrnd(sum(classConn(axonClass.axonIds, :), 2), targetClassProbs);
         mn_s = mn_s ./ sum(mn_s, 2);
+        
+%         % fit for axons that actually do innervate a target class
+%         figure;
+%         i = 6;
+%         histogram(axonSpecs(axonSpecs(:,i) > 0, 1), -0.025:0.05:1.25)
+%         hold on
+%         histogram(pol_s(pol_s(:,i) > 0, 1), -0.025:0.05:1.25)
+%         histogram(mn_s(mn_s(:,i) > 0, 1), -0.025:0.05:1.25)
+%         legend('Observed', 'Polya', 'Multinomial');
+%         title(sprintf('Synapse fraction histogram (target %d - innervations only)', i))
     end
     
     %% plotting
