@@ -12,7 +12,7 @@ clear;
 
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-outputDir = '/home/amotta/Desktop/farther-than-30um';
+outputDir = '/home/amotta/Desktop/most-distant';
 
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-linearized_dendrites-wholeCells-03-v2-classified_spine-syn-clust.mat');
 
@@ -20,19 +20,13 @@ synCount = 2;
 synType = 'spine';
 
 distType = 'preDist';
-minDist = 30E3;
+minDist = [];
 maxDist = [];
 
 info = Util.runInfo();
 
-%% Check and complete configuration
-calcDist = false;
-if ~isempty(minDist) || ~isempty(maxDist)
-    % Distance calculation only works for synapse pairs
-    assert(ismember(distType, {'preDist', 'postDist'}));
-    assert(synCount == 2);
-    calcDist = true;
-end
+%% Complete configuration
+calcDist = synCount == 2;
 
 %% Loading data
 param = load(fullfile(rootDir, 'allParameter.mat'), 'p');
@@ -115,8 +109,8 @@ skel = Skeleton.setParams4Pipeline(skel, param);
 skelDesc = sprintf('%s (%s)', mfilename, info.git_repos{1}.hash);
 skel = skel.setDescription(skelDesc);
 
-rng(0);
-randIds = randperm(height(pairT));
+% Export in order of decreasing axonal intersynapse distance
+[~, randIds] = sort(pairT.preDist, 'descend');
 randIds = randIds(1:50);
 
 for curIdx = 1:numel(randIds)
