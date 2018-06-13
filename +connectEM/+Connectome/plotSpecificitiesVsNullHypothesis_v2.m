@@ -71,6 +71,25 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
     targetClassSyns = sum(classConn(axonClass.nullAxonIds, :), 1);
     targetClassProbs = targetClassSyns / sum(targetClassSyns);
     
+    %% dirichlet-multinomial fit (polya)
+    try
+        a = polya_fit_simple(classConn(axonClass.axonIds, :)); % dirichlet-multinomial dist params % requires fastfit toolbox https://github.com/tminka/fastfit
+        fitted_polya = true;
+    catch err
+        fitted_polya = false;
+    end
+    
+    if fitted_polya
+        % polya fit samples (maximum likelihood)
+        pol_s = polya_sample(a, sum(classConn(axonClass.axonIds, :), 2));
+        pol_s = pol_s ./ sum(pol_s, 2);
+    %     pol_m =  sum(targetClassSyns) .* a ./ sum(a);
+
+        % multinomial samples (maximum likelihood)
+        mn_s = mnrnd(sum(classConn(axonClass.axonIds, :), 2), targetClassProbs);
+        mn_s = mn_s ./ sum(mn_s, 2);
+    end
+    
     %% plotting
     fig = figure;
     fig.Color = 'white';
@@ -113,6 +132,15 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
             'DisplayStyle', 'stairs', ...
             'LineWidth', 2, ...
             'FaceAlpha', 1);
+        
+        if fitted_polya
+            histogram(ax, ...
+                pol_s(:, classIdx), ...
+                'BinEdges', binEdges, ...
+                'DisplayStyle', 'stairs', ...
+                'LineWidth', 2, ...
+                'FaceAlpha', 1);
+        end
 
         xlabel(ax, 'Synapse fraction');
         ax.XAxis.TickDirection = 'out';
@@ -136,26 +164,48 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
         % p-value distribution under null hypothesis (binomial)
         ax_stat = tabulate(sum(classConn(axonClass.axonIds, :), 2));
         ax_stat = ax_stat(ax_stat(:,2) > 0, :);
-        tP = cell(size(ax_stat, 1), 1);
         p_vals_h0 = cell(size(ax_stat, 1), 1);
         ax_count_h0 = cell(size(ax_stat, 1), 1);
         for i = 1:size(ax_stat, 1)
             n = ax_stat(i, 1);
             pdf = binopdf(0: n, n, classProb);
 %             cdf = binocdf((0:n) - 1, n, classProb, 'upper');
-            cdf = flip(cumsum(flip(pdf))); % consistent with
+            cdf = flip(cumsum(flip(pdf)));
             p_vals_h0{i} = cdf(:);
-            N_ax = round(pdf .* ax_stat(i, 2));
-            tP{i} = repelem(cdf(N_ax > 0), N_ax(N_ax > 0))';
             ax_count_h0{i} = pdf(:) .* ax_stat(i, 2);
         end
-        tP = cell2mat(tP);
         p_vals_h0 = cell2mat(p_vals_h0);
         ax_count_h0 = cell2mat(ax_count_h0);
         [p_vals_h0, sI] = sort(p_vals_h0, 'ascend');
         ax_count_h0 = ax_count_h0(sI);
         ax_count_h0 = cumsum(ax_count_h0);
         ax_count_h0 = ax_count_h0 ./ ax_count_h0(end);
+        
+        if fitted_polya
+            % p-value distribution under null hypothesis (dirichlet-multinomial)
+            ax_stat = tabulate(sum(classConn(axonClass.axonIds, :), 2));
+            ax_stat = ax_stat(ax_stat(:,2) > 0, :);
+            p_vals_h0_bb = cell(size(ax_stat, 1), 1);
+            ax_count_h0_bb = cell(size(ax_stat, 1), 1);
+            p1 = a(classIdx);
+            p2 = sum(a(setdiff(1:length(a), classIdx)));
+            for i = 1:size(ax_stat, 1)
+                n = ax_stat(i, 1);
+                warning('off', 'all');
+                pdf = Math.Prob.bbinopdf(0:n, n, p1, p2);
+                warning('on', 'all');
+    %             cdf = binocdf((0:n) - 1, n, classProb, 'upper');
+                cdf = flip(cumsum(flip(pdf))); % consistent with
+                p_vals_h0_bb{i} = cdf(:);
+                ax_count_h0_bb{i} = pdf(:) .* ax_stat(i, 2);
+            end
+            p_vals_h0_bb = cell2mat(p_vals_h0_bb);
+            ax_count_h0_bb = cell2mat(ax_count_h0_bb);
+            [p_vals_h0_bb, sI] = sort(p_vals_h0_bb, 'ascend');
+            ax_count_h0_bb = ax_count_h0_bb(sI);
+            ax_count_h0_bb = cumsum(ax_count_h0_bb);
+            ax_count_h0_bb = ax_count_h0_bb ./ ax_count_h0_bb(end);
+        end
         
         % Compare p-value distribution against expectation:
         % We'd expect there to be `theta` percent of axons with a p-value
@@ -217,6 +267,9 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
         
         plot(curPVal, curPAxonFrac);
         plot(p_vals_h0, ax_count_h0);
+        if fitted_polya
+            plot(p_vals_h0_bb, ax_count_h0_bb);
+        end
 %         plot([0, 1], [0, 1]);
         
         if ~isempty(curThetaIdx)
@@ -225,6 +278,7 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
                 'Color', 'black', 'LineStyle', '--');
         end
         
+        ax.XLim = [0, 1];
         xlabel(ax, 'p-value');
         ylabel(ax, {'Fraction of axons'; 'with p < x'});
     end
@@ -236,6 +290,13 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
         'Observed', ...
         'Binomial model', ...
         'Location', 'East');
+    if fitted_polya
+        leg = legend(ax, ...
+            'Observed', ...
+            'Binomial model', ...
+            'Dirichlet-Multinomial', ...
+            'Location', 'East');
+    end
     leg.Box = 'off';
     
     % Fix positions
