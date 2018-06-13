@@ -185,8 +185,14 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
         
         curPAxonFrac = linspace(0, 1, numel(curPVal));
         
+       [curTempX, curTempY] = ...
+            connectEM.Specificity.calcExpectedChanceProbDist( ...
+                axonMeta.synCount(axonClass.axonIds), classProb);
+        curTempY = cumsum(curTempY);
+        curTempY = curTempY / curTempY(end);
+        
         plot(curPVal, curPAxonFrac);
-        plot([0, 1], [0, 1]);
+        plot(curTempX, curTempY);
         
         if ~isempty(curThetaIdx)
             plot(ax, ...
@@ -194,6 +200,8 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
                 'Color', 'black', 'LineStyle', '--');
         end
         
+        xlim(ax, [0, 1]);
+        ylim(ax, [0, 1]);
         xlabel(ax, 'p-value');
         ylabel(ax, {'Fraction of axons'; 'with p < x'});
     end
