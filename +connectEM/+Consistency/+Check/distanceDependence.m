@@ -35,6 +35,17 @@ pairNames = { ...
     '12_axon-34919_dendrite_3295';
     '13_axon-53705_dendrite_11234';
     '14_axon-44868_dendrite_7904';
+    % most distant pairs (in decreasing order)
+    '02_axon-63543_dendrite_11253';
+    '03_axon-54867_dendrite_11260';
+    '06_axon-28429_dendrite_11245';
+    '07_axon-27974_dendrite_11270';
+    '08_axon-21023_dendrite_11257';
+    '09_axon-60532_dendrite_11253';
+    '10_axon-18575_dendrite_11274';
+    '11_axon-28618_dendrite_11221';
+    '14_axon-39094_dendrite_1093';
+    '16_axon-51425_dendrite_1384';
     % closer than 5 µm
     '01_axon-55107_dendrite_272';
     '02_axon-65041_dendrite_962';
@@ -68,6 +79,9 @@ pairConfig = regexp(pairNames, pairPattern, 'names');
 pairConfig = cellfun(@(pair) structfun( ...
     @str2num, pair, 'UniformOutput', false), pairConfig);
 pairConfig = struct2table(pairConfig);
+
+% Make sure that there are no duplicate data points
+assert(height(unique(pairConfig, 'rows')) == height(pairConfig));
 
 % Find corresponding synapse pairs
 pairSynT = synT;
