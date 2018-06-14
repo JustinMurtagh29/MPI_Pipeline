@@ -77,7 +77,7 @@ availabilities = availabilities ./ sum(availabilities, 1);
 % skipped classes can still be used to make predictions.
 axonClasses(1).predictClasses = setdiff( ...
     axonClasses(1).predictClasses, ...
-    {'Somata', 'AxonInitialSegment', 'SmoothDendrite'});
+    {'Somata', 'AxonInitialSegment'});
 
 %% Build fake connectome for testing
 if ~isempty(fakeRadius)
@@ -320,6 +320,18 @@ end
 
 assert(~any(isnan(targetDistAxonMnVar(:))));
 assert(~any(isnan(targetAxonConnMnVar(:))));
+
+%% Excitatory smooth dendrite innervations
+% This case is treated with a different null mode. The connectomic
+% variability is used here instead of the availability-based one.
+clear cur*;
+
+curAxonClassId = 1;
+[~, curTargetClassIds] = ismember({'SmoothDendrite'}, targetClasses);
+
+% Multinomial variability **ACCORDING TO SPECIFICITIES**
+curSpecMnVar = targetAxonConnMnVar(curTargetClassIds, curAxonClassId);
+targetDistAxonMnVar(curTargetClassIds, :, curAxonClassId) = curSpecMnVar;
 
 %% Calculate explainability
 clear cur*;
