@@ -79,6 +79,7 @@ function outlier = plotAxonClass(info, axonMeta, classConn, targetClasses, axonC
         fitted_polya = true;
     catch err
         fitted_polya = false;
+        nullModel = 'binomial';
     end
     
     if fitted_polya
@@ -145,12 +146,10 @@ function outlier = plotAxonClass(info, axonMeta, classConn, targetClasses, axonC
             p1 = a(classIdx);
             p2 = sum(a(setdiff(1:length(a), classIdx)));
             
-            warning('off', 'all')
             [nullSynFrac, nullAxonCount] = ...
                 connectEM.Specificity.calcExpectedDist( ...
                     axonMeta.synCount(axonClass.axonIds), ...
                     classProb, 'distribution', 'bb', 'a', p1, 'b', p2);
-            warning('on', 'all')
             
             nullBinId_bb = discretize(nullSynFrac, binEdges);
             nullBinCount_bb = accumarray(nullBinId_bb, nullAxonCount);
@@ -214,11 +213,9 @@ function outlier = plotAxonClass(info, axonMeta, classConn, targetClasses, axonC
             p1 = a(classIdx);
             p2 = sum(a(setdiff(1:length(a), classIdx)));
             pdf = @(n)Math.Prob.bbinopdf(0:n, n, p1, p2);
-            warning('off', 'all');
             [p_vals_h0_bb, ax_count_h0_bb] = ...
                 connectEM.Specificity.calcExpectedChanceProbDist( ...
                 axonMeta.synCount(axonClass.axonIds), classProb, 'pdf', pdf);
-            warning('on', 'all');
             ax_count_h0_bb = cumsum(ax_count_h0_bb);
             ax_count_h0_bb = ax_count_h0_bb ./ ax_count_h0_bb(end);
             
