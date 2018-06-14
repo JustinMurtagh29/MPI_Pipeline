@@ -26,7 +26,7 @@ skel = Skeleton.setParams4Pipeline(skel, param);
 skel = skel.setDescription(sprintf( ...
     '%s (%s)', info.filename, info.git_repos{1}.hash));
 
-for curIdx = 1
+for curIdx = 1:wcCount
     curAgglo = wcAgglos(curIdx);
     curSkel = Superagglos.toSkel(curAgglo, skel);
     
