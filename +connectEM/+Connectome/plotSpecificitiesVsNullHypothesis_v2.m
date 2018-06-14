@@ -63,16 +63,17 @@ function outlier = plotAxonClass(info, axonMeta, classConn, targetClasses, axonC
     axonSpecs = classConn(axonClass.axonIds, :);
     axonSpecs = axonSpecs ./ sum(axonSpecs, 2);
     
+    
     %% preparations
-    axonNullProbs = connectEM.Specificity.calcChanceProbs( ...
-        classConn, axonClass.axonIds, axonClass.nullAxonIds, ...
-        'distribution', 'binomial');
+    
+    %     nullModel = 'binomial';
+    nullModel = 'drmn';
     
     % calculate overall synapse probabilities
     targetClassSyns = sum(classConn(axonClass.nullAxonIds, :), 1);
     targetClassProbs = targetClassSyns / sum(targetClassSyns);
     
-    %% dirichlet-multinomial fit (polya)
+    % dirichlet-multinomial fit (polya)
     try
         a = polya_fit_simple(classConn(axonClass.axonIds, :)); % dirichlet-multinomial dist params % requires fastfit toolbox https://github.com/tminka/fastfit
         fitted_polya = true;
@@ -99,10 +100,17 @@ function outlier = plotAxonClass(info, axonMeta, classConn, targetClasses, axonC
 %         histogram(mn_s(mn_s(:,i) > 0, 1), -0.025:0.05:1.25)
 %         legend('Observed', 'Polya', 'Multinomial');
 %         title(sprintf('Synapse fraction histogram (target %d - innervations only)', i))
-
-        axonNullProbs = connectEM.Specificity.calcChanceProbs( ...
-            classConn, axonClass.axonIds, axonClass.nullAxonIds, ...
-            'distribution', 'drmn', 'alpha', a);
+    end
+    
+    switch nullModel
+        case 'binomial'
+            axonNullProbs = connectEM.Specificity.calcChanceProbs( ...
+                classConn, axonClass.axonIds, axonClass.nullAxonIds, ...
+                'distribution', 'binomial');
+        case 'drmn'
+            axonNullProbs = connectEM.Specificity.calcChanceProbs( ...
+                classConn, axonClass.axonIds, axonClass.nullAxonIds, ...
+                'distribution', 'drmn', 'alpha', a);
     end
     
     %% plotting
@@ -128,9 +136,25 @@ function outlier = plotAxonClass(info, axonMeta, classConn, targetClasses, axonC
             connectEM.Specificity.calcExpectedDist( ...
                 axonMeta.synCount(axonClass.axonIds), ...
                 classProb, 'distribution', 'binomial');
-        
+            
         nullBinId = discretize(nullSynFrac, binEdges);
         nullBinCount = accumarray(nullBinId, nullAxonCount);
+            
+        % null hypothesis dirichlet multinomial marginal (beta-binomial)
+        if fitted_polya
+            p1 = a(classIdx);
+            p2 = sum(a(setdiff(1:length(a), classIdx)));
+            
+            warning('off', 'all')
+            [nullSynFrac, nullAxonCount] = ...
+                connectEM.Specificity.calcExpectedDist( ...
+                    axonMeta.synCount(axonClass.axonIds), ...
+                    classProb, 'distribution', 'bb', 'a', p1, 'b', p2);
+            warning('on', 'all')
+            
+            nullBinId_bb = discretize(nullSynFrac, binEdges);
+            nullBinCount_bb = accumarray(nullBinId_bb, nullAxonCount);
+        end
 
         % Measured
         ax = subplot(3, numel(targetClasses), classIdx);
@@ -152,8 +176,8 @@ function outlier = plotAxonClass(info, axonMeta, classConn, targetClasses, axonC
         
         if fitted_polya
             histogram(ax, ...
-                pol_s(:, classIdx), ...
                 'BinEdges', binEdges, ...
+                'BinCounts', nullBinCount_bb, ...
                 'DisplayStyle', 'stairs', ...
                 'LineWidth', 2, ...
                 'FaceAlpha', 1);
@@ -179,47 +203,22 @@ function outlier = plotAxonClass(info, axonMeta, classConn, targetClasses, axonC
         hold(ax, 'on');
         
         % p-value distribution under null hypothesis (binomial)
-        ax_stat = tabulate(sum(classConn(axonClass.axonIds, :), 2));
-        ax_stat = ax_stat(ax_stat(:,2) > 0, :);
-        p_vals_h0 = cell(size(ax_stat, 1), 1);
-        ax_count_h0 = cell(size(ax_stat, 1), 1);
-        for i = 1:size(ax_stat, 1)
-            n = ax_stat(i, 1);
-            pdf = binopdf(0: n, n, classProb);
-%             cdf = binocdf((0:n) - 1, n, classProb, 'upper');
-            ucdf = flip(cumsum(flip(pdf)));
-            p_vals_h0{i} = ucdf(:);
-            ax_count_h0{i} = pdf(:) .* ax_stat(i, 2);
-        end
-        p_vals_h0 = cell2mat(p_vals_h0);
-        ax_count_h0 = cell2mat(ax_count_h0);
-        [p_vals_h0, sI] = sort(p_vals_h0, 'ascend');
-        ax_count_h0 = ax_count_h0(sI);
+        [p_vals_h0, ax_count_h0] = ...
+            connectEM.Specificity.calcExpectedChanceProbDist( ...
+            axonMeta.synCount(axonClass.axonIds), classProb);
         ax_count_h0 = cumsum(ax_count_h0);
         ax_count_h0 = ax_count_h0 ./ ax_count_h0(end);
         
         if fitted_polya
             % p-value distribution under null hypothesis (dirichlet-multinomial)
-            ax_stat = tabulate(sum(classConn(axonClass.axonIds, :), 2));
-            ax_stat = ax_stat(ax_stat(:,2) > 0, :);
-            p_vals_h0_bb = cell(size(ax_stat, 1), 1);
-            ax_count_h0_bb = cell(size(ax_stat, 1), 1);
             p1 = a(classIdx);
             p2 = sum(a(setdiff(1:length(a), classIdx)));
-            for i = 1:size(ax_stat, 1)
-                n = ax_stat(i, 1);
-                warning('off', 'all');
-                pdf = Math.Prob.bbinopdf(0:n, n, p1, p2);
-                warning('on', 'all');
-    %             cdf = binocdf((0:n) - 1, n, classProb, 'upper');
-                ucdf = flip(cumsum(flip(pdf))); % consistent with
-                p_vals_h0_bb{i} = ucdf(:);
-                ax_count_h0_bb{i} = pdf(:) .* ax_stat(i, 2);
-            end
-            p_vals_h0_bb = cell2mat(p_vals_h0_bb);
-            ax_count_h0_bb = cell2mat(ax_count_h0_bb);
-            [p_vals_h0_bb, sI] = sort(p_vals_h0_bb, 'ascend');
-            ax_count_h0_bb = ax_count_h0_bb(sI);
+            pdf = @(n)Math.Prob.bbinopdf(0:n, n, p1, p2);
+            warning('off', 'all');
+            [p_vals_h0_bb, ax_count_h0_bb] = ...
+                connectEM.Specificity.calcExpectedChanceProbDist( ...
+                axonMeta.synCount(axonClass.axonIds), classProb, 'pdf', pdf);
+            warning('on', 'all');
             ax_count_h0_bb = cumsum(ax_count_h0_bb);
             ax_count_h0_bb = ax_count_h0_bb ./ ax_count_h0_bb(end);
             
@@ -228,19 +227,7 @@ function outlier = plotAxonClass(info, axonMeta, classConn, targetClasses, axonC
             % which is equivalent to saying that the p-value is smaller
             % than out_t
             out_t = 0.001;
-            axons = classConn(axonClass.axonIds, :);
-            syn_per_axon = sum(axons, 2);
-            outlier_idx = cell(size(ax_stat, 1), 1);
-            for i = 1:size(ax_stat, 1)
-                n = ax_stat(i, 1);
-                warning('off', 'all');
-                pdf = Math.Prob.bbinopdf(0:n, n, p1, p2);
-                warning('on', 'all');
-                ucdf = flip(cumsum(flip(pdf)));
-                syn_t = find(ucdf < out_t, 1, 'first') - 1;
-                outlier_idx{i} = find(syn_per_axon == n & axons(:, classIdx) >= syn_t);
-            end
-            outlier{classIdx} = unique(cell2mat(outlier_idx));
+            outlier{classIdx} = find(axonClassNullProbs < out_t);
         end
         
         % Compare p-value distribution against expectation:
@@ -271,7 +258,7 @@ function outlier = plotAxonClass(info, axonMeta, classConn, targetClasses, axonC
         plot( ...
             ax, binEdges([1, end]), [1, 1], ...
             'Color', ax.ColorOrder(2, :));
-        plot( ...
+        pl = plot( ...
             ax, curPVal, curPRatio, ...
             'Color', ax.ColorOrder(1, :), ...
             'LineWidth', 2);
@@ -292,6 +279,12 @@ function outlier = plotAxonClass(info, axonMeta, classConn, targetClasses, axonC
         
         pValAxes{classIdx} = ax;
         
+        if classIdx == numel(targetClasses)
+            legend(pl, ...
+                sprintf('observed p-value under %s', nullModel), ...
+                'Location', 'NorthEast');
+        end
+        
         %% alternative visualization
         ax = subplot( ...
             3, numel(targetClasses), ...
@@ -302,9 +295,10 @@ function outlier = plotAxonClass(info, axonMeta, classConn, targetClasses, axonC
         curPAxonFrac = linspace(0, 1, numel(curPVal));
         
         plot(curPVal, curPAxonFrac);
-        plot(p_vals_h0, ax_count_h0);
+        pl = plot(p_vals_h0, ax_count_h0);
         if fitted_polya
-            plot(p_vals_h0_bb, ax_count_h0_bb);
+            pl2 = plot(p_vals_h0_bb, ax_count_h0_bb);
+            pl = [pl, pl2];
         end
 %         plot([0, 1], [0, 1]);
         
@@ -317,6 +311,13 @@ function outlier = plotAxonClass(info, axonMeta, classConn, targetClasses, axonC
         ax.XLim = [0, 1];
         xlabel(ax, 'p-value');
         ylabel(ax, {'Fraction of axons'; 'with p < x'});
+        
+        if classIdx == numel(targetClasses)
+            legend(pl, ...
+                'sampled p-value under binomial', ...
+                'sampled p-value under drmn', ...
+                'Location', 'NorthEast');
+        end
     end
     
     % Legend
@@ -354,4 +355,3 @@ function outlier = plotAxonClass(info, axonMeta, classConn, targetClasses, axonC
             'Observed synapse fractions vs. null hypothesis'; ...
             axonClass.title; info.git_repos{1}.hash});
 end
-

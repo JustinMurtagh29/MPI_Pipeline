@@ -62,7 +62,7 @@ function probs = calcChanceProbs( ...
                 'Specify the drml alpha parameter.');
             probs = nan(size(axonSynCounts));
             % calculates the null probs separately for each target class
-            % using the marginal distribution
+            % using the marginal distribution (beta-binomial)
             alpha = opts.alpha;
             n_syn_tot = sum(axonSynCounts, 2);
             for i = 1:length(alpha)
