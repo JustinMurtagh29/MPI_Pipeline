@@ -76,7 +76,8 @@ availabilities = availabilities ./ sum(availabilities, 1);
 % note predict targets that are not innervated by excitatory axons. The
 % skipped classes can still be used to make predictions.
 axonClasses(1).predictClasses = setdiff( ...
-    axonClasses(1).predictClasses, {'Somata', 'AxonInitialSegment'});
+    axonClasses(1).predictClasses, ...
+    {'Somata', 'AxonInitialSegment', 'SmoothDendrite'});
 
 %% Build fake connectome for testing
 if ~isempty(fakeRadius)
