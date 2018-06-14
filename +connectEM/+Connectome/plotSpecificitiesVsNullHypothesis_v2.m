@@ -240,6 +240,12 @@ function outlier = plotAxonClass(info, axonMeta, classConn, targetClasses, axonC
         curPRatio = (1:numel(curPVal)) ./ numel(curPVal);
         curPRatio = curPRatio ./ curPVal;
         
+        % for a discrete distribution we would expect that for the possible
+        % p-values (the unique values of the CDF), the fraction of axons
+        % with p-values less or equal to p is p
+        ax_fr = arrayfun(@(x)sum(curPVal <= x) / length(curPVal), curPVal);
+        ratio = ax_fr ./ curPVal;
+        
         % Find chance level (i.e., ratio 1)
         curThetaIdx = find(curPRatio > 1, 1);
         
