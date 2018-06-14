@@ -371,8 +371,9 @@ for curAxonClassId = 1:numel(axonClasses)
     curPredictClasses = curAxonClass.predictClasses;
    [~, curPredictClassIds] = ismember(curPredictClasses, targetClasses);
     
-    curConn = classConn(curAxonIds, curPredictClassIds);
+    curConn = classConn(curAxonIds, :);
     curConn = curConn ./ sum(curConn, 2);
+    curConn = curConn(:, curPredictClassIds);
     
     curVar = mean((curConn - mean(curConn, 1)) .^ 2, 1);
     
