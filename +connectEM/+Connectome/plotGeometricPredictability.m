@@ -9,7 +9,7 @@ availFile = '/tmpscratch/amotta/l4/2018-04-27-surface-availability-connectome-v5
 
 maxRadius = 50;
 maxAvail = 0.7;
-plotAxonClasses = 1:2;
+plotAxonClasses = [1, 5, 2];
 
 % Valid prediction methods are
 % * predictTargetClassAvailability: The predicted innervation of a target
@@ -69,14 +69,35 @@ classConn = classConn(:, classIds);
 availabilities = avail.axonAvail(classIds, :, :);
 availabilities = availabilities ./ sum(availabilities, 1);
 
+% Duplicate excitatory axons
+axonClasses(5) = axonClasses(1);
+
 % Define target classes we want to predict
 [axonClasses.predictClasses] = deal(targetClasses);
+
+% Define target classes whose unexplainable variance is determined not
+% based on the availability, but based on their connectivity.
+[axonClasses.connMnVarClasses] = deal({});
 
 % NOTE(amotta): As discussed in the phone call with MH on 13.06.2018, let's
 % note predict targets that are not innervated by excitatory axons. The
 % skipped classes can still be used to make predictions.
+axonClasses(1).title = sprintf( ...
+    '%s (without AIS, SO, and SD)', axonClasses(1).title);
 axonClasses(1).predictClasses = setdiff( ...
-    axonClasses(1).predictClasses, {'Somata', 'AxonInitialSegment'});
+    targetClasses, {'Somata', 'AxonInitialSegment', 'SmoothDendrite'});
+
+% NOTE(amotta): In today's (14.06.2018) meeting with MH we've decided to
+% also perform the explainability analysis where the unexplainable variance
+% for excitatory smooth dendrite innervations is determined based on the
+% synaptic specificities instead of the membrane availabilities.
+axonClasses(5).title = sprintf([ ...
+    '%s (without AIS, SO; ', ...
+    'synapse-based MN var. for SD)'], ...
+    axonClasses(5).title);
+axonClasses(5).predictClasses = setdiff( ...
+    targetClasses, {'Somata', 'AxonInitialSegment'});
+axonClasses(5).connMnVarClasses = {'SmoothDendrite'};
 
 %% Build fake connectome for testing
 if ~isempty(fakeRadius)
@@ -320,6 +341,18 @@ end
 assert(~any(isnan(targetDistAxonMnVar(:))));
 assert(~any(isnan(targetAxonConnMnVar(:))));
 
+%% Fallback to connectomic noise model
+clear cur*;
+
+for curAxonClassId = 1:numel(axonClasses)
+    curAxonClass = axonClasses(curAxonClassId);
+    curTargetClassIds = curAxonClass.connMnVarClasses;
+   [~, curTargetClassIds] = ismember(curTargetClassIds, targetClasses);
+   
+    curConnMnVar = targetAxonConnMnVar(curTargetClassIds, curAxonClassId);
+    targetDistAxonMnVar(curTargetClassIds, :, curAxonClassId) = curConnMnVar;
+end
+
 %% Calculate explainability
 clear cur*;
 
@@ -338,8 +371,9 @@ for curAxonClassId = 1:numel(axonClasses)
     curPredictClasses = curAxonClass.predictClasses;
    [~, curPredictClassIds] = ismember(curPredictClasses, targetClasses);
     
-    curConn = classConn(curAxonIds, curPredictClassIds);
+    curConn = classConn(curAxonIds, :);
     curConn = curConn ./ sum(curConn, 2);
+    curConn = curConn(:, curPredictClassIds);
     
     curVar = mean((curConn - mean(curConn, 1)) .^ 2, 1);
     
@@ -505,7 +539,7 @@ for curAxonClassIdx = 1:numel(plotAxonClasses)
         curColor = curAx.ColorOrder(curTargetClassId, :);
         
         curData = axonTargetClassExplainability( ...
-            curTargetClassId, :, curAxonClassIdx);
+            curTargetClassId, :, curAxonClassId);
         plot(curAx, ...
             avail.dists / 1E3, curData, ...
             'LineWidth', 2, 'Color', curColor);
@@ -538,9 +572,6 @@ annotation(curFig, ...
 
 %% Plot R² over classes
 clear cur*;
-
-% Model: Linear combination of all availabilities
-plotAxonClasses = 1:2;
 
 % Plotting
 curFig = figure();
