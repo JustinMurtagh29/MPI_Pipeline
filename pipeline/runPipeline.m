@@ -1,4 +1,4 @@
-function p = runPipeline(p, startStep, endStep,runlocal)
+function p = runPipeline(p, startStep, endStep)
 %RUNPIPELINE
 % INPUT p: struct
 %           Segmentation parameter struct.
@@ -9,9 +9,6 @@ function p = runPipeline(p, startStep, endStep,runlocal)
 %       endStep: (Optional) PipelineStep object
 %           The step where the pipeline is stopped.
 %           (Default: PipelineStep.GraphConstruction)
-%       runlocal: (Optional) boolean to switch if
-%           some main functions of the pipeline should
-%           be run on the interactive node or on a worker (default)
     
     % store run info in hidden folder of pipeline
     runInfo = Util.runInfo();
@@ -31,9 +28,6 @@ function p = runPipeline(p, startStep, endStep,runlocal)
     end
     if ~exist('endStep','var') || isempty(endStep)
         endStep = PipelineStep.GlobalGraphStruct;
-    end
-    if ~exist('runlocal','var') || isempty(runlocal)
-        runlocal = 0;
     end
     
     % NOTE(amotta): SynEM generate a modified parameter structure which
@@ -172,26 +166,18 @@ function p = runPipeline(p, startStep, endStep,runlocal)
         Cluster.waitForJob(job);
     end
 
-    %Save the global SVG data
-    if startStep <= PipelineStep.SaveGlobalSvgData && ...
-            endStep >= PipelineStep.SaveGlobalSvgData
-        if runlocal
-            Seg.Global.saveGlobalSvgData(p,[],[],1);
-        else
-            job = collectSvgDataOnCluster(p);
-            Cluster.waitForJob(job);
-        end
+    % Save the global SVG data
+    if startStep <= PipelineStep.SaveGlobalSvgData ...
+            && endStep >= PipelineStep.SaveGlobalSvgData
+        job = collectSvgDataOnCluster(p);
+        Cluster.waitForJob(job);
     end
 
-    %Create graph struct
-    if startStep <= PipelineStep.GlobalGraphStruct && ...
-            endStep >= PipelineStep.GlobalGraphStruct
-        if runlocal
-            collectGlobalGraphStruct(p);
-        else
-            job = collectGraphStructOnCluster(p);
-            Cluster.waitForJob(job);
-        end
+    % Create graph struct
+    if startStep <= PipelineStep.GlobalGraphStruct ...
+            && endStep >= PipelineStep.GlobalGraphStruct
+        job = collectGraphStructOnCluster(p);
+        Cluster.waitForJob(job);
     end
 end
 
