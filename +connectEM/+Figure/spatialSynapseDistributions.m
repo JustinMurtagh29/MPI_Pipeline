@@ -40,19 +40,20 @@ synT.pos = synT.pos .* param.raw.voxelSize ./ 1E3;
 clear cur*;
 curDimIds = [3, 1];
 curMaxImSize = 300;
-
-curLimX = round(( ...
-    param.bbox(curDimIds(1), :) ...
-    - mean(param.bbox(curDimIds(1), :))) ...
-    * param.raw.voxelSize(curDimIds(1)) / 1E3);
-curLimY = round(( ...
-    param.bbox(curDimIds(2), :) ...
-    - mean(param.bbox(curDimIds(2), :))) ...
-    * param.raw.voxelSize(curDimIds(2)) / 1E3);
-
-curSupport = cat(2, curLimY(:), curLimX(:));
+curBinSizeUm = 2;
 curBandWidth = repelem(0.2, 2);
 
+curHalfBoxUm = param.bbox(:, 2) - mean(param.bbox, 2);
+curHalfBoxUm = curHalfBoxUm .* param.raw.voxelSize(:) / 1E3;
+
+curLimits = curBinSizeUm * ceil(curHalfBoxUm / curBinSizeUm);
+curLimX = [-1, +1] .* curLimits(curDimIds(1));
+curLimY = [-1, +1] .* curLimits(curDimIds(2));
+
+curSupport = curHalfBoxUm(flip(curDimIds));
+curSupport = transpose(curSupport(:) .* [-1, +1]);
+
+%%
 curImSize = [curLimY(2), curLimX(2)];
 curImSize = round(curMaxImSize * curImSize / max(curImSize));
 
@@ -81,7 +82,7 @@ curTypeIdx = 2;
 
 curFig = figure();
 curFig.Color = 'white';
-curFig.Position(3:4) = [1200, 325];
+curFig.Position(3:4) = [720, 480];
 
 curIm = curTypeDensities{curTypeIdx};
 curIm = uint8(double(intmax('uint8')) * curIm / max(curIm(:)));
@@ -90,19 +91,25 @@ curAx = axes(curFig);
 curIm = image(curAx, curIm);
 colormap(curAx, jet(256));
 axis(curAx, 'image');
+
+curAx.XTick = [];
+curAx.YTick = curAx.YTick([1, end]);
+curAx.YTickLabel = {'Pia', 'WM'};
 curPos = curAx.Position;
+
 
 plotHist = @(ax, edges, data) ...
     histogram(ax, ...
         'BinEdges', edges, ...
         'BinCounts', data, ...
-        'Orientation', 'horizontal', ...
         'DisplayStyle', 'stairs', ...
         'LineWidth', 2, ...
         'FaceAlpha', 1);
 
-curEdges = linspace(curLimY(1), curLimY(2), 21);
-curPosId = synT.pos(:, curDimIds(2));
+
+% Synapse histogram along X axis of plot
+curEdges = curLimX(1):curBinSizeUm:curLimX(2);
+curPosId = synT.pos(:, curDimIds(1));
 curPosId = discretize(curPosId, curEdges);
 curSynCounts = accumarray( ...
     cat(2, curPosId, synT.synType), ...
@@ -112,9 +119,43 @@ curAx = axes(curFig);
 plotHist(curAx, curEdges, curSynCounts(:, curTypeIdx));
 
 curAx.YDir = 'reverse';
+
+curAx.Box = 'off';
+curAx.TickDir = 'out';
+curAx.XAxisLocation = 'top';
+curAx.XLim = curEdges([1, end]);
+curAx.XTick = [];
+
+curAx.Position(1) = curPos(1);
+curAx.Position(3) = curPos(3);
+curAx.Position(2) = 0.02;
+curAx.Position(4) = curPos(2) - curAx.Position(2);
+
+
+% Synapse histogram along Y axis of plot
+curEdges = curLimY(1):curBinSizeUm:curLimY(2);
+curPosId = synT.pos(:, curDimIds(2));
+curPosId = discretize(curPosId, curEdges);
+curSynCounts = accumarray( ...
+    cat(2, curPosId, synT.synType), ...
+    1, [numel(curEdges) - 1, numel(synTypes)]);
+
+curAx = axes(curFig);
+curHist = plotHist(curAx, curEdges, curSynCounts(:, curTypeIdx));
+
+curHist.Orientation = 'horizontal';
+curAx.YDir = 'reverse';
+
+curAx.Box = 'off';
+curAx.TickDir = 'out';
+curAx.XAxisLocation = 'top';
+curAx.YTick = [];
+curAx.YLim = curEdges([1, end]);
+
 curAx.Position(1) = curPos(1) + curPos(3);
-curAx.Position(3) = 1 - curAx.Position(1);
+curAx.Position(3) = 0.98 - curAx.Position(1);
 curAx.Position(2) = curPos(2);
+
 
 annotation( ...
     curFig, ...
