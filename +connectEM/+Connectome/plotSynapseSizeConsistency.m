@@ -62,8 +62,10 @@ ctrlPlotConfigs(1).title = 'all spine synapses (control)';
 ctrlPlotConfigs(1).tag = 'sp (ctrl)';
 
 %% Plot distribution of synapse size
-connectEM.Consistency.plotSizeHistogram(info, synT, plotConfigs(1));
-connectEM.Consistency.plotSizeHistogram(info, synT, plotConfigs(2:3));
+connectEM.Consistency.plotSizeHistogram( ...
+    info, synT, plotConfigs(1), 'scale', 'log')
+connectEM.Consistency.plotSizeHistogram( ...
+    info, synT, plotConfigs(2:3), 'scale', 'log');
 
 %% Plot histogram of degree of coupling
 connectEM.Consistency.plotCouplingHistogram( ...
