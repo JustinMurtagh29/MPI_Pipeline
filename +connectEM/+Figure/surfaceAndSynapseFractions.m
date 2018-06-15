@@ -129,68 +129,63 @@ globalSynFrac = globalSynFrac ./ sum(globalSynFrac);
 globalData = cat(2, globalSurfFrac, globalSynFrac);
 
 %% Show results
-boxGroups = reshape(1:numel(targetClasses), [], 1);
-boxGroups = repmat(boxGroups, 1, 2, size(boxData, 3));
+clear cur*;
 
-boxGroups(:, 1, :) = 2 .* boxGroups(:, 1, :) - 1;
-boxGroups(:, 2, :) = 2 .* boxGroups(:, 2, :);
+curDataX = reshape(boxData(:, 1, :), [], 1);
+curDataY = reshape(boxData(:, 2, :), [], 1);
 
-% Add jitter
-boxJitter = 0.5 * (rand(size(boxGroups)) - 0.5);
-boxJitter = boxGroups + boxJitter;
+curFig = figure();
+curFig.Color = 'white';
+curFig.Position(3:4) = [540, 375];
 
-fig = figure();
-fig.Color = 'white';
-fig.Position(3:4) = [720, 300];
+curAx = axes(curFig);
+axis(curAx, 'square');
+hold(curAx, 'on');
 
-ax = axes(fig);
-hold(ax, 'on');
+curAx.XLim = [0.001, 1];
+curAx.YLim = [0.001, 1];
 
-colors = ax.ColorOrder([1, 3], :);
-colorGroup = repmat(1:2, 1, numel(targetClasses));
+line(curAx, curAx.XLim, curAx.YLim, 'Color', 'black');
 
-% Fake plots for legend
-plot(ax, nan, nan, '.', 'Color', colors(1, :));
-plot(ax, nan, nan, '.', 'Color', colors(2, :));
-
-scatter(ax, ...
-    boxJitter(:), boxData(:), [], ...
-    colors(1 + mod(boxGroups(:) - 1, 2), :), '.');
-
-for curIdx = 1:numel(globalData)
-    curY = globalData(curIdx);
-    curY = repelem(curY, 1, 2);
+for curIdx = 1:numel(targetClasses)
+    curColor = curAx.ColorOrder(curIdx, :);
+    curDataX = reshape(boxData(curIdx, 1, :), [], 1);
+    curDataY = reshape(boxData(curIdx, 2, :), [], 1);
     
-    curGroup = boxGroups(curIdx);
-    curColor = colors(1 + mod(curGroup - 1, 2), :);
-    curX = curGroup + [-0.45, +0.45];
-    
-    plot(ax, ...
-        curX, curY, ...
-        'Color', curColor, ...
-        'LineWidth', 2);
+    scatter(curAx, curDataX, curDataY, 3 * 36, curColor, '.');
 end
 
-ax.Box = 'off';
-ax.TickDir = 'out';
-ax.YScale = 'log';
+for curIdx = 1:numel(targetClasses)
+    curColor = curAx.ColorOrder(curIdx, :);
+    curPlot = scatter(curAx, ...
+        globalData(curIdx, 1), ...
+        globalData(curIdx, 2), ...
+        2 * 36, curColor, ...
+        'o', 'filled');
+    curPlot.MarkerEdgeColor = 'black';
+end
 
-ylim(ax, [1e-4, 1]);
-yticklabels(ax, arrayfun( ...
-    @(f) sprintf('%g', f), ...
-    yticks(ax), 'UniformOutput', false));
-ax.YAxis.MinorTick = 'off';
-ylabel(ax, 'Fraction');
+curAx.Box = 'off';
+curAx.TickDir = 'out';
+curAx.XScale = 'log';
+curAx.YScale = 'log';
 
-xticks(ax, 2 .* (1:numel(targetClasses)) - 0.5);
-xticklabels(ax, targetLabels);
+xlabel(curAx, 'Surface fraction');
+ylabel(curAx, 'Synapse fraction');
 
-h = legend(ax, ...
-    'Surface fraction', ...
-    'Synapse fraction', ...
+curPlots = flip(cat(1, curAx.Children));
+
+[curLeg, curIcons] = legend( ...
+    curPlots(2:end), targetClasses, ...
     'Location', 'eastoutside');
-h.Box = 'off';
+curLeg.Box = 'off';
 
-title(ax, ...
-    {info.filename; info.git_repos{1}.hash}, ...
-    'FontWeight', 'normal', 'FontSize', 10);
+curMarkers = curIcons((end - numel(targetClasses) + 1):end);
+curMarkers = cat(1, curMarkers.Children);
+set(curMarkers, 'MarkerSize', 24);
+
+annotation( ...
+    curFig, ...
+    'textbox', [0, 0.9, 1, 0.1], ...
+	'String', {info.filename; info.git_repos{1}.hash}, ...
+    'EdgeColor', 'none', 'HorizontalAlignment', 'center');
