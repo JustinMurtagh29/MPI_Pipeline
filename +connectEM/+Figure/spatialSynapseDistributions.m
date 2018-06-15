@@ -38,7 +38,7 @@ synT.pos = synT.pos .* param.raw.voxelSize ./ 1E3;
 
 %% Scatter plot of synpapse position
 clear cur*;
-curDimIds = [2, 1];
+curDimIds = [3, 1];
 curMaxImSize = 300;
 curBandWidth = repelem(0.2, 2);
 
