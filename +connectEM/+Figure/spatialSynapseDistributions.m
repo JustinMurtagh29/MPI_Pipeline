@@ -40,7 +40,6 @@ synT.pos = synT.pos .* param.raw.voxelSize ./ 1E3;
 clear cur*;
 curDimIds = [3, 1];
 curMaxImSize = 300;
-curBandWidth = repelem(0.2, 2);
 
 curLimX = round(( ...
     param.bbox(curDimIds(1), :) ...
@@ -51,6 +50,9 @@ curLimY = round(( ...
     - mean(param.bbox(curDimIds(2), :))) ...
     * param.raw.voxelSize(curDimIds(2)) / 1E3);
 
+curSupport = cat(2, curLimY(:), curLimX(:));
+curBandWidth = repelem(0.2, 2);
+
 curImSize = [curLimY(2), curLimX(2)];
 curImSize = round(curMaxImSize * curImSize / max(curImSize));
 
@@ -59,12 +61,8 @@ curImSize = round(curMaxImSize * curImSize / max(curImSize));
     linspace(curLimX(1), curLimX(2), curImSize(2)));
 curImGrid = cat(2, curImGridY(:), curImGridX(:));
 
-curSupport = cat(2, curLimY(:), curLimX(:));
-
-curFig = figure();
-curFig.Color = 'white';
-curFig.Position(3:4) = [1200, 325];
-
+% Precompute images for faster prototyping
+curTypeDensities = cell(size(synTypes));
 for curIdx = 1:numel(synTypes)
     curSynT = synT(synT.synType == curIdx, :);
     curDataX = curSynT.pos(:, curDimIds(1));
@@ -73,31 +71,50 @@ for curIdx = 1:numel(synTypes)
     curIm = ksdensity( ...
        cat(2, curDataY, curDataX), curImGrid, ...
        'Support', curSupport, 'BandWidth', curBandWidth);
-    curIm = uint8(double(intmax('uint8')) * curIm / max(curIm));
     curIm = reshape(curIm, curImSize);
     
-    curAx = subplot(1, numel(synTypes), curIdx);
-    imshow(curIm, jet(double(intmax('uint8'))));
-    
-    title(curAx, ...
-        synTypes{curIdx}, ...
-        'FontWeight', 'normal', ...
-        'FontSize', 10);
+    curTypeDensities{curIdx} = curIm;
 end
 
-curAxes = curFig.Children;
+%% Do the actual plotting
+curTypeIdx = 2;
 
-set(curAxes, ...
-    'Visible', 'on', ...
-    'Layer', 'top', ...
-    'Box', 'off', ...
-    'TickDir', 'out', ...
-    'XTick', [1, curImSize(2)], ...
-    'XTickLabel', {}, ...
-    'YTick', [1, curImSize(1)], ...
-    'YTickLabel', {});
+curFig = figure();
+curFig.Color = 'white';
+curFig.Position(3:4) = [1200, 325];
 
-yticklabels(curAxes(end), {'Pia', 'WM'});
+curIm = curTypeDensities{curTypeIdx};
+curIm = uint8(double(intmax('uint8')) * curIm / max(curIm(:)));
+
+curAx = axes(curFig);
+curIm = image(curAx, curIm);
+colormap(curAx, jet(256));
+axis(curAx, 'image');
+curPos = curAx.Position;
+
+plotHist = @(ax, edges, data) ...
+    histogram(ax, ...
+        'BinEdges', edges, ...
+        'BinCounts', data, ...
+        'Orientation', 'horizontal', ...
+        'DisplayStyle', 'stairs', ...
+        'LineWidth', 2, ...
+        'FaceAlpha', 1);
+
+curEdges = linspace(curLimY(1), curLimY(2), 21);
+curPosId = synT.pos(:, curDimIds(2));
+curPosId = discretize(curPosId, curEdges);
+curSynCounts = accumarray( ...
+    cat(2, curPosId, synT.synType), ...
+    1, [numel(curEdges) - 1, numel(synTypes)]);
+
+curAx = axes(curFig);
+plotHist(curAx, curEdges, curSynCounts(:, curTypeIdx));
+
+curAx.YDir = 'reverse';
+curAx.Position(1) = curPos(1) + curPos(3);
+curAx.Position(3) = 1 - curAx.Position(1);
+curAx.Position(2) = curPos(2);
 
 annotation( ...
     curFig, ...
@@ -105,7 +122,8 @@ annotation( ...
 	'String', {info.filename; info.git_repos{1}.hash}, ...
     'EdgeColor', 'none', 'HorizontalAlignment', 'center');
 
-%% Plotting data
+%% Plotting histogram
+%{
 clear cur*;
 curDimLabels = {'X', 'Y', 'Z'};
 
@@ -190,3 +208,4 @@ function leg = addLegend(ax, legends, varargin)
     leg = legend(ax, legends, varargin{:});
     ax.Position = axPos;
 end
+%}
