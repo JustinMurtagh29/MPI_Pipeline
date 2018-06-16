@@ -1,0 +1,27 @@
+<things>
+  <meta name="writer" content="NmlWriter.scala" />
+  <meta name="writerGitCommit" content="a08be231ee532559379c2bc5a3568b7ea6d2e239" />
+  <meta name="timestamp" content="1520858145546" />
+  <meta name="annotationId" content="5aa673fc2700003404c5b119" />
+  <meta name="username" content="Heiko Wissler" />
+  <parameters>
+    <experiment name="2012-09-28_ex145_07x2_ROI2017" description="" />
+    <scale x="11.4" y="11.4" z="28.0" />
+    <offset x="0" y="0" z="0" />
+    <time ms="1517908241490" />
+    <editPosition x="2061" y="8000" z="3397" />
+    <editRotation xRot="0.0" yRot="0.0" zRot="0.0" />
+    <zoomLevel zoom="2.42" />
+    <activeNode id="1" />
+  </parameters>
+  <thing id="1" color.r="1.0" color.g="0.0" color.b="0.0" color.a="1.0" name="task_5a0b045b3300003301c53526_Vanessa_Kalbert_001">
+    <nodes>
+      <node id="1" radius="120.0" x="2099" y="7999" z="3397" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="1" inMag="1" bitDepth="0" interpolation="false" time="1511041136899" />
+    </nodes>
+    <edges />
+  </thing>
+  <branchpoints />
+  <comments>
+    <comment node="1" content="dendrite" />
+  </comments>
+</things>
