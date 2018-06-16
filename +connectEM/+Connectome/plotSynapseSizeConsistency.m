@@ -141,9 +141,11 @@ for curConfig = curConfigs
        [curLearnedFrac, curUnlearnedFrac, curCvThresh] = ...
             connectEM.Consistency.calculateLearnedFraction( ...
                 curConfig.synT, curPairConfigs(1), curPairConfigs(end));
+        curOpenFrac = 1 - curLearnedFrac - curUnlearnedFrac;
 
         fprintf('%s\n', curPlotConfig.title);
         fprintf('→ Learned fraction: %.1f %%\n', 100 * curLearnedFrac);
+        fprintf('→ Possibly learned fraction: %.1f %%\n', 100 * curOpenFrac);
         fprintf('→ Unlearned fraction: %.1f %%\n', 100 * curUnlearnedFrac);
         fprintf('→ CV threshold: %.2f\n', curCvThresh);
         fprintf('\n');
