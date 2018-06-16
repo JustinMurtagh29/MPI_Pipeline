@@ -65,4 +65,11 @@ volT(6).vol = sum(segSizes(neuropilSegIds));
 
 volT = struct2table(volT);
 volT.percent = 100 * volT.vol / volT.vol(1);
+volT.vol = volT.vol * voxelVol;
+
+% Calculate volume fractions
+% without taking into account watershed borders
+nonBorderVol = volT.vol(1) - volT.vol(2);
+volT.borderCorrPercent = nan(size(volT.percent));
+volT.borderCorrPercent(3:end) = 100 * volT.vol(3:end) ./ nonBorderVol;
 disp(volT)
