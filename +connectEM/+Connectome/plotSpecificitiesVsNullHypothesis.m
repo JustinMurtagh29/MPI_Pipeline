@@ -190,9 +190,13 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
         
         if ~isempty(curThetaIdx)
             curThetaPVal = curPVal(curThetaIdx);
+            
             plot(ax, ...
                 repelem(curThetaPVal, 2), [0, 1], ...
                 'Color', 'black', 'LineStyle', '--');
+            title(ax, ...
+                sprintf('p = %.2f', curThetaPVal), ...
+                'FontWeight', 'normal', 'FontSize', 10);
         end
         
         xlim(ax, [0, 1]);
