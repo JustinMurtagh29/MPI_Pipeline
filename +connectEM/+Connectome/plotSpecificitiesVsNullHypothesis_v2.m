@@ -66,7 +66,7 @@ function outlier = plotAxonClass(info, axonMeta, classConn, targetClasses, axonC
     
     %% preparations
     
-    %     nullModel = 'binomial';
+    % nullModel = 'binomial';
     nullModel = 'drmn';
     
     % calculate overall synapse probabilities
@@ -86,7 +86,11 @@ function outlier = plotAxonClass(info, axonMeta, classConn, targetClasses, axonC
         % polya fit samples (maximum likelihood)
         pol_s = polya_sample(a, sum(classConn(axonClass.axonIds, :), 2));
         pol_s = pol_s ./ sum(pol_s, 2);
-    %     pol_m =  sum(targetClassSyns) .* a ./ sum(a);
+%         pol_m =  sum(targetClassSyns) .* a ./ sum(a);
+    
+    % marginal means
+        pol_m = a ./ (a + arrayfun(@(x)sum(a(setdiff(1:length(a), x))), ...
+            1:length(a)));
 
         % multinomial samples (maximum likelihood)
         mn_s = mnrnd(sum(classConn(axonClass.axonIds, :), 2), targetClassProbs);
