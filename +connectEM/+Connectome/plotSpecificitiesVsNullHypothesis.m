@@ -122,7 +122,7 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
         axes{classIdx} = ax;
         
         %% p-values
-        curBinEdges = linspace(-1E-3, 1 + 1E-3, 21);
+        curBinEdges = linspace(-1E-3, 1 + 1E-3, numel(binEdges));
         
        [expChanceProbs, expChanceCounts] = ...
             connectEM.Specificity.calcExpectedChanceProbDist( ...
@@ -185,8 +185,8 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
        [curMaxDiff, curThetaIdx] = max(curDiffs(1:curThetaIdx));
         if curMaxDiff < 0; curThetaIdx = []; end
         
-        plot(ax, curPVal, curPAxonFrac, 'LineWidth', 1);
-        plot(ax, curExpX, curExpY, 'LineWidth', 1);
+        plot(ax, curPVal, curPAxonFrac, 'LineWidth', 2);
+        plot(ax, curExpX, curExpY, 'LineWidth', 2);
         
         if ~isempty(curThetaIdx)
             curThetaPVal = curPVal(curThetaIdx);
