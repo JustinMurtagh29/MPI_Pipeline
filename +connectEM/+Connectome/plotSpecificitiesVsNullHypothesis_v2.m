@@ -51,23 +51,28 @@ allAxonClass.title = sprintf( ...
 axonClasses(end + 1) = allAxonClass;
 
 %% plot
+% nullModel = 'binomial';
+nullModel = 'drmn';
 for curIdx = 1:numel(axonClasses)
     outlier = plotAxonClass( ...
         info, conn.axonMeta, classConnectome, ...
-        targetClasses, axonClasses(curIdx));
+        targetClasses, axonClasses(curIdx), nullModel);
 end
 
 
-%% plotting
-function outlier = plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
+function outlier = plotAxonClass(info, axonMeta, classConn, ...
+    targetClasses, axonClass, nullModel)
+    axonCount = numel(axonClass.axonIds);
     axonSpecs = classConn(axonClass.axonIds, :);
     axonSpecs = axonSpecs ./ sum(axonSpecs, 2);
     
     
     %% preparations
     
-    % nullModel = 'binomial';
-    nullModel = 'drmn';
+    if ~exist('nullModel', 'var') || isempty(nullModel)
+        nullModel = 'binomial';
+%         nullModel = 'drmn';
+    end
     
     % calculate overall synapse probabilities
     targetClassSyns = sum(classConn(axonClass.nullAxonIds, :), 1);
@@ -86,15 +91,15 @@ function outlier = plotAxonClass(info, axonMeta, classConn, targetClasses, axonC
         % polya fit samples (maximum likelihood)
         pol_s = polya_sample(a, sum(classConn(axonClass.axonIds, :), 2));
         pol_s = pol_s ./ sum(pol_s, 2);
-%         pol_m =  sum(targetClassSyns) .* a ./ sum(a);
-    
-    % marginal means
-        pol_m = a ./ (a + arrayfun(@(x)sum(a(setdiff(1:length(a), x))), ...
-            1:length(a)));
+    %     pol_m =  sum(targetClassSyns) .* a ./ sum(a);
 
         % multinomial samples (maximum likelihood)
         mn_s = mnrnd(sum(classConn(axonClass.axonIds, :), 2), targetClassProbs);
         mn_s = mn_s ./ sum(mn_s, 2);
+        
+        % marginal means
+        pol_m = a ./ (a + arrayfun(@(x)sum(a(setdiff(1:length(a), x))), ...
+            1:length(a)));
         
 %         % fit for axons that actually do innervate a target class
 %         figure;
@@ -229,7 +234,48 @@ function outlier = plotAxonClass(info, axonMeta, classConn, targetClasses, axonC
             % than out_t
             out_t = 0.001;
             outlier{classIdx} = find(axonClassNullProbs < out_t);
+            p_vals = p_vals_h0_bb;
         end
+        
+        %% p-values
+        curBinEdges = linspace(-1E-3, 1 + 1E-3, 21);
+        
+        switch nullModel
+            case 'binomial'
+                [expChanceProbs, expChanceCounts] = ...
+                    connectEM.Specificity.calcExpectedChanceProbDist( ...
+                        axonMeta.synCount(axonClass.axonIds), classProb);
+            case 'drmn'
+               [expChanceProbs, expChanceCounts] = ...
+                    connectEM.Specificity.calcExpectedChanceProbDist( ...
+                        axonMeta.synCount(axonClass.axonIds), classProb, 'pdf', pdf);
+        end
+        curExpCounts = accumarray( ...
+            discretize(expChanceProbs, curBinEdges), ...
+            expChanceCounts / axonCount);
+        curBinCounts = accumarray( ...
+            discretize(axonClassNullProbs, curBinEdges), ...
+            1 / axonCount);
+        
+        ax = subplot( ...
+            3, numel(targetClasses), ...
+            numel(targetClasses) + classIdx);
+        axis(ax, 'square');
+        hold(ax, 'on');
+        
+        histogram(ax, ...
+            'BinCounts', curBinCounts, ...
+            'BinEdges', curBinEdges, ...
+            'DisplayStyle', 'stairs', ...
+            'LineWidth', 2);
+        histogram(ax, ...
+            'BinEdges', curBinEdges, ...
+            'BinCounts', curExpCounts, ...
+            'DisplayStyle', 'stairs', ...
+            'LineWidth', 2);
+        
+        ax.YScale = 'log';
+        ax.XLim = curBinEdges([1, end]);
         
         % Compare p-value distribution against expectation:
         % We'd expect there to be `theta` percent of axons with a p-value
@@ -260,69 +306,58 @@ function outlier = plotAxonClass(info, axonMeta, classConn, targetClasses, axonC
                 curPRatio(curThetaIdx:end) < 1, 1);
         end
         
-        % Plotting
-        hold(ax, 'on');
-        plot( ...
-            ax, binEdges([1, end]), [1, 1], ...
-            'Color', ax.ColorOrder(2, :));
-        pl = plot( ...
-            ax, curPVal, curPRatio, ...
-            'Color', ax.ColorOrder(1, :), ...
-            'LineWidth', 2);
-        
-        if ~isempty(curThetaIdx)
-            plot( ...
-                ax, curPVal([curThetaIdx, curThetaIdx]), ax.YLim, ...
-                'Color', 'black', 'LineStyle', '--');
-            title(ax, ...
-                sprintf('p = %.2f', curPVal(curThetaIdx)), ...
-                'FontWeight', 'normal', 'FontSize', 10);
-        end
-        
-        ax.TickDir = 'out';
-        xlabel(ax, 'p-value');
-        xlim(ax, binEdges([1, end]));
-        ylim(ax, [0, 2]);
-        
-        pValAxes{classIdx} = ax;
-        
-        if classIdx == numel(targetClasses)
-            legend(pl, ...
-                sprintf('observed p-value under %s', nullModel), ...
-                'Location', 'NorthEast');
-        end
-        
         %% alternative visualization
+        %% alternative visualization
+        % Compare p-value distribution against expectation:
+        % We'd expect there to be `theta` percent of axons with a p-value
+        % below `theta`. If there are, however, significantly more axons
+        % with a p-value below `theta`, something interesting is going on.
+        curPVal = sort(axonClassNullProbs, 'ascend');
+        curPVal = reshape(curPVal, 1, []);
+        
         ax = subplot( ...
             3, numel(targetClasses), ...
             2 * numel(targetClasses) + classIdx);
         axis(ax, 'square');
         hold(ax, 'on');
         
-        curPAxonFrac = linspace(0, 1, numel(curPVal));
+       [curPVal, ~, curPAxonFrac] = unique(curPVal);
+        curPAxonFrac = accumarray(curPAxonFrac, 1);
+        curPAxonFrac = cumsum(curPAxonFrac) / sum(curPAxonFrac);
         
-        plot(curPVal, curPAxonFrac);
-        pl = plot(p_vals_h0, ax_count_h0);
-        if fitted_polya
-            pl2 = plot(p_vals_h0_bb, ax_count_h0_bb);
-            pl = [pl, pl2];
-        end
-%         plot([0, 1], [0, 1]);
+        curExpX = expChanceProbs;
+        curExpY = cumsum(expChanceCounts);
+        curExpY = curExpY / curExpY(end);
+        
+        curDiffs = interp1(curExpX, curExpY, curPVal);
+        curDiffs = curPAxonFrac(:) - curDiffs(:);
+        
+        curThetaIdx = find(curDiffs(1:(end - 1)) < 0, 1);
+       [curMaxDiff, curThetaIdx] = max(curDiffs(1:curThetaIdx));
+        if curMaxDiff < 0; curThetaIdx = []; end
+        
+        plot(ax, curPVal, curPAxonFrac, 'LineWidth', 2);
+        plot(ax, curExpX, curExpY, 'LineWidth', 2);
         
         if ~isempty(curThetaIdx)
+            curThetaPVal = curPVal(curThetaIdx);
+            
             plot(ax, ...
-                curPVal([curThetaIdx, curThetaIdx]), ax.YLim, ...
+                repelem(curThetaPVal, 2), [0, 1], ...
                 'Color', 'black', 'LineStyle', '--');
+            title(ax, ...
+                sprintf('p = %.2f', curThetaPVal), ...
+                'FontWeight', 'normal', 'FontSize', 10);
         end
         
-        ax.XLim = [0, 1];
+        xlim(ax, [0, 1]);
+        ylim(ax, [0, 1]);
         xlabel(ax, 'p-value');
         ylabel(ax, {'Fraction of axons'; 'with p < x'});
         
         if classIdx == numel(targetClasses)
-            legend(pl, ...
-                'sampled p-value under binomial', ...
-                'sampled p-value under drmn', ...
+            legend('Observed data', ...
+                sprintf('Null model: %s', nullModel), ...
                 'Location', 'NorthEast');
         end
     end
