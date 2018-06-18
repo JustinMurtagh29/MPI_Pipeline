@@ -38,6 +38,6 @@ function [pVals, expAxonCount] = ...
     pVals = cell2mat(pVals);
     expAxonCount = cell2mat(expAxonCount);
     
-   [pVals, sortIds] = sort(pVals, 'ascend');
-    expAxonCount = expAxonCount(sortIds);
+   [pVals, ~, sortIds] = unique(pVals);
+    expAxonCount = accumarray(sortIds, expAxonCount);
 end
