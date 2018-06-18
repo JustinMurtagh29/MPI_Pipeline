@@ -122,17 +122,17 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
         axes{classIdx} = ax;
         
         %% p-values
-       [curExpChanceProbs, curExpChanceCounts] = ...
+        curBinEdges = linspace(-1E-3, 1 + 1E-3, 21);
+        
+       [expChanceProbs, expChanceCounts] = ...
             connectEM.Specificity.calcExpectedChanceProbDist( ...
                 axonMeta.synCount(axonClass.axonIds), classProb);
-            
-        curBinEdges = linspace(-1E-3, 1 + 1E-3, 21);
-        curObsCounts = accumarray( ...
+        curExpCounts = accumarray( ...
+            discretize(expChanceProbs, curBinEdges), ...
+            expChanceCounts / axonCount);
+        curBinCounts = accumarray( ...
             discretize(axonClassNullProbs, curBinEdges), ...
             1 / axonCount);
-        curExpCounts = accumarray( ...
-            discretize(curExpChanceProbs, curBinEdges), ...
-            curExpChanceCounts / axonCount);
             
         ax = subplot( ...
             3, numel(targetClasses), ...
@@ -141,8 +141,8 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
         hold(ax, 'on');
         
         histogram(ax, ...
+            'BinCounts', curBinCounts, ...
             'BinEdges', curBinEdges, ...
-            'BinCounts', curObsCounts, ...
             'DisplayStyle', 'stairs', ...
             'LineWidth', 2);
         histogram(ax, ...
@@ -154,6 +154,9 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
         ax.YScale = 'log';
         ax.XLim = curBinEdges([1, end]);
         
+        pValAxes{classIdx} = ax;
+        
+        %% alternative visualization
         % Compare p-value distribution against expectation:
         % We'd expect there to be `theta` percent of axons with a p-value
         % below `theta`. If there are, however, significantly more axons
@@ -161,23 +164,36 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
         curPVal = sort(axonClassNullProbs, 'ascend');
         curPVal = reshape(curPVal, 1, []);
         
-        pValAxes{classIdx} = ax;
-        
-        %% alternative visualization
         ax = subplot( ...
             3, numel(targetClasses), ...
             2 * numel(targetClasses) + classIdx);
         axis(ax, 'square');
         hold(ax, 'on');
         
-        curPAxonFrac = linspace(0, 1, numel(curPVal));
+       [curPVal, ~, curPAxonFrac] = unique(curPVal);
+        curPAxonFrac = accumarray(curPAxonFrac, 1);
+        curPAxonFrac = cumsum(curPAxonFrac) / sum(curPAxonFrac);
         
-        curBinEdges = curExpChanceProbs;
-        curTempY = cumsum(curExpChanceCounts);
-        curTempY = curTempY / curTempY(end);
+        curExpX = expChanceProbs;
+        curExpY = cumsum(expChanceCounts);
+        curExpY = curExpY / curExpY(end);
         
-        plot(curPVal, curPAxonFrac, 'LineWidth', 2);
-        plot(curBinEdges, curTempY, 'LineWidth', 2);
+        curDiffs = interp1(curExpX, curExpY, curPVal);
+        curDiffs = curPAxonFrac(:) - curDiffs(:);
+        
+        curThetaIdx = find(curDiffs(1:(end - 1)) < 0, 1);
+       [curMaxDiff, curThetaIdx] = max(curDiffs(1:curThetaIdx));
+        if curMaxDiff < 0; curThetaIdx = []; end
+        
+        plot(ax, curPVal, curPAxonFrac, 'LineWidth', 1);
+        plot(ax, curExpX, curExpY, 'LineWidth', 1);
+        
+        if ~isempty(curThetaIdx)
+            curThetaPVal = curPVal(curThetaIdx);
+            plot(ax, ...
+                repelem(curThetaPVal, 2), [0, 1], ...
+                'Color', 'black', 'LineStyle', '--');
+        end
         
         xlim(ax, [0, 1]);
         ylim(ax, [0, 1]);
