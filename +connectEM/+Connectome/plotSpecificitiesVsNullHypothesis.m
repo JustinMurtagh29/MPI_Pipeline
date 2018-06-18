@@ -53,6 +53,7 @@ end
 
 %% plotting
 function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
+    axonCount = numel(axonClass.axonIds);
     axonSpecs = classConn(axonClass.axonIds, :);
     axonSpecs = axonSpecs ./ sum(axonSpecs, 2);
     
@@ -121,11 +122,37 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
         axes{classIdx} = ax;
         
         %% p-values
+       [curExpChanceProbs, curExpChanceCounts] = ...
+            connectEM.Specificity.calcExpectedChanceProbDist( ...
+                axonMeta.synCount(axonClass.axonIds), classProb);
+            
+        curBinEdges = linspace(-1E-3, 1 + 1E-3, 21);
+        curObsCounts = accumarray( ...
+            discretize(axonClassNullProbs, curBinEdges), ...
+            1 / axonCount);
+        curExpCounts = accumarray( ...
+            discretize(curExpChanceProbs, curBinEdges), ...
+            curExpChanceCounts / axonCount);
+            
         ax = subplot( ...
             3, numel(targetClasses), ...
             numel(targetClasses) + classIdx);
         axis(ax, 'square');
         hold(ax, 'on');
+        
+        histogram(ax, ...
+            'BinEdges', curBinEdges, ...
+            'BinCounts', curObsCounts, ...
+            'DisplayStyle', 'stairs', ...
+            'LineWidth', 2);
+        histogram(ax, ...
+            'BinEdges', curBinEdges, ...
+            'BinCounts', curExpCounts, ...
+            'DisplayStyle', 'stairs', ...
+            'LineWidth', 2);
+        
+        ax.YScale = 'log';
+        ax.XLim = curBinEdges([1, end]);
         
         % Compare p-value distribution against expectation:
         % We'd expect there to be `theta` percent of axons with a p-value
@@ -133,46 +160,6 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
         % with a p-value below `theta`, something interesting is going on.
         curPVal = sort(axonClassNullProbs, 'ascend');
         curPVal = reshape(curPVal, 1, []);
-
-        curPRatio = (1:numel(curPVal)) ./ numel(curPVal);
-        curPRatio = curPRatio ./ curPVal;
-        
-        % Find chance level (i.e., ratio 1)
-        curThetaIdx = find(curPRatio > 1, 1);
-        
-        % No threshold if chance level was reached from below.
-        if mean(curPRatio(1:curThetaIdx) > 1) < 0.5
-            curThetaIdx = [];
-        end
-        
-        if ~isempty(curThetaIdx)
-            curThetaIdx = curThetaIdx - 1 + find( ...
-                curPRatio(curThetaIdx:end) < 1, 1);
-        end
-        
-        % Plotting
-        hold(ax, 'on');
-        plot( ...
-            ax, binEdges([1, end]), [1, 1], ...
-            'Color', ax.ColorOrder(2, :));
-        plot( ...
-            ax, curPVal, curPRatio, ...
-            'Color', ax.ColorOrder(1, :), ...
-            'LineWidth', 2);
-        
-        if ~isempty(curThetaIdx)
-            plot( ...
-                ax, curPVal([curThetaIdx, curThetaIdx]), ax.YLim, ...
-                'Color', 'black', 'LineStyle', '--');
-            title(ax, ...
-                sprintf('p = %.2f', curPVal(curThetaIdx)), ...
-                'FontWeight', 'normal', 'FontSize', 10);
-        end
-        
-        ax.TickDir = 'out';
-        xlabel(ax, 'p-value');
-        xlim(ax, binEdges([1, end]));
-        ylim(ax, [0, 2]);
         
         pValAxes{classIdx} = ax;
         
@@ -185,20 +172,12 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
         
         curPAxonFrac = linspace(0, 1, numel(curPVal));
         
-       [curTempX, curTempY] = ...
-            connectEM.Specificity.calcExpectedChanceProbDist( ...
-                axonMeta.synCount(axonClass.axonIds), classProb);
-        curTempY = cumsum(curTempY);
+        curBinEdges = curExpChanceProbs;
+        curTempY = cumsum(curExpChanceCounts);
         curTempY = curTempY / curTempY(end);
         
-        plot(curPVal, curPAxonFrac);
-        plot(curTempX, curTempY);
-        
-        if ~isempty(curThetaIdx)
-            plot(ax, ...
-                curPVal([curThetaIdx, curThetaIdx]), ax.YLim, ...
-                'Color', 'black', 'LineStyle', '--');
-        end
+        plot(curPVal, curPAxonFrac, 'LineWidth', 2);
+        plot(curBinEdges, curTempY, 'LineWidth', 2);
         
         xlim(ax, [0, 1]);
         ylim(ax, [0, 1]);
@@ -223,10 +202,6 @@ function plotAxonClass(info, axonMeta, classConn, targetClasses, axonClass)
     yMax = max(arrayfun(@(a) a.YAxis.Limits(end), axes));
     for ax = axes; ax.YAxis.Limits(end) = yMax; end
     
-    pValAxes = horzcat(pValAxes{:});
-    yMax = max(arrayfun(@(a) a.YAxis(1).Limits(end), pValAxes));
-   [pValAxes.YLim] = deal([0, yMax]);
-
     annotation( ...
         'textbox', [0, 0.9, 1, 0.1], ...
         'EdgeColor', 'none', 'HorizontalAlignment', 'center', ...
