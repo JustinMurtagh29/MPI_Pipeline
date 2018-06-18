@@ -31,12 +31,15 @@ predictionMethod = 'predictUsingLinearRegressionOnAllTargetClassAvailabilities';
 fakeRadius = [];
 
 targetClasses = { ...
-    'Somata', ...
-    'ProximalDendrite', ...
-    'SmoothDendrite', ...
-    'ApicalDendrite', ...
-    'AxonInitialSegment', ...
-    'OtherDendrite'};
+    'Somata', 'SO';
+    'ProximalDendrite', 'PD'; ...
+    'SmoothDendrite', 'SD'; ...
+    'ApicalDendrite', 'AD'; ...
+    'AxonInitialSegment', 'AIS'; ...
+    'OtherDendrite', 'Other'};
+
+targetTags = reshape(targetClasses(:, 2), 1, []);
+targetClasses = reshape(targetClasses(:, 1), 1, []);
 
 info = Util.runInfo();
 
@@ -474,33 +477,48 @@ curRadiusId = find(avail.dists == 1E3 * curRadius);
 
 curFig = figure();
 curFig.Color = 'white';
-curFig.Position(3:4) = [1150, 350];
+curFig.Position(3:4) = [310, 310];
 
 for curIdx = 1:numel(targetClasses)
     curSpecs = classConn(curAxonIds, :);
     curSpecs = curSpecs(:, curIdx) ./ sum(curSpecs, 2);
     curAvail = availabilities(curIdx, curRadiusId, curAxonIds);
     
-   [curFit, curGof] = fit(curAvail(:), curSpecs(:), 'poly1');
-   
-    curTitle = { ...
-        char(targetClasses(curIdx)); ...
-        sprintf('r² = %g', curGof.rsquare)};
+    curRange = [min(curAvail), max(curAvail)];
+    
+    curFit = fit(curAvail(:), curSpecs(:), 'poly1');
+    curTitle = targetTags{curIdx};
     
     curAx = subplot(1, numel(targetClasses), curIdx);
-    axis(curAx, 'square');
     hold(curAx, 'on');
     
     scatter(curAx, curAvail(:), curSpecs(:), '.');
-    plot(curAx, [0, 1], curFit([0, 1]), 'Color', 'black');
+    plot(curAx, [0, 1], curFit([0, 1]), 'Color', 'black', 'LineWidth', 2);
     
-    curAx.XLim = [0, 1];
-    curAx.YLim = [0, 1];
     curAx.TickDir = 'out';
+    curAx.XLim = curRange;
+    
+    curAx.Position(3) = 0.3 * diff(curRange);
+    curAx.Position([2, 4]) = [0.2, 0.5];
+    
     title(curAx, curTitle, 'FontWeight', 'normal', 'FontSize', 10);
 end
 
-curAx = curFig.Children(end);
+curAxes = flip(curFig.Children);
+set(curAxes, 'YLim', [0, 1], 'XTick', []);
+
+curWidth = sum(arrayfun(@(a) a.Position(3), curAxes));
+curWidth = curWidth + (numel(curAxes) - 1) * 0.075;
+curOffset = (1 - curWidth) / 2;
+
+curAxes(1).Position(1) = curOffset;
+for curIdx = 2:numel(curAxes)
+    curAxes(curIdx).YAxis.Visible = 'off';
+    curAxes(curIdx).Position(1) = ...
+        sum(curAxes(curIdx - 1).Position([1, 3])) + 0.075;
+end
+
+curAx = curAxes(1);
 xlabel(curAx, 'Availability');
 ylabel(curAx, 'Synapse fraction');
 
