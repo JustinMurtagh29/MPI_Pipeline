@@ -10,7 +10,6 @@ function axonClasses = buildAxonSpecificityClasses(conn, axonClasses)
     %% Add specificity thresholds
     % Excitatory axons
     axonClasses(1).specs = struct;
-    axonClasses(1).specs.Somata.pThresh = 0.06;
     axonClasses(1).specs.ProximalDendrite.pThresh = 0.11;
     axonClasses(1).specs.ApicalDendrite.pThresh = 0.14;
     axonClasses(1).specs.SmoothDendrite.pThresh = 0.07;
@@ -29,7 +28,6 @@ function axonClasses = buildAxonSpecificityClasses(conn, axonClasses)
     
     % Corticocortical axons
     axonClasses(4).specs = struct;
-    axonClasses(4).specs.Somata.pThresh = 0.08;
     axonClasses(4).specs.ProximalDendrite.pThresh = 0.08;
     axonClasses(4).specs.ApicalDendrite.pThresh = 0.14;
     axonClasses(4).specs.SmoothDendrite.pThresh = 0.13;
