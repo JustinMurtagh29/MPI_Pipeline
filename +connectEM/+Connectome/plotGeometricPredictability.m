@@ -472,6 +472,9 @@ clear cur*;
 curSynCount = 10;
 curRadius = 10;
 
+curPad = 0.075;
+curMinRange = 0.2;
+
 curAxonIds = conn.axonMeta.synCount >= curSynCount;
 curRadiusId = find(avail.dists == 1E3 * curRadius);
 
@@ -485,6 +488,11 @@ for curIdx = 1:numel(targetClasses)
     curAvail = availabilities(curIdx, curRadiusId, curAxonIds);
     
     curRange = [min(curAvail), max(curAvail)];
+    curMidRange = mean(curRange);
+    
+    curRange = [ ...
+        min(curRange(1), curMidRange - curMinRange / 2), ...
+        max(curRange(2), curMidRange + curMinRange / 2)];
     
     curFit = fit(curAvail(:), curSpecs(:), 'poly1');
     curTitle = targetTags{curIdx};
@@ -508,14 +516,14 @@ curAxes = flip(curFig.Children);
 set(curAxes, 'YLim', [0, 1], 'XTick', []);
 
 curWidth = sum(arrayfun(@(a) a.Position(3), curAxes));
-curWidth = curWidth + (numel(curAxes) - 1) * 0.075;
+curWidth = curWidth + (numel(curAxes) - 1) * curPad;
 curOffset = (1 - curWidth) / 2;
 
 curAxes(1).Position(1) = curOffset;
 for curIdx = 2:numel(curAxes)
     curAxes(curIdx).YAxis.Visible = 'off';
     curAxes(curIdx).Position(1) = ...
-        sum(curAxes(curIdx - 1).Position([1, 3])) + 0.075;
+        sum(curAxes(curIdx - 1).Position([1, 3])) + curPad;
 end
 
 curAx = curAxes(1);
