@@ -472,12 +472,15 @@ clear cur*;
 curSynCount = 10;
 curRadius = 10;
 
+curPad = 0.05;
+curMinRange = 0.1;
+
 curAxonIds = conn.axonMeta.synCount >= curSynCount;
 curRadiusId = find(avail.dists == 1E3 * curRadius);
 
 curFig = figure();
 curFig.Color = 'white';
-curFig.Position(3:4) = [310, 310];
+curFig.Position(3:4) = [500, 310];
 
 for curIdx = 1:numel(targetClasses)
     curSpecs = classConn(curAxonIds, :);
@@ -485,6 +488,8 @@ for curIdx = 1:numel(targetClasses)
     curAvail = availabilities(curIdx, curRadiusId, curAxonIds);
     
     curRange = [min(curAvail), max(curAvail)];
+    curRange(1) = floor(10 * curRange(1)) / 10;
+    curRange(2) = ceil(10 * curRange(2)) / 10;
     
     curFit = fit(curAvail(:), curSpecs(:), 'poly1');
     curTitle = targetTags{curIdx};
@@ -497,6 +502,7 @@ for curIdx = 1:numel(targetClasses)
     
     curAx.TickDir = 'out';
     curAx.XLim = curRange;
+    curAx.XTick = curRange;
     
     curAx.Position(3) = 0.3 * diff(curRange);
     curAx.Position([2, 4]) = [0.2, 0.5];
@@ -505,22 +511,22 @@ for curIdx = 1:numel(targetClasses)
 end
 
 curAxes = flip(curFig.Children);
-set(curAxes, 'YLim', [0, 1], 'XTick', []);
+set(curAxes, 'YLim', [0, 1]);
 
 curWidth = sum(arrayfun(@(a) a.Position(3), curAxes));
-curWidth = curWidth + (numel(curAxes) - 1) * 0.075;
+curWidth = curWidth + (numel(curAxes) - 1) * curPad;
 curOffset = (1 - curWidth) / 2;
 
 curAxes(1).Position(1) = curOffset;
 for curIdx = 2:numel(curAxes)
     curAxes(curIdx).YAxis.Visible = 'off';
     curAxes(curIdx).Position(1) = ...
-        sum(curAxes(curIdx - 1).Position([1, 3])) + 0.075;
+        sum(curAxes(curIdx - 1).Position([1, 3])) + curPad;
 end
 
 curAx = curAxes(1);
-xlabel(curAx, 'Availability');
-ylabel(curAx, 'Synapse fraction');
+xlabel(curAx, 'Surface availability');
+ylabel(curAx, 'Axonal synapse fraction');
 
 curTitle = sprintf( ...
     'All axons with ≥ %d synapses. r_{pred} = %d µm', ...
