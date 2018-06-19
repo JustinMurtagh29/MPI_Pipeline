@@ -472,15 +472,15 @@ clear cur*;
 curSynCount = 10;
 curRadius = 10;
 
-curPad = 0.075;
-curMinRange = 0.2;
+curPad = 0.05;
+curMinRange = 0.1;
 
 curAxonIds = conn.axonMeta.synCount >= curSynCount;
 curRadiusId = find(avail.dists == 1E3 * curRadius);
 
 curFig = figure();
 curFig.Color = 'white';
-curFig.Position(3:4) = [310, 310];
+curFig.Position(3:4) = [500, 310];
 
 for curIdx = 1:numel(targetClasses)
     curSpecs = classConn(curAxonIds, :);
