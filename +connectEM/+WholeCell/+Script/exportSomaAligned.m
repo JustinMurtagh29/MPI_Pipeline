@@ -73,6 +73,11 @@ for curIdx = 1:wcCount
         curAgglo.nodes(:, 1:3) ...
       - curWc.somaPos;
     
+    % HACK(amotta): Heiko's script for skeleton visualization in Amira
+    % doesn't work with cyclic graphs. So, let's reduce the cells to the
+    % subset of edges in the minimal spanning tree.
+    curAgglo = SuperAgglo.toMST(curAgglo, param.raw.voxelSize);
+    
     curSkel = Superagglos.toSkel(curAgglo, skel);
     curSkel.names{1} = sprintf(...
         '%0*d. Whole cell %d', numDigits, curIdx, curWc.id);
