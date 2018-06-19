@@ -488,11 +488,8 @@ for curIdx = 1:numel(targetClasses)
     curAvail = availabilities(curIdx, curRadiusId, curAxonIds);
     
     curRange = [min(curAvail), max(curAvail)];
-    curMidRange = mean(curRange);
-    
-    curRange = [ ...
-        min(curRange(1), curMidRange - curMinRange / 2), ...
-        max(curRange(2), curMidRange + curMinRange / 2)];
+    curRange(1) = floor(10 * curRange(1)) / 10;
+    curRange(2) = ceil(10 * curRange(2)) / 10;
     
     curFit = fit(curAvail(:), curSpecs(:), 'poly1');
     curTitle = targetTags{curIdx};
@@ -505,6 +502,7 @@ for curIdx = 1:numel(targetClasses)
     
     curAx.TickDir = 'out';
     curAx.XLim = curRange;
+    curAx.XTick = curRange;
     
     curAx.Position(3) = 0.3 * diff(curRange);
     curAx.Position([2, 4]) = [0.2, 0.5];
@@ -513,7 +511,7 @@ for curIdx = 1:numel(targetClasses)
 end
 
 curAxes = flip(curFig.Children);
-set(curAxes, 'YLim', [0, 1], 'XTick', []);
+set(curAxes, 'YLim', [0, 1]);
 
 curWidth = sum(arrayfun(@(a) a.Position(3), curAxes));
 curWidth = curWidth + (numel(curAxes) - 1) * curPad;
@@ -527,8 +525,8 @@ for curIdx = 2:numel(curAxes)
 end
 
 curAx = curAxes(1);
-xlabel(curAx, 'Availability');
-ylabel(curAx, 'Synapse fraction');
+xlabel(curAx, 'Surface availability');
+ylabel(curAx, 'Axonal synapse fraction');
 
 curTitle = sprintf( ...
     'All axons with ≥ %d synapses. r_{pred} = %d µm', ...
