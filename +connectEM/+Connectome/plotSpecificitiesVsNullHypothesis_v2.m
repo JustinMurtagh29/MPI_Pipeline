@@ -51,6 +51,7 @@ allAxonClass.title = sprintf( ...
 axonClasses(end + 1) = allAxonClass;
 
 %% plot
+
 % nullModel = 'binomial';
 nullModel = 'drmn';
 for curIdx = 1:numel(axonClasses)
@@ -59,7 +60,7 @@ for curIdx = 1:numel(axonClasses)
         targetClasses, axonClasses(curIdx), nullModel);
 end
 
-
+%% plotting function
 function outlier = plotAxonClass(info, axonMeta, classConn, ...
     targetClasses, axonClass, nullModel)
     axonCount = numel(axonClass.axonIds);
@@ -216,6 +217,7 @@ function outlier = plotAxonClass(info, axonMeta, classConn, ...
             axonMeta.synCount(axonClass.axonIds), classProb);
         ax_count_h0 = cumsum(ax_count_h0);
         ax_count_h0 = ax_count_h0 ./ ax_count_h0(end);
+        p_vals = p_vals_h0;
         
         if fitted_polya
             % p-value distribution under null hypothesis (dirichlet-multinomial)
