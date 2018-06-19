@@ -123,7 +123,7 @@ function plotIt(info, targetClasses, axonClass, specClasses, coinMat)
         
         curAnn = annotation( ...
             fig, 'textbox', [curOff, curBoxSize], ...
-            'String', sprintf('%.1f %%', 100 * coinMat(curIdx)));
+            'String', sprintf('%.2g', 100 * coinMat(curIdx)));
         curAnn.HorizontalAlignment = 'center';
         curAnn.VerticalAlignment = 'middle';
         curAnn.EdgeColor = 'none';
