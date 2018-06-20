@@ -20,13 +20,9 @@ param = param.p;
 [conn, ~, axonClasses] = ...
     connectEM.Connectome.load(param, connFile);
 
-% Inhibitory whole cell → smooth dendrite
-% Excitatory whole cell → proximal dendrite
-wcMask = conn.denMeta.targetClass == 'WholeCell';
-inMask = conn.denMeta.isInterneuron;
-
-conn.denMeta.targetClass(wcMask &  inMask) = 'SmoothDendrite';
-conn.denMeta.targetClass(wcMask & ~inMask) = 'ProximalDendrite';
+[conn, axonClasses] = ...
+    connectEM.Connectome.prepareForSpecificityAnalysis( ...
+        conn, axonClasses, 'minSynPre', minSynPre);
 
 classConnectome = ...
     connectEM.Connectome.buildClassConnectome( ...
