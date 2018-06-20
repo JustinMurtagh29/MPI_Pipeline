@@ -15,6 +15,7 @@ targetClasses = { ...
 targetLabels = targetClasses(:, 2);
 targetClasses = targetClasses(:, 1);
 
+minSynPre = 10;
 info = Util.runInfo();
 
 %% Loading data
@@ -30,8 +31,9 @@ axonClasses(2).tag = 'Inh';
 axonClasses(3).tag = 'TC';
 axonClasses(4).tag = 'CC';
 
-conn = ...
-    connectEM.Connectome.prepareForSpecificityAnalysis(conn);
+[conn, axonClasses] = ...
+    connectEM.Connectome.prepareForSpecificityAnalysis( ...
+        conn, axonClasses, 'minSynPre', minSynPre);
 axonClasses = ...
     connectEM.Connectome.buildAxonSpecificityClasses(conn, axonClasses);
 
