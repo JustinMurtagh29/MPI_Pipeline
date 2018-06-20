@@ -25,14 +25,37 @@ voxelSize = param.raw.voxelSize;
 points = Seg.Global.getSegToPointMap(param);
 
 %% Select neurites
-rng(0);
 
-% For whole cells we have proper skeleton tracings to do the calibration,
-% so we are skipping somata and whole cells here.
-randDendIds = find(~ismember( ...
+randDends = struct;
+
+randDends(1).title = 'Non-whole cell';
+randDends(1).dendIds = find(~ismember( ...
     conn.denMeta.targetClass, {'Somata', 'WholeCell'}));
-randDendIds = randDendIds(randperm(numel(randDendIds), numDendrites));
 
+randDends(2).title = 'Smooth dendrite';
+randDends(2).dendIds = find( ...
+    conn.denMeta.targetClass == 'SmoothDendrite');
+
+randDends(3).title = 'Apical dendrite';
+randDends(3).dendIds = find( ...
+    conn.denMeta.targetClass == 'ApicalDendrite');
+
+randDends(4).title = 'Axon initial segment';
+randDends(4).dendIds = find( ...
+    conn.denMeta.targetClass == 'AxonInitialSegment');
+
+% Shuffle and select a random subset
+rng(0);
+for curIdx = 1:numel(randDends)
+    curDendIds = randDends(curIdx).dendIds;
+    
+    curDendIds = curDendIds(randperm(numel(curDendIds)));
+    curDendIds = curDendIds(1:min(numel(curDendIds), numDendrites));
+    
+    randDends(curIdx).dendIds = curDendIds;
+end
+
+rng(0);
 randAxonIds = randperm(numel(conn.axons), numAxons);
 randAxonIds = reshape(randAxonIds, [], 1);
 
@@ -63,18 +86,26 @@ end
 
 %% Generate dendrites NMLs
 clear cur*;
-curDigits = ceil(log10(1 + numDendrites));
 
-for curIdx = 1:numDendrites
-    curDendriteId = randDendIds(curIdx);
-    curParentId = conn.denMeta.parentId(curDendriteId);
-    curAgglo = dendrites(curParentId);
+for curClassIdx = 1:numel(randDends)
+    curClass = randDends(curClassIdx);
     
-    curSkel = Superagglos.toSkel(curAgglo, skel);
-    curSkel.names{1} = sprintf('Dendrite %d', curDendriteId);
+    curTitle = curClass.title;
+    curTag = strrep(lower(curTitle), ' ', '-');
     
-    curNmlName = sprintf( ...
-        '%0*d_dendrite-%d.nml', ...
-        curDigits, curIdx, curDendriteId);
-    curSkel.write(fullfile(outputDir, curNmlName));
+    curDendIds = curClass.dendIds;
+    curDigits = ceil(log10(1 + numel(curDendIds)));
+
+    for curIdx = 1:numel(curDendIds)
+        curDendId = curDendIds(curIdx);
+        curParentId = conn.denMeta.parentId(curDendId);
+        curAgglo = dendrites(curParentId);
+
+        curSkel = Superagglos.toSkel(curAgglo, skel);
+        curSkel.names{1} = sprintf('%s %d', curTitle, curDendId);
+
+        curNmlName = sprintf( ...
+            '%0*d_%s-%d.nml', curDigits, curIdx, curTag, curDendId);
+        curSkel.write(fullfile(outputDir, curNmlName));
+    end
 end
