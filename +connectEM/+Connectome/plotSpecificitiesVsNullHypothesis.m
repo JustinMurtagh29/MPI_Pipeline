@@ -171,35 +171,27 @@ function plotAxonClass(info, classConn, targetClasses, axonClass)
         curPAxonFrac = accumarray(curPAxonFrac, 1);
         curPAxonFrac = cumsum(curPAxonFrac) / sum(curPAxonFrac);
         
-        curExpX = expChanceProbs;
-        curExpY = cumsum(expChanceCounts);
-        curExpY = curExpY / curExpY(end);
+        % Conservative estimate of false detection rate (FDR)
+        curFdrEst = curPVal(:) ./ curPAxonFrac(:);
+        curThetaIdx = find(curFdrEst > 0.2, 1);
         
-        curDiffs = interp1(curExpX, curExpY, curPVal);
-        curDiffs = curPAxonFrac(:) - curDiffs(:);
-        
-        curThetaIdx = find(curDiffs(1:(end - 1)) < 0, 1);
-       [curMaxDiff, curThetaIdx] = max(curDiffs(1:curThetaIdx));
-        if curMaxDiff < 0; curThetaIdx = []; end
-        
-        plot(ax, curPVal, curPAxonFrac, 'LineWidth', 2);
-        plot(ax, curExpX, curExpY, 'LineWidth', 2);
+        plot(ax, curPVal, curFdrEst, 'LineWidth', 1);
         
         if ~isempty(curThetaIdx)
             curThetaPVal = curPVal(curThetaIdx);
             
             plot(ax, ...
-                repelem(curThetaPVal, 2), [0, 1], ...
+                repelem(curThetaPVal, 2), [0, 1.12], ...
                 'Color', 'black', 'LineStyle', '--');
             title(ax, ...
-                sprintf('p = %.2f', curThetaPVal), ...
+                sprintf('p = %f', curThetaPVal), ...
                 'FontWeight', 'normal', 'FontSize', 10);
         end
         
         xlim(ax, [0, 1]);
-        ylim(ax, [0, 1]);
+        ylim(ax, [0, 1.2]);
         xlabel(ax, 'p-value');
-        ylabel(ax, {'Fraction of axons'; 'with p < x'});
+        ylabel(ax, 'Estimated FDR');
     end
     
     % Legend
