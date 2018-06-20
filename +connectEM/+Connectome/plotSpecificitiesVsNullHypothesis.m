@@ -172,7 +172,11 @@ function plotAxonClass(info, classConn, targetClasses, axonClass)
         curPAxonFrac = cumsum(curPAxonFrac) / sum(curPAxonFrac);
         
         % Conservative estimate of false detection rate (FDR)
-        curFdrEst = curPVal(:) ./ curPAxonFrac(:);
+        curFdrEst = cumsum(expChanceCounts);
+        curFdrEst = curFdrEst / curFdrEst(end);
+        
+        curFdrEst = interp1(expChanceProbs, curFdrEst, curPVal);
+        curFdrEst = curFdrEst(:) ./ curPAxonFrac(:);
         curThetaIdx = find(curFdrEst > 0.2, 1);
         
         plot(ax, curPVal, curFdrEst, 'LineWidth', 1);
