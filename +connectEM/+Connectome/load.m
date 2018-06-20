@@ -50,6 +50,6 @@ function [conn, syn, axonClasses] = load(param, connFile, synFile)
     conn.denMeta = connectEM.Dendrite.completeCellMeta(param, conn);
     
     %% label all axon classes
-    axonClasses = ...
+   [axonClasses, conn] = ...
         connectEM.Connectome.buildAxonClasses(conn, 'minSynPre', 10);
 end
