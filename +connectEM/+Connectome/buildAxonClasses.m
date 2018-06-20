@@ -1,4 +1,4 @@
-function axonClasses = buildAxonClasses(conn, varargin)
+function [axonClasses, conn] = buildAxonClasses(conn, varargin)
     % axonClasses = buildAxonClasses(conn, varargin)
     %
     % Written by
@@ -55,4 +55,15 @@ function axonClasses = buildAxonClasses(conn, varargin)
     axonClasses(4).title = sprintf( ...
         'corticocortical axons (n = %d)', ...
         numel(axonClasses(end).axonIds));
+    
+    % Update axon meta data
+    conn.axonMeta.axonClass(:) = {'Other'};
+    conn.axonMeta.axonClass(axonClasses(4).axonIds) = {'Corticocortical'};
+    conn.axonMeta.axonClass(axonClasses(3).axonIds) = {'Thalamocortical'};
+    conn.axonMeta.axonClass(axonClasses(2).axonIds) = {'Inhibitory'};
+    
+    axonClassOrder = { ...
+        'Corticocortical', 'Thalamocortical', 'Inhibitory', 'Other'};
+    conn.axonMeta.axonClass = categorical( ...
+        conn.axonMeta.axonClass, axonClassOrder, 'Ordinal', true);
 end
