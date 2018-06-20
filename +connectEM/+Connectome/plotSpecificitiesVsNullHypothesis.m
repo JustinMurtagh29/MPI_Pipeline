@@ -173,7 +173,7 @@ function plotAxonClass(info, classConn, targetClasses, axonClass)
         
         curFdrEst = interp1(expChanceProbs, curFdrEst, curPVal);
         curFdrEst = curFdrEst(:) ./ curPAxonFrac(:);
-        curThetaIdx = find(curFdrEst > 0.5, 1);
+        curThetaIdx = find(curFdrEst > 0.2, 1);
         
         plot(ax, curPVal, curFdrEst, 'LineWidth', 1);
         
