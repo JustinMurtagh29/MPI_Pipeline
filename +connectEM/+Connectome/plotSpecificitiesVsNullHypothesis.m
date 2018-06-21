@@ -43,14 +43,9 @@ axonClasses(end + 1) = allAxonClass;
 %% calculate target class innervation probabilities for null model
 clear cur*;
 
-for curIdx = 1:numel(axonClasses)
-    curNullProbs = axonClasses(curIdx).nullAxonIds;
-    curNullProbs = classConnectome(curNullProbs, :);
-    curNullProbs = curNullProbs ./ sum(curNullProbs, 2);
-    curNullProbs = mean(curNullProbs, 1);
-    
-    axonClasses(curIdx).nullTargetClassProbs = curNullProbs;
-end
+curNullProbs = sum(classConnectome, 1);
+curNullProbs = curNullProbs / sum(curNullProbs);
+[axonClasses.nullTargetClassProbs] = deal(curNullProbs);
 
 %% plot
 clear cur*;
@@ -187,7 +182,10 @@ function plotAxonClass(info, classConn, targetClasses, axonClass)
         
         curFdrEst = interp1(expChanceProbs, curFdrEst, curPVal);
         curFdrEst = curFdrEst(:) ./ curPAxonFrac(:);
-        curThetaIdx = find(curFdrEst > 0.2, 1);
+        
+        curThetaIdx = 1 + find( ...
+            curFdrEst(1:(end - 1)) <= 0.2 ...
+          & curFdrEst(2:end) > 0.2, 1);
         
         plot(ax, curPVal, curFdrEst, 'LineWidth', 1);
         

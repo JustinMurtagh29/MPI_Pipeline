@@ -10,35 +10,29 @@ function axonClasses = buildAxonSpecificityClasses(conn, axonClasses)
     %% Add specificity thresholds
     % Excitatory axons
     axonClasses(1).specs = struct;
-    axonClasses(1).specs.Somata.pThresh = 0.007492;
-    axonClasses(1).specs.ProximalDendrite.pThresh = 0.012747;
-    axonClasses(1).specs.ApicalDendrite.pThresh = 0.011326;
-    axonClasses(1).specs.SmoothDendrite.pThresh = 0.004438;
-    axonClasses(1).specs.AxonInitialSegment.pThresh = 0.000363;
+    axonClasses(1).specs.ProximalDendrite.pThresh = 0.009347;
+    axonClasses(1).specs.ApicalDendrite.pThresh = 0.011567;
+    axonClasses(1).specs.SmoothDendrite.pThresh = 0.002976;
     
     % Inhibitory axons
     axonClasses(2).specs = struct;
-    axonClasses(2).specs.Somata.pThresh = 0.033061;
-    axonClasses(2).specs.ProximalDendrite.pThresh = 0.048615;
-    axonClasses(2).specs.ApicalDendrite.pThresh = 0.018314;
-    axonClasses(2).specs.SmoothDendrite.pThresh = 0.017851;
-    axonClasses(2).specs.AxonInitialSegment.pThresh = 0.001267;
+    axonClasses(2).specs.Somata.pThresh = 0.168331;
+    axonClasses(2).specs.ProximalDendrite.pThresh = 0.073651;
+    axonClasses(2).specs.ApicalDendrite.pThresh = 0.016054;
+    axonClasses(2).specs.SmoothDendrite.pThresh = 0.016215;
+    axonClasses(2).specs.AxonInitialSegment.pThresh = 0.000823;
     
     % Thalamocortical axons
     axonClasses(3).specs = struct;
-    axonClasses(3).specs.Somata.pThresh = 0.008984;
-    axonClasses(3).specs.ProximalDendrite.pThresh = 0.040792;
-    axonClasses(3).specs.ApicalDendrite.pThresh = 0.004631;
-    axonClasses(3).specs.SmoothDendrite.pThresh = 0.000778;
-    axonClasses(3).specs.AxonInitialSegment.pThresh = 0.002412;
+    axonClasses(3).specs.ProximalDendrite.pThresh = 0.028024;
+    axonClasses(3).specs.ApicalDendrite.pThresh = 0.004531;
+    axonClasses(3).specs.AxonInitialSegment.pThresh = 0.004258;
     
     % Corticocortical axons
     axonClasses(4).specs = struct;
-    axonClasses(4).specs.Somata.pThresh = 0.007492;
-    axonClasses(4).specs.ProximalDendrite.pThresh = 0.011260;
-    axonClasses(4).specs.ApicalDendrite.pThresh = 0.013997;
-    axonClasses(4).specs.SmoothDendrite.pThresh = 0.004877;
-    axonClasses(4).specs.AxonInitialSegment.pThresh = 0.001049;
+    axonClasses(4).specs.ProximalDendrite.pThresh = 0.005596;
+    axonClasses(4).specs.ApicalDendrite.pThresh = 0.014586;
+    axonClasses(4).specs.SmoothDendrite.pThresh = 0.004950;
     
     %% Find specific axons
    [classConn, targetClasses] = ...
@@ -48,9 +42,8 @@ function axonClasses = buildAxonSpecificityClasses(conn, axonClasses)
         curAxonClass = axonClasses(curAxonClassIdx);
         curSpecs = curAxonClass.specs;
         
-        curNullProbs = classConn(curAxonClass.nullAxonIds, :);
-        curNullProbs = curNullProbs ./ sum(curNullProbs, 2);
-        curNullProbs = mean(curNullProbs, 1);
+        curNullProbs = sum(classConn, 1);
+        curNullProbs = curNullProbs / sum(curNullProbs);
         
         curProbs = ...
             connectEM.Specificity.calcChanceProbs( ...
