@@ -33,8 +33,9 @@ function probs = calcChanceProbs( ...
     end
     
     % Probabilities for null model
-    classProbs = sum(classConn(nullAxonIds(:), :), 1);
-    classProbs = classProbs ./ sum(classProbs);
+    classProbs = classConn(nullAxonIds(:), :);
+    classProbs = classProbs ./ sum(classProbs, 2);
+    classProbs = mean(classProbs, 1);
     
     % Prepare output
     axonSynCounts = classConn(axonIds(:), :);

@@ -59,8 +59,9 @@ function plotAxonClass(info, classConn, targetClasses, axonClass)
         'distribution', 'binomial');
     
     % calculate overall synapse probabilities
-    targetClassSyns = sum(classConn(axonClass.nullAxonIds, :), 1);
-    targetClassProbs = targetClassSyns / sum(targetClassSyns);
+    targetClassProbs = classConn(axonClass.nullAxonIds, :);
+    targetClassProbs = targetClassProbs ./ sum(targetClassProbs, 2);
+    targetClassProbs = mean(targetClassProbs, 1);
     
     %% plotting
     fig = figure;
