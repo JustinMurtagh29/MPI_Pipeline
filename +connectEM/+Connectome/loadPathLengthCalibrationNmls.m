@@ -1,9 +1,6 @@
-function calibT = loadPathLengthCalibration(param)
+function calibT = loadPathLengthCalibrationNmls(param, nmlDir)
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
-    thisDir = fileparts(mfilename('fullpath'));
-    nmlDir = fullfile(thisDir, 'pathLengthCalibration');
-    
     nmlFiles = dir(fullfile(nmlDir, '*.nml'));
     nmlFiles = reshape({nmlFiles.name}, [], 1);
     nmlFiles = fullfile(nmlDir, nmlFiles);
