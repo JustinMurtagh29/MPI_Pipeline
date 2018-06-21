@@ -178,21 +178,21 @@ function plotAxonClass(info, classConn, targetClasses, axonClass)
         
         plot(ax, curPVal, curFdrEst, 'LineWidth', 1);
         
+        xlim(ax, [0, 1]);
+        ylim(ax, [0, 1.2]);
+        xlabel(ax, 'p-value');
+        ylabel(ax, 'Estimated FDR');
+        
         if ~isempty(curThetaIdx)
             curThetaPVal = curPVal(curThetaIdx);
             
             plot(ax, ...
-                repelem(curThetaPVal, 2), [0, 1.12], ...
+                repelem(curThetaPVal, 2), ylim(ax), ...
                 'Color', 'black', 'LineStyle', '--');
             title(ax, ...
                 sprintf('p = %f', curThetaPVal), ...
                 'FontWeight', 'normal', 'FontSize', 10);
         end
-        
-        xlim(ax, [0, 1]);
-        ylim(ax, [0, 1.2]);
-        xlabel(ax, 'p-value');
-        ylabel(ax, 'Estimated FDR');
     end
     
     % Legend
