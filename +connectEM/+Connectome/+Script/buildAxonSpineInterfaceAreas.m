@@ -31,7 +31,5 @@ clear borderAreas;
 synT = connectEM.Connectome.buildSynapseTable(conn, syn);
 
 %%
-blah = buildAxonSpineInterfaceAreas( ...
+blah = connectEM.Connectome.buildAxonSpineInterfaceAreas( ...
     param, graph, conn.axons, shAgglos, syn.synapses, synT);
-
-%%

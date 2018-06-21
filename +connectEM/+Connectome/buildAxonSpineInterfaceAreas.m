@@ -1,43 +1,29 @@
-function asiAreas = buildAxonSpineInterfaceAreas( ...
+function asiT = buildAxonSpineInterfaceAreas( ...
         param, graph, axons, shAgglos, synapses, synT)
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     maxSegId = Seg.Global.getMaxSegId(param);
+    axonLUT = Agglo.buildLUT(maxSegId, axons);
     shLUT = Agglo.buildLUT(maxSegId, shAgglos);
     
     synT.shId = cellfun( ...
         @(segIds) max(shLUT(segIds)), ...
         synapses.postsynId(synT.id));
-    uniShIds = setdiff(synT.shId, 0);
-   [~, synT.shId] = ismember(synT.shId, uniShIds);
-	
-    %% Build list of outward edges for each spine head.
-    shAgglos = shAgglos(uniShIds);
-    shLUT = Agglo.buildLUT(maxSegId, shAgglos);
+    synT(~synT.shId, :) = [];
     
-    shEdgesIds = [ ...
-        shLUT(graph.edges(:, 1)), reshape(1:size(graph., 1), [], 1); ...
-        shLUT(graph.edges(:, 2)), reshape(1:size(graph, 1), [], 1)];
-    shEdgesIds(~shEdgesIds(:, 1), :) = [];
+   [~, asiT, synIds] = unique(synT(:, {'preAggloId', 'shId'}), 'rows');
+    asiT = synT(asiT, {'id', 'preAggloId', 'postAggloId', 'shId'});
+    asiT.synIds = accumarray(synIds, synT.id, [], @(ids) {ids(:)});
     
-    shEdgesIds = accumarray( ...
-        shEdgesIds(:, 1), shEdgesIds(:, 2), ...
-        [], @(edgeIds) {sort(edgeIds)});
+    graph.shId = max(shLUT(graph.edges), [], 2);
+    graph.preAggloId = max(axonLUT(graph.edges), [], 2);
     
-    %% Calculate axon spine interface areas
-    asiAreas = nan(size(synT.id));
-    for curIdx = 1:size(synT, 1)
-        if ~synT.isSpine(curIdx)
-            continue;
-        end
-        
-        curShEdgeIds = shEdgesIds{synT.shId(curIdx)};
-        curPreSegIds = axons{synT.preAggloId(curIdx)};
-        
-        curAsiArea = graph.edges(curShEdgeIds, :);
-        curAsiArea = any(ismember(curAsiArea, curPreSegIds), 2);
-        curAsiArea = sum(graph.borderArea(curShEdgeIds(curAsiArea)));
-        
-        asiAreas(curIdx) = curAsiArea;
-    end
+   [~, graph.axonSpineId] = ismember( ...
+        graph(:, {'preAggloId', 'shId'}), ...
+        asiT(:, {'preAggloId', 'shId'}), 'rows');
+    mask = (graph.axonSpineId ~= 0);
+    
+    asiT.area = accumarray( ...
+        graph.axonSpineId(mask), ...
+        graph.borderArea(mask));
 end
