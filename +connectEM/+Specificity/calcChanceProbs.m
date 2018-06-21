@@ -1,5 +1,5 @@
 function probs = calcChanceProbs( ...
-        classConn, axonIds, nullAxonIds, varargin)
+        classConn, axonIds, nullTargetClassProbs, varargin)
     % probs = calcChanceProbs(classConn, axonIds, poissAxonIds, varargin)
     %   Calculates the probability of seeing a greater or equal number of
     %   synapses onto a target class under a null hypothesis.
@@ -13,9 +13,9 @@ function probs = calcChanceProbs( ...
     %   Optional matrix with indices of axons for which the output is
     %   calculated. Defaults to `(1:size(classConn, 1))'`.
     %
-    % nullAxonIds
-    %   Optional matrix with indices of axons whose synapses are considered
-    %   to build the null model. Defaults to `axonIds`.
+    % nullTargetClassProbs
+    %   Vector where entry `nullTargetClassProbs(i)` indicates the
+    %   probability of innervating target class `i` under the null model.
     %
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
@@ -28,14 +28,8 @@ function probs = calcChanceProbs( ...
         axonIds = reshape(1:size(classConn, 1), [], 1);
     end
     
-    if ~exist('nullAxonIds', 'var') || isempty(nullAxonIds)
-        nullAxonIds = axonIds;
-    end
-    
-    % Probabilities for null model
-    classProbs = classConn(nullAxonIds(:), :);
-    classProbs = classProbs ./ sum(classProbs, 2);
-    classProbs = mean(classProbs, 1);
+    nullTargetClassProbs = reshape(nullTargetClassProbs, 1, []);
+    assert(numel(nullTargetClassProbs) == size(classConn, 2));
     
     % Prepare output
     axonSynCounts = classConn(axonIds(:), :);
@@ -45,7 +39,7 @@ function probs = calcChanceProbs( ...
         case 'poisson'
             probs = 1 - arrayfun( ...
                 @poisscdf, axonSynCounts - 1, ...
-                classProbs .* sum(axonSynCounts, 2));
+                nullTargetClassProbs .* sum(axonSynCounts, 2));
             
         case 'binomial'
             probs = nan(size(axonSynCounts));
@@ -53,7 +47,7 @@ function probs = calcChanceProbs( ...
                 probs(curIdx, :) = 1 - binocdf( ...
                     axonSynCounts(curIdx, :) - 1, ...
                     sum(axonSynCounts(curIdx, :), 2), ...
-                    classProbs);
+                    nullTargetClassProbs);
             end
             
         case 'drmn' % dirichlet-multinomial

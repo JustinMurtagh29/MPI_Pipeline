@@ -40,11 +40,28 @@ allAxonClass.title = sprintf( ...
 
 axonClasses(end + 1) = allAxonClass;
 
-%% plot
+%% calculate target class innervation probabilities for null model
+clear cur*;
+
 for curIdx = 1:numel(axonClasses)
+    curNullProbs = axonClasses(curIdx).nullAxonIds;
+    curNullProbs = classConnectome(curNullProbs, :);
+    curNullProbs = curNullProbs ./ sum(curNullProbs, 2);
+    curNullProbs = mean(curNullProbs, 1);
+    
+    axonClasses(curIdx).nullTargetClassProbs = curNullProbs;
+end
+
+%% plot
+clear cur*;
+
+curAxonClasses = axonClasses;
+curAxonClasses = rmfield(curAxonClasses, 'nullAxonIds');
+
+for curIdx = 1:numel(curAxonClasses)
     plotAxonClass( ...
         info, classConnectome, ...
-        targetClasses, axonClasses(curIdx));
+        targetClasses, curAxonClasses(curIdx));
 end
 
 %% plotting
@@ -54,14 +71,10 @@ function plotAxonClass(info, classConn, targetClasses, axonClass)
     axonSpecs = axonSpecs ./ synCounts;
     
     %% preparations
+    nullTargetClassProbs = axonClass.nullTargetClassProbs;
     axonNullProbs = connectEM.Specificity.calcChanceProbs( ...
-        classConn, axonClass.axonIds, axonClass.nullAxonIds, ...
+        classConn, axonClass.axonIds, nullTargetClassProbs, ...
         'distribution', 'binomial');
-    
-    % calculate overall synapse probabilities
-    targetClassProbs = classConn(axonClass.nullAxonIds, :);
-    targetClassProbs = targetClassProbs ./ sum(targetClassProbs, 2);
-    targetClassProbs = mean(targetClassProbs, 1);
     
     %% plotting
     fig = figure;
@@ -74,7 +87,7 @@ function plotAxonClass(info, classConn, targetClasses, axonClass)
 
     for classIdx = 1:numel(targetClasses)
         className = targetClasses{classIdx};
-        classProb = targetClassProbs(classIdx);
+        classProb = nullTargetClassProbs(classIdx);
         
         axonClassSpecs = axonSpecs(:, classIdx);
         axonClassNullProbs = axonNullProbs(:, classIdx);
