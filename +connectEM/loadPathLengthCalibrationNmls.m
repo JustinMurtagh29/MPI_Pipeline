@@ -37,7 +37,7 @@ function pathLength = calculatePathLength(param, nmlFile)
     templateTreeId = nodes.treeId(templateTreeId);
     
     calibTreeId = setdiff(nodes.treeId, templateTreeId);
-    assert(isscalar(calibTreeId));
+    assert(isscalar(calibTreeId), '%s contains too many trees', nmlFile);
     
     calibEdges = trees.edges{trees.id == calibTreeId};
     calibEdges = cat(2, calibEdges.source, calibEdges.target);
