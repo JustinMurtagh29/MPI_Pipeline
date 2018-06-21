@@ -69,8 +69,9 @@ function plotAxonClass(info, dendMeta, classConn, targetClasses, dendClass)
     dendSynFracs = dendSynFracs ./ sum(dendSynFracs, 2);
     
     %% preparations
+    nullProbs = mean(dendSynFracs(dendClass.nullIds, :), 1);
     nullProbs = connectEM.Specificity.calcChanceProbs( ...
-        classConn, dendClass.ids, dendClass.nullIds, ...
+        classConn, dendClass.ids, nullProbs, ...
         'distribution', 'binomial');
     
     % calculate overall synapse probabilities
