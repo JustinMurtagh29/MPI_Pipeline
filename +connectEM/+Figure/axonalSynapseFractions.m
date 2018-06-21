@@ -14,6 +14,12 @@ targetClasses = { ...
     'AxonInitialSegment', 'AIS'; ...
     'OtherDendrite', 'Other'};
 
+% Show mean values for these axon classes
+plotAxonClassIds = [1, 2];
+plotAxonClassStyles = { ...
+    {'Color', 'black', 'LineStyle', '-'}, ...
+    {'Color', 'black', 'LineStyle', ':'}};
+
 targetLabels = targetClasses(:, 2);
 targetClasses = targetClasses(:, 1);
 
@@ -33,9 +39,16 @@ conn = ...
 classConnectome = ...
     connectEM.Connectome.buildClassConnectome( ...
         conn, 'targetClasses', targetClasses);
+classConnectome = ...
+    classConnectome ...
+ ./ sum(classConnectome, 2);
+
+axonClassMeans = cell2mat(arrayfun(@(a)  ...
+    mean(classConnectome(a.axonIds, :), 1), ...
+    reshape(axonClasses(plotAxonClassIds), [], 1), ...
+    'UniformOutput', false));
 
 classConnectome(conn.axonMeta.synCount < minSynPre, :) = [];
-classConnectome = classConnectome ./ sum(classConnectome, 2);
 
 %% Plot results
 boxGroups = 1:numel(targetClasses);
@@ -47,7 +60,7 @@ boxJitter = boxGroups + boxJitter;
 
 fig = figure();
 fig.Color = 'white';
-fig.Position(3:4) = [720, 300];
+fig.Position(3:4) = [275, 300];
 
 ax = axes(fig);
 hold(ax, 'on');
@@ -60,17 +73,26 @@ scatter( ...
     ax, boxJitter(:), classConnectome(:), ...
     [], colors(boxGroups(:), :), '.');
 
-for curIdx = 1:numel(targetClasses)
-    curY = mean(classConnectome(:, curIdx));
-    curY = repelem(curY, 1, 2);
+for curTargetId = 1:numel(targetClasses)
+    curX = curTargetId + [-0.45, +0.45];
     
-    curX = curIdx + [-0.45, +0.45];
-    curColor = colors(curIdx, :);
+    % Mean over all axons
+    curMean = mean(classConnectome(:, curTargetId));
+    curColor = colors(curTargetId, :);
     
     plot(ax, ...
-        curX, curY, ...
-        'Color', curColor, ...
-        'LineWidth', 2);
+        curX, repelem(curMean, 2), ...
+        'Color', curColor, 'LineWidth', 2);
+    
+    % Mean over axon classes
+    for curAxonIdx = 1:size(axonClassMeans, 1)
+        curMean = axonClassMeans(curAxonIdx, curTargetId);
+        curStyle = plotAxonClassStyles{curAxonIdx};
+        
+        plot(ax, ...
+            curX, repelem(curMean, 2), ...
+            'LineWidth', 2, curStyle{:});
+    end
 end
 
 ax.Box = 'off';
