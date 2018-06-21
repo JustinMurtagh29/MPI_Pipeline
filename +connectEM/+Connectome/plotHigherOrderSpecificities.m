@@ -55,6 +55,7 @@ end
 
 %% Core function
 function plotAxonClass(info, classConn, targetClasses, axonClass, pTheta)
+    error('Third input to calcChanceProbs has change');
     axonProbs = connectEM.Specificity.calcChanceProbs( ...
         classConn, axonClass.axonIds, axonClass.nullAxonIds, ...
         'distribution', 'binomial');
