@@ -91,11 +91,11 @@ end
 rng(0);
 curRandIds = randperm(numel(excShaftAxonIds));
 curRandIds = excShaftAxonIds(curRandIds);
-curRandIds = curRandIds(1:20);
+curRandIds = curRandIds(1:50);
 
 numDigits = ceil(log10(1 + numel(curRandIds)));
 
-for curIdx = 1:numel(curRadIds)
+for curIdx = 1:numel(curRandIds)
     curId = curRandIds(curIdx);
     curAgglo = axons(conn.axonMeta.parentId(curId));
     
