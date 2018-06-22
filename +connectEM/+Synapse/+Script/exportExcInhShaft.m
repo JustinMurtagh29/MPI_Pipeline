@@ -1,6 +1,9 @@
 % This script export random example of shaft synapses made by
-% * excitatory (mainly spine targeting) axons
-% * inhibitory, soma-targeting axons
+% * excitatory (mainly spine targeting) axons, and
+% * inhibitory, soma-targeting axons.
+%
+% It also generates NML files of non-soma targeting, shaft preferring
+% axons. This might be an excitatory axon subpopulation from L6.
 %
 % Written by
 %   Alessandro Motta <alessandro.motta@brain.mpg.de>
@@ -21,6 +24,9 @@ points = Seg.Global.getSegToPointMap(param);
 
 [conn, syn, axonClasses] = connectEM.Connectome.load(param, connFile);
 
+axons = load(conn.info.param.axonFile);
+axons = axons.axons;
+
 %% Select synapses
 % Find non-soma shaft synapses
 synT = connectEM.Connectome.buildSynapseTable(conn, syn);
@@ -35,6 +41,9 @@ inhAxonIds = conn.denMeta.id(conn.denMeta.targetClass == 'Somata');
 inhAxonIds = ismember(conn.connectome.edges(:, 2), inhAxonIds);
 inhAxonIds = unique(conn.connectome.edges(inhAxonIds, 1));
 inhAxonIds = intersect(axonClasses(2).axonIds, inhAxonIds);
+
+% Shaft synapses of non-soma-targeting, shaft preferring axon
+excShaftAxonIds = setdiff(axonClasses(2).axonIds, inhAxonIds);
 
 exportSyns = struct;
 exportSyns(1).tag = 'exc-shaft-synapses';
@@ -75,5 +84,45 @@ for curSyn = reshape(exportSyns, 1, [])
         'UniformOutput', false);
     
     curFile = sprintf('%s.nml', curTag);
+    curSkel.write(fullfile(outputDir, curFile));
+end
+
+%% Export samples of non-soma innervating, shaft preferring axons
+rng(0);
+curRandIds = randperm(numel(excShaftAxonIds));
+curRandIds = excShaftAxonIds(curRandIds);
+curRandIds = curRandIds(1:20);
+
+numDigits = ceil(log10(1 + numel(curRandIds)));
+
+for curIdx = 1:numel(curRadIds)
+    curId = curRandIds(curIdx);
+    curAgglo = axons(conn.axonMeta.parentId(curId));
+    
+    curSynIds = synT.preAggloId == curId;
+    curSynIds = synT.id(curSynIds);
+    
+    curSynAgglos = cellfun( ...
+        @vertcat, ...
+        syn.synapses.presynId(curSynIds), ...
+        syn.synapses.postsynId(curSynIds), ...
+        'UniformOutput', false);
+    curSynAgglos = cellfun( ...
+        @(segIds) points(segIds, :), ...
+        curSynAgglos, 'UniformOutput', false);
+    
+    curSkel = Superagglos.toSkel(curAgglo, skel);
+    curSkel.names{1} = sprintf('Axon %d', curId);
+    
+    curSkel = Skeleton.fromMST( ...
+        curSynAgglos, param.raw.voxelSize, curSkel);
+    curSkel.names(2:end) = arrayfun( ...
+        @(id) sprintf('Synapse %d', id), ...
+        curSynIds, 'UniformOutput', false);
+    curSkel.colors(2:end) = {[0, 0, 1, 1]};
+    
+    curFile = sprintf( ...
+        '%0*d_non-soma-shaft-axons_axon-%d.nml', ...
+        numDigits, curIdx, curId);
     curSkel.write(fullfile(outputDir, curFile));
 end
