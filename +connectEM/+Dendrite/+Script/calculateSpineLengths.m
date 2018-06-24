@@ -1,3 +1,7 @@
+% This script calculates the length of spine necks as the shortest path
+% from a spine head segment to a trunk segment along the super-agglomerate
+% edges.
+%
 % Written by
 %   Alessandro Motta <alessandro.motta@brain.mpg.de>
 clear;
@@ -12,10 +16,7 @@ connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites
 % https://gitlab.mpcdf.mpg.de/connectomics/amotta/blob/534c026acd534957b84e395d697ac48b3cc6a7ad/matlab/+L4/+Spine/buildDendriteTrunkMask.m
 trunkMinSize = 10 ^ 5.5;
 
-calibNml = fullfile( ...
-    fileparts(mfilename('fullpath')), 'annotations', ...
-    '2012-09-28_ex145_07x2_ROI2017__explorational__amotta__da37a8.nml');
-
+calibNml = connectEM.Dendrite.Data.getFile('spineLengthCalibration.nml');
 binEdges = linspace(0, 7, 71);
 
 info = Util.runInfo();
@@ -72,15 +73,24 @@ spineLengths = ...
     connectEM.Dendrite.calculateSpineLengths( ...
         param, trunks, dendrites, spineHeads);
 
-%% Use manual annotations for calibration
+%% Calibration of automatically or manually attached spine heads
+% Note that this excludes "prematurely" and non-attached spines
 calib = skeleton(calibNml);
 
 calibT = table;
 calibT.spineId = regexpi( ...
     calib.names, 'Spine head (\d+)$', 'tokens', 'once');
 calibT.spineId = str2double(vertcat(calibT.spineId{:}));
+
 calibT.calibLength = calib.pathLength([], param.raw.voxelSize);
 calibT.autoLength = spineLengths(calibT.spineId);
+
+calibT(isnan(calibT.autoLength), :) = [];
+calibT(~calibT.autoLength, :) = [];
+
+corrCoeff = ...
+    sum(calibT.calibLength) ...
+  / sum(calibT.autoLength);
 
 fig = figure();
 fig.Color = 'white';
@@ -90,18 +100,28 @@ ax.TickDir = 'out';
 axis(ax, 'square');
 hold(ax, 'on');
 
-scatter(ax, calibT.calibLength / 1E3, calibT.autoLength / 1E3, 128, '.');
+scatter(ax, ...
+    calibT.autoLength / 1E3, ...
+    calibT.calibLength / 1E3, ...
+    128, '.');
 
 limits = [0, max(ax.XLim(2), ax.YLim(2))];
 ax.XLim = limits; ax.YLim = limits;
 
 plot(ax, limits, limits, 'Color', 'black', 'LineStyle', '--');
+plot(ax, limits, corrCoeff .* limits);
 
 ticks = union(0, intersect(xticks(ax), yticks(ax)));
 xticks(ax, ticks); yticks(ax, ticks);
 
-xlabel(ax, 'True spine length (µm)');
-ylabel(ax, 'Calculated spine length (µm)');
+xlabel(ax, 'Shortest path-based spine length (µm)');
+ylabel(ax, 'Tracing-based spine length (µm)');
+
+leg = legend(ax, { ...
+    sprintf('%d calibration points', height(calibT)), ...
+    sprintf('Correction coefficient: %.3g', corrCoeff)}, ...
+    'Location', 'NorthWest');
+leg.Box = 'off';
 
 title( ...
     ax, {info.filename; info.git_repos{1}.hash}, ...
