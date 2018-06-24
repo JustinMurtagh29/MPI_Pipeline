@@ -29,6 +29,9 @@ info = Util.runInfo();
 param = load(fullfile(rootDir, 'allParameter.mat'), 'p');
 param = param.p;
 
+maxSegId = Seg.Global.getMaxSegId(param);
+segPoints = Seg.Global.getSegToPointMap(param);
+
 [conn, syn] = connectEM.Connectome.load(param, connFile);
 
 trunks = load(trunkFile);
@@ -47,9 +50,6 @@ dendrites = dendrites(dendMask);
 
 % Sanity check
 assert(numel(trunks) == numel(dendrites));
-
-maxSegId = Seg.Global.getMaxSegId(param);
-segPoints = Seg.Global.getSegToPointMap(param);
 
 %% Build spine head table
 shT = table;
