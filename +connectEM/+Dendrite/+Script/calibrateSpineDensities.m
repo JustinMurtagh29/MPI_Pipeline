@@ -12,7 +12,7 @@ lengthFile = sprintf('%s_pathLengths.mat', lengthFile);
 lengthFile = fullfile(fileparts(connFile), lengthFile);
 
 targetClasses = { ...
-    '', ...
+    'Random', ...
     'ApicalDendrite', ...
     'SmoothDendrite', ...
     'AxonInitialSegment'};
@@ -45,7 +45,7 @@ conn.denMeta.trunkLength(curMask) = ...
 clear curMask;
 
 %% Process NML files
-calibData = cell(size(targetClasses));
+calibData = struct;
 for curTargetClassIdx = 1:numel(targetClasses)
     curTargetClass = targetClasses{curTargetClassIdx};
     
@@ -104,7 +104,7 @@ for curTargetClassIdx = 1:numel(targetClasses)
         curTasks.calibLength(curTaskIdx) = curCalibLength;
     end
     
-    calibData{curTargetClassIdx} = curTasks;
+    calibData.(curTargetClass) = curTasks;
 end
 
 %% Visualize results
@@ -116,8 +116,8 @@ curFig.Position(3:4) = [1025, 350];
 
 for curIdx = 1:numel(targetClasses)
     curTargetClass = targetClasses{curIdx};
+    curCalibT = calibData.(curTargetClass);
     
-    curCalibT = calibData{curIdx};
     curCalibT.autoLength = conn.denMeta.trunkLength(curCalibT.aggloId);
     curInterp = fit(curCalibT.autoLength, curCalibT.calibLength, 'poly1');
 
