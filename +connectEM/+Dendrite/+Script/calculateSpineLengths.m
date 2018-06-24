@@ -16,7 +16,11 @@ connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites
 % https://gitlab.mpcdf.mpg.de/connectomics/amotta/blob/534c026acd534957b84e395d697ac48b3cc6a7ad/matlab/+L4/+Spine/buildDendriteTrunkMask.m
 trunkMinSize = 10 ^ 5.5;
 
-calibNml = connectEM.Dendrite.Data.getFile('spineLengthCalibration.nml');
+calibNml = ...
+    connectEM.Dendrite.Data.getFile('spineLengthCalibration.nml');
+premCalibNml = ...
+    connectEM.Dendrite.Data.getFile('prematureSpineLengthCalibration.nml');
+
 binEdges = linspace(0, 7, 71);
 
 info = Util.runInfo();
@@ -25,21 +29,40 @@ info = Util.runInfo();
 param = load(fullfile(rootDir, 'allParameter.mat'), 'p');
 param = param.p;
 
-trunks = load(trunkFile);
-trunks = Agglo.fromSuperAgglo(trunks.dendrites(trunks.indBigDends));
-trunks = trunks(Agglo.calculateVolume(param, trunks) > trunkMinSize);
-
-dendrites = load(dendFile);
-spineHeads = dendrites.shAgglos;
-dendrites = dendrites.dendrites(dendrites.indBigDends);
-
 [conn, syn] = connectEM.Connectome.load(param, connFile);
 
+trunks = load(trunkFile);
+trunks = Agglo.fromSuperAgglo(trunks.dendrites);
+trunks = trunks(Agglo.calculateVolume(param, trunks) > trunkMinSize);
+trunkLUT = Agglo.buildLUT(maxSegId, trunks);
+
+dendrites = load(dendFile);
+shAgglos = dendrites.shAgglos;
+dendrites = dendrites.dendrites;
+
+% Only keep dendrites that also contain a trunk
+dendMask = Agglo.fromSuperAgglo(dendrites, true);
+dendMask = cellfun(@(ids) any(trunkLUT(ids)), dendMask);
+dendrites = dendrites(dendMask);
+
+% Sanity check
+assert(numel(trunks) == numel(dendrites));
+
+maxSegId = Seg.Global.getMaxSegId(param);
 segPoints = Seg.Global.getSegToPointMap(param);
 
+%% Build spine head table
+shT = table;
+shT.agglo = shAgglos;
+
+dendLUT = Agglo.fromSuperAgglo(dendrites, true);
+dendLUT = Agglo.buildLUT(maxSegId, dendLUT);
+
+shT.attached = cellfun(@(ids) any(dendLUT(ids)), shT.agglo);
+shT.premAttached = cellfun(@(ids) any(trunkLUT(ids)), shT.agglo);
+
 %% Map synapses onto spine heads (if possible)
-maxSegId = Seg.Global.getMaxSegId(param);
-spineLUT = Agglo.buildLUT(maxSegId, spineHeads);
+spineLUT = Agglo.buildLUT(maxSegId, shT.agglo);
 trunkLUT = Agglo.buildLUT(maxSegId, trunks);
 
 syn.synapses.spineId = cellfun( ...
@@ -75,7 +98,7 @@ skel.setDescription(sprintf( ...
 skel = Skeleton.fromMST( ...
     cellfun( ...
         @(segIds) segPoints(segIds, :), ...
-        spineHeads(randSpineIds), ...
+        shT.agglo(randSpineIds), ...
         'UniformOutput', false), ...
 	param.raw.voxelSize, skel);
 skel.names = arrayfun( ...
@@ -84,21 +107,14 @@ skel.names = arrayfun( ...
 skel.write('/home/amotta/Desktop/random-spine-heads.nml');
 
 %% Calculate spine lengths
-spineLengths = ...
+shT.length = ...
     connectEM.Dendrite.calculateSpineLengths( ...
-        param, trunks, dendrites, spineHeads);
+        param, trunks, dendrites, shT.agglo);
 
 %% Calibration of automatically or manually attached spine heads
 % Note that this excludes "prematurely" and non-attached spines
-calib = skeleton(calibNml);
-
-calibT = table;
-calibT.spineId = regexpi( ...
-    calib.names, 'Spine head (\d+)$', 'tokens', 'once');
-calibT.spineId = str2double(vertcat(calibT.spineId{:}));
-
-calibT.calibLength = calib.pathLength([], param.raw.voxelSize);
-calibT.autoLength = spineLengths(calibT.spineId);
+calibT = loadCalibrationNml(param, calibNml);
+calibT.autoLength = shT.length(calibT.spineId);
 
 calibT(isnan(calibT.autoLength), :) = [];
 calibT(~calibT.autoLength, :) = [];
@@ -106,6 +122,9 @@ calibT(~calibT.autoLength, :) = [];
 corrCoeff = ...
     sum(calibT.calibLength) ...
   / sum(calibT.autoLength);
+
+premCalibT = loadCalibrationNml(param, premCalibNml);
+premCorr = mean(premCalibT.calibLength);
 
 fig = figure();
 fig.Color = 'white';
@@ -141,6 +160,13 @@ leg.Box = 'off';
 title( ...
     ax, {info.filename; info.git_repos{1}.hash}, ...
     'FontWeight', 'normal', 'FontSize', 10);
+
+%% Estimate total spine length
+corrLength = corrCoeff * sum(shT.length(shT.attached & ~shT.premAttached));
+premLength = premCorr * sum(shT.attached & shT.premAttached);
+
+totalLenght = (corrLength + premLength) / 1E9;
+fprintf('Total spine neck length: %g m\n', totalLenght);
 
 %% Prepare analysis
 synT = connectEM.Connectome.buildSynapseTable(conn, syn);
@@ -433,4 +459,15 @@ for curIdx = 1:height(corrT)
         @(a, l) corr(a(:), l(:), 'Type', 'Kendall'), ...
         curJointAreas, curJointLengths);
     corrT.rankCorr(curIdx) = mean(curJointCorr, 'omitnan');
+end
+
+%% Utilities
+function calibT = loadCalibrationNml(param, nmlFile)
+    calib = skeleton(nmlFile);
+
+    calibT = table;
+    calibT.spineId = regexpi( ...
+        calib.names, 'Spine head (\d+)$', 'tokens', 'once');
+    calibT.spineId = str2double(vertcat(calibT.spineId{:}));
+    calibT.calibLength = calib.pathLength([], param.raw.voxelSize);
 end
