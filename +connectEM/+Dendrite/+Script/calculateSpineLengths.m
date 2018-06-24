@@ -35,19 +35,34 @@ dendrites = dendrites.dendrites(dendrites.indBigDends);
 
 [conn, syn] = connectEM.Connectome.load(param, connFile);
 
+segPoints = Seg.Global.getSegToPointMap(param);
+
 %% Map synapses onto spine heads (if possible)
 maxSegId = Seg.Global.getMaxSegId(param);
 spineLUT = Agglo.buildLUT(maxSegId, spineHeads);
+trunkLUT = Agglo.buildLUT(maxSegId, trunks);
 
 syn.synapses.spineId = cellfun( ...
     @(segIds) mode(nonzeros(spineLUT(segIds))), ...
     syn.synapses.postsynId);
+syn.synapses.trunkId = cellfun( ...
+    @(segIds) mode(nonzeros(trunkLUT(segIds))), ...
+    syn.synapses.postsynId);
     
 %% Export random spine heads for ground-truth
-segPoints = Seg.Global.getSegToPointMap(param);
-
 rng(0);
+
+%{
+% Random spine heads
 randSpineIds = rmmissing(syn.synapses.spineId);
+%}
+
+% Random prematurely attached spines
+% I.e., spines attached before running the spine attachment routines
+randSpineIds = isnan(syn.synapses.spineId) | isnan(syn.synapses.trunkId);
+randSpineIds = syn.synapses.spineId(~randSpineIds);
+
+% Select random subset
 randSpineIds = randSpineIds(randperm(numel(randSpineIds)));
 randSpineIds = randSpineIds(1:25);
 
