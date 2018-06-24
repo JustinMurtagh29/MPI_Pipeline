@@ -6,16 +6,28 @@ clear;
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites-wholeCells-03-v2-classified_spine-syn-clust.mat');
 trunkFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v3.mat');
+shFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v3_auto.mat');
 
 [~, lengthFile] = fileparts(connFile);
 lengthFile = sprintf('%s_pathLengths.mat', lengthFile);
 lengthFile = fullfile(fileparts(connFile), lengthFile);
 
-targetClasses = { ...
-    'Random', ...
+calibClasses = { ...
+    'AxonInitialSegment', ...
     'ApicalDendrite', ...
     'SmoothDendrite', ...
-    'AxonInitialSegment'};
+    'Random'};
+
+plotTargetClasses = { ...
+    'AxonInitialSegment', 'AIS'; ...
+    'ApicalDendrite', 'AD'; ...
+    'SmoothDendrite', 'SD'; ...
+    'OtherDendrite', 'Other'};
+
+plotLabels = plotTargetClasses(:, 2);
+plotTargetClasses = plotTargetClasses(:, 1);
+
+minSynPost = 10;
 
 info = Util.runInfo();
 
@@ -28,6 +40,9 @@ conn = connectEM.Connectome.load(param, connFile);
 trunks = load(trunkFile);
 trunks = trunks.dendrites(trunks.indBigDends);
 trunks = Agglo.fromSuperAgglo(trunks);
+
+shAgglos = load(shFile, 'shAgglos');
+shAgglos = shAgglos.shAgglos;
 
 lengths = load(lengthFile);
 
@@ -44,12 +59,23 @@ conn.denMeta.trunkLength(curMask) = ...
     lengths.trunkPathLengths(conn.denMeta.trunkId(curMask));
 clear curMask;
 
+%%
+dendT = conn.denMeta;
+dendT = dendT( ...
+    dendT.targetClass == 'AxonInitialSegment' ...
+  | dendT.synCount >= minSynPost, :);
+dendT = dendT(ismember(dendT.targetClass, plotTargetClasses), :);
+
+dendT.spineCount = ...
+    connectEM.Dendrite.calculateSpineCount( ...
+        param, conn.dendrites(dendT.id), shAgglos);
+
 %% Process NML files
 calibData = struct;
-for curTargetClassIdx = 1:numel(targetClasses)
-    curTargetClass = targetClasses{curTargetClassIdx};
+for curCalibClassIdx = 1:numel(calibClasses)
+    curCalibClass = calibClasses{curCalibClassIdx};
     
-    curDir = sprintf('pathLengthCalibration%s', curTargetClass);
+    curDir = sprintf('pathLengthCalibration%s', curCalibClass);
     curDir = connectEM.Dendrite.Data.getFile(curDir);
     
     curNmlFiles = dir(fullfile(curDir, '*.nml'));
@@ -104,7 +130,7 @@ for curTargetClassIdx = 1:numel(targetClasses)
         curTasks.calibLength(curTaskIdx) = curCalibLength;
     end
     
-    calibData.(curTargetClass) = curTasks;
+    calibData.(curCalibClass) = curTasks;
 end
 
 %% Visualize results
@@ -114,14 +140,14 @@ curFig = figure();
 curFig.Color = 'white';
 curFig.Position(3:4) = [1025, 350];
 
-for curIdx = 1:numel(targetClasses)
-    curTargetClass = targetClasses{curIdx};
-    curCalibT = calibData.(curTargetClass);
+for curIdx = 1:numel(calibClasses)
+    curCalibClass = calibClasses{curIdx};
+    curCalibT = calibData.(curCalibClass);
     
     curCalibT.autoLength = conn.denMeta.trunkLength(curCalibT.aggloId);
     curInterp = fit(curCalibT.autoLength, curCalibT.calibLength, 'poly1');
 
-    curAx = subplot(1, numel(targetClasses), curIdx);
+    curAx = subplot(1, numel(calibClasses), curIdx);
     axis(curAx, 'square');
     hold(curAx, 'on');
 
@@ -136,7 +162,7 @@ for curIdx = 1:numel(targetClasses)
     plot(curAx, curLimits(:), curInterp(1E3 * curLimits) / 1E3);
     plot(curAx, curLimits, curLimits, 'Color', 'black', 'LineStyle', '--');
     
-    title(curAx, curTargetClass, 'FontWeight', 'normal', 'FontSize', 10);
+    title(curAx, curCalibClass, 'FontWeight', 'normal', 'FontSize', 10);
 end
 
 curAxes = flip(curFig.Children);
@@ -150,3 +176,56 @@ annotation( ...
     'textbox', [0, 0.9, 1, 0.1], ...
 	'String', {info.filename; info.git_repos{1}.hash}, ...
     'EdgeColor', 'none', 'HorizontalAlignment', 'center');
+
+%% Correct path length
+dendT.corrTrunkLength = nan(size(dendT.trunkLength));
+for curIdx = 1:numel(plotTargetClasses)
+    curTargetClass = plotTargetClasses{curIdx};
+    curCalibClass = calibClasses{curIdx};
+    
+    curCalibT = calibData.(curCalibClass);
+    curCalibT.autoLength = conn.denMeta.trunkLength(curCalibT.aggloId);
+    curInterp = fit(curCalibT.autoLength, curCalibT.calibLength, 'poly1');
+    
+    curMask = dendT.targetClass == curTargetClass;
+    dendT.corrTrunkLength(curMask) = curInterp(dendT.trunkLength(curMask));
+end
+
+dendT.correSpineDensity = ...
+    dendT.spineCount ./ ( ...
+    dendT.corrTrunkLength / 1E3);
+
+%%
+binEdges = linspace(0, 2.5, 51);
+
+fig = figure();
+fig.Color = 'white';
+
+ax = axes(fig);
+axis(ax, 'square');
+hold(ax, 'on');
+
+plotHist = @(data) ...
+    histogram( ...
+        ax, data, ...
+        'BinEdges', binEdges, ...
+        'DisplayStyle', 'stairs', ...
+        'LineWidth', 2, ...
+        'FaceAlpha', 1);
+
+for curTargetClass = reshape(plotTargetClasses, 1, [])
+    curData = dendT.targetClass == curTargetClass;
+    curData = dendT.correSpineDensity(curData, :);
+    plotHist(curData);
+end
+
+ax.TickDir = 'out';
+xlabel(ax, 'Spine density (µm^{-1})');
+ylabel(ax, 'Dendrites');
+
+leg = legend(ax, plotLabels, 'Location', 'East');
+leg.Box = 'off';
+
+title( ...
+    ax, {info.filename; info.git_repos{1}.hash}, ...
+    'FontWeight', 'normal', 'FontSize', 10);
