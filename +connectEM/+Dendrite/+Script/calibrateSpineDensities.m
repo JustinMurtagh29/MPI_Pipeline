@@ -12,6 +12,7 @@ lengthFile = sprintf('%s_pathLengths.mat', lengthFile);
 lengthFile = fullfile(fileparts(connFile), lengthFile);
 
 targetClasses = { ...
+    '', ...
     'ApicalDendrite', ...
     'SmoothDendrite', ...
     'AxonInitialSegment'};
@@ -50,31 +51,40 @@ for curTargetClassIdx = 1:numel(targetClasses)
     
     curDir = sprintf('pathLengthCalibration%s', curTargetClass);
     curDir = connectEM.Dendrite.Data.getFile(curDir);
+    
+    curNmlFiles = dir(fullfile(curDir, '*.nml'));
+    curNmlFiles = reshape({curNmlFiles.name}, [], 1);
+    curNmlFiles = fullfile(curDir, curNmlFiles);
 
     curTaskFile = fullfile(curDir, 'taskIds.txt');
-    curTasks = connectEM.Chiasma.Util.loadTaskIds(curTaskFile);
-
+    curUseTaskIds = true;
+    
+    try
+        curTasks = connectEM.Chiasma.Util.loadTaskIds(curTaskFile);
+    catch
+        curTasks = table;
+        curTasks.nmlFile = curNmlFiles;
+        curUseTaskIds = false;
+    end
+    
     % Extract agglomerate ID
     curTasks.aggloId = regexpi( ...
         curTasks.nmlFile, '.*-(\d+)\.nml', 'tokens', 'once');
     assert(all(cellfun(@isscalar, curTasks.aggloId)));
-
+    
     curTasks.aggloId = cat(1, curTasks.aggloId{:});
     curTasks.aggloId = cellfun(@str2double, curTasks.aggloId);
+    
+    if curUseTaskIds
+        second = @(in) in(2);
+        curNmlTaskId = cellfun(@(name) ...
+            second(strsplit(name, '__')), curNmlFiles);
 
-    % Find NML file with results
-    curNmlFiles = dir(fullfile(curDir, '*.nml'));
-    curNmlFiles = reshape({curNmlFiles.name}, [], 1);
-
-    second = @(in) in(2);
-    curNmlTaskId = cellfun(@(name) ...
-        second(strsplit(name, '__')), curNmlFiles);
-
-    [~, curTasks.nmlFile] = ismember(curTasks.id, curNmlTaskId);
-    curTasks(~curTasks.nmlFile, :) = [];
-
-    curTasks.nmlFile = curNmlFiles(curTasks.nmlFile);
-    curTasks.nmlFile = fullfile(curDir, curTasks.nmlFile);
+       [~, curTasks.nmlFile] = ismember(curTasks.id, curNmlTaskId);
+        
+        curTasks(~curTasks.nmlFile, :) = [];
+        curTasks.nmlFile = curNmlFiles(curTasks.nmlFile);
+    end
 
     % Calculate tracing-based path length
     curTasks.calibLength = nan(height(curTasks), 1);
