@@ -36,7 +36,7 @@ axonCalibT.autoPathLength = lengths.axonPathLengths(axonCalibT.id);
 
 
 %% Loading dendrite calibration data
-dendCalibT = connectEM.Dendrite.Data.getDir('pathLengthCalibration');
+dendCalibT = connectEM.Dendrite.Data.getFile('pathLengthCalibration');
 dendCalibT = connectEM.loadPathLengthCalibrationNmls(param, dendCalibT);
 
 dendCalibT.trunkId = cellfun( ...

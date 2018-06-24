@@ -1,6 +1,6 @@
-function dataDir = getDir(dirName)
+function path = getFile(name)
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     thisDir = fileparts(mfilename('fullpath'));
-    dataDir = fullfile(thisDir, dirName);
+    path = fullfile(thisDir, name);
 end
