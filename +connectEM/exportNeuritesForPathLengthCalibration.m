@@ -9,6 +9,7 @@ outputDir = '/home/amotta/Desktop/neurites-for-path-length-calibration';
 
 numAxons = 50;
 numDendrites = 50;
+minSynPost = 10;
 
 info = Util.runInfo();
 
@@ -30,15 +31,18 @@ randDends = struct;
 
 randDends(1).title = 'Non-whole cell';
 randDends(1).dendIds = find(~ismember( ...
-    conn.denMeta.targetClass, {'Somata', 'WholeCell'}));
+    conn.denMeta.synCount >= minSynPost ...
+  & conn.denMeta.targetClass, {'Somata', 'WholeCell'}));
 
 randDends(2).title = 'Smooth dendrite';
 randDends(2).dendIds = find( ...
-    conn.denMeta.targetClass == 'SmoothDendrite');
+    conn.denMeta.synCount >= minSynPost ...
+  & conn.denMeta.targetClass == 'SmoothDendrite');
 
 randDends(3).title = 'Apical dendrite';
 randDends(3).dendIds = find( ...
-    conn.denMeta.targetClass == 'ApicalDendrite');
+    conn.denMeta.synCount >= minSynPost ...
+  & conn.denMeta.targetClass == 'ApicalDendrite');
 
 randDends(4).title = 'Axon initial segment';
 randDends(4).dendIds = find( ...
