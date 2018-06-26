@@ -5,7 +5,7 @@ clear;
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites-wholeCells-03-v2-classified_spine-syn-clust.mat');
-shFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v3_auto.mat');
+autoFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v3_auto.mat');
 
 info = Util.runInfo();
 Util.showRunInfo(info);
@@ -16,8 +16,10 @@ param = param.p;
 
 conn = connectEM.Connectome.load(param, connFile);
 
-shAgglos = load(shFile, 'shAgglos');
-shAgglos = shAgglos.shAgglos;
+autoData = load(autoFile);
+shAgglos = autoData.shAgglos;
+shAutoAttached = autoData.attached;
+clear autoData;
 
 box = param.bbox;
 voxelSize = param.raw.voxelSize;
@@ -31,6 +33,7 @@ dendLUT = Agglo.buildLUT(maxSegId, conn.dendrites);
 
 shT = table;
 shT.agglo = shAgglos;
+shT.autoAttached = shAutoAttached ~= 0;
 shT.attached = cellfun(@(segIds) any(dendLUT(segIds)), shT.agglo);
 
 wmean = @(w, v) sum(v .* (w / sum(w)), 1);
@@ -76,6 +79,10 @@ title(curAx, ...
 
 %% Quantitative evaluation
 numSpineHeads = height(shT) %#ok
+
+fractionOfSpineHeadsAutoAttached = mean(shT.autoAttached) %#ok
+fractionOfSpineHeadsAutoAttachedAfterTenUm = ...
+    mean(shT.autoAttached(shT.borderDist > 10E3)) %#ok
 
 fracionOfSpineHeadsAttached = mean(shT.attached) %#ok
 fractionOfSpineHeadsAttachedAfterTenUm = ...
