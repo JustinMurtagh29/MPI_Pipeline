@@ -98,6 +98,7 @@ colors = num2cell(colors(1:(end - 1), :), 2);
 
 [allBars.FaceColor] = deal(colors{:});
 [allBars.EdgeColor] = deal('none');
+allBars(end).FaceColor = 'none';
 
 xlim(ax, [0.25, numel(plotClasses) + 0.75]);
 xticklabels(ax, {axonClasses(plotClasses).tag});
