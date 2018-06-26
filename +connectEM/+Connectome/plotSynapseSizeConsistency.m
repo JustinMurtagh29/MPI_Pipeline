@@ -5,7 +5,8 @@ clear;
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites-wholeCells-03-v2-classified_spine-syn-clust.mat');
-ctrlConnFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-linearized_dendrites-wholeCells-03-v2-classified_spine-syn-clust.mat');
+% ctrlConnFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-linearized_dendrites-wholeCells-03-v2-classified_spine-syn-clust.mat');
+shFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v3_auto.mat');
 
 info = Util.runInfo();
 
@@ -15,22 +16,48 @@ param = param.p;
 
 [conn, syn, axonClasses] = ...
     connectEM.Connectome.load(param, connFile);
-[ctrlConn, ctrlSyn] = ...
-    connectEM.Connectome.load(param, ctrlConnFile);
+% [ctrlConn, ctrlSyn] = ...
+%     connectEM.Connectome.load(param, ctrlConnFile);
 
 [~, synToSynFile] = fileparts(connFile);
 synToSynFile = sprintf('%s_synToSynDists.mat', synToSynFile);
 synToSynFile = fullfile(fileparts(connFile), synToSynFile);
 synToSyn = load(synToSynFile);
 
+%{
 [~, ctrlSynToSynFile] = fileparts(ctrlConnFile);
 ctrlSynToSynFile = sprintf('%s_synToSynDists.mat', ctrlSynToSynFile);
 ctrlSynToSynFile = fullfile(fileparts(connFile), ctrlSynToSynFile);
 ctrlSynToSyn = load(ctrlSynToSynFile);
+%}
+
+% Loading spine head agglomerates
+shAgglos = load(shFile, 'shAgglos');
+shAgglos = shAgglos.shAgglos;
+
+% Loading augmented graph
+graph = Graph.load(rootDir);
+graph(~graph.borderIdx, :) = [];
+
+borderAreas = fullfile(rootDir, 'globalBorder.mat');
+borderAreas = load(borderAreas, 'borderArea2');
+borderAreas = borderAreas.borderArea2;
+
+graph.borderArea = borderAreas(graph.borderIdx);
+graph(:, {'prob', 'borderIdx'}) = [];
+clear borderAreas;
+
+%%
+asiT = ...
+    connectEM.Connectome.buildAxonSpineInterfaces( ...
+        param, graph, shAgglos, conn, syn);
+asiT(asiT.type ~= 'PrimarySpine', :) = [];
+
+synT = asiT;
+synT.isSpine(:) = true;
 
 %% Prepare data
-synT = connectEM.Connectome.buildSynapseTable(conn, syn);
-allAxonIds = find(conn.axonMeta.synCount);
+allAxonIds = unique(asiT.preAggloId);
 
 plotConfigs = struct;
 plotConfigs(1).synIds = find( ...
@@ -51,6 +78,7 @@ plotConfigs(3).synIds = find( ...
 plotConfigs(3).title = 'corticocortical spine synapses';
 plotConfigs(3).tag = 'cc sp';
 
+%{
 ctrlSynT = connectEM.Connectome.buildSynapseTable(ctrlConn, ctrlSyn);
 ctrlAllAxonIds = find(ctrlConn.axonMeta.synCount);
 
@@ -60,25 +88,26 @@ ctrlPlotConfigs(1).synIds = find( ...
     ctrlSynT.preAggloId, ctrlAllAxonIds));
 ctrlPlotConfigs(1).title = 'all spine synapses (control)';
 ctrlPlotConfigs(1).tag = 'sp (ctrl)';
+%}
 
 %% Plot distribution of synapse size
 connectEM.Consistency.plotSizeHistogram( ...
-    info, synT, plotConfigs(1), 'scale', 'log')
+    info, synT, plotConfigs(1), 'scale', 'log');
 connectEM.Consistency.plotSizeHistogram( ...
     info, synT, plotConfigs(2:3), 'scale', 'log');
 
 %% Plot histogram of degree of coupling
 connectEM.Consistency.plotCouplingHistogram( ...
     info, synT, plotConfigs(1), 'normalization', 'count');
-connectEM.Consistency.plotCouplingHistogram( ...
-    info, ctrlSynT, ctrlPlotConfigs(1), 'normalization', 'count');
+% connectEM.Consistency.plotCouplingHistogram( ...
+%     info, ctrlSynT, ctrlPlotConfigs(1), 'normalization', 'count');
 
 %% Synapse areas vs. degree of coupling
 clear cur*;
 curPlotCouplings = 1:5;
 curConfigs = [ ...
-    struct('synT', synT, 'plotConfig', plotConfigs(1)), ...
-    struct('synT', ctrlSynT, 'plotConfig', ctrlPlotConfigs)];
+    struct('synT', synT, 'plotConfig', plotConfigs(1))]; %, ...
+    % struct('synT', ctrlSynT, 'plotConfig', ctrlPlotConfigs)];
 
 for curConfig = reshape(curConfigs, 1, [])
     curPlotConfig = curConfig.plotConfig;
@@ -124,8 +153,8 @@ end
 %% Synapse area variability
 clear cur*;
 curConfigs = [ ...
-    struct('synT', synT, 'plotConfigs', plotConfigs), ...
-    struct('synT', ctrlSynT, 'plotConfigs', ctrlPlotConfigs)];
+    struct('synT', synT, 'plotConfigs', plotConfigs)];%, ...
+  % struct('synT', ctrlSynT, 'plotConfigs', ctrlPlotConfigs)];
 
 for curConfig = curConfigs
     for curPlotConfig = curConfig.plotConfigs
@@ -167,8 +196,8 @@ end
 clear cur*;
 curPlotCouplings = 2:5;
 curConfigs = [ ...
-    struct('synT', synT, 'plotConfig', plotConfigs(1)), ...
-    struct('synT', ctrlSynT, 'plotConfig', ctrlPlotConfigs)];
+    struct('synT', synT, 'plotConfig', plotConfigs(1))]; %, ...
+  % struct('synT', ctrlSynT, 'plotConfig', ctrlPlotConfigs)];
 
 for curConfig = curConfigs
     curPlotConfig = curConfig.plotConfig;
@@ -242,7 +271,8 @@ clear cur*;
 curConfigs = [ ...
     struct( ...
         'synT', synT, 'plotConfig', plotConfigs(1), ...
-        'synToSyn', synToSyn, 'maxDistUm', []), ...
+        'synToSyn', synToSyn, 'maxDistUm', [])]; %, ...
+%{
     struct( ...
         'synT', synT, 'plotConfig', plotConfigs(1), ...
         'synToSyn', synToSyn, 'maxDistUm', 20), ...
@@ -252,7 +282,8 @@ curConfigs = [ ...
     struct( ...
         'synT', ctrlSynT, 'plotConfig', ctrlPlotConfigs, ...
         'synToSyn', ctrlSynToSyn, 'maxDistUm', 20)];
-
+%}
+        
 for curConfig = curConfigs
     curSynT = curConfig.synT;
     curPlotConfig = curConfig.plotConfig;
