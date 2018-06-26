@@ -12,6 +12,7 @@ lengthFile = sprintf('%s_pathLengths.mat', lengthFile);
 lengthFile = fullfile(fileparts(connFile), lengthFile);
 
 info = Util.runInfo();
+Util.showRunInfo(info);
 
 %% Loading data
 param = load(fullfile(rootDir, 'allParameter.mat'));
@@ -109,3 +110,13 @@ annotation( ...
 	'String', {info.filename; info.git_repos{1}.hash}, ...
     'EdgeColor', 'none', 'HorizontalAlignment', 'center');
 
+%% Calculate total axonal and dendritic path length
+% This excludes whole cell dendrites
+totalDendLength = sum(lengths.trunkPathLengths(~lengths.trunkIsWholeCell));
+totalDendLength = dendCorrCoeff * totalDendLength / 1E9;
+
+totalAxonLength = sum(lengths.axonPathLengths);
+totalAxonLength = axonCorrCoeff * totalAxonLength / 1E9;
+
+fprintf('Total axonal path length: %.3f m\n', totalAxonLength);
+fprintf('Total dendritic path length: %.3f m\n', totalDendLength);

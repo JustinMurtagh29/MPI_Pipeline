@@ -11,6 +11,7 @@ nmlDirs = fullfile(nmlDirs, '+Data', { ...
     'center-cells_axon-dendrites-split'});
 
 info = Util.runInfo();
+Util.showRunInfo(info);
 
 %% Loading data
 param = load(fullfile(rootDir, 'allParameter.mat'));
