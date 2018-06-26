@@ -16,6 +16,7 @@ vesselThreshold = 0.5;
 nucleiThreshold = 0.5;
 
 info = Util.runInfo();
+Util.showRunInfo(info);
 
 %% Loading data
 param = load(fullfile(rootDir, 'allParameter.mat'));
