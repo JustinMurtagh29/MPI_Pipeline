@@ -24,6 +24,7 @@ premCalibNml = ...
 binEdges = linspace(0, 7, 71);
 
 info = Util.runInfo();
+Util.showRunInfo(info);
 
 %% Loading data
 param = load(fullfile(rootDir, 'allParameter.mat'), 'p');
