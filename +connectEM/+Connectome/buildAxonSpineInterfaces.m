@@ -4,7 +4,15 @@ function asiT = buildAxonSpineInterfaces( ...
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     maxSegId = Seg.Global.getMaxSegId(param);
     axonLUT = Agglo.buildLUT(maxSegId, conn.axons);
-    shLUT = Agglo.buildLUT(maxSegId, shAgglos);
+    
+    % NOTE(amotta): Find spine heads that overlap with axon agglomerates.
+    % This is a sign that something went wrong. We don't want to use these
+    % data points in our analysis.
+    %   By removing the spine head we make sure that the corresponding
+    % synapse is not detected as being onto a spine head, and thus won't
+    % make it into the axon-spine interface table.
+    shIds = find(cellfun(@(ids) ~any(axonLUT(ids)), shAgglos));
+    shLUT = Agglo.buildLUT(maxSegId, shAgglos(shIds), shIds);
     
     synT = connectEM.Connectome.buildSynapseTable(conn, syn);
     synT.type = syn.synapses.type(synT.id);
@@ -28,5 +36,13 @@ function asiT = buildAxonSpineInterfaces( ...
     
     asiT.area = accumarray( ...
         graph.axonSpineId(mask), ...
-        graph.borderArea(mask));
+        graph.borderArea(mask), ...
+       [height(asiT), 1], @sum, nan);
+    
+    % NOTE(amotta): The synapse agglomeration happened independently of the
+    % neurite reconstruction. In very rare cases (55 times at the time of
+    % writing) it can thus happen that there does not exist any border
+    % between a axon and spine head agglomerates.
+    %   For now, this case is eliminated by brute force.
+    asiT(isnan(asiT.area), :) = [];
 end
