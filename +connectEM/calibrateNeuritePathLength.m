@@ -26,7 +26,11 @@ trunks = Agglo.fromSuperAgglo(trunks);
 lengths = load(lengthFile);
 
 maxSegId = Seg.Global.getMaxSegId(param);
+
+%% Find trunk to dendrites
 trunkLUT = Agglo.buildLUT(maxSegId, trunks);
+conn.denMeta.trunkId = cellfun( ...
+    @(segIds) mode(nonzeros(trunkLUT(segIds))), conn.dendrites);
 
 %% Loading axon calibration data
 axonCalibT = connectEM.Axon.Data.getDir('pathLengthCalibration');
@@ -38,11 +42,8 @@ axonCalibT.autoPathLength = lengths.axonPathLengths(axonCalibT.id);
 dendCalibT = connectEM.Dendrite.Data.getFile('pathLengthCalibrationRandom');
 dendCalibT = connectEM.loadPathLengthCalibrationNmls(param, dendCalibT);
 
-dendCalibT.trunkId = cellfun( ...
-    @(segIds) mode(nonzeros(trunkLUT(segIds))), ...
-    conn.dendrites(dendCalibT.id));
-dendCalibT.autoPathLength = ...
-    lengths.trunkPathLengths(dendCalibT.trunkId);
+dendCalibT.trunkId = conn.denMeta.trunkId(dendCalibT.id);
+dendCalibT.autoPathLength = lengths.trunkPathLengths(dendCalibT.trunkId);
 
 %% Calculating correction coefficient
 axonCorrCoeff = ...
