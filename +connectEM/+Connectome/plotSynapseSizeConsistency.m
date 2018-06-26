@@ -39,8 +39,11 @@ clear borderAreas;
 % HACK(amotta): For some reason there exist borders, for which
 % `physicalBorderArea2` is zero. This seems wrong.
 %   In order not to be affected by this issue, let's set the area of these
-% borders to Nan. This will result in an total axon-spine interface area of
+% borders to NaN. This will result in an total axon-spine interface area of
 % NaN, which we can remove by brute force later on.
+%
+% Corresponding issue on GitLab:
+% https://gitlab.mpcdf.mpg.de/connectomics/auxiliaryMethods/issues/16
 graph.borderArea(~graph.borderArea) = nan;
 graph(:, {'prob', 'borderIdx'}) = [];
 
