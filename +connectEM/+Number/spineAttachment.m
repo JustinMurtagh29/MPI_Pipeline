@@ -8,6 +8,7 @@ connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites
 shFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v3_auto.mat');
 
 info = Util.runInfo();
+Util.showRunInfo(info);
 
 %% Loading data
 param = load(fullfile(rootDir, 'allParameter.mat'));
@@ -72,3 +73,10 @@ ylabel(curAx, 'Fraction of spine heads attached');
 title(curAx, ...
     {info.filename; info.git_repos{1}.hash}, ...
     'FontWeight', 'normal', 'FontSize', 10);
+
+%% Quantitative evaluation
+numSpineHeads = height(shT) %#ok
+
+fracionOfSpineHeadsAttached = mean(shT.attached) %#ok
+fractionOfSpineHeadsAttachedAfterTenUm = ...
+    mean(shT.attached(shT.borderDist > 10E3)) %#ok
