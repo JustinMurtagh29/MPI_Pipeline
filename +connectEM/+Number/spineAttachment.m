@@ -79,6 +79,7 @@ title(curAx, ...
 
 %% Quantitative evaluation
 numSpineHeads = height(shT) %#ok
+numManuallyAttachedSpineHeads = sum(shT.attached & ~shT.autoAttached) %#ok
 
 fractionOfSpineHeadsAutoAttached = mean(shT.autoAttached) %#ok
 fractionOfSpineHeadsAutoAttachedAfterTenUm = ...
