@@ -15,7 +15,7 @@ param = param.p;
 
 [conn, syn, axonClasses] = connectEM.Connectome.load(param, connFile);
 
-%% Numbers
+%% Connectome
 numAxons = numel(conn.axons) %#ok
 numDendrites = numel(conn.dendrites) %#ok
 
@@ -36,9 +36,34 @@ numAxonInitialSegments = sum( ...
 numAxonInitialSegmentsAll = sum( ...
     conn.denMeta.targetClass == 'AxonInitialSegment') %#ok
 
+%% Axon classes
 numLikelyExcitatoryAxons = numel(axonClasses(1).axonIds) %#ok
 numLikelyInhibitoryAxons = numel(axonClasses(2).axonIds) %#ok
 
 fractionOfAxonsLikelyBeingExcitatory = ...
     numLikelyExcitatoryAxons / ( ...
     numLikelyExcitatoryAxons + numLikelyInhibitoryAxons) %#ok
+
+%% Synapse fractions
+synT = connectEM.Connectome.buildSynapseTable(conn, syn);
+synT.targetClass = conn.denMeta.targetClass(synT.postAggloId);
+synT.inConnectome = axonMask(synT.preAggloId) & dendMask(synT.postAggloId);
+
+numSynpases = height(synT) %#ok
+numSomaSynapses = sum(synT.targetClass == 'Somata') %#ok
+fractionOfSynapsesOntoSomata = mean(synT.targetClass == 'Somata') %#ok
+
+numSynapsesInConnectome = sum(synT.inConnectome) %#ok
+numSomaSynapsesInConnectome = sum( ...
+    synT.targetClass(synT.inConnectome) == 'Somata') %#ok
+fractionOfSynapsesInCommectomeOntoSomata = mean( ...
+    synT.targetClass(synT.inConnectome) == 'Somata') %#ok
+
+% Analyse likely inhibitory synapses
+synT.isLikelyInhibitory = ismember( ...
+    synT.preAggloId, axonClasses(2).axonIds);
+numLikelyInhSynapses = sum(synT.isLikelyInhibitory) %#ok
+numLikelyInhSomaSynapses = sum( ...
+    synT.targetClass(synT.isLikelyInhibitory) == 'Somata') %#ok
+fractionOfLikelyInhibitorySynapsesOntoSomata = mean( ...
+    synT.targetClass(synT.isLikelyInhibitory) == 'Somata') %#ok
