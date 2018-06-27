@@ -13,7 +13,7 @@ Util.showRunInfo(info);
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 
-[conn, syn] = connectEM.Connectome.load(param, connFile);
+[conn, syn, axonClasses] = connectEM.Connectome.load(param, connFile);
 
 %% Numbers
 numAxons = numel(conn.axons) %#ok
@@ -35,3 +35,10 @@ numAxonInitialSegments = sum( ...
     conn.denMeta.targetClass(dendMask) == 'AxonInitialSegment') %#ok
 numAxonInitialSegmentsAll = sum( ...
     conn.denMeta.targetClass == 'AxonInitialSegment') %#ok
+
+numLikelyExcitatoryAxons = numel(axonClasses(1).axonIds) %#ok
+numLikelyInhibitoryAxons = numel(axonClasses(2).axonIds) %#ok
+
+fractionOfAxonsLikelyBeingExcitatory = ...
+    numLikelyExcitatoryAxons / ( ...
+    numLikelyExcitatoryAxons + numLikelyInhibitoryAxons) %#ok
