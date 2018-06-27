@@ -37,11 +37,15 @@ numAxonInitialSegmentsAll = sum(aisMask) %#ok
 
 %% Axon classes
 numLikelyExcitatoryAxons = numel(axonClasses(1).axonIds) %#ok
+numLikelyThalamocorticalAxons = numel(axonClasses(3).axonIds) %#ok
 numLikelyInhibitoryAxons = numel(axonClasses(2).axonIds) %#ok
 
 fractionOfAxonsLikelyBeingExcitatory = ...
     numLikelyExcitatoryAxons / ( ...
     numLikelyExcitatoryAxons + numLikelyInhibitoryAxons) %#ok
+fractionOfExcitatoryAxonsLikelyBeingThalamocortical = ...
+    numLikelyThalamocorticalAxons / ( ...
+    numLikelyThalamocorticalAxons + numLikelyExcitatoryAxons) %#ok
 
 %% Synapse fractions
 synT = connectEM.Connectome.buildSynapseTable(conn, syn);
