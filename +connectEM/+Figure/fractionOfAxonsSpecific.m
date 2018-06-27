@@ -37,12 +37,12 @@ axonClasses(4).tag = 'CC';
 axonClasses = ...
     connectEM.Connectome.buildAxonSpecificityClasses(conn, axonClasses);
 
-%% Plotting
-plotClasses = [4, 3, 2];
-plotData = nan(numel(plotClasses), 2 * numel(targetClasses) + 1);
+%% Prepare data
+fractionSpecific = nan(size(axonClasses));
+fractionOfSpecificOntoTarget = nan( ...
+    numel(axonClasses), 2 * numel(targetClasses) - 1);
 
-for curIdx = 1:numel(plotClasses)
-    curId = plotClasses(curIdx);
+for curId = 1:numel(axonClasses)
     curAxonClass = axonClasses(curId);
     curAxonIds = curAxonClass.axonIds;
     curSpecs = curAxonClass.specs;
@@ -55,14 +55,17 @@ for curIdx = 1:numel(plotClasses)
         @(name) curSpecs.(name).axonIds, ...
         curSpecClasses, 'UniformOutput', false);
     
+    % Determine fraction of axons with specificity
+    curFractionSpecific = unique(cell2mat(curSpecAxonIds));
+    curFractionSpecific = numel(curFractionSpecific) / numel(curAxonIds);
+    fractionSpecific(curId) = curFractionSpecific;
+    
+    % Fraction of specific axons per target
    [curA, curB] = ndgrid(1:numel(curIds), 1:numel(curIds));
-    curSpecMat = zeros(1 + numel(targetClasses));
+    curSpecMat = zeros(numel(targetClasses));
     curSpecMat(curIds, curIds) = cellfun( ...
         @(idsOne, idsTwo) numel(intersect(idsOne, idsTwo)), ...
         curSpecAxonIds(curA), curSpecAxonIds(curB));
-    
-    curNonSpecAxonIds = setdiff(curAxonIds, cell2mat(curSpecAxonIds));
-    curSpecMat(end, end) = numel(curNonSpecAxonIds);
     
     % Prepare stacked bars
     curDiag = diag(curSpecMat, 0);
@@ -78,17 +81,50 @@ for curIdx = 1:numel(plotClasses)
     curProbs = curProbs(1:(end - 1));
     curProbs = curProbs / sum(curProbs);
     
-    plotData(curIdx, :) = curProbs;
+    fractionOfSpecificOntoTarget(curId, :) = curProbs;
 end
+
+%% Plot fraction of axons specific
+plotClasses = [4, 3, 2];
 
 fig = figure();
 fig.Color = 'white';
+fig.Position(3:4) = [150, 161];
 
 ax = axes(fig);
-plotScaled = plotData ./ sum(plotData, 2);
-allBars = bar(ax, plotScaled, 'stacked');
+bar(ax, ...
+    1:numel(plotClasses), ...
+    fractionOfAxonsSpecific(plotClasses), ...
+    'EdgeColor', 'black', 'FaceColor', 'black');
 
-colors = ax.ColorOrder(1:(numel(targetClasses) + 1), :);
+ax.XLim = [0.5, numel(plotClasses) + 0.5];
+ax.YLim = [0, 1];
+
+ax.Box = 'off';
+ax.TickDir = 'out';
+ax.XTick = 1:numel(plotClasses);
+ax.XTickLabel = {axonClasses(plotClasses).tag};
+
+ylabel(ax, {'Fraction of'; 'axons specific'});
+
+title(ax, { ...
+    info.filename; info.git_repos{1}.hash}, ...
+    'FontWeight', 'normal', 'FontSize', 10);
+
+%% Plot distribution of specificities over target classes
+plotClasses = [4, 3, 2];
+
+fig = figure();
+fig.Color = 'white';
+fig.Position(3:4) = [190, 160];
+
+ax = axes(fig);
+plotData = fractionOfSpecificOntoTarget(plotClasses, :);
+plotData = flip(plotData, 2);
+
+allBars = bar(ax, plotData, 'stacked');
+
+colors = flip(ax.ColorOrder(1:numel(targetClasses), :), 1);
 mixedColors = (colors(1:(end - 1), :) .^ 2 + colors(2:end, :) .^ 2) / 2;
 mixedColors = cat(1, sqrt(mixedColors), zeros(1, 3));
 
@@ -98,17 +134,12 @@ colors = num2cell(colors(1:(end - 1), :), 2);
 
 [allBars.FaceColor] = deal(colors{:});
 [allBars.EdgeColor] = deal('none');
-allBars(end).FaceColor = 'none';
 
-xlim(ax, [0.25, numel(plotClasses) + 0.75]);
+xlim(ax, [0.5, numel(plotClasses) + 0.5]);
 xticklabels(ax, {axonClasses(plotClasses).tag});
-ylabel('Fraction of specific axons');
-
-legends = targetLabels;
-legends{end + 1} = 'None';
 
 leg = legend( ...
-    allBars(1:2:end), legends, ...
+    flip(allBars(1:2:end)), targetLabels, ...
     'Location', 'EastOutside');
 leg.Box = 'off';
 
