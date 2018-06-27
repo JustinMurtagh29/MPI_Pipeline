@@ -4,12 +4,20 @@ clear;
 
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-outFile = '/tmpscratch/amotta/l4/2018-05-08-ending-query-evaluation/axon-state_60.mat';
+nmlEvalFile = '/tmpscratch/amotta/l4/2018-05-08-ending-query-evaluation/axon-state_60.mat';
+
+% See https://gitlab.mpcdf.mpg.de/connectomics/pipeline/blob/c3e5dacf542e71c452b9b8d7e3fe5f63bd5b8e0c/+connectEM/setQueryState.m
+axonsBeforeQueryFile = fullfile(rootDir, 'aggloState', 'axons_04.mat');
 
 info = Util.runInfo();
+Util.showRunInfo(info);
+
+%% Number of axon fragments at beginning
+axonsBeforeQuery = load(axonsBeforeQueryFile, 'indBigAxons');
+numFiveUmAxonFragments = sum(axonsBeforeQuery.indBigAxons) %#ok
 
 %% Running analysis
-if ~exist(outFile, 'file')
+if ~exist(nmlEvalFile, 'file')
     %% Loading data
     param = load(fullfile(rootDir, 'allParameter.mat'));
     param = param.p;
@@ -54,10 +62,10 @@ if ~exist(outFile, 'file')
     out.nmlT = nmlT;
     out.info = info;
 
-    Util.saveStruct(outFile, out);
-    Util.protect(outFile);
+    Util.saveStruct(nmlEvalFile, out);
+    Util.protect(nmlEvalFile);
 else
-    out = load(outFile);
+    out = load(nmlEvalFile);
 end
 
 %% Plotting results
@@ -96,6 +104,11 @@ annotation(fig, ...
         info.filename; info.git_repos{1}.hash; ...
         sprintf('Evaluation of %d ending queries', height(out.nmlT))}, ...
     'EdgeColor', 'none', 'HorizontalAlignment', 'center');
+
+%% Quantitative evaluation
+meanQueryPathLengthUm = mean(nmlT.pathLen) %#ok
+meanQuerySpeedUmPerS = mean(nmlT.pathLen ./ nmlT.time) %#ok
+meanQueryTime = meanQueryPathLengthUm / meanQuerySpeedUmPerS %#ok
 
 %% Utility
 function [lenNm, timeMs] = forNmlFile(path, voxelSize)
