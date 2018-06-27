@@ -74,7 +74,7 @@ function plotAxonClass(info, classConn, targetClasses, axonClass)
     %% plotting
     fig = figure;
     fig.Color = 'white';
-    fig.Position(3:4) = [1850, 885];
+    fig.Position(3:4) = [1850, 1025];
     
     binEdges = linspace(0, 1, 21);
     axes = cell(size(targetClasses));
@@ -91,6 +91,12 @@ function plotAxonClass(info, classConn, targetClasses, axonClass)
        [nullSynFrac, nullAxonCount] = ...
             connectEM.Specificity.calcExpectedDist( ...
                 synCounts, classProb, 'distribution', 'binomial');
+            
+        ksProb = ...
+            connectEM.Specificity.kolmogorovSmirnovTest( ...
+                axonClassSpecs, nullSynFrac, ...
+                'nullWeights', nullAxonCount, ...
+                'tail', 'smaller');
         
         nullBinId = discretize(nullSynFrac, binEdges);
         nullBinCount = accumarray(nullBinId, nullAxonCount);
@@ -122,7 +128,9 @@ function plotAxonClass(info, classConn, targetClasses, axonClass)
         ax.YAxis.Limits(1) = 10 ^ (-0.1);
         ax.YAxis.Scale = 'log';
         
-        title(ax, className, 'FontWeight', 'normal', 'FontSize', 10);
+        title(ax, ...
+            {className; sprintf('p = %g (tailed KS)', ksProb)}, ...
+            'FontWeight', 'normal', 'FontSize', 10);
         axes{classIdx} = ax;
         
         %% p-values
