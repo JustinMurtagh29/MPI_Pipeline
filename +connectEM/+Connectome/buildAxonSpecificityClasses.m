@@ -25,12 +25,9 @@ function axonClasses = buildAxonSpecificityClasses(conn, axonClasses)
     % Thalamocortical axons
     axonClasses(3).specs = struct;
     axonClasses(3).specs.ProximalDendrite.pThresh = 0.028024;
-    axonClasses(3).specs.ApicalDendrite.pThresh = 0.004531;
-    axonClasses(3).specs.AxonInitialSegment.pThresh = 0.004258;
     
     % Corticocortical axons
     axonClasses(4).specs = struct;
-    axonClasses(4).specs.ProximalDendrite.pThresh = 0.005596;
     axonClasses(4).specs.ApicalDendrite.pThresh = 0.014586;
     axonClasses(4).specs.SmoothDendrite.pThresh = 0.004950;
     
