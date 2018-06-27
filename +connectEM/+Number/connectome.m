@@ -23,6 +23,7 @@ axonMask = conn.axonMeta.synCount >= 10;
 numAxonsWithTenSynapses = sum(axonMask) %#ok
 
 dendMask = conn.denMeta.synCount >= 10;
+aisMask = conn.denMeta.targetClass == 'AxonInitialSegment';
 numDendritesWithTenSynapses = sum(dendMask) %#ok
 
 numSomata = sum(...
@@ -31,10 +32,8 @@ numSmoothDendrites = sum( ...
     conn.denMeta.targetClass(dendMask) == 'SmoothDendrite') %#ok
 numApicalDendrites = sum( ...
     conn.denMeta.targetClass(dendMask) == 'ApicalDendrite') %#ok
-numAxonInitialSegments = sum( ...
-    conn.denMeta.targetClass(dendMask) == 'AxonInitialSegment') %#ok
-numAxonInitialSegmentsAll = sum( ...
-    conn.denMeta.targetClass == 'AxonInitialSegment') %#ok
+numAxonInitialSegments = sum(dendMask & aisMask) %#ok
+numAxonInitialSegmentsAll = sum(aisMask) %#ok
 
 %% Axon classes
 numLikelyExcitatoryAxons = numel(axonClasses(1).axonIds) %#ok
@@ -47,7 +46,11 @@ fractionOfAxonsLikelyBeingExcitatory = ...
 %% Synapse fractions
 synT = connectEM.Connectome.buildSynapseTable(conn, syn);
 synT.targetClass = conn.denMeta.targetClass(synT.postAggloId);
-synT.inConnectome = axonMask(synT.preAggloId) & dendMask(synT.postAggloId);
+
+synT.inConnectome = ...
+    axonMask(synT.preAggloId) & ( ...
+    dendMask(synT.postAggloId) | ...
+    aisMask(synT.postAggloId));
 
 numSynpases = height(synT) %#ok
 numSomaSynapses = sum(synT.targetClass == 'Somata') %#ok
