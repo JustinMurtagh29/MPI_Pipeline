@@ -8,6 +8,7 @@ connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-linearize
 shFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v3_auto.mat');
 
 info = Util.runInfo();
+Util.showRunInfo(info);
 
 %% Loading data
 param = load(fullfile(rootDir, 'allParameter.mat'));
@@ -83,11 +84,41 @@ plotConfigs(3).synIds = find( ...
 plotConfigs(3).title = 'corticocortical spine synapses';
 plotConfigs(3).tag = 'cc sp';
 
+%% Report synapse sizes
+clear cur*;
+fprintf('Synapse sizes\n');
+for curConfig = plotConfigs
+    curSynT = synT(curConfig.synIds, :);
+    curLogAsi = log10(curSynT.area);
+    curMeanLog10Asi = mean(curLogAsi);
+    curStdLog10Asi = std(curLogAsi);
+    
+    fprintf( ...
+        '* log10(%s ASI): %f ± %f (mean ± std)\n', ...
+        curConfig.title, curMeanLog10Asi, curStdLog10Asi)
+end
+
 %% Plot distribution of synapse size
 connectEM.Consistency.plotSizeHistogram( ...
     info, synT, plotConfigs(1), 'scale', 'log');
 connectEM.Consistency.plotSizeHistogram( ...
     info, synT, plotConfigs(2:3), 'scale', 'log');
+
+%% Report number of occurences for degree of coupling
+clear cur*;
+curPlotConfig = plotConfigs(1);
+curSynT = synT(curPlotConfig.synIds, :);
+[~, ~, curDegreeOfCoupling] = unique(curSynT( ...
+    :, {'preAggloId', 'postAggloId'}), 'rows');
+curDegreeOfCoupling = accumarray(curDegreeOfCoupling, 1);
+
+docT = table;
+[docT.degreeOfCoupling, ~, curDocCount] = unique(curDegreeOfCoupling);
+
+docT.occurences = accumarray(curDocCount, 1);
+docT(docT.degreeOfCoupling == 1, :) = [];
+
+disp(docT)
 
 %% Plot histogram of degree of coupling
 connectEM.Consistency.plotCouplingHistogram( ...
@@ -95,7 +126,7 @@ connectEM.Consistency.plotCouplingHistogram( ...
 
 %% Synapse areas vs. degree of coupling
 clear cur*;
-curPlotCouplings = 1:5;
+curPlotCouplings = 1:4;
 curConfigs = struct('synT', synT, 'plotConfig', plotConfigs(1));
 
 for curConfig = reshape(curConfigs, 1, [])
@@ -119,11 +150,15 @@ for curConfig = reshape(curConfigs, 1, [])
         info, curConfig.synT, curPlotConfigs, ...
         'scale', 'log', 'title', curPlotConfig.title);
 
-    fig = ...
+   [curFig, curFit] = ...
         connectEM.Consistency.plotSizeBoxPlot( ...
             info, curConfig.synT, curPlotConfigs, ...
             'title', curPlotConfig.title);
-    fig.Position(3:4) = [250, 420];
+    curFig.Position(3:4) = [250, 420];
+    
+    curAsiGainVsDoc = 10 ^ curFit.p1;
+    fprintf('Fit results for "%s"\n', curPlotConfig.title);
+    fprintf('* Fold ASI per degree of coupling: %f\n', curAsiGainVsDoc);
 end
 
 %% Illustrate synapse size similarity
@@ -148,7 +183,6 @@ for curConfig = curConfigs
         curPairConfigs = ...
             connectEM.Consistency.buildPairConfigs( ...
                 curConfig.synT, curPlotConfig);
-
         curFig = ...
             connectEM.Consistency.plotVariabilityHistogram( ...
                 info, curConfig.synT, curPlotConfig, curPairConfigs(:));
@@ -158,23 +192,38 @@ for curConfig = curConfigs
             connectEM.Consistency.calculateLearnedFraction( ...
                 curConfig.synT, curPairConfigs(1), curPairConfigs(end));
         curOpenFrac = 1 - curLearnedFrac - curUnlearnedFrac;
-
-        fprintf('%s\n', curPlotConfig.title);
-        fprintf('→ Learned fraction: %.1f %%\n', 100 * curLearnedFrac);
-        fprintf('→ Possibly learned fraction: %.1f %%\n', 100 * curOpenFrac);
-        fprintf('→ Unlearned fraction: %.1f %%\n', 100 * curUnlearnedFrac);
-        fprintf('→ CV threshold: %.2f\n', curCvThresh);
+        
+        % Quantitative reporting
+        fprintf('**%s**\n', curPlotConfig.title);
+        
+        fprintf('CV between pairs (mean ± std)\n');
+        for curPairConfig = curPairConfigs
+            curCvs = curConfig.synT.area(curPairConfig.synIdPairs);
+            curCvs = std(curCvs, 0, 2) ./ mean(curCvs, 2);
+            
+            fprintf( ...
+                '* %s: %f ± %f\n', ...
+                curPairConfig.title, ...
+                mean(curCvs), std(curCvs));
+        end
+            
+        fprintf('\n');
+        
+        fprintf('* Learned fraction: %.1f %%\n', 100 * curLearnedFrac);
+        fprintf('* Possibly learned fraction: %.1f %%\n', 100 * curOpenFrac);
+        fprintf('* Unlearned fraction: %.1f %%\n', 100 * curUnlearnedFrac);
+        fprintf('* CV threshold: %.2f\n', curCvThresh);
         fprintf('\n');
 
-        fprintf('* Significance tests\n');
-        fprintf('  p-values for unexpected synapse size similarity\n');
+        fprintf('Significance tests\n');
+        fprintf('p-values for unexpected synapse size similarity\n');
         for curPairConfig = curPairConfigs(1:(end - 1))
             curPValue = ...
                 connectEM.Consistency.testVariability( ...
                     curConfig.synT, curPairConfig, curPairConfigs(end));
-            fprintf('→ %s: %g\n', curPairConfig.title, curPValue);
+            fprintf('* %s: %g\n', curPairConfig.title, curPValue);
         end
-
+        
         fprintf('\n');
     end
 end

@@ -1,4 +1,4 @@
-function fig = plotSizeBoxPlot(info, synT, plotConfigs, varargin)
+function [fig, asiFit] = plotSizeBoxPlot(info, synT, plotConfigs, varargin)
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     opt = struct;
@@ -37,7 +37,7 @@ function fig = plotSizeBoxPlot(info, synT, plotConfigs, varargin)
     dataT.plotX = dataT.coupling ...
         + opt.boxWidth * (rand(height(dataT), 1) - 0.5);
     
-    synAreaFit = fit(dataT.coupling, dataT.synArea, 'poly1');
+    asiFit = fit(dataT.coupling, dataT.synArea, 'poly1'); %#ok
 
     %% Plotting
     fig = figure();
@@ -81,7 +81,7 @@ function fig = plotSizeBoxPlot(info, synT, plotConfigs, varargin)
     
     % Interpolation
     plot( ...
-        ax, ax.XLim, synAreaFit(ax.XLim), ...
+        ax, ax.XLim, asiFit(ax.XLim), ...
         'Color', 'black', 'LineWidth', 2);
     
     ax.TickDir = 'out';
