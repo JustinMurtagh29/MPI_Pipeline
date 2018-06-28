@@ -7,6 +7,7 @@ rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites-wholeCells-03-v2-classified_spine-syn-clust.mat');
 
 binEdges = linspace(-50, 50, 51);
+marginUm = 3;
 
 synTypes = { ...
     'Corticocortical', ...
@@ -35,6 +36,44 @@ clear synPos;
 % Physical units, relative to center
 synT.pos = synT.pos - mean(param.bbox, 2)';
 synT.pos = synT.pos .* param.raw.voxelSize ./ 1E3;
+
+%% Numbers
+binUm = 5;
+
+curRangeX = param.bbox(1, :) - mean(param.bbox(1, :), 2);
+curRangeX = curRangeX .* param.raw.voxelSize(1) / 1E3;
+
+% Correct for Benedikt's synapse margin
+curRangeX = curRangeX + marginUm .* [+1, -1];
+
+curBinEdges = [ ...
+    -inf, curRangeX(1), curRangeX(1) + binUm, ...
+    curRangeX(2) - binUm, curRangeX(2), +inf];
+curSynData = accumarray(horzcat( ...
+    discretize(synT.pos(:, 1), curBinEdges), synT.synType), ...
+    1, [numel(curBinEdges) - 1, numel(synTypes)]);
+
+curSynData = curSynData([1 + 1, end - 1], :);
+
+curInhCount = curSynData(:, 3);
+curTcCount = curSynData(:, 2);
+
+curInhExcRatio = curSynData(:, 3) ./ sum(curSynData(:, 1:3), 2);
+curTcCcRatio = curSynData(:, 2) ./ sum(curSynData(:, 1:2), 2);
+
+fprintf('Top %d µm of dataset\n', binUm);
+fprintf('* Inh synapses: %d\n', curInhCount(1));
+fprintf('* TC synapses: %d\n', curTcCount(1));
+fprintf('* Inh / (Inh + Exc): %f\n', curInhExcRatio(1));
+fprintf('* TC / (TC + CC): %f\n', curTcCcRatio(1));
+fprintf('\n');
+
+fprintf('Bottom %d µm of dataset\n', binUm);
+fprintf('* Inh synapses: %d\n', curInhCount(end));
+fprintf('* TC synapses: %d\n', curTcCount(end));
+fprintf('* Inh / (Inh + Exc): %f\n', curInhExcRatio(end));
+fprintf('* TC / (TC + CC): %f\n', curTcCcRatio(end));
+fprintf('\n');
 
 %% Scatter plot of synpapse position
 clear cur*;
