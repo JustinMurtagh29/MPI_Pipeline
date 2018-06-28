@@ -37,7 +37,7 @@ function [fig, asiFit] = plotSizeBoxPlot(info, synT, plotConfigs, varargin)
     dataT.plotX = dataT.coupling ...
         + opt.boxWidth * (rand(height(dataT), 1) - 0.5);
     
-    asiFit = fit(dataT.coupling, dataT.synArea, 'poly1'); %#ok
+    asiFit = fit(dataT.coupling, dataT.synArea, 'poly1');
 
     %% Plotting
     fig = figure();
