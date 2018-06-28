@@ -192,8 +192,8 @@ function plotAxonClass(info, classConn, targetClasses, axonClass)
         curFdrEst = curFdrEst(:) ./ curPAxonFrac(:);
         
         curThetaIdx = 1 + find( ...
-            curFdrEst(1:(end - 1)) <= 0.5 ...
-          & curFdrEst(2:end) > 0.5, 1);
+            curFdrEst(1:(end - 1)) <= 0.2 ...
+          & curFdrEst(2:end) > 0.2, 1);
         
         plot(ax, curPVal, curFdrEst, 'LineWidth', 1);
         
