@@ -16,7 +16,9 @@ targetLabels = targetClasses(:, 2);
 targetClasses = targetClasses(:, 1);
 
 minSynPre = 10;
+
 info = Util.runInfo();
+Util.showRunInfo(info);
 
 %% Loading data
 param = load(fullfile(rootDir, 'allParameter.mat'));
@@ -40,6 +42,8 @@ axonClasses = ...
 %% Prepare data
 fractionSpecific = nan(size(axonClasses));
 fractionOfSpecificOntoTarget = nan( ...
+    numel(axonClasses), 1 + numel(targetClasses));
+fractionOfSpecificOntoTargetBars = nan( ...
     numel(axonClasses), 2 * numel(targetClasses) - 1);
 
 for curId = 1:numel(axonClasses)
@@ -67,6 +71,15 @@ for curId = 1:numel(axonClasses)
         @(idsOne, idsTwo) numel(intersect(idsOne, idsTwo)), ...
         curSpecAxonIds(curA), curSpecAxonIds(curB));
     
+    % NOTE(amotta): These fractions may add up to more than 100 %. Reason
+    % for this is that an axon may be specific for multiple target classes.
+    curFracPerTarget = diag(curSpecMat, 0);
+    curFracPerTarget = curFracPerTarget / numel(curAxonIds);
+    curFracPerTarget = curFracPerTarget / curFractionSpecific;
+    
+    fractionOfSpecificOntoTarget(curId, 1) = curFractionSpecific;
+    fractionOfSpecificOntoTarget(curId, 2:end) = curFracPerTarget;
+    
     % Prepare stacked bars
     curDiag = diag(curSpecMat, 0);
     curOff = diag(curSpecMat, 1);
@@ -81,10 +94,16 @@ for curId = 1:numel(axonClasses)
     curProbs = curProbs(1:(end - 1));
     curProbs = curProbs / sum(curProbs);
     
-    fractionOfSpecificOntoTarget(curId, :) = curProbs;
+    fractionOfSpecificOntoTargetBars(curId, :) = curProbs;
 end
 
+fractionOfSpecificOntoTarget = array2table( ...
+    fractionOfSpecificOntoTarget, ...
+    'VariableNames', cat(1, 'Overall', targetClasses), ...
+    'RowNames', {axonClasses.tag}) %#ok
+
 %% Plot fraction of axons specific
+clear cur*;
 plotClasses = [4, 3, 2];
 
 fig = figure();
@@ -112,6 +131,7 @@ title(ax, { ...
     'FontWeight', 'normal', 'FontSize', 10);
 
 %% Plot distribution of specificities over target classes
+clear cur*;
 plotClasses = [4, 3, 2];
 
 fig = figure();
@@ -119,7 +139,7 @@ fig.Color = 'white';
 fig.Position(3:4) = [190, 160];
 
 ax = axes(fig);
-plotData = fractionOfSpecificOntoTarget(plotClasses, :);
+plotData = fractionOfSpecificOntoTargetBars(plotClasses, :);
 plotData = flip(plotData, 2);
 
 allBars = bar(ax, plotData, 'stacked');
