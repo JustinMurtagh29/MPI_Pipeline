@@ -15,6 +15,7 @@ synTypes = { ...
     'Inhibitory'};
 
 info = Util.runInfo();
+Util.showRunInfo(info);
 
 %% Loading data
 param = load(fullfile(rootDir, 'allParameter.mat'));
