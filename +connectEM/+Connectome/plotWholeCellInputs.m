@@ -491,6 +491,9 @@ disp(curFit);
 fprintf('\n');
 fprintf('\n');
 
+tcCcCellNormalizedWmPiaRatio = ...
+    curFit.predict(+1) / curFit.predict(-1) %#ok
+
 %% Calculate expected dendrite / neuron ratio for TC / (TC + CC)
 clear cur*;
 curBinEdges = linspace(0, 2, 11);
