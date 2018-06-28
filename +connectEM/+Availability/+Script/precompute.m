@@ -6,7 +6,7 @@ clear;
 blockSize = [32, 32, 16];
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites-wholeCells-03-v2-classified_spine-syn-clust.mat');
-outDir = '/tmpscratch/amotta/l4/2018-04-27-surface-availability-connectome-v5';
+outDir = '/tmpscratch/amotta/l4/2018-06-28-surface-availability-connectome-v5';
 
 info = Util.runInfo();
 
