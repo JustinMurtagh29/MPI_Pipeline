@@ -195,37 +195,72 @@ dendT.correSpineDensity = ...
     dendT.spineCount ./ ( ...
     dendT.corrTrunkLength / 1E3);
 
-%%
-binEdges = linspace(0, 2.5, 51);
+%% Plot
+pathEdges = linspace(0, 200, 41);
+pathClasses = [1, 3, 2];
 
-fig = figure();
-fig.Color = 'white';
+densityEdges = linspace(0, 2.5, 51);
+densityClasses = [1, 3, 2, 4];
 
-ax = axes(fig);
-axis(ax, 'square');
-hold(ax, 'on');
+colors = get(groot, 'defaultAxesColorOrder');
 
-plotHist = @(data) ...
+plotHist = @(ax, edges, data) ...
     histogram( ...
         ax, data, ...
-        'BinEdges', binEdges, ...
+        'BinEdges', edges, ...
         'DisplayStyle', 'stairs', ...
         'LineWidth', 2, ...
         'FaceAlpha', 1);
 
-for curTargetClass = reshape(plotTargetClasses, 1, [])
+fig = figure();
+fig.Color = 'white';
+fig.Position(3:4) = [750, 365];
+
+% Path length
+ax = subplot(1, 2, 1);
+hold(ax, 'on');
+
+for curTargetClassId = flip(pathClasses)
+    curTargetClass = plotTargetClasses(curTargetClassId);
+    curColor = colors(curTargetClassId, :);
+    
     curData = dendT.targetClass == curTargetClass;
-    curData = dendT.correSpineDensity(curData, :);
-    plotHist(curData);
+    curData = dendT.corrTrunkLength(curData) / 1E3;
+    curHist = plotHist(ax, pathEdges, curData);
+    curHist.EdgeColor = curColor;
 end
 
-ax.TickDir = 'out';
-xlabel(ax, 'Spine density (µm^{-1})');
+xlim(ax, pathEdges([1, end]));
+xlabel(ax, 'Path length (µm)');
 ylabel(ax, 'Dendrites');
 
-leg = legend(ax, plotLabels, 'Location', 'East');
+% Spine density
+ax = subplot(1, 2, 2);
+hold(ax, 'on');
+
+for curTargetClassId = flip(densityClasses)
+    curTargetClass = plotTargetClasses(curTargetClassId);
+    curColor = colors(curTargetClassId, :);
+    
+    curData = dendT.targetClass == curTargetClass;
+    curData = dendT.correSpineDensity(curData, :);
+    curHist = plotHist(ax, densityEdges, curData);
+    curHist.EdgeColor = curColor;
+end
+
+xlim(ax, densityEdges([1, end]));
+xlabel(ax, 'Spine density (µm^{-1})');
+
+set(fig.Children, ...
+    'TickDir', 'out', ...
+    'PlotBoxAspectRatio', ones(1, 3), ...
+    'DataAspectRatioMode', 'auto');
+
+leg = legend(ax, plotLabels, 'Location', 'NorthEast');
 leg.Box = 'off';
 
-title( ...
-    ax, {info.filename; info.git_repos{1}.hash}, ...
-    'FontWeight', 'normal', 'FontSize', 10);
+annotation( ...
+    fig, ...
+    'textbox', [0, 0.9, 1, 0.1], ...
+	'String', {info.filename; info.git_repos{1}.hash}, ...
+    'EdgeColor', 'none', 'HorizontalAlignment', 'center');
