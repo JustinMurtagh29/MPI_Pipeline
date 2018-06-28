@@ -5,9 +5,14 @@ function [tasks, startPos] = loadTaskIds(taskFile)
     data = fread(fid, 'char=>char');
     fclose(fid);
     
+    % HACK(amotta): MATLAB's `strsplit` has this weird, UNIX-unfriendly
+    % behaviour that a trailing separator produces a trailing empty cell in
+    % its output. Let's work around this by dropping trailing separators.
+    if data(end) == newline; data(end) = []; end
+    
     % split into lines
     data = reshape(data, 1, []);
-    data = strsplit(data, '\n');
+    data = strsplit(data, newline);
     
     % remove header
     data(1) = [];
