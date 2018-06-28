@@ -21,6 +21,7 @@ debugDir = '';
 debugCellIds = [];
 
 info = Util.runInfo();
+Util.showRunInfo(info);
 
 %% Loading data
 param = load(fullfile(rootDir, 'allParameter.mat'), 'p');
@@ -549,147 +550,6 @@ title( ...
     ax, {info.filename; info.git_repos{1}.hash}, ...
     'FontWeight', 'normal', 'FontSize', 10);
 
-%% Plot soma-aligned neurons
-% Projection matrix
-curProjMat = [0, 1, 0; 1, 0, 0];
-curProjMat = transpose(curProjMat);
-
-curWcT = wcT;
-curWcT.tcExcFrac = ...
-    curWcT.classConn(:, 2) ...
- ./ sum(curWcT.classConn(:, 1:2), 2);
-curWcT.nodeCount = arrayfun(@(a) size(a.nodes, 1), curWcT.agglo);
-curWcT = sortrows(curWcT, 'nodeCount');
-curWcT = curWcT(ismember(curWcT.id, curDendT.id), :);
-
-fig = figure;
-fig.Color = 'white';
-
-ax = axes(fig);
-hold(ax, 'on');
-axis(ax, 'equal');
-
-for curCellId = 1:height(curWcT)
-    curAgglo = curWcT.agglo(curCellId);
-    curSomaPos = curWcT.somaPos(curCellId, :);
-    
-    curCoords = curAgglo.nodes(:, 1:3) - curSomaPos;
-    curCoords = curCoords .* param.raw.voxelSize / 1E3;
-    curCoords = curCoords * curProjMat;
-    
-    curEdges = transpose(curAgglo.edges);
-    
-    % NOTE(amotta): Here, I'm concatenating the X and Y values of all
-    % edges, respectively. To break up the chain, we have to intersperse
-    % NaNs between each pair of X or Y values. This allows us to use the
-    % `plot` command despite the coordinate sequence to be disconnected.
-    % This is important because calling and displaying the results of the
-    % `plot` command is dramatically faster than creating `lines` for each
-    % edge.
-    curX = reshape(curCoords(curEdges(:), 1), 2, []);
-    curX = reshape(cat(1, curX, nan(1, size(curX, 2))), 1, []);
-    curY = reshape(curCoords(curEdges(:), 2), 2, []);
-    curY = reshape(cat(1, curY, nan(1, size(curY, 2))), 1, []);
-    
-    plot(curX, curY);
-end
-
-ax.TickDir = 'out';
-xlabel(ax, '"Radial" distance from soma (µm)');
-ylabel(ax, 'Cortical depth relative to soma (µm)');
-
-ax.YDir = 'reverse';
-ax.YTickLabel(1) = strcat({'(Pia) '}, ax.YTickLabel(1));
-ax.YTickLabel(end) = strcat({'(WM) '}, ax.YTickLabel(end));
-
-title(ax, ...
-    {info.filename; info.git_repos{1}.hash}, ...
-    'FontWeight', 'normal', 'FontSize', 10);
-
-%% Two dimensional polar plot
-curValNames = { ...
-    'somaPosCorrInhExcRatio', 'Inh / (Inh + Exc)'; ...
-    'somaPosCorrTcExcRatio', 'TC / (TC + CC)'; ...
-    'wcRelInhExcRatio', 'Dend(Inh) / Neuron(Inh)'; ...
-    'wcRelTcExcRatio', 'Dend(TC) / Neuron(TC)'};
-
-curLabels = curValNames(:, 2);
-curValNames = curValNames(:, 1);
-
-for curValIdx = 1:numel(curValNames)
-    curValName = curValNames{curValIdx};
-
-    curFig = figure();
-    curFig.Color = 'white';
-    curFig.Position(3:4) = [900, 600];
-    
-    for curDim = 1:3
-        curData = table;
-        curData.dir = dendT.dir(:, curDim);
-        curData.theta = asin(curData.dir);
-        curData.val = dendT.(curValName);
-        curData.syns = cellfun( ...
-            @height, dendT.synapses);
-
-        curKernBw = (pi / 5);
-        curKern = @(p, r) (1 - min(1, abs(p - r) / curKernBw)) / curKernBw;
-        
-        curTheta = pi / 2 * linspace(-1, +1, 51);
-        curMean = curKern(curData.theta, curTheta);
-        curMean = curData.syns .* curMean;
-        curMean = sum(curData.val .* curMean, 1) ./ sum(curMean, 1);
-
-        curMaxVal = max(curData.val);
-        
-        curAxWidth = 1 / 5;
-        curPad = (1 - 3 * curAxWidth) / 4;
-        curAxPos = curPad + (curDim - 1) * (curAxWidth + curPad);
-        curAxPos = [curAxPos, 0.05, curAxWidth, 0.9]; %#ok
-        
-        curAx = polaraxes(curFig, 'Position', curAxPos);
-        curAx.ThetaDir = 'clockwise';
-        curAx.ThetaLim = [-90, +90];
-        hold(curAx, 'on');
-        
-        for curIdx = 1:height(curData)
-            polarplot( ...
-                curAx, repelem(curData.theta(curIdx), 1, 2), ...
-                [0, curData.val(curIdx)], ...
-                'Color', curAx.ColorOrder(1, :));
-        end
-
-        for curIdx = 1:height(curData)
-            polarplot( ...
-                curAx, curData.theta(curIdx), ...
-                curData.val(curIdx), '.', ...
-                'MarkerEdgeColor', 'black');
-        end
-        
-        polarplot( ...
-            curAx, curTheta, curMean, ...
-            'Color', 'black', 'LineWidth', 2);
-        
-        curDimChar = char(char('X') + (curDim - 1));
-        curAx.ThetaAxis.TickLabels{1} = sprintf( ...
-            '(-%s) %s', curDimChar, curAx.ThetaAxis.TickLabels{1});
-        curAx.ThetaAxis.TickLabels{(1 + end) / 2} = sprintf( ...
-            '(%s) %s', setdiff('XYZ', curDimChar), ...
-            curAx.ThetaAxis.TickLabels{(1 + end) / 2});
-        curAx.ThetaAxis.TickLabels{end} = sprintf( ...
-            '(+%s) %s', curDimChar, curAx.ThetaAxis.TickLabels{end});
-    end
-    
-    curAxes = flip(curFig.Children);
-    set(curAxes, 'TickDir', 'out', 'GridAlpha', 0.5);
-    
-    curAxes(1).RAxis.Label.String = curLabels{curValIdx};
-
-    annotation( ...
-        curFig, 'textbox', [0, 0.9, 1, 0.1], ...
-        'String', {info.filename; info.git_repos{1}.hash}, ...
-        'EdgeColor', 'none', 'HorizontalAlignment', 'center');
-end
-
 %% Try to find border cells
 somaPos = cell2mat(arrayfun( ...
     @(s) mean(s.nodes(:, 1:3), 1), ...
@@ -727,7 +587,7 @@ wcGroups(3).title = sprintf( ...
     numel(wcGroups(3).wcIds));
 wcGroups(3).tag = '1-syn';
 
-%% Generate queen neuron
+%% Generate queen neurons
 extWcT = wcT;
 for curIdx = 1:numel(wcGroups)
     curWcGroup = wcGroups(curIdx);
@@ -752,15 +612,40 @@ for curIdx = 1:numel(wcGroups)
     curQueenWcT.somaAgglo.edges = zeros(0, 2);
     
     curQueenWcT.somaPos = nan(1, 3);
-
-    curQueenWcT.nodeDists = {cell2mat(curWcT.nodeDists)};
-    curQueenWcT.nodeOrthoDists = {cell2mat(curWcT.nodeOrthoDists)};
-    curQueenWcT.synapses = {lumpedSynapses};
     
     curQueenWcT.title = curWcGroup.title;
     curQueenWcT.tag = curWcGroup.tag;
 
+    curQueenWcT.nodeDists = {cell2mat(curWcT.nodeDists)};
+    curQueenWcT.nodeOrthoDists = {cell2mat(curWcT.nodeOrthoDists)};
+    curQueenWcT.synapses = {lumpedSynapses};
+    curQueenWcT.classConn = sum(curWcT.classConn, 1);
+
     extWcT = cat(1, extWcT, curQueenWcT);
+end
+
+%% Numbers
+curDists = [40, 70];
+curBinSize = 10;
+
+curIdx = height(extWcT);
+curSyns = extWcT.synapses{curIdx};
+curSyns.axonClass = conn.axonMeta.axonClass(curSyns.axonId);
+curSyns.dist = extWcT.nodeDists{curIdx}(curSyns.nodeId);
+curSyns.dist = curSyns.dist / 1E3;
+
+for curDist = curDists
+    curBinEdges = curDist + curBinSize .* [-1, +1] ./ 2;
+    curSynMask = ...
+        curSyns.dist >= curBinEdges(1) ...
+      & curSyns.dist <= curBinEdges(2);
+
+    curSynTypeData = accumarray( ...
+        double(curSyns.axonClass(curSynMask)), 1, [4, 1]);
+    curInhExcRatio = curSynTypeData(3) / sum(curSynTypeData(1:3));
+
+    fprintf('Distance from soma: %g µm\n', curDist);
+    fprintf('* Inh / (Inh + Exc): %g\n', curInhExcRatio);
 end
 
 %% Plotting
