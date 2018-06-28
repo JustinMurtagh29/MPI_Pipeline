@@ -15,6 +15,8 @@ targetClasses = { ...
 targetLabels = targetClasses(:, 2);
 targetClasses = targetClasses(:, 1);
 
+minSynPre = 10;
+
 info = Util.runInfo();
 
 %% Loading data
@@ -24,8 +26,9 @@ param = param.p;
 [conn, ~, axonClasses] = connectEM.Connectome.load(param, connFile);
 
 %% Prepare connectome
-conn = ...
-    connectEM.Connectome.prepareForSpecificityAnalysis(conn);
+[conn, axonClasses] = ...
+    connectEM.Connectome.prepareForSpecificityAnalysis( ...
+        conn, axonClasses, 'minSynPre', minSynPre);
 axonClasses = ...
     connectEM.Connectome.buildAxonSpecificityClasses(conn, axonClasses);
 
