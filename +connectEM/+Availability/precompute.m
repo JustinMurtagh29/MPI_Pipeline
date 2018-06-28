@@ -53,7 +53,8 @@ function [axonBlocks, targetClassAreas, targetClasses] = ...
     import connectEM.Availability.*;
     
     %% loading data
-    conn = load(connFile);
+    conn = connectEM.Connectome.load(param, connFile);
+    conn = connectEM.Connectome.prepareForSpecificityAnalysis(conn);
     
     box = param.local(cubeIdx).bboxSmall;
     seg = loadSegDataGlobal(param.seg, box);
