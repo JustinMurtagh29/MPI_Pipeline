@@ -56,13 +56,13 @@ for curAxonClass = axonClasses
         
         curCoinVec = classConn(curAxonIds, :);
         curCoinVec(:, curSpecClass) = 0;
-        curCoinVec = mean(curCoinVec ./ sum(curCoinVec, 2), 1);
+        curCoinVec = sum(curCoinVec, 1) / sum(curCoinVec(:));
         curCoinMat(curSpecIdx, :) = curCoinVec;
     end
     
     % All axons
     curCoinVec = classConn(curAxonClass.axonIds, :);
-    curCoinVec = mean(curCoinVec ./ sum(curCoinVec, 2), 1);
+    curCoinVec = sum(curCoinVec, 1) / sum(curCoinVec(:));
     curCoinMat(end, :) = curCoinVec;
     
     plotIt(info, targetLabels, curAxonClass, curSpecClasses, curCoinMat);
