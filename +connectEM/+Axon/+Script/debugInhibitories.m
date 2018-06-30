@@ -47,6 +47,15 @@ axonMeta.excSomaSynFrac = ...
 
 axonMeta(axonMeta.synCount < minSynPre, :) = [];
 
+%% Prepare for plot
+colors = get(groot, 'defaultAxesColorOrder');
+axonMeta.color = repmat(colors(1, :), height(axonMeta), 1);
+
+excMask = ...
+    axonMeta.fullPriSpineSynFrac ...
+  > axonMeta.fullSecSpineSynFrac;
+axonMeta.color(excMask, :) = repmat(colors(2, :), sum(excMask), 1);
+
 %% Plot
 fig = figure();
 fig.Color = 'white';
@@ -55,14 +64,16 @@ fig.Position(3:4) = [675, 330];
 ax = subplot(1, 2, 1);
 scatter(ax, ...
     axonMeta.fullPriSpineSynFrac, ...
-    axonMeta.excSomaSynFrac, 36, '.');
+    axonMeta.excSomaSynFrac, ...
+    36, axonMeta.color, '.');
 xlabel(ax, {'Fraction of synapses being'; 'primary spine innervations'});
 ylabel(ax, {'Fraction of synapses'; 'onto excitatory somata'});
 
 ax = subplot(1, 2, 2);
 scatter(ax, ...
     axonMeta.fullPriSpineSynFrac, ...
-    axonMeta.fullSecSpineSynFrac, 36, '.');
+    axonMeta.fullSecSpineSynFrac, ...
+    36, axonMeta.color, '.');
 ylabel(ax, {'Fraction of synapses being'; 'secondary spine innervations'});
 
 set(fig.Children, ...
