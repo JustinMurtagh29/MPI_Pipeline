@@ -195,6 +195,24 @@ for curConfig = curConfigs
         
         % Quantitative reporting
         fprintf('**%s**\n', curPlotConfig.title);
+        curSynIdPairs = curPairConfigs(1).synIdPairs;
+        
+        curSynT = curConfig.synT( ...
+            curSynIdPairs(:, 1), {'preAggloId', 'postAggloId'});
+        curSynT.areas = curConfig.synT.area(curSynIdPairs);
+        curSynT.cv = std(curSynT.areas, 0, 2) ./ mean(curSynT.areas, 2);
+        curSynT.low = curSynT.cv < curCvThresh;
+        
+        curAxonT = curSynT(:, {'preAggloId'});
+       [curAxonT, ~, curGroupIds] = unique(curAxonT);
+        curAxonT.allConn = accumarray(curGroupIds, 1);
+        curAxonT.lowConn = accumarray(curGroupIds, curSynT.low);
+        curAxonT = sortrows(curAxonT, 'lowConn', 'descend');
+        
+        curLowThresh = round(height(curSynT) * curLearnedFrac);
+        curAxonFracLow = find(cumsum(curAxonT.lowConn) > curLowThresh, 1);
+        curAxonFracLow = curAxonFracLow / height(curAxonT) %#ok
+        curAxonFracUp = curLowThresh / height(curAxonT) %#ok
         
         fprintf('CV between pairs (mean ± std)\n');
         for curPairConfig = curPairConfigs
