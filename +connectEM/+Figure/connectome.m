@@ -9,6 +9,7 @@ connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites
 minSynCount = 10;
 
 info = Util.runInfo();
+Util.showRunInfo(info);
 
 %% Loading data
 param = load(fullfile(rootDir, 'allParameter.mat'));
@@ -41,6 +42,9 @@ dendMeta.targetClass(proxDendMask & ~inMask) = 'ProximalDendriteExc';
 conn = conn.connectome;
 conn(~ismember(conn.edges(:, 1), axonMeta.id), :) = [];
 conn(~ismember(conn.edges(:, 2), dendMeta.id), :) = [];
+
+%% Numbers
+numberOfConnections = height(conn) %#ok
 
 %% Group by classes
 axonClasses = { ...
