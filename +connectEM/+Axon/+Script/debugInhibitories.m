@@ -7,7 +7,7 @@ clear;
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites-wholeCells-03-v2-classified_spine-syn-clust.mat');
-outputDir = '/home/amotta/Desktop';
+outputDir = '/home/amotta/Desktop/exc-l6-candidates';
 
 minSynPre = 10;
 
@@ -38,8 +38,8 @@ axonMeta.fullSecSpineSynFrac = ...
  ./ axonMeta.fullSynCount;
 
 excSomaIds = find( ...
-    conn.denMeta.targetClass == 'Somata' ...
-  & not(conn.denMeta.isInterneuron));
+   ~conn.denMeta.isInterneuron ...
+  & conn.denMeta.targetClass == 'Somata');
 
 excSomaConn = conn.connectome;
 excSomaConn(~ismember(excSomaConn.edges(:, 2), excSomaIds), :) = [];
@@ -59,7 +59,7 @@ axonMeta(axonMeta.synCount < minSynPre, :) = [];
 axonMeta.exclusion = zeros(height(axonMeta), 1);
 axonMeta.exclusion(axonMeta.fullSpineSynFrac > 0.5) = 1;
 axonMeta.exclusion(axonMeta.fullPriSpineSynFrac > 0.5) = 2;
-axonMeta.exclusion(axonMeta.fullSecSpineSynFrac > 0.3) = 3;
+axonMeta.exclusion(axonMeta.fullSecSpineSynFrac > 0.25) = 3;
 axonMeta.exclusion(axonMeta.excSomaSynFrac > 0.1) = 4;
 
 colors = get(groot, 'defaultAxesColorOrder');
@@ -114,10 +114,12 @@ annotation( ...
     'EdgeColor', 'none', 'HorizontalAlignment', 'center');
 
 %% Search for potential shaft-preferring excitatory axons
+clear cur*;
+mkdir(outputDir);
+
 rng(0);
 axonIds = axonMeta.id(~axonMeta.exclusion);
-axonIds = randperm(numel(excCandIds));
-axonIds = excCandIds(axonIds);
+axonIds = axonIds(randperm(numel(axonIds)));
 axonIds = axonIds(1:25);
 
 synT = connectEM.Connectome.buildSynapseTable(conn, syn);
