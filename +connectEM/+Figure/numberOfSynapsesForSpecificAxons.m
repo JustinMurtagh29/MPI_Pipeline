@@ -51,29 +51,51 @@ for curAxonClassIdx = 1:numel(plotAxonClassIds)
     curAxonClassId = plotAxonClassIds(curAxonClassIdx);
     curAxonClass = axonClasses(curAxonClassId);
     
-    for curTargetClassId = 1:numTargetClasses
+    curAllSynCounts = axonSynCounts(curAxonClass.axonIds);
+	curBinEdges = 0:prctile(curAllSynCounts, 95);
+    
+    curUnspecAxonIds = structfun( ...
+        @(c) c.axonIds, curAxonClass.specs, 'UniformOutput', false);
+    curUnspecAxonIds = cell2mat(struct2cell(curUnspecAxonIds));
+    curUnspecAxonIds = setdiff(curAxonClass.axonIds, curUnspecAxonIds);
+    
+    curTargetClasses = fieldnames(curAxonClass.specs);
+   [~, curTargetClassIds] = ismember(curTargetClasses, targetClasses);
+    curTargetClassIds = reshape(curTargetClassIds, 1, []);
+    
+    for curTargetClassId = curTargetClassIds
         curTargetClass = targetClasses{curTargetClassId};
         curSpecAxonIds = curAxonClass.specs.(curTargetClass).axonIds;
         curSynCounts = axonSynCounts(curSpecAxonIds);
-        curBinEdges = 0:max(curSynCounts);
         
         curAx = subplot( ...
             numel(plotAxonClassIds), numTargetClasses, ...
             (curAxonClassIdx - 1) * numTargetClasses + curTargetClassId);
         if isempty(curSynCounts); continue; end
         
+        yyaxis(curAx, 'left');
         histogram(curAx, ...
             curSynCounts, ...
             'BinEdges', curBinEdges, ...
             'FaceColor', curAx.ColorOrder(1, :), ...
             'EdgeColor', 'none', ...
             'FaceAlpha', 1);
+        
+        yyaxis(curAx, 'right');
+        histogram(curAx, ...
+            curAllSynCounts, ...
+            'BinEdges', curBinEdges, ...
+            'DisplayStyle', 'stairs', ...
+            'LineWidth', 2, ...
+            'FaceAlpha', 1)
+        
+        yyaxis(curAx, 'left');
     end
     
-    curAxes = fig.Children(1:numTargetClasses);
+    curAxes = fig.Children(1:numel(curTargetClasses));
     curMaxX = max(arrayfun(@(a) a.XLim(end), curAxes));
     curMaxY = max(arrayfun(@(a) a.YLim(end), curAxes));
-    set(curAxes, 'XLim', [0, curMaxX], 'YLim', [0, curMaxY]);
+    set(curAxes, 'XLim', curBinEdges([1, end]), 'YLim', [0, curMaxY]);
     
     ylabel(curAxes(end), sprintf('%s axons', curAxonClass.tag));
 end
@@ -81,12 +103,18 @@ end
 xlabel(fig.Children(numTargetClasses), 'Synapses');
 
 allAxes = flip(fig.Children);
-set(allAxes, 'Box', 'off', 'TickDir', 'out');
+set(allAxes, ...
+    'Box', 'off', ...
+    'TickDir', 'out', ...
+    'PlotBoxAspectRatio', [1, 1, 1], ...
+    'DataAspectRatioMode', 'auto');
 
+%{
 arrayfun(@(ax, targetClass) title( ...
         ax, cat(1, targetClass, {'specific axons'}), ...
         'FontWeight', 'normal', 'FontSize', 10), ...
     allAxes(1:numTargetClasses), targetClasses);
+%}
 
 annotation( ...
     fig, ...
