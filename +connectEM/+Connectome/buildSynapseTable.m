@@ -9,7 +9,10 @@ function synT = buildSynapseTable(conn, synapses, varargin)
     
     synT = table;
     synT.id = cell2mat(conn.connectome.synIdx);
-    synT.area = cell2mat(conn.connectomeMeta.contactArea);
+    
+    if isfield(conn, 'connectomeMeta')
+        synT.area = cell2mat(conn.connectomeMeta.contactArea);
+    end
 
     synT.preAggloId = repelem( ...
         conn.connectome.edges(:, 1), ...
