@@ -5,7 +5,7 @@ clear;
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites-wholeCells-03-v2-classified_spine-syn-clust.mat');
-outputDir = '/home/amotta/Desktop/inh-sd-specific';
+outputDir = '/home/amotta/Desktop/inh-ad-specific';
 
 minSynPre = 10;
 
@@ -32,7 +32,7 @@ axonClasses = ...
 clear cur*;
 mkdir(outputDir);
 
-curTargetClass = 'SmoothDendrite';
+curTargetClass = 'ApicalDendrite';
 
 rng(0);
 axonIds = axonClasses(2).specs.(curTargetClass).axonIds;
