@@ -249,7 +249,7 @@ end
 %% Correlation of synapse size correlation with synapse size
 clear cur*;
 curMinCv = 0.0;
-curMaxCv = 0.5;
+curMaxCv = 0.25;
 
 curSynT = synT;
 curConfig = plotConfigs(1);
@@ -292,7 +292,7 @@ curFig.Position(3:4) = [420, 820];
 curAx = subplot(2, 1, 1);
 hold(curAx, 'on');
 
-curBinEdges = linspace(-1.5, 0.5, 21);
+curBinEdges = linspace(-1.5, 0.5, 11);
 curHist = @(t) histogram(curAx, ...
     mean(log10(t.areas( ...
         t.cv > curMinCv ...
