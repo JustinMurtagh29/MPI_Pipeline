@@ -90,14 +90,23 @@ function [axonClasses, conn] = buildAxonClasses(conn, varargin)
         'corticocortical axons (n = %d)', ...
         numel(axonClasses(end).axonIds));
     
+    % Unassigned axons
+    axonClasses(5).axonIds = unassignedIds;
+    axonClasses(5).nullAxonIds = axonClasses(end).axonIds;
+    axonClasses(5).title = sprintf( ...
+        'unassigned axons (n = %d)', ...
+        numel(axonClasses(end).axonIds));
+    
     % Update axon meta data
     conn.axonMeta.axonClass(:) = {'Other'};
     conn.axonMeta.axonClass(axonClasses(4).axonIds) = {'Corticocortical'};
     conn.axonMeta.axonClass(axonClasses(3).axonIds) = {'Thalamocortical'};
     conn.axonMeta.axonClass(axonClasses(2).axonIds) = {'Inhibitory'};
+    conn.axonMeta.axonClass(axonClasses(5).axonIds) = {'Unassigned'};
     
     axonClassOrder = { ...
-        'Corticocortical', 'Thalamocortical', 'Inhibitory', 'Other'};
+        'Corticocortical', 'Thalamocortical', ...
+        'Inhibitory', 'Unassigned', 'Other'};
     conn.axonMeta.axonClass = categorical( ...
         conn.axonMeta.axonClass, axonClassOrder, 'Ordinal', true);
 end
