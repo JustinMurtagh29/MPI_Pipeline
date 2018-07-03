@@ -43,7 +43,8 @@ axonClasses(end + 1) = allAxonClass;
 %% calculate target class innervation probabilities for null model
 clear cur*;
 
-curNullProbs = sum(classConnectome, 1);
+curNullProbs = cat(1, axonClasses(1:2).axonIds);
+curNullProbs = sum(classConnectome(curNullProbs, :), 1);
 curNullProbs = curNullProbs / sum(curNullProbs);
 [axonClasses.nullTargetClassProbs] = deal(curNullProbs);
 
