@@ -246,6 +246,91 @@ for curConfig = curConfigs
     end
 end
 
+%% Correlation of synapse size correlation with synapse size
+clear cur*;
+curMinCv = 0.0;
+curMaxCv = 0.5;
+
+curSynT = synT;
+curConfig = plotConfigs(1);
+
+curPairConfigs = ...
+    connectEM.Consistency.buildPairConfigs(curSynT, curConfig);
+curCtrlPairConfigs = ...
+    connectEM.Consistency.buildPairConfigs(curSynT, struct( ...
+        'synIds', curPairConfigs(1).synIdPairs(:)));
+
+curFig = ...
+	connectEM.Consistency.plotVariabilityHistogram( ...
+        info, curSynT, curConfig, cat(1,  ...
+        curPairConfigs(1), curCtrlPairConfigs(end)));
+curFig.Position(3:4) = [370, 540];
+
+curPairT = table;
+curPairT.areas = curSynT.area(curPairConfigs(1).synIdPairs);
+curPairT.areas = sort(curPairT.areas, 2);
+curPairT.cv = std(curPairT.areas, 0, 2) ./ mean(curPairT.areas, 2);
+
+curRandT = table;
+curRandT.areas = curSynT.area(curPairConfigs(end).synIdPairs);
+curRandT.areas = sort(curRandT.areas, 2);
+curRandT.cv = std(curRandT.areas, 0, 2) ./ mean(curRandT.areas, 2);
+
+curCtrlT = table;
+curCtrlT.areas = curSynT.area(curCtrlPairConfigs(end).synIdPairs);
+curCtrlT.areas = sort(curCtrlT.areas, 2);
+curCtrlT.cv = std(curCtrlT.areas, 0, 2) ./ mean(curCtrlT.areas, 2);
+
+curFig = figure;
+curFig.Color = 'white';
+curFig.Position(3:4) = [420, 820];
+
+curAx = subplot(2, 1, 1);
+hold(curAx, 'on');
+
+curBinEdges = linspace(-1.5, 0.5, 21);
+curHist = @(t) histogram(curAx, ...
+    mean(log10(t.areas( ...
+        t.cv > curMinCv ...
+      & t.cv < curMaxCv, :)), 2), ...
+	'BinEdges', curBinEdges, ...
+    'DisplayStyle', 'stairs', ...
+    'LineWidth', 2);
+curPairHist = curHist(curPairT);
+curCtrlHist = curHist(curCtrlT);
+
+xlabel(curAx, 'log_{10}(ASI area [µm²])');
+ylabel(curAx, 'Probability');
+
+curAx = subplot(2, 1, 2);
+histogram(curAx, ...
+    'BinCounts', max( ...
+        curPairHist.BinCounts ...
+      - curCtrlHist.BinCounts, 0), ...
+	'BinEdges', curBinEdges, ...
+    'DisplayStyle', 'stairs', ...
+    'LineWidth', 2);
+
+xlabel(curAx, 'log_{10}(ASI area [µm²])');
+ylabel(curAx, 'Observed vs. expected synapse pairs');
+
+curAxes = flip(cat(1, curFig.Children));
+set(curAxes, ...
+    'Box', 'off', ...
+    'TickDir', 'out', ...
+    'XLim', curBinEdges([1, end]), ...
+    'PlotBoxAspectRatio', [1, 1, 1],...
+	'DataAspectRatioMode', 'auto');
+
+curAx = curAxes(1);
+curPos = curAx.Position;
+curLeg = legend(curAx, { ...
+    'Same-axon same-dendrite spine synapses', ...
+    'Random pairs from above set of synapses'}, ...
+    'Location', 'SouthOutside');
+curLeg.Box = 'off';
+curAx.Position = curPos;
+
 %% Synapse size variability vs. degrees of coupling
 clear cur*;
 curPlotCouplings = 2:5;
