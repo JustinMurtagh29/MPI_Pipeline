@@ -47,7 +47,8 @@ function p = setParameterSettings(p)
     p.cnn.first = ['/gaba/u/mberning/results/parameterSearch/' p.cnn.dateStrings ...
         '/iter' num2str(p.cnn.iter, '%.2i') '/gpu' num2str(p.cnn.gpu, '%.2i') '/saveNet0000000001.mat'];
     p.cnn.GPU = false;
-    
+    p.cnn.myelin = '/gaba/u/sahilloo/myelinCNN/iter/myelin_segem_3.mat';
+
     % Location to store CNN classification
     p.class = Util.modifyStruct( ...
         p.raw, ...
