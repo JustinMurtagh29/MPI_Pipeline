@@ -58,7 +58,7 @@ for curAxonClass = axonClasses
 
     rng(0);
     curAxonIds = curAxonIds(randperm(numel(curAxonIds)));
-    curAxonIds = curAxonIds(1:25);
+    curAxonIds = curAxonIds(1:50);
 
     curNumDigits = ceil(log10(1 + numel(curAxonIds)));
 
