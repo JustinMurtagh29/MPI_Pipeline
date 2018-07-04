@@ -55,6 +55,6 @@ end
 function jobWrapper(p, bbox)
     onlyFwdPass3DonKnossosFolder( ...
         p.cnn.myelin, p.cnn.GPU, p.raw, ...
-        p.class, bbox, p.norm.func);
+        p.classMyelin, bbox, p.norm.func);
 end
 
