@@ -54,11 +54,11 @@ end
 
 function jobWrapper(p, bbox)
     onlyFwdPass3DonKnossosFolderMyelinCodat( ...
-        p.cnn.myelin, p.cnn.GPU, p.raw, ...
+        p.cnn.myelin, p.raw, ...
         p.classMyelin, bbox, p.norm.func);
 end
 
-function onlyFwdPass3DonKnossosFolderMyelinCodat(cnetLocation, gpuSwitch, input, result, bbox, normFunc)                                                                     
+function onlyFwdPass3DonKnossosFolderMyelinCodat(cnetLocation, input, result, bbox, normFunc)                                                                     
     % Load the CNN used for classification
     load(cnetLocation, 'cnet');
 
@@ -70,11 +70,7 @@ function onlyFwdPass3DonKnossosFolderMyelinCodat(cnetLocation, gpuSwitch, input,
     raw = loadRawData(input, bboxWithBorder);
     
     % Normalize data
-    if cnet.normalize
-        raw = normFunc(single(raw));
-    else
-        raw = single(raw);
-    end
+    raw = normFunc(single(raw));
     
     % Memory efficent fwd pass
     cnet = cnet.setConvMode('fft2');
