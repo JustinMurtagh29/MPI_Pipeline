@@ -17,12 +17,23 @@ info = Util.runInfo();
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 
+maxSegId = Seg.Global.getMaxSegId(param);
 segPoints = Seg.Global.getSegToPointMap(param);
 
 [conn, syn] = connectEM.Connectome.load(param, connFile);
 
-synT = connectEM.Connectome.buildSynapseTable(conn, syn);
-synT.type = syn.synapses.type(synT.id);
+%% Find synapses not contained in connectome
+axonLUT = Agglo.buildLUT(maxSegId, conn.axons);
+syn.synapses.axonId = cellfun( ...
+    @(ids) setdiff(axonLUT(ids), 0), ...
+    syn.synapses.presynId, ...
+    'UniformOutput', false);
+
+syn.synapses.axonId(~cellfun(@isscalar, syn.synapses.axonId)) = {nan};
+syn.synapses.axonId = cell2mat(syn.synapses.axonId);
+
+syn.synapses.inConn = false(height(syn.synapses), 1);
+syn.synapses.inConn(cell2mat(conn.connectome.synIdx)) = true;
 
 %% Prepare data
 conn.axonMeta.fullPriSpineSynFrac = ...
@@ -44,6 +55,8 @@ skel = Skeleton.setParams4Pipeline(skel, param);
 skel = skel.setDescription(sprintf( ...
     '%s (%s)', info.filename, info.git_repos{1}.hash));
 
+inConnStr = {'. Not in connectome', ''};
+
 for curAxonClass = axonClasses
     curAxonIds = curAxonClass.axonIds;
     curOutputDir = fullfile(outputDir, curAxonClass.tag);
@@ -55,13 +68,13 @@ for curAxonClass = axonClasses
 
     for curIdx = 1:numel(curAxonIds)
         curId = conn.axonMeta.id(curAxonIds(curIdx));
-        curSynT = synT(synT.preAggloId == curId, :);
+        curSynT = syn.synapses(syn.synapses.axonId == curId, :);
 
         curAxon = conn.axons(curId);
         curSynapses = cellfun( ...
             @vertcat, ...
-            syn.synapses.presynId(curSynT.id), ...
-            syn.synapses.postsynId(curSynT.id), ...
+            curSynT.presynId, ...
+            curSynT.postsynId, ...
             'UniformOutput', false);
 
         curNodes = [curAxon; curSynapses];
@@ -76,8 +89,10 @@ for curAxonClass = axonClasses
         curSkel.colors{1} = [0, 0, 1, 1];
 
         curSkel.names(2:end) = arrayfun( ...
-            @(id, type) sprintf('Synapse %d (%s)', id, type), ...
-            curSynT.id, curSynT.type, 'UniformOutput', false);
+            @(id, type, inConn) sprintf( ...
+                'Synapse %d (%s%s)', id, type, inConnStr{1 + inConn}), ...
+            curSynT.id, curSynT.type, curSynT.inConn, ...
+            'UniformOutput', false);
         curSkel.colors(2:end) = {[1, 1, 0, 1]};
 
         curSkelName = sprintf( ...
