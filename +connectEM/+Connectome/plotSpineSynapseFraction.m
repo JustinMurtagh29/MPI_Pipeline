@@ -14,7 +14,13 @@ info = Util.runInfo();
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 
-[conn, syn] = connectEM.Connectome.load(param, connFile);
+% [conn, syn] = connectEM.Connectome.load(param, connFile);
+
+% HACK(amotta): Switch to "official" connectome loader once the
+% intersynpase file becomes available.
+conn = load(connFile);
+syn = load(conn.info.param.synFile);
+conn.axonMeta = connectEM.Axon.completeSynapseMeta(param, conn, syn);
 
 %% Prepare axon meta data% Remove axons with too few synapses
 axonMeta = conn.axonMeta;
