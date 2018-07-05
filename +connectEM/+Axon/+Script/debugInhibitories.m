@@ -6,7 +6,7 @@ clear;
 
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites-wholeCells-03-v2-classified_spine-syn-clust.mat');
+connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-partiallySplit_dendrites-wholeCells-03-v2-classified_spine-syn-clust.mat');
 outputDir = '/home/amotta/Desktop';
 
 minSynPre = 10;
@@ -32,14 +32,9 @@ conn.axonMeta.fullPriSpineSynFrac = ...
 axonClasses = struct;
 axonClasses(1).axonIds = find( ...
     conn.axonMeta.synCount >= minSynPre ...
-  & conn.axonMeta.fullPriSpineSynFrac <= 0.2);
-axonClasses(1).tag = 'less-than-20-percent-pri-spines';
-
-axonClasses(2).axonIds = find( ...
-    conn.axonMeta.synCount >= minSynPre ...
   & conn.axonMeta.fullPriSpineSynFrac > 0.2 ...
   & conn.axonMeta.fullPriSpineSynFrac < 0.5);
-axonClasses(2).tag = 'between-20-and-50-percent-pri-spines';
+axonClasses(1).tag = 'between-20-and-50-percent-pri-spines';
 
 %% Search for potential shaft-preferring excitatory axons
 clear cur*;
@@ -55,10 +50,6 @@ for curAxonClass = axonClasses
     
     assert(~exist(curOutputDir, 'dir'));
     mkdir(curOutputDir);
-
-    rng(0);
-    curAxonIds = curAxonIds(randperm(numel(curAxonIds)));
-    curAxonIds = curAxonIds(1:50);
 
     curNumDigits = ceil(log10(1 + numel(curAxonIds)));
 
