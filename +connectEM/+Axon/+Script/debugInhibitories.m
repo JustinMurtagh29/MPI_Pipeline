@@ -22,6 +22,9 @@ segPoints = Seg.Global.getSegToPointMap(param);
 
 [conn, syn] = connectEM.Connectome.load(param, connFile);
 
+axons = load(conn.info.param.axonFile, 'axons');
+axons = axons.axons;
+
 %% Find synapses not contained in connectome
 axonLUT = Agglo.buildLUT(maxSegId, conn.axons);
 syn.synapses.axonId = cellfun( ...
@@ -41,6 +44,9 @@ syn.synapses.id = reshape(1:height(syn.synapses), [], 1);
 conn.axonMeta.fullPriSpineSynFrac = ...
     conn.axonMeta.fullPriSpineSynCount ...
  ./ conn.axonMeta.fullSynCount;
+conn.axonMeta.fullShaftSynFrac = 1 - ...
+    conn.axonMeta.fullSpineSynCount ...
+ ./ conn.axonMeta.fullSynCount;
 
 axonClasses = struct;
 axonClasses(1).axonIds = find( ...
@@ -48,6 +54,14 @@ axonClasses(1).axonIds = find( ...
   & conn.axonMeta.fullPriSpineSynFrac > 0.2 ...
   & conn.axonMeta.fullPriSpineSynFrac < 0.5);
 axonClasses(1).tag = 'between-20-and-50-percent-pri-spines';
+
+shaftAvoidingIds = intersect(axonClasses(1).axonIds, ...
+    find(conn.axonMeta.fullShaftSynFrac < 0.3));
+shaftAvoidingIds = Util.sortBy(shaftAvoidingIds, ...
+    conn.axonMeta.fullShaftSynFrac(shaftAvoidingIds));
+
+axonClasses(2).axonIds = shaftAvoidingIds;
+axonClasses(2).tag = 'between-20-and-50-percent-pri-spines_shaft-avoiding';
 
 %% Search for potential shaft-preferring excitatory axons
 clear cur*;
@@ -70,22 +84,23 @@ for curAxonClass = axonClasses
 
     for curIdx = 1:numel(curAxonIds)
         curId = conn.axonMeta.id(curAxonIds(curIdx));
+        
+        curAxon = axons(conn.axonMeta.parentId(curAxonIds(curIdx)));
         curSynT = syn.synapses(syn.synapses.axonId == curId, :);
-
-        curAxon = conn.axons(curId);
+        
         curSynapses = cellfun( ...
             @vertcat, ...
             curSynT.presynId, ...
             curSynT.postsynId, ...
             'UniformOutput', false);
-
-        curNodes = [curAxon; curSynapses];
-        curNodes = cellfun( ...
+        curSynapses = cellfun( ...
             @(segIds) segPoints(segIds, :), ...
-            curNodes, 'UniformOutput', false);
-
+            curSynapses, 'UniformOutput', false);
+        
+        curSkel = skel;
+        curSkel = Superagglos.toSkel(curAxon, curSkel);
         curSkel = Skeleton.fromMST( ...
-            curNodes, param.raw.voxelSize, skel);
+            curSynapses, param.raw.voxelSize, curSkel);
 
         curSkel.names{1} = sprintf('Axon %d', curId);
         curSkel.colors{1} = [0, 0, 1, 1];
