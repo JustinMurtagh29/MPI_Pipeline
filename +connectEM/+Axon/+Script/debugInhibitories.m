@@ -35,6 +35,8 @@ syn.synapses.axonId = cell2mat(syn.synapses.axonId);
 syn.synapses.inConn = false(height(syn.synapses), 1);
 syn.synapses.inConn(cell2mat(conn.connectome.synIdx)) = true;
 
+syn.synapses.id = reshape(1:height(syn.synapses), [], 1);
+
 %% Prepare data
 conn.axonMeta.fullPriSpineSynFrac = ...
     conn.axonMeta.fullPriSpineSynCount ...
