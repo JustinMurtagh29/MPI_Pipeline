@@ -20,14 +20,13 @@ function synT = buildSynapseTable(conn, synapses, varargin)
         cellfun(@numel, conn.connectome.synIdx));
 
     synT.isSpine = synapses.isSpineSyn(synT.id);
-
-    % remove duplicate entries
-    [~, uniRows, uniCount] = unique(synT.id);
-    synT = synT(uniRows, :);
     
     if ~opts.allowDuplicates
         % remove synapses occuring multiple times
         % (i.e., between two or more pairs of neurites)
+       [~, uniRows, uniCount] = unique(synT.id);
+        synT = synT(uniRows, :);
+        
         synT.occurences = accumarray(uniCount, 1);
         synT(synT.occurences > 1, :) = [];
         synT.occurences = [];
