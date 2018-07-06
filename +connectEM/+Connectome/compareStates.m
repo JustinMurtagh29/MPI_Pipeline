@@ -10,6 +10,9 @@ connFiles = { ...
     'connectome_axons-19-a_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v8-classified.mat'};
 connFiles = fullfile(rootDir, 'connectomeState', connFiles);
 
+info = Util.runInfo();
+Util.showRunInfo(info);
+
 %% loading data
 conns = cellfun(@load, connFiles, 'UniformOutput', false);
 
