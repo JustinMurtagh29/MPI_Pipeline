@@ -4,9 +4,9 @@ clear;
 
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites-wholeCells-03-v2-classified_spine-syn-clust.mat');
-splitConnFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-linearized_dendrites-wholeCells-03-v2-classified_spine-syn-clust.mat');
-outFile = fullfile(rootDir, 'aggloState', 'axons_19_a_partiallySplit.mat');
+connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v8-classified.mat');
+splitAxonFile = fullfile(rootDir, 'aggloState', 'axons_19_a_linearized.mat');
+outFile = fullfile(rootDir, 'aggloState', 'axons_19_a_partiallySplit_v2.mat');
 
 % Set file path to generate debug NML file
 debugNmlFile = '';
@@ -20,11 +20,10 @@ param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 
 conn = connectEM.Connectome.load(param, connFile);
-splitConn = load(splitConnFile, 'info');
 
 % Loading axons
 axons = load(conn.info.param.axonFile);
-splitAxons = load(splitConn.info.param.axonFile);
+splitAxons = load(splitAxonFile);
 
 % Sanity check
 chiasmata = load(splitAxons.info.param.chiasmaFile, 'info');
