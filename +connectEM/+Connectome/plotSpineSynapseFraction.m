@@ -4,7 +4,7 @@ clear;
 
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites-wholeCells-03-classified_spine-syn-clust.mat');
+connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v8-classified.mat');
 
 minSynCount = 10;
 
@@ -14,7 +14,7 @@ info = Util.runInfo();
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 
-[conn, syn] = connectEM.Connectome.load(param, connFile);
+conn = connectEM.Connectome.load(param, connFile);
 
 %% Prepare axon meta data% Remove axons with too few synapses
 axonMeta = conn.axonMeta;
@@ -44,5 +44,5 @@ xlabel(ax, 'Spine synapse fraction');
 ylabel(ax, 'Axons');
 
 title(ax, ...
-   {info.filename; info.git_repos{1}.hash}, ...
+    {info.filename; info.git_repos{1}.hash}, ...
     'FontWeight', 'normal', 'FontSize', 10);
