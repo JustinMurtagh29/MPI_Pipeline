@@ -55,13 +55,35 @@ axonClasses(1).axonIds = find( ...
   & conn.axonMeta.fullPriSpineSynFrac < 0.5);
 axonClasses(1).tag = 'between-20-and-50-percent-pri-spines';
 
-shaftAvoidingIds = intersect(axonClasses(1).axonIds, ...
-    find(conn.axonMeta.fullShaftSynFrac < 0.3));
-shaftAvoidingIds = Util.sortBy(shaftAvoidingIds, ...
-    conn.axonMeta.fullShaftSynFrac(shaftAvoidingIds));
+%% Also export axons in order of shaft avoidance
+curShaftAvoidingIds = axonClasses(1).axonIds;
+curShaftSynFracs = conn.axonMeta.fullShaftSynFrac(curShaftAvoidingIds);
+curShaftAvoidingIds = Util.sortBy(curShaftAvoidingIds, curShaftSynFracs);
 
-axonClasses(2).axonIds = shaftAvoidingIds;
+axonClasses(2).axonIds = curShaftAvoidingIds;
 axonClasses(2).tag = 'between-20-and-50-percent-pri-spines_shaft-avoiding';
+
+curFig = figure;
+curFig.Color = 'white';
+
+curAx = axes(curFig);
+axis(curAx, 'square');
+
+histogram( ...
+    curAx, curShaftSynFracs, ...
+    'BinEdges', linspace(0, 1, 11), ...
+    'DisplayStyle', 'stairs', ...
+    'LineWidth', 2);
+
+curAx.Box = 'off';
+curAx.TickDir = 'out';
+
+xlabel(curAx, 'Fraction of synapses onto shaft');
+ylabel(curAx, 'Axons with 20 % to 50 % primary spines');
+
+title(curAx, ...
+    {info.filename; info.git_repos{1}.hash}, ...
+    'FontWeight', 'normal', 'FontSize', 10);
 
 %% Search for potential shaft-preferring excitatory axons
 clear cur*;
