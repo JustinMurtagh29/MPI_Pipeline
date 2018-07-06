@@ -6,7 +6,7 @@ function [conn, axonClasses] = ...
     opt.syn = [];
     opt.minSynPre = 1;
     opt.perisomaClass = false;
-    opt.withoutSecondarySpines = false;
+    opt.removeSecondarySpines = false;
     opt = Util.modifyStruct(opt, varargin{:});
     
     %% Configuration
@@ -52,7 +52,7 @@ function [conn, axonClasses] = ...
     
     %% Remove secondary spine innervations
     % As discussed with MH in a meeting on 05.07.2018.
-    if opt.withoutSecondarySpines
+    if opt.removeSecondarySpines
         assert(~isempty(opt.syn));
         conn = removeSecondarySpineSynapses(conn, opt.syn);
     end
