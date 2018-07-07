@@ -7,7 +7,7 @@ clear;
 
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites-wholeCells-03-v2-classified_spine-syn-clust.mat');
+connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-partiallySplit-v2_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v8-classified.mat');
 
 minSynPre = 10;
 
@@ -21,14 +21,26 @@ param = param.p;
     connectEM.Connectome.load(param, connFile);
 
 %% Prepare data
-conn = ...
-    connectEM.Connectome.prepareForSpecificityAnalysis(conn);
+[conn, axonClasses] = ...
+    connectEM.Connectome.prepareForSpecificityAnalysis( ...
+        conn, axonClasses, 'minSynPre', minSynPre);
 [classConn, targetClasses] = ...
     connectEM.Connectome.buildClassConnectome(conn);
 
 % Build list of possible seed synapses
 synT = connectEM.Connectome.buildSynapseTable(conn, syn);
-synT.ontoTargetClass = conn.denMeta.targetClass(synT.postAggloId);
+synT.isPriSpine = syn.synapses.type(synT.id) == 'PrimarySpine';
+
+%% Build class with all axons
+allAxonsClass = struct;
+allAxonsClass.axonIds = find( ...
+    conn.axonMeta.synCount >= minSynPre);
+allAxonsClass.nullAxonIds = allAxonsClass.axonIds;
+allAxonsClass.title = sprintf( ...
+    'all axons with ≥ %d synapses (n = %d)', ...
+    minSynPre, numel(allAxonsClass.axonIds));
+
+axonClasses(end + 1) = allAxonsClass;
 
 %% Seed synapses
 colorT = table;
@@ -37,16 +49,15 @@ colors = get(groot, 'defaultAxesColorOrder');
 colorT.color = colors(1:size(colorT, 1), :);
 
 excSeedConfigs = { ...
-    'ProximalDendrite', 'ApicalDendrite'};
+    'ProximalDendrite', 'SmoothDendrite', 'ApicalDendrite'};
 excSeedConfigs = cellfun(@(t) struct( ...
-    'synIds', synT.id(synT.isSpine & synT.ontoTargetClass == t), ...
+    'synIds', synT.id(synT.isPriSpine & synT.ontoTargetClass == t), ...
     'title', sprintf('Axons seeded at spine synapse onto %s', t), ...
     'color', colorT.color(colorT.targetClass == t, :)), ...
     reshape(excSeedConfigs, [], 1));
 
 inhSeedConfigs = { ...
-    'Somata', 'ProximalDendrite', ...
-    'ApicalDendrite', 'SmoothDendrite'};
+    'Somata', 'ProximalDendrite', 'SmoothDendrite', 'ApicalDendrite'};
 inhSeedConfigs = cellfun(@(t) struct( ...
     'synIds', synT.id(~synT.isSpine & synT.ontoTargetClass == t), ...
     'title', sprintf('Axons seeded at shaft synapse onto %s', t), ...
@@ -54,11 +65,11 @@ inhSeedConfigs = cellfun(@(t) struct( ...
     reshape(inhSeedConfigs, [], 1));
 
 %% Axon populations
-plotConfigs = axonClasses([4, 3, 2]);
+plotConfigs = axonClasses([1, 2, end]);
 plotConfigs = rmfield(plotConfigs, 'nullAxonIds');
 
-[plotConfigs(1:2).seedConfigs] = deal(excSeedConfigs);
-[plotConfigs(3).seedConfigs] = deal(inhSeedConfigs);
+[plotConfigs(1).seedConfigs] = deal(excSeedConfigs);
+[plotConfigs([2, end]).seedConfigs] = deal(inhSeedConfigs);
 
 %% Plot
 for curIdx = 1:numel(plotConfigs)
@@ -81,8 +92,8 @@ function withConfig(synT, classConn, targetClasses, info, weighted, config)
     axonCounts = nan(size(config.seedConfigs));
     for curIdx = 1:numel(config.seedConfigs)
         curSeedConfig = config.seedConfigs(curIdx);
-       [obsConn, obsAxonIds, obsWeights] = ...
-            forTargetClass(synT, classConn, targetClasses, curSeedConfig);
+       [obsConn, obsAxonIds, obsWeights] = forTargetClass( ...
+            synT, classConn, targetClasses, curSeedConfig);
         
         % Restrict to axons of interest
         obsMask = ismember(obsAxonIds, config.axonIds);
