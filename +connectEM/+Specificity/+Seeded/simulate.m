@@ -52,7 +52,8 @@ colorT.color = colors(1:size(colorT, 1), :);
 excSeedConfigs = { ...
     'ProximalDendrite', 'SmoothDendrite', 'ApicalDendrite'};
 excSeedConfigs = cellfun(@(t) struct( ...
-    'synIds', synT.id(synT.isPriSpine & synT.ontoTargetClass == t), ...
+    'targetClass', t, ...
+    'synIds', synT.id(synT.ontoTargetClass == t), ...
     'title', sprintf('Axons seeded at spine synapse onto %s', t), ...
     'color', colorT.color(colorT.targetClass == t, :)), ...
     reshape(excSeedConfigs, [], 1));
@@ -60,7 +61,8 @@ excSeedConfigs = cellfun(@(t) struct( ...
 inhSeedConfigs = { ...
     'Somata', 'ProximalDendrite', 'SmoothDendrite', 'ApicalDendrite'};
 inhSeedConfigs = cellfun(@(t) struct( ...
-    'synIds', synT.id(~synT.isSpine & synT.ontoTargetClass == t), ...
+    'targetClass', t, ...
+    'synIds', synT.id(synT.ontoTargetClass == t), ...
     'title', sprintf('Axons seeded at shaft synapse onto %s', t), ...
     'color', colorT.color(colorT.targetClass == t, :)), ...
     reshape(inhSeedConfigs, [], 1));
@@ -90,14 +92,34 @@ function withConfig(synT, classConn, targetClasses, info, weighted, config)
     axis(ax, 'square');
     hold(ax, 'on');
     
-    obsSynFracs = classConn(config.axonIds, :);
-    obsSynFracs = sum(obsSynFracs, 1) / sum(obsSynFracs(:));
-
+    obsSynCounts = sum(classConn(config.axonIds, :), 2);
+    obsSynFracs = sum(classConn(config.axonIds, :), 1);
+    obsSynFracs = obsSynFracs / sum(obsSynFracs);
+    
     axonCounts = nan(size(config.seedConfigs));
     for curIdx = 1:numel(config.seedConfigs)
         curSeedConfig = config.seedConfigs(curIdx);
+        curTargetClass = curSeedConfig.targetClass;
+        
+        curTargetClassId = find(targetClasses == curTargetClass);
+        curNullSynProb = obsSynFracs(curTargetClassId);
+        
        [obsConn, obsAxonIds, obsWeights] = forTargetClass( ...
             synT, classConn, targetClasses, curSeedConfig);
+        
+       [expConn, expAxonCounts] = ...
+            connectEM.Specificity.calcExpectedDist( ...
+                obsSynCounts, curNullSynProb, ...
+                'distribution', 'binomial', ...
+                'outputFormat', 'absolute');
+            
+        % Remove entries without seed synapse
+        expAxonCounts(~expConn(:, 1)) = [];
+        expConn(~expConn(:, 1), :) = [];
+        
+        % Remove seed synapse
+        expSynCounts = expConn(:, 1);
+        expConn = expConn - 1;
         
         % Restrict to axons of interest
         obsMask = ismember(obsAxonIds, config.axonIds);
@@ -109,19 +131,28 @@ function withConfig(synT, classConn, targetClasses, info, weighted, config)
         
         % Calculate and plot fractional synapses
         obsConn = obsConn ./ sum(obsConn, 2);
+        expConn = expConn(:, 1) ./ expConn(:, 2);
         
         if weighted
             % Calculate weighted mean and standard deviation. Axons are
             % weighted by the probability of being reconstructed in sparse
             % synapse-seeded reconstructions.
             curWeights = obsWeights ./ sum(obsWeights);
+            curExpWeights = expSynCounts .* expAxonCounts;
+         
+            % curExpWeights = curExpWeights .* expAxonCounts;
+            curExpWeights = curExpWeights / sum(curExpWeights);
         else
             % Calculate unweighted mean and standard deviation.
             curWeights = ones(size(obsWeights)) / numel(obsWeights);
+            curExpWeights = expAxonCounts / sum(expAxonCounts);
         end
         
         curMu = sum(curWeights .* obsConn, 1);
         curSigma = std(obsConn, curWeights, 1);
+        
+        curExpMu = sum(curExpWeights .* expConn);
+        curExpSigma = std(expConn, curExpWeights);
 
         errorbar( ...
             1:numel(curMu), curMu, curSigma, ...
@@ -129,6 +160,10 @@ function withConfig(synT, classConn, targetClasses, info, weighted, config)
             'LineWidth', 1.25, ...
             'Marker', '.', ...
             'MarkerSize', 18);
+        
+        errorbar( ...
+            curTargetClassId, curExpMu, curExpSigma, ...
+            'Color', 'black', 'Marker', 'o', 'MarkerSize', 8);
     end
     
     plot( ...
@@ -156,7 +191,11 @@ function withConfig(synT, classConn, targetClasses, info, weighted, config)
         'UniformOutput', false);
     legends{end + 1} = sprintf( ...
         'Synapse fraction over %s', config.title);
-    legend(legends, 'Location', 'North', 'Box', 'off');
+    legends{end + 1} = 'Binomial null model';
+    
+    legend( ...
+        flip(ax.Children([2, 1:2:end])), ...
+        legends, 'Location', 'North', 'Box', 'off');
     
     weightStr = {'unweighted', 'weighted'};
     weightStr = weightStr{1 + weighted};
