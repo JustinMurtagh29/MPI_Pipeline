@@ -69,13 +69,11 @@ inhSeedConfigs = cellfun(@(t) struct( ...
 
 %% Axon populations
 plotConfigs = axonClasses([1:4, end]);
-plotConfigs = rmfield(plotConfigs, 'nullAxonIds');
-
 [plotConfigs.seedConfigs] = deal(excSeedConfigs);
 [plotConfigs([2, end]).seedConfigs] = deal(inhSeedConfigs);
 
 %% Plot
-for curIdx = 1:numel(plotConfigs)
+for curIdx = 2%1:numel(plotConfigs)
     curConfig = plotConfigs(curIdx);
     withConfig(synT, classConn, targetClasses, info, false, curConfig);
     withConfig(synT, classConn, targetClasses, info, true, curConfig);
@@ -89,12 +87,11 @@ function withConfig(synT, classConn, targetClasses, info, weighted, config)
 
     ax = axes(fig);
     ax.TickDir = 'out';
-    axis(ax, 'square');
     hold(ax, 'on');
     
-    obsSynCounts = sum(classConn(config.axonIds, :), 2);
-    obsSynFracs = sum(classConn(config.axonIds, :), 1);
-    obsSynFracs = obsSynFracs / sum(obsSynFracs);
+    nullSynCounts = sum(classConn(config.nullAxonIds, :), 2);
+    nullSynProbs = sum(classConn(config.nullAxonIds, :), 1);
+    nullSynProbs = nullSynProbs / sum(nullSynProbs);
     
     axonCounts = nan(size(config.seedConfigs));
     for curIdx = 1:numel(config.seedConfigs)
@@ -102,14 +99,14 @@ function withConfig(synT, classConn, targetClasses, info, weighted, config)
         curTargetClass = curSeedConfig.targetClass;
         
         curTargetClassId = find(targetClasses == curTargetClass);
-        curNullSynProb = obsSynFracs(curTargetClassId);
+        curNullSynProb = nullSynProbs(curTargetClassId);
         
        [obsConn, obsAxonIds, obsWeights] = forTargetClass( ...
             synT, classConn, targetClasses, curSeedConfig);
         
        [expConn, expAxonCounts] = ...
             connectEM.Specificity.calcExpectedDist( ...
-                obsSynCounts, curNullSynProb, ...
+                nullSynCounts, curNullSynProb, ...
                 'distribution', 'binomial', ...
                 'outputFormat', 'absolute');
             
@@ -167,7 +164,7 @@ function withConfig(synT, classConn, targetClasses, info, weighted, config)
     end
     
     plot( ...
-        1:numel(obsSynFracs), obsSynFracs, ...
+        1:numel(nullSynProbs), nullSynProbs, ...
         'Color', 'black', ...
         'LineStyle', '--', ...
         'LineWidth', 2);
@@ -182,20 +179,19 @@ function withConfig(synT, classConn, targetClasses, info, weighted, config)
     xtickangle(ax, 30);
 
     ylabel(ax, 'Fraction of synapses');
-    ylim(ax, [0, 1]);
+    ylim(ax, [0, 0.5]);
     
     legends = arrayfun( ...
         @(c, n) sprintf( ...
             '%s (n = %d)', c.title, n), ...
         config.seedConfigs, axonCounts, ...
         'UniformOutput', false);
-    legends{end + 1} = sprintf( ...
-        'Synapse fraction over %s', config.title);
+    legends{end + 1} = 'Synapse fractions in null model';
     legends{end + 1} = 'Binomial null model';
     
     legend( ...
         flip(ax.Children([2, 1:2:end])), ...
-        legends, 'Location', 'North', 'Box', 'off');
+        legends, 'Location', 'SouthOutside', 'Box', 'off');
     
     weightStr = {'unweighted', 'weighted'};
     weightStr = weightStr{1 + weighted};
