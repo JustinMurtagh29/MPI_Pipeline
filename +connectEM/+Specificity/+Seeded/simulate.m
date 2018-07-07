@@ -89,6 +89,9 @@ function withConfig(synT, classConn, targetClasses, info, weighted, config)
     ax.TickDir = 'out';
     axis(ax, 'square');
     hold(ax, 'on');
+    
+    obsSynFracs = classConn(config.axonIds, :);
+    obsSynFracs = sum(obsSynFracs, 1) / sum(obsSynFracs(:));
 
     axonCounts = nan(size(config.seedConfigs));
     for curIdx = 1:numel(config.seedConfigs)
@@ -127,6 +130,12 @@ function withConfig(synT, classConn, targetClasses, info, weighted, config)
             'Marker', '.', ...
             'MarkerSize', 18);
     end
+    
+    plot( ...
+        1:numel(obsSynFracs), obsSynFracs, ...
+        'Color', 'black', ...
+        'LineStyle', '--', ...
+        'LineWidth', 2);
 
     xlim(ax, [0.5, (numel(targetClasses) + 0.5)]);
     xticks(ax, 1:numel(targetClasses));
@@ -145,6 +154,8 @@ function withConfig(synT, classConn, targetClasses, info, weighted, config)
             '%s (n = %d)', c.title, n), ...
         config.seedConfigs, axonCounts, ...
         'UniformOutput', false);
+    legends{end + 1} = sprintf( ...
+        'Synapse fraction over %s', config.title);
     legend(legends, 'Location', 'North', 'Box', 'off');
     
     weightStr = {'unweighted', 'weighted'};
