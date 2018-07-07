@@ -73,7 +73,7 @@ plotConfigs = axonClasses([1:4, end]);
 [plotConfigs([2, end]).seedConfigs] = deal(inhSeedConfigs);
 
 %% Plot
-for curIdx = 2%1:numel(plotConfigs)
+for curIdx = 1:numel(plotConfigs)
     curConfig = plotConfigs(curIdx);
     withConfig(synT, classConn, targetClasses, info, false, curConfig);
     withConfig(synT, classConn, targetClasses, info, true, curConfig);
