@@ -29,6 +29,7 @@ param = param.p;
 
 % Build list of possible seed synapses
 synT = connectEM.Connectome.buildSynapseTable(conn, syn);
+synT.ontoTargetClass = conn.denMeta.targetClass(synT.postAggloId);
 synT.isPriSpine = syn.synapses.type(synT.id) == 'PrimarySpine';
 
 %% Build class with all axons
@@ -65,10 +66,10 @@ inhSeedConfigs = cellfun(@(t) struct( ...
     reshape(inhSeedConfigs, [], 1));
 
 %% Axon populations
-plotConfigs = axonClasses([1, 2, end]);
+plotConfigs = axonClasses([1:4, end]);
 plotConfigs = rmfield(plotConfigs, 'nullAxonIds');
 
-[plotConfigs(1).seedConfigs] = deal(excSeedConfigs);
+[plotConfigs.seedConfigs] = deal(excSeedConfigs);
 [plotConfigs([2, end]).seedConfigs] = deal(inhSeedConfigs);
 
 %% Plot
