@@ -111,3 +111,86 @@ for curIdx = 1:synPairCount
         curAxonId, curSynIds(1), curSynIds(2)));
     skel = skel.addTreesToGroup(curTreeIds, curGroupId);
 end
+
+%% Loading annotations
+annNmlFile = connectEM.Axon.Data.getDir('multiHitBoutonCalibration.nml');
+annNmlFile = skeleton(annNmlFile);
+
+% Process annotations
+annSynPairs = annNmlFile.groups(:, {'id', 'name'});
+
+curRegEx = '^axon (\d+), synapses (\d+) and (\d+) \((\w+)\)$';
+annSynPairData = regexpi(annSynPairs.name, curRegEx, 'tokens', 'once');
+
+annSynPairs(cellfun(@isempty, annSynPairData), :) = [];
+annSynPairData(cellfun(@isempty, annSynPairData), :) = [];
+annSynPairData = vertcat(annSynPairData{:});
+
+annSynPairs.axonId = cellfun(@str2double, annSynPairData(:, 1));
+annSynPairs.synIds = cellfun(@str2double, annSynPairData(:, 2:3));
+annSynPairs.sameBouton = strcmpi(annSynPairData(:, 4), 'yes');
+annSynPairs(:, {'name'}) = [];
+
+% Find corresponding intersynapse distance
+[~, annSynPairs.interSynIdx] = ismember( ...
+    annSynPairs.axonId, interSyn.axonIds);
+assert(all(annSynPairs.interSynIdx));
+
+annSynPairs.interSynDist = nan(height(annSynPairs), 1);
+for curIdx = 1:height(annSynPairs)
+    curInterSynIdx = annSynPairs.interSynIdx(curIdx);
+    curInterSynDists = interSyn.synToSynDists{curInterSynIdx};
+    
+    curDist = annSynPairs.synIds(curIdx, :);
+   [~, curDist] = ismember(curDist, interSyn.synIds{curInterSynIdx});
+    curDist = curInterSynDists(curDist(1), curDist(2));
+    
+    annSynPairs.interSynDist(curIdx) = curDist;
+end
+
+%% Plot results
+curEdges = linspace(0, 10, 11);
+
+curFig = figure();
+curFig.Color = 'white';
+
+curAx = axes(curFig);
+hold(curAx, 'on');
+
+curData = sortrows(annSynPairs, 'interSynDist');
+curPrec = [1; cumsum(curData.sameBouton) ./ (1:height(curData))'; 0];
+curRec = [0; cumsum(curData.sameBouton) / sum(curData.sameBouton); 1];
+
+curAuc = curPrec .* curRec;
+[~, curMaxAucIdx] = max(curAuc);
+curData.interSynDist(curMaxAucIdx) / 1E3 %#ok
+
+plot(curAx, curRec, curPrec);
+curAx.XLim = [0, 1];
+curAx.YLim = [0, 1];
+
+xlabel(curAx, 'Recall');
+ylabel(curAx, 'Precision');
+
+%{
+histogram(curAx, ...
+    annSynPairs.interSynDist(annSynPairs.sameBouton) / 1E3, ...
+    'BinEdges', curEdges, 'DisplayStyle', 'stairs', 'LineWidth', 2);
+histogram(curAx, ...
+    annSynPairs.interSynDist(~annSynPairs.sameBouton) / 1E3, ...
+    'BinEdges', curEdges, 'DisplayStyle', 'stairs', 'LineWidth', 2);
+
+curAx.XLim = curEdges([1, end]);
+
+xlabel(curAx, 'Intersynapse distance (µm)');
+ylabel(curAx, 'Occurences');
+
+curLeg = legend(curAx, 'Same bouton', 'Different bouton');
+curLeg.Box = 'off';
+%}
+
+curAx.TickDir = 'out';
+
+title(curAx, ...
+    {info.filename; info.git_repos{1}.hash}, ...
+    'FontWeight', 'normal', 'FontSize', 10);
