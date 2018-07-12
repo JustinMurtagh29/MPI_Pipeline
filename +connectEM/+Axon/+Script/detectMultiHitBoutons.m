@@ -194,3 +194,22 @@ curAx.TickDir = 'out';
 title(curAx, ...
     {info.filename; info.git_repos{1}.hash}, ...
     'FontWeight', 'normal', 'FontSize', 10);
+
+%% Group synapses into boutons
+clear cur*;
+curAxonId = 3;
+
+curInterSyn = find(interSyn.axonIds == curAxonId, 1);
+curInterSyn = interSyn.synToSynDists{curInterSyn};
+
+curPdist = ~triu(true(size(curInterSyn)));
+curPdist = curInterSyn(curPdist);
+curPdist = reshape(curPdist, 1, []);
+
+curLinks = linkage(curPdist, 'average');
+
+curClusters = cluster( ...
+    curLinks, ...
+    'cutoff', 2433, ...
+    'criterion', 'distance');
+
