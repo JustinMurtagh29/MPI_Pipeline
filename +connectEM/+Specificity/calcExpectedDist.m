@@ -40,7 +40,7 @@ function [synFrac, expAxonCount] = ...
     
     switch opts.outputFormat
         case 'relative'
-            t.synFrac = t.synCount ./ t.synCountA;
+            t.synFrac = t.synCount ./ t.synCountAll;
             t = sortrows(t, 'synFrac');
             
             % It's possible that we have multiple rows with the same
