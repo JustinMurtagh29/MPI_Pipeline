@@ -45,7 +45,7 @@ clear cur*;
 
 for curIdx = 1:numel(axonClasses)
     curNullProbs = classConnectome(axonClasses(curIdx).nullAxonIds, :);
-    curNullProbs = sum(curNullProbs, 1) / sum(curNullProbs(:));
+    curNullProbs = connectEM.Specificity.calcFirstHitProbs(curNullProbs);
     axonClasses(curIdx).nullTargetClassProbs = curNullProbs;
 end
 
