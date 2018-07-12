@@ -30,29 +30,25 @@ classConn = ...
 
 %% Testing
 clear cur*;
-curTargetId = 1;
 curAxonClass = axonClasses(2);
-
 curClassConn = classConn(curAxonClass.axonIds, :);
-curHasTargetSyn = curClassConn(:, curTargetId) > 0;
-curNumSyn = sum(curClassConn, 2);
 
-%{
-curHasTargetSyn = [1; 1; 0];
-curNumSyn = [1; 12; 5];
-%}
+curSyns = sum(curClassConn, 2);
 
-curPolyDegs = zeros(numel(curNumSyn), max(curNumSyn) + 1);
-for curIdx = 1:size(curPolyDegs, 1)
-    curNi = curNumSyn(curIdx);
-    curBi = curHasTargetSyn(curIdx);
+for curTargetId = 1:numel(targetClasses)
+    curHit = curClassConn(:, curTargetId) > 0;
+
+    curFuncs = @(x) ...
+        (1 - curHit) + (2 .* curHit - 1) .* (x .^ curSyns);
+    curDerivs = @(x) ...
+        (2 .* curHit - 1) .* curSyns .* (x .^ (curSyns - 1));
+    curOptions = optimoptions( ...
+        'lsqnonlin', 'SpecifyObjectiveGradient', true, 'display', 'off');
+    curPInv = lsqnonlin(@(x) ...
+        deal(curFuncs(x), curDerivs(x)), 0.5, 0, 1, curOptions);
+    curP = 1 - curPInv;
     
-    if curBi
-        curPolyDegs(curIdx, 1 + curNi) = 1;
-    else
-        curPolyDegs(curIdx, 1 + [0, curNi]) = [1, -1];
-    end
+    curBulkP = sum(curClassConn(:, curTargetId)) / sum(curClassConn(:));
+    
+    [curP, curBulkP] %#ok
 end
-
-curFun = @(x) sum((x .^ ((1:size(curPolyDegs, 2)) - 1)) .* curPolyDegs, 2);
-1 - lsqnonlin(curFun, 0.5, 0, 1)
