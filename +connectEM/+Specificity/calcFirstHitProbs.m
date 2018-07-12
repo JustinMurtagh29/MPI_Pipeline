@@ -13,7 +13,7 @@ function firstHitProbs = calcFirstHitProbs(classConn)
         'SpecifyObjectiveGradient', true);
     
     firstHitProbs = nan(1, size(classConn, 2));
-    for curIdx = 1:numel(firstHitProbs)
+    for curTargetId = 1:numel(firstHitProbs)
         curHits = classConn(:, curTargetId) > 0;
 
         curFuncs = @(x) (1 - curHits) + (2 .* curHits - 1) .* (x .^ syns);
@@ -23,7 +23,7 @@ function firstHitProbs = calcFirstHitProbs(classConn)
             @(x) deal(curFuncs(x), curDerivs(x)), ...
             0.5, 0, 1, optimizationOptions);
         
-        firstHitProbs(curIdx) = 1 - curPInv;
+        firstHitProbs(curTargetId) = 1 - curPInv;
     end
 end
 
