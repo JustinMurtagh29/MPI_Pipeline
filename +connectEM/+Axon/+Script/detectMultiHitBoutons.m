@@ -268,6 +268,19 @@ arrayfun( ...
     'TickDir', 'out', ...
     'XLim', curBinEdges([1, end]));
 
+plot(curAx, ...
+    repelem(0.19, 2), ylim(curAx), ...
+    'Color', 'black', 'LineWidth', 2, 'LineStyle', '--');
+plot(curAx, ...
+    repelem(0.67, 2), ylim(curAx), ...
+    'Color', 'black', 'LineWidth', 2, 'LineStyle', '--');
+
+curVals = [0.19, 0.67];
+curAx.XTick = union(curAx.XTick, curVals);
+
+[~, curIds] = ismember(curVals, curAx.XTick);
+curAx.XTickLabel(curIds) = {'CC', 'TC'};
+
 ylabel(curAx, 'Axons');
 xlabel(curAx, 'Fraction of boutons with multiple synapses');
 
