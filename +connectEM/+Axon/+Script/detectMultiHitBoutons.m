@@ -311,7 +311,9 @@ curMeanSynCounts = cellfun(@(boutonIds, isSpine) ...
     boutonIds, synIsSpine);
 
 curAxonIds = axonClasses(4).axonIds;
-curAxonIds = curAxonIds(curMeanSynCounts(curAxonIds) > 1.9);
+curAxonIds = curAxonIds( ...
+    curMeanSynCounts(curAxonIds) > 1.6 ...
+  & curMeanSynCounts(curAxonIds) < 1.9);
 
 rng(0);
 curAxonIds = curAxonIds(randperm(numel(curAxonIds)));
