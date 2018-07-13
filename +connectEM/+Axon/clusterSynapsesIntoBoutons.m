@@ -14,10 +14,8 @@ function boutonIds = clusterSynapsesIntoBoutons(synIds, interSyn, varargin)
     
     % NOTE(amotta): For a derivation of this default value, see
     % connectEM.Axon.Script.detectMultiHitBoutons.
-    opts.cutoffDistUm = 2.4333;
-    
+    opts.cutoffDist = 2433;
     opts = Util.modifyStruct(opts, varargin{:});
-    cutoffDistNm = 1E3 * opts.cutoffDistUm;
     
     % HACK(amotta): For some stupid reason I had decided not to include
     % axons with no or only one synapse in the `interSyn` struct.  Now we
@@ -31,7 +29,7 @@ function boutonIds = clusterSynapsesIntoBoutons(synIds, interSyn, varargin)
         synIds(~synMask), 'UniformOutput', false);
     
     boutonIds(synMask) = cellfun( ...
-        @(a, b, c) forAxon(cutoffDistNm, a, b, c), ...
+        @(a, b, c) forAxon(opts.cutoffDist, a, b, c), ...
         synIds(synMask), interSyn.synIds, interSyn.synToSynDists, ...
         'UniformOutput', false);
 end

@@ -18,7 +18,7 @@ param = param.p;
 
 segPoints = Seg.Global.getSegToPointMap(param);
 
-[conn, syn] = connectEM.Connectome.load(param, connFile);
+[conn, syn, axonClasses] = connectEM.Connectome.load(param, connFile);
 
 axons = load(conn.info.param.axonFile, 'axons');
 axons = axons.axons;
@@ -149,13 +149,9 @@ for curIdx = 1:height(annSynPairs)
 end
 
 %% Plot results
+clear cur*;
+curPlot = false;
 curEdges = linspace(0, 10, 11);
-
-curFig = figure();
-curFig.Color = 'white';
-
-curAx = axes(curFig);
-hold(curAx, 'on');
 
 curData = sortrows(annSynPairs, 'interSynDist');
 curPrec = [1; cumsum(curData.sameBouton) ./ (1:height(curData))'; 0];
@@ -163,53 +159,134 @@ curRec = [0; cumsum(curData.sameBouton) / sum(curData.sameBouton); 1];
 
 curAuc = curPrec .* curRec;
 [~, curMaxAucIdx] = max(curAuc);
-curData.interSynDist(curMaxAucIdx) / 1E3 %#ok
 
-plot(curAx, curRec, curPrec);
-curAx.XLim = [0, 1];
-curAx.YLim = [0, 1];
+% Determine optimal cut-off
+optimalCutoff = curData.interSynDist(curMaxAucIdx);
 
-xlabel(curAx, 'Recall');
-ylabel(curAx, 'Precision');
+if curPlot
+    curFig = figure();
+    curFig.Color = 'white';
 
-%{
-histogram(curAx, ...
-    annSynPairs.interSynDist(annSynPairs.sameBouton) / 1E3, ...
-    'BinEdges', curEdges, 'DisplayStyle', 'stairs', 'LineWidth', 2);
-histogram(curAx, ...
-    annSynPairs.interSynDist(~annSynPairs.sameBouton) / 1E3, ...
-    'BinEdges', curEdges, 'DisplayStyle', 'stairs', 'LineWidth', 2);
+    curAx = axes(curFig);
+    hold(curAx, 'on');
 
-curAx.XLim = curEdges([1, end]);
+    plot(curAx, curRec, curPrec);
+    curAx.XLim = [0, 1];
+    curAx.YLim = [0, 1];
 
-xlabel(curAx, 'Intersynapse distance (µm)');
-ylabel(curAx, 'Occurences');
+    xlabel(curAx, 'Recall');
+    ylabel(curAx, 'Precision');
 
-curLeg = legend(curAx, 'Same bouton', 'Different bouton');
+    curAx.TickDir = 'out';
+
+    title(curAx, ...
+        {info.filename; info.git_repos{1}.hash}, ...
+        'FontWeight', 'normal', 'FontSize', 10);
+end
+
+%% Define boutons
+synIds = connectEM.Axon.getSynapses(conn);
+boutonIds = ...
+    connectEM.Axon.clusterSynapsesIntoBoutons( ...
+        synIds, interSyn, 'cutoffDist', optimalCutoff);
+
+%% Plot average number of synapses per bouton
+clear cur*;
+curBinEdges = linspace(1, 3, 21);
+curAxonClasses = axonClasses([1, 3]);
+
+curMeanSynCounts = cellfun(@(boutonIds) ...
+    mean(accumarray(boutonIds, 1)), ...
+    boutonIds);
+
+curFig = figure();
+curFig.Color = 'white';
+curFig.Position(3:4) = [675, 375];
+
+curAx = axes(curFig);
+hold(curAx, 'on');
+
+arrayfun( ...
+    @(axClass) fixedHistogram(curAx, ...
+        curMeanSynCounts(axClass.axonIds), ...
+        'BinEdges', curBinEdges), ...
+	curAxonClasses);
+
+plot(curAx, ...
+    repelem(1.2, 2), ylim(curAx), ...
+    'Color', 'black', 'LineWidth', 2, 'LineStyle', '--');
+plot(curAx, ...
+    repelem(2.1, 2), ylim(curAx), ...
+    'Color', 'black', 'LineWidth', 2, 'LineStyle', '--');
+
+curVals = [1.2, 2.1];
+curAx.XTick = union(curAx.XTick, curVals);
+
+[~, curIds] = ismember(curVals, curAx.XTick);
+curAx.XTickLabel(curIds) = {'CC', 'TC'};
+
+set( ...
+    curAx, ...
+    'Box', 'off', ...
+    'TickDir', 'out', ...
+    'XLim', curBinEdges([1, end]));
+
+ylabel(curAx, 'Axons');
+xlabel(curAx, 'Average number of synapses per bouton');
+
+curLeg = legend(curAx, ...
+    {curAxonClasses.title}, ...
+    'Location', 'NorthEast');
 curLeg.Box = 'off';
-%}
 
-curAx.TickDir = 'out';
-
-title(curAx, ...
-    {info.filename; info.git_repos{1}.hash}, ...
+title( ...
+    curAx, {info.filename; info.git_repos{1}.hash}, ...
     'FontWeight', 'normal', 'FontSize', 10);
 
-%% Group synapses into boutons
-clear cur*;
-curAxonId = 3;
+%% Plot fraction of multihit boutonsclear cur*;
+curBinEdges = linspace(0, 1, 21);
+curAxonClasses = axonClasses([1, 3]);
 
-curInterSyn = find(interSyn.axonIds == curAxonId, 1);
-curInterSyn = interSyn.synToSynDists{curInterSyn};
+curMultiHitFracs = cellfun(@(boutonIds) ...
+    mean(accumarray(boutonIds, 1) > 1), ...
+    boutonIds);
 
-curPdist = ~triu(true(size(curInterSyn)));
-curPdist = curInterSyn(curPdist);
-curPdist = reshape(curPdist, 1, []);
+curFig = figure();
+curFig.Color = 'white';
+curFig.Position(3:4) = [675, 375];
 
-curLinks = linkage(curPdist, 'average');
+curAx = axes(curFig);
+hold(curAx, 'on');
 
-curClusters = cluster( ...
-    curLinks, ...
-    'cutoff', 2433, ...
-    'criterion', 'distance');
+arrayfun( ...
+    @(axClass) fixedHistogram(curAx, ...
+        curMultiHitFracs(axClass.axonIds), ...
+        'BinEdges', curBinEdges), ...
+	curAxonClasses);set( ...
+    curAx, ...
+    'Box', 'off', ...
+    'TickDir', 'out', ...
+    'XLim', curBinEdges([1, end]));
 
+ylabel(curAx, 'Axons');
+xlabel(curAx, 'Fraction of boutons with multiple synapses');
+
+curLeg = legend(curAx, ...
+    {curAxonClasses.title}, ...
+    'Location', 'NorthEast');
+curLeg.Box = 'off';
+
+title( ...
+    curAx, {info.filename; info.git_repos{1}.hash}, ...
+    'FontWeight', 'normal', 'FontSize', 10);
+
+%% Utilities
+function varargout = fixedHistogram(ax, data, varargin)
+    varargout = cell(1, nargout);
+   [varargout{:}] = histogram( ...
+        ax, data, ...
+        'DisplayStyle', 'stairs', ...
+        'LineWidth', 2, ...
+        'FaceAlpha', 1, ...
+        varargin{:});
+end
