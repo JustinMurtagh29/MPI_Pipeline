@@ -20,6 +20,9 @@ segPoints = Seg.Global.getSegToPointMap(param);
 
 [conn, syn, axonClasses] = connectEM.Connectome.load(param, connFile);
 
+synT = connectEM.Connectome.buildSynapseTable(conn, syn);
+synT.type = syn.synapses.type(synT.id);
+
 axons = load(conn.info.param.axonFile, 'axons');
 axons = axons.axons;
 
@@ -298,6 +301,65 @@ curLeg.Box = 'off';
 title( ...
     curAx, {info.filename; info.git_repos{1}.hash}, ...
     'FontWeight', 'normal', 'FontSize', 10);
+
+%% Look at discrepancies
+clear cur*;
+curOutputDir = '/home/amotta/Desktop/multi-hit-tc';
+
+curMeanSynCounts = cellfun(@(boutonIds, isSpine) ...
+    mean(accumarray(boutonIds, isSpine)), ...
+    boutonIds, synIsSpine);
+
+curAxonIds = axonClasses(4).axonIds;
+curAxonIds = curAxonIds(curMeanSynCounts(curAxonIds) > 1.9);
+
+rng(0);
+curAxonIds = curAxonIds(randperm(numel(curAxonIds)));
+curAxonIds = curAxonIds(1:10);
+
+skel = skeleton();
+skel = Skeleton.setParams4Pipeline(skel, param);
+skel = skel.setDescription(sprintf( ...
+    '%s (%s)', info.filename, info.git_repos{1}.hash));
+
+mkdir(curOutputDir);
+
+curNumDigits = ceil(log10(1 + numel(curAxonIds)));
+
+for curIdx = 1:numel(curAxonIds)
+    curId = conn.axonMeta.id(curAxonIds(curIdx));
+    
+    curSynIds = synIds{curId};
+    curBoutonIds = boutonIds{curId};
+    
+    curAxon = conn.axons(curId);
+    curSynapses = cellfun( ...
+        @vertcat, ...
+        syn.synapses.presynId(curSynIds), ...
+        syn.synapses.postsynId(curSynIds), ...
+        'UniformOutput', false);
+    
+    curNodes = [curAxon; curSynapses];
+    curNodes = cellfun( ...
+        @(segIds) segPoints(segIds, :), ...
+        curNodes, 'UniformOutput', false);
+    
+    curSkel = Skeleton.fromMST( ...
+        curNodes, param.raw.voxelSize, skel);
+    
+    curSkel.names{1} = sprintf('Axon %d', curId);
+    curSkel.colors{1} = [0, 0, 1, 1];
+    
+    curSkel.names(2:end) = arrayfun( ...
+        @(id, boutonId) sprintf( ...
+            'Synapse %d (Bouton %d)', id, boutonId), ...
+        curSynIds, curBoutonIds, 'UniformOutput', false);
+    curSkel.colors(2:end) = {[1, 1, 0, 1]};
+    
+    curSkelName = sprintf( ...
+        '%0*d_axon-%d.nml', curNumDigits, curIdx, curId);
+    curSkel.write(fullfile(curOutputDir, curSkelName));
+end
 
 %% Utilities
 function varargout = fixedHistogram(ax, data, varargin)
