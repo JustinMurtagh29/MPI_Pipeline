@@ -24,7 +24,7 @@ axons = load(conn.info.param.axonFile, 'axons');
 axons = axons.axons;
 
 [connDir, connName] = fileparts(connFile);
-interSynFile = sprintf('%s_intersynapse.mat', connName);
+interSynFile = sprintf('%s_intersynapse_v2.mat', connName);
 interSynFile = fullfile(connDir, interSynFile);
 interSyn = load(interSynFile);
 
@@ -185,7 +185,12 @@ if curPlot
 end
 
 %% Define boutons
-synIds = connectEM.Axon.getSynapses(conn);
+synIds = connectEM.Axon.getSynapses(conn, syn);
+
+synIsSpine = cellfun( ...
+    @(ids) syn.isSpineSyn(ids), ...
+    synIds, 'UniformOutput', false);
+
 boutonIds = ...
     connectEM.Axon.clusterSynapsesIntoBoutons( ...
         synIds, interSyn, 'cutoffDist', optimalCutoff);
@@ -195,9 +200,9 @@ clear cur*;
 curBinEdges = linspace(1, 3, 21);
 curAxonClasses = axonClasses([1, 3]);
 
-curMeanSynCounts = cellfun(@(boutonIds) ...
-    mean(accumarray(boutonIds, 1)), ...
-    boutonIds);
+curMeanSynCounts = cellfun(@(boutonIds, isSpine) ...
+    mean(accumarray(boutonIds, isSpine)), ...
+    boutonIds, synIsSpine);
 
 curFig = figure();
 curFig.Color = 'white';
@@ -232,7 +237,7 @@ set( ...
     'XLim', curBinEdges([1, end]));
 
 ylabel(curAx, 'Axons');
-xlabel(curAx, 'Average number of synapses per bouton');
+xlabel(curAx, 'Average number of spine synapses per bouton');
 
 curLeg = legend(curAx, ...
     {curAxonClasses.title}, ...
@@ -243,13 +248,14 @@ title( ...
     curAx, {info.filename; info.git_repos{1}.hash}, ...
     'FontWeight', 'normal', 'FontSize', 10);
 
-%% Plot fraction of multihit boutonsclear cur*;
+%% Plot fraction of multihit boutons
+clear cur*;
 curBinEdges = linspace(0, 1, 21);
 curAxonClasses = axonClasses([1, 3]);
 
-curMultiHitFracs = cellfun(@(boutonIds) ...
-    mean(accumarray(boutonIds, 1) > 1), ...
-    boutonIds);
+curMultiHitFracs = cellfun(@(boutonIds, isSpine) ...
+    mean(accumarray(boutonIds, isSpine) > 1), ...
+    boutonIds, synIsSpine);
 
 curFig = figure();
 curFig.Color = 'white';
@@ -282,7 +288,7 @@ curAx.XTick = union(curAx.XTick, curVals);
 curAx.XTickLabel(curIds) = {'CC', 'TC'};
 
 ylabel(curAx, 'Axons');
-xlabel(curAx, 'Fraction of boutons with multiple synapses');
+xlabel(curAx, 'Fraction of boutons with multiple spine synapses');
 
 curLeg = legend(curAx, ...
     {curAxonClasses.title}, ...
