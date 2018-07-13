@@ -17,27 +17,22 @@ function boutonIds = clusterSynapsesIntoBoutons(synIds, interSyn, varargin)
     opts.cutoffDist = 2433;
     opts = Util.modifyStruct(opts, varargin{:});
     
-    % HACK(amotta): For some stupid reason I had decided not to include
-    % axons with no or only one synapse in the `interSyn` struct.  Now we
-    % need to treat this case separately...
-    synMask = cellfun(@numel, synIds) > 1;
-    assert(isequal(find(synMask), interSyn.axonIds));
-    
-    boutonIds = cell(size(synIds));
-    boutonIds(~synMask) = cellfun( ...
-        @(vals) reshape(1:numel(vals), [], 1), ...
-        synIds(~synMask), 'UniformOutput', false);
-    
-    boutonIds(synMask) = cellfun( ...
+    boutonIds = cellfun( ...
         @(a, b, c) forAxon(opts.cutoffDist, a, b, c), ...
-        synIds(synMask), interSyn.synIds, interSyn.synToSynDists, ...
+        synIds, interSyn.synIds, interSyn.synToSynDists, ...
         'UniformOutput', false);
 end
 
 function boutonIds = forAxon(cutoff, synIds, synToSynIds, synToSyn)
+    if numel(synIds) < 2
+        boutonIds = 1:numel(synIds);
+        boutonIds = reshape(boutonIds, [], 1);
+        return;
+    end
+    
     pairwiseDist = ~triu(true(size(synToSyn)));
     pairwiseDist = reshape(synToSyn(pairwiseDist), 1, []);
-
+    
     links = linkage(pairwiseDist, 'average');
     boutonIds = cluster(links, 'cutoff', cutoff, 'criterion', 'distance');
     
