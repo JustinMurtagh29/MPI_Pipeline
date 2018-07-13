@@ -104,3 +104,4 @@ end
 
 % save results
 Util.saveStruct(interSynFile, out);
+Util.protect(interSynFile);
