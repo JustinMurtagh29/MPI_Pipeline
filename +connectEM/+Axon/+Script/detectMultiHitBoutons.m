@@ -203,8 +203,9 @@ clear cur*;
 curBinEdges = linspace(1, 3, 21);
 curAxonClasses = axonClasses([1, 3]);
 
+curFilter = @(vals) vals(vals > 0);
 curMeanSynCounts = cellfun(@(boutonIds, isSpine) ...
-    mean(accumarray(boutonIds, isSpine)), ...
+    mean(curFilter(accumarray(boutonIds, isSpine))), ...
     boutonIds, synIsSpine);
 
 curFig = figure();
@@ -256,8 +257,9 @@ clear cur*;
 curBinEdges = linspace(0, 1, 21);
 curAxonClasses = axonClasses([1, 3]);
 
+curFilter = @(vals) vals(vals > 0);
 curMultiHitFracs = cellfun(@(boutonIds, isSpine) ...
-    mean(accumarray(boutonIds, isSpine) > 1), ...
+    mean(curFilter(accumarray(boutonIds, isSpine)) > 1), ...
     boutonIds, synIsSpine);
 
 curFig = figure();
