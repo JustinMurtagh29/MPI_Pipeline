@@ -10,23 +10,27 @@ function axonClasses = buildAxonSpecificityClasses(conn, axonClasses)
     %% Add specificity thresholds
     % Excitatory axons
     axonClasses(1).specs = struct;
-    axonClasses(1).specs.ProximalDendrite.pThresh = 0.009347;
-    axonClasses(1).specs.ApicalDendrite.pThresh = 0.011567;
-    axonClasses(1).specs.SmoothDendrite.pThresh = 0.002976;
+    axonClasses(1).specs.ProximalDendrite.pThresh = 0.050108;
+    axonClasses(1).specs.ApicalDendrite.pThresh   = 0.026136;
+    axonClasses(1).specs.SmoothDendrite.pThresh   = 0.013979;
     
     % Inhibitory axons
     axonClasses(2).specs = struct;
-    axonClasses(2).specs.Somata.pThresh = 0.180040;
-    axonClasses(2).specs.ProximalDendrite.pThresh = 0.086484;
+    axonClasses(2).specs.Somata.pThresh           = 0.099645;
+    axonClasses(2).specs.ProximalDendrite.pThresh = 0.115281;
+    axonClasses(2).specs.ApicalDendrite.pThresh   = 0.040949;
+    axonClasses(2).specs.SmoothDendrite.pThresh   = 0.010088;
     
     % Thalamocortical axons
     axonClasses(3).specs = struct;
-    axonClasses(3).specs.ProximalDendrite.pThresh = 0.028024;
+    axonClasses(3).specs.ProximalDendrite.pThresh = 0.055817;
+    axonClasses(3).specs.ApicalDendrite.pThresh   = 0.022862;
     
     % Corticocortical axons
     axonClasses(4).specs = struct;
-    axonClasses(4).specs.ApicalDendrite.pThresh = 0.014586;
-    axonClasses(4).specs.SmoothDendrite.pThresh = 0.004950;
+    axonClasses(4).specs.ProximalDendrite.pThresh = 0.045358;
+    axonClasses(4).specs.ApicalDendrite.pThresh   = 0.024061;
+    axonClasses(4).specs.SmoothDendrite.pThresh   = 0.013253;
     
     %% Find specific axons
    [classConn, targetClasses] = ...
@@ -36,8 +40,9 @@ function axonClasses = buildAxonSpecificityClasses(conn, axonClasses)
         curAxonClass = axonClasses(curAxonClassIdx);
         curSpecs = curAxonClass.specs;
         
-        curNullProbs = sum(classConn, 1);
-        curNullProbs = curNullProbs / sum(curNullProbs);
+        curNullProbs = ...
+            connectEM.Specificity.calcFirstHitProbs( ...
+                classConn(axonClasses(curAxonClassIdx).nullAxonIds, :));
         
         curProbs = ...
             connectEM.Specificity.calcChanceProbs( ...
