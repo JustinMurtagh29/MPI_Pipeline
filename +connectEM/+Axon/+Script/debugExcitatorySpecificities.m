@@ -37,6 +37,8 @@ specClasses = ...
 
 %% Export samples
 clear cur*;
+
+rng(0);
 mkdir(outputDir);
 
 curAxonIds = specClasses(4).specs.ProximalDendrite.axonIds;
