@@ -7,23 +7,17 @@ function firstHitProbs = calcFirstHitProbs(classConn)
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     syns = sum(classConn, 2);
-
-    optimizationOptions = optimoptions( ...
-        'lsqnonlin', 'display', 'off', ...
-        'SpecifyObjectiveGradient', true);
     
     firstHitProbs = nan(1, size(classConn, 2));
     for curTargetId = 1:numel(firstHitProbs)
         curHits = classConn(:, curTargetId) > 0;
+        
+        curFunc = @(pTilde) -sum( ...
+            (1 - curHits) .* log(pTilde .^ syns) ...
+            + curHits .* log(1 - pTilde .^ syns));
 
-        curFuncs = @(x) (1 - curHits) + (2 .* curHits - 1) .* (x .^ syns);
-        curDerivs = @(x) (2 .* curHits - 1) .* syns .* (x .^ (syns - 1));
-        
-        curPInv = lsqnonlin( ...
-            @(x) deal(curFuncs(x), curDerivs(x)), ...
-            0.5, 0, 1, optimizationOptions);
-        
-        firstHitProbs(curTargetId) = 1 - curPInv;
+        curPTilde = fminbnd(curFunc, 0, 1);
+        firstHitProbs(curTargetId) = 1 - curPTilde;
     end
 end
 
