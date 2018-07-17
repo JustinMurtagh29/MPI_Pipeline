@@ -8,24 +8,25 @@ classdef PipelineStep < uint8
    % <step name corresponding to job name> (position in pipeline) % corresponding m file 
    enumeration
       Classification          (1)  % bigFwdPass
-      MyelinFix               (2)  % Myelin.runFix
-      Segmentation            (3)  % miniSegmentation
-      OverlapRemoval          (4)  % removeOverlaps
-      GlobalSegmentID         (5)  % globalizeSegmentation
-      Correspondence          (6)  % correspondenceFinderGlobal
-      BuildSegmentMetaData    (7)  % buildSegmentMetaData
-      SegmentationPyramid     (8)  % createResolutionPyramid
-      CompressSegmentation    (9)  % compressSegmentation
-      GraphConstruction       (10) % graphConstruction
-      SynapseDetection        (11) % SynEM.Seg.pipelineRun
-      RawFeatures             (12) % connectEM.calculateRawFeatures
-      ClassFeatures           (13) % connectEM.calculateClassFeatures
-  NeuriteContinuityPrediction (14) % connectEM.predictDataset
-      SaveGlobalSvgData       (15) % collectSvgDataOnCluster
-      GlobalGraphStruct       (16) % collectGraphStructOnCluster
+      MyelinDetection         (2)  % bigFwdPassMyelinCodat
+      MyelinFix               (3)  % Myelin.runFix
+      Segmentation            (4)  % miniSegmentation
+      OverlapRemoval          (5)  % removeOverlaps
+      GlobalSegmentID         (6)  % globalizeSegmentation
+      Correspondence          (7)  % correspondenceFinderGlobal
+      BuildSegmentMetaData    (8)  % buildSegmentMetaData
+      SegmentationPyramid     (9)  % createResolutionPyramid
+      CompressSegmentation    (10)  % compressSegmentation
+      GraphConstruction       (11) % graphConstruction
+      SynapseDetection        (12) % SynEM.Seg.pipelineRun
+      RawFeatures             (13) % connectEM.calculateRawFeatures
+      ClassFeatures           (14) % connectEM.calculateClassFeatures
+  NeuriteContinuityPrediction (15) % connectEM.predictDataset
+      SaveGlobalSvgData       (16) % collectSvgDataOnCluster
+      GlobalGraphStruct       (17) % collectGraphStructOnCluster
       
       % additional steps from comment at bottom of pipeline
-      HeuristicLookup         (17) % connectEM.getHeuristicResult
-      Agglomeration           (18) % connectEM.agglomerate
+      HeuristicLookup         (18) % connectEM.getHeuristicResult
+      Agglomeration           (19) % connectEM.agglomerate
    end
 end
