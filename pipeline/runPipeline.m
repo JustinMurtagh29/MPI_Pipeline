@@ -56,17 +56,19 @@ function p = runPipeline(p, startStep, endStep)
             Cluster.waitForJob(job);
         end
 
-        newPrefix = strcat(p.class.prefix, '_mod');
-        
+        newClassRoot = strrep(p.class.root,'class', 'classFixed');       
+        if ~exist(newClassRoot,'dir')
+            mkdir(newClassRoot);
+        end
         if startStep <= PipelineStep.MyelinFix ...
                 && endStep >= PipelineStep.MyelinFix
             % run myelin masking
-            job = Myelin.runFix(p, newPrefix);
+            job = Myelin.runFixMasks(p, newClassRoot);
             Cluster.waitForJob(job);
         end
         
-        p.class.prefix = newPrefix;
-        clear newPrefix;
+        p.class.root = newClassRoot;
+        clear newClassRoot;
     end
 
     % Runs watershed based segmentation for region defined in p.bbox on p.raw and saves as p.local(X).tempSegFile
