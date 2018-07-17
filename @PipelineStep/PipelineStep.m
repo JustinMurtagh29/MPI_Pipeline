@@ -4,8 +4,8 @@
 % Author: Matej Zecevic <matej.zecevic@brain.mpg.de>
 % ================================================================================
 classdef PipelineStep < uint8
-   
-   % <step name corresponding to job name> (position in pipeline) % corresponding m file 
+
+   % <step name corresponding to job name> (position in pipeline) % corresponding m file                                                                                     
    enumeration
       Classification          (1)  % bigFwdPass
       MyelinDetection         (2)  % bigFwdPassMyelinCodat
@@ -30,3 +30,4 @@ classdef PipelineStep < uint8
       Agglomeration           (19) % connectEM.agglomerate
    end
 end
+

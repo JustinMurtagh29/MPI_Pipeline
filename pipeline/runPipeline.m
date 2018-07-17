@@ -49,8 +49,8 @@ function p = runPipeline(p, startStep, endStep)
     % used to ensure a voxel detected as myelin will not be in one segment with voxel not detected
     % as myelin
     if isfield(p, 'myelin') && p.myelin.isUsed
-        if startStep <= PipelineStep.MyelinClassification ...
-                && endStep >= PipelineStep.MyelinClassification
+        if startStep <= PipelineStep.MyelinDetection ...
+                && endStep >= PipelineStep.MyelinDetection
             % run myelin detection
             job = bigFwdPassMyelinCodat(p,p.bbox);
             Cluster.waitForJob(job);
