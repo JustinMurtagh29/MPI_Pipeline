@@ -57,9 +57,8 @@ function p = runPipeline(p, startStep, endStep)
         end
 
         newClassRoot = strrep(p.class.root,'class', 'classFixed');       
-        if ~exist(newClassRoot,'dir')
-            mkdir(newClassRoot);
-        end
+        wkwInit('new', newClassRoot, 32, 32, 'single', 1);
+
         if startStep <= PipelineStep.MyelinFix ...
                 && endStep >= PipelineStep.MyelinFix
             % run myelin masking
