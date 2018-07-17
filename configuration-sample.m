@@ -59,7 +59,7 @@ p.myelin.isUsed = false;
 p.myelin.root = '/gaba/u/mberning/wkCubes/2012-09-28_ex145_07x2_ROI2016_vessel/segmentation/1/';
 p.myelin.prefix = '2012-09-28_ex145_07x2_ROI2016_vessel_mag1';
 p.myelin.segId = 3; 
-
+p.myelin.thr = -0.5;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%% STOP EDITING HERE %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Do not change this, will add other parameters that

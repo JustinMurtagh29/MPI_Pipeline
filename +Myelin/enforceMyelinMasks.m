@@ -25,7 +25,7 @@ function enforceMyelinMasks(p, newPrefix, bbox)
     myelin = loadClassData(p.classMyelin, bbox);
    
     % Threshold myelin voxels at thr 
-    myelin = myelin > p.classMyelin.thr; 
+    myelin = myelin > p.myelin.thr; 
     border = bwdist(~myelin, 'euclidean');
     border = (border > 0) & (border < 2);
 
