@@ -1,4 +1,4 @@
-function enforceMyelinMasks(p, newPrefix, bbox)
+function enforceMyelinMasks(p, newClassRoot, bbox)
     % enforceMyelinSegments(p, box)
     %   The current membrane detection / segmentation pipeline
     %   struggles with myelin sheaths and produces 
@@ -37,7 +37,7 @@ function enforceMyelinMasks(p, newPrefix, bbox)
     class(border) = borderHeight;
     
     % write result
-    saveParam = Util.modifyStruct(p.class, 'prefix', newPrefix);
+    saveParam = Util.modifyStruct(p.class, 'root', newClassRoot);
     saveOffset = reshape(bbox(:, 1), 1, []);
     saveClassData(saveParam, saveOffset, class);
 end
