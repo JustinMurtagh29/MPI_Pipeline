@@ -4,11 +4,11 @@ clear;
 
 %% configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a_ax_spine_syn_clust.mat');
+connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites-wholeCells-03-v2-classified_spine-syn-clust.mat');
 synFile = fullfile(rootDir, 'connectomeState', 'SynapseAgglos_v3_ax_spine_clustered_classified.mat');
 
-isoDir = '';
-axonClassFile = '/tmpscratch/amotta/l4/2018-01-24-axons-18a-isosurfaces/axon-classes_v1.mat';
+isoDir = '/tmpscratch/amotta/l4/2018-07-17-axons-19a-without-soma-overlaps';
+axonClassFile = '';
 
 info = Util.runInfo();
 
@@ -16,14 +16,26 @@ info = Util.runInfo();
 param = load(fullfile(rootDir, 'allParameter.mat'), 'p');
 param = param.p;
 
+maxSegId = Seg.Global.getMaxSegId(param);
+
 [conn, ~, axonClasses] = ...
     connectEM.Connectome.load(param, connFile, synFile);
-axons = conn.axons;
 
 % for speed
 param.seg = struct;
 param.seg.root = '/tmpscratch/amotta/l4/2012-09-28_ex145_07x2_ROI2017/segmentation/1';
 param.seg.backend = 'wkwrap';
+
+%% prepare axon agglomerates
+axons = conn.axons;
+
+% Remove soma segments from axons
+somaMask = conn.dendrites(conn.denMeta.targetClass == 'Somata');
+somaMask = logical(Agglo.buildLUT(maxSegId, somaMask));
+
+axons = cellfun( ...
+    @(segIds) segIds(~somaMask(segIds)), ...
+    axons, 'UniformOutput', false);
 
 %% generate isosurfaces
 if ~isempty(isoDir)
