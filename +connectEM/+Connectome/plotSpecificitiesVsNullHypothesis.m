@@ -28,17 +28,8 @@ classConnectome = ...
     connectEM.Connectome.buildClassConnectome( ...
         conn, 'targetClasses', targetClasses);
     
-%% generate a class with all axons
-allAxonClass = struct;
-allAxonClass.axonIds = find( ...
-    conn.axonMeta.synCount >= minSynPre);
-allAxonClass.nullAxonIds = find( ...
-    conn.axonMeta.synCount >= minSynPre);
-allAxonClass.title = sprintf( ...
-    'all axons with ≥ %d synapses (n = %d)', ...
-    minSynPre, numel(allAxonClass.axonIds));
-
-axonClasses(end + 1) = allAxonClass;
+%% only analyse excitatory and inhibitory axons
+axonClasses = axonClasses(1:2);
 
 %% calculate target class innervation probabilities for null model
 clear cur*;
@@ -51,9 +42,12 @@ end
 
 %% plot
 clear cur*;
-
 curAxonClasses = axonClasses;
-curAxonClasses = rmfield(curAxonClasses, 'nullAxonIds');
+
+% NOTE(amotta): The list of axons to induce the null model is no longer
+% needed. Let's remove it to cause an error in case a weird code path still
+% tries to use it.
+axonClasses = rmfield(curAxonClasses, 'nullAxonIds');
 
 for curIdx = 1:numel(curAxonClasses)
     plotAxonClass( ...
