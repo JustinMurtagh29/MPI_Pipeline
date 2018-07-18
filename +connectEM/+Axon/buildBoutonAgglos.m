@@ -5,6 +5,7 @@ function boutonAgglos = buildBoutonAgglos( ...
     opt = struct;
     opt.voxelSize = [];
     opt.distThresh = 1000;
+    opt.parallelize = false;
     opt.showProgressBar = false;
     opt = Util.modifyStruct(opt, varargin{:});
     
@@ -22,10 +23,22 @@ function boutonAgglos = buildBoutonAgglos( ...
     preSynAgglos = syn.synapses.presynId;
     boutonAgglos = cell(numel(axonAgglos), 1);
     
-    parfor curId = 1:numel(axonAgglos)
-        boutonAgglos{curId} = forAxon( ...
-            opt.distThresh, segPoints, axonAgglos{curId}, ...
-            preSynAgglos(synIds{curId}), boutonIds{curId}); %#ok
+    if opt.parallelize
+        parfor curId = 1:numel(axonAgglos)
+            boutonAgglos{curId} = forAxon( ...
+                opt.distThresh, segPoints, axonAgglos{curId}, ...
+                preSynAgglos(synIds{curId}), boutonIds{curId}); %#ok
+        end
+    else
+        tic;
+        for curId = 1:numel(axonAgglos)
+            boutonAgglos{curId} = forAxon( ...
+                opt.distThresh, segPoints, axonAgglos{curId}, ...
+                preSynAgglos(synIds{curId}), boutonIds{curId});
+            
+            if ~opt.showProgressBar; continue; end
+            Util.progressBar(curId, numel(axonAgglos));
+        end
     end
 end
 
