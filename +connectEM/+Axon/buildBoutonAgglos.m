@@ -64,6 +64,6 @@ function boutonAgglos = forAxon( ...
 
         curDists = distances(skel, curSynSegIds, curSegIds);
         curSegIds = curSegIds(any(curDists < distThresh, 1));
-        boutonAgglos{curBoutonId} = reshape(curSegIds, [], 1);
+        boutonAgglos{curBoutonId} = segIds(curSegIds(:));
     end
 end
