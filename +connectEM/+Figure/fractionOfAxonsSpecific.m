@@ -26,19 +26,16 @@ param = param.p;
 
 [conn, ~, axonClasses] = ...
     connectEM.Connectome.load(param, connFile);
-
-%% Preparing data
-axonClasses(1).tag = 'Exc';
-axonClasses(2).tag = 'Inh';
-axonClasses(3).tag = 'TC';
-axonClasses(4).tag = 'CC';
-
-% Ignore "unclear" axons
-axonClasses(end) = [];
-
 [conn, axonClasses] = ...
     connectEM.Connectome.prepareForSpecificityAnalysis( ...
         conn, axonClasses, 'minSynPre', minSynPre);
+
+%% Find specific axons
+axonClasses = axonClasses(1:2);
+
+axonClasses(1).tag = 'Exc';
+axonClasses(2).tag = 'Inh';
+
 axonClasses = ...
     connectEM.Connectome.buildAxonSpecificityClasses(conn, axonClasses);
 
@@ -107,7 +104,7 @@ fractionOfSpecificOntoTarget = array2table( ...
 
 %% Plot fraction of axons specific
 clear cur*;
-plotClasses = [4, 3, 2];
+plotClasses = 1:numel(axonClasses);
 
 fig = figure();
 fig.Color = 'white';
@@ -135,7 +132,7 @@ title(ax, { ...
 
 %% Plot distribution of specificities over target classes
 clear cur*;
-plotClasses = [4, 3, 2];
+plotClasses = 1:numel(axonClasses);
 
 fig = figure();
 fig.Color = 'white';

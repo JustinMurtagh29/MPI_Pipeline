@@ -21,17 +21,6 @@ function axonClasses = buildAxonSpecificityClasses(conn, axonClasses)
     axonClasses(2).specs.ApicalDendrite.pThresh   = 0.040949;
     axonClasses(2).specs.SmoothDendrite.pThresh   = 0.010088;
     
-    % Thalamocortical axons
-    axonClasses(3).specs = struct;
-    axonClasses(3).specs.ProximalDendrite.pThresh = 0.055817;
-    axonClasses(3).specs.ApicalDendrite.pThresh   = 0.022862;
-    
-    % Corticocortical axons
-    axonClasses(4).specs = struct;
-    axonClasses(4).specs.ProximalDendrite.pThresh = 0.045358;
-    axonClasses(4).specs.ApicalDendrite.pThresh   = 0.024061;
-    axonClasses(4).specs.SmoothDendrite.pThresh   = 0.013253;
-    
     %% Find specific axons
    [classConn, targetClasses] = ...
         connectEM.Connectome.buildClassConnectome(conn);
