@@ -425,49 +425,52 @@ clear prevWarning;
 clear cur*;
 
 % AD- and soma-specific axon, respectively
-curAxonIds = [23314, 628];
+% TODO(amotta): Update to IDs in latest connectome!
+curAxonIds = [];
 
-curFig = figure();
-curFig.Color = 'white';
+if ~isempty(curAxonIds)
+    curFig = figure();
+    curFig.Color = 'white';
 
-curAx = axes(curFig);
-hold(curAx, 'on');
-axis(curAx, 'square');
+    curAx = axes(curFig);
+    hold(curAx, 'on');
+    axis(curAx, 'square');
 
-curAvail = availabilities(:, :, curAxonIds);
-curAvail = permute(curAvail, [2, 3, 1]);
-curAvail = reshape(curAvail, size(curAvail, 1), []);
-curAvail = transpose(curAvail);
+    curAvail = availabilities(:, :, curAxonIds);
+    curAvail = permute(curAvail, [2, 3, 1]);
+    curAvail = reshape(curAvail, size(curAvail, 1), []);
+    curAvail = transpose(curAvail);
 
-plot(curAx, avail.dists / 1E3, curAvail);
+    plot(curAx, avail.dists / 1E3, curAvail);
 
-curColors = curAx.ColorOrder(1:numel(targetClasses), :);
-curColors = num2cell(curColors, 2);
+    curColors = curAx.ColorOrder(1:numel(targetClasses), :);
+    curColors = num2cell(curColors, 2);
 
-curLines = flip(cat(1, curAx.Children));
-[curLines.LineWidth] = deal(2);
-[curLines(1:2:end).LineStyle] = deal('--');
-[curLines(1:2:end).Color] = deal(curColors{:});
-[curLines(2:2:end).Color] = deal(curColors{:});
+    curLines = flip(cat(1, curAx.Children));
+    [curLines.LineWidth] = deal(2);
+    [curLines(1:2:end).LineStyle] = deal('--');
+    [curLines(1:2:end).Color] = deal(curColors{:});
+    [curLines(2:2:end).Color] = deal(curColors{:});
 
-xlabel(curAx, 'r_{pred} (µm)');
-ylabel(curAx, 'Availability');
+    xlabel(curAx, 'r_{pred} (µm)');
+    ylabel(curAx, 'Availability');
 
-curAx.XLim = [0, maxRadius];
-curAx.YLim = [0, maxAvail];
-curAx.TickDir = 'out';
+    curAx.XLim = [0, maxRadius];
+    curAx.YLim = [0, maxAvail];
+    curAx.TickDir = 'out';
 
-curLeg = legend( ...
-    curLines(2:2:end), targetClasses, ...
-    'Location', 'EastOutside');
-curLeg.Box = 'off';
+    curLeg = legend( ...
+        curLines(2:2:end), targetClasses, ...
+        'Location', 'EastOutside');
+    curLeg.Box = 'off';
 
-annotation(curFig, ...
-    'textbox', [0, 0.9, 1, 0.1], ...
-    'EdgeColor', 'none', 'HorizontalAlignment', 'center', ...
-    'String', { ...
-        info.filename; info.git_repos{1}.hash; ...
-        'AD- (dashed) vs. soma-specific (solid) axon'});
+    annotation(curFig, ...
+        'textbox', [0, 0.9, 1, 0.1], ...
+        'EdgeColor', 'none', 'HorizontalAlignment', 'center', ...
+        'String', { ...
+            info.filename; info.git_repos{1}.hash; ...
+            'AD- (dashed) vs. soma-specific (solid) axon'});
+end
 
 %% Scatter plot and linear regression
 clear cur*;
