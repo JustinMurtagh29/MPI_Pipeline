@@ -6,10 +6,14 @@ clear;
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-partiallySplit-v2_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v8-classified.mat');
 
-[outDir, outFile] = fileparts(connFile);
-outFile = sprintf('%s_axonalBoutons_v1.mat', outFile);
-outFile = fullfile(outDir, outFile);
-clear outDir;
+[connDir, connName] = fileparts(connFile);
+
+interSynFile = sprintf('%s_intersynapse_v2.mat', connName);
+interSynFile = fullfile(connDir, interSynFile);
+
+outFile = sprintf('%s_axonalBoutons_v1.mat', connName);
+outFile = fullfile(connDir, outFile);
+clear connDir connName;
 
 info = Util.runInfo();
 
@@ -24,10 +28,6 @@ segVols = Seg.Global.getSegToSizeMap(param);
 segVols = prod(param.raw.voxelSize) .* segVols;
 
 [conn, syn] = connectEM.Connectome.load(param, connFile);
-
-[connDir, connName] = fileparts(connFile);
-interSynFile = sprintf('%s_intersynapse_v2.mat', connName);
-interSynFile = fullfile(connDir, interSynFile);
 interSyn = load(interSynFile);
 
 %% Build bouton agglomerates and calculate volume
