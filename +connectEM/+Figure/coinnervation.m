@@ -73,16 +73,26 @@ for curAxonClass = axonClasses
 end
 
 %% Utilities
-function plotIt(info, targetClasses, axonClass, specClasses, coinMat)
-    maxDelta = 0.25;
+function plotIt( ...
+        info, targetClasses, axonClass, ...
+        specClasses, coinMat, varargin)
+    opt = struct;
+    opt.maxDelta = 0.20;
+    opt = Util.modifyStruct(opt, varargin{:});
     
-    targetClasses{end + 1} = 'Other';
     specLabels = targetClasses(specClasses);
     specLabels{end + 1} = 'All';
+    
+    % Don't show the synapses, which do not fall in one of the target
+    % classes listed in `targetClasses`.
+    coinMat(:, end) = [];
     
     rows = numel(specLabels);
     cols = numel(targetClasses);
     frac = rows / cols;
+    
+    % Sanity checks
+    assert(isequal(size(coinMat), [rows, cols]));
     
     diagIds = arrayfun( ...
         @(idx, id) sub2ind(size(coinMat), idx, id), ...
@@ -95,7 +105,7 @@ function plotIt(info, targetClasses, axonClass, specClasses, coinMat)
     ax = axes(fig);
     
     imshow( ...
-        deltaMat, [-maxDelta, +maxDelta], ...
+        deltaMat, [-opt.maxDelta, +opt.maxDelta], ...
         'Colormap', connectEM.Figure.redBlue(128), ...
         'Parent', ax);
 
