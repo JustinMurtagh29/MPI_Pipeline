@@ -4,7 +4,7 @@ clear;
 
 %% configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-blockDataFile = '/tmpscratch/amotta/l4/2018-06-28-surface-availability-connectome-v5/block-data.mat';
+blockDataFile = '/tmpscratch/amotta/l4/2018-07-18-surface-availability-for-connectome-v7-partially-split/block-data.mat';
 axonsPerJob = 10;
 
 outFile = fileparts(blockDataFile);
