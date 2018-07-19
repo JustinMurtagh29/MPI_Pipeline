@@ -4,12 +4,12 @@ clear
 
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites-wholeCells-03-v2-classified_spine-syn-clust.mat');
-availFile = '/tmpscratch/amotta/l4/2018-04-27-surface-availability-connectome-v5/axon-availability_v2.mat';
+connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-partiallySplit-v2_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v8-classified.mat');
+availFile = '/tmpscratch/amotta/l4/2018-07-18-surface-availability-for-connectome-v7-partially-split/axon-availability_v2.mat';
 
 maxRadius = 50;
 maxAvail = 0.7;
-plotAxonClasses = [1, 5, 2];
+plotAxonClasses = [1, -1, 2];
 
 % Valid prediction methods are
 % * predictTargetClassAvailability: The predicted innervation of a target
@@ -73,7 +73,7 @@ availabilities = avail.axonAvail(classIds, :, :);
 availabilities = availabilities ./ sum(availabilities, 1);
 
 % Duplicate excitatory axons
-axonClasses(5) = axonClasses(1);
+axonClasses(end + 1) = axonClasses(1);
 
 % Define target classes we want to predict
 [axonClasses.predictClasses] = deal(targetClasses);
@@ -83,7 +83,7 @@ axonClasses(5) = axonClasses(1);
 [axonClasses.connMnVarClasses] = deal({});
 
 % NOTE(amotta): As discussed in the phone call with MH on 13.06.2018, let's
-% note predict targets that are not innervated by excitatory axons. The
+% not predict targets that are not innervated by excitatory axons. The
 % skipped classes can still be used to make predictions.
 axonClasses(1).title = sprintf( ...
     '%s (without AIS, SO, and SD)', axonClasses(1).title);
@@ -94,13 +94,17 @@ axonClasses(1).predictClasses = setdiff( ...
 % also perform the explainability analysis where the unexplainable variance
 % for excitatory smooth dendrite innervations is determined based on the
 % synaptic specificities instead of the membrane availabilities.
-axonClasses(5).title = sprintf([ ...
+axonClasses(end).title = sprintf([ ...
     '%s (without AIS, SO; ', ...
     'synapse-based MN var. for SD)'], ...
-    axonClasses(5).title);
-axonClasses(5).predictClasses = setdiff( ...
+    axonClasses(end).title);
+axonClasses(end).predictClasses = setdiff( ...
     targetClasses, {'Somata', 'AxonInitialSegment'});
-axonClasses(5).connMnVarClasses = {'SmoothDendrite'};
+axonClasses(end).connMnVarClasses = {'SmoothDendrite'};
+
+plotAxonClasses(plotAxonClasses < 0) = ...
+    plotAxonClasses(plotAxonClasses < 0) ...
+  + 1 + numel(axonClasses);
 
 %% Build fake connectome for testing
 if ~isempty(fakeRadius)
@@ -421,49 +425,52 @@ clear prevWarning;
 clear cur*;
 
 % AD- and soma-specific axon, respectively
-curAxonIds = [23314, 628];
+% TODO(amotta): Update to IDs in latest connectome!
+curAxonIds = [];
 
-curFig = figure();
-curFig.Color = 'white';
+if ~isempty(curAxonIds)
+    curFig = figure();
+    curFig.Color = 'white';
 
-curAx = axes(curFig);
-hold(curAx, 'on');
-axis(curAx, 'square');
+    curAx = axes(curFig);
+    hold(curAx, 'on');
+    axis(curAx, 'square');
 
-curAvail = availabilities(:, :, curAxonIds);
-curAvail = permute(curAvail, [2, 3, 1]);
-curAvail = reshape(curAvail, size(curAvail, 1), []);
-curAvail = transpose(curAvail);
+    curAvail = availabilities(:, :, curAxonIds);
+    curAvail = permute(curAvail, [2, 3, 1]);
+    curAvail = reshape(curAvail, size(curAvail, 1), []);
+    curAvail = transpose(curAvail);
 
-plot(curAx, avail.dists / 1E3, curAvail);
+    plot(curAx, avail.dists / 1E3, curAvail);
 
-curColors = curAx.ColorOrder(1:numel(targetClasses), :);
-curColors = num2cell(curColors, 2);
+    curColors = curAx.ColorOrder(1:numel(targetClasses), :);
+    curColors = num2cell(curColors, 2);
 
-curLines = flip(cat(1, curAx.Children));
-[curLines.LineWidth] = deal(2);
-[curLines(1:2:end).LineStyle] = deal('--');
-[curLines(1:2:end).Color] = deal(curColors{:});
-[curLines(2:2:end).Color] = deal(curColors{:});
+    curLines = flip(cat(1, curAx.Children));
+    [curLines.LineWidth] = deal(2);
+    [curLines(1:2:end).LineStyle] = deal('--');
+    [curLines(1:2:end).Color] = deal(curColors{:});
+    [curLines(2:2:end).Color] = deal(curColors{:});
 
-xlabel(curAx, 'r_{pred} (µm)');
-ylabel(curAx, 'Availability');
+    xlabel(curAx, 'r_{pred} (µm)');
+    ylabel(curAx, 'Availability');
 
-curAx.XLim = [0, maxRadius];
-curAx.YLim = [0, maxAvail];
-curAx.TickDir = 'out';
+    curAx.XLim = [0, maxRadius];
+    curAx.YLim = [0, maxAvail];
+    curAx.TickDir = 'out';
 
-curLeg = legend( ...
-    curLines(2:2:end), targetClasses, ...
-    'Location', 'EastOutside');
-curLeg.Box = 'off';
+    curLeg = legend( ...
+        curLines(2:2:end), targetClasses, ...
+        'Location', 'EastOutside');
+    curLeg.Box = 'off';
 
-annotation(curFig, ...
-    'textbox', [0, 0.9, 1, 0.1], ...
-    'EdgeColor', 'none', 'HorizontalAlignment', 'center', ...
-    'String', { ...
-        info.filename; info.git_repos{1}.hash; ...
-        'AD- (dashed) vs. soma-specific (solid) axon'});
+    annotation(curFig, ...
+        'textbox', [0, 0.9, 1, 0.1], ...
+        'EdgeColor', 'none', 'HorizontalAlignment', 'center', ...
+        'String', { ...
+            info.filename; info.git_repos{1}.hash; ...
+            'AD- (dashed) vs. soma-specific (solid) axon'});
+end
 
 %% Scatter plot and linear regression
 clear cur*;

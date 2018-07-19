@@ -31,6 +31,10 @@ interSynFile = sprintf('%s_intersynapse_v2.mat', connName);
 interSynFile = fullfile(connDir, interSynFile);
 interSyn = load(interSynFile);
 
+boutonMetaFile = sprintf('%s_axonalBoutons_v1.mat', connName);
+boutonMetaFile = fullfile(connDir, boutonMetaFile);
+boutonMeta = load(boutonMetaFile);
+
 %% Training data
 % This section select N random synapses, and exports it together with one
 % of its direct neighbours. I'll then decide whether or not a pair of
@@ -317,11 +321,13 @@ curMeanSynCounts = cellfun(@(boutonIds, isSpine) ...
 curMultiHitFracs = cellfun(@(boutonIds, isSpine) ...
     mean(accumarray(boutonIds, isSpine) > 1), ...
     boutonIds, synIsSpine);
+curMedianBoutonVol = cellfun( ...
+    @median, boutonMeta.boutonVols);
 
 curFig = figure();
 curFig.Color = 'white';
 
-curAx = subplot(1, 2, 1);
+curAx = subplot(1, 3, 1);
 axis(curAx, 'square');
 hold(curAx, 'on');
 
@@ -330,7 +336,7 @@ scatter(curAx, ...
     curMeanSynCounts(curAxonIds), '.');
 ylabel(curAx, 'Average spine synapses per bouton');
 
-curAx = subplot(1, 2, 2);
+curAx = subplot(1, 3, 2);
 axis(curAx, 'square');
 hold(curAx, 'on');
 
@@ -338,6 +344,15 @@ scatter(curAx, ...
     curConn.axonMeta.fullPriSpineSynDens(curAxonIds), ...
     curMultiHitFracs(curAxonIds), '.');
 ylabel(curAx, 'Fraction of multi-synaptic boutons');
+
+curAx = subplot(1, 3, 3);
+axis(curAx, 'square');
+hold(curAx, 'on');
+
+scatter(curAx, ...
+    curConn.axonMeta.fullPriSpineSynDens(curAxonIds), ...
+    curMedianBoutonVol(curAxonIds), '.');
+ylabel(curAx, 'Mean bouton volume');
 
 curAxes = flip(curFig.Children);
 
