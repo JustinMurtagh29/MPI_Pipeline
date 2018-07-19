@@ -374,20 +374,10 @@ annotation( ...
     'String', {info.filename; info.git_repos{1}.hash});
 
 %% Look at discrepancies
-clear cur*;
-curOutputDir = '/home/amotta/Desktop/multi-hit-tc';
-
-curMeanSynCounts = cellfun(@(boutonIds, isSpine) ...
-    mean(accumarray(boutonIds, isSpine)), ...
-    boutonIds, synIsSpine);
-
-curAxonIds = axonClasses(4).axonIds;
-curAxonIds = curAxonIds( ...
-    curMeanSynCounts(curAxonIds) > 1.6 ...
-  & curMeanSynCounts(curAxonIds) < 1.9);
+curOutputDir = '/home/amotta/Desktop/tc-candidates';
 
 rng(0);
-curAxonIds = curAxonIds(randperm(numel(curAxonIds)));
+curAxonIds = curAxonIds(curGroupId > 0);
 curAxonIds = curAxonIds(1:10);
 
 skel = skeleton();
