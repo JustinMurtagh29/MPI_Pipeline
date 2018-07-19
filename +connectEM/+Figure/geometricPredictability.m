@@ -55,3 +55,28 @@ availabilities = availabilities ./ sum(availabilities, 1);
 assert(numel(avail.targetClasses) == numel(targetClasses));
 [~, classIds] = ismember(targetClasses, avail.targetClasses);
 availabilities = availabilities(classIds, :, :);
+
+%% Prototype
+clear cur*;
+
+curAxonIds = axonClasses(2).axonIds;
+curTargetId = 2;
+curDistId = 10;
+
+curClassConn = classConn(curAxonIds, :);
+curSynCountAll = sum(curClassConn, 2);
+curSynTargetAll = curClassConn(:, curTargetId);
+curSynFracs = curSynTargetAll ./ curSynCountAll;
+
+curAvails = availabilities(:, curDistId, curAxonIds);
+curAvails = reshape(curAvails, size(curAvails, 1), []);
+curAvails = transpose(curAvails);
+
+curS = size(targetClasses);
+curOpts = optimoptions('lsqlin', 'Display', 'off');
+
+% Find optimal parameters
+[curParam, ~, ~, curExitFlag] = lsqlin( ...
+    curAvails, curSynFracs, ones(curS), 1, [], [], ...
+    zeros(curS), ones(curS), ones(curS) / numel(curS), curOpts);
+assert(curExitFlag == 1);
