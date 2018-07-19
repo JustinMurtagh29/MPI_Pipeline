@@ -1,10 +1,13 @@
-function makeIso(state,reduce,outDir)
+function makeIso(state,reduce,outDir,type)
 
 if ~exist('reduce','var')
     reduce = 0.1;
 end
 if ~exist('outDir','var')
     outDir = '/tmpscratch/mbeining/L4/';
+end
+if ~exist('type','var')
+    type = 'all'; % can be border, center or all
 end
 Util.log('Loading parameters and state')
 load('/gaba/u/mberning/results/pipeline/20170217_ROI/allParameterWithSynapses.mat');
@@ -14,12 +17,14 @@ m = load(fullfile(outputFolder,[state,'.mat']));
 if ~isfield(m,'WholeCellId')
     Util.log('Overlap state with soma agglos')
     %% load soma whole cell agglos
-    somaAgglos = connectEM.getSomaAgglos(fullfile(outputFolder,'somas_with_merged_somas.mat'),'center');
+    %% load all soma whole cell agglos
+    somaAgglos = connectEM.getSomaAgglos(fullfile(outputFolder,'somas_with_merged_somas.mat'),type);
     somaAgglos = somaAgglos(~cellfun(@isempty,somaAgglos)); % remove not found somata
     somaSegIds = cell2mat(somaAgglos);
     % remove duplicate segIds
     [~,ic] = unique(somaSegIds);
     duplicates = somaSegIds(setdiff(1:numel(somaSegIds),ic));
+    % somaDuplicateIds = cellfun(@(x) any(intersect(x,duplicates)),somaAgglos);
     somaAgglos = cellfun(@(x) setdiff(x,duplicates),somaAgglos,'uni',0);
     somaSegIds = cell2mat(somaAgglos);
     somaLUT(somaSegIds) = repelem(1:numel(somaAgglos),cellfun(@numel,somaAgglos));
@@ -31,7 +36,7 @@ if ~isfield(m,'WholeCellId')
     m.WholeCellId = accumarray(somaLUT(somaSegIds(ismem))',dendriteLUT(dendriteSegIds(ind(ismem)))',[],@mode);
 end
 
-outDir = fullfile(outDir,sprintf('isoForWC_%s_%g',state,reduce));
+outDir = fullfile(outDir,sprintf('isoForWC_%s_%s_%g',type,state,reduce));
 
 if ~exist(outDir,'dir')
     mkdir(outDir);
