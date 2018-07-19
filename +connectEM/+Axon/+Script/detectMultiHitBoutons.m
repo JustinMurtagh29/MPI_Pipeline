@@ -378,6 +378,7 @@ curOutputDir = '/home/amotta/Desktop/tc-candidates';
 
 rng(0);
 curAxonIds = curAxonIds(curGroupId > 0);
+curAxonIds = curAxonIds(randperm(numel(curAxonIds)));
 curAxonIds = curAxonIds(1:10);
 
 skel = skeleton();
