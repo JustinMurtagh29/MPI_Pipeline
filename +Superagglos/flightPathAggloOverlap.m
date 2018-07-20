@@ -85,7 +85,7 @@ for i = 1:length(cubeIdx)
     seg = Seg.IO.loadSeg(p, this_bbox);
     warning('on', 'all')
     curNodes = Util.indConversion(this_bbox, nodes(group{i},:));
-    curNodes = bsxfun(@plus, curNodes, [0, Util.lneigh26(size(this_bbox))]);
+    curNodes = bsxfun(@plus, curNodes, [0, Util.lneigh26(size(seg))]);
     ids(group{i}, :) = seg(curNodes);
     
     if floor(i/length(cubeIdx)*100) < 10
