@@ -9,9 +9,9 @@ synFile = fullfile(rootDir, 'connectomeState', 'SynapseAgglos_v3_ax_spine_cluste
 outDir = '/tmpscratch/amotta/l4/2018-07-17-axons-19a-without-soma-overlaps';
 
 isoDir = [];
-axonClassFile = fullfile(outDir, 'axonClasses_v3.mat');
+axonClassFile = fullfile(outDir, 'axonClasses_v4.mat');
 
-minBorderDistUm = 3;
+minBorderDistUm = 5;
 
 info = Util.runInfo();
 
