@@ -9,7 +9,7 @@ synFile = fullfile(rootDir, 'connectomeState', 'SynapseAgglos_v3_ax_spine_cluste
 outDir = '/tmpscratch/amotta/l4/2018-07-17-axons-19a-without-soma-overlaps';
 
 isoDir = [];
-axonClassFile = fullfile(outDir, 'axonClasses_v2.mat');
+axonClassFile = fullfile(outDir, 'axonClasses_v3.mat');
 
 minBorderDistUm = 3;
 
@@ -48,7 +48,7 @@ axons = cellfun( ...
 boxCore = round(1E3 * minBorderDistUm ./ param.raw.voxelSize);
 boxCore = transpose(box) - [-1; +1] .* boxCore;
 
-pointsInCore = @(pts) all(pts > boxCore(1, :) & pts < boxCore(2, :), 1);
+pointsInCore = @(pts) all(pts > boxCore(1, :) & pts < boxCore(2, :), 2);
 aggloInCore = @(segIds) any(pointsInCore(segPoints(segIds, :)));
 
 coreAxonClass = struct;
