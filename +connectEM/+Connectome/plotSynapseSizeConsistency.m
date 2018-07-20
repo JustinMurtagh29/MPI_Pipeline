@@ -249,7 +249,7 @@ end
 %% Correlation of synapse size correlation with synapse size
 clear cur*;
 curMinCv = 0.0;
-curMaxCv = 0.25;
+curMaxCv = 0.54;
 
 curSynT = synT;
 curConfig = plotConfigs(1);
@@ -275,11 +275,6 @@ curPairT.areas = curSynT.area(curPairConfigs(1).synIdPairs);
 curPairT.areas = sort(curPairT.areas, 2);
 curPairT.cv = std(curPairT.areas, 0, 2) ./ mean(curPairT.areas, 2);
 
-curRandT = table;
-curRandT.areas = curSynT.area(curPairConfigs(end).synIdPairs);
-curRandT.areas = sort(curRandT.areas, 2);
-curRandT.cv = std(curRandT.areas, 0, 2) ./ mean(curRandT.areas, 2);
-
 curCtrlT = table;
 curCtrlT.areas = curSynT.area(curCtrlPairConfig.synIdPairs);
 curCtrlT.areas = sort(curCtrlT.areas, 2);
@@ -292,7 +287,7 @@ curFig.Position(3:4) = [420, 820];
 curAx = subplot(2, 1, 1);
 hold(curAx, 'on');
 
-curBinEdges = linspace(-1.5, 0.5, 11);
+curBinEdges = linspace(-1.5, 0.5, 16);
 curHist = @(t) histogram(curAx, ...
     mean(log10(t.areas( ...
         t.cv > curMinCv ...
@@ -303,7 +298,7 @@ curHist = @(t) histogram(curAx, ...
 curPairHist = curHist(curPairT);
 curCtrlHist = curHist(curCtrlT);
 
-xlabel(curAx, 'log_{10}(ASI area [µm²])');
+xlabel(curAx, 'Average(log_{10}(ASI area [µm²]))');
 ylabel(curAx, 'Probability');
 
 curAx = subplot(2, 1, 2);
@@ -315,7 +310,7 @@ histogram(curAx, ...
     'DisplayStyle', 'stairs', ...
     'LineWidth', 2);
 
-xlabel(curAx, 'log_{10}(ASI area [µm²])');
+xlabel(curAx, 'Average(log_{10}(ASI area [µm²]))');
 ylabel(curAx, 'Observed vs. expected synapse pairs');
 
 curAxes = flip(cat(1, curFig.Children));
