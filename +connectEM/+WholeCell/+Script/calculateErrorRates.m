@@ -79,10 +79,21 @@ for curIdx = 1:numel(nmlFiles)
     curEdges.edge = cell2mat(cellfun( ...
         @(edges) [edges.source, edges.target], ...
         curTrees.edges, 'UniformOutput', false));
+   [~, curEdges.edge] = ismember(curEdges.edge, curNodes.id);
+   
+    curEdges.isRecalled = all(curNodes.isRecalled(curEdges.edge), 2);
+    curEdges.ignore = any(curNodes.ignore(curEdges.edge), 2);
     
-   [~, curEdges.isRecalled] = ismember(curEdges.edge, curNodes.id);
-    curEdges.ignore = any(curNodes.ignore(curEdges.isRecalled), 2);
-    curEdges.isRecalled = all(curNodes.isRecalled(curEdges.isRecalled), 2);
+    curEdgeRecall = ...
+        curNodes.coord(curEdges.edge(:, 1), :) ...
+      - curNodes.coord(curEdges.edge(:, 2), :);
+    curEdgeRecall = curEdgeRecall .* param.raw.voxelSize;
+    curEdgeRecall = sqrt(sum(curEdgeRecall .^ 2, 2));
+    
+    curEdgeRecall(curEdges.ignore) = 0;
+    curEdgeRecall = ...
+        sum(curEdgeRecall(curEdges.isRecalled)) ...
+      / sum(curEdgeRecall) %#ok
     
     % Check if trees indicate axon
     curAxonTreeName = curTrees.id(contains( ...
