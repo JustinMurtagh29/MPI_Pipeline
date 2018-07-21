@@ -4,6 +4,7 @@ clear;
 
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
+wholeCellFile = fullfile(rootDir, 'aggloState', 'wholeCells_GTAxon_08_v4.mat');
 
 nmlDirs = ...
     connectEM.WholeCell.Data.getFile({ ...
@@ -21,8 +22,16 @@ Util.showRunInfo(info);
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 
+maxSegId = Seg.Global.getMaxSegId(param);
+
 % Use WKW segmentation for speed
 param.seg = segParam;
+
+wholeCells = load(wholeCellFile);
+wholeCells = wholeCells.wholeCells;
+
+wholeCellAgglos = Agglo.fromSuperAgglo(wholeCells);
+wholeCellLUT = Agglo.buildLUT(maxSegId, wholeCellAgglos);
 
 %% Find NML files
 nmlFiles = cellfun(@(nmlDir) ...
@@ -42,6 +51,9 @@ for curIdx = 1:numel(nmlFiles)
     curNmlFile = nmlFiles{curIdx};
     curNml = slurpNml(curNmlFile);
     
+    curTrees = NML.buildTreeTable(curNml);
+    curComments = NML.buildCommentTable(curNml);
+    
     curNodes = NML.buildNodeTable(curNml);
     curNodes.coord = curNodes.coord + 1;
     
@@ -49,8 +61,21 @@ for curIdx = 1:numel(nmlFiles)
         Skeleton.getSegmentIdsOfNodes( ...
             param, curNodes.coord, 26);
     
-    curTrees = NML.buildTreeTable(curNml);
-    curComments = NML.buildCommentTable(curNml);
+    % Find whole cell agglomerate
+    curWholeCellId = nonzeros(curNodes.segIds(:));
+    curWholeCellId = mode(nonzeros(wholeCellLUT(curWholeCellId)));
+    
+    % Determine node recall
+    curWholeCellSegIds = wholeCellAgglos{curWholeCellId};
+    curNodes.isRecalled = any(ismember( ...
+        curNodes.segIds, curWholeCellSegIds), 2);
+    
+    % Determine path recall
+    % TODO(amotta): Separate between axon and dendrite
+    curEdges = table;
+    curEdges.edge = cell2mat(curTrees.edges{:});
+   [~, curEdges.isRecalled] = ismember(curEdges.edge, curNodes.id);
+    curEdges.isRecalled = all(curNodes.isRecalled(curEdges.isRecalled), 2);
     
     % Check if trees indicate axon
     curAxonTreeName = curTrees.id(contains( ...
