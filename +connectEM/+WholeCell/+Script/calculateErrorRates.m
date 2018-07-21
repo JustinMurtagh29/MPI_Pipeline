@@ -62,7 +62,7 @@ for curIdx = 1:numel(nmlFiles)
             param, curNodes.coord, 26);
     
     % Find whole cell agglomerate
-    curWholeCellId = nonzeros(curNodes.segIds(:));
+    curWholeCellId = curNodes.segIds(curNodes.segIds > 0);
     curWholeCellId = mode(nonzeros(wholeCellLUT(curWholeCellId)));
     
     % Determine node recall
@@ -70,11 +70,16 @@ for curIdx = 1:numel(nmlFiles)
     curNodes.isRecalled = any(ismember( ...
         curNodes.segIds, curWholeCellSegIds), 2);
     
+    % Ignore nodes that are outside segmentation
+    curNodes.ignore = any(curNodes.segIds < 0, 2);
+    
     % Determine path recall
     % TODO(amotta): Separate between axon and dendrite
     curEdges = table;
     curEdges.edge = cell2mat(curTrees.edges{:});
    [~, curEdges.isRecalled] = ismember(curEdges.edge, curNodes.id);
+   
+    curNodes.ignore = any(curNodes.ignore(curEdges.isRecalled), 2);
     curEdges.isRecalled = all(curNodes.isRecalled(curEdges.isRecalled), 2);
     
     % Check if trees indicate axon
