@@ -10,12 +10,19 @@ nmlDirs = ...
         'border-cells_axon-dendrites-split', ...
         'center-cells_axon-dendrites-split'});
 
+segParam = struct;
+segParam.root = '/tmpscratch/amotta/l4/2012-09-28_ex145_07x2_ROI2017/segmentation/1';
+segParam.backend = 'wkwrap';
+
 info = Util.runInfo();
 Util.showRunInfo(info);
 
 %% Loading data
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
+
+% Use WKW segmentation for speed
+param.seg = segParam;
 
 %% Find NML files
 nmlFiles = cellfun(@(nmlDir) ...
@@ -36,7 +43,11 @@ for curIdx = 1:numel(nmlFiles)
     curNml = slurpNml(curNmlFile);
     
     curNodes = NML.buildNodeTable(curNml);
-    curNodes.coord = curNodes.coord .* param.raw.voxelSize;
+    curNodes.coord = curNodes.coord + 1;
+    
+    curNodes.segIds = ...
+        Skeleton.getSegmentIdsOfNodes( ...
+            param, curNodes.coord, 26);
     
     curTrees = NML.buildTreeTable(curNml);
     curComments = NML.buildCommentTable(curNml);
@@ -85,6 +96,7 @@ for curIdx = 1:numel(nmlFiles)
         curPathLength = ...
             curNodes.coord(curEdges(:, 1), :) ...
           - curNodes.coord(curEdges(:, 2), :);
+        curPathLength = curPathLength .* param.raw.voxelSize;
         curPathLength = sum(sqrt(sum(curPathLength .^ 2, 2)));
         curTrees.pathLength(curTreeIdx) = curPathLength;
     end
