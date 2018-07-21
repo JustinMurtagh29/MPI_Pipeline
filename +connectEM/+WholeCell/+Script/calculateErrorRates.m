@@ -76,10 +76,12 @@ for curIdx = 1:numel(nmlFiles)
     % Determine path recall
     % TODO(amotta): Separate between axon and dendrite
     curEdges = table;
-    curEdges.edge = cell2mat(curTrees.edges{:});
+    curEdges.edge = cell2mat(cellfun( ...
+        @(edges) [edges.source, edges.target], ...
+        curTrees.edges, 'UniformOutput', false));
+    
    [~, curEdges.isRecalled] = ismember(curEdges.edge, curNodes.id);
-   
-    curNodes.ignore = any(curNodes.ignore(curEdges.isRecalled), 2);
+    curEdges.ignore = any(curNodes.ignore(curEdges.isRecalled), 2);
     curEdges.isRecalled = all(curNodes.isRecalled(curEdges.isRecalled), 2);
     
     % Check if trees indicate axon
