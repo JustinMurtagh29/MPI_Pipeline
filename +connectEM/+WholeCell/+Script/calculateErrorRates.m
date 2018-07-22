@@ -82,7 +82,7 @@ for curIdx = 1:numel(nmlFiles)
         @(n) numel(n.id), curTrees.nodes));
     curAxonSize = curTrees.id(curAxonSize);
     
-    curAxonId = [];
+    curAxonId = nan;
     if ~isempty(curAxonTreeName) && ~isempty(curAxonComment)
         assert(isequal(curAxonTreeName, curAxonComment));
         curAxonId = union(curAxonTreeName, curAxonComment);
@@ -122,21 +122,24 @@ for curIdx = 1:numel(nmlFiles)
     curNodes.ignore = any(curNodes.segIds < 0, 2);
     
     for curTreeIdx = 1:height(curTrees)
-        curTreeName = curTree.name{curTreeIdx};
-        curTreeIsAxon = curTree.isAxon(curTreeIdx);
+        curTreeName = curTrees.name{curTreeIdx};
+        curTreeIsAxon = curTrees.isAxon(curTreeIdx);
         
-        curTreeNodes = curTree.nodes{curTreeIdx}.id;
+        curTreeNodes = curTrees.nodes{curTreeIdx}.id;
        [~, curTreeNodes] = ismember(curTreeNodes, curNodes.id);
         curTreeNodes = curNodes(curTreeNodes, :);
-        
-        curTreeEdges = curTrees.edges{curTreeIdx};
-        curTreeEdges = [curTreeEdges.source, curTreeEdges.target];
-       [~, curTreeEdges] = ismember(curTreeEdges, curTreeNodes.id);
 
-        curTreeEdges.isRecalled = all( ...
-            curTreeNodes.isRecalled(curTreeEdges.edge), 2);
-        curTreeEdges.ignore = any( ...
-            curTreeNodes.ignore(curTreeEdges.edge), 2);
+        curTreeEdges = table;
+        curTreeEdges.edge = horzcat( ...
+            curTrees.edges{curTreeIdx}.source, ...
+            curTrees.edges{curTreeIdx}.target);
+       [~, curTreeEdges.edge] = ismember( ...
+            curTreeEdges.edge, curTreeNodes.id);
+
+        curTreeEdges.isRecalled = all(reshape( ...
+            curTreeNodes.isRecalled(curTreeEdges.edge), [], 2), 2);
+        curTreeEdges.ignore = any(reshape( ...
+            curTreeNodes.ignore(curTreeEdges.edge), [], 2), 2);
 
         curTreeEdgeLengths = ...
             curTreeNodes.coord(curTreeEdges.edge(:, 1), :) ...
@@ -150,7 +153,7 @@ for curIdx = 1:numel(nmlFiles)
         curTreeEdgeRecall(curTreeEdges.ignore) = 0;
         curTreeEdgeRecall = ...
             sum(curTreeEdgeRecall(curTreeEdges.isRecalled)) ...
-          / sum(curTreeEdgeRecall) %#ok
+          / sum(curTreeEdgeRecall);
         
         % Build output
         curTreeErrorData = errorData([]);
@@ -160,6 +163,7 @@ for curIdx = 1:numel(nmlFiles)
         curTreeErrorData(1).isAxon = curTreeIsAxon;
         curTreeErrorData(1).pathLength = curTreePathLength;
         curTreeErrorData(1).pathLengthRecalled = curTreeEdgeRecall;
+        errorData = cat(1, errorData, curTreeErrorData); %#ok
     end
 end
 
