@@ -46,6 +46,11 @@ nmlFiles = cellfun(@(nmlDir, nmlFiles) ...
     nmlDirs, nmlFiles, 'UniformOutput', false);
 nmlFiles = cat(1, nmlFiles{:});
 
+%% Prepare for debugging
+if ~isempty(debugDir)
+    mkdir(debugDir);
+end
+
 %% Calculate path length and errors
 errorData = cell(numel(nmlFiles), 1);
 parfor curIdx = 1:numel(nmlFiles)
