@@ -184,13 +184,12 @@ parfor curIdx = 1:numel(nmlFiles)
         
         % Generate debug NML file
         if ~isempty(curDebugSkel)
+            curDebugSkelBranchPointIds = curDebugSkel.largestID + ...
+                find(~curTreeNodes.ignore & ~curTreeNodes.isRecalled);
             curDebugSkel = curDebugSkel.addTree( ...
                 curTreeName, curTreeNodes.coord, curTreeEdges.edge);
             
             % Mark "missed" nodes as branch points
-            curDebugSkelNodeOff = curDebugSkel.numNodes();
-            curDebugSkelBranchPointIds = curDebugSkelNodeOff + ...
-                find(~curTreeNodes.ignore & ~curTreeNodes.isRecalled);
             curDebugSkel = ...
                 curDebugSkel.addBranchpoint(curDebugSkelBranchPointIds);
         end
