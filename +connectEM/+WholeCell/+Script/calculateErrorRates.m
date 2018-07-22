@@ -157,8 +157,8 @@ parfor curIdx = 1:numel(nmlFiles)
         curTreeErrorData.treeName = curTreeName;
         curTreeErrorData.isAxon = curTreeIsAxon;
         curTreeErrorData.pathLength = curTreePathLength;
-        curTreeErrorData.pathLengthValid = pathLengthValid;
-        curTreeErrorData.pathLengthRecalled = curTreeEdgeRecall;
+        curTreeErrorData.pathLengthValid = curTreePathLengthValid;
+        curTreeErrorData.pathLengthRecalled = curTreePathLengthRecalled;
         curErrorData{curTreeIdx} = curTreeErrorData;
     end
     
