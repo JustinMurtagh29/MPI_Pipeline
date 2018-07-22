@@ -63,6 +63,9 @@ for curIdx = 1:numel(nmlFiles)
     curTrees = NML.buildTreeTable(curNml);
     curComments = NML.buildCommentTable(curNml);
     
+    curNodes = NML.buildNodeTable(curNml);
+    curNodes.coord = curNodes.coord + 1;
+    
     
     % Check if trees indicate axon
     curAxonTreeName = curTrees.id(contains( ...
@@ -92,10 +95,6 @@ for curIdx = 1:numel(nmlFiles)
     curTrees.isAxon = curTrees.id == curAxonId;
     assert(sum(curTrees.isAxon) <= 1);
     
-    
-    % Prepare for overlap calculation
-    curNodes = NML.buildNodeTable(curNml);
-    curNodes.coord = curNodes.coord + 1;
     
     curNodes.segIds = ...
         Skeleton.getSegmentIdsOfNodes( ...
