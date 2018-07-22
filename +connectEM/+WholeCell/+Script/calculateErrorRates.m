@@ -113,6 +113,22 @@ parfor curIdx = 1:numel(nmlFiles)
     % Ignore nodes that are outside segmentation
     curNodes.ignore = any(curNodes.segIds < 0, 2);
     
+    
+    % Prepare debug skeleton
+    curDebugSkel = [];
+    if ~isempty(debugDir) && curWholeCellId ~= 0
+        curDebugSkel = skeleton();
+        curDebugSkel = Skeleton.setParams4Pipeline(curDebugSkel, param);
+        curDebugSkel = curDebugSkel.setDescription(sprintf( ...
+            '%s (%s)', info.filename, info.git_repos{1}.hash)); %#ok
+        
+        curDebugSkel = Superagglos.toSkel( ...
+            wholeCells(curWholeCellId), curDebugSkel); %#ok
+        curDebugSkel.names{end} = sprintf( ...
+            'Whole cell %d', curWholeCellId);
+    end
+    
+    
     curErrorData = cell(height(curTrees), 1);
     for curTreeIdx = 1:height(curTrees)
         curTreeName = curTrees.name{curTreeIdx};
@@ -160,6 +176,27 @@ parfor curIdx = 1:numel(nmlFiles)
         curTreeErrorData.pathLengthValid = curTreePathLengthValid;
         curTreeErrorData.pathLengthRecalled = curTreePathLengthRecalled;
         curErrorData{curTreeIdx} = curTreeErrorData;
+        
+        
+        % Generate debug NML file
+        if ~isempty(curDebugSkel)
+            curDebugSkelNodeOff = curDebugSkel.numNodes();
+            curDebugSkel = curDebugSkel.addTree( ...
+                curTreeName, curTreeNodes.coord, curTreeEdges.edge);
+            
+            % Mark "missed" nodes as branch points
+            curDebugSkel = curDebugSkel.addBranchpoint( ...
+                curDebugSkelNodeOff + find(~curTreeNodes.isRecalled));
+        end
+    end
+    
+    if ~isempty(curDebugSkel)
+       [~, curDebugSkelFileName] = fileparts(curNmlFile);
+        curNumDigits = ceil(log10(1 + numel(nmlFiles))); %#ok
+        
+        curDebugSkelFileName = fullfile(debugDir, sprintf( ...
+            '%0*d_%s.nml', curNumDigits, curIdx, curDebugSkelFileName));
+        curDebugSkel.write(curDebugSkelFileName);
     end
     
     curErrorData = vertcat(curErrorData{:});
