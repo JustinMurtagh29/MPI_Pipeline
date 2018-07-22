@@ -122,8 +122,8 @@ for curIdx = 1:numel(nmlFiles)
     curNodes.ignore = any(curNodes.segIds < 0, 2);
     
     for curTreeIdx = 1:height(curTrees)
-        curTreeName = curTree.name{curTreeId};
-        curTreeIsAxon = curTree.isAxon(curTreeId);
+        curTreeName = curTree.name{curTreeIdx};
+        curTreeIsAxon = curTree.isAxon(curTreeIdx);
         
         curTreeNodes = curTree.nodes{curTreeIdx}.id;
        [~, curTreeNodes] = ismember(curTreeNodes, curNodes.id);
