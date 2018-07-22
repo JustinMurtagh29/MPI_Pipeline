@@ -128,9 +128,8 @@ parfor curIdx = 1:numel(nmlFiles)
             '%s (%s)', info.filename, info.git_repos{1}.hash)); %#ok
         
         curDebugSkel = Superagglos.toSkel( ...
-            wholeCells(curWholeCellId), curDebugSkel); %#ok
-        curDebugSkel.names{end} = sprintf( ...
-            'Whole cell %d', curWholeCellId);
+            SuperAgglo.clean(wholeCells(curWholeCellId)), curDebugSkel); %#ok
+        curDebugSkel.names{end} = sprintf('Whole cell %d', curWholeCellId);
     end
     
     
