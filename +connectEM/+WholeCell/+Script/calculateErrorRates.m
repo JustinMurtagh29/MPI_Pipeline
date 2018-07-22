@@ -5,6 +5,10 @@ clear;
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 wholeCellFile = fullfile(rootDir, 'aggloState', 'wholeCells_GTAxon_08_v4.mat');
+outDir = '/tmpscratch/amotta/l4/2018-07-22-whole-cell-recall';
+
+debugDir = sprintf('%s_debug-skeletons', datestr(now, 30));
+debugDir = fullfile(outDir, debugDir);
 
 nmlDirs = ...
     connectEM.WholeCell.Data.getFile({ ...
@@ -42,10 +46,15 @@ nmlFiles = cellfun(@(nmlDir, nmlFiles) ...
     nmlDirs, nmlFiles, 'UniformOutput', false);
 nmlFiles = cat(1, nmlFiles{:});
 
-%% Calculate path length
+%% Calculate path length and errors
 wholeCellT = table;
 wholeCellT.axonLength = nan(size(nmlFiles(:)));
 wholeCellT.dendriteLength = nan(size(nmlFiles(:)));
+
+errorData = { ...
+    'nmlFile', 'cellId', 'treeName', ...
+    'isAxon', 'pathLength', 'pathLengthRecalled'};
+errorData = cell2struct(cell(0, numel(errorData)), errorData, 2);
 
 for curIdx = 1:numel(nmlFiles)
     curNmlFile = nmlFiles{curIdx};
@@ -54,46 +63,6 @@ for curIdx = 1:numel(nmlFiles)
     curTrees = NML.buildTreeTable(curNml);
     curComments = NML.buildCommentTable(curNml);
     
-    curNodes = NML.buildNodeTable(curNml);
-    curNodes.coord = curNodes.coord + 1;
-    
-    curNodes.segIds = ...
-        Skeleton.getSegmentIdsOfNodes( ...
-            param, curNodes.coord, 26);
-    
-    % Find whole cell agglomerate
-    curWholeCellId = curNodes.segIds(curNodes.segIds > 0);
-    curWholeCellId = mode(nonzeros(wholeCellLUT(curWholeCellId)));
-    
-    % Determine node recall
-    curWholeCellSegIds = wholeCellAgglos{curWholeCellId};
-    curNodes.isRecalled = any(ismember( ...
-        curNodes.segIds, curWholeCellSegIds), 2);
-    
-    % Ignore nodes that are outside segmentation
-    curNodes.ignore = any(curNodes.segIds < 0, 2);
-    
-    % Determine path recall
-    % TODO(amotta): Separate between axon and dendrite
-    curEdges = table;
-    curEdges.edge = cell2mat(cellfun( ...
-        @(edges) [edges.source, edges.target], ...
-        curTrees.edges, 'UniformOutput', false));
-   [~, curEdges.edge] = ismember(curEdges.edge, curNodes.id);
-   
-    curEdges.isRecalled = all(curNodes.isRecalled(curEdges.edge), 2);
-    curEdges.ignore = any(curNodes.ignore(curEdges.edge), 2);
-    
-    curEdgeRecall = ...
-        curNodes.coord(curEdges.edge(:, 1), :) ...
-      - curNodes.coord(curEdges.edge(:, 2), :);
-    curEdgeRecall = curEdgeRecall .* param.raw.voxelSize;
-    curEdgeRecall = sqrt(sum(curEdgeRecall .^ 2, 2));
-    
-    curEdgeRecall(curEdges.ignore) = 0;
-    curEdgeRecall = ...
-        sum(curEdgeRecall(curEdges.isRecalled)) ...
-      / sum(curEdgeRecall) %#ok
     
     % Check if trees indicate axon
     curAxonTreeName = curTrees.id(contains( ...
@@ -120,34 +89,79 @@ for curIdx = 1:numel(nmlFiles)
         curAxonId = curAxonSize;
     end
     
-   	curAxonId = find(curTrees.id == curAxonId);
-    assert(numel(curAxonId) <= 1);
+    curTrees.isAxon = curTrees.id == curAxonId;
+    assert(sum(curTrees.isAxon) <= 1);
     
-    curTrees.isAxon = false(height(curTrees), 1);
-    curTrees.isAxon(curAxonId) = true;
     
-    % Calculate path length
-    curTrees.edges = cellfun( ...
-        @(e) horzcat(e.source, e.target), ...
-        curTrees.edges, 'UniformOutput', false);
+    % Prepare for overlap calculation
+    curNodes = NML.buildNodeTable(curNml);
+    curNodes.coord = curNodes.coord + 1;
     
-    curTrees.pathLength = nan(height(curTrees), 1);
-    for curTreeIdx = 1:height(curTrees)
-        curEdges = curTrees.edges{curTreeIdx};
-       [~, curEdges] = ismember(curEdges, curNodes.id);
-        
-        curPathLength = ...
-            curNodes.coord(curEdges(:, 1), :) ...
-          - curNodes.coord(curEdges(:, 2), :);
-        curPathLength = curPathLength .* param.raw.voxelSize;
-        curPathLength = sum(sqrt(sum(curPathLength .^ 2, 2)));
-        curTrees.pathLength(curTreeIdx) = curPathLength;
+    curNodes.segIds = ...
+        Skeleton.getSegmentIdsOfNodes( ...
+            param, curNodes.coord, 26);
+    
+    % Find whole cell agglomerate
+    curWholeCellId = curNodes.segIds(curNodes.segIds > 0);
+    curWholeCellId = nonzeros(wholeCellLUT(curWholeCellId));
+    
+    if isempty(curWholeCellId)
+        % NOTE(amotta): This block is reached only if we've missed to
+        % reconstruct a whole cell... It's existence makes me sad.
+        curWholeCellId = 0;
+        curWholeCellSegIds = [];
+    else
+        curWholeCellId = mode(curWholeCellId);
+        curWholeCellSegIds = wholeCellAgglos{curWholeCellId};
     end
     
-    curTotalLength = sum(curTrees.pathLength);
-    curAxonLength = sum(curTrees.pathLength(curAxonId));
-    wholeCellT.axonLength(curIdx) = curAxonLength;
-    wholeCellT.dendriteLength(curIdx) = curTotalLength - curAxonLength;
+    % Determine node recall
+    curNodes.isRecalled = any(ismember( ...
+        curNodes.segIds, curWholeCellSegIds), 2);
+    
+    % Ignore nodes that are outside segmentation
+    curNodes.ignore = any(curNodes.segIds < 0, 2);
+    
+    for curTreeIdx = 1:height(curTrees)
+        curTreeName = curTree.name{curTreeId};
+        curTreeIsAxon = curTree.isAxon(curTreeId);
+        
+        curTreeNodes = curTree.nodes{curTreeIdx}.id;
+       [~, curTreeNodes] = ismember(curTreeNodes, curNodes.id);
+        curTreeNodes = curNodes(curTreeNodes, :);
+        
+        curTreeEdges = curTrees.edges{curTreeIdx};
+        curTreeEdges = [curTreeEdges.source, curTreeEdges.target];
+       [~, curTreeEdges] = ismember(curTreeEdges, curTreeNodes.id);
+
+        curTreeEdges.isRecalled = all( ...
+            curTreeNodes.isRecalled(curTreeEdges.edge), 2);
+        curTreeEdges.ignore = any( ...
+            curTreeNodes.ignore(curTreeEdges.edge), 2);
+
+        curTreeEdgeLengths = ...
+            curTreeNodes.coord(curTreeEdges.edge(:, 1), :) ...
+          - curTreeNodes.coord(curTreeEdges.edge(:, 2), :);
+        curTreeEdgeLengths = curTreeEdgeLengths .* param.raw.voxelSize;
+        curTreeEdgeLengths = sqrt(sum(curTreeEdgeLengths .^ 2, 2));
+        
+        curTreePathLength = sum(curTreeEdgeLengths);
+        
+        curTreeEdgeRecall = curTreeEdgeLengths;
+        curTreeEdgeRecall(curTreeEdges.ignore) = 0;
+        curTreeEdgeRecall = ...
+            sum(curTreeEdgeRecall(curTreeEdges.isRecalled)) ...
+          / sum(curTreeEdgeRecall) %#ok
+        
+        % Build output
+        curTreeErrorData = errorData([]);
+        curTreeErrorData(1).nmlFile = curNmlFile;
+        curTreeErrorData(1).cellId = curWholeCellId;
+        curTreeErrorData(1).treeName = curTreeName;
+        curTreeErrorData(1).isAxon = curTreeIsAxon;
+        curTreeErrorData(1).pathLength = curTreePathLength;
+        curTreeErrorData(1).pathLengthRecalled = curTreeEdgeRecall;
+    end
 end
 
 %% Total
