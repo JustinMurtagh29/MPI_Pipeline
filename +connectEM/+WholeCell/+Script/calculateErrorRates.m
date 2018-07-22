@@ -47,16 +47,8 @@ nmlFiles = cellfun(@(nmlDir, nmlFiles) ...
 nmlFiles = cat(1, nmlFiles{:});
 
 %% Calculate path length and errors
-wholeCellT = table;
-wholeCellT.axonLength = nan(size(nmlFiles(:)));
-wholeCellT.dendriteLength = nan(size(nmlFiles(:)));
-
-errorData = { ...
-    'nmlFile', 'cellId', 'treeName', ...
-    'isAxon', 'pathLength', 'pathLengthRecalled'};
-errorData = cell2struct(cell(0, numel(errorData)), errorData, 2);
-
-for curIdx = 1:numel(nmlFiles)
+errorData = cell(numel(nmlFiles), 1);
+parfor curIdx = 1:numel(nmlFiles)
     curNmlFile = nmlFiles{curIdx};
     curNml = slurpNml(curNmlFile);
     
@@ -102,7 +94,7 @@ for curIdx = 1:numel(nmlFiles)
     
     % Find whole cell agglomerate
     curWholeCellId = curNodes.segIds(curNodes.segIds > 0);
-    curWholeCellId = nonzeros(wholeCellLUT(curWholeCellId));
+    curWholeCellId = nonzeros(wholeCellLUT(curWholeCellId)); %#ok
     
     if isempty(curWholeCellId)
         % NOTE(amotta): This block is reached only if we've missed to
@@ -111,7 +103,7 @@ for curIdx = 1:numel(nmlFiles)
         curWholeCellSegIds = [];
     else
         curWholeCellId = mode(curWholeCellId);
-        curWholeCellSegIds = wholeCellAgglos{curWholeCellId};
+        curWholeCellSegIds = wholeCellAgglos{curWholeCellId}; %#ok
     end
     
     % Determine node recall
@@ -121,6 +113,7 @@ for curIdx = 1:numel(nmlFiles)
     % Ignore nodes that are outside segmentation
     curNodes.ignore = any(curNodes.segIds < 0, 2);
     
+    curErrorData = cell(height(curTrees), 1);
     for curTreeIdx = 1:height(curTrees)
         curTreeName = curTrees.name{curTreeIdx};
         curTreeIsAxon = curTrees.isAxon(curTreeIdx);
@@ -156,20 +149,18 @@ for curIdx = 1:numel(nmlFiles)
           / sum(curTreeEdgeRecall);
         
         % Build output
-        curTreeErrorData = errorData([]);
-        curTreeErrorData(1).nmlFile = curNmlFile;
-        curTreeErrorData(1).cellId = curWholeCellId;
-        curTreeErrorData(1).treeName = curTreeName;
-        curTreeErrorData(1).isAxon = curTreeIsAxon;
-        curTreeErrorData(1).pathLength = curTreePathLength;
-        curTreeErrorData(1).pathLengthRecalled = curTreeEdgeRecall;
-        errorData = cat(1, errorData, curTreeErrorData); %#ok
+        curTreeErrorData = struct;
+        curTreeErrorData.nmlFile = curNmlFile;
+        curTreeErrorData.cellId = curWholeCellId;
+        curTreeErrorData.treeName = curTreeName;
+        curTreeErrorData.isAxon = curTreeIsAxon;
+        curTreeErrorData.pathLength = curTreePathLength;
+        curTreeErrorData.pathLengthRecalled = curTreeEdgeRecall;
+        curErrorData{curTreeIdx} = curTreeErrorData;
     end
+    
+    curErrorData = vertcat(curErrorData{:});
 end
 
-%% Total
-totalAxonLengthMm = sum(wholeCellT.axonLength) / 1E6;
-totalDendriteLengthMm = sum(wholeCellT.dendriteLength) / 1E6;
-
-fprintf('Total axonal path length: %.2f mm\n', totalAxonLengthMm);
-fprintf('Total dendritic path length: %.2f mm\n', totalDendriteLengthMm);
+errorData = vertcat(errorData{:});
+errorData = struct2table(errorData);
