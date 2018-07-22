@@ -160,6 +160,7 @@ parfor curIdx = 1:numel(nmlFiles)
     end
     
     curErrorData = vertcat(curErrorData{:});
+    errorData{curIdx} = curErrorData;
 end
 
 errorData = vertcat(errorData{:});
