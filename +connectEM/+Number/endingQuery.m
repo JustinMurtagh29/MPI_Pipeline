@@ -147,7 +147,7 @@ function [lenNm, timeMs] = forNmlFile(path, voxelSize)
     % we're only counting edges below 10 µm. Since flight mode nodes are
     % automatically placed at a regular (sub-micron) spatial interval, this
     % heuristic should be fair.
-    lenNm(pathLen >= 10E3) = 0;
+    lenNm(lenNm >= 10E3) = 0;
     lenNm = sum(lenNm);
 end
 
