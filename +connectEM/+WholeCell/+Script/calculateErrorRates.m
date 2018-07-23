@@ -233,7 +233,9 @@ out.errorData = errorData;
 
 outFile = sprintf('%s_error-data.mat', runId);
 outFile = fullfile(outDir, outFile);
+
 Util.saveStruct(outFile, out);
+Util.protect(outFile);
 
 %% Evaluation
 numTracings = numel(nmlFiles) %#ok
