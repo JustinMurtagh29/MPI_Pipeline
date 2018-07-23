@@ -4,7 +4,7 @@ clear;
 
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-nmlEvalFile = '/tmpscratch/amotta/l4/2018-05-08-ending-query-evaluation/axon-state_60.mat';
+nmlEvalFile = '/tmpscratch/amotta/l4/2018-05-08-ending-query-evaluation/axon-state_60_v2.mat';
 
 % See https://gitlab.mpcdf.mpg.de/connectomics/pipeline/blob/c3e5dacf542e71c452b9b8d7e3fe5f63bd5b8e0c/+connectEM/setQueryState.m
 axonsBeforeQueryFile = fullfile(rootDir, 'aggloState', 'axons_04.mat');
@@ -20,7 +20,9 @@ numFiveUmAxonFragments = sum(axonsBeforeQuery.indBigAxons) %#ok
 if ~exist(nmlEvalFile, 'file')
     %% Loading data
     param = load(fullfile(rootDir, 'allParameter.mat'));
+    
     param = param.p;
+    voxelSize = param.raw.voxelSize;
 
     %% Find nml Files
     Util.log('Finding NML files');
@@ -38,24 +40,21 @@ if ~exist(nmlEvalFile, 'file')
     %% Processing
     Util.log('Processing NML files');
 
-    nmlT = table;
-    nmlT.filePath = nmlFiles;
-    nmlT.pathLenNm = nan(height(nmlT), 1);
-    nmlT.timeMs = nan(height(nmlT), 1);
+    nmlT = {'filePath', 'error', 'pathLenNm', 'timeMs'};
+    nmlT = cell2struct(cell(numel(nmlFiles), numel(nmlT)), nmlT, 2);
 
-    tic;
-    for curIdx = 1:height(nmlT)
-        curFilePath = nmlT.filePath{curIdx};
+    parfor curIdx = 1:numel(nmlT)
+        curFilePath = nmlT(curIdx).filePath;
 
         try
-           [nmlT.pathLenNm(curIdx), nmlT.timeMs(curIdx)] = ...
-                forNmlFile(curFilePath, param.raw.voxelSize);
-        catch
-            warning('Error in %s', curFilePath);
+           [nmlT(curIdx).pathLenNm, nmlT(curIdx).timeMs] = ...
+                forNmlFile(curFilePath, voxelSize);
+        catch processingError
+            nmlT(curIdx).error = processingError;
         end
-
-        Util.progressBar(curIdx, height(nmlT));
     end
+    
+    nmlT = struct2table(nmlT, 'AsArray', true);
 
     %% Save result
     out = struct;
