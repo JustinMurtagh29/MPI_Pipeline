@@ -116,8 +116,17 @@ function [lenNm, timeMs] = forNmlFile(path, voxelSize)
     nodes = NML.buildNodeTable(nml);
     nodes.coord = nodes.coord .* voxelSize;
     
-    timeMs = sort(nodes.time);
-    timeMs = timeMs(end) - timeMs(2);
+    % NOTE(amotta): Estimate time spent on this particular tracing. If
+    % there are periods of inactivity that are 60 seconds or longer, they
+    % are considered as separators between separate tracing sessions, and
+    % temporarily pause the timer.
+    %     Here, we're only considering flight mode tracings, where nodes
+    % are automatically placed at a fixed (spatial) interval. A typical
+    % inter-node interval is ~1 second. The above threshold should thus be
+    % relatively robust.
+    timeMs = diff(sort(nodes.time));
+    timeMs(timeMs >= 60E3) = 0;
+    timeMs = sum(timeMs);
     
     lenNm = cell2mat(cellfun( ...
         @(e) horzcat(e.source, e.target), ...
@@ -125,10 +134,19 @@ function [lenNm, timeMs] = forNmlFile(path, voxelSize)
    [~, lenNm] = ismember(lenNm, nodes.id);
    
     lenNm = ...
-        nodes.coord(lenNm(:, 1)) ...
-      - nodes.coord(lenNm(:, 2));
-    lenNm = sum(lenNm .* lenNm, 2);
-    lenNm = sum(sqrt(lenNm));
+        nodes.coord(lenNm(:, 1), :) ...
+      - nodes.coord(lenNm(:, 2), :);
+    lenNm = sqrt(sum(lenNm .* lenNm, 2));
+    
+    % NOTE(amotta): For a period of time there was a bug in webKNOSSOS'
+    % dynamic task switching, which occasionally introduced an edge when
+    % the user was teleported to the location of the next task.
+    %   To prevent this bug from influencing that path length measurement,
+    % we're only counting edges below 10 µm. Since flight mode nodes are
+    % automatically placed at a regular (sub-micron) spatial interval, this
+    % heuristic should be fair.
+    lenNm(pathLen >= 10E3) = 0;
+    lenNm = sum(lenNm);
 end
 
 function plotData(ax, name, unit, values, binEdges)
