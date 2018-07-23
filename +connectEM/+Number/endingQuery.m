@@ -4,7 +4,8 @@ clear;
 
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-nmlEvalFile = '/tmpscratch/amotta/l4/2018-05-08-ending-query-evaluation/axon-state_60_v2.mat';
+skelDir = '/tmpscratch/amotta/l4/2018-07-23-ending-query-evaluation/nml-files';
+nmlEvalFile = '/tmpscratch/amotta/l4/2018-07-23-ending-query-evaluation/all-ending-queries_v1.mat';
 
 % See https://gitlab.mpcdf.mpg.de/connectomics/pipeline/blob/c3e5dacf542e71c452b9b8d7e3fe5f63bd5b8e0c/+connectEM/setQueryState.m
 axonsBeforeQueryFile = fullfile(rootDir, 'aggloState', 'axons_04.mat');
@@ -26,9 +27,11 @@ if ~exist(nmlEvalFile, 'file')
 
     %% Find nml Files
     Util.log('Finding NML files');
-
-    skelDirs = connectEM.setQueryState('6.0');
-    skelDirs = fullfile('/gaba', reshape(skelDirs, [], 1));
+    
+    skelDirs = dir(skelDir);
+    skelDirs = {skelDirs([skelDirs.isdir]).name};
+    skelDirs(startsWith(skelDirs, '.')) = [];
+    skelDirs = reshape(skelDirs, [], 1);
 
     nmlFiles = cellfun( ...
         @(skelDir) dir(fullfile(skelDir, '*.nml')), ...
