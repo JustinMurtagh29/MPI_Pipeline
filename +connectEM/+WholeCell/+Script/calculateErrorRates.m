@@ -49,7 +49,7 @@ nmlFiles = cellfun(@(nmlDir, nmlFiles) ...
 nmlFiles = cat(1, nmlFiles{:});
 
 %% Prepare for debugging
-if ~exist('debugDir', 'dir')
+if ~exist(debugDir, 'dir')
     mkdir(debugDir);
 else
     % Write skeletons only once
