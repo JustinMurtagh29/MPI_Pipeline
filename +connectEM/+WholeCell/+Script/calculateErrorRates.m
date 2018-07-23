@@ -5,9 +5,11 @@ clear;
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 wholeCellFile = fullfile(rootDir, 'aggloState', 'wholeCells_GTAxon_08_v4.mat');
-outDir = '/tmpscratch/amotta/l4/2018-07-22-whole-cell-recall';
 
-debugDir = sprintf('%s_debug-skeletons', datestr(now, 30));
+outDir = '/tmpscratch/amotta/l4/2018-07-22-whole-cell-recall';
+runId = '20180723T161109';
+
+debugDir = sprintf('%s_debug-skeletons', runId);
 debugDir = fullfile(outDir, debugDir);
 
 nmlDirs = ...
@@ -47,8 +49,11 @@ nmlFiles = cellfun(@(nmlDir, nmlFiles) ...
 nmlFiles = cat(1, nmlFiles{:});
 
 %% Prepare for debugging
-if ~isempty(debugDir)
+if ~exist('debugDir', 'dir')
     mkdir(debugDir);
+else
+    % Write skeletons only once
+    debugDir = [];
 end
 
 %% Calculate path length and errors
