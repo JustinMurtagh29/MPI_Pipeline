@@ -31,6 +31,7 @@ if ~exist(nmlEvalFile, 'file')
     skelDirs = dir(skelDir);
     skelDirs = {skelDirs([skelDirs.isdir]).name};
     skelDirs(startsWith(skelDirs, '.')) = [];
+    skelDirs = fullfile(skelDir, skelDirs);
     skelDirs = reshape(skelDirs, [], 1);
 
     nmlFiles = cellfun( ...
