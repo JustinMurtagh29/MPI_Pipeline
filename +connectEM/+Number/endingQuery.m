@@ -42,6 +42,7 @@ if ~exist(nmlEvalFile, 'file')
 
     nmlT = {'filePath', 'error', 'pathLenNm', 'timeMs'};
     nmlT = cell2struct(cell(numel(nmlFiles), numel(nmlT)), nmlT, 2);
+   [nmlT.filePath] = deal(nmlFiles{:});
 
     parfor curIdx = 1:numel(nmlT)
         curFilePath = nmlT(curIdx).filePath;
@@ -51,6 +52,8 @@ if ~exist(nmlEvalFile, 'file')
                 forNmlFile(curFilePath, voxelSize);
         catch processingError
             nmlT(curIdx).error = processingError;
+            nmlT(curIdx).pathLenNm = nan;
+            nmlT(curIdx).timeMs = nan;
         end
     end
     
