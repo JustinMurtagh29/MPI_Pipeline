@@ -227,6 +227,14 @@ end
 errorData = vertcat(errorData{:});
 errorData = struct2table(errorData);
 
+out = struct;
+out.info = info;
+out.errorData = errorData;
+
+outFile = sprintf('%s_error-data.mat', runId);
+outFile = fullfile(outDir, outFile);
+Util.saveStruct(outFile, out);
+
 %% Evaluation
 numTracings = numel(nmlFiles) %#ok
 tracingsWithoutWholeCell = unique( ...
