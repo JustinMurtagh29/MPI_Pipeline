@@ -122,6 +122,24 @@ fprintf( ...
     'Flight speed: %g ± %g µm / s (median = %g)\n', ...
     mean(nmlT.speed), std(nmlT.speed), median(nmlT.speed));
 
+% Per-project evaluation
+[~, nmlT.projectName] = cellfun( ...
+    @(path) fileparts(fileparts(path)), ...
+    nmlT.filePath, 'UniformOutput', false);
+
+projectT = table;
+[projectT.name, ~, uniRows] = unique(nmlT.projectName);
+projectT.taskCount = accumarray(uniRows, 1);
+projectT.totalTimeH = accumarray(uniRows, nmlT.time) / 3600;
+projectT.timePerTaskS = 3600 * projectT.totalTimeH ./ projectT.taskCount;
+
+fprintf('\n');
+disp(projectT)
+
+fprintf('\n');
+fprintf('Total number of tasks: %d\n', height(nmlT));
+fprintf('Total number of work hours: %g h\n', sum(nmlT.time) / 3600);
+
 %% Utility
 function [lenNm, timeMs] = forNmlFile(path, voxelSize)
     nml = slurpNml(path);
