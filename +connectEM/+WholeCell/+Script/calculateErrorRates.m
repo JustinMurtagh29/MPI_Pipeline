@@ -238,7 +238,7 @@ Util.saveStruct(outFile, out);
 Util.protect(outFile);
 
 %% Evaluation
-numTracings = numel(nmlFiles) %#ok
+numTracings = numel(unique(errorData.nmlFile)) %#ok
 tracingsWithoutWholeCell = unique( ...
     errorData.nmlFile(~errorData.cellId)) %#ok
 wholeCellsWithoutTracing = setdiff( ...
@@ -267,3 +267,17 @@ totalDendriteLengthRecalledMm = sum( ...
     errorData.pathLengthRecalled(~errorData.isAxon)) / 1E6 %#ok
 totalDendriteRecall = ...
     totalDendriteLengthRecalledMm / totalDendriteLengthValidMm %#ok
+
+%% Debug recall
+clear cur*;
+curIsAxon = false;
+
+curData = errorData;
+curData(curData.isAxon ~= curIsAxon, :) = [];
+
+curData.missedPathLength = ...
+    curData.pathLengthValid - curData.pathLengthRecalled;
+curData = sortrows(curData, 'missedPathLength', 'descend');
+
+fprintf('\n');
+disp(curData);
