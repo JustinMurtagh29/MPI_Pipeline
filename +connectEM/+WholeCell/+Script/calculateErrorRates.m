@@ -7,7 +7,7 @@ rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 wholeCellFile = fullfile(rootDir, 'aggloState', 'wholeCells_GTAxon_08_v4.mat');
 
 outDir = '/tmpscratch/amotta/l4/2018-07-22-whole-cell-recall';
-runId = '20180723T161109';
+runId = '20180724T165252';
 
 debugDir = sprintf('%s_debug-skeletons', runId);
 debugDir = fullfile(outDir, debugDir);
