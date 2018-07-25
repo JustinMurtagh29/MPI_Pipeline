@@ -102,61 +102,80 @@ end
 %% Generate NML files
 clear cur*;
 
-skel = skeleton();
-skel = Skeleton.setParams4Pipeline(skel, param);
+if ~isempty(outputDir)
+    skel = skeleton();
+    skel = Skeleton.setParams4Pipeline(skel, param);
 
-skelDesc = sprintf('%s (%s)', mfilename, info.git_repos{1}.hash);
-skel = skel.setDescription(skelDesc);
+    skelDesc = sprintf('%s (%s)', mfilename, info.git_repos{1}.hash);
+    skel = skel.setDescription(skelDesc);
 
-for curConfig = exportConfigs
-    rng(0);
-    randIds = curConfig.pairIds;
-    randIds = randIds(randperm(numel(randIds)));
-    randIds = randIds(1:50);
-    
-    curOutputDir = fullfile(outputDir, curConfig.name);
-    if ~exist(curOutputDir, 'dir'); mkdir(curOutputDir); end
+    for curConfig = exportConfigs
+        rng(0);
+        randIds = curConfig.pairIds;
+        randIds = randIds(randperm(numel(randIds)));
+        randIds = randIds(1:50);
 
-    for curIdx = 1:numel(randIds)
-        curId = randIds(curIdx);
-        curAxonId = pairT.preAggloId(curId);
-        curDendId = pairT.postAggloId(curId);
-        curSynIds = pairT.synIds(curId, :);
+        curOutputDir = fullfile(outputDir, curConfig.name);
+        if ~exist(curOutputDir, 'dir'); mkdir(curOutputDir); end
 
-        curAxon = conn.axons{curAxonId};
-        curDend = conn.dendrites{curDendId};
+        for curIdx = 1:numel(randIds)
+            curId = randIds(curIdx);
+            curAxonId = pairT.preAggloId(curId);
+            curDendId = pairT.postAggloId(curId);
+            curSynIds = pairT.synIds(curId, :);
 
-        curSyns = syn.synapses(curSynIds, :);
-        curSyns = cellfun( ...
-            @(pre, post) unique(cat(1, pre, post)), ...
-            curSyns.presynId, curSyns.postsynId, ...
-            'UniformOutput', false);
+            curAxon = conn.axons{curAxonId};
+            curDend = conn.dendrites{curDendId};
 
-        curSkel = skel;
-        curSkel = Skeleton.fromMST(points(curAxon, :), voxelSize, curSkel);
-        curSkel.names{end} = sprintf('Axon %d', curAxonId);
-        curSkel.colors{end} = [1, 0, 0, 1];
+            curSyns = syn.synapses(curSynIds, :);
+            curSyns = cellfun( ...
+                @(pre, post) unique(cat(1, pre, post)), ...
+                curSyns.presynId, curSyns.postsynId, ...
+                'UniformOutput', false);
 
-        curSkel = Skeleton.fromMST(points(curDend, :), voxelSize, curSkel);
-        curSkel.names{end} = sprintf('Dendrite %d', curDendId);
-        curSkel.colors{end} = [0, 0, 1, 1];
+            curSkel = skel;
+            curSkel = Skeleton.fromMST( ...
+                points(curAxon, :), voxelSize, curSkel);
+            curSkel.names{end} = sprintf('Axon %d', curAxonId);
+            curSkel.colors{end} = [1, 0, 0, 1];
 
-        curSkel = Skeleton.fromMST( ...
-            cellfun( ...
-                @(ids) points(ids, :), curSyns, ...
-                'UniformOutput', false), ...
-            param.raw.voxelSize, curSkel);
+            curSkel = Skeleton.fromMST( ...
+                    points(curDend, :), voxelSize, curSkel);
+            curSkel.names{end} = sprintf('Dendrite %d', curDendId);
+            curSkel.colors{end} = [0, 0, 1, 1];
 
-        curMask = cat(1, false(2, 1), true(numel(curSynIds), 1));
-        curSkel.names(curMask) = arrayfun( ...
-            @(id) sprintf('Synapse %d', id), ...
-            curSynIds, 'UniformOutput', false);
-        curSkel.colors(curMask) = {[0, 1, 0, 1]};
+            curSkel = Skeleton.fromMST( ...
+                cellfun( ...
+                    @(ids) points(ids, :), curSyns, ...
+                    'UniformOutput', false), ...
+                param.raw.voxelSize, curSkel);
 
-        curSkelFile = sprintf( ...
-            '%0*d_axon-%d_dendrite_%d.nml', ...
-            ceil(log10(1 + numel(randIds))), ...
-            curIdx, curAxonId, curDendId);
-        curSkel.write(fullfile(curOutputDir, curSkelFile));
+            curMask = cat(1, false(2, 1), true(numel(curSynIds), 1));
+            curSkel.names(curMask) = arrayfun( ...
+                @(id) sprintf('Synapse %d', id), ...
+                curSynIds, 'UniformOutput', false);
+            curSkel.colors(curMask) = {[0, 1, 0, 1]};
+
+            curSkelFile = sprintf( ...
+                '%0*d_axon-%d_dendrite_%d.nml', ...
+                ceil(log10(1 + numel(randIds))), ...
+                curIdx, curAxonId, curDendId);
+            curSkel.write(fullfile(curOutputDir, curSkelFile));
+        end
     end
+end
+
+%% Look at potential distance-dependent effects
+clear cur*;
+for curConfig = exportConfigs
+    curSynT = asiT;
+    curSynToSyn = synToSyn;
+    
+    curPairConfig = struct;
+    curPairConfig.title = curConfig.name;
+   [~, curPairConfig.synIdPairs] = ismember( ...
+       pairT.synIds(curConfig.pairIds, :), asiT.id);
+    
+    connectEM.Consistency.plotVariabilityVsDistance( ...
+        curSynT, curSynToSyn, curPairConfig, 'maxDistUm', 50);
 end
