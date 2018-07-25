@@ -165,6 +165,23 @@ parfor curIdx = 1:numel(nmlFiles)
         curTreeEdges.length = curTreeEdges.length .* param.raw.voxelSize;
         curTreeEdges.length = sqrt(sum(curTreeEdges.length .^ 2, 2));
         
+        % NOTE(amotta): To determine the number of splits, we determine the
+        % number of non-recalled connected components above a certain size
+        % threshold.
+        curGraph = ~(curTreeEdges.isRecalled | curTreeEdges.ignore);
+        curGraph = graph( ...
+            curTree.edges(curGraph, 1), curTree.edges(curGraph, 2), ...
+            curTree.length(curGraph), height(curTreeNodes));
+        curGraphComps = graph.conncomp();
+        
+        curGraphCompIds = unique(curGraph.Edges.EndNodes(:));
+        curGraphCompIds = unique(curGraphComps(curGraphCompIds));
+        
+        curGraphCompLengths = arrayfun(@(id) ...
+            sum(curGraph.subgraph(curGraphComps == id).Edges.Weight), ...
+            curGraphCompIds);
+        curNumSplits = sum(curGraphCompLengths >= 5E3);
+        
         curTreePathLength = sum( ...
             curTreeEdges.length);
         curTreePathLengthValid = sum( ...
