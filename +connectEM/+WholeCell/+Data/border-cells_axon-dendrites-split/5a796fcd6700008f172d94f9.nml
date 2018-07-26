@@ -1,4 +1,9 @@
 <things>
+  <meta name="writer" content="NmlWriter.scala" />
+  <meta name="writerGitCommit" content="265a9da58d61fc963ce4db2e99336efc899e9e35" />
+  <meta name="timestamp" content="1532597928152" />
+  <meta name="annotationId" content="5b59968f2900006c014a16ac" />
+  <meta name="username" content="Alessandro Motta" />
   <parameters>
     <experiment name="2012-09-28_ex145_07x2_ROI2017" description="" />
     <scale x="11.4" y="11.4" z="28.0" />
@@ -9,7 +14,7 @@
     <zoomLevel zoom="1.1273569999999844" />
     <activeNode id="6" />
   </parameters>
-  <thing id="2" color.r="0.0" color.g="0.0" color.b="1.0" color.a="1.0" name="explorative_2018-03-02_Raphael_Jakoby_002">
+  <thing id="2" color.r="0.0" color.g="0.0" color.b="1.0" color.a="1.0" name="Dendrite">
     <nodes>
       <node id="1083" radius="120.0" x="1182" y="4165" z="2773" rotX="150.9837635279099" rotY="303.05016856090936" rotZ="111.22871183360647" inVp="4" inMag="0" bitDepth="4" interpolation="true" time="1511006526936" />
       <node id="2141" radius="120.0" x="2883" y="5224" z="1832" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="4" interpolation="true" time="1511007190196" />
@@ -4460,7 +4465,7 @@
       <edge source="1736" target="1737" />
     </edges>
   </thing>
-  <thing id="1" color.r="1.0" color.g="0.0" color.b="0.0" color.a="1.0" name="task_5a0b045b3300004902c53512_Hanaa_Charif_001">
+  <thing id="1" color.r="1.0" color.g="0.0" color.b="0.0" color.a="1.0" name="Axon">
     <nodes>
       <node id="8" radius="120.0" x="5404" y="5829" z="3338" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="4" interpolation="true" time="1511003145955" />
       <node id="11" radius="120.0" x="5584" y="5833" z="3321" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="1" bitDepth="4" interpolation="true" time="1511003153106" />
@@ -4479,7 +4484,8 @@
   </thing>
   <branchpoints />
   <comments>
-    <comment node="1" content="dendrite" />
-    <comment node="6" content="axon" />
+    <comment node="1" content="soma" />
+    <comment node="6" content="soma" />
   </comments>
+  <groups />
 </things>

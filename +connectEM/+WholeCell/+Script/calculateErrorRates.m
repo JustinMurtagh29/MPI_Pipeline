@@ -7,7 +7,7 @@ rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 wholeCellFile = fullfile(rootDir, 'aggloState', 'wholeCells_GTAxon_08_v4.mat');
 
 outDir = '/tmpscratch/amotta/l4/2018-07-22-whole-cell-recall';
-runId = '20180724T165252';
+runId = '20180726T150513';
 
 debugDir = sprintf('%s_debug-skeletons', runId);
 debugDir = fullfile(outDir, debugDir);
@@ -16,6 +16,9 @@ nmlDirs = ...
     connectEM.WholeCell.Data.getFile({ ...
         'border-cells_axon-dendrites-split', ...
         'center-cells_axon-dendrites-split'});
+
+splitMinLenNm = 5000;
+splitBoxMarginNm = 5000;
 
 segParam = struct;
 segParam.root = '/tmpscratch/amotta/l4/2012-09-28_ex145_07x2_ROI2017/segmentation/1';
@@ -39,6 +42,10 @@ wholeCells = wholeCells.wholeCells;
 wholeCellAgglos = Agglo.fromSuperAgglo(wholeCells);
 wholeCellLUT = Agglo.buildLUT(maxSegId, wholeCellAgglos);
 
+% Only count splits if they enter this bounding box
+splitBox = round(splitBoxMarginNm ./ param.raw.voxelSize);
+splitBox = param.bbox + [+1, -1] .* splitBox(:);
+
 %% Find NML files
 nmlFiles = cellfun(@(nmlDir) ...
     dir(fullfile(nmlDir, '*.nml')), ...
@@ -60,6 +67,8 @@ end
 errorData = cell(numel(nmlFiles), 1);
 parfor curIdx = 1:numel(nmlFiles)
     curNmlFile = nmlFiles{curIdx};
+    
+    try
     curNml = slurpNml(curNmlFile);
     
     curTrees = NML.buildTreeTable(curNml);
@@ -68,35 +77,14 @@ parfor curIdx = 1:numel(nmlFiles)
     curNodes = NML.buildNodeTable(curNml);
     curNodes.coord = curNodes.coord + 1;
     
+    % Validate tree names and find axon
+    assert(all(ismember(curTrees.name, {'Axon', 'Dendrite'})));
+    curTrees.isAxon = strcmpi(curTrees.name, 'Axon');
     
-    % Check if trees indicate axon
-    curAxonTreeName = curTrees.id(contains( ...
-        curTrees.name, 'axon', 'IgnoreCase', true));
-    
-    % Check if comments indicate axon
-    curAxonComment = curComments.node(contains( ...
-        curComments.comment, 'axon', 'IgnoreCase', true));
-	curAxonComment = unique(curNodes.treeId( ...
-        ismember(curNodes.id, curAxonComment)));
-    
-    % Find smallest tree
-   [~, curAxonSize] = min(cellfun( ...
-        @(n) numel(n.id), curTrees.nodes));
-    curAxonSize = curTrees.id(curAxonSize);
-    
-    curAxonId = nan;
-    if ~isempty(curAxonTreeName) && ~isempty(curAxonComment)
-        assert(isequal(curAxonTreeName, curAxonComment));
-        curAxonId = union(curAxonTreeName, curAxonComment);
-    elseif ~isempty(curAxonTreeName) || ~isempty(curAxonComment)
-        curAxonId = union(curAxonTreeName, curAxonComment);
-    elseif height(curTrees) > 1
-        curAxonId = curAxonSize;
-    end
-    
-    curTrees.isAxon = curTrees.id == curAxonId;
-    assert(sum(curTrees.isAxon) <= 1);
-    
+    % Find soma nodes
+    curNodes.isSoma(:) = false;
+   [~, curRowIds] = ismember(curComments.node, curNodes.id);
+    curNodes.isSoma(curRowIds) = strcmpi(curComments.comment, 'soma');
     
     curNodes.segIds = ...
         Skeleton.getSegmentIdsOfNodes( ...
@@ -146,6 +134,9 @@ parfor curIdx = 1:numel(nmlFiles)
         curTreeNodes = curTrees.nodes{curTreeIdx}.id;
        [~, curTreeNodes] = ismember(curTreeNodes, curNodes.id);
         curTreeNodes = curNodes(curTreeNodes, :);
+        
+        curTreeSomaNodeId = find(curTreeNodes.isSoma);
+        assert(isscalar(curTreeSomaNodeId));
 
         curTreeEdges = table;
         curTreeEdges.edge = horzcat( ...
@@ -165,6 +156,61 @@ parfor curIdx = 1:numel(nmlFiles)
         curTreeEdges.length = curTreeEdges.length .* param.raw.voxelSize;
         curTreeEdges.length = sqrt(sum(curTreeEdges.length .^ 2, 2));
         
+        
+        % NOTE(amotta): To determine the number of splits, we count the
+        % number of non-recalled connected components above a certain size
+        % threshold. The size threshold aims to discard FP split detections
+        % in, e.g., sporadically missed segments in mitochondria.
+        %   Since nuclei are not part of the whole cells, the
+        % "soma" node placed in the center of the soma / nucleus is treated
+        % separately.
+        %   Furthermore, we only count missed segments that reach at least
+        % 5 µm into the dataset as splits. This is the criterion used by
+        % MB, when he detected open endings.
+        curGraph = ~( ...
+            curTreeEdges.isRecalled ...
+          | curTreeEdges.ignore);
+        curGraph = graph( ...
+            curTreeEdges.edge(curGraph, 1), ...
+            curTreeEdges.edge(curGraph, 2), ...
+            curTreeEdges.length(curGraph), ...
+            height(curTreeNodes));
+        
+        curGraphComps = curGraph.conncomp();
+        curGraphCompIds = unique(curGraph.Edges.EndNodes(:));
+        curGraphCompIds = unique(curGraphComps(curGraphCompIds));
+        
+        curGraphCompLengths = @(id) sum( ...
+            curGraph.subgraph(curGraphComps == id).Edges.Weight);
+        curGraphCompNodes = @(var, id) ...
+            curTreeNodes.(var)(curGraphComps == id, :);
+        curGraphCompIsSoma = @(id) any(curGraphCompNodes('isSoma', id));
+        curGraphCompIsInBox = @(id) any( ...
+            all(curGraphCompNodes('coord', id) >= splitBox(:, 1)', 2) ...
+          & all(curGraphCompNodes('coord', id) <= splitBox(:, 2)', 2)); %#ok
+        
+        curGraphCompIsSplit = arrayfun(@(id) ...
+            curGraphCompLengths(id) >= splitMinLenNm ...
+          & not(curGraphCompIsSoma(id)) ...
+          & curGraphCompIsInBox(id), ...
+            curGraphCompIds);
+        
+        % Find nodes corresponding to splits
+        curNodeSomaDists = graph( ...
+            curTreeEdges.edge(:, 1), curTreeEdges.edge(:, 2), ...
+            curTreeEdges.length, height(curTreeNodes));
+        curNodeSomaDists = curNodeSomaDists.distances(curTreeSomaNodeId);
+        
+        curFirst = @(ids) ids(1);
+        curSplitNodes = @(ids) curFirst( ...
+            Util.sortBy(ids, curNodeSomaDists(ids), 'ascend'));
+        curSplitNodes = arrayfun( ...
+            @(id) curSplitNodes(find(curGraphComps == id)), ...
+            curGraphCompIds(curGraphCompIsSplit)); %#ok
+        
+        curSplitCount = sum(curGraphCompIsSplit);
+        
+        
         curTreePathLength = sum( ...
             curTreeEdges.length);
         curTreePathLengthValid = sum( ...
@@ -175,6 +221,7 @@ parfor curIdx = 1:numel(nmlFiles)
                 ~curTreeEdges.ignore ...
                & curTreeEdges.isRecalled));
         
+        
         % Build output
         curTreeErrorData = struct;
         curTreeErrorData.nmlFile = curNmlFile;
@@ -184,6 +231,7 @@ parfor curIdx = 1:numel(nmlFiles)
         curTreeErrorData.pathLength = curTreePathLength;
         curTreeErrorData.pathLengthValid = curTreePathLengthValid;
         curTreeErrorData.pathLengthRecalled = curTreePathLengthRecalled;
+        curTreeErrorData.splitCount = curSplitCount;
         curErrorData{curTreeIdx} = curTreeErrorData;
         
         
@@ -191,6 +239,9 @@ parfor curIdx = 1:numel(nmlFiles)
         if ~isempty(curDebugSkel)
             curDebugSkelBranchPointIds = curDebugSkel.largestID + ...
                 find(~curTreeNodes.ignore & ~curTreeNodes.isRecalled);
+            
+            curDebugSkelComments = repelem({''}, height(curTreeNodes), 1);
+            curDebugSkelComments(curSplitNodes) = {'Split'};
             
             curNeuriteType = {'Dendrite', 'Axon'};
             curNeuriteType = curNeuriteType{1 + curTreeIsAxon};
@@ -200,9 +251,8 @@ parfor curIdx = 1:numel(nmlFiles)
                 curTreeIdx, curTreeName, curNeuriteType);
             
             curDebugSkel = curDebugSkel.addTree( ...
-                curDebugSkelTreeName, ...
-                curTreeNodes.coord, ...
-                curTreeEdges.edge);
+                curDebugSkelTreeName, curTreeNodes.coord, ...
+                curTreeEdges.edge, [], [], curDebugSkelComments);
             
             % Mark "missed" nodes as branch points
             curDebugSkel = ...
@@ -222,6 +272,10 @@ parfor curIdx = 1:numel(nmlFiles)
     
     curErrorData = vertcat(curErrorData{:});
     errorData{curIdx} = curErrorData;
+    
+    catch
+        error('Error in %s', curNmlFile);
+    end
 end
 
 errorData = vertcat(errorData{:});

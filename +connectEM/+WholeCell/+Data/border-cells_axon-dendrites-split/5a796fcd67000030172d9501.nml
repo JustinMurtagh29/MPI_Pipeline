@@ -1,15 +1,20 @@
 <things>
+  <meta name="writer" content="NmlWriter.scala" />
+  <meta name="writerGitCommit" content="265a9da58d61fc963ce4db2e99336efc899e9e35" />
+  <meta name="timestamp" content="1532598322235" />
+  <meta name="annotationId" content="5b5998122900005d014a1726" />
+  <meta name="username" content="Alessandro Motta" />
   <parameters>
     <experiment name="2012-09-28_ex145_07x2_ROI2017" description="" />
     <scale x="11.4" y="11.4" z="28.0" />
     <offset x="0" y="0" z="0" />
     <time ms="1517908191217" />
-    <editPosition x="1441" y="806" z="3093" />
-    <editRotation xRot="174.01232373897722" yRot="328.6725634450031" zRot="179.50608071260453" />
-    <zoomLevel zoom="0.7009877989627836" />
-    <activeNode id="36" />
+    <editPosition x="3295" y="609" z="3411" />
+    <editRotation xRot="0.0" yRot="0.0" zRot="0.0" />
+    <zoomLevel zoom="2.4199999999999973" />
+    <activeNode id="1" />
   </parameters>
-  <thing id="1" color.r="1.0" color.g="0.0" color.b="0.0" color.a="1.0" name="task_5a0b045b3300004802c534fe_Jannik_Winkelmeier_001">
+  <thing id="1" color.r="1.0" color.g="0.0" color.b="0.0" color.a="1.0" name="Dendrite">
     <nodes>
       <node id="690" radius="120.0" x="375" y="888" z="2000" rotX="197.54050839588615" rotY="322.13905125199165" rotZ="190.581842610661" inVp="4" inMag="0" bitDepth="4" interpolation="true" time="1512421553188" />
       <node id="1595" radius="120.0" x="3537" y="3759" z="1638" rotX="309.7265522605632" rotY="48.65304562395397" rotZ="18.92443543341568" inVp="4" inMag="0" bitDepth="4" interpolation="true" time="1512422408054" />
@@ -4763,5 +4768,7 @@
   <branchpoints />
   <comments>
     <comment node="36" content="dendrite" />
+    <comment node="1" content="soma" />
   </comments>
+  <groups />
 </things>

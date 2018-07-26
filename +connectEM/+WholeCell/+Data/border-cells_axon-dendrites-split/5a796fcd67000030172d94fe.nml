@@ -1,4 +1,9 @@
 <things>
+  <meta name="writer" content="NmlWriter.scala" />
+  <meta name="writerGitCommit" content="265a9da58d61fc963ce4db2e99336efc899e9e35" />
+  <meta name="timestamp" content="1532598282427" />
+  <meta name="annotationId" content="5b5997fc29000070014a171f" />
+  <meta name="username" content="Alessandro Motta" />
   <parameters>
     <experiment name="2012-09-28_ex145_07x2_ROI2017" description="" />
     <scale x="11.4" y="11.4" z="28.0" />
@@ -9,7 +14,7 @@
     <zoomLevel zoom="1.128947860107552" />
     <activeNode id="1" />
   </parameters>
-  <thing id="1" color.r="1.0" color.g="0.0" color.b="0.0" color.a="1.0" name="task_5a0b045b330000f501c53500_Nagihan_Aydin_001">
+  <thing id="1" color.r="1.0" color.g="0.0" color.b="0.0" color.a="1.0" name="Dendrite">
     <nodes>
       <node id="4971" radius="120.0" x="5182" y="4181" z="1590" rotX="88.3400460629561" rotY="5.184310713455943" rotZ="355.3931639852029" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1512071015265" />
       <node id="4667" radius="120.0" x="2263" y="2143" z="1828" rotX="41.06782438921073" rotY="26.801620773671004" rotZ="47.09860785085124" inVp="4" inMag="0" bitDepth="4" interpolation="false" time="1512070608813" />
@@ -16992,6 +16997,7 @@
   </thing>
   <branchpoints />
   <comments>
-    <comment node="1" content="dendrite" />
+    <comment node="1" content="soma" />
   </comments>
+  <groups />
 </things>
