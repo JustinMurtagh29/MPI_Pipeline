@@ -156,9 +156,16 @@ parfor curIdx = 1:numel(nmlFiles)
         curTreeEdges.length = sqrt(sum(curTreeEdges.length .^ 2, 2));
         
         
-        % NOTE(amotta): To determine the number of splits, we determine the
+        % NOTE(amotta): To determine the number of splits, we count the
         % number of non-recalled connected components above a certain size
-        % threshold.
+        % threshold. The size threshold aims to discard FP split detections
+        % in, e.g., sporadically missed segments in mitochondria.
+        %   Since nuclei are not part of the whole cells, the
+        % "soma" node placed in the center of the soma / nucleus is treated
+        % separately.
+        %   Furthermore, we only count missed segments that reach at least
+        % 5 µm into the dataset as splits. This is the criterion used by
+        % MB, when he detected open endings.
         curGraph = ~( ...
             curTreeEdges.isRecalled ...
           | curTreeEdges.ignore);
@@ -187,8 +194,6 @@ parfor curIdx = 1:numel(nmlFiles)
           & curGraphCompIsInBox(id), ...
             curGraphCompIds);
         
-        curNumSplits = sum(curGraphCompIsSplit);
-        
         % Find nodes corresponding to splits
         curNodeSomaDists = graph( ...
             curTreeEdges.edge(:, 1), curTreeEdges.edge(:, 2), ...
@@ -202,6 +207,9 @@ parfor curIdx = 1:numel(nmlFiles)
             @(id) curSplitNodes(find(curGraphComps == id)), ...
             curGraphCompIds(curGraphCompIsSplit)); %#ok
         
+        curSplitCount = sum(curGraphCompIsSplit);
+        
+        
         curTreePathLength = sum( ...
             curTreeEdges.length);
         curTreePathLengthValid = sum( ...
@@ -212,6 +220,7 @@ parfor curIdx = 1:numel(nmlFiles)
                 ~curTreeEdges.ignore ...
                & curTreeEdges.isRecalled));
         
+        
         % Build output
         curTreeErrorData = struct;
         curTreeErrorData.nmlFile = curNmlFile;
@@ -221,6 +230,7 @@ parfor curIdx = 1:numel(nmlFiles)
         curTreeErrorData.pathLength = curTreePathLength;
         curTreeErrorData.pathLengthValid = curTreePathLengthValid;
         curTreeErrorData.pathLengthRecalled = curTreePathLengthRecalled;
+        curTreeErrorData.splitCount = curSplitCount;
         curErrorData{curTreeIdx} = curTreeErrorData;
         
         
