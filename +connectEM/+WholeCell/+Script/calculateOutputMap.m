@@ -92,7 +92,7 @@ parfor curIdx = 1:numel(nmlFiles)
         strcmpi(curSomaNodeIds.comment, 'soma'));
     
     curNodes.isSoma = ismember(curNodes.id, curSomaNodeIds);
-    curSomaNodeId = curNodes.id(curNodes.isSoma);
+    curSomaNodeId = find(curNodes.isSoma);
     assert(isscalar(curSomaNodeId));
     
     curEdges = table;
