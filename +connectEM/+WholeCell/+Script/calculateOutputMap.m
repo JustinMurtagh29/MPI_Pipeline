@@ -79,7 +79,7 @@ parfor curIdx = 1:numel(nmlFiles)
     assert(all(ismember(curTree.name, {'Axon', 'Dendrite'})));
     curTree = curTree(strcmpi(curTree.name, 'Axon'), :);
     
-    if isempty(curTrees); continue; end
+    if isempty(curTree); continue; end
     assert(height(curTree) == 1);
     
     curNodes = NML.buildNodeTable(curNml);
