@@ -133,6 +133,9 @@ parfor curIdx = 1:numel(nmlFiles)
         curTreeNodes = curTrees.nodes{curTreeIdx}.id;
        [~, curTreeNodes] = ismember(curTreeNodes, curNodes.id);
         curTreeNodes = curNodes(curTreeNodes, :);
+        
+        curTreeSomaNodeId = find(curTreeNodes.isSoma);
+        assert(isscalar(curTreeSomaNodeId));
 
         curTreeEdges = table;
         curTreeEdges.edge = horzcat( ...
@@ -186,6 +189,18 @@ parfor curIdx = 1:numel(nmlFiles)
         
         curNumSplits = sum(curGraphCompIsSplit);
         
+        % Find nodes corresponding to splits
+        curNodeSomaDists = graph( ...
+            curTreeEdges.edge(:, 1), curTreeEdges.edge(:, 2), ...
+            curTreeEdges.length, height(curTreeNodes));
+        curNodeSomaDists = curNodeSomaDists.distances(curTreeSomaNodeId);
+        
+        curFirst = @(ids) ids(1);
+        curSplitNodes = @(ids) curFirst( ...
+            Util.sortBy(ids, curNodeSomaDists(ids), 'ascend'));
+        curSplitNodes = arrayfun( ...
+            @(id) curSplitNodes(find(curGraphComps == id)), ...
+            curGraphCompIds(curGraphCompIsSplit)); %#ok
         
         curTreePathLength = sum( ...
             curTreeEdges.length);
@@ -214,6 +229,9 @@ parfor curIdx = 1:numel(nmlFiles)
             curDebugSkelBranchPointIds = curDebugSkel.largestID + ...
                 find(~curTreeNodes.ignore & ~curTreeNodes.isRecalled);
             
+            curDebugSkelComments = repelem({''}, height(curTreeNodes), 1);
+            curDebugSkelComments(curSplitNodes) = {'Split'};
+            
             curNeuriteType = {'Dendrite', 'Axon'};
             curNeuriteType = curNeuriteType{1 + curTreeIsAxon};
             curDebugSkelTreeName = sprintf( ...
@@ -222,9 +240,8 @@ parfor curIdx = 1:numel(nmlFiles)
                 curTreeIdx, curTreeName, curNeuriteType);
             
             curDebugSkel = curDebugSkel.addTree( ...
-                curDebugSkelTreeName, ...
-                curTreeNodes.coord, ...
-                curTreeEdges.edge);
+                curDebugSkelTreeName, curTreeNodes.coord, ...
+                curTreeEdges.edge, [], [], curDebugSkelComments);
             
             % Mark "missed" nodes as branch points
             curDebugSkel = ...
