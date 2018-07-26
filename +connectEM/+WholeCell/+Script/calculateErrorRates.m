@@ -17,6 +17,9 @@ nmlDirs = ...
         'border-cells_axon-dendrites-split', ...
         'center-cells_axon-dendrites-split'});
 
+splitMinLenNm = 5000;
+splitBoxMarginNm = 5000;
+
 segParam = struct;
 segParam.root = '/tmpscratch/amotta/l4/2012-09-28_ex145_07x2_ROI2017/segmentation/1';
 segParam.backend = 'wkwrap';
@@ -38,6 +41,10 @@ wholeCells = wholeCells.wholeCells;
 
 wholeCellAgglos = Agglo.fromSuperAgglo(wholeCells);
 wholeCellLUT = Agglo.buildLUT(maxSegId, wholeCellAgglos);
+
+% Only count splits if they enter this bounding box
+splitBox = round(splitBoxMarginNm ./ param.raw.voxelSize);
+splitBox = param.bbox + [+1, -1] .* splitBox(:);
 
 %% Find NML files
 nmlFiles = cellfun(@(nmlDir) ...
@@ -145,6 +152,7 @@ parfor curIdx = 1:numel(nmlFiles)
         curTreeEdges.length = curTreeEdges.length .* param.raw.voxelSize;
         curTreeEdges.length = sqrt(sum(curTreeEdges.length .^ 2, 2));
         
+        
         % NOTE(amotta): To determine the number of splits, we determine the
         % number of non-recalled connected components above a certain size
         % threshold.
@@ -163,15 +171,20 @@ parfor curIdx = 1:numel(nmlFiles)
         
         curGraphCompLengths = @(id) sum( ...
             curGraph.subgraph(curGraphComps == id).Edges.Weight);
-        curGraphCompIsSoma = @(id) any( ...
-            curTreeNodes.isSoma(curGraphComps == id));
+        curGraphCompNodes = @(id) curTreeNodes(curGraphComps == id, :);
+        curGraphCompIsSoma = @(id) any(curGraphCompNodes(id).isSoma);
+        curGraphCompIsInBox = @(is) any( ...
+            all(curGraphCompNodes(id).coord >= splitBox(:, 1)', 2) ...
+          & all(curGraphCompNodes(id).coord <= splitBox(:, 2)', 2));
         
         curGraphCompIsSplit = arrayfun(@(id) ...
-            curGraphCompLengths(id) >= 5E3 ...
-          & not(curGraphCompIsSoma(id)), ...
+            curGraphCompLengths(id) >= splitMinLenNm ...
+          & not(curGraphCompIsSoma(id) ...
+          & curGraphCompIsInBox(id)), ...
             curGraphCompIds);
         
         curNumSplits = sum(curGraphCompIsSplit);
+        
         
         curTreePathLength = sum( ...
             curTreeEdges.length);
