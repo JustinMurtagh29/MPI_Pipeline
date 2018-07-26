@@ -68,35 +68,15 @@ parfor curIdx = 1:numel(nmlFiles)
     curNodes = NML.buildNodeTable(curNml);
     curNodes.coord = curNodes.coord + 1;
     
+    % Validate tree names and find axon
+    assert(all(ismember(curTrees.name, {'Axon', 'Dendrite'})));
+    curTrees.isAxon = strcmpi(curTrees.name, 'Axon');
     
-    % Check if trees indicate axon
-    curAxonTreeName = curTrees.id(contains( ...
-        curTrees.name, 'axon', 'IgnoreCase', true));
-    
-    % Check if comments indicate axon
-    curAxonComment = curComments.node(contains( ...
-        curComments.comment, 'axon', 'IgnoreCase', true));
-	curAxonComment = unique(curNodes.treeId( ...
-        ismember(curNodes.id, curAxonComment)));
-    
-    % Find smallest tree
-   [~, curAxonSize] = min(cellfun( ...
-        @(n) numel(n.id), curTrees.nodes));
-    curAxonSize = curTrees.id(curAxonSize);
-    
-    curAxonId = nan;
-    if ~isempty(curAxonTreeName) && ~isempty(curAxonComment)
-        assert(isequal(curAxonTreeName, curAxonComment));
-        curAxonId = union(curAxonTreeName, curAxonComment);
-    elseif ~isempty(curAxonTreeName) || ~isempty(curAxonComment)
-        curAxonId = union(curAxonTreeName, curAxonComment);
-    elseif height(curTrees) > 1
-        curAxonId = curAxonSize;
-    end
-    
-    curTrees.isAxon = curTrees.id == curAxonId;
-    assert(sum(curTrees.isAxon) <= 1);
-    
+    % Find soma nodes
+    curNodes.isSoma(:) = false;
+   [~, curRowIds] = ismember(curComments.node, curNodes.id);
+    curNodes.isSoma(curRowIds) = strcmpi(curComments.comment, 'soma');
+    clear curRowIds;
     
     curNodes.segIds = ...
         Skeleton.getSegmentIdsOfNodes( ...
