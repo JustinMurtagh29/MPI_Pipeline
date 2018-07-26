@@ -67,6 +67,8 @@ end
 errorData = cell(numel(nmlFiles), 1);
 parfor curIdx = 1:numel(nmlFiles)
     curNmlFile = nmlFiles{curIdx};
+    
+    try
     curNml = slurpNml(curNmlFile);
     
     curTrees = NML.buildTreeTable(curNml);
@@ -270,6 +272,10 @@ parfor curIdx = 1:numel(nmlFiles)
     
     curErrorData = vertcat(curErrorData{:});
     errorData{curIdx} = curErrorData;
+    
+    catch
+        error('Error in %s', curNmlFile);
+    end
 end
 
 errorData = vertcat(errorData{:});
