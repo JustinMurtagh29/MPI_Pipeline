@@ -54,7 +54,7 @@ curPlotData = reshape(curPlotData, 1, []);
 
 curNumDigits = ceil(log10(1 + numel(curPlotData)));
 
-for curIdx = numel(curPlotData)
+for curIdx = 1:numel(curPlotData)
     curAxonData = curPlotData(curIdx);
     curSynapses = curAxonData.synapses;
     if isempty(curSynapses); continue; end
