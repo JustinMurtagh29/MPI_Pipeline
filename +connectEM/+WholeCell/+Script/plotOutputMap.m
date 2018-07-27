@@ -8,6 +8,9 @@ outputMapFile = '/tmpscratch/amotta/l4/2018-07-26-tracing-based-output-maps/2018
 
 binSizeUm = 20;
 
+% Set output directory to save PNG and EPS files of plots
+outputDir = '';
+
 info = Util.runInfo();
 Util.showRunInfo(info);
 
@@ -49,7 +52,10 @@ clear cur*;
 curPlotData = cat(1, axonData(:), grandAvgAxon);
 curPlotData = reshape(curPlotData, 1, []);
 
-for curAxonData = curPlotData
+curNumDigits = ceil(log10(1 + numel(curPlotData)));
+
+for curIdx = numel(curPlotData)
+    curAxonData = curPlotData(curIdx);
     curSynapses = curAxonData.synapses;
     if isempty(curSynapses); continue; end
     
@@ -85,4 +91,13 @@ for curAxonData = curPlotData
         info.filename; info.git_repos{1}.hash; ...
         sprintf('Axon %s', curAxonName)}, ...
         'FontWeight', 'normal', 'FontSize', 10);
+    
+    if ~isempty(outputDir)
+        curFigFileName = strrep(curAxonName, ' ', '-');
+        curFigFileName = fullfile(outputDir, sprintf( ...
+            '%0*d_%s', curNumDigits, curIdx, curFigFileName));
+        
+        export_fig('-r172', strcat(curFigFileName, '.png'), curFig);
+        export_fig('-r172', strcat(curFigFileName, '.eps'), curFig);
+    end
 end
