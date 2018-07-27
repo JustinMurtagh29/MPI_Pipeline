@@ -5,7 +5,7 @@ clear;
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 wholeCellFile = fullfile(rootDir, 'aggloState', 'wholeCells_GTAxon_08_v4.mat');
-connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-partiallySplit-v2_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v8-classified.mat');
+dendriteFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v3.mat');
 
 probThresh = 0.75;
 
@@ -37,18 +37,20 @@ clear borderAreas;
 
 maxSegId = Seg.Global.getMaxSegId(param);
 segPoints = Seg.Global.getSegToPointMap(param);
-conn = connectEM.Connectome.load(param, connFile);
 
-dendrites = load(conn.info.param.dendriteFile);
-dendrites = dendrites.dendrites(conn.denMeta.parentId);
+dendrites = load(dendriteFile);
+
+dendriteIds = find( ...
+    dendrites.indBigDends ...
+ & ~dendrites.indWholeCells ...
+ & ~dendrites.indAIS);
+
+dendrites = dendrites.dendrites;
+dendAgglos = Agglo.fromSuperAgglo(dendrites);
+dendLUT = Agglo.buildLUT(maxSegId, dendAgglos(dendriteIds), dendriteIds);
 
 wholeCells = load(wholeCellFile);
 wholeCells = wholeCells.wholeCells;
-
-validDendAggloIds = find(~ismember( ...
-    conn.denMeta.targetClass, {'Somata', 'WholeCell'}));
-dendLUT = Agglo.buildLUT( ...
-    maxSegId, conn.dendrites(validDendAggloIds), validDendAggloIds);
 
 %% Generate skeletons for annotation
 clear cur*;
@@ -71,7 +73,7 @@ for curCellId = 1:numel(wholeCells)
     curNeighT.dendId = curNeighDendIds(:);
     curNeighT.edgeIds = arrayfun( ...
         @(id) curGraph.id(any(ismember( ...
-            curGraph.edges, conn.dendrites{id}), 2)), ...
+            curGraph.edges, dendAgglos{id}), 2)), ...
         curNeighDendIds, 'UniformOutput', false);
 
     curNeighT.meanEdgeProb = cellfun(@(ids) ...
