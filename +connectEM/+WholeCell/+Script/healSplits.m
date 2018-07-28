@@ -55,7 +55,9 @@ wholeCells = wholeCells.wholeCells;
 
 %% Generate skeletons for annotation
 clear cur*;
-wholeCellsNew = wholeCells;
+
+wholeCellsPost = struct('nodes', [], 'edges', []);
+
 for curCellId = 1:numel(wholeCells)
     % Find and load annotations from previous rounds
     curNmlFiles = sprintf('whole-cell-%d_run-*.nml', curCellId);
@@ -106,7 +108,7 @@ for curCellId = 1:numel(wholeCells)
     end
     
     % Generate next round of annotations
-    wholeCellsNew(curCellId) = curWholeCell;
+    wholeCellsPost(curCellId) = curWholeCell;
     curSegIds = Agglo.fromSuperAgglo(curWholeCell);
     curLUT = logical(Agglo.buildLUT(maxSegId, {curSegIds}));
 
@@ -181,7 +183,7 @@ end
 %% Export current state of whole cells
 out = struct;
 out.info = info;
-out.wholeCells = wholeCellsNew;
+out.wholeCells = wholeCellsPost;
 
 outFile = fullfile(outputDir, ...
     sprintf('%s_whole-cells.mat', runId));
