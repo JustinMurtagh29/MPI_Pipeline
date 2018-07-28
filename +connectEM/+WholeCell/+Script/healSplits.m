@@ -181,6 +181,14 @@ for curCellId = 1:numel(wholeCells)
 end
 
 %% Export current state of whole cells
+clear cur*;
+
+% Mark axonal nodes as such
+curAxonMasks = arrayfun(@(pre, post) ismember( ...
+    post.nodes(:, end), pre.nodes(pre.axon, end)), ...
+    wholeCells, wholeCellsPost, 'UniformOutput', false);
+[wholeCellsPost.axon] = deal(curAxonMasks{:});
+
 out = struct;
 out.info = info;
 out.wholeCells = wholeCellsPost;
