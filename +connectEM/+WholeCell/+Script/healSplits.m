@@ -89,7 +89,10 @@ for curCellId = 1:numel(wholeCells)
     curAnnT.edgeId = cellfun(@str2double, curAnnT.edgeId);
     curAnnT.merge = strcmpi(curAnnT.tag, 'yes');
     
-    curWholeCell = SuperAgglo.clean(wholeCells(curCellId));
+    curWholeCell = wholeCells(curCellId);
+    curWholeCell = rmfield(curWholeCell, setdiff( ...
+        fieldnames(curWholeCell), fieldnames(wholeCellsPost)));
+    curWholeCell = SuperAgglo.clean(curWholeCell);
     
     for curIdx = 1:height(curAnnT)
         if ~curAnnT.merge(curIdx); continue; end
