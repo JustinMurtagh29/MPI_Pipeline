@@ -51,12 +51,13 @@ dendAgglos = Agglo.fromSuperAgglo(dendrites);
 dendLUT = Agglo.buildLUT(maxSegId, dendAgglos(dendriteIds), dendriteIds);
 
 wholeCells = load(wholeCellFile);
-wholeCells = wholeCells.wholeCells;
+wholeCells = wholeCells.wholeCells(:);
 
 %% Generate skeletons for annotation
 clear cur*;
 
-wholeCellsPost = struct('nodes', [], 'edges', []);
+wholeCellsPost = struct( ...
+    'nodes', [], 'edges', []);
 
 for curCellId = 1:numel(wholeCells)
     % Find and load annotations from previous rounds
@@ -185,10 +186,11 @@ end
 
 %% Export current state of whole cells
 clear cur*;
+wholeCellsPost = wholeCellsPost(:);
 
 % Mark axonal nodes as such
 curAxonMasks = arrayfun(@(pre, post) ismember( ...
-    post.nodes(:, end), pre.nodes(pre.axon, end)), ...
+    post.nodes(:, end), pre.nodes(pre.axon > 0, end)), ...
     wholeCells, wholeCellsPost, 'UniformOutput', false);
 [wholeCellsPost.axon] = deal(curAxonMasks{:});
 
