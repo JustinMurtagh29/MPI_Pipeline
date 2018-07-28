@@ -7,8 +7,9 @@ rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 wholeCellFile = fullfile(rootDir, 'aggloState', 'wholeCells_GTAxon_08_v4.mat');
 dendriteFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v3.mat');
 
-probThresh = 0.90;
+probThresh = 0.75;
 
+annotationDir = connectEM.WholeCell.Data.getFile('split-resolution');
 outputDir = '';
 runId = datestr(now, 30);
 
@@ -55,9 +56,56 @@ wholeCells = wholeCells.wholeCells;
 %% Generate skeletons for annotation
 clear cur*;
 for curCellId = 1:numel(wholeCells)
+    % Find and load annotations from previous rounds
+    curNmlFiles = sprintf('whole-cell-%d_run-*.nml', curCellId);
+    curNmlFiles = dir(fullfile(annotationDir, curNmlFiles));
+    curNmlFiles = {curNmlFiles(~[curNmlFiles.isdir]).name};
+    
+    curAnnT = {'dendId', 'edgeId', 'tag'};
+    curAnnT = table({}, {}, {}, 'VariableNames', curAnnT);
+    
+    for curIdx = 1:numel(curNmlFiles)
+        curNmlFile = curNmlFiles{curIdx};
+        curNmlFile = fullfile(annotationDir, curNmlFile);
+        curNml = slurpNml(curNmlFile);
+        
+        % Find annotated dendrite agglomerates
+        curNmlAnnT = [ ...
+            'Dendrite (?<dendId>\d+)\. ', ...
+            'Edge (?<edgeId>\d+) ', ...
+            '.*\((?<tag>\w+)\)$'];
+        curNmlAnnT = regexpi( ...
+            curNml.things.name, curNmlAnnT, 'names', 'once');
+        curNmlAnnT(cellfun(@isempty, curNmlAnnT)) = [];
+        curNmlAnnT = struct2table(cat(1, curNmlAnnT{:}));
+        
+        curAnnT = cat(1, curAnnT, curNmlAnnT);
+    end
+    
+    curAnnT.dendId = cellfun(@str2double, curAnnT.dendId);
+    curAnnT.edgeId = cellfun(@str2double, curAnnT.edgeId);
+    curAnnT.merge = strcmpi(curAnnT.tag, 'yes');
+    
     curWholeCell = SuperAgglo.clean(wholeCells(curCellId));
     
-    curSegIds = Agglo.fromSuperAgglo(wholeCells(curCellId));
+    for curIdx = 1:height(curAnnT)
+        if ~curAnnT.merge(curIdx); continue; end
+        
+        % Patch dendrite agglomerate into whole cell
+        curDend = dendrites(curAnnT.dendId(curIdx));
+        curEdge = double(graph.edges(curAnnT.edgeId(curIdx), :));
+        
+       [curMask, curNodeId] = ismember(curEdge, curDend.nodes(:, end));
+       
+        curDend.nodes = cat(1, curDend.nodes, [ ...
+            segPoints(curEdge(~curMask), :), curEdge(~curMask)]);
+        curDend.edges = cat(1, curDend.edges, ...
+            [curNodeId(curMask), size(curDend.nodes, 1)]);
+        curWholeCell = SuperAgglo.merge(curWholeCell, curDend);
+    end
+    
+    % Find neighbouring dendrite agglomerates
+    curSegIds = Agglo.fromSuperAgglo(curWholeCell);
     curLUT = logical(Agglo.buildLUT(maxSegId, {curSegIds}));
 
     curGraph = graph;
@@ -68,6 +116,7 @@ for curCellId = 1:numel(wholeCells)
 
     curNeighDendIds = curGraph.edges(~curGraph.cellMask);
     curNeighDendIds = setdiff(dendLUT(curNeighDendIds), 0);
+    curNeighDendIds = setdiff(curNeighDendIds, curAnnT.dendId);
 
     curNeighT = table;
     curNeighT.dendId = curNeighDendIds(:);
@@ -85,7 +134,7 @@ for curCellId = 1:numel(wholeCells)
 
     curNeighT.maxEdgeId = cellfun(@(ids) first( ...
         Util.sortBy(ids, graph.prob(ids), 'descend')), curNeighT.edgeIds);
-
+    
     curSkel = skeleton();
     curSkel = Skeleton.setParams4Pipeline(curSkel, param);
     curSkel = curSkel.setDescription(sprintf( ...
