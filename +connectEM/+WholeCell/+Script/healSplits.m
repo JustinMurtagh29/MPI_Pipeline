@@ -7,7 +7,7 @@ rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 wholeCellFile = fullfile(rootDir, 'aggloState', 'wholeCells_GTAxon_08_v4.mat');
 dendriteFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v3.mat');
 
-probThresh = 0.75;
+probThresh = 0.90;
 
 outputDir = '';
 runId = datestr(now, 30);
