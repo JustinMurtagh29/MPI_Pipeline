@@ -4,9 +4,9 @@ clear;
 
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-wholeCellFile = fullfile(rootDir, 'aggloState', 'wholeCells_GTAxon_08_v4.mat');
+wholeCellFile = fullfile(rootDir, 'aggloState', 'wholeCells_GTAxon_08_v4_splitHealed_v1.mat');
 
-outDir = '/tmpscratch/amotta/l4/2018-07-22-whole-cell-recall';
+outDir = '/tmpscratch/amotta/l4/2018-07-28-whole-cell-recall';
 runId = '20180726T150513';
 
 debugDir = sprintf('%s_debug-skeletons', runId);
