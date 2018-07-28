@@ -55,6 +55,7 @@ wholeCells = wholeCells.wholeCells;
 
 %% Generate skeletons for annotation
 clear cur*;
+wholeCellsNew = wholeCells;
 for curCellId = 1:numel(wholeCells)
     % Find and load annotations from previous rounds
     curNmlFiles = sprintf('whole-cell-%d_run-*.nml', curCellId);
@@ -104,7 +105,8 @@ for curCellId = 1:numel(wholeCells)
         curWholeCell = SuperAgglo.merge(curWholeCell, curDend);
     end
     
-    % Find neighbouring dendrite agglomerates
+    % Generate next round of annotations
+    wholeCellsNew(curCellId) = curWholeCell;
     curSegIds = Agglo.fromSuperAgglo(curWholeCell);
     curLUT = logical(Agglo.buildLUT(maxSegId, {curSegIds}));
 
@@ -175,3 +177,12 @@ for curCellId = 1:numel(wholeCells)
         'whole-cell-%d_run-%s.nml', curCellId, runId));
     curSkel.write(curSkelFileName);
 end
+
+%% Export current state of whole cells
+out = struct;
+out.info = info;
+out.wholeCells = wholeCellsNew;
+
+outFile = fullfile(outputDir, ...
+    sprintf('%s_whole-cells.mat', runId));
+Util.saveStruct(outFile, out);
