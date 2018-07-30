@@ -18,6 +18,20 @@ function [axonClasses, conn] = buildAxonClasses(conn, varargin)
     tcCandIds = find( ...
         conn.axonMeta.fullPriSpineSynDens ...
       > opts.minSpineSynDensTc);
+  
+    % For the source of these logistic regression parameters, see
+    % connectEM.Axon.Script.detectThalamocorticals
+    % 1f5d888c36ed0776851732be1cf36aafa6953b3b
+    tcLogRegFeatNames = { ...
+        'fullPriSpineSynDens', 'fullPriSpinesPerBouton', ...
+        'fullPriSpinesMultiHitFrac', 'medianBoutonVol'};
+    tcLogRegWeights = [0.356965; 1.664203; 0.725779; 0.829174];
+    tcLogRegBias = -3.093222;
+    
+    tcProb = table2array(conn.axonMeta(:, tcLogRegFeatNames));
+    tcProb = tcProb * tcLogRegWeights + tcLogRegBias;
+    tcProb = 1 ./ (1 + exp(-tcProb));
+    conn.axonMeta.tcProb = tcProb;
 
     % Excitatory axons
     axonClasses = struct;
