@@ -41,7 +41,7 @@ for curTcProbThresh = 0.4:0.1:0.9
     axonClasses(end).nullAxonIds = axonClasses(end).axonIds;
 end
 
-for curTcProbThresh = 0.1:0.1:0.6
+for curTcProbThresh = 0.2:0.1:0.6
     curTcAxonIds = find(conn.axonMeta.tcProb > curTcProbThresh);
 
     axonClasses(end + 1).axonIds = setdiff( ...
