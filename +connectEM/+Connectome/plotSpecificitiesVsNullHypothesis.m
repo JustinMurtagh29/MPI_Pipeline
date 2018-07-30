@@ -28,7 +28,7 @@ classConnectome = ...
     connectEM.Connectome.buildClassConnectome( ...
         conn, 'targetClasses', targetClasses);
     
-%% only analyse excitatory and inhibitory axons
+%% synthesize debug axon classes
 clear cur*;
 for curTcProbThresh = 0.4:0.1:0.9
     curTcAxonIds = find(conn.axonMeta.tcProb > curTcProbThresh);
@@ -37,6 +37,17 @@ for curTcProbThresh = 0.4:0.1:0.9
         axonClasses(1).axonIds, curTcAxonIds); %#ok
     axonClasses(end).title = sprintf( ...
         'Axons with TC probability > %g (n = %d)', ...
+        curTcProbThresh, numel(axonClasses(end).axonIds));
+    axonClasses(end).nullAxonIds = axonClasses(end).axonIds;
+end
+
+for curTcProbThresh = 0.1:0.1:0.6
+    curTcAxonIds = find(conn.axonMeta.tcProb > curTcProbThresh);
+
+    axonClasses(end + 1).axonIds = setdiff( ...
+        axonClasses(1).axonIds, curTcAxonIds); %#ok
+    axonClasses(end).title = sprintf( ...
+        'Axons with TC probability ≤ %g (n = %d)', ...
         curTcProbThresh, numel(axonClasses(end).axonIds));
     axonClasses(end).nullAxonIds = axonClasses(end).axonIds;
 end
