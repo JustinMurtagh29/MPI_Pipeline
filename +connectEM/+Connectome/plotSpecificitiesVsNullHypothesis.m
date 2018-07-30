@@ -29,7 +29,17 @@ classConnectome = ...
         conn, 'targetClasses', targetClasses);
     
 %% only analyse excitatory and inhibitory axons
-axonClasses = axonClasses(1:2);
+clear cur*;
+for curTcProbThresh = 0.4:0.1:0.9
+    curTcAxonIds = find(conn.axonMeta.tcProb > curTcProbThresh);
+
+    axonClasses(end + 1).axonIds = intersect( ...
+        axonClasses(1).axonIds, curTcAxonIds); %#ok
+    axonClasses(end).title = sprintf( ...
+        'Axons with TC probability > %g (n = %d)', ...
+        curTcProbThresh, numel(axonClasses(end).axonIds));
+    axonClasses(end).nullAxonIds = axonClasses(end).axonIds;
+end
 
 %% calculate target class innervation probabilities for null model
 clear cur*;
