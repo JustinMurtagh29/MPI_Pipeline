@@ -37,14 +37,19 @@ function [conn, syn, axonClasses] = load(param, connFile, synFile)
     
     % intersynapse distances (for detection of TC axons)
    [connDir, connName] = fileparts(connFile);
-    interSynFile = sprintf('%s_intersynapse.mat', connName);
+    interSynFile = sprintf('%s_intersynapse_v2.mat', connName);
     interSynFile = fullfile(connDir, interSynFile);
-    interSyn = load(interSynFile, 'axonIds', 'axonPathLens');
+    interSyn = load(interSynFile);
+    
+    % meta data about axonal boutons (for detection of TC axons)
+    boutonMetaFile = sprintf('%s_axonalBoutons_v1.mat', connName);
+    boutonMetaFile = fullfile(connDir, boutonMetaFile);
+    boutonMeta = load(boutonMetaFile);
     
     %% complete axon meta data
-    conn.axonMeta.pathLen = nan(size(conn.axons));
-    conn.axonMeta.pathLen(interSyn.axonIds) = interSyn.axonPathLens / 1E3;
-    conn.axonMeta = connectEM.Axon.completeSynapseMeta(param, conn, syn);
+    conn.axonMeta = ...
+        connectEM.Axon.completeSynapseMeta( ...
+            param, interSyn, boutonMeta, conn, syn);
     
     %% label dendrites
     conn.denMeta = connectEM.Dendrite.completeCellMeta(param, conn);
