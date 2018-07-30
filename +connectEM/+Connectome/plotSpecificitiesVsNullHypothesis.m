@@ -47,7 +47,7 @@ curAxonClasses = axonClasses;
 % NOTE(amotta): The list of axons to induce the null model is no longer
 % needed. Let's remove it to cause an error in case a weird code path still
 % tries to use it.
-axonClasses = rmfield(curAxonClasses, 'nullAxonIds');
+curAxonClasses = rmfield(curAxonClasses, 'nullAxonIds');
 
 for curIdx = 1:numel(curAxonClasses)
     plotAxonClass( ...
