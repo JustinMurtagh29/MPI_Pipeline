@@ -35,6 +35,10 @@ interSynFile = sprintf('%s_intersynapse_v2.mat', connName);
 interSynFile = fullfile(connDir, interSynFile);
 interSyn = load(interSynFile);
 
+boutonMetaFile = sprintf('%s_axonalBoutons_v1.mat', connName);
+boutonMetaFile = fullfile(connDir, boutonMetaFile);
+boutonMeta = load(boutonMetaFile);
+
 %% Translate ground truth annotations to latest connectome
 clear cur*;
 curConn = load(oldConnFile);
@@ -61,66 +65,106 @@ boutonIds = ...
     connectEM.Axon.clusterSynapsesIntoBoutons( ...
         synIds, interSyn, 'cutoffDist', 2433);
 
-conn.axonMeta.fullPriSpinesPerBouton = cellfun( ...
-    @(boutonIds, isSpine) mean(accumarray(boutonIds, isSpine)), ...
-    boutonIds, synIsSpine);
-
 conn.axonMeta.fullPriSpineSynDens = ...
     conn.axonMeta.fullPriSpineSynCount ...
  ./ conn.axonMeta.pathLen;
 
+conn.axonMeta.fullPriSpinesPerBouton = cellfun( ...
+    @(boutonIds, isSpine) mean(accumarray(boutonIds, isSpine)), ...
+    boutonIds, synIsSpine);
+
+conn.axonMeta.fullPriSpinesMultiHitFrac = cellfun( ....
+    @(boutonIds, isSpine) mean(accumarray(boutonIds, isSpine) > 1), ...
+    boutonIds, synIsSpine);
+
+conn.axonMeta.medianBoutonVol = cellfun( ...
+    @median, boutonMeta.boutonVols) / (1E3) ^ 3;
+
 %% Plot synapse densities for GT axons
-thresh = 0.19;
-excAxonIds = axonClasses(1).axonIds;
-binEdges = linspace(0, 0.4, 21);
+clear cur*;
+curConfigs = struct;
+curConfigs(1).featName = 'fullPriSpineSynDens';
+curConfigs(1).label = 'Spine synapse density (µm^{-1})';
+curConfigs(1).binEdges = linspace(0, 0.4, 21);
+curConfigs(1).thresh = 0.19;
 
-fig = figure();
-fig.Color = 'white';
-fig.Position(3:4) = [425, 400];
+curConfigs(2).featName = 'fullPriSpinesPerBouton';
+curConfigs(2).label = { ...
+    'Average number of '; ...
+    'spine synapses per bouton'};
+curConfigs(2).binEdges = linspace(0, 3, 31);
+curConfigs(2).thresh = 1.55;
 
-ax = axes(fig);
-colors = ax.ColorOrder;
+curConfigs(3).featName = 'fullPriSpinesMultiHitFrac';
+curConfigs(3).label = { ...
+    'Fraction of boutons with'; ...
+    'multiple spine synapses'};
+curConfigs(3).binEdges = linspace(0, 1, 21);
+curConfigs(3).thresh = 0.475;
 
-hold(ax, 'on');
-axis(ax, 'square');
+curConfigs(4).featName = 'medianBoutonVol';
+curConfigs(4).label = 'Median bouton volume (µm^3)';
+curConfigs(4).binEdges = linspace(0, 0.8, 21);
+curConfigs(4).thresh = 0.3;
 
-yyaxis(ax, 'right');
-tcHist = histogram(ax, conn.axonMeta.fullPriSpineSynDens(tcAxonIds));
-ccHist = histogram(ax, conn.axonMeta.fullPriSpineSynDens(ccAxonIds));
-ylim(ax, [0, 1]);
-ylabel(ax, 'Probability');
+curAxonIds = axonClasses(1).axonIds;
 
-yyaxis(ax, 'left');
-excHist = histogram(ax, conn.axonMeta.fullPriSpineSynDens(excAxonIds));
+for curConfig = reshape(curConfigs, 1, [])
+    curFeatVals = conn.axonMeta.(curConfig.featName);
+    curFeatName = curConfig.featName;
+    curBinEdges = linspace(0, 0.4, 21);
 
-allHists = [tcHist, ccHist, excHist];
-[allHists.DisplayStyle] = deal('stairs');
-[allHists.BinEdges] = deal(binEdges);
-[allHists.LineWidth] = deal(2);
-[allHists.FaceAlpha] = deal(1);
+    curFig = figure();
+    curFig.Color = 'white';
+    curFig.Position(3:4) = [425, 400];
 
-[allHists(1:2).Normalization] = deal('probability');
-allHists(1).EdgeColor = colors(1, :);
-allHists(2).EdgeColor = colors(2, :);
-allHists(3).EdgeColor = zeros(1, 3);
+    curAx = axes(curFig); %#ok
+    colors = curAx.ColorOrder;
 
-plot( ...
-    ax, [thresh, thresh], ax.YLim, ...
-    'Color', 'black', 'LineStyle', '--');
+    hold(curAx, 'on');
+    axis(curAx, 'square');
 
-ax.TickDir = 'out';
-ax.YColor = [0, 0, 0];
-xlim(ax, binEdges([1, end]));
-xlabel(ax, 'Spine synapse density (µm^{-1})');
-ylabel(ax, 'Excitatory axons');
+    yyaxis(curAx, 'right');
+    curTcHist = histogram(curAx, curFeatVals(tcAxonIds));
+    curCcHist = histogram(curAx, curFeatVals(ccAxonIds));
+    ylim(curAx, [0, 1]);
+    ylabel(curAx, 'Probability');
 
-leg = legend( ...
-    [tcHist, ccHist], ...
-    'Thalamocortical', ...
-    'Corticocortical', ...
-    'Location', 'NorthEast');
-leg.Box = 'off';
+    yyaxis(curAx, 'left');
+    excHist = histogram(curAx, curFeatVals(curAxonIds));
 
-title( ...
-    ax, {info.filename, info.git_repos{1}.hash}, ...
-    'FontWeight', 'normal', 'FontSize', 10);
+    allHists = [curTcHist, curCcHist, excHist];
+    
+    set(allHists, ...
+        'DisplayStyle', 'stairs', ...
+        'BinEdges', curConfig.binEdges, ...
+        'LineWidth', 2, 'FaceAlpha', 1);
+
+   [allHists(1:2).Normalization] = deal('probability');
+    allHists(1).EdgeColor = colors(1, :);
+    allHists(2).EdgeColor = colors(2, :);
+    allHists(3).EdgeColor = zeros(1, 3);
+    
+    if ~isempty(curConfig.thresh)
+        plot( ...
+            curAx, repelem(curConfig.thresh, 2), curAx.YLim, ...
+            'Color', 'black', 'LineWidth', 2, 'LineStyle', '--');
+    end
+
+    curAx.TickDir = 'out';
+    curAx.YColor = [0, 0, 0];
+    xlim(curAx, curConfig.binEdges([1, end]));
+    xlabel(curAx, curConfig.label);
+    ylabel(curAx, 'Excitatory axons');
+
+    leg = legend( ...
+        [curTcHist, curCcHist], ...
+        'Thalamocortical', ...
+        'Corticocortical', ...
+        'Location', 'NorthEast');
+    leg.Box = 'off';
+
+    title( ...
+        curAx, {info.filename, info.git_repos{1}.hash}, ...
+        'FontWeight', 'normal', 'FontSize', 10);
+end
