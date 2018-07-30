@@ -30,13 +30,10 @@ param = param.p;
 [conn, syn, axonClasses] = ...
     connectEM.Connectome.load(param, connFile);
 
-% Precompute useful quantities
-conn.axonMeta.fullPriSpineSynDens = ...
-    conn.axonMeta.fullPriSpineSynCount ...
- ./ conn.axonMeta.pathLen;
-conn.axonMeta.fullPriSpineSynFrac = ...
-    conn.axonMeta.fullPriSpineSynCount ...
- ./ conn.axonMeta.fullSynCount;
+[connDir, connName] = fileparts(connFile);
+interSynFile = sprintf('%s_intersynapse_v2.mat', connName);
+interSynFile = fullfile(connDir, interSynFile);
+interSyn = load(interSynFile);
 
 %% Translate ground truth annotations to latest connectome
 clear cur*;
@@ -52,6 +49,25 @@ tcAxonIds = reshape(tcAxonIds, size(oldTcAxonIds));
 ccAxonIds = cellfun(curFindInNew, curConn.axons(oldCcAxonIds));
 ccAxonIds = reshape(ccAxonIds, size(oldCcAxonIds));
 clear cur*;
+
+%% Calculate features for TC detection
+synIds = connectEM.Axon.getSynapses(conn, syn);
+
+synIsSpine = cellfun( ...
+    @(ids) syn.synapses.type(ids) == 'PrimarySpine', ...
+    synIds, 'UniformOutput', false);
+
+boutonIds = ...
+    connectEM.Axon.clusterSynapsesIntoBoutons( ...
+        synIds, interSyn, 'cutoffDist', 2433);
+
+conn.axonMeta.fullPriSpinesPerBouton = cellfun( ...
+    @(boutonIds, isSpine) mean(accumarray(boutonIds, isSpine)), ...
+    boutonIds, synIsSpine);
+
+conn.axonMeta.fullPriSpineSynDens = ...
+    conn.axonMeta.fullPriSpineSynCount ...
+ ./ conn.axonMeta.pathLen;
 
 %% Plot synapse densities for GT axons
 thresh = 0.19;
