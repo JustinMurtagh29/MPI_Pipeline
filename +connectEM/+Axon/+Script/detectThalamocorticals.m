@@ -94,6 +94,11 @@ classifier = fitclinear( ...
     curX(curAxonIds, :), curY, ...
     'Learner', 'logistic');
 
+fprintf('\n');
+fprintf('Results of logistic regression\n');
+fprintf('* Beta: %f %f %f %f\n', classifier.Beta);
+fprintf('* Bias: %f\n', classifier.Bias);
+
 [~, axonProbs] = predict(classifier, curX);
 axonProbs = axonProbs(:, 2);
 
