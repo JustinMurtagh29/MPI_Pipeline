@@ -22,6 +22,7 @@ oldCcAxonIds = [ ...
     13742, 7553, 28847, 20707, 18837];
 
 info = Util.runInfo();
+Util.showRunInfo(info);
 
 %% Loading data
 param = load(fullfile(rootDir, 'allParameter.mat'), 'p');
