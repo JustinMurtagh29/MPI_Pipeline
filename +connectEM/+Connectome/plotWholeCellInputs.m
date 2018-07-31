@@ -42,7 +42,7 @@ assert(all(splitNmlT.cellId));
 
 %% Override TC / CC axon definition (for debugging purposes only)
 clear cur*;
-curTcProbThresh = 0.6;
+curTcProbThresh = 0.5;
 
 curExcAxonIds = find(ismember( ...
     conn.axonMeta.axonClass, ...
