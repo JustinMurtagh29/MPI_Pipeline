@@ -23,6 +23,22 @@ param = param.p;
 
 [conn, syn] = connectEM.Connectome.load(param, connFile);
 
+%% Override TC / CC axon definition (for debugging purposes only)
+clear cur*;
+curTcProbThresh = 0.6;
+
+curExcAxonIds = find(ismember( ...
+    conn.axonMeta.axonClass, ...
+    {'Corticocortical', 'Thalamocortical'}));
+
+curTcAxonIds = find(conn.axonMeta.tcProb > curTcProbThresh);
+curCcAxonIds = setdiff(curExcAxonIds, curTcAxonIds);
+curTcAxonIds = intersect(curExcAxonIds, curTcAxonIds);
+
+conn.axonMeta.axonClass(curCcAxonIds) = 'Corticocortical';
+conn.axonMeta.axonClass(curTcAxonIds) = 'Thalamocortical';
+clear cur*;
+
 %% Preparing data
 synT = connectEM.Connectome.buildSynapseTable(conn, syn);
 synT.synType = conn.axonMeta.axonClass(synT.preAggloId);
