@@ -40,6 +40,22 @@ splitNmlT = connectEM.WholeCell.loadSplitNmls(splitNmlDir);
 splitNmlT.cellId = wcData.idxWholeCells(splitNmlT.aggloId);
 assert(all(splitNmlT.cellId));
 
+%% Override TC / CC axon definition (for debugging purposes only)
+clear cur*;
+curTcProbThresh = 0.6;
+
+curExcAxonIds = find(ismember( ...
+    conn.axonMeta.axonClass, ...
+    {'Corticocortical', 'Thalamocortical'}));
+
+curTcAxonIds = find(conn.axonMeta.tcProb > curTcProbThresh);
+curCcAxonIds = setdiff(curExcAxonIds, curTcAxonIds);
+curTcAxonIds = intersect(curExcAxonIds, curTcAxonIds);
+
+conn.axonMeta.axonClass(curCcAxonIds) = 'Corticocortical';
+conn.axonMeta.axonClass(curTcAxonIds) = 'Thalamocortical';
+clear cur*;
+
 %% Split axons into exc. and inh.
 conn.axonMeta.fullPriSpineSynFrac = ...
     conn.axonMeta.fullPriSpineSynCount ...
