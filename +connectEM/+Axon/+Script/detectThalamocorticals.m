@@ -182,3 +182,34 @@ for curConfig = reshape(curConfigs, 1, [])
         curAx, {info.filename, info.git_repos{1}.hash}, ...
         'FontWeight', 'normal', 'FontSize', 10);
 end
+
+%% Plot TC probability distribution
+clear cur*;
+
+% Configuration
+curBinEdges = linspace(0, 1, 21);
+
+curAxonIds = axonClasses(1).axonIds;
+curTcProbs = conn.axonMeta.tcProb(curAxonIds);
+
+curFig = figure();
+curFig.Color = 'white';
+curFig.Position(3:4) = [410, 195];
+
+curAx = axes(curFig);
+histogram(curAx, ...
+    curTcProbs, ...
+    'BinEdges', curBinEdges, ...
+    'DisplayStyle', 'stairs', ...
+    'LineWidth', 2, ...
+    'FaceAlpha', 1);
+
+curAx.Box = 'off';
+curAx.TickDir = 'out';
+curAx.XLim = curBinEdges([1, end]);
+
+xlabel(curAx, 'TC probability');
+ylabel(curAx, 'Excitatory axons');
+title(curAx, ...
+    {info.filename; info.git_repos{1}.hash}, ...
+    'FontWeight', 'normal', 'FontSize', 10);
