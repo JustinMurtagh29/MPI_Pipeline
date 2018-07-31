@@ -1105,7 +1105,8 @@ for curId = reshape(curWcIds, 1, [])
     
     axis(curAx, 'square');
     xticks(curAx, 1:size(curData, 2));
-    xticklabels(curAx, synTypes);
+    xticklabels(curAx, arrayfun( ...
+        @char, synTypes, 'UniformOutput', false));
     
     xlabel('Synapse type');
     ylabel('Fraction of input synapses');
