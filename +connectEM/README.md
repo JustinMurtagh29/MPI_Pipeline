@@ -7,7 +7,7 @@ See `preprocessing/preprocessData.m`
 See
 * `preprocessing/additionalHeuristics.m`,
 * `preprocessing/localDetectionNuclei.m`, and
-* `preprocessing/localDetectionMyelin.m`
+* `preprocessing/localDetectionMyelin.m`.
 
 ## Pipeline
 
@@ -16,17 +16,19 @@ See `pipeline/runPipeline.m`
 ### Volume segmentation
 See
 * `bigFwdPass.m`,
-* `+Myelin/runFix.m` and `+Myelin/enforceMyelinSegments.m`,
-* `miniSegmentation.m`, `segmentation/segmentForPipeline.m`, and `segmentation/watershedSeg_v1_cortex.m`
+* `+Myelin/runFix.m` and `+Myelin/enforceMyelinSegments.m`, and
+* `miniSegmentation.m`, `segmentation/segmentForPipeline.m`, and `segmentation/watershedSeg_v1_cortex.m`.
 
 ### Segment neighborhood graph
-See `+SynEM/+Svg/findEdgesAndBorders.m`
+See `graphConstruction.m` and `+SynEM/+Svg/findEdgesAndBorders.m`.
 
 ### SynEM classifier
 See `+SynEM/+Seg/pipelineRun.m`
 
 ### ConnectEM classifier
 See
+* `+connectEM/calculateFeatures.m`, and
+* `+connectEM/predictDataset.m`.
 
 ### TypeEM classifier
 See
