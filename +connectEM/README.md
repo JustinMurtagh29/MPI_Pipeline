@@ -41,9 +41,17 @@ See
    parameters
      * min. border size: 60 vx
      * min. segment size: 300 vx
-     * min. axon probability: 50 %
-     * min. edge probability: 97 %
-2. Grid search (...). Yields `aggloGridSearch6/6_01_00046/metricsFinal.mat`.
+     * min. axon type probability: 50 %
+     * min. neurite continuity probability: 97 %
+2. Grid search (`+connectEM/aggloGridSearchDir.m`). Yields
+   `aggloGridSearch6/6_01_00046/metricsFinal.mat` based on the following
+   set of parameters
+     * min. latent score: 0.8
+     * min. border size: 40 vx
+     * min. directionality score: 0.9
+     * min. neurite continuity probability: 80 %
+     * min. axon type probability: 30 %
+     * recursion steps: 10
 3. Conversion from segment equivalence classes to super-agglomerate
    representation (`+connectEM/aggloPreprocessing.m`). Yields
    `axons_01.mat`.
