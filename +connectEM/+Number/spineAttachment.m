@@ -14,12 +14,16 @@ Util.showRunInfo(info);
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 
-conn = connectEM.Connectome.load(param, connFile);
+conn = load(connFile);
 
 autoData = load(autoFile);
 shAgglos = autoData.shAgglos;
 shAutoAttached = autoData.attached;
+preSpineFile = autoData.info.param.dendFile;
 clear autoData;
+
+preSpineDends = load(preSpineFile);
+preSpineDends = preSpineDends.dendrites(preSpineDends.indBigDends);
 
 box = param.bbox;
 voxelSize = param.raw.voxelSize;
@@ -29,11 +33,14 @@ segWeights =  Seg.Global.getSegToSizeMap(param);
 segPoints = Seg.Global.getSegToCentroidMap(param);
 
 %% Process spine heads
+preSpineLUT = Agglo.fromSuperAgglo(preSpineDends);
+preSpineLUT = Agglo.buildLUT(maxSegId, preSpineLUT);
 dendLUT = Agglo.buildLUT(maxSegId, conn.dendrites);
 
 shT = table;
 shT.agglo = shAgglos;
 shT.autoAttached = shAutoAttached ~= 0;
+shT.preAttached = cellfun(@(segIds) any(preSpineLUT(segIds)), shT.agglo);
 shT.attached = cellfun(@(segIds) any(dendLUT(segIds)), shT.agglo);
 
 wmean = @(w, v) sum(v .* (w / sum(w)), 1);
@@ -80,6 +87,10 @@ title(curAx, ...
 %% Quantitative evaluation
 numSpineHeads = height(shT) %#ok
 numManuallyAttachedSpineHeads = sum(shT.attached & ~shT.autoAttached) %#ok
+
+fractionOfSpineHeadsPrematurelyAttached = mean(shT.preAttached) %#ok
+fractionOfSpineHeadsPrematurelyAttachedAfterTenUm = ...
+    mean(shT.preAttached(shT.borderDist > 10E3)) %#ok
 
 fractionOfSpineHeadsAutoAttached = mean(shT.autoAttached) %#ok
 fractionOfSpineHeadsAutoAttachedAfterTenUm = ...
