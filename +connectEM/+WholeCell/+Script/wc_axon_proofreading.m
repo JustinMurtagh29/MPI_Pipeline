@@ -15,6 +15,7 @@ somaFile = fullfile(p.agglo.saveFolder, 'somata_07.mat');
 m = load(wcFile);
 wcAgglos = m.wholeCells;
 wcAgglosC = SuperAgglo.clean(wcAgglos);
+numWC = length(wcAgglos);
 
 m = load(somaFile);
 somaAgglos = m.somata;
@@ -28,13 +29,29 @@ soma = connectEM.WholeCell.getSoma(wcAgglosC, somaAgglos);
 %% write to WK
 
 % somata
-skel = Superagglos.toSkel(Superagglos.deleteNodes(wcAgglosC, soma, true));
-skel.names = arrayfun(@(x)sprintf('WC_%02d_Soma', 1:length(wcAgglosC), ...
-    'uni', 0));
+wcSomas = SuperAgglo.toMST( ...
+    Superagglos.deleteNodes(wcAgglosC, soma, true), [11.24, 11.24, 28]);
+skel = Superagglos.toSkel(wcSomas);
+skel.names(1:numWC) = arrayfun(@(x)sprintf('WC_%02d_Soma', x), ...
+    1:length(wcAgglosC), 'uni', 0);
 
 % axons
-skel = Superagglos.toSkel(Superagglos.deleteNodes(wcAgglosC, ...
-    {wcAgglosC.axons}, true), skel);
-skel.names = arrayfun(@(x)sprintf('WC_%02d_Axon', 1:length(wcAgglosC), ...
-    'uni', 0));
+wcAxons = SuperAgglo.toMST( ...
+    Superagglos.deleteNodes(wcAgglosC, {wcAgglosC.axon}, true), ...
+    [11.24, 11.24, 28]);
+skel = Superagglos.toSkel(wcAxons, skel);
+skel.names(numWC + 1:end) = arrayfun(@(x)sprintf('WC_%02d_Axon', x), ...
+    1:length(wcAgglosC), 'uni', 0);
+
+% sort by wc
+idx = reshape(1:skel.numTrees(), 2, [])';
+skel.thingIDs = idx(:);
+skel = skel.sortTreesById();
+skel.colors(1:2:end) = {[0 0 1 1]};
+skel.colors(2:2:end) = {[1 0 0 1]};
+
+for i = 1:numWC
+    [skel, gid] = skel.addGroup(sprintf('WC_%02d', i));
+    skel = skel.addTreesToGroup((2*i-1):(2*i), gid);
+end
 
