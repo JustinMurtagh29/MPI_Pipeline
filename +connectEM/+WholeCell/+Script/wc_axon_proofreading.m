@@ -9,7 +9,7 @@ info = Util.runInfo();
 
 p = Gaba.getSegParameters('ex145_ROI2017');
 wcFile = fullfile(p.agglo.saveFolder, ...
-    'wholeCells_GTAxon_08_v4_splitHealed_v1.mat');
+    'wholeCells_GTAxon_08_v5.mat');
 somaFile = fullfile(p.agglo.saveFolder, 'somata_07.mat');
 
 m = load(wcFile);
@@ -42,6 +42,13 @@ wcAxons = SuperAgglo.toMST( ...
 skel = Superagglos.toSkel(wcAxons, skel);
 skel.names(numWC + 1:end) = arrayfun(@(x)sprintf('WC_%02d_Axon', x), ...
     1:length(wcAgglosC), 'uni', 0);
+
+[~, wcName] = fileparts(wcFile);
+
+skel = skel.setDescription( ...
+    sprintf(['Whole cell (%s) axons and somata. ' ...
+    '(function: %s, git hash: %s)'], wcName, info.filename, ...
+    info.git_repos{1}.hash));
 
 % sort by wc
 idx = reshape(1:skel.numTrees(), 2, [])';
