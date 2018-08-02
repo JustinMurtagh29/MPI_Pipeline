@@ -27,12 +27,14 @@ segPoints = param.raw.voxelSize .* segPoints;
 segVols = Seg.Global.getSegToSizeMap(param);
 segVols = prod(param.raw.voxelSize) .* segVols;
 
-[conn, syn] = connectEM.Connectome.load(param, connFile);
+conn = load(connFile);
+syn = load(conn.info.param.synFile);
 interSyn = load(interSynFile);
 
 %% Build bouton agglomerates and calculate volume
-boutonAgglos = connectEM.Axon.buildBoutonAgglos( ...
-    segPoints, conn, syn, interSyn, 'parallelize', true);
+boutonAgglos = ...
+    connectEM.Axon.buildBoutonAgglos( ...
+        segPoints, conn, syn, interSyn);
 
 boutonVols = cellfun( ...
     @(agglos) cellfun( ...
