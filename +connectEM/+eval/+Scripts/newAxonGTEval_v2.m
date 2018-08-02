@@ -21,7 +21,6 @@ for i = 1:10
     skels{i}.verbose = false;
 end
 
-
 m = load(p.agglo.axonAggloFile);
 ov = connectEM.eval.getNewAxonGTAggloOverlap(segIds, axons);
 
@@ -36,10 +35,32 @@ end
 
 %% everything to nml
 
+if iscell(axons) % if agglos are used then create MST superagglo
+    m = load(p.svg.segmentMetaFile, 'point');
+    point = point';
+    axons = SuperAgglo.fromAgglo(axons, point, 'mst', 'voxelSize', ...
+        [11.24, 11.24, 28]);
+end
+
 ovSkels = connectEM.eval.newAxonGTOverlapsToSkel(skels, axons, ov);
 
 % write to tracings
+skel = L4.Util.getSkel();
+c = 1;
 for i = 1:10
-    ovSkels1{i}.write(sprintf('Axon%02d_ov1.nml', i));
+    toMergeSkel = ovSkels{i};
+    numT = toMergeSkel.numTrees();
+    
+    skel = skel.mergeSkels(toMergeSkel);
+    skel.colors{c} = [0, 1, 0, 1];
+    skel.colors(c+1:end) = {[1, 0, 0, 1]};
+    
+    [skel, gid] = skel.addGroup(sprintf('Axon_%02d', i));
+    skel = skel.addTreesToGroup(c:c+numT, gid);
+    c = c + numT;
 end
+
+skel = skel.setDescription(sprintf(['Overlap of axon agglo %s with ' ...
+    'axon_gt_new. (filename: %s, git hash: %s)'], axFile, info.filename, ...
+    info.git_repos{1}.hash));
 
