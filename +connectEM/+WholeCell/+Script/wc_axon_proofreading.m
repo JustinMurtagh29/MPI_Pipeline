@@ -24,8 +24,15 @@ somaAgglos = m.somata;
 %% get somata and axons
 
 soma = connectEM.WholeCell.getSoma(wcAgglosC, somaAgglos);
-axon = cellfun(@logical, {wcAgglosC.axon}, 'uni', 0);
-axon = axon(:);
+for i = 1:length(wcAgglosC)
+    if ~islogical(wcAgglosC(i).axon)
+        if all(isnan(wcAgglosC(i).axon))
+            wcAgglosC(i).axon = false(size(wcAgglosC(i).nodes, 1), 1);
+        else
+            error('Axons that are not fully nan.');
+        end
+    end
+end
 
 
 %% write to WK
