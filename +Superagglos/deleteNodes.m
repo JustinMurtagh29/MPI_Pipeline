@@ -29,7 +29,7 @@ for i = 1:length(agglo)
         lidx = idx(:);
         idx = find(lidx);
     else
-        lidx = false(size(agglo.nodes, 4), 1);
+        lidx = false(size(agglo.nodes, 1), 1);
         lidx(idx) = true;
     end
     
