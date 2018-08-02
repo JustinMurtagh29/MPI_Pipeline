@@ -3,6 +3,7 @@
 
 info = Util.runInfo();
 
+
 %% get the overlaps between gt skeletons and agglos
 
 p = Gaba.getSegParameters('ex145_ROI2017');
@@ -22,11 +23,13 @@ if ~exist(outFile, 'file')
     save(outFile, 'info', 'ov', 'skels', 'agglos');
 end
 
+
 %% everything to nml
 
 ovSkels = connectEM.eval.newAxonGTOverlapsToSkel(skels, agglos, ov);
 
 % write to tracings
 for i = 1:10
-    ovSkels1{i}.write(sprintf('Axon%02d_ov1.nml', i));
+    ovSkels{i}.write(sprintf('Axon%02d_ov1.nml', i));
 end
+
