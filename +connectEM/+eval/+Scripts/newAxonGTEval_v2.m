@@ -10,7 +10,7 @@ info = Util.runInfo();
 p = Gaba.getSegParameters('ex145_ROI2017');
 p.agglo.axonAggloFile = fullfile(p.agglo.saveFolder, ...
     'axons_19_a_partiallySplit_v2.mat');
-axons = L4.Axons.getLargeAxons(p, true, true);
+axons = L4.Axons.getLargeAxons(p, false, false);
 
 
 %% get the overlaps between gt skeletons and agglos
@@ -36,7 +36,7 @@ end
 
 %% everything to nml
 
-ovSkels = connectEM.eval.newAxonGTOverlapsToSkel(skels, agglos, ov);
+ovSkels = connectEM.eval.newAxonGTOverlapsToSkel(skels, axons, ov);
 
 % write to tracings
 for i = 1:10
