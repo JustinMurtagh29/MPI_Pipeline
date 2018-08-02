@@ -24,6 +24,8 @@ somaAgglos = m.somata;
 %% get somata and axons
 
 soma = connectEM.WholeCell.getSoma(wcAgglosC, somaAgglos);
+axon = cellfun(@logical, {wcAgglosC.axon}, 'uni', 0);
+axon = axon(:);
 
 
 %% write to WK
