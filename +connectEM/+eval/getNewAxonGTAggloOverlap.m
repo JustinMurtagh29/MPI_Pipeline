@@ -22,7 +22,8 @@ if isstruct(sagglos)
 end
 
 % lookup table for gt seg ids in agglos
-m = max([cellfun(@max, gtSegIds); cellfun(@max, sagglos)]);
+m = max([cellfun(@max, gtSegIds); ...
+         cellfun(@max, sagglos(~cellfun(@isempty, sagglos)))]);
 lut = Agglo.buildLUT(m, sagglos);
 
 % get overlaps
