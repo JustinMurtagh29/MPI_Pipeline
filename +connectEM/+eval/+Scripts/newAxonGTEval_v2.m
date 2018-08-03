@@ -37,8 +37,12 @@ Util.ssave(outFile, info, ov, skels);
 
 if iscell(axons) % if agglos are used then create MST superagglo
     m = load(p.svg.segmentMetaFile, 'point');
-    point = point';
-    axons = SuperAgglo.fromAgglo(axons, point, 'mst', 'voxelSize', ...
+    point = m.point';
+    axonsBkp = axons;
+    axons = cell(length(axons), 1);
+    idx = unique(cell2mat(cellfun(@(x)x(:,1), ov, 'uni', 0)));
+    axons(idx) = SuperAgglo.fromAgglo(axonsBkp(idx), point, 'mst', ...
+        'voxelSize', ...
         [11.24, 11.24, 28]);
 end
 
