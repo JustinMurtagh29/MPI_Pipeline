@@ -71,5 +71,4 @@ end
 skel = skel.setDescription(sprintf(['Overlap (ovT=%d) of axon agglo %s ' ...
     'with axon_gt_new.'], ovT, axFile));
 skel = Skeleton.appendRunInfoToDescription(skel, info);
-skel.filename = sprintf('AxonGT_%s_overlaps.nml', axFile);
-% skel.write();
+% skel.write(sprintf('AxonGT_%s_overlaps.nml', axFile));
