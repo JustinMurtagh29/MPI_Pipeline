@@ -5,7 +5,7 @@
 info = Util.runInfo();
 
 ovT = 2; % minimal overlap in segments
-nhood = 26;
+nhood = 0;
 
 
 %% load axon agglo
