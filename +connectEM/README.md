@@ -62,3 +62,14 @@ See
    the decreasing alignment quality results in a heightened rate of
    merge errors (`+connectEM/splitBordersMeta.m`). Yields
    `axons_04.mat`.
+
+## Automated dendrite reconstruction
+Grid search (`+connectEM/aggloGridSearch.m`) from commit
+618b07f4eaaf5a98cb00d2926dcc4354355c1a7d. Yields
+`aggloGridSearch/search03_00514.mat` based on the following set of
+parameters:
+
+* min. border size: 300 vx
+* min. segment size: 500 vx
+* min. dendrite type probability: 30 %
+* min. neurite continuity probability: 98 %
