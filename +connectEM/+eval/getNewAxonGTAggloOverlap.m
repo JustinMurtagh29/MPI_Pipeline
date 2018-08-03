@@ -18,6 +18,10 @@ function ov = getNewAxonGTAggloOverlap( gtSegIds, sagglos, ovT )
 %
 % Author: Benedikt Staffler <benedikt.staffler@brain.mpg.de>
 
+if ~exist('ovT', 'var') || isempty(ovT)
+    ovT = 1;
+end
+
 % make gtSegIds unique and delete 0, -1
 gtSegIds = cellfun(@(x)setdiff(x, [0, -1]), gtSegIds, 'uni', 0);
 
@@ -34,7 +38,8 @@ lut = Agglo.buildLUT(m, sagglos);
 
 % get overlaps
 ov = cellfun(@(x)tabulate(lut(x)), gtSegIds, 'uni', 0);
-ov = cellfun(@(x)x(x(:,1) >= ovT, 1:2), ov, 'uni', 0);
+ov = cellfun(@(x)x(x(:,1) > 0, 1:2), ov, 'uni', 0); % remove zero (border)
+ov = cellfun(@(x)x(x(:,2) >= ovT, :), ov, 'uni', 0); % minimal overlap
 
 end
 
