@@ -38,7 +38,7 @@ lut = Agglo.buildLUT(m, sagglos);
 
 % get overlaps
 ov = cellfun(@(x)tabulate(lut(x)), gtSegIds, 'uni', 0);
-ov = cellfun(@(x)x(x(:,1) > 0, 1:2), ov, 'uni', 0); % remove zero (border)
+ov = cellfun(@(x)x(x(:,1) > 0, 1:2), ov, 'uni', 0); % remove id 0 as overlap
 ov = cellfun(@(x)x(x(:,2) >= ovT, :), ov, 'uni', 0); % minimal overlap
 
 end

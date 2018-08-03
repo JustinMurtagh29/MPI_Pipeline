@@ -59,7 +59,7 @@ for i = 1:10
     c = c + numT;
 end
 
-skel = skel.setDescription(sprintf(['Overlap (ovT=%d) of axon agglo %s with ' ...
-    'axon_gt_new. (filename: %s, git hash: %s)'], ovT, axFile, info.filename, ...
-    info.git_repos{1}.hash));
+skel = skel.setDescription(sprintf(['Overlap (ovT=%d) of axon agglo %s ' ...
+    'with axon_gt_new.'], ovT, axFile));
+skel = Skeleton.appendRunInfoToDescription(skel, info);
 skel.write(sprintf('AxonGT_%s_overlaps.nml', axFile));
