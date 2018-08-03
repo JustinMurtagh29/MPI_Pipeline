@@ -28,9 +28,7 @@ ov = connectEM.eval.getNewAxonGTAggloOverlap(segIds, axons);
 outFile = fullfile(p.agglo.saveFolder, 'eval', ...
     sprintf('axon_gt_eval_%s.mat', axFile));
 
-if ~exist(outFile, 'file')
-    Util.ssave(outFile, info, ov, skels);
-end
+Util.ssave(outFile, info, ov, skels);
 
 
 %% everything to nml
@@ -63,4 +61,4 @@ end
 skel = skel.setDescription(sprintf(['Overlap of axon agglo %s with ' ...
     'axon_gt_new. (filename: %s, git hash: %s)'], axFile, info.filename, ...
     info.git_repos{1}.hash));
-
+% skel.write(sprintf('AxonGT_%s_overlaps.nml', axFile));
