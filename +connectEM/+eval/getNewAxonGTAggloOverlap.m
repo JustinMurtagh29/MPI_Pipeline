@@ -14,7 +14,9 @@ function ov = getNewAxonGTAggloOverlap( gtSegIds, sagglos, ovT )
 %
 % OUTPUT ov: [Nx1] cell
 %           Cell with linear indices of sagglos that overlap with the
-%           corresponding gtSegIds.
+%           corresponding gtSegIds. Each cell contains a [Nx2] int array
+%           where the first row is the linear index of an agglo. The second
+%           row specified the number of overlapping segments.
 %
 % Author: Benedikt Staffler <benedikt.staffler@brain.mpg.de>
 
