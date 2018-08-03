@@ -42,6 +42,7 @@ stats.pathLength = cellfun(@(x, ign)sum(x(~ign)), l, ignEdges);
 stats.recalledPathLength = cellfun(@(x, y, ign)sum(x(y & ~ign)), l, ...
     recalledEdges, ignEdges);
 stats.recall = stats.recalledPathLength ./ stats.pathLength;
+stats.splits = cellfun(@(x)size(x, 1), ov);
 
 debug.recalledNodes = recalledNodes;
 debug.ignoredNodes = ignoredNodes;
