@@ -10,7 +10,7 @@ ovT = 2; % minimal overlap in segments
 
 p = Gaba.getSegParameters('ex145_ROI2017');
 p.agglo.axonAggloFile = fullfile(p.agglo.saveFolder, ...
-    'axons_19_a_partiallySplit_v2.mat');
+    'axons_19_a_partiallySplit_v3.mat');
 axons = L4.Axons.getLargeAxons(p, true, true);
 
 
