@@ -24,6 +24,7 @@ end
 
 m = load(p.agglo.axonAggloFile);
 ov = connectEM.eval.getNewAxonGTAggloOverlap(segIds, axons, ovT);
+stats = connectEM.eval.gtReconstructionStats(skels, segIds, axons, ov);
 
 [~, axFile] = fileparts(p.agglo.axonAggloFile);
 outFile = fullfile(p.agglo.saveFolder, 'eval', ...
