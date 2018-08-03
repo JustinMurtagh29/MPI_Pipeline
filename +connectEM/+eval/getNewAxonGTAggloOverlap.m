@@ -1,15 +1,21 @@
-function ov = getNewAxonGTAggloOverlap( gtSegIds, sagglos )
+function ov = getNewAxonGTAggloOverlap( gtSegIds, sagglos, ovT )
 %GETNEWAXONGTAGGLOOVERLAP Get the axon agglos that overlap with the
 % new_axon_gt axons.
+%
 % INPUT gtSegIds: [Nx1] cell
 %           Segment ids of the ground truth axons. Can contain zeros and
 %           duplicates.
 %           (see also connectEM.eval.getNewAxonGT)
 %       sagglos: [Nx1] cell or struct
 %           Axon agglos or superagglos.
+%       ovT: (Optional) double
+%           Minimal overlap in number of segments.
+%           (Default: 1)
+%
 % OUTPUT ov: [Nx1] cell
 %           Cell with linear indices of sagglos that overlap with the
 %           corresponding gtSegIds.
+%
 % Author: Benedikt Staffler <benedikt.staffler@brain.mpg.de>
 
 % make gtSegIds unique and delete 0, -1
@@ -28,7 +34,7 @@ lut = Agglo.buildLUT(m, sagglos);
 
 % get overlaps
 ov = cellfun(@(x)tabulate(lut(x)), gtSegIds, 'uni', 0);
-ov = cellfun(@(x)x(x(:,1) > 0, 1:2), ov, 'uni', 0);
+ov = cellfun(@(x)x(x(:,1) >= ovT, 1:2), ov, 'uni', 0);
 
 end
 

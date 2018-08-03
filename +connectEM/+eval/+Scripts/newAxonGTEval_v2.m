@@ -4,6 +4,7 @@
 
 info = Util.runInfo();
 
+ovT = 2; % minimal overlap in segments
 
 %% load axon agglo
 
@@ -22,7 +23,7 @@ for i = 1:10
 end
 
 m = load(p.agglo.axonAggloFile);
-ov = connectEM.eval.getNewAxonGTAggloOverlap(segIds, axons);
+ov = connectEM.eval.getNewAxonGTAggloOverlap(segIds, axons, ovT);
 
 [~, axFile] = fileparts(p.agglo.axonAggloFile);
 outFile = fullfile(p.agglo.saveFolder, 'eval', ...
@@ -61,4 +62,4 @@ end
 skel = skel.setDescription(sprintf(['Overlap of axon agglo %s with ' ...
     'axon_gt_new. (filename: %s, git hash: %s)'], axFile, info.filename, ...
     info.git_repos{1}.hash));
-% skel.write(sprintf('AxonGT_%s_overlaps.nml', axFile));
+skel.write(sprintf('AxonGT_%s_overlaps.nml', axFile));
