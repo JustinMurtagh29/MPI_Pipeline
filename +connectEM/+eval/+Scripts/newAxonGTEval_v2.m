@@ -59,6 +59,9 @@ for i = 1:10
     skel = skel.mergeSkels(toMergeSkel);
     skel.colors{c} = [0, 1, 0, 1];
     skel.colors(c+1:end) = {[1, 0, 0, 1]};
+    skel.names{c} = [skel.names{c}, ...
+        sprintf(' (path length: %.2f um; recall: %.3f)', ...
+        stats.pathLength(i) ./ 1000, stats.recall(i))];
     
     [skel, gid] = skel.addGroup(sprintf('Axon_%02d', i));
     skel = skel.addTreesToGroup(c:c+numT, gid);
