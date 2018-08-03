@@ -26,8 +26,8 @@ end
 
 % get all nodes that overlap with
 ovIds = cellfun(@(x)cell2mat(agglos(x(:,1))), ov, 'uni', 0);
-recalledNodes = cellfun(@(x, y) ismember(x, y), segIds, ovIds, 'uni', 0);
-ignoredNodes = cellfun(@(x)x < 0, segIds, 'uni', 0);
+recalledNodes = cellfun(@(x, y) any(ismember(x, y), 2), segIds, ovIds, 'uni', 0);
+ignoredNodes = cellfun(@(x)all(x < 0, 2), segIds, 'uni', 0);
 
 recalledEdges = cellfun(@(s, isRec) any(isRec(s.edges{1}), 2), ...
     skels, recalledNodes, 'uni', 0);

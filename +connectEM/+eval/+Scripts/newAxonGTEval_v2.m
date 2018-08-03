@@ -5,6 +5,8 @@
 info = Util.runInfo();
 
 ovT = 2; % minimal overlap in segments
+nhood = 26;
+
 
 %% load axon agglo
 
@@ -22,7 +24,7 @@ for i = 1:10
     skels{i}.verbose = false;
 end
 
-ov = connectEM.eval.getNewAxonGTAggloOverlap(segIds, axons, ovT);
+ov = connectEM.eval.getNewAxonGTAggloOverlap(segIds, axons, ovT, nhood);
 stats = connectEM.eval.gtReconstructionStats(skels, segIds, axons, ov);
 
 [~, axFile] = fileparts(p.agglo.axonAggloFile);
