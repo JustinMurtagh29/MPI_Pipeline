@@ -11,7 +11,7 @@ ovT = 2; % minimal overlap in segments
 p = Gaba.getSegParameters('ex145_ROI2017');
 p.agglo.axonAggloFile = fullfile(p.agglo.saveFolder, ...
     'axons_19_a_partiallySplit_v2.mat');
-axons = L4.Axons.getLargeAxons(p, false, false);
+axons = L4.Axons.getLargeAxons(p, true, true);
 
 
 %% get the overlaps between gt skeletons and agglos
@@ -43,6 +43,7 @@ if iscell(axons) % if agglos are used then create MST superagglo
     tmp = SuperAgglo.fromAgglo(axonsBkp(idx), point, 'mst', ...
         'voxelSize', ...
         [11.24, 11.24, 28]);
+    clear axons
     axons(idx) = tmp;
 end
 
@@ -67,4 +68,5 @@ end
 skel = skel.setDescription(sprintf(['Overlap (ovT=%d) of axon agglo %s ' ...
     'with axon_gt_new.'], ovT, axFile));
 skel = Skeleton.appendRunInfoToDescription(skel, info);
-skel.write(sprintf('AxonGT_%s_overlaps.nml', axFile));
+skel.filename = sprintf('AxonGT_%s_overlaps.nml', axFile);
+% skel.write();
