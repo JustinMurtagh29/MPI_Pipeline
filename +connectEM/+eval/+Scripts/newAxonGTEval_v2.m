@@ -19,7 +19,7 @@ axons = L4.Axons.getLargeAxons(p, true, true);
 %% get the overlaps between gt skeletons and agglos
 
 
-[skels, segIds] = connectEM.eval.getNewAxonGT(nhood);
+[skels, segIds] = connectEM.eval.getNewAxonGT([], nhood);
 for i = 1:10
     skels{i}.verbose = false;
 end
