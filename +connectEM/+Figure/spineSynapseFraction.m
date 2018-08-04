@@ -17,8 +17,10 @@ param = param.p;
 
 conn = connectEM.Connectome.load(param, connFile);
 
-%% Prepare axon meta data% Remove axons with too few synapses
+%% Prepare axon meta data
 axonMeta = conn.axonMeta;
+
+% Remove axons with too few synapses
 axonMeta(axonMeta.synCount < minSynCount, :) = [];
 
 axonMeta.fullPriSpineSynFrac = ...
