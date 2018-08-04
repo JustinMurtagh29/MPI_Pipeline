@@ -73,3 +73,16 @@ parameters:
 * min. segment size: 500 vx
 * min. dendrite type probability: 30 %
 * min. neurite continuity probability: 98 %
+
+## FocusEM ending queries
+1. Parsing of NML files and segment overlap  
+   See TODO
+2. Mapping of tracings onto axon agglomerates  
+   See `+connectEM/getAggloQueryOverlapB.m`
+3. Mapping of tracings onto endings of axon agglomerates  
+   See `+connectEM/flightEndingOverlapRun.m` and
+   `+connectEM/flightEndingOverlap.m`
+4. Case distinction  
+   See `+connectEM/makeEndingCaseDistinctions.m`
+5. Patching in of flight queries
+   See `+connectEM/createNewSuperagglos.m`
