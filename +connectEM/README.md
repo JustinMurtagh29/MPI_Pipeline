@@ -76,7 +76,7 @@ parameters:
 
 ## FocusEM ending queries
 1. Parsing of NML files and segment overlap  
-   See TODO
+   See `+connectEM/getAggloQueryOverlapA.m`
 2. Mapping of tracings onto axon agglomerates  
    See `+connectEM/getAggloQueryOverlapB.m`
 3. Mapping of tracings onto endings of axon agglomerates  
