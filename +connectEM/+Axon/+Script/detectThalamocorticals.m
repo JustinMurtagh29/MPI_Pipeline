@@ -92,16 +92,12 @@ curConfigs(1).binEdges = linspace(0, 0.4, 21);
 curConfigs(1).thresh = 0.19;
 
 curConfigs(2).featName = 'fullPriSpinesPerBouton';
-curConfigs(2).label = { ...
-    'Average number of '; ...
-    'spine synapses per bouton'};
-curConfigs(2).binEdges = linspace(0, 3, 31);
+curConfigs(2).label = 'Average number of spine synapses per bouton';
+curConfigs(2).binEdges = linspace(0, 2.5, 26);
 curConfigs(2).thresh = 1.55;
 
 curConfigs(3).featName = 'fullPriSpinesMultiHitFrac';
-curConfigs(3).label = { ...
-    'Fraction of boutons with'; ...
-    'multiple spine synapses'};
+curConfigs(3).label = 'Fraction of boutons with multiple spine synapses';
 curConfigs(3).binEdges = linspace(0, 1, 21);
 curConfigs(3).thresh = 0.475;
 
@@ -113,39 +109,30 @@ curConfigs(4).thresh = 0.3;
 curExcAxonIds = axonClasses(1).axonIds;
 curPlotProbs = true;
 
-for curConfig = reshape(curConfigs, 1, [])
+for curIdx = 1:numel(curConfigs)
+    curConfig = curConfigs(curIdx);
     curBinEdges = curConfig.binEdges;
     curFeatVals = conn.axonMeta.(curConfig.featName);
 
     curFig = figure();
     curFig.Color = 'white';
-    curFig.Position(3:4) = [425, 400];
+    curFig.Position(3:4) = [305, 285];
 
     curAx = axes(curFig); %#ok
     colors = curAx.ColorOrder;
 
     hold(curAx, 'on');
-    axis(curAx, 'square');
 
     yyaxis(curAx, 'right');
     curTcHist = histogram(curAx, curFeatVals(tcAxonIds));
     curCcHist = histogram(curAx, curFeatVals(ccAxonIds));
-    
-    curBinIds = discretize(curFeatVals(curExcAxonIds), curBinEdges);
-    curMask = ~isnan(curBinIds);
-    
-    curMeanProb = accumarray( ...
-        curBinIds(curMask), axonProbs(curExcAxonIds(curMask)), ...
-       [numel(curConfig.binEdges) - 1, 1], @mean, 0);
-    curProbHist = histogram(curAx, ...
-        'BinEdges', curBinEdges, 'BinCounts', curMeanProb);
     
     ylim(curAx, [0, 1]);
     ylabel(curAx, 'Probability');
 
     yyaxis(curAx, 'left');
     curExcHist = histogram(curAx, curFeatVals(curExcAxonIds));
-    curAllHists = [curTcHist, curCcHist, curProbHist, curExcHist];
+    curAllHists = [curTcHist, curCcHist, curExcHist];
     
     set(curAllHists, ...
         'DisplayStyle', 'stairs', ...
@@ -155,12 +142,11 @@ for curConfig = reshape(curConfigs, 1, [])
    [curAllHists(1:2).Normalization] = deal('probability');
     curAllHists(1).EdgeColor = colors(1, :);
     curAllHists(2).EdgeColor = colors(2, :);
-    curAllHists(3).EdgeColor = colors(3, :);
-    curAllHists(4).EdgeColor = zeros(1, 3);
+    curAllHists(3).EdgeColor = zeros(1, 3);
     
     if ~isempty(curConfig.thresh)
-        plot( ...
-            curAx, repelem(curConfig.thresh, 2), curAx.YLim, ...
+        line(curAx, ...
+            repelem(curConfig.thresh, 2), curAx.YLim, ...
             'Color', 'black', 'LineWidth', 2, 'LineStyle', '--');
     end
 
@@ -170,13 +156,12 @@ for curConfig = reshape(curConfigs, 1, [])
     xlabel(curAx, curConfig.label);
     ylabel(curAx, 'Excitatory axons');
 
-    leg = legend( ...
-        [curTcHist, curCcHist, curProbHist], ...
+    curLeg = legend( ...
+        [curTcHist, curCcHist], ...
         'Thalamocortical', ...
         'Corticocortical', ...
-        'TC probability', ...
-        'Location', 'NorthEast');
-    leg.Box = 'off';
+        'Location', 'SouthOutside');
+    curLeg.Box = 'off';
 
     title( ...
         curAx, {info.filename, info.git_repos{1}.hash}, ...
