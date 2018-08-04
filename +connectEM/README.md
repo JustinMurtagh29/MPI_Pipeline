@@ -86,3 +86,28 @@ parameters:
    See `+connectEM/makeEndingCaseDistinctions.m`
 5. Patching in of flight queries
    See `+connectEM/createNewSuperagglos.m`
+
+### Case distinctions
+
+ 1. Flight does not reach any axon agglomerate
+ 2. Flight overlaps with axon agglomerate at end, but not at start
+ 3. Flight overlaps with axon agglomerate at start, but not at end
+    (after exclusion of type 10 flights)
+ 4. Neither end of flight overlaps with an axon ending
+ 5. Start, but not end of flight does overlap with an axon ending (after
+    exclusion of type 11 flights)
+ 6. End, but not start of flight does overlap with an axon ending
+ 7. Start and end of flight overlap with same axon ending
+ 8. Start and end of flight overlap with same axon agglomerate, but not
+    the same ending (i.e., different endings or no endings)
+ 9. "Correct" flight that overlaps with endings of two different axon
+    agglomerates (after removal of type 12 flights)
+10. Special case of type 3: Flight overlaps with axon agglomerate at
+    start and comes closer than 3 µm to the end of dataset
+11. Special case of type 5: Axon ending at start was queried multiple
+    times and was answered with type 5 flights that reach different axon
+    agglomerates.
+12. Special case of type 9: At least one of the involved axon endings
+    was reached by case 9 flights that started at different axon
+    endings.
+13. 
