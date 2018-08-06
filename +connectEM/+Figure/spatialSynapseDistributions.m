@@ -125,7 +125,7 @@ end
 for curTypeIdx = 1:numel(synTypes)
     curFig = figure();
     curFig.Color = 'white';
-    curFig.Position(3:4) = [480, 320];
+    curFig.Position(3:4) = [600, 320];
     curFigRatio = curFig.Position(4) / curFig.Position(3);
 
     curIm = curTypeDensities{curTypeIdx};
@@ -141,16 +141,8 @@ for curTypeIdx = 1:numel(synTypes)
     curImAx.YTick = curImAx.YTick([1, end]);
     curImAx.YTickLabel = {'Pia', 'WM'};
     
-    curImAx.Position(3:4) = 0.75 * [1, curImRatio / curFigRatio];
+    curImAx.Position(3:4) = 0.6 * [1, curImRatio / curFigRatio];
     curImAx.Position(1:2) = (1 - curImAx.Position(3:4)) / 2;
-
-    plotHist = @(ax, edges, data) ...
-        histogram(ax, ...
-            'BinEdges', edges, ...
-            'BinCounts', data, ...
-            'DisplayStyle', 'stairs', ...
-            'LineWidth', 2, ...
-            'FaceAlpha', 1);
 
     % Synapse histogram along Y axis of plot
     curEdges = curLimY(1):curBinSizeUm:curLimY(2);
@@ -163,11 +155,22 @@ for curTypeIdx = 1:numel(synTypes)
     curSynCounts = accumarray( ...
         cat(2, curSynT.posId, curSynT.synType), ...
         1, [numel(curEdges) - 1, numel(synTypes)]);
+    
+    % Linear regression
+    curLinFit = (curEdges(1:(end - 1)) + curEdges(2:end)) / 2;
+    curLinFit = fit(curLinFit(:), curSynCounts(:, curTypeIdx), 'poly1');
 
     curHistAx = axes(curFig); %#ok
-    curHist = plotHist(curHistAx, curEdges, curSynCounts(:, curTypeIdx));
-
-    curHist.Orientation = 'horizontal';
+    hold(curHistAx, 'on');
+    
+    curHist = histogram(curHistAx, ...
+        'BinEdges', curEdges, ...
+        'BinCounts', curSynCounts(:, curTypeIdx), ...
+        'DisplayStyle', 'stairs', 'LineWidth', 2, ...
+        'FaceAlpha', 1, 'Orientation', 'horizontal');
+    curHistFit = plot(curHistAx, ...
+        curLinFit(curEdges([1, end])), curEdges([1, end]), ...
+        'Color', 'black', 'LineWidth', 2);
     curHistAx.YDir = 'reverse';
 
     curHistAx.Box = 'off';
