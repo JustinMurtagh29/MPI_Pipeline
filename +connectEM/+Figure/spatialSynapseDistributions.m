@@ -81,20 +81,18 @@ clear cur*;
 curDimIds = [2, 1];
 curMaxImSize = 300;
 curBinSizeUm = 2;
-curBandWidth = repelem(0.2, 2);
+curBandWidth = repelem(2, 2);
 curHistSize = 0.1;
 
 curHalfBoxUm = param.bbox(:, 2) - mean(param.bbox, 2);
 curHalfBoxUm = curHalfBoxUm .* param.raw.voxelSize(:) / 1E3;
+curHalfBoxUm = curHalfBoxUm - marginUm;
 
-curLimits = curBinSizeUm * ceil(curHalfBoxUm / curBinSizeUm);
+curLimits = curBinSizeUm * floor(curHalfBoxUm / curBinSizeUm);
 curLimX = [-1, +1] .* curLimits(curDimIds(1));
 curLimY = [-1, +1] .* curLimits(curDimIds(2));
 
-curSupport = curHalfBoxUm(flip(curDimIds));
-curSupport = transpose(curSupport(:) .* [-1, +1]);
-
-%%
+%% Precompute images for faster prototyping
 curImSize = [curLimY(2), curLimX(2)];
 curImSize = round(curMaxImSize * curImSize / max(curImSize));
 
@@ -103,16 +101,21 @@ curImSize = round(curMaxImSize * curImSize / max(curImSize));
     linspace(curLimX(1), curLimX(2), curImSize(2)));
 curImGrid = cat(2, curImGridY(:), curImGridX(:));
 
-% Precompute images for faster prototyping
 curTypeDensities = cell(size(synTypes));
 for curIdx = 1:numel(synTypes)
     curSynT = synT(synT.synType == curIdx, :);
-    curDataX = curSynT.pos(:, curDimIds(1));
-    curDataY = curSynT.pos(:, curDimIds(2));
+    curSynT.posX = curSynT.pos(:, curDimIds(1));
+    curSynT.posY = curSynT.pos(:, curDimIds(2));
+    
+    % Restrict to synapses in domain
+    curSynT(abs(curSynT.posX) > curLimX(end), :) = [];
+    curSynT(abs(curSynT.posY) > curLimY(end), :) = [];
     
     curIm = ksdensity( ...
-       cat(2, curDataY, curDataX), curImGrid, ...
-       'Support', curSupport, 'BandWidth', curBandWidth);
+       cat(2, curSynT.posY, curSynT.posX), curImGrid, ...
+       'Support', cat(2, curLimY(:), curLimX(:)), ...
+       'BoundaryCorrection', 'reflection', ...
+       'BandWidth', curBandWidth);
     curIm = reshape(curIm, curImSize);
     
     curTypeDensities{curIdx} = curIm;
@@ -122,11 +125,8 @@ end
 for curTypeIdx = 1:numel(synTypes)
     curFig = figure();
     curFig.Color = 'white';
-    curFig.Position(3:4) = [480, 360];
+    curFig.Position(3:4) = [480, 320];
     curFigRatio = curFig.Position(4) / curFig.Position(3);
-    
-    curCorrHistSizes = curFig.Position(3:4) / min(curFig.Position(3:4));
-    curCorrHistSizes = curHistSize ./ curCorrHistSizes;
 
     curIm = curTypeDensities{curTypeIdx};
     curIm = uint8(double(intmax('uint8')) * curIm / max(curIm(:)));
@@ -154,10 +154,14 @@ for curTypeIdx = 1:numel(synTypes)
 
     % Synapse histogram along Y axis of plot
     curEdges = curLimY(1):curBinSizeUm:curLimY(2);
-    curPosId = synT.pos(:, curDimIds(2));
-    curPosId = discretize(curPosId, curEdges);
+    
+    curSynT = synT;
+    curSynT.posId = curSynT.pos(:, curDimIds(2));
+    curSynT.posId = discretize(curSynT.posId, curEdges);
+    curSynT(isnan(curSynT.posId), :) = [];
+    
     curSynCounts = accumarray( ...
-        cat(2, curPosId, synT.synType), ...
+        cat(2, curSynT.posId, curSynT.synType), ...
         1, [numel(curEdges) - 1, numel(synTypes)]);
 
     curHistAx = axes(curFig); %#ok
@@ -175,7 +179,8 @@ for curTypeIdx = 1:numel(synTypes)
     curPos = curImAx.Position;
     curHistAx.Position([2, 4]) = curPos([2, 4]);
     curHistAx.Position(1) = curPos(1) + curPos(3);
-    curHistAx.Position(3) = curCorrHistSizes(1);
+    curHistAx.Position(3) = 0.95 - curHistAx.Position(1);
+    curHistAx.Position(4) = curPos(4);
 
     annotation( ...
         curFig, ...
