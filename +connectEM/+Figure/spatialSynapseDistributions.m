@@ -100,7 +100,7 @@ curImSize = round(maxImSize * curImSize / max(curImSize));
 curImGrid = cat(2, curImGridY(:), curImGridX(:));
 
 typeDensities = cell(size(synTypes));
-for curIdx = 2%1:numel(synTypes)
+for curIdx = 1:numel(synTypes)
     curSynT = synT(synT.synType == curIdx, :);
     curSynT.posX = curSynT.pos(:, dimIds(1));
     curSynT.posY = curSynT.pos(:, dimIds(2));
@@ -133,7 +133,7 @@ typeBinCounts = accumarray( ...
 	1, [numel(typeBinEdges) - 1, numel(synTypes)]);
 
 %% Do the actual plotting
-for curTypeIdx = 2%1:numel(synTypes)
+for curTypeIdx = 1:numel(synTypes)
     curFig = figure();
     curFig.Color = 'white';
     curFig.Position(3:4) = [600, 320];
