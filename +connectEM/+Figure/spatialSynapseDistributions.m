@@ -122,27 +122,27 @@ end
 for curTypeIdx = 1:numel(synTypes)
     curFig = figure();
     curFig.Color = 'white';
-    curFig.Position(3:4) = [720, 480];
+    curFig.Position(3:4) = [480, 360];
+    curFigRatio = curFig.Position(4) / curFig.Position(3);
     
     curCorrHistSizes = curFig.Position(3:4) / min(curFig.Position(3:4));
     curCorrHistSizes = curHistSize ./ curCorrHistSizes;
 
     curIm = curTypeDensities{curTypeIdx};
     curIm = uint8(double(intmax('uint8')) * curIm / max(curIm(:)));
+    curImRatio = size(curIm, 1) / size(curIm, 2);
 
-    curAx = axes(curFig); %#ok
-    curIm = image(curAx, curIm);
-    colormap(curAx, jet(256));
-    axis(curAx, 'image');
+    curImAx = axes(curFig); %#ok
+    curIm = image(curImAx, curIm);
+    colormap(curImAx, jet(256));
+    axis(curImAx, 'image');
 
-    curAx.XTick = [];
-    curAx.YTick = curAx.YTick([1, end]);
-    curAx.YTickLabel = {'Pia', 'WM'};
+    curImAx.XTick = [];
+    curImAx.YTick = curImAx.YTick([1, end]);
+    curImAx.YTickLabel = {'Pia', 'WM'};
     
-    curAx.Position(3:4) = 0.8 * curAx.Position(3:4);
-    curAx.Position(1:2) = curAx.Position(1:2) ...
-        + (1 / 0.8 - 1) * curAx.Position(3:4) / 2;
-    curPos = curAx.Position;
+    curImAx.Position(3:4) = 0.75 * [1, curImRatio / curFigRatio];
+    curImAx.Position(1:2) = (1 - curImAx.Position(3:4)) / 2;
 
     plotHist = @(ax, edges, data) ...
         histogram(ax, ...
@@ -152,31 +152,6 @@ for curTypeIdx = 1:numel(synTypes)
             'LineWidth', 2, ...
             'FaceAlpha', 1);
 
-
-    % Synapse histogram along X axis of plot
-    curEdges = curLimX(1):curBinSizeUm:curLimX(2);
-    curPosId = synT.pos(:, curDimIds(1));
-    curPosId = discretize(curPosId, curEdges);
-    curSynCounts = accumarray( ...
-        cat(2, curPosId, synT.synType), ...
-        1, [numel(curEdges) - 1, numel(synTypes)]);
-
-    curAx = axes(curFig); %#ok
-    plotHist(curAx, curEdges, curSynCounts(:, curTypeIdx));
-
-    curAx.YDir = 'reverse';
-
-    curAx.Box = 'off';
-    curAx.TickDir = 'out';
-    curAx.XAxisLocation = 'top';
-    curAx.XLim = curEdges([1, end]);
-    curAx.XTick = [];
-    
-    curAx.Position([1, 3]) = curPos([1, 3]);
-    curAx.Position(2) = curPos(2) - curCorrHistSizes(2);
-    curAx.Position(4) = curCorrHistSizes(2);
-
-
     % Synapse histogram along Y axis of plot
     curEdges = curLimY(1):curBinSizeUm:curLimY(2);
     curPosId = synT.pos(:, curDimIds(2));
@@ -185,22 +160,22 @@ for curTypeIdx = 1:numel(synTypes)
         cat(2, curPosId, synT.synType), ...
         1, [numel(curEdges) - 1, numel(synTypes)]);
 
-    curAx = axes(curFig); %#ok
-    curHist = plotHist(curAx, curEdges, curSynCounts(:, curTypeIdx));
+    curHistAx = axes(curFig); %#ok
+    curHist = plotHist(curHistAx, curEdges, curSynCounts(:, curTypeIdx));
 
     curHist.Orientation = 'horizontal';
-    curAx.YDir = 'reverse';
+    curHistAx.YDir = 'reverse';
 
-    curAx.Box = 'off';
-    curAx.TickDir = 'out';
-    curAx.XAxisLocation = 'top';
-    curAx.YTick = [];
-    curAx.YLim = curEdges([1, end]);
+    curHistAx.Box = 'off';
+    curHistAx.TickDir = 'out';
+    curHistAx.XAxisLocation = 'top';
+    curHistAx.YTick = [];
+    curHistAx.YLim = curEdges([1, end]);
     
-    curAx.Position([2, 4]) = curPos([2, 4]);
-    curAx.Position(1) = curPos(1) + curPos(3);
-    curAx.Position(3) = curCorrHistSizes(1);
-
+    curPos = curImAx.Position;
+    curHistAx.Position([2, 4]) = curPos([2, 4]);
+    curHistAx.Position(1) = curPos(1) + curPos(3);
+    curHistAx.Position(3) = curCorrHistSizes(1);
 
     annotation( ...
         curFig, ...
