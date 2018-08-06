@@ -2,10 +2,11 @@
 %
 % Author: Benedikt Staffler <benedikt.staffler@brain.mpg.de>
 
-info = Util.runInfo();
 
 ovT = 2; % minimal overlap in segments
 nhood = 0;
+
+info = Util.runInfo();
 
 
 %% load axon agglo
@@ -13,7 +14,7 @@ nhood = 0;
 p = Gaba.getSegParameters('ex145_ROI2017');
 p.agglo.axonAggloFile = fullfile(p.agglo.saveFolder, ...
     'axons_19_a_partiallySplit_v2.mat');
-axons = L4.Axons.getLargeAxons(p, true, true);
+[axons, ~, ~, axFile] = L4.Axons.getLargeAxons(p, true, true);
 
 
 %% get the overlaps between gt skeletons and agglos
@@ -25,9 +26,9 @@ for i = 1:10
 end
 
 ov = connectEM.eval.getNewAxonGTAggloOverlap(segIds, axons, ovT);
-stats = connectEM.eval.gtReconstructionStats(skels, segIds, axons, ov);
+[stats, debug] = connectEM.eval.gtReconstructionStats(skels, segIds, axons, ov);
 
-[~, axFile] = fileparts(p.agglo.axonAggloFile);
+[~, axFile] = fileparts(axFile);
 outFile = fullfile(p.agglo.saveFolder, 'eval', ...
     sprintf('axon_gt_eval_%s.mat', axFile));
 
