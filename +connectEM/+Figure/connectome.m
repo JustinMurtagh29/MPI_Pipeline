@@ -28,16 +28,13 @@ dendMeta( ...
     dendMeta.targetClass ~= 'AxonInitialSegment' ...
   & dendMeta.synCount < minSynCount, :) = [];
 
-% Separate between exc. and inh. cells
-inMask = dendMeta.isInterneuron;
+% Rename "Somata" to "Soma"
 somaMask = dendMeta.targetClass == 'Somata';
-dendMeta.targetClass(somaMask &  inMask) = 'SomaInh';
-dendMeta.targetClass(somaMask & ~inMask) = 'SomaExc';
+dendMeta.targetClass(somaMask) = 'Soma';
 
-% Also rename "whole cells" to "proximal dendrites"
+% Rename "WholeCell" to "ProximalDendrite"
 proxDendMask = dendMeta.targetClass == 'WholeCell';
-dendMeta.targetClass(proxDendMask &  inMask) = 'ProximalDendriteInh';
-dendMeta.targetClass(proxDendMask & ~inMask) = 'ProximalDendriteExc';
+dendMeta.targetClass(proxDendMask) = 'ProximalDendrite';
 
 conn = conn.connectome;
 conn(~ismember(conn.edges(:, 1), axonMeta.id), :) = [];
@@ -52,10 +49,8 @@ axonClasses = { ...
     'Thalamocortical'; ...
     'Inhibitory';};
 dendClasses = { ...
-    'SomaExc'; ...
-    'SomaInh';
-    'ProximalDendriteExc';
-    'ProximalDendriteInh';
+    'Soma'; ...
+    'ProximalDendrite';
     'SmoothDendrite'; ...
     'ApicalDendrite'; ...
     'AxonInitialSegment'; ...
