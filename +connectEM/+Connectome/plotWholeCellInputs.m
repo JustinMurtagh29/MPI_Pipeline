@@ -496,23 +496,24 @@ title( ...
     'FontWeight', 'normal', 'FontSize', 10);
 
 %% Try to find border cells
+clear cur*;
 somaPos = cell2mat(arrayfun( ...
     @(s) mean(s.nodes(:, 1:3), 1), ...
     wcT.somaAgglo, 'UniformOutput', false));
 
 voxelSize = param.raw.voxelSize;
-somaDistXY = voxelSize(3) * min(pdist2( ...
+curSomaDistXY = voxelSize(3) * min(pdist2( ...
     somaPos(:, 3), transpose(param.bbox(3, :))), [], 2);
-somaDistXZ = voxelSize(2) * min(pdist2( ...
+curSomaDistXZ = voxelSize(2) * min(pdist2( ...
     somaPos(:, 2), transpose(param.bbox(2, :))), [], 2);
-somaDistYZ = voxelSize(1) * min(pdist2( ...
+curSomaDistYZ = voxelSize(1) * min(pdist2( ...
     somaPos(:, 1), transpose(param.bbox(1, :))), [], 2);
 
-yzWcIds = find(somaDistYZ >= 10E3 & ...
-    (somaDistXY < 10E3 | somaDistXZ < 10E3));
+curYzWcIds = find(curSomaDistYZ >= 10E3 & ...
+    (curSomaDistXY < 10E3 | curSomaDistXZ < 10E3));
 
 wcGroups = struct;
-wcGroups(1).wcIds = yzWcIds;
+wcGroups(1).wcIds = curYzWcIds;
 wcGroups(1).title = sprintf( ...
     'whole cells in YZ view (n = %d)', ...
     numel(wcGroups(1).wcIds));
@@ -534,16 +535,21 @@ wcGroups(3).tag = '1-syn';
 
 %% Generate queen neurons
 extWcT = wcT;
+extWcT.nodeParentIds = arrayfun( ...
+    @(id, nodeCount) reshape(repelem(id, nodeCount), [], 1), ...
+    extWcT.id, cellfun(@numel, extWcT.nodeDists), ...
+    'UniformOutput', false);
+
 for curIdx = 1:numel(wcGroups)
     curWcGroup = wcGroups(curIdx);
     curWcT = extWcT(curWcGroup.wcIds, :);
     
-    nodeIdOff = cumsum(cellfun(@numel, curWcT.nodeDists));
-    nodeIdOff = [0; nodeIdOff(1:(end - 1))];
-
-    lumpedSynapses = cat(1, curWcT.synapses{:});
-    lumpedSynapses.nodeId = lumpedSynapses.nodeId ...
-        + repelem(nodeIdOff, cellfun(@height, curWcT.synapses));
+    curNodeIdOff = cumsum(cellfun(@numel, curWcT.nodeDists));
+    curNodeIdOff = [0; curNodeIdOff(1:(end - 1))];
+    
+    curLumpedSynapses = cat(1, curWcT.synapses{:});
+    curLumpedSynapses.nodeId = curLumpedSynapses.nodeId ...
+        + repelem(curNodeIdOff, cellfun(@height, curWcT.synapses));
 
     curQueenWcT = table;
     curQueenWcT.id = 0;
@@ -562,8 +568,8 @@ for curIdx = 1:numel(wcGroups)
     curQueenWcT.tag = curWcGroup.tag;
 
     curQueenWcT.nodeDists = {cell2mat(curWcT.nodeDists)};
-    curQueenWcT.nodeOrthoDists = {cell2mat(curWcT.nodeOrthoDists)};
-    curQueenWcT.synapses = {lumpedSynapses};
+    curQueenWcT.nodeParentIds = {cat(1, curWcT.nodeParentIds{:})};
+    curQueenWcT.synapses = {curLumpedSynapses};
     curQueenWcT.classConn = sum(curWcT.classConn, 1);
 
     extWcT = cat(1, extWcT, curQueenWcT);
@@ -616,11 +622,9 @@ for curIdx = 1:height(extWcT)
     end
     
     curFig.Color = 'white';
-    curFig.Position(3:4) = [1120, 660];
+    curFig.Position(3:4) = [220, 220];
     
-    curSyns.isSpine = syn.synapses.type(curSyns.id);
-    curSyns.isSpine = curSyns.isSpine == 'PrimarySpine';
-    
+    curSyns.parentId = extWcT.nodeParentIds{curIdx}(curSyns.nodeId);
     curSyns.dist = extWcT.nodeDists{curIdx}(curSyns.nodeId);
     curSyns.dist = curSyns.dist / 1E3;
     
@@ -631,18 +635,21 @@ for curIdx = 1:height(extWcT)
     curSyns.dist(curSyns.isSoma) = -eps;
     
     curMaxDist = 10 * ceil(max(curSyns.dist) / 10);
-    curBinEdges = -5:5:curMaxDist;
+    curBinEdges = -10:10:curMaxDist;
     
     curPlotRange = 10 * ceil(prctile(curSyns.dist, 99) / 10);
     curPlotRange = [curBinEdges(1), curPlotRange]; %#ok
     
     curSyns.axonClass = conn.axonMeta.axonClass(curSyns.axonId);
     
+    curBinIds = discretize(curSyns.dist, curBinEdges);
     curSynTypeData = accumarray( ...
-        horzcat( ...
-            discretize(curSyns.dist, curBinEdges), ...
-            double(curSyns.axonClass)), ...
+        cat(2, curBinIds, double(curSyns.axonClass)), ...
         1, [numel(curBinEdges) - 1, 4]);
+    curNeuronCounts = accumarray( ...
+        curBinIds, curSyns.parentId, ...
+        [numel(curBinEdges) - 1, 1], ...
+        @(ids) numel(unique(ids)));
     
     curPlot = @(ax, varargin) ...
         histogram( ...
@@ -651,31 +658,8 @@ for curIdx = 1:height(extWcT)
             'DisplayStyle', 'stairs', ...
             'LineWidth', 2, ...
             'FaceAlpha', 1);
-        
+    
     curAx = subplot(3, 1, 1);
-    hold(curAx, 'on');
-    
-    curPlot(curAx, curSyns.dist);
-    curPlot(curAx, curSyns.dist(curSyns.isSpine));
-    
-    curAx.TickDir = 'out';
-    curAx.Position(3) = 0.8 - curAx.Position(1);
-    
-    xlim(curAx, curPlotRange);
-    ylabel(curAx, 'Synapses');
-    
-    title(curAx, { ...
-        sprintf('Inputs onto %s', extWcT.title{curIdx}); ...
-        sprintf('%s (%s)', info.filename, info.git_repos{1}.hash)}, ...
-        'FontWeight', 'normal', 'FontSize', 10);
-    
-    curLeg = legend(curAx, ...
-        'All', 'Onto spines', ...
-        'Location', 'EastOutside');
-    curLeg.Position([1, 3]) = [0.82, (0.98 - 0.82)];
-    curLeg.Box = 'off';
-    
-    curAx = subplot(3, 1, 2);
     hold(curAx, 'on');
         
 	curPlot(curAx, curSyns.dist(curSyns.axonClass == 'Corticocortical'));
@@ -695,6 +679,23 @@ for curIdx = 1:height(extWcT)
         'Location', 'EastOutside');
     curLeg.Position([1, 3]) = [0.82, (0.98 - 0.82)];
     curLeg.Box = 'off';
+    
+    title(curAx, { ...
+        sprintf('Inputs onto %s', extWcT.title{curIdx}); ...
+        sprintf('%s (%s)', info.filename, info.git_repos{1}.hash)}, ...
+        'FontWeight', 'normal', 'FontSize', 10);
+        
+    curAx = subplot(3, 1, 2);
+    hold(curAx, 'on');
+    
+    curPlot(curAx, 'BinCounts', curNeuronCounts, 'EdgeColor', 'black');
+    
+    curAx.YDir = 'reverse';
+    curAx.Position(3) = 0.8 - curAx.Position(1);
+    curAx.TickDir = 'out';
+    
+    xlim(curAx, curPlotRange);
+    ylabel(curAx, 'Neurons');
     
     % Synapse ratios
     curAx = subplot(3, 1, 3);
@@ -728,6 +729,18 @@ for curIdx = 1:height(extWcT)
         'Location', 'EastOutside');
     curLeg.Position([1, 3]) = [0.82, (0.98 - 0.82)];
     curLeg.Box = 'off';
+    
+    curAxes = findobj(curFig, 'Type', 'Axes');
+    
+    curTickLabels = repelem({''}, numel(curBinEdges));
+    curTickLabels{curBinEdges == 0} = '0';
+    curTickLabels{end} = num2str(curBinEdges(end));
+    
+    set(curAxes, ...
+        'Color', 'none', ...
+        'XLim', curBinEdges([1, end]), ...
+        'XTick', curBinEdges, ...
+        'XTickLabels', curTickLabels);
     
     % save figure
     if ~isempty(plotDir)
