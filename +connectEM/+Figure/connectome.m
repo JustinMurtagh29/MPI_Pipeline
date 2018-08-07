@@ -161,10 +161,8 @@ axDend.YDir = 'reverse';
 axDend.TickDir = 'out';
 axDend.YMinorTick = 'off';
 
-axDend.YLim(1) = minSynCount;
-axDend.YLim(2) = 10 ^ ceil(log10(max(dendSynCount)));
-yTicks = log10(axDend.YLim);
-yTicks = 10 .^ (yTicks(1):yTicks(2));
+axDend.YLim = 10 .^ [log10(0.9), ceil(log10(max(dendSynCount)))];
+yTicks = 10 .^ (0:log10(axDend.YLim(end)));
 
 yticks(axDend, yTicks);
 yticklabels(axDend, arrayfun( ...
