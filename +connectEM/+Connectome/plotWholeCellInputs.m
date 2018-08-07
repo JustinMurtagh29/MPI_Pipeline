@@ -9,6 +9,8 @@ rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 plotDir = '';
 plotShow = false;
 
+synEmMarginUm = 3;
+
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-partiallySplit-v2_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v8-classified.mat');
 wcFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v3_auto-and-manual.mat');
 somaFile  = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_03_v2.mat');
@@ -205,10 +207,34 @@ end
 %% Plot soma position versus input ratios
 clear cur*;
 curMinSyn = 100;
+curBinSizeUm = 2;
 
-curLimY = (param.bbox(1, 2) - param.bbox(1, 1)) / 2;
-curLimY = floor(curLimY * param.raw.voxelSize(1) / 1E3);
-curLimY = [-curLimY, curLimY];
+curLimits = (param.bbox(1, 2) - param.bbox(1, 1)) / 2;
+curLimits = curLimits * param.raw.voxelSize(1) / 1E3;
+curLimY = floor(curLimits) .* [-1, +1];
+
+curBinEdges = curLimits - synEmMarginUm;
+curBinEdges = curBinSizeUm * floor(curBinEdges / curBinSizeUm);
+curBinEdges = (-curBinEdges):curBinSizeUm:curBinEdges;
+
+curSynT = connectEM.Connectome.buildSynapseTable(conn, syn);
+curSynT.synType = conn.axonMeta.axonClass(curSynT.preAggloId);
+
+curSynPos = connectEM.Synapse.calculatePositions(param, syn);
+curSynPos = curSynPos(:, 1) - mean(param.bbox(1, :));
+curSynPos = curSynPos * param.raw.voxelSize(1) / 1E3;
+
+curSynT.pos = curSynPos(curSynT.id);
+curSynT.binId = discretize(curSynT.pos, curBinEdges);
+curSynT(isnan(curSynT.binId), :) = [];
+
+curBinCounts = accumarray( ...
+    cat(2, curSynT.binId, double(curSynT.synType)), ...
+    1, [numel(curBinEdges) - 1, numel(synTypes)]);
+curBinRatios = curBinCounts(:, 2) ./ sum(curBinCounts(:, 1:2), 2);
+
+curFitRatio = (curBinEdges(1:(end - 1)) + curBinEdges(2:end)) / 2;
+curFitRatio = fit(curFitRatio(:), curBinRatios(:), 'poly1');
 
 curWcT = wcT;
 curWcT(sum(curWcT.classConn, 2) < curMinSyn, :) = [];
@@ -241,6 +267,7 @@ scatter(curAx, curWcT.corrTcRatio, curWcT.somaPosRel(:, 1), 60, '.');
 scatter(curAx, curWcT.tcRatio, curWcT.somaPosRel(:, 1), 60, '.');
 
 curFit = fit(curWcT.somaPosRel(:, 1), curWcT.corrTcRatio, 'poly1');
+plot(curFitRatio(curLimY), curLimY, 'Color', 'red', 'LineWidth', 2, 'LineStyle', '--');
 plot(curFit(curLimY), curLimY, 'Color', 'black', 'LineWidth', 2);
 
 xlabel(curAx, {'TC / (TC + CC)'; 'per neuron'});
