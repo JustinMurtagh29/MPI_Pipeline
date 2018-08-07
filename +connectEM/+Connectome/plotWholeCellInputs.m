@@ -116,6 +116,8 @@ for curIdx = 1:height(wcT)
 end
 
 %% Collect input synapses
+clear cur*;
+
 wcT.synapses = cell(size(wcT.id));
 wcT.classConn = nan(height(wcT), numel(synTypes));
 
@@ -162,6 +164,8 @@ for curIdx = 1:size(wcT, 1)
 end
 
 %% Debugging
+clear cur*;
+
 if ~isempty(debugDir)
     skel = skeleton();
     skel = Skeleton.setParams4Pipeline(skel, param);
@@ -229,8 +233,12 @@ curFig.Position(3:4) = [300, 180];
 curAx = axes(curFig);
 hold(curAx, 'on');
 
-scatter(curAx, curWcT.tcRatio, curWcT.somaPosRel(:, 1), 60, '.');
+curAx.ColorOrder = [ ...
+    0.4660, 0.6740, 0.1880;
+    0.0000, 0.4470, 0.7410];
+
 scatter(curAx, curWcT.corrTcRatio, curWcT.somaPosRel(:, 1), 60, '.');
+scatter(curAx, curWcT.tcRatio, curWcT.somaPosRel(:, 1), 60, '.');
 
 curFit = fit(curWcT.somaPosRel(:, 1), curWcT.corrTcRatio, 'poly1');
 plot(curFit(curLimY), curLimY, 'Color', 'black', 'LineWidth', 2);
@@ -241,7 +249,7 @@ curAx.TickDir = 'out';
 curAx.YDir = 'reverse';
 curAx.YLim = curLimY;
 
-curLeg = {'Raw ratios'; 'YZ corrected ratios'};
+curLeg = {'YZ corrected ratios'; 'Raw ratios'};
 curLeg = legend(curAx, curLeg, 'Location', 'EastOutside');
 curLeg.Box = 'off';
 
