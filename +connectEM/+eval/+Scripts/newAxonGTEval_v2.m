@@ -5,6 +5,8 @@
 
 ovT = 2; % minimal overlap in segments
 nhood = 0;
+opts.nodeDist = 500; % nm
+opts.voxelSize = [11.24, 11.24, 28];
 
 info = Util.runInfo();
 
@@ -26,7 +28,8 @@ for i = 1:10
 end
 
 ov = connectEM.eval.getNewAxonGTAggloOverlap(segIds, axons, ovT);
-[stats, debug] = connectEM.eval.gtReconstructionStats(skels, segIds, axons, ov);
+[stats, debug] = connectEM.eval.gtReconstructionStats(skels, segIds, ...
+    axons, ov, opts);
 
 [~, axFile] = fileparts(axFile);
 outFile = fullfile(p.agglo.saveFolder, 'eval', ...
