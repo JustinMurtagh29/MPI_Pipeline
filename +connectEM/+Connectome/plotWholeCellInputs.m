@@ -253,7 +253,7 @@ curWcT.corrTcRatio = curWcT.tcRatio - curFit(curWcT.somaPosRel(:, 2:3));
 
 curFig = figure();
 curFig.Color = 'white';
-curFig.Position(3:4) = [300, 180];
+curFig.Position(3:4) = [290, 200];
 
 % Correct for YZ
 curAx = axes(curFig);
@@ -301,8 +301,6 @@ dendT(~dendT.cellRow, :) = [];
 
 dendT.dir = nan(size(dendT.somaPos));
 dendT.classConn = nan(height(dendT), numel(synTypes));
-dendT.inhExcRatio = nan(size(dendT.id));
-dendT.wcRelInhExcRatio = nan(size(dendT.id));
 dendT.tcExcRatio = nan(size(dendT.id));
 dendT.wcRelTcExcRatio = nan(size(dendT.id));
 
@@ -332,28 +330,24 @@ for curIdx = 1:size(dendT, 1)
     
     dendT.dir(curIdx, :) = curDendDir;
     dendT.classConn(curIdx, :) = curSynData;
-    dendT.inhExcRatio(curIdx) = curSynData(3) / sum(curSynData(1:3));
-    dendT.tcExcRatio(curIdx) = curSynData(2) / sum(curSynData(1:2));
     
-    % Relative to whole cell-wide average
-    dendT.wcRelInhExcRatio(curIdx) = ...
-        dendT.inhExcRatio(curIdx) / curCell.inhRatio;
+    dendT.tcExcRatio(curIdx) = ...
+        curSynData(2) / sum(curSynData(1:2));
     dendT.wcRelTcExcRatio(curIdx) = ...
         dendT.tcExcRatio(curIdx) / curCell.tcRatio;
 end
 
 %% Plotting
 curVars = { ...
-    'wcRelInhExcRatio', {'Inh / (Inh + Exc)'; 'normalized to cell'}; ...
     'wcRelTcExcRatio', {'TC / (TC + CC)'; 'normalized to cell'}};
 curVarLabels = curVars(:, 2);
 curVars = curVars(:, 1);
 
 curBinEdges = [-1, -0.5, 0.5, 1];
 
-fig = figure();
-fig.Color = 'white';
-fig.Position(3:4) = 700;
+curFig = figure();
+curFig.Color = 'white';
+curFig.Position(3:4) = [400, 220];
 
 for curVarIdx = 1:numel(curVars)
     curVar = curVars{curVarIdx};
@@ -375,8 +369,8 @@ for curVarIdx = 1:numel(curVars)
     
     xlabel(curAx, curVarLabel);
     ylabel(curAx, 'Alignment to cortical axis');
-    curAx.YTickLabel{1} = sprintf('(Pia) %s', curAx.YTickLabel{1});
-    curAx.YTickLabel{end} = sprintf('(WM) %s', curAx.YTickLabel{end});
+    curAx.YTickLabel{1} = sprintf('%s', curAx.YTickLabel{1});
+    curAx.YTickLabel{end} = sprintf('%s', curAx.YTickLabel{end});
     
     curAx = subplot(numel(curVars), 2, (curVarIdx - 1) * 2 + 2);
     boxplot( ...
@@ -394,22 +388,21 @@ for curVarIdx = 1:numel(curVars)
         curBinEdges, 'UniformOutput', false));
 end
 
-ax = flip(cat(1, fig.Children));
-set(ax, ...
+curAx = flip(cat(1, curFig.Children));
+set(curAx, ...
     'XLim', [0, 2], ...
     'YDir', 'reverse', ...
     'TickDir', 'out', ...
     'PlotBoxAspectRatio', [1, 1, 1], ...
     'DataAspectRatioMode', 'auto');
 
-% MATLAB's `boxplot` function is a nightmare
-ax(2).Position(2:4) = ax(1).Position(2:4);
-ax(4).Position(2:4) = ax(3).Position(2:4);
-
 annotation( ...
-    fig, 'textbox', [0, 0.9, 1, 0.1], ...
+    curFig, 'textbox', [0, 0.9, 1, 0.1], ...
     'String', {info.filename; info.git_repos{1}.hash}, ...
     'EdgeColor', 'none', 'HorizontalAlignment', 'center');
+
+% MATLAB's `boxplot` function is a nightmare
+curAx(2).Position(2:4) = curAx(1).Position(2:4);
 
 %% Statistical significance tests
 fprintf([ ...
