@@ -33,6 +33,8 @@ segMass = Seg.Global.getSegToSizeMap(param);
 segPoint = Seg.Global.getSegToPointMap(param);
 
 [conn, syn, axonClasses] = connectEM.Connectome.load(param, connFile);
+
+synPos = connectEM.Synapse.calculatePositions(param, syn);
 synTypes = unique(conn.axonMeta.axonClass);
 
 wcData = load(wcFile);
@@ -203,6 +205,69 @@ if ~isempty(debugDir)
         curSkel.write(fullfile(debugDir, curSkelName));
     end
 end
+
+%% Render isosurface
+% Since Mr. Amira is on vacation.
+clear cur*;
+
+% Configuration
+curIsoDir = '/tmpscratch/amotta/l4/2018-05-10-whole-cell-isosurfaces-spine-evolution/full/mat/';
+
+curCellId = 21;
+curCamPos = [44683, 16045, -15604];
+curCamTarget = [2852.5, 4320.0, 1965.4];
+curCamUpVector = [-0.0178, -0.0785, -0.0153];
+curCamViewAngle = 10.4142;
+
+curIso = load(fullfile(curIsoDir, sprintf('iso-%d.mat', curCellId)));
+curIso = curIso.isoSurf;
+
+curSyn = wcT.synapses{wcT.id == curCellId};
+curSynIsSpine = syn.synapses.type(curSyn.id) == 'PrimarySpine';
+curSynPos = synPos(curSyn.id, :);
+
+curSynColors = [0, 0, 0; 1, 0, 1];
+curSynColors = curSynColors(1 + curSynIsSpine, :);
+
+curFig = figure;
+curFig.Color = 'white';
+
+curAx = axes(curFig);
+curAx.Visible = 'off';
+
+hold(curAx, 'on');
+daspect(curAx, 1 ./ param.raw.voxelSize);
+
+curP = patch(curAx, curIso);
+curP.EdgeColor = 'none';
+curP.FaceColor = 'red';
+material(curP, 'dull');
+
+[curX, curY, curZ] = sphere();
+curX = curX / param.raw.voxelSize(1);
+curY = curY / param.raw.voxelSize(2);
+curZ = curZ / param.raw.voxelSize(3);
+curRad = 0.5E3;
+
+for curId = 1:height(curSyn)
+    curColor = curSynColors(curId, :);
+    curPos = curSynPos(curId, :);
+    
+    curSurf = surf(curAx, ...
+        curRad * curX + curPos(1), ...
+        curRad * curY + curPos(2), ...
+        curRad * curZ + curPos(3));
+    curSurf.FaceColor = curColor;
+    curSurf.EdgeColor = 'none';
+    material(curSurf, 'dull');
+end
+
+curAx.CameraPosition = curCamPos;
+curAx.CameraTarget = curCamTarget;
+curAx.CameraUpVector = curCamUpVector;
+curAx.CameraViewAngle = curCamViewAngle;
+
+camlight(curAx);
 
 %% Plot soma position versus input ratios
 clear cur*;
