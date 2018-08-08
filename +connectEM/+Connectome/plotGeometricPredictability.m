@@ -10,7 +10,6 @@ availFile = '/tmpscratch/amotta/l4/2018-07-18-surface-availability-for-connectom
 minSynPre = 10;
 maxRadius = 50;
 maxAvail = 0.7;
-plotAxonClasses = 1:2;
 
 % Valid prediction methods are
 % * predictTargetClassAvailability: The predicted innervation of a target
@@ -53,6 +52,7 @@ param = param.p;
 [conn, axonClasses] = ...
     connectEM.Connectome.prepareForSpecificityAnalysis( ...
         conn, axonClasses, 'minSynPre', minSynPre);
+axonClasses = axonClasses(1:2);
     
 avail = load(availFile);
 
@@ -69,11 +69,36 @@ classConn = classConn(:, classIds);
 availabilities = avail.axonAvail(classIds, :, :);
 availabilities = availabilities ./ sum(availabilities, 1);
 
-% Duplicate excitatory axons
-axonClasses(end + 1) = axonClasses(1);
-
 % Define target classes we want to predict
 [axonClasses.predictClasses] = deal(targetClasses);
+[axonClasses.correctForBinoVar] = deal(false);
+
+% NOTE(amotta): As discussed with MH on 08.08.2018, let's not predict
+% targets that are not innervated by excitatory axons.
+axonClasses(1).title = sprintf( ...
+    '%s (without SOM and AIS)', axonClasses(1).title);
+axonClasses(1).predictClasses = setdiff( ...
+    targetClasses, {'Somata', 'AxonInitialSegment'});
+
+% Duplicate excitatory axons
+axonClasses(end + 1) = axonClasses(1);
+axonClasses(end).correctForBinoVar = true;
+axonClasses(end).title = sprintf( ...
+    '%s (uncorrected)', axonClasses(end).title);
+
+% Inhibitory axons without correction
+axonClasses(end + 1) = axonClasses(2);
+axonClasses(end).correctForBinoVar = true;
+axonClasses(end).title = sprintf( ...
+    '%s (uncorrected)', axonClasses(end).title);
+
+% Cosmetics
+curColors = get(groot, 'defaultAxesColorOrder');
+axonClasses(1).styles = {'Color', curColors(1, :), 'LineStyle', '-'};
+axonClasses(2).styles = {'Color', curColors(2, :), 'LineStyle', '-'};
+axonClasses(3).styles = {'Color', curColors(1, :), 'LineStyle', '--'};
+axonClasses(4).styles = {'Color', curColors(2, :), 'LineStyle', '--'};
+plotAxonClasses = 1:numel(axonClasses);
 
 %% Build fake connectome for testing
 if ~isempty(fakeRadius)
@@ -330,6 +355,7 @@ axonTargetClassExplainability = nan( ...
 
 for curAxonClassId = 1:numel(axonClasses)
     curAxonClass = axonClasses(curAxonClassId);
+    curCorrect = curAxonClass.correctForBinoVar;
     curAxonIds = curAxonClass.axonIds;
     
     curPredictClasses = curAxonClass.predictClasses;
@@ -352,6 +378,7 @@ for curAxonClassId = 1:numel(axonClasses)
         curVarUnexplainable = targetDistAxonMnVar( ...
             curPredictClassIds, curDistId, curAxonClassId);
         curVarUnexplainable = reshape(curVarUnexplainable, 1, []);
+        curVarUnexplainable = curCorrect * curVarUnexplainable;
         
         % Per axon and target class
         curVarLeft = mean((curPred - curConn) .^ 2, 1);
@@ -539,7 +566,7 @@ end
 curAxes = cat(1, curFig.Children);
 set(curAxes, ...
     'XLim', [0, maxRadius], ...
-    'YLim', [-0.2, 1.2]);
+    'YLim', [0, 1]);
 xlabel(curAxes(end), 'Radius (µm)');
 ylabel(curAxes(end), 'R²');
 
@@ -570,14 +597,17 @@ axis(curAx, 'square');
 hold(curAx, 'on');
 
 for curAxonClassId = plotAxonClasses
+    curStyles = axonClasses(curAxonClassId).styles;
     curData = axonClassExplainability(:, curAxonClassId);
-    plot(curAx, avail.dists / 1E3, curData, 'LineWidth', 2);
+    plot(curAx, ...
+        avail.dists / 1E3, curData, ...
+        'LineWidth', 2, curStyles{:});
 end
 
 xlabel(curAx, 'Radius (µm)');
 xlim(curAx, [0, maxRadius]);
 ylabel(curAx, 'R²');
-ylim(curAx, [-0.2, 1.2]);
+ylim(curAx, [0, 1]);
 
 legend(curAx, ...
     {axonClasses(plotAxonClasses).title}, ...
