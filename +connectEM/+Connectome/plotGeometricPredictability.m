@@ -10,7 +10,7 @@ availFile = '/tmpscratch/amotta/l4/2018-07-18-surface-availability-for-connectom
 minSynPre = 10;
 maxRadius = 50;
 maxAvail = 0.7;
-plotAxonClasses = [1, -1, 2];
+plotAxonClasses = 1:2;
 
 % Valid prediction methods are
 % * predictTargetClassAvailability: The predicted innervation of a target
@@ -316,18 +316,6 @@ end
 
 assert(~any(isnan(targetDistAxonMnVar(:))));
 assert(~any(isnan(targetAxonConnMnVar(:))));
-
-%% Fallback to connectomic noise model
-clear cur*;
-
-for curAxonClassId = 1:numel(axonClasses)
-    curAxonClass = axonClasses(curAxonClassId);
-    curTargetClassIds = curAxonClass.connMnVarClasses;
-   [~, curTargetClassIds] = ismember(curTargetClassIds, targetClasses);
-   
-    curConnMnVar = targetAxonConnMnVar(curTargetClassIds, curAxonClassId);
-    targetDistAxonMnVar(curTargetClassIds, :, curAxonClassId) = curConnMnVar;
-end
 
 %% Calculate explainability
 clear cur*;
