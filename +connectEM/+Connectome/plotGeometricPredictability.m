@@ -7,6 +7,7 @@ rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-partiallySplit-v2_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v8-classified.mat');
 availFile = '/tmpscratch/amotta/l4/2018-07-18-surface-availability-for-connectome-v7-partially-split/axon-availability_v2.mat';
 
+minSynPre = 10;
 maxRadius = 50;
 maxAvail = 0.7;
 plotAxonClasses = [1, -1, 2];
@@ -24,7 +25,12 @@ plotAxonClasses = [1, -1, 2];
 %   predicted innervation of a target class is the result of a multivariate
 %   linear regression based on the fractional surface availability of all
 %   target classes.
-predictionMethod = 'predictUsingLinearRegressionOnAllTargetClassAvailabilities';
+%
+% * predictUsingMultinomialLogisticRegressionOnAllTargetClassAvailabilities:
+%   The predicted innervation of target claass is the result of a
+%   multivariace multinomial logistic regression based on the fractional
+%   surface availability of all target classes.
+predictionMethod = 'predictUsingMultinomialLogisticRegressionOnAllTargetClassAvailabilities';
 
 % Set to radius (in µm) to run forward model to generate fake connectome
 % and calibrate the geometric predictability analysis.
@@ -47,19 +53,15 @@ info = Util.runInfo();
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 
-[conn, ~, axonClasses] = connectEM.Connectome.load(param, connFile);
+[conn, ~, axonClasses] = ...
+    connectEM.Connectome.load(param, connFile);
+[conn, axonClasses] = ...
+    connectEM.Connectome.prepareForSpecificityAnalysis( ...
+        conn, axonClasses, 'minSynPre', minSynPre);
+    
 avail = load(availFile);
 
 %% Prepare data
-% Rename whole cells to proximal dendrites
-% TODO(amotta): Use `connectEM.Connectome.prepareForSpecificityAnalysis`
-% once availability calculation was updated accordingly!
-wcMask = conn.denMeta.targetClass == 'WholeCell';
-conn.denMeta.targetClass(wcMask) = 'ProximalDendrite';
-
-wcMask = avail.targetClasses == 'WholeCell';
-avail.targetClasses(wcMask) = 'ProximalDendrite';
-
 [classConn, classIds] = ...
     connectEM.Connectome.buildClassConnectome(conn);
 
@@ -635,11 +637,11 @@ annotation(curFig, ...
     'String', {predictionMethod; info.filename; info.git_repos{1}.hash});
     
 %% Geometric prediction models
-function preds = predictTargetClassAvailability(~, avails) %#ok
+function preds = predictTargetClassAvailability(~, avails, ~) %#ok
     preds = avails(:, 1:(end - 1));
 end
 
-function preds = predictUsingLinearRegressionOnTargetClassAvailability(conn, avails) %#ok
+function preds = predictUsingLinearRegressionOnTargetClassAvailability(conn, avails, ~) %#ok
     preds = nan(size(conn));
     for curIdx = 1:size(conn, 2)
         curAvails = avails(:, [curIdx, end]);
@@ -648,7 +650,11 @@ function preds = predictUsingLinearRegressionOnTargetClassAvailability(conn, ava
     end
 end
 
-function preds = predictUsingLinearRegressionOnAllTargetClassAvailabilities(conn, avails) %#ok
+function preds = predictUsingLinearRegressionOnAllTargetClassAvailabilities(conn, avails, ~) %#ok
     fit = avails \ conn;
     preds = avails * fit;
+end
+
+function pres = predictUsingMultinomialLogisticRegressionOnAllTargetClassAvailabilities(conn, avails, synCounts) %#ok
+    error('Not implemented yet');
 end
