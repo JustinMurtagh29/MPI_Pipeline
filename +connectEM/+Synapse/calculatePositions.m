@@ -26,7 +26,7 @@ function pos = calculatePositions(param, syn, where)
             error('Invalid input argument');
     end
 
-    wmean = @(w, d) sum((w ./ sum(w)) .* d, 2);
+    wmean = @(w, d) sum((w ./ sum(w)) .* d, 1);
     pos = cell2mat(cellfun( ...
         @(ids) wmean(weights(ids), points(ids, :)), ...
         pos, 'UniformOutput', false));
