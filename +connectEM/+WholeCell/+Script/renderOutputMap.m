@@ -119,7 +119,7 @@ curPlot.LineWidth = 2;
 curX = curX / param.raw.voxelSize(1);
 curY = curY / param.raw.voxelSize(2);
 curZ = curZ / param.raw.voxelSize(3);
-curRad = 0.5E3;
+curRad = 1.5E3;
 
 synColors = [0, 0, 0; 1, 0, 1];
 synIsSpine = syn.synapses.type(synIds) == 'PrimarySpine';
@@ -140,6 +140,16 @@ for curId = 1:numel(synIds)
 end
 
 view(ax, 90, 90);
+
+% Scale bar
+scalebar = 10E3;
+scalebarX = repelem(param.bbox(1, 2) + 5E3 ./ param.raw.voxelSize(1), 2);
+scalebarY = param.bbox(2, 1) + [0, scalebar] ./ param.raw.voxelSize(2);
+scalebarZ = repelem(mean(param.bbox(3, :)), 2);
+
+plot3(ax, ...
+    scalebarX, scalebarY, scalebarZ, ...
+    'Color', 'black', 'LineWidth', 5);
 
 annotation( ...
     fig, 'textbox', [0, 0.9, 1, 0.1], ...
