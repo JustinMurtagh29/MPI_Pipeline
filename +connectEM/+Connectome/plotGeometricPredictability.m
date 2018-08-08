@@ -25,12 +25,7 @@ plotAxonClasses = [1, -1, 2];
 %   predicted innervation of a target class is the result of a multivariate
 %   linear regression based on the fractional surface availability of all
 %   target classes.
-%
-% * predictUsingMultinomialLogisticRegressionOnAllTargetClassAvailabilities:
-%   The predicted innervation of target claass is the result of a
-%   multivariace multinomial logistic regression based on the fractional
-%   surface availability of all target classes.
-predictionMethod = 'predictUsingMultinomialLogisticRegressionOnAllTargetClassAvailabilities';
+predictionMethod = 'predictUsingLinearRegressionOnAllTargetClassAvailabilities';
 
 % Set to radius (in µm) to run forward model to generate fake connectome
 % and calibrate the geometric predictability analysis.
@@ -79,34 +74,6 @@ axonClasses(end + 1) = axonClasses(1);
 
 % Define target classes we want to predict
 [axonClasses.predictClasses] = deal(targetClasses);
-
-% Define target classes whose unexplainable variance is determined not
-% based on the availability, but based on their connectivity.
-[axonClasses.connMnVarClasses] = deal({});
-
-% NOTE(amotta): As discussed in the phone call with MH on 13.06.2018, let's
-% not predict targets that are not innervated by excitatory axons. The
-% skipped classes can still be used to make predictions.
-axonClasses(1).title = sprintf( ...
-    '%s (without AIS, SO, and SD)', axonClasses(1).title);
-axonClasses(1).predictClasses = setdiff( ...
-    targetClasses, {'Somata', 'AxonInitialSegment', 'SmoothDendrite'});
-
-% NOTE(amotta): In today's (14.06.2018) meeting with MH we've decided to
-% also perform the explainability analysis where the unexplainable variance
-% for excitatory smooth dendrite innervations is determined based on the
-% synaptic specificities instead of the membrane availabilities.
-axonClasses(end).title = sprintf([ ...
-    '%s (without AIS, SO; ', ...
-    'synapse-based MN var. for SD)'], ...
-    axonClasses(end).title);
-axonClasses(end).predictClasses = setdiff( ...
-    targetClasses, {'Somata', 'AxonInitialSegment'});
-axonClasses(end).connMnVarClasses = {'SmoothDendrite'};
-
-plotAxonClasses(plotAxonClasses < 0) = ...
-    plotAxonClasses(plotAxonClasses < 0) ...
-  + 1 + numel(axonClasses);
 
 %% Build fake connectome for testing
 if ~isempty(fakeRadius)
@@ -381,7 +348,8 @@ for curAxonClassId = 1:numel(axonClasses)
    [~, curPredictClassIds] = ismember(curPredictClasses, targetClasses);
     
     curConn = classConn(curAxonIds, :);
-    curConn = curConn ./ sum(curConn, 2);
+    curSynCounts = sum(curConn, 2);
+    curConn = curConn ./ curSynCounts;
     curConn = curConn(:, curPredictClassIds);
     
     curVar = mean((curConn - mean(curConn, 1)) .^ 2, 1);
@@ -391,18 +359,18 @@ for curAxonClassId = 1:numel(axonClasses)
         curAvails = transpose(squeeze(curAvails));
         curAvails(:, end + 1) = 1; %#ok
         
-        curPred = curPredFunc(curConn, curAvails);
-        
-        % Per axon and target class
-        curVarLeft = mean((curPred - curConn) .^ 2, 1);
-        curVarExplained = curVar - curVarLeft;
+        curPred = curPredFunc(curConn, curAvails, curSynCounts);
         
         curVarUnexplainable = targetDistAxonMnVar( ...
             curPredictClassIds, curDistId, curAxonClassId);
         curVarUnexplainable = reshape(curVarUnexplainable, 1, []);
         
-        curVarExplainable = curVar - curVarUnexplainable;
-        curVarFracExplained = curVarExplained ./ curVarExplainable;
+        % Per axon and target class
+        curVarLeft = mean((curPred - curConn) .^ 2, 1);
+        curVarLeft = max(curVarLeft - curVarUnexplainable, 0);
+        
+        curVarExplained = curVar - curVarLeft;
+        curVarFracExplained = curVarExplained ./ curVar;
         
         axonTargetClassExplainability(curPredictClassIds, ...
             curDistId, curAxonClassId) = curVarFracExplained;
@@ -410,10 +378,7 @@ for curAxonClassId = 1:numel(axonClasses)
         % Per axon class
         curVarLeft = sum(curVarLeft);
         curVarExplained = sum(curVar) - curVarLeft;
-        
-        curVarUnexplainable = sum(curVarUnexplainable);
-        curVarExplainable = sum(curVar) - curVarUnexplainable;
-        curVarFracExplained = curVarExplained / curVarExplainable;
+        curVarFracExplained = curVarExplained / sum(curVar);
         
         axonClassExplainability( ...
             curDistId, curAxonClassId) = curVarFracExplained;
@@ -653,8 +618,4 @@ end
 function preds = predictUsingLinearRegressionOnAllTargetClassAvailabilities(conn, avails, ~) %#ok
     fit = avails \ conn;
     preds = avails * fit;
-end
-
-function pres = predictUsingMultinomialLogisticRegressionOnAllTargetClassAvailabilities(conn, avails, synCounts) %#ok
-    error('Not implemented yet');
 end
