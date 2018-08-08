@@ -226,7 +226,7 @@ curSynColors = [0, 0, 0; 1, 0, 1];
 curSynColors = curSynColors(1 + curSynIsSpine, :);
 
 curFig = figure;
-curFig.Color = 'white';
+curFig.Color = 'none';
 
 curAx = axes(curFig);
 curAx.Visible = 'off';
@@ -243,7 +243,7 @@ material(curP, 'dull');
 curX = curX / param.raw.voxelSize(1);
 curY = curY / param.raw.voxelSize(2);
 curZ = curZ / param.raw.voxelSize(3);
-curRad = 0.5E3;
+curRad = 1.0E3;
 
 for curId = 1:height(curSyn)
     curColor = curSynColors(curId, :);
@@ -264,6 +264,11 @@ curAx.CameraUpVector = curCamUpVector;
 curAx.CameraViewAngle = curCamViewAngle;
 
 camlight(curAx);
+
+annotation( ...
+    curFig, 'textbox', [0, 0.9, 1, 0.1], ...
+    'String', {info.filename; info.git_repos{1}.hash}, ...
+    'EdgeColor', 'none', 'HorizontalAlignment', 'center');
 
 %% Plot soma position versus input ratios
 clear cur*;
