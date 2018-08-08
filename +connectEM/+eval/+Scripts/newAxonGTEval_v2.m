@@ -71,7 +71,7 @@ for i = 1:10
         stats.pathLength(i) ./ 1000, stats.recall_volume(i))];
     if ismember('recall_nodeDist', stats.Properties.VariableNames)
         skel.names{c} = [skel.names{c}, ...
-            sprintf('; recall_nodeDist: %d', stats.recall_nodeDist(i))];
+            sprintf('; recall_nodeDist: %.2f', stats.recall_nodeDist(i))];
     end
     skel.names{c} = [skel.names{c}, ...
             sprintf('; splits: %d', stats.splits(i))];
@@ -85,7 +85,9 @@ for i = 1:10
     
     for j = 1:(numT-1)
         if any(debug.mergerNodes{i}{j})
-            skel = skel.setComments(c+j, debug.mergerNodes{i}{j}, 'merger');
+            skel = skel.setComments(c+j, ...
+                find(debug.mergerNodes{i}{j}, 1, 'first'), 'merger');
+            skel.names{c+j} = [skel.names{c+j}, ' - has merger'];
         end
     end
     c = c + numT;
