@@ -89,7 +89,8 @@ for i = 1:length(ov)
         nodes = cellfun(@(x)opts.seg_com(x, :), agglos(ov{i}(:, 1)), ...
             'uni', 0);
     else
-        isMerger{i} = nan(size(ov{i}, 1));
+        num_merger = nan(length(ov), 1);
+        break;
     end
     
     d = cellfun(@(x)minDist(x, skels{i}.getNodes(1), opts.voxelSize), ...
@@ -98,7 +99,8 @@ for i = 1:length(ov)
         d{j}(~potMergeSeg{j}) = 0;
     end
     isMerger{i} = cellfun(@(x)any(x > opts.merge_dist), d);
-    mergerNodes = cellfun(@(x)x > opts.merge_dist, d, 'uni', 0);
+    mergerNodes{i} = cellfun(@(x)x > opts.merge_dist, d, 'uni', 0);
+    num_merger = cellfun(@(x)sum(x), isMerger);
 end
 
 % length of each edge
@@ -118,7 +120,7 @@ if hasNodeRec
         stats.pathLength;
 end
 stats.splits = cellfun(@(x)size(x, 1), ov);
-stats.merger = cellfun(@(x)sum(x), isMerger);
+stats.merger = num_merger;
 
 stats = struct2table(stats);
 

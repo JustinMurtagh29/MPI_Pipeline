@@ -18,6 +18,10 @@ p.agglo.axonAggloFile = fullfile(p.agglo.saveFolder, ...
     'axons_19_a_partiallySplit_v2.mat');
 [axons, ~, ~, axFile] = L4.Axons.getLargeAxons(p, true, true);
 
+m = load(p.svg.segmentMetaFile, 'point');
+point = m.point';
+opts.seg_com = point;
+
 
 %% get the overlaps between gt skeletons and agglos
 
@@ -41,8 +45,6 @@ Util.ssave(outFile, info, ov, skels);
 %% everything to nml
 
 if iscell(axons) % if agglos are used then create MST superagglo
-    m = load(p.svg.segmentMetaFile, 'point');
-    point = m.point';
     axonsBkp = axons;
     idx = unique(cell2mat(cellfun(@(x)x(:,1), ov, 'uni', 0)));
     tmp = SuperAgglo.fromAgglo(axonsBkp(idx), point, 'mst', ...
@@ -65,11 +67,27 @@ for i = 1:10
     skel.colors{c} = [0, 1, 0, 1];
     skel.colors(c+1:end) = {[1, 0, 0, 1]};
     skel.names{c} = [skel.names{c}, ...
-        sprintf(' (path length: %.2f um; recall: %.3f)', ...
-        stats.pathLength(i) ./ 1000, stats.recall(i))];
-    
+        sprintf(' (path length: %.2f um; recall_volume: %.3f', ...
+        stats.pathLength(i) ./ 1000, stats.recall_volume(i))];
+    if ismember('recall_nodeDist', stats.Properties.VariableNames)
+        skel.names{c} = [skel.names{c}, ...
+            sprintf('; recall_nodeDist: %d', stats.recall_nodeDist(i))];
+    end
+    skel.names{c} = [skel.names{c}, ...
+            sprintf('; splits: %d', stats.splits(i))];
+    if ismember('merger', stats.Properties.VariableNames)
+        skel.names{c} = [skel.names{c}, ...
+            sprintf('; merger: %d', stats.merger(i))];
+    end
+    skel.names{c} = [skel.names{c}, ')'];
     [skel, gid] = skel.addGroup(sprintf('Axon_%02d', i));
     skel = skel.addTreesToGroup(c:c+numT, gid);
+    
+    for j = 1:(numT-1)
+        if any(debug.mergerNodes{i}{j})
+            skel = skel.setComments(c+j, debug.mergerNodes{i}{j}, 'merger');
+        end
+    end
     c = c + numT;
 end
 
