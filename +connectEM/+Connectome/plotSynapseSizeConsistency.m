@@ -7,6 +7,15 @@ rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-linearized_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v8-classified.mat');
 shFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v3_auto.mat');
 
+modeConfigs = struct;
+modeConfigs(1).name = 'large';
+modeConfigs(1).cvRange = [0, 0.4];
+modeConfigs(1).avgLogAsiRange = [-0.14, 0.23];
+
+modeConfigs(2).name = 'small';
+modeConfigs(2).cvRange = [0, 0.5];
+modeConfigs(2).avgLogAsiRange = [-0.97, -0.6];
+
 info = Util.runInfo();
 Util.showRunInfo(info);
 
@@ -348,20 +357,49 @@ for curCtrlConfig = [curRandConfig, curRandSaSdConfig]
        linspace(curLimY(1), curLimY(2), curImSize(1)));
     curTickLabelsY = arrayfun( ...
         @num2str, curTicksY, 'UniformOutput', false);
+    
+    curColors = {'white', 'white', 'black'};
+    curImages = {curSaSdImg, curCtrlImg, curDiffImg};
+    curTitles = { ...
+        curSaSdConfig.title, curCtrlConfig.title, ...
+        'Difference in probability density'};
    
-    curAx = flip(curFig.Children);
+    curAxes = reshape(flip(curFig.Children), 1, []);
+    curAxTitles = arrayfun(@(ax, t) title(ax, t{1}), curAxes, curTitles);
+    set(curAxTitles, 'FontWeight', 'normal', 'FontSize', 10);
+    arrayfun(@(ax) hold(ax, 'on'), curAxes);
     
-    title( ...
-        curAx(1), curSaSdConfig.title, ...
-        'FontWeight', 'normal', 'FontSize', 10);
-    title( ...
-        curAx(2), curCtrlConfig.title, ...
-        'FontWeight', 'normal', 'FontSize', 10);
-    title( ...
-        curAx(3), 'Difference in probability density', ...
-        'FontWeight', 'normal', 'FontSize', 10);
+    for curModeConfig = modeConfigs
+        fprintf('# Evaluation of mode "%s"\n', curModeConfig.name);
+        
+        curX = curModeConfig.cvRange - curLimX(1);
+        curX = curX / (curLimX(end) - curLimX(1));
+        curX = round(0.5 + (curImSize(2) - 1) * curX);
+        curY = curModeConfig.avgLogAsiRange - curLimY(1);
+        curY = curY / (curLimY(end) - curLimY(1));
+        curY = round(0.5 + (curImSize(1) - 1) * curY);
+        
+        for curIdx = 1:numel(curAxes)
+            curAx = curAxes(curIdx);
+            curTitle = curTitles{curIdx};
+            curColor = curColors{curIdx};
+            
+            plot(curAx, ...
+                curX([1, 2, 2, 1, 1]), ...
+                curY([1, 1, 2, 2, 1]), ...
+                'Color', curColor, ...
+                'LineStyle', '--', ...
+                'LineWidth', 2);
+            
+            curProb = sum(sum(curImages{curIdx}( ...
+                curY(1):curY(end), curX(1):curX(end))));
+            fprintf('* %s: %f %%\n', curTitle, 100 * curProb);
+        end
+        
+        fprintf('\n');
+    end
     
-    set(curAx, ...
+    set(curAxes, ...
         'Box', 'off', ...
         'TickDir', 'out', ...
         'YDir', 'normal', ...
@@ -370,13 +408,13 @@ for curCtrlConfig = [curRandConfig, curRandSaSdConfig]
         'XTick', [], ...
         'PlotBoxAspectRatio', [1, 1, 1], ...
         'DataAspectRatioMode', 'auto');
-    set(curAx(end), ...
+    set(curAxes(end), ...
         'XTick', curTickIdsX, ...
         'XTickLabels', curTickLabelsX);
     
     arrayfun(@(ax) ylabel(ax, ...
-        'Average log_{10}(ASI area [µm²])'), curAx);
-    xlabel(curAx(end), 'Coefficient of variation');
+        'Average log_{10}(ASI area [µm²])'), curAxes);
+    xlabel(curAxes(end), 'Coefficient of variation');
 
     annotation( ...
         curFig, ...
