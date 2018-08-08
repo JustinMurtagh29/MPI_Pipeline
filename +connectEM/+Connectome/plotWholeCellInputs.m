@@ -202,6 +202,34 @@ if ~isempty(debugDir)
     end
 end
 
+%% Remove interneurons and exc. synapses onto exc. somata
+% As discussed with MH on 08.08.2018
+
+% Remove interneurons
+interNeuronCellIds = conn.denMeta.cellId(conn.denMeta.isInterneuron);
+interNeuronCellIds = setdiff(interNeuronCellIds, 0);
+wcT(ismember(wcT.id, interNeuronCellIds), :) = [];
+
+% Remove excitatory synapses onto somata
+for curIdx = 1:height(wcT)
+    curSynapses = wcT.synapses{curIdx};
+    curNodeDists = wcT.nodeDists{curIdx};
+    
+    curExcMask = ismember( ...
+        conn.axonMeta.axonClass(curSynapses.axonId), ...
+        {'Corticocortical', 'Thalamocortical'});
+    curSomaMask = ~curNodeDists(curSynapses.nodeId);
+    curDropMask = curExcMask & curSomaMask;
+    curSynapses(curDropMask, :) = [];
+    
+    % Update class connectome
+    curClassConn = double(conn.axonMeta.axonClass(curSynapses.axonId));
+    curClassConn = accumarray(curClassConn, 1, [numel(synTypes), 1]);
+    
+    wcT.synapses{curIdx} = curSynapses;
+    wcT.classConn(curIdx, :) = curClassConn;
+end
+
 %% Render isosurface
 % Since Mr. Amira is on vacation.
 clear cur*;
