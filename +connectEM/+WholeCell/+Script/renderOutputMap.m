@@ -79,13 +79,15 @@ axon.edges = [ ...
 
 %% Generate isosurface
 fig = figure();
-% fig.Color = 'none';
+fig.Color = 'none';
 
 ax = axes(fig);
 hold(ax, 'on');
 view(ax, 90, 90);
-% ax.Color = 'none';
+
+ax.Color = 'none';
 ax.Visible = 'off';
+
 daspect(ax, 1 ./ param.raw.voxelSize);
 
 p = patch(ax, iso);
@@ -138,3 +140,8 @@ for curId = 1:numel(synIds)
 end
 
 view(ax, 90, 90);
+
+annotation( ...
+    fig, 'textbox', [0, 0.9, 1, 0.1], ...
+    'String', {info.filename; info.git_repos{1}.hash}, ...
+    'EdgeColor', 'none', 'HorizontalAlignment', 'center');
