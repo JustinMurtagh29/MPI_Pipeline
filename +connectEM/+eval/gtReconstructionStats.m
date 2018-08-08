@@ -83,8 +83,7 @@ for i = 1:length(ov)
     potMergeSeg = cellfun(@(x) ~ismember(x, segIds{i}), ...
         agglos(ov{i}(:, 1)), 'uni', 0);
     if isSuperagglo
-        nodes = arrayfun(@Superagglos.getNodes, sagglos(ov{i}(:, 1)), ...
-            'uni', 0);
+        nodes = Superagglos.getNodes(sagglos(ov{i}(:, 1)));
     elseif ~isempty(opts.seg_com)
         nodes = cellfun(@(x)opts.seg_com(x, :), agglos(ov{i}(:, 1)), ...
             'uni', 0);
