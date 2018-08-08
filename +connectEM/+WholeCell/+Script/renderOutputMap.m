@@ -119,7 +119,7 @@ curPlot.LineWidth = 2;
 curX = curX / param.raw.voxelSize(1);
 curY = curY / param.raw.voxelSize(2);
 curZ = curZ / param.raw.voxelSize(3);
-curRad = 0.5E3;
+curRad = 1.5E3;
 
 synColors = [0, 0, 0; 1, 0, 1];
 synIsSpine = syn.synapses.type(synIds) == 'PrimarySpine';
