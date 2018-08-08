@@ -219,8 +219,10 @@ curIso = load(fullfile(curIsoDir, sprintf('iso-%d.mat', curCellId)));
 curIso = curIso.isoSurf;
 
 curSyn = wcT.synapses{wcT.id == curCellId};
-curSynType = conn.axonMeta.axonClass(curSyn.axonId);
-curSynPos = synPos(curSyn.id, :);
+curSyn.type = conn.axonMeta.axonClass(curSyn.axonId);
+
+curSynPos = connectEM.Synapse.calculatePositions(param, syn, 'pre');
+curSynPos = curSynPos(curSyn.id, :);
 
 curFig = figure;
 curFig.Color = 'none';
@@ -246,7 +248,7 @@ curZ = curZ / param.raw.voxelSize(3);
 curRad = 1.0E3;
 
 for curId = 1:height(curSyn)
-    curTypeId = double(curSynType(curId));
+    curTypeId = double(curSyn.type(curId));
     curColor = curColors(curTypeId, :);
     curPos = curSynPos(curId, :);
     
