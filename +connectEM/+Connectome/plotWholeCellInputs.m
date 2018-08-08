@@ -219,11 +219,8 @@ curIso = load(fullfile(curIsoDir, sprintf('iso-%d.mat', curCellId)));
 curIso = curIso.isoSurf;
 
 curSyn = wcT.synapses{wcT.id == curCellId};
-curSynIsSpine = syn.synapses.type(curSyn.id) == 'PrimarySpine';
+curSynType = conn.axonMeta.axonClass(curSyn.axonId);
 curSynPos = synPos(curSyn.id, :);
-
-curSynColors = [0, 0, 0; 1, 0, 1];
-curSynColors = curSynColors(1 + curSynIsSpine, :);
 
 curFig = figure;
 curFig.Color = 'none';
@@ -231,12 +228,15 @@ curFig.Color = 'none';
 curAx = axes(curFig);
 curAx.Visible = 'off';
 
+curColors = curAx.ColorOrder;
+curColors = cat(1, curColors(1:3, :), [0, 0, 0]);
+
 hold(curAx, 'on');
 daspect(curAx, 1 ./ param.raw.voxelSize);
 
 curP = patch(curAx, curIso);
 curP.EdgeColor = 'none';
-curP.FaceColor = 'red';
+curP.FaceColor = repelem(0.85, 3);
 material(curP, 'dull');
 
 [curX, curY, curZ] = sphere();
@@ -246,7 +246,8 @@ curZ = curZ / param.raw.voxelSize(3);
 curRad = 1.0E3;
 
 for curId = 1:height(curSyn)
-    curColor = curSynColors(curId, :);
+    curTypeId = double(curSynType(curId));
+    curColor = curColors(curTypeId, :);
     curPos = curSynPos(curId, :);
     
     curSurf = surf(curAx, ...
