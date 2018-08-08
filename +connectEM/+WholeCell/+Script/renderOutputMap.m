@@ -141,6 +141,16 @@ end
 
 view(ax, 90, 90);
 
+% Scale bar
+scalebar = 10E3;
+scalebarX = repelem(param.bbox(1, 2) + 5E3 ./ param.raw.voxelSize(1), 2);
+scalebarY = param.bbox(2, 1) + [0, scalebar] ./ param.raw.voxelSize(2);
+scalebarZ = repelem(mean(param.bbox(3, :)), 2);
+
+plot3(ax, ...
+    scalebarX, scalebarY, scalebarZ, ...
+    'Color', 'black', 'LineWidth', 5);
+
 annotation( ...
     fig, 'textbox', [0, 0.9, 1, 0.1], ...
     'String', {info.filename; info.git_repos{1}.hash}, ...
