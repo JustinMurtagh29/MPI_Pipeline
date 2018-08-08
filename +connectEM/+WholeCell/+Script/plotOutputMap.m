@@ -42,6 +42,15 @@ grandAvgAxon.pathLength = nan;
 grandAvgAxon.synapses = cat(1, axonData.synapses);
 grandAvgAxon.synapses = sortrows(grandAvgAxon.synapses, 'somaDist');
 
+%% Perform statistical test
+clear cur*;
+curSomaDist = grandAvgAxon.synapses.somaDist;
+curIsSpineSyn = syn.isSpineSyn(grandAvgAxon.synapses.id);
+
+[~, curPVal] = ttest2( ...
+    curSomaDist(curIsSpineSyn), ...
+    curSomaDist(~curIsSpineSyn)) %#ok
+
 %% Determine bin edges
 binEdges = max(grandAvgAxon.synapses.somaDist / 1E3);
 binEdges = binSizeUm * ceil(binEdges / binSizeUm);
