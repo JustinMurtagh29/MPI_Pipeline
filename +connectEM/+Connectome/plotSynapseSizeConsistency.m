@@ -352,18 +352,36 @@ for curCtrlConfig = [curRandConfig, curRandSaSdConfig]
         uint8(double(intmax('uint8')) ...
       * curSaSdImg / curMax));
     colormap(curAx, jet(256));
+    curBar = colorbar('peer', curAx);
+    curBar.Label.String = {'Fraction of'; curSaSdConfig.title};
+    curBar.Ticks = curBar.Limits(1);
     
     curAx = subplot(3, 1, 2);
     image(curAx, ...
         uint8(double(intmax('uint8')) ...
       * curCtrlImg / curMax));
     colormap(curAx, jet(256));
+    curBar = colorbar('peer', curAx);
+    curBar.Label.String = {'Fraction of'; curCtrlConfig.title};
+    curBar.Ticks = curBar.Limits(1);
     
     curAx = subplot(3, 1, 3);
     image(curAx, ...
         uint8(double(intmax('uint8')) ...
       * (1 + curDiffImg / curMaxDiff) / 2));
     colormap(curAx, jet(256));
+    curBar = colorbar('peer', curAx);
+    curBar.Label.String = { ...
+        'Fraction of observe pairs'; ...
+        'relative to null model'};
+    curBar.Ticks = mean(curBar.Limits);
+    curBar.TickLabels = {'0'};
+    
+    set( ...
+        findobj(curFig.Children, 'Type', 'ColorBar'), ...
+        'Location', 'EastOutside', ...
+        'TickDirection', 'out', ...
+        'Box', 'off');
     
    [~, curTickIdsX] = ismember(curTicksX, ...
        linspace(curLimX(1), curLimX(2), curImSize(2)));
@@ -380,9 +398,7 @@ for curCtrlConfig = [curRandConfig, curRandSaSdConfig]
         curSaSdConfig.title, curCtrlConfig.title, ...
         'Difference in probability density'};
    
-    curAxes = reshape(flip(curFig.Children), 1, []);
-    curAxTitles = arrayfun(@(ax, t) title(ax, t{1}), curAxes, curTitles);
-    set(curAxTitles, 'FontWeight', 'normal', 'FontSize', 10);
+    curAxes = reshape(flip(findobj(curFig, 'Type', 'Axes')), 1, []);
     arrayfun(@(ax) hold(ax, 'on'), curAxes);
     
     for curModeConfig = modeConfigs
