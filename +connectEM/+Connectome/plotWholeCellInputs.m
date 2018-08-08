@@ -179,24 +179,21 @@ if ~isempty(debugDir)
     for curIdx = 1:numel(debugCellIds)
         curId = debugCellIds(curIdx);
         curAgglo = wcT.agglo(curId);
-        curSynIds = wcT.synapses{curId}.nodeId;
-        curDistsUm = wcT.nodeDists{curId} / 1E3;
+        
+        curSynDists = wcT.nodeDists{curId} / 1E3;
+        curSynDists = curSynDists(wcT.synapses{curId}.nodeId);
+        curSynPos = synPos(wcT.synapses{curId}.id, :);
 
         % generate skeleton
         curSkel = skel.addTree( ...
             sprintf('Whole cell %d', curId), ...
             curAgglo.nodes(:, 1:3), curAgglo.edges);
-
+        curSkel = curSkel.addNodesAsTrees(curSynPos);
+        
         % add distance annotations
-        curComments = arrayfun( ...
-            @(segId, distUm) sprintf( ...
-                'Synapse. Segment %d. %.1f µm to soma.', segId, distUm), ...
-            curAgglo.nodes(curSynIds, 4), curDistsUm(curSynIds), ...
-            'UniformOutput', false);
-       [curSkel.nodesAsStruct{end}(curSynIds).comment] = deal(curComments{:});
-
-        % add branchpoints
-        curSkel = curSkel.addBranchpoint(curSynIds);
+        curSkel.names(2:end) = arrayfun( ...
+            @(distUm) sprintf('Synapse. %.1f µm to soma.', distUm), ...
+            curSynDists, 'UniformOutput', false);
 
         curSkelName = sprintf( ...
             '%0*d_whole-cell-%d.nml', ...
