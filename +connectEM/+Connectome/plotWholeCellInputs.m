@@ -208,7 +208,9 @@ end
 % Remove interneurons
 interNeuronCellIds = conn.denMeta.cellId(conn.denMeta.isInterneuron);
 interNeuronCellIds = setdiff(interNeuronCellIds, 0);
+
 wcT(ismember(wcT.id, interNeuronCellIds), :) = [];
+splitNmlT(ismember(splitNmlT.cellId, interNeuronCellIds), :) = [];
 
 % Remove excitatory synapses onto somata
 for curIdx = 1:height(wcT)
