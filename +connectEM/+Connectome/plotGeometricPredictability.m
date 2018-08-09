@@ -88,13 +88,13 @@ axonClasses(1).predictClasses = setdiff( ...
 axonClasses(end + 1) = axonClasses(1);
 axonClasses(end).correctForBinoVar = true;
 axonClasses(end).title = sprintf( ...
-    '%s (uncorrected)', axonClasses(end).title);
+    '%s (bino. var. corrected)', axonClasses(end).title);
 
 % Inhibitory axons without correction
 axonClasses(end + 1) = axonClasses(2);
 axonClasses(end).correctForBinoVar = true;
 axonClasses(end).title = sprintf( ...
-    '%s (uncorrected)', axonClasses(end).title);
+    '%s (bino. var. corrected)', axonClasses(end).title);
 
 % Cosmetics
 curColors = get(groot, 'defaultAxesColorOrder');
