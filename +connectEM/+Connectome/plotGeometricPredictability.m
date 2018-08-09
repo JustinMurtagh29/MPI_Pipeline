@@ -24,7 +24,11 @@ maxAvail = 0.7;
 %   predicted innervation of a target class is the result of a multivariate
 %   linear regression based on the fractional surface availability of all
 %   target classes.
-predictionMethod = 'predictUsingLinearRegressionOnAllTargetClassAvailabilities';
+% * predictUsingMultivariateMultinomialLogisticRegression: The predicted
+%   innervation of a target class is the result of a multivariate
+%   multinomial logistic regression based on the fractional surface
+%   availability of all target classes.
+predictionMethod = 'predictUsingMultivariateMultinomialLogisticRegression';
 
 % Set to radius (in µm) to run forward model to generate fake connectome
 % and calibrate the geometric predictability analysis.
@@ -368,7 +372,9 @@ for curAxonClassId = 1:numel(axonClasses)
     
     curVar = mean((curConn - mean(curConn, 1)) .^ 2, 1);
     
+    tic();
     for curDistId = 1:numel(avail.dists)
+        Util.progressBar(curDistId, numel(avail.dists));
         curAvails = availabilities(:, curDistId, curAxonIds);
         curAvails = transpose(squeeze(curAvails));
         curAvails(:, end + 1) = 1; %#ok
@@ -636,4 +642,23 @@ end
 function preds = predictUsingLinearRegressionOnAllTargetClassAvailabilities(conn, avails, ~) %#ok
     fit = avails \ conn;
     preds = avails * fit;
+end
+
+function preds = predictUsingMultivariateMultinomialLogisticRegression(conn, avails, synCounts) %#ok
+    % HACK(amotta): Restore absolute synapse counts
+    conn = round(conn .* synCounts);
+    avails(:, end) = [];
+    
+    % HACK(amotta): Work around MATLAB throwing an error if multiple axons
+    % have the same availabilities, but different synapses. This can be
+    % solved by generating a single virtual axon with the pooled synapses.
+   [X, ~, Y] = unique(avails, 'rows');
+    Y = Y(:) + ((1:size(conn, 2)) - 1) * size(X, 1);
+    Y = reshape(accumarray(Y(:), conn(:)), size(X, 1), []);
+    
+    warnConfig = warning('off');
+    onCleanup(@() warning(warnConfig));
+    
+    fit = mnrfit(X, Y);
+    preds = mnrval(fit, avails);
 end
