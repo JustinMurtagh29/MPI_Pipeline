@@ -657,7 +657,7 @@ function preds = predictUsingMultivariateMultinomialLogisticRegression(conn, ava
     Y = reshape(accumarray(Y(:), conn(:)), size(X, 1), []);
     
     warnConfig = warning('off');
-    onCleanup(@() warning(warnConfig));
+    cleanUp = onCleanup(@() warning(warnConfig));
     
     fit = mnrfit(X, Y);
     preds = mnrval(fit, avails);
