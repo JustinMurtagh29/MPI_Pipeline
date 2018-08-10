@@ -4,7 +4,7 @@ clear;
 
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites-wholeCells-03-v2-classified_spine-syn-clust.mat');
+connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-partiallySplit-v2_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v8-classified.mat');
 
 targetClasses = { ...
     'Somata', 'SO'; ...
@@ -30,29 +30,41 @@ info = Util.runInfo();
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 
-[conn, ~, axonClasses] = ...
+[conn, syn, axonClasses] = ...
     connectEM.Connectome.load(param, connFile);
-conn = ...
-    connectEM.Connectome.prepareForSpecificityAnalysis(conn);
+[conn, axonClasses] = ...
+    connectEM.Connectome.prepareForSpecificityAnalysis( ...
+        conn, axonClasses, 'minSynPre', minSynPre);
 
 %% Calculate synapse fractions
-classConnectome = ...
-    connectEM.Connectome.buildClassConnectome( ...
-        conn, 'targetClasses', targetClasses);
-classConnectome = ...
-    classConnectome ...
- ./ sum(classConnectome, 2);
+[classConnectome, curSortIds] = ...
+    connectEM.Connectome.buildClassConnectome(conn);
+[~, curSortIds] = ismember(targetClasses, curSortIds);
+
+classConnectome = classConnectome(:, curSortIds);
+classConnectome = classConnectome ./ sum(classConnectome, 2);
 
 axonClassMeans = cell2mat(arrayfun(@(a)  ...
     mean(classConnectome(a.axonIds, :), 1), ...
     reshape(axonClasses(plotAxonClassIds), [], 1), ...
     'UniformOutput', false));
 
-classConnectome(conn.axonMeta.synCount < minSynPre, :) = [];
+%% Calculate target class innervation probabilities for null model
+clear cur*;
+
+for curIdx = 1:numel(axonClasses)
+    curNullProbs = classConnectome(axonClasses(curIdx).nullAxonIds, :);
+    curNullProbs = connectEM.Specificity.calcFirstHitProbs(curNullProbs);
+    axonClasses(curIdx).nullTargetClassProbs = curNullProbs;
+end
 
 %% Plot results
+clear cur*;
+curClassConn =  classConnectome( ...
+    conn.axonMeta.synCount >= minSynPre, :);
+
 boxGroups = 1:numel(targetClasses);
-boxGroups = repmat(boxGroups, size(classConnectome, 1), 1);
+boxGroups = repmat(boxGroups, size(curClassConn, 1), 1);
 
 % Add jitter
 boxJitter = 0.5 * (rand(size(boxGroups)) - 0.5);
@@ -70,14 +82,14 @@ colors = ax.ColorOrder(1:numel(targetClasses), :);
 cellfun(@(c) plot(ax, nan, nan, '.', 'Color', c), num2cell(colors, 2));
 
 scatter( ...
-    ax, boxJitter(:), classConnectome(:), ...
+    ax, boxJitter(:), curClassConn(:), ...
     [], colors(boxGroups(:), :), '.');
 
 for curTargetId = 1:numel(targetClasses)
     curX = curTargetId + [-0.45, +0.45];
     
     % Mean over all axons
-    curMean = mean(classConnectome(:, curTargetId));
+    curMean = mean(curClassConn(:, curTargetId));
     curColor = colors(curTargetId, :);
     
     plot(ax, ...
@@ -86,11 +98,12 @@ for curTargetId = 1:numel(targetClasses)
     
     % Mean over axon classes
     for curAxonIdx = 1:size(axonClassMeans, 1)
-        curMean = axonClassMeans(curAxonIdx, curTargetId);
+        curAxonClass = axonClasses(plotAxonClassIds(curAxonIdx));
+        curNullProb = curAxonClass.nullTargetClassProbs(curTargetId);
         curStyle = plotAxonClassStyles{curAxonIdx};
         
         plot(ax, ...
-            curX, repelem(curMean, 2), ...
+            curX, repelem(curNullProb, 2), ...
             'LineWidth', 2, curStyle{:});
     end
 end

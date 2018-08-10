@@ -6,7 +6,7 @@ clear;
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v8-classified.mat');
 splitAxonFile = fullfile(rootDir, 'aggloState', 'axons_19_a_linearized.mat');
-outFile = fullfile(rootDir, 'aggloState', 'axons_19_a_partiallySplit_v2.mat');
+outFile = fullfile(rootDir, 'aggloState', 'axons_19_a_partiallySplit_v3.mat');
 
 % Set file path to generate debug NML file
 debugNmlFile = '';
@@ -42,6 +42,9 @@ replaceAxonByIds = accumarray( ...
     find(replaceAxonByIds), ...
    [numel(toSplitIds), 1], ...
     @(ids) {ids});
+
+replacedAxonIds = repelem( ...
+    toSplitIds, cellfun(@numel, replaceAxonByIds));
 
 assert(~any(cellfun(@isempty, replaceAxonByIds)));
 replaceByIds = cell2mat(replaceAxonByIds);
@@ -84,14 +87,20 @@ end
 out = struct;
 out.axons = axons.axons;
 out.indBigAxons = axons.indBigAxons;
+out.parentIdsSplit = zeros(size(out.axons));
+out.parentIds = reshape(1:numel(out.axons), [], 1);
 
 % Remove axons which we want to split
 out.axons(toSplitIds) = [];
 out.indBigAxons(toSplitIds) = [];
+out.parentIdsSplit(toSplitIds) = [];
+out.parentIds(toSplitIds) = [];
 
 % Addend split versions
 out.axons = [out.axons; splitAxons.axons(replaceByIds)];
 out.indBigAxons = [out.indBigAxons; splitAxons.indBigAxons(replaceByIds)];
+out.parentIdsSplit = [out.parentIdsSplit; replaceByIds];
+out.parentIds = [out.parentIds; replacedAxonIds];
 
 out.info = info;
 

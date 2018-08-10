@@ -4,7 +4,7 @@ clear;
 
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites-wholeCells-03-v2-classified_spine-syn-clust.mat');
+connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-partiallySplit-v2_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v8-classified.mat');
 outputDir = '/home/amotta/Desktop';
 
 info = Util.runInfo();
@@ -19,17 +19,20 @@ points = Seg.Global.getSegToPointMap(param);
 
 %% Select synapses
 spinyDendIds = find(conn.denMeta.targetClass == 'OtherDendrite');
+apicalDendIds = find(conn.denMeta.targetClass == 'ApicalDendrite');
 smoothDendIds = find(conn.denMeta.targetClass == 'SmoothDendrite');
 
 synT = connectEM.Connectome.buildSynapseTable(conn, syn);
 synT(synT.isSpine, :) = [];
 
 spinySynT = synT(ismember(synT.postAggloId, spinyDendIds), :);
+apicalSynT = synT(ismember(synT.postAggloId, apicalDendIds), :);
 smoothSynT = synT(ismember(synT.postAggloId, smoothDendIds), :);
 
 %% Export random examples
 exportSyns(1) = struct('tag', 'spiny', 'syns', spinySynT);
-exportSyns(2) = struct('tag', 'smooth', 'syns', smoothSynT);
+exportSyns(2) = struct('tag', 'apical', 'syns', apicalSynT);
+exportSyns(3) = struct('tag', 'smooth', 'syns', smoothSynT);
 
 skel = skeleton();
 skel = Skeleton.setParams4Pipeline(skel, param);

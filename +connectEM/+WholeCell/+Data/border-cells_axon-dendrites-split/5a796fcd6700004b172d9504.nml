@@ -1,20 +1,20 @@
 <things>
   <meta name="writer" content="NmlWriter.scala" />
-  <meta name="writerGitCommit" content="203197dbf38d1a31d002f5c35837a1a552eb0ded" />
-  <meta name="timestamp" content="1520572098220" />
-  <meta name="annotationId" content="5aa21690670000ed0ecd0c32" />
-  <meta name="username" content="Heiko Wissler" />
+  <meta name="writerGitCommit" content="265a9da58d61fc963ce4db2e99336efc899e9e35" />
+  <meta name="timestamp" content="1532597180035" />
+  <meta name="annotationId" content="5b5993a1290000d5004a15bc" />
+  <meta name="username" content="Alessandro Motta" />
   <parameters>
     <experiment name="2012-09-28_ex145_07x2_ROI2017" description="" />
     <scale x="11.4" y="11.4" z="28.0" />
     <offset x="0" y="0" z="0" />
     <time ms="1517908160057" />
     <editPosition x="4457" y="7978" z="911" />
-    <editRotation xRot="96.91475479995967" yRot="359.5796802089341" zRot="352.56755447136635" />
+    <editRotation xRot="96.91475522375288" yRot="359.5796802356152" zRot="352.56755447136635" />
     <zoomLevel zoom="0.7710865788590626" />
     <activeNode id="3723" />
   </parameters>
-  <thing id="3" color.r="0.6784313917160034" color.g="0.1411764770746231" color.b="0.05098039284348488" color.a="1.0" name="explorative_2018-03-09_Heiko_Wissler_003">
+  <thing id="3" color.r="0.6784313917160034" color.g="0.1411764770746231" color.b="0.05098039284348488" color.a="1.0" name="Dendrite">
     <nodes>
       <node id="975" radius="120.0" x="1671" y="4609" z="1514" rotX="86.64068716093414" rotY="0.6920283803917755" rotZ="13.89701966374463" inVp="4" inMag="0" bitDepth="8" interpolation="true" time="1512477012759" />
       <node id="3204" radius="120.0" x="556" y="7231" z="654" rotX="151.04402994653452" rotY="15.825722554645665" rotZ="101.15433620201117" inVp="4" inMag="0" bitDepth="8" interpolation="true" time="1512478151032" />
@@ -9271,7 +9271,7 @@
       <edge source="3870" target="3871" />
     </edges>
   </thing>
-  <thing id="2" color.r="0.0" color.g="0.0" color.b="1.0" color.a="1.0" name="explorative_2018-03-01_Raphael_Jakoby_002">
+  <thing id="2" color.r="0.0" color.g="0.0" color.b="1.0" color.a="1.0" name="Axon">
     <nodes>
       <node id="3739" radius="120.0" x="4741" y="8018" z="861" rotX="109.93347856495166" rotY="351.12054636727504" rotZ="318.257987324008" inVp="4" inMag="0" bitDepth="8" interpolation="true" time="1512478484519" />
       <node id="3818" radius="120.0" x="5530" y="8159" z="847" rotX="81.1241754261473" rotY="330.08097058294584" rotZ="264.82723341693577" inVp="4" inMag="0" bitDepth="8" interpolation="true" time="1512478520405" />
@@ -9487,6 +9487,8 @@
   <branchpoints />
   <comments>
     <comment node="5" content="dendrite" />
-    <comment node="3723" content="axon" />
+    <comment node="1" content="soma" />
+    <comment node="3723" content="soma" />
   </comments>
+  <groups />
 </things>

@@ -7,6 +7,7 @@ rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-partiallySplit-v2_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v8-classified.mat');
 
 minSynCount = 10;
+threshLines = [0.2, 0.5];
 
 info = Util.runInfo();
 
@@ -16,8 +17,10 @@ param = param.p;
 
 conn = connectEM.Connectome.load(param, connFile);
 
-%% Prepare axon meta data% Remove axons with too few synapses
+%% Prepare axon meta data
 axonMeta = conn.axonMeta;
+
+% Remove axons with too few synapses
 axonMeta(axonMeta.synCount < minSynCount, :) = [];
 
 axonMeta.fullPriSpineSynFrac = ...
@@ -29,6 +32,7 @@ binEdges = linspace(0, 1, 21);
 
 fig = figure();
 fig.Color = 'white';
+fig.Position(3:4) = [290, 210];
 
 ax = axes(fig);
 axis(ax, 'square')
@@ -38,8 +42,12 @@ histogram(ax, ...
     axonMeta.fullPriSpineSynFrac, binEdges, ...
     'DisplayStyle', 'stairs', 'LineWidth', 2, 'FaceAlpha', 1);
 
+lines = arrayfun(@(x) plot(ax, [x, x], ax.YLim), threshLines);
+set(lines, 'Color', 'black', 'LineWidth', 2', 'LineStyle', '--');
+
 ax.TickDir = 'out';
-xlim(ax, binEdges([1, end]));
+ax.XLim = binEdges([1, end]);
+
 xlabel(ax, 'Spine synapse fraction');
 ylabel(ax, 'Axons');
 

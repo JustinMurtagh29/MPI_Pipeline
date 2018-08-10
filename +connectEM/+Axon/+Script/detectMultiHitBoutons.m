@@ -321,8 +321,14 @@ curMeanSynCounts = cellfun(@(boutonIds, isSpine) ...
 curMultiHitFracs = cellfun(@(boutonIds, isSpine) ...
     mean(accumarray(boutonIds, isSpine) > 1), ...
     boutonIds, synIsSpine);
-curMedianBoutonVol = cellfun( ...
-    @median, boutonMeta.boutonVols);
+
+curMedianBoutonVols = cellfun(@median, boutonMeta.boutonVols);
+curMedianBoutonVols = curMedianBoutonVols / (1E3) ^ 3;
+
+curGroupId = zeros(size(curAxonIds));
+curGroupId(curMedianBoutonVols(curAxonIds) > 0.45) = 3;
+curGroupId(curMeanSynCounts(curAxonIds) > 1.6) = 2;
+curGroupId(curConn.axonMeta.fullPriSpineSynDens(curAxonIds) > 0.19) = 1;
 
 curFig = figure();
 curFig.Color = 'white';
@@ -331,28 +337,28 @@ curAx = subplot(1, 3, 1);
 axis(curAx, 'square');
 hold(curAx, 'on');
 
-scatter(curAx, ...
+gscatter( ...
     curConn.axonMeta.fullPriSpineSynDens(curAxonIds), ...
-    curMeanSynCounts(curAxonIds), '.');
+    curMeanSynCounts(curAxonIds), curGroupId, [], [], [], 'off');
 ylabel(curAx, 'Average spine synapses per bouton');
 
 curAx = subplot(1, 3, 2);
 axis(curAx, 'square');
 hold(curAx, 'on');
 
-scatter(curAx, ...
+gscatter( ...
     curConn.axonMeta.fullPriSpineSynDens(curAxonIds), ...
-    curMultiHitFracs(curAxonIds), '.');
+    curMultiHitFracs(curAxonIds), curGroupId, [], [], [], 'off');
 ylabel(curAx, 'Fraction of multi-synaptic boutons');
 
 curAx = subplot(1, 3, 3);
 axis(curAx, 'square');
 hold(curAx, 'on');
 
-scatter(curAx, ...
+gscatter( ...
     curConn.axonMeta.fullPriSpineSynDens(curAxonIds), ...
-    curMedianBoutonVol(curAxonIds), '.');
-ylabel(curAx, 'Mean bouton volume');
+    curMedianBoutonVols(curAxonIds), curGroupId, [], [], [], 'off');
+ylabel(curAx, 'Median bouton volume (µm³)');
 
 curAxes = flip(curFig.Children);
 
@@ -360,31 +366,18 @@ arrayfun(@(a) set(a, ...
     'TickDir', 'out', ...
     'XLim', [0, a.XLim(2)], ...
     'YLim', [0, a.YLim(2)]), curAxes);
-
-arrayfun(@(a) plot(a, ...
-	repelem(0.19, 2), ylim(a), ...
-	'Color', 'black', 'LineWidth', 2, 'LineStyle', '--'), curAxes);
 xlabel(curAxes(1), 'Spine synapse density (µm^{-1})');
-    
+
 annotation( ...
     'textbox', [0, 0.9, 1, 0.1], ...
     'EdgeColor', 'none', 'HorizontalAlignment', 'center', ...
     'String', {info.filename; info.git_repos{1}.hash});
 
 %% Look at discrepancies
-clear cur*;
-curOutputDir = '/home/amotta/Desktop/multi-hit-tc';
-
-curMeanSynCounts = cellfun(@(boutonIds, isSpine) ...
-    mean(accumarray(boutonIds, isSpine)), ...
-    boutonIds, synIsSpine);
-
-curAxonIds = axonClasses(4).axonIds;
-curAxonIds = curAxonIds( ...
-    curMeanSynCounts(curAxonIds) > 1.6 ...
-  & curMeanSynCounts(curAxonIds) < 1.9);
+curOutputDir = '/home/amotta/Desktop/tc-candidates';
 
 rng(0);
+curAxonIds = curAxonIds(curGroupId > 0);
 curAxonIds = curAxonIds(randperm(numel(curAxonIds)));
 curAxonIds = curAxonIds(1:10);
 

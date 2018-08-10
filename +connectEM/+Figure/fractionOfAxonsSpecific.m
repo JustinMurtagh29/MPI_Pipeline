@@ -132,17 +132,23 @@ title(ax, { ...
 
 %% Plot distribution of specificities over target classes
 clear cur*;
+
+curBarWidth = 0.8;
+curHistWidth = 0.09;
 plotClasses = 1:numel(axonClasses);
 
 fig = figure();
 fig.Color = 'white';
-fig.Position(3:4) = [190, 160];
+fig.Position(3:4) = [280, 280];
 
 ax = axes(fig);
+hold(ax, 'on');
+ax.YAxisLocation = 'right';
+
 plotData = fractionOfSpecificOntoTargetBars(plotClasses, :);
 plotData = flip(plotData, 2);
 
-allBars = bar(ax, plotData, 'stacked');
+allBars = bar(ax, plotData, 'stacked', 'BarWidth', curBarWidth);
 
 colors = flip(ax.ColorOrder(1:numel(targetClasses), :), 1);
 mixedColors = (colors(1:(end - 1), :) .^ 2 + colors(2:end, :) .^ 2) / 2;
@@ -154,6 +160,30 @@ colors = num2cell(colors(1:(end - 1), :), 2);
 
 [allBars.FaceColor] = deal(colors{:});
 [allBars.EdgeColor] = deal('none');
+
+excSpecs = axonClasses(1).specs;
+excOff = fractionOfSpecificOntoTargetBars(1, :);
+excOff = 1 - cumsum(cat(1, 0, excOff(:)));
+for curClassId = 1:numel(targetClasses)
+    curClassName = targetClasses{curClassId};
+    curTcProbs = [];
+    
+    if isfield(excSpecs, curClassName)
+        curTcProbs = excSpecs.(curClassName).axonIds;
+        curTcProbs = conn.axonMeta.tcProb(curTcProbs);
+        curTcProbs = sort(curTcProbs, 'descend');
+    end
+    
+    curOffX = 1 - curBarWidth / 2;
+    curX = (curTcProbs(:) >= 0.6) * curHistWidth;
+    curOffY = excOff(1 + 2 * (curClassId - 1) + [0, 1]);
+    curY = linspace(curOffY(1), curOffY(2), numel(curX));
+    
+    curX = curOffX - cat(1, 0, curX(:), 0);
+    curY = cat(1, curOffY(1), curY(:), curOffY(2));
+    
+    plot(ax, curX, curY, 'Color', 'black');
+end
 
 xlim(ax, [0.5, numel(plotClasses) + 0.5]);
 xticklabels(ax, {axonClasses(plotClasses).tag});

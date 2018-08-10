@@ -1,6 +1,12 @@
-function axonMeta = completeSynapseMeta(param, conn, syn)
+function axonMeta = completeSynapseMeta( ...
+        param, interSyn, boutonMeta, conn, syn)
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
+    import connectEM.Axon.*;
+    
+    synIds = getSynapses(conn, syn);
+    boutonIds = clusterSynapsesIntoBoutons(synIds, interSyn);
+    fullPriSynSpineMask = syn.synapses.type == 'PrimarySpine';
     
     synapses = syn.synapses;
     synapses.id = reshape( ...
@@ -9,7 +15,7 @@ function axonMeta = completeSynapseMeta(param, conn, syn)
         synapses.type == 'PrimarySpine' ...
       | synapses.type == 'SecondarySpine';
   
-    maxSegId = Seg.Global.getMaxSegId(param);    
+    maxSegId = Seg.Global.getMaxSegId(param);
     axonLUT = Agglo.buildLUT(maxSegId, conn.axons);
     
     synapses.axonId = cellfun( ...
@@ -20,13 +26,31 @@ function axonMeta = completeSynapseMeta(param, conn, syn)
     synapses.axonId = cell2mat(synapses.axonId);
 
     axonMeta = conn.axonMeta;
+    axonMeta.pathLen = interSyn.axonPathLens / 1E3;
+    
     axonMeta.fullSynCount = accumarray( ...
         synapses.axonId, 1, size(axonMeta.id));
     axonMeta.fullSpineSynCount = accumarray( ...
         synapses.axonId, synapses.ontoSpine, size(axonMeta.id));
     
-    priSpineSynMask = ...
+    priSynSpineMask = ...
         synapses.type == 'PrimarySpine';
     axonMeta.fullPriSpineSynCount = accumarray( ...
-        synapses.axonId, priSpineSynMask, size(axonMeta.id));
+        synapses.axonId, priSynSpineMask, size(axonMeta.id));
+
+    % Average number of primary spine innervations per axonal bouton
+    axonMeta.fullPriSpinesPerBouton = cellfun( ...
+        @(synIds, boutonIds) mean(accumarray( ...
+            boutonIds, fullPriSynSpineMask(synIds))), ...
+        synIds, boutonIds);
+    
+    % Fraction of axonal boutons with multiple primary spine innervations
+    axonMeta.fullPriSpinesMultiHitFrac = cellfun( ...
+        @(synIds, boutonIds) mean(accumarray( ...
+            boutonIds, fullPriSynSpineMask(synIds)) > 1), ...
+        synIds, boutonIds);
+    
+    % Median volume of axonal boutons (in µm³)
+    axonMeta.medianBoutonVol = cellfun( ...
+        @median, boutonMeta.boutonVols) / (1E3) ^ 3;
 end

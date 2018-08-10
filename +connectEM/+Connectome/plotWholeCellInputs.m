@@ -9,7 +9,9 @@ rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 plotDir = '';
 plotShow = false;
 
-connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites-wholeCells-03-v2-classified_spine-syn-clust.mat');
+synEmMarginUm = 3;
+
+connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-partiallySplit-v2_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v8-classified.mat');
 wcFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v3_auto-and-manual.mat');
 somaFile  = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_03_v2.mat');
 
@@ -30,41 +32,36 @@ param = param.p;
 segMass = Seg.Global.getSegToSizeMap(param);
 segPoint = Seg.Global.getSegToPointMap(param);
 
-[conn, syn] = connectEM.Connectome.load(param, connFile);
+[conn, syn, axonClasses] = connectEM.Connectome.load(param, connFile);
+
+synPos = connectEM.Synapse.calculatePositions(param, syn);
+synTypes = unique(conn.axonMeta.axonClass);
 
 wcData = load(wcFile);
 somaData = load(somaFile);
 
-%% NML files for whole cell splitting
+%% NML files for splitting whole cells into individual dendrites
 splitNmlT = connectEM.WholeCell.loadSplitNmls(splitNmlDir);
 splitNmlT.cellId = wcData.idxWholeCells(splitNmlT.aggloId);
 assert(all(splitNmlT.cellId));
 
-%% Split axons into exc. and inh.
-conn.axonMeta.fullPriSpineSynFrac = ...
-    conn.axonMeta.fullPriSpineSynCount ...
- ./ conn.axonMeta.fullSynCount;
-
-conn.axonMeta.isExc = (conn.axonMeta.fullPriSpineSynFrac >= 0.5);
-conn.axonMeta.isInh = ~conn.axonMeta.isExc;
-
-synTypes = unique(conn.axonMeta.axonClass);
-
 %% Complete whole cell somata
+clear cur*;
+
 wcT = table;
 wcT.id = wcData.idxWholeCells(wcData.indWholeCells);
 wcT.agglo = wcData.dendrites(wcData.indWholeCells);
 SuperAgglo.check(wcT.agglo);
 
 % Find corresponding somata
-[~, somaIds] = ismember(wcT.id, somaData.idxSomata);
-wcT.somaAgglo = somaData.dendrites(somaIds);
+[~, curSomaIds] = ismember(wcT.id, somaData.idxSomata);
+wcT.somaAgglo = somaData.dendrites(curSomaIds);
 
-calcSomaPos = @(n) ...
+curCalcSomaPos = @(n) ...
     sum(segMass(n(:, 4)) .* n(:, 1:3), 1) ....
     ./ sum(segMass(n(:, 4)));
 wcT.somaPos = cell2mat(arrayfun( ...
-    @(a) calcSomaPos(a.nodes), ...
+    @(a) curCalcSomaPos(a.nodes), ...
     wcT.somaAgglo, 'UniformOutput', false));
 
 % NOTE(amotta): There is a bug in the soma super-agglomerates which allows
@@ -82,12 +79,13 @@ wcT.title = arrayfun( ...
     wcT.id, 'UniformOutput', false);
 wcT.tag = strrep(wcT.title, ' ', '-');
 
-%% Calculate node distances
-%  * to soma surface, and
-%  * orthogonal to soma
+%% Calculate dendritic path length to soma
+% Nodes within the soma are assigned as distance of zero.
+clear cur*;
+
 wcT.nodeDists = cell(size(wcT.id));
 
-for curIdx = 1:size(wcT, 1)
+for curIdx = 1:height(wcT)
     curAgglo = wcT.agglo(curIdx);
     curNodeCount = size(curAgglo.nodes, 1);
     
@@ -104,33 +102,26 @@ for curIdx = 1:size(wcT, 1)
     curDists = sqrt(sum(curDists .* curDists, 2));
     assert(all(curDists));
     
-    % Travelling within soma is for free!
+    % NOTE(amotta): Travelling within soma doesn't add path length.
     curDists(all(curSomaNodeMask(curAgglo.edges), 2)) = 0;
     
-    curAdj = sparse( ...
-        curAgglo.edges(:, 2), curAgglo.edges(:, 1), ...
-        true, curNodeCount, curNodeCount);
-
-    curDists = graphshortestpath( ...
-        curAdj, curSomaNodeId, ...
-        'Weights', curDists, ...
-        'Directed', false);
+    curDists = graph( ...
+        curAgglo.edges(:, 1), ...
+        curAgglo.edges(:, 2), ...
+        curDists, curNodeCount);
+    curDists = distances(curDists, curSomaNodeId);
     
     % Sanity checks
     assert(~any(curDists(curSomaNodeMask)));
     assert(all(curDists(~curSomaNodeMask)));
     
     curDists = reshape(curDists, [], 1);
-    
-    % Orthogonal distance
-    curOrthoDists = curAgglo.nodes(:, 1:3) - wcT.somaPos(curIdx, :);
-    curOrthoDists = curOrthoDists .* param.raw.voxelSize;
-    
     wcT.nodeDists{curIdx} = curDists;
-    wcT.nodeOrthoDists{curIdx} = curOrthoDists;
 end
 
 %% Collect input synapses
+clear cur*;
+
 wcT.synapses = cell(size(wcT.id));
 wcT.classConn = nan(height(wcT), numel(synTypes));
 
@@ -149,20 +140,19 @@ for curIdx = 1:size(wcT, 1)
     
     curSynT = table;
     curSynT.id = cell2mat(curConnRows.synIdx);
-    curSynT.area = cell2mat(curAreaRows);
     
     curSynT.nodeId = cellfun( ...
         @(ids) intersect(ids, curAgglo.nodes(:, 4)), ...
         syn.synapses.postsynId(curSynT.id), ...
         'UniformOutput', false);
     
-    % assign synapse to largest segment
+    % Assign synapse to largest segment
    [~, curNodeId] = cellfun( ...
         @(ids) max(segMass(ids)), curSynT.nodeId);
     curNodeIds = arrayfun( ...
         @(ids, idx) ids{1}(idx), curSynT.nodeId, curNodeId);
     
-    % translate to relative 
+    % Translate segment to node IDs
    [~, curSynT.nodeId] = ismember( ...
        double(curNodeIds), curAgglo.nodes(:, 4));
     
@@ -177,7 +167,9 @@ for curIdx = 1:size(wcT, 1)
     wcT.classConn(curIdx, :) = curClassConn;
 end
 
-%% debugging
+%% Debugging
+clear cur*;
+
 if ~isempty(debugDir)
     skel = skeleton();
     skel = Skeleton.setParams4Pipeline(skel, param);
@@ -186,26 +178,22 @@ if ~isempty(debugDir)
 
     for curIdx = 1:numel(debugCellIds)
         curId = debugCellIds(curIdx);
+        curAgglo = wcT.agglo(curId);
         
-        curEdges = wcT.edges{curId};
-        curNodeIds = wcT.segIds{curId};
-        curDistsUm = wcT.nodeDists{curId} / 1E3;
-        curSynIdx = wcT.synapses{curId}.segIdx;
+        curSynDists = wcT.nodeDists{curId} / 1E3;
+        curSynDists = curSynDists(wcT.synapses{curId}.nodeId);
+        curSynPos = synPos(wcT.synapses{curId}.id, :);
 
         % generate skeleton
         curSkel = skel.addTree( ...
             sprintf('Whole cell %d', curId), ...
-            ceil(segCentroids(curNodeIds, :)), curEdges);
-
+            curAgglo.nodes(:, 1:3), curAgglo.edges);
+        curSkel = curSkel.addNodesAsTrees(curSynPos);
+        
         % add distance annotations
-        curComments = arrayfun( ...
-            @(segId, distUm) sprintf( ...
-                'Synapse. Segment %d. %.1f µm to soma.', segId, distUm), ...
-            curNodeIds(curSynIdx), curDistsUm(curSynIdx), 'UniformOutput', false);
-       [curSkel.nodesAsStruct{end}(curSynIdx).comment] = deal(curComments{:});
-
-        % add branchpoints
-        curSkel = curSkel.addBranchpoint(curSynIdx);
+        curSkel.names(2:end) = arrayfun( ...
+            @(distUm) sprintf('Synapse. %.1f µm to soma.', distUm), ...
+            curSynDists, 'UniformOutput', false);
 
         curSkelName = sprintf( ...
             '%0*d_whole-cell-%d.nml', ...
@@ -214,132 +202,192 @@ if ~isempty(debugDir)
     end
 end
 
-%% Plot soma position versus input ratios
-curMinSyn = 100;
-curDimLabels = {'X', 'Y', 'Z'};
+%% Remove interneurons and exc. synapses onto exc. somata
+% As discussed with MH on 08.08.2018
 
-[curInhRatioFit, curTcRatioFit] = ...
-    connectEM.Synapse.calculateCorticalRatioGradients(param, conn, syn);
+% Remove interneurons
+interNeuronCellIds = conn.denMeta.cellId(conn.denMeta.isInterneuron);
+interNeuronCellIds = setdiff(interNeuronCellIds, 0);
 
-curWcT = wcT;
-curWcT(cellfun(@height, curWcT.synapses) < curMinSyn, :) = [];
+wcT(ismember(wcT.id, interNeuronCellIds), :) = [];
+splitNmlT(ismember(splitNmlT.cellId, interNeuronCellIds), :) = [];
 
-curWcT.inhRatio = nan(height(curWcT), 1);
-curWcT.tcRatio = nan(height(curWcT), 1);
-
-for curIdx = 1:height(curWcT)
-    curSynapses = curWcT.classConn(curIdx, :);
-    curWcT.inhRatio(curIdx) = curSynapses(3) / sum(curSynapses(1:3));
-    curWcT.tcRatio(curIdx) = curSynapses(2) / sum(curSynapses(1:2));
-end
-
-curWcT.somaPosRel = curWcT.somaPos - mean(param.bbox, 2)';
-curWcT.somaPosRel = curWcT.somaPosRel .* param.raw.voxelSize / 1E3;
-
-
-% Correct for YZ changes
-curFitYZ = fit(curWcT.somaPosRel(:, 2:3), ...
-    curWcT.inhRatio - mean(curWcT.inhRatio), 'poly11');
-curWcT.corrInhRatio = curWcT.inhRatio - curFitYZ(curWcT.somaPosRel(:, 2:3));
-
-curFitYZ = fit(curWcT.somaPosRel(:, 2:3), ...
-    curWcT.tcRatio - mean(curWcT.tcRatio), 'poly11');
-curWcT.corrTcRatio = curWcT.tcRatio - curFitYZ(curWcT.somaPosRel(:, 2:3));
-
-
-curFig = figure();
-curFig.Color = 'white';
-curFig.Position(3:4) = [1650, 850];
-
-% Correct for YZ
-curAx = subplot(2, 4, 1);
-hold(curAx, 'on');
-
-scatter(curWcT.corrInhRatio, curWcT.somaPosRel(:, 1), 60, '.');
-curFit = fit(curWcT.somaPosRel(:, 1), curWcT.corrInhRatio, 'poly1');
-plot(curInhRatioFit(curAx.YLim), curAx.YLim', 'Color', 'red', 'LineWidth', 2);
-plot(curFit(curAx.YLim), curAx.YLim, 'Color', 'black', 'LineWidth', 2);
-
-curVar = sum((curWcT.corrInhRatio - curFit(curWcT.somaPosRel(:, 1))) .^ 2);
-title( ...
-    curAx, sprintf('Var = %.3f', curVar), ...
-    'FontWeight', 'normal', 'FontSize', 10);
-
-curAx = subplot(2, 4, 1 + 4);
-hold(curAx, 'on');
-
-scatter(curWcT.corrTcRatio, curWcT.somaPosRel(:, 1), 60, '.');
-curFit = fit(curWcT.somaPosRel(:, 1), curWcT.corrTcRatio, 'poly1');
-plot(curTcRatioFit(curAx.YLim), curAx.YLim', 'Color', 'red', 'LineWidth', 2);
-plot(curFit(curAx.YLim), curAx.YLim, 'Color', 'black', 'LineWidth', 2);
-
-curVar = sum((curWcT.corrTcRatio - curFit(curWcT.somaPosRel(:, 1))) .^ 2);
-title( ...
-    curAx, sprintf('Var = %.3f', curVar), ...
-    'FontWeight', 'normal', 'FontSize', 10);
-
-
-for curDim = 1:3
-    curAx = subplot(2, 4, 1 + curDim);
-    hold(curAx, 'on');
-
-    scatter(curWcT.inhRatio, curWcT.somaPosRel(:, curDim), 60, '.');
-    curFit = fit(curWcT.somaPosRel(:, curDim), curWcT.inhRatio, 'poly1');
-    plot(curFit(curAx.YLim), curAx.YLim, 'Color', 'black', 'LineWidth', 2);
+% Remove excitatory synapses onto somata
+for curIdx = 1:height(wcT)
+    curSynapses = wcT.synapses{curIdx};
+    curNodeDists = wcT.nodeDists{curIdx};
     
-
-    curAx = subplot(2, 4, 1 + 4 + curDim);
-    hold(curAx, 'on');
-
-    scatter(curWcT.tcRatio, curWcT.somaPosRel(:, curDim), 60, '.');
-    curFit = fit(curWcT.somaPosRel(:, curDim), curWcT.tcRatio, 'poly1');
-    plot(curFit(curAx.YLim), curAx.YLim, 'Color', 'black', 'LineWidth', 2);
+    curExcMask = ismember( ...
+        conn.axonMeta.axonClass(curSynapses.axonId), ...
+        {'Corticocortical', 'Thalamocortical'});
+    curSomaMask = ~curNodeDists(curSynapses.nodeId);
+    curDropMask = curExcMask & curSomaMask;
+    curSynapses(curDropMask, :) = [];
+    
+    % Update class connectome
+    curClassConn = double(conn.axonMeta.axonClass(curSynapses.axonId));
+    curClassConn = accumarray(curClassConn, 1, [numel(synTypes), 1]);
+    
+    wcT.synapses{curIdx} = curSynapses;
+    wcT.classConn(curIdx, :) = curClassConn;
 end
 
+%% Render isosurface
+% Since Mr. Amira is on vacation.
+clear cur*;
 
-curAxes = flip(curFig.Children);
+% Configuration
+curIsoDir = '/tmpscratch/amotta/l4/2018-05-10-whole-cell-isosurfaces-spine-evolution/full/mat/';
 
-set(curAxes, ...
-    'TickDir', 'out', ...
-    'XLim', [0, 1], ...
-    'YDir', 'reverse', ...
-    'DataAspectRatioMode', 'auto', ...
-    'PlotBoxAspectRatio', [1, 1, 1]);
+curCellId = 21;
+curCamPos = [44683, 16045, -15604];
+curCamTarget = [2852.5, 4320.0, 1965.4];
+curCamUpVector = [-0.0178, -0.0785, -0.0153];
+curCamViewAngle = 10.4142;
 
-xlabel(curAxes(1), {'YZ corrected'; 'Inh / (Inh + Exc)'});
-xlabel(curAxes(3), 'Inh / (Inh + Exc)');
-xlabel(curAxes(2), {'YZ corrected'; 'TC / (TC + CC)'});
-xlabel(curAxes(4), 'TC / (TC + CC)');
+curIso = load(fullfile(curIsoDir, sprintf('iso-%d.mat', curCellId)));
+curIso = curIso.isoSurf;
 
-[curAxes(1:2:end).YLim] = deal(prctile( ...
-    cat(2, curAxes(1:2:end).YLim), [0, 100]));
-[curAxes(2:2:end).YLim] = deal(prctile( ...
-    cat(2, curAxes(2:2:end).YLim), [0, 100]));
+curSyn = wcT.synapses{wcT.id == curCellId};
+curSyn.type = conn.axonMeta.axonClass(curSyn.axonId);
 
-for curDim = 1:3
-    ylabel(curAxes(2 * (curDim + 1)), sprintf( ...
-        'Soma position along %s (µm)', char(char('X') + (curDim - 1))));
+curSynPos = connectEM.Synapse.calculatePositions(param, syn, 'pre');
+curSynPos = curSynPos(curSyn.id, :);
+
+curFig = figure;
+curFig.Color = 'none';
+
+curAx = axes(curFig);
+curAx.Visible = 'off';
+
+curColors = curAx.ColorOrder;
+curColors = cat(1, curColors(1:3, :), [0, 0, 0]);
+
+hold(curAx, 'on');
+daspect(curAx, 1 ./ param.raw.voxelSize);
+
+curP = patch(curAx, curIso);
+curP.EdgeColor = 'none';
+curP.FaceColor = repelem(0.85, 3);
+material(curP, 'dull');
+
+[curX, curY, curZ] = sphere();
+curX = curX / param.raw.voxelSize(1);
+curY = curY / param.raw.voxelSize(2);
+curZ = curZ / param.raw.voxelSize(3);
+curRad = 1.0E3;
+
+for curId = 1:height(curSyn)
+    curTypeId = double(curSyn.type(curId));
+    curColor = curColors(curTypeId, :);
+    curPos = curSynPos(curId, :);
+    
+    curSurf = surf(curAx, ...
+        curRad * curX + curPos(1), ...
+        curRad * curY + curPos(2), ...
+        curRad * curZ + curPos(3));
+    curSurf.FaceColor = curColor;
+    curSurf.EdgeColor = 'none';
+    material(curSurf, 'dull');
 end
 
-curLeg = legend(curAxes(1), ...
-    'Neurons', 'Synapse gradient', 'Fit', ...
-    'Location', 'SouthEast');
-curLeg.Box = 'off';
+curAx.CameraPosition = curCamPos;
+curAx.CameraTarget = curCamTarget;
+curAx.CameraUpVector = curCamUpVector;
+curAx.CameraViewAngle = curCamViewAngle;
+
+camlight(curAx);
 
 annotation( ...
     curFig, 'textbox', [0, 0.9, 1, 0.1], ...
-	'String', {info.filename; info.git_repos{1}.hash}, ...
+    'String', {info.filename; info.git_repos{1}.hash}, ...
     'EdgeColor', 'none', 'HorizontalAlignment', 'center');
 
+%% Plot soma position versus input ratios
+clear cur*;
+curMinSyn = 100;
+curBinSizeUm = 2;
 
-% Significance tests
-fprintf('Significance test for inh / (inh + exc)\n');
-curFit = fitlm(curWcT.somaPosRel(:, 1), curWcT.corrInhRatio);
-disp(curFit);
+curLimits = (param.bbox(1, 2) - param.bbox(1, 1)) / 2;
+curLimits = curLimits * param.raw.voxelSize(1) / 1E3;
+curLimY = floor(curLimits) .* [-1, +1];
 
-fprintf('Significance test for tc / (tc + cc)\n');
-curFit = fitlm(curWcT.somaPosRel(:, 1), curWcT.corrTcRatio);
-disp(curFit);
+curBinEdges = curLimits - synEmMarginUm;
+curBinEdges = curBinSizeUm * floor(curBinEdges / curBinSizeUm);
+curBinEdges = (-curBinEdges):curBinSizeUm:curBinEdges;
+
+curSynT = connectEM.Connectome.buildSynapseTable(conn, syn);
+curSynT.synType = conn.axonMeta.axonClass(curSynT.preAggloId);
+
+curSynPos = connectEM.Synapse.calculatePositions(param, syn);
+curSynPos = curSynPos(:, 1) - mean(param.bbox(1, :));
+curSynPos = curSynPos * param.raw.voxelSize(1) / 1E3;
+
+curSynT.pos = curSynPos(curSynT.id);
+curSynT.binId = discretize(curSynT.pos, curBinEdges);
+curSynT(isnan(curSynT.binId), :) = [];
+
+curBinCounts = accumarray( ...
+    cat(2, curSynT.binId, double(curSynT.synType)), ...
+    1, [numel(curBinEdges) - 1, numel(synTypes)]);
+curBinRatios = curBinCounts(:, 2) ./ sum(curBinCounts(:, 1:2), 2);
+
+curFitRatio = (curBinEdges(1:(end - 1)) + curBinEdges(2:end)) / 2;
+curFitRatio = fit(curFitRatio(:), curBinRatios(:), 'poly1');
+
+curWcT = wcT;
+curWcT(sum(curWcT.classConn, 2) < curMinSyn, :) = [];
+
+curWcT.tcRatio = ...
+    curWcT.classConn(:, 2) ...
+ ./ sum(curWcT.classConn(:, 1:2), 2);
+
+curWcT.somaPosRel = curWcT.somaPos - transpose(mean(param.bbox, 2));
+curWcT.somaPosRel = curWcT.somaPosRel .* param.raw.voxelSize / 1E3;
+
+% Correct for YZ changes
+curFit = curWcT.tcRatio - mean(curWcT.tcRatio);
+curFit = fit(curWcT.somaPosRel(:, 2:3), curFit, 'poly11');
+curWcT.corrTcRatio = curWcT.tcRatio - curFit(curWcT.somaPosRel(:, 2:3));
+
+curFig = figure();
+curFig.Color = 'white';
+curFig.Position(3:4) = [290, 200];
+
+% Correct for YZ
+curAx = axes(curFig);
+hold(curAx, 'on');
+
+curAx.ColorOrder = [ ...
+    0.4660, 0.6740, 0.1880;
+    0.0000, 0.4470, 0.7410];
+
+scatter(curAx, curWcT.corrTcRatio, curWcT.somaPosRel(:, 1), 60, '.');
+scatter(curAx, curWcT.tcRatio, curWcT.somaPosRel(:, 1), 60, '.');
+
+curFit = fit( ...
+    curWcT.somaPosRel(:, 1), ...
+    curWcT.corrTcRatio, 'poly1');
+plot(curAx, ...
+    curFitRatio(curLimY), curLimY, ...
+    'Color', 'red', 'LineWidth', 2, 'LineStyle', '--');
+plot(curAx, ...
+    curFit(curLimY), curLimY, ...
+    'Color', 'black', 'LineWidth', 2);
+
+xlabel(curAx, {'TC / (TC + CC)'; 'per neuron'});
+
+curAx.TickDir = 'out';
+curAx.YDir = 'reverse';
+curAx.YLim = curLimY;
+
+curLeg = {'YZ corrected ratios'; 'Raw ratios'};
+curLeg = legend(curAx, curLeg, 'Location', 'EastOutside');
+curLeg.Box = 'off';
+
+title(curAx, ...
+    {info.filename; info.git_repos{1}.hash}, ...
+    'FontWeight', 'normal', 'FontSize', 10);
 
 %% Correlation between ratios and dendrite direction
 curMinSyn = 50;
@@ -352,8 +400,6 @@ dendT(~dendT.cellRow, :) = [];
 
 dendT.dir = nan(size(dendT.somaPos));
 dendT.classConn = nan(height(dendT), numel(synTypes));
-dendT.inhExcRatio = nan(size(dendT.id));
-dendT.wcRelInhExcRatio = nan(size(dendT.id));
 dendT.tcExcRatio = nan(size(dendT.id));
 dendT.wcRelTcExcRatio = nan(size(dendT.id));
 
@@ -383,28 +429,24 @@ for curIdx = 1:size(dendT, 1)
     
     dendT.dir(curIdx, :) = curDendDir;
     dendT.classConn(curIdx, :) = curSynData;
-    dendT.inhExcRatio(curIdx) = curSynData(3) / sum(curSynData(1:3));
-    dendT.tcExcRatio(curIdx) = curSynData(2) / sum(curSynData(1:2));
     
-    % Relative to whole cell-wide average
-    dendT.wcRelInhExcRatio(curIdx) = ...
-        dendT.inhExcRatio(curIdx) / curCell.inhRatio;
+    dendT.tcExcRatio(curIdx) = ...
+        curSynData(2) / sum(curSynData(1:2));
     dendT.wcRelTcExcRatio(curIdx) = ...
         dendT.tcExcRatio(curIdx) / curCell.tcRatio;
 end
 
 %% Plotting
 curVars = { ...
-    'wcRelInhExcRatio', {'Inh / (Inh + Exc)'; 'normalized to cell'}; ...
     'wcRelTcExcRatio', {'TC / (TC + CC)'; 'normalized to cell'}};
 curVarLabels = curVars(:, 2);
 curVars = curVars(:, 1);
 
 curBinEdges = [-1, -0.5, 0.5, 1];
 
-fig = figure();
-fig.Color = 'white';
-fig.Position(3:4) = 700;
+curFig = figure();
+curFig.Color = 'white';
+curFig.Position(3:4) = [400, 220];
 
 for curVarIdx = 1:numel(curVars)
     curVar = curVars{curVarIdx};
@@ -426,8 +468,8 @@ for curVarIdx = 1:numel(curVars)
     
     xlabel(curAx, curVarLabel);
     ylabel(curAx, 'Alignment to cortical axis');
-    curAx.YTickLabel{1} = sprintf('(Pia) %s', curAx.YTickLabel{1});
-    curAx.YTickLabel{end} = sprintf('(WM) %s', curAx.YTickLabel{end});
+    curAx.YTickLabel{1} = sprintf('%s', curAx.YTickLabel{1});
+    curAx.YTickLabel{end} = sprintf('%s', curAx.YTickLabel{end});
     
     curAx = subplot(numel(curVars), 2, (curVarIdx - 1) * 2 + 2);
     boxplot( ...
@@ -445,38 +487,23 @@ for curVarIdx = 1:numel(curVars)
         curBinEdges, 'UniformOutput', false));
 end
 
-ax = flip(cat(1, fig.Children));
-set(ax, ...
+curAx = flip(cat(1, curFig.Children));
+set(curAx, ...
     'XLim', [0, 2], ...
     'YDir', 'reverse', ...
     'TickDir', 'out', ...
     'PlotBoxAspectRatio', [1, 1, 1], ...
     'DataAspectRatioMode', 'auto');
 
-% MATLAB's `boxplot` function is a nightmare
-ax(2).Position(2:4) = ax(1).Position(2:4);
-ax(4).Position(2:4) = ax(3).Position(2:4);
-
 annotation( ...
-    fig, 'textbox', [0, 0.9, 1, 0.1], ...
+    curFig, 'textbox', [0, 0.9, 1, 0.1], ...
     'String', {info.filename; info.git_repos{1}.hash}, ...
     'EdgeColor', 'none', 'HorizontalAlignment', 'center');
 
-%% Statistical significance tests
-fprintf([ ...
-    'Significance test for dendrites / neuron ', ...
-    'inh / (inh + exc) ratio\n']);
-[~, curTopBotPVal] = ttest2( ...
-    dendT.wcRelInhExcRatio(dendT.dir(:, 1) < -0.5), ...
-    dendT.wcRelInhExcRatio(dendT.dir(:, 1) > +0.5));
-fprintf([ ...
-    '→ Pia- / WM-oriented dendrites different ', ...
-    'with p-value of %g\n'], curTopBotPVal)
-curFit = fitlm(dendT.dir(:, 1), dendT.wcRelInhExcRatio);
-disp(curFit);
-fprintf('\n');
-fprintf('\n');
+% MATLAB's `boxplot` function is a nightmare
+curAx(2).Position(2:4) = curAx(1).Position(2:4);
 
+%% Statistical significance test
 fprintf([ ...
     'Significance test for dendrite / neuron ', ...
     'tc / (tc + cc) ratio\n']);
@@ -494,83 +521,25 @@ fprintf('\n');
 tcCcCellNormalizedWmPiaRatio = ...
     curFit.predict(+1) / curFit.predict(-1) %#ok
 
-%% Calculate expected dendrite / neuron ratio for TC / (TC + CC)
-clear cur*;
-curBinEdges = linspace(0, 2, 11);
-
-curDendT = dendT;
-curDendT.wcTcProb = ...
-    wcT.classConn(curDendT.id, 2) ...
- ./ sum(wcT.classConn(curDendT.id, 1:2), 2);
-curDendT.excSynCount = ...
-    sum(curDendT.classConn(:, 1:2), 2);
-
-[curRatios, curCounts] = arrayfun(@(nSyn, tcProb) ...
-    connectEM.Specificity.calcExpectedDist( ...
-        nSyn, tcProb, 'distribution', 'binomial'), ...
-	curDendT.excSynCount, curDendT.wcTcProb, ...
-    'UniformOutput', false);
-curRatios = arrayfun( ...
-    @(dendRatios, wcRatio) dendRatios{1} / wcRatio, ...
-    curRatios, curDendT.wcTcProb, 'UniformOutput', false);
-
-curRatios = cell2mat(curRatios);
-curCounts = cell2mat(curCounts);
-
-% Discretize
-curBinIds = discretize(curRatios, curBinEdges);
-curMask = (curBinIds > 0) & (curBinIds <= numel(curBinEdges));
-curBinCounts = accumarray(curBinIds(curMask), curCounts(curMask));
-
-fig = figure();
-fig.Color = 'white';
-fig.Position(3:4) = [400, 400];
-
-ax = axes(fig);
-axis(ax, 'square');
-hold(ax, 'on');
-
-histogram(ax, ...
-    curDendT.wcRelTcExcRatio, ...
-    'BinEdges', curBinEdges, ...
-    'DisplayStyle', 'stairs', ...
-    'LineWidth', 2);
-histogram(ax, ...
-    'BinEdges', curBinEdges, ...
-    'BinCounts', curBinCounts, ...
-    'DisplayStyle', 'stairs', ...
-    'LineWidth', 2);
-
-ax.TickDir = 'out';
-ax.XLim = curBinEdges([1, end]);
-xlabel(ax, 'Dendrite / neuron TC / (TC + CC) ratio');
-ylabel(ax, 'Dendrites');
-
-leg = legend(ax, {'Observed', 'Expected'}, 'Location', 'NorthEast');
-leg.Box = 'off';
-
-title( ...
-    ax, {info.filename; info.git_repos{1}.hash}, ...
-    'FontWeight', 'normal', 'FontSize', 10);
-
 %% Try to find border cells
+clear cur*;
 somaPos = cell2mat(arrayfun( ...
     @(s) mean(s.nodes(:, 1:3), 1), ...
     wcT.somaAgglo, 'UniformOutput', false));
 
 voxelSize = param.raw.voxelSize;
-somaDistXY = voxelSize(3) * min(pdist2( ...
+curSomaDistXY = voxelSize(3) * min(pdist2( ...
     somaPos(:, 3), transpose(param.bbox(3, :))), [], 2);
-somaDistXZ = voxelSize(2) * min(pdist2( ...
+curSomaDistXZ = voxelSize(2) * min(pdist2( ...
     somaPos(:, 2), transpose(param.bbox(2, :))), [], 2);
-somaDistYZ = voxelSize(1) * min(pdist2( ...
+curSomaDistYZ = voxelSize(1) * min(pdist2( ...
     somaPos(:, 1), transpose(param.bbox(1, :))), [], 2);
 
-yzWcIds = find(somaDistYZ >= 10E3 & ...
-    (somaDistXY < 10E3 | somaDistXZ < 10E3));
+curYzWcIds = find(curSomaDistYZ >= 10E3 & ...
+    (curSomaDistXY < 10E3 | curSomaDistXZ < 10E3));
 
 wcGroups = struct;
-wcGroups(1).wcIds = yzWcIds;
+wcGroups(1).wcIds = curYzWcIds;
 wcGroups(1).title = sprintf( ...
     'whole cells in YZ view (n = %d)', ...
     numel(wcGroups(1).wcIds));
@@ -592,16 +561,21 @@ wcGroups(3).tag = '1-syn';
 
 %% Generate queen neurons
 extWcT = wcT;
+extWcT.nodeParentIds = arrayfun( ...
+    @(id, nodeCount) reshape(repelem(id, nodeCount), [], 1), ...
+    extWcT.id, cellfun(@numel, extWcT.nodeDists), ...
+    'UniformOutput', false);
+
 for curIdx = 1:numel(wcGroups)
     curWcGroup = wcGroups(curIdx);
     curWcT = extWcT(curWcGroup.wcIds, :);
     
-    nodeIdOff = cumsum(cellfun(@numel, curWcT.nodeDists));
-    nodeIdOff = [0; nodeIdOff(1:(end - 1))];
-
-    lumpedSynapses = cat(1, curWcT.synapses{:});
-    lumpedSynapses.nodeId = lumpedSynapses.nodeId ...
-        + repelem(nodeIdOff, cellfun(@height, curWcT.synapses));
+    curNodeIdOff = cumsum(cellfun(@numel, curWcT.nodeDists));
+    curNodeIdOff = [0; curNodeIdOff(1:(end - 1))];
+    
+    curLumpedSynapses = cat(1, curWcT.synapses{:});
+    curLumpedSynapses.nodeId = curLumpedSynapses.nodeId ...
+        + repelem(curNodeIdOff, cellfun(@height, curWcT.synapses));
 
     curQueenWcT = table;
     curQueenWcT.id = 0;
@@ -620,8 +594,8 @@ for curIdx = 1:numel(wcGroups)
     curQueenWcT.tag = curWcGroup.tag;
 
     curQueenWcT.nodeDists = {cell2mat(curWcT.nodeDists)};
-    curQueenWcT.nodeOrthoDists = {cell2mat(curWcT.nodeOrthoDists)};
-    curQueenWcT.synapses = {lumpedSynapses};
+    curQueenWcT.nodeParentIds = {cat(1, curWcT.nodeParentIds{:})};
+    curQueenWcT.synapses = {curLumpedSynapses};
     curQueenWcT.classConn = sum(curWcT.classConn, 1);
 
     extWcT = cat(1, extWcT, curQueenWcT);
@@ -674,11 +648,9 @@ for curIdx = 1:height(extWcT)
     end
     
     curFig.Color = 'white';
-    curFig.Position(3:4) = [1120, 660];
+    curFig.Position(3:4) = [220, 220];
     
-    curSyns.isSpine = syn.synapses.type(curSyns.id);
-    curSyns.isSpine = curSyns.isSpine == 'PrimarySpine';
-    
+    curSyns.parentId = extWcT.nodeParentIds{curIdx}(curSyns.nodeId);
     curSyns.dist = extWcT.nodeDists{curIdx}(curSyns.nodeId);
     curSyns.dist = curSyns.dist / 1E3;
     
@@ -689,18 +661,21 @@ for curIdx = 1:height(extWcT)
     curSyns.dist(curSyns.isSoma) = -eps;
     
     curMaxDist = 10 * ceil(max(curSyns.dist) / 10);
-    curBinEdges = -5:5:curMaxDist;
+    curBinEdges = -10:10:curMaxDist;
     
     curPlotRange = 10 * ceil(prctile(curSyns.dist, 99) / 10);
     curPlotRange = [curBinEdges(1), curPlotRange]; %#ok
     
     curSyns.axonClass = conn.axonMeta.axonClass(curSyns.axonId);
     
+    curBinIds = discretize(curSyns.dist, curBinEdges);
     curSynTypeData = accumarray( ...
-        horzcat( ...
-            discretize(curSyns.dist, curBinEdges), ...
-            double(curSyns.axonClass)), ...
+        cat(2, curBinIds, double(curSyns.axonClass)), ...
         1, [numel(curBinEdges) - 1, 4]);
+    curNeuronCounts = accumarray( ...
+        curBinIds, curSyns.parentId, ...
+        [numel(curBinEdges) - 1, 1], ...
+        @(ids) numel(unique(ids)));
     
     curPlot = @(ax, varargin) ...
         histogram( ...
@@ -709,31 +684,8 @@ for curIdx = 1:height(extWcT)
             'DisplayStyle', 'stairs', ...
             'LineWidth', 2, ...
             'FaceAlpha', 1);
-        
+    
     curAx = subplot(3, 1, 1);
-    hold(curAx, 'on');
-    
-    curPlot(curAx, curSyns.dist);
-    curPlot(curAx, curSyns.dist(curSyns.isSpine));
-    
-    curAx.TickDir = 'out';
-    curAx.Position(3) = 0.8 - curAx.Position(1);
-    
-    xlim(curAx, curPlotRange);
-    ylabel(curAx, 'Synapses');
-    
-    title(curAx, { ...
-        sprintf('Inputs onto %s', extWcT.title{curIdx}); ...
-        sprintf('%s (%s)', info.filename, info.git_repos{1}.hash)}, ...
-        'FontWeight', 'normal', 'FontSize', 10);
-    
-    curLeg = legend(curAx, ...
-        'All', 'Onto spines', ...
-        'Location', 'EastOutside');
-    curLeg.Position([1, 3]) = [0.82, (0.98 - 0.82)];
-    curLeg.Box = 'off';
-    
-    curAx = subplot(3, 1, 2);
     hold(curAx, 'on');
         
 	curPlot(curAx, curSyns.dist(curSyns.axonClass == 'Corticocortical'));
@@ -753,6 +705,23 @@ for curIdx = 1:height(extWcT)
         'Location', 'EastOutside');
     curLeg.Position([1, 3]) = [0.82, (0.98 - 0.82)];
     curLeg.Box = 'off';
+    
+    title(curAx, { ...
+        sprintf('Inputs onto %s', extWcT.title{curIdx}); ...
+        sprintf('%s (%s)', info.filename, info.git_repos{1}.hash)}, ...
+        'FontWeight', 'normal', 'FontSize', 10);
+        
+    curAx = subplot(3, 1, 2);
+    hold(curAx, 'on');
+    
+    curPlot(curAx, 'BinCounts', curNeuronCounts, 'EdgeColor', 'black');
+    
+    curAx.YDir = 'reverse';
+    curAx.Position(3) = 0.8 - curAx.Position(1);
+    curAx.TickDir = 'out';
+    
+    xlim(curAx, curPlotRange);
+    ylabel(curAx, 'Neurons');
     
     % Synapse ratios
     curAx = subplot(3, 1, 3);
@@ -786,6 +755,18 @@ for curIdx = 1:height(extWcT)
         'Location', 'EastOutside');
     curLeg.Position([1, 3]) = [0.82, (0.98 - 0.82)];
     curLeg.Box = 'off';
+    
+    curAxes = findobj(curFig, 'Type', 'Axes');
+    
+    curTickLabels = repelem({''}, numel(curBinEdges));
+    curTickLabels{curBinEdges == 0} = '0';
+    curTickLabels{end} = num2str(curBinEdges(end));
+    
+    set(curAxes, ...
+        'Color', 'none', ...
+        'XLim', curBinEdges([1, end]), ...
+        'XTick', curBinEdges, ...
+        'XTickLabels', curTickLabels);
     
     % save figure
     if ~isempty(plotDir)
@@ -1105,7 +1086,8 @@ for curId = reshape(curWcIds, 1, [])
     
     axis(curAx, 'square');
     xticks(curAx, 1:size(curData, 2));
-    xticklabels(curAx, synTypes);
+    xticklabels(curAx, arrayfun( ...
+        @char, synTypes, 'UniformOutput', false));
     
     xlabel('Synapse type');
     ylabel('Fraction of input synapses');

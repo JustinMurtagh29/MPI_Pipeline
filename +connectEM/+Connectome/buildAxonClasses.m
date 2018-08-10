@@ -5,8 +5,12 @@ function [axonClasses, conn] = buildAxonClasses(conn, varargin)
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     opts = struct;
     opts.minSynPre = 1;
-    opts.minSpineSynDensTc = 0.19;
+    opts.minTcProb = 0.6;
     opts = Util.modifyStruct(opts, varargin{:});
+    
+    assert( ...
+        not(isfield(opts, 'minSpineSynDensTc')), ...
+        'Support for minSpineSynDensTc was removed');
     
     conn.axonMeta.fullPriSpineSynFrac = ...
         conn.axonMeta.fullPriSpineSynCount ...
@@ -14,10 +18,22 @@ function [axonClasses, conn] = buildAxonClasses(conn, varargin)
     conn.axonMeta.fullPriSpineSynDens = ...
         conn.axonMeta.fullPriSpineSynCount ...
      ./ conn.axonMeta.pathLen;
- 
-    tcCandIds = find( ...
-        conn.axonMeta.fullPriSpineSynDens ...
-      > opts.minSpineSynDensTc);
+  
+    % For the source of these logistic regression parameters, see
+    % connectEM.Axon.Script.detectThalamocorticals
+    % 1f5d888c36ed0776851732be1cf36aafa6953b3b
+    tcLogRegFeatNames = { ...
+        'fullPriSpineSynDens', 'fullPriSpinesPerBouton', ...
+        'fullPriSpinesMultiHitFrac', 'medianBoutonVol'};
+    tcLogRegWeights = [0.356965; 1.664203; 0.725779; 0.829174];
+    tcLogRegBias = -3.093222;
+    
+    tcProb = table2array(conn.axonMeta(:, tcLogRegFeatNames));
+    tcProb = tcProb * tcLogRegWeights + tcLogRegBias;
+    tcProb = 1 ./ (1 + exp(-tcProb));
+    conn.axonMeta.tcProb = tcProb;
+    
+    tcCandIds = find(tcProb >= opts.minTcProb);
 
     % Excitatory axons
     axonClasses = struct;

@@ -1,5 +1,5 @@
 function [synIds, inConn] = getSynapses(conn, syn)
-    % synIds = getSynapses(param, conn)
+    % [synIds, inConn] = getSynapses(conn, syn)
     %   Returns a cell array, where `synIds{i}` contains the indices of the
     %   synapses of axon `i`. `inConn{i}(j)` is a logical indicating
     %   whether synapse `synIds{i}(j)` is also contained in the connectome.

@@ -27,9 +27,6 @@ param = param.p;
 classConnectome = ...
     connectEM.Connectome.buildClassConnectome( ...
         conn, 'targetClasses', targetClasses);
-    
-%% only analyse excitatory and inhibitory axons
-axonClasses = axonClasses(1:2);
 
 %% calculate target class innervation probabilities for null model
 clear cur*;
@@ -47,7 +44,8 @@ curAxonClasses = axonClasses;
 % NOTE(amotta): The list of axons to induce the null model is no longer
 % needed. Let's remove it to cause an error in case a weird code path still
 % tries to use it.
-axonClasses = rmfield(curAxonClasses, 'nullAxonIds');
+curAxonClasses = curAxonClasses(1:4);
+curAxonClasses = rmfield(curAxonClasses, 'nullAxonIds');
 
 for curIdx = 1:numel(curAxonClasses)
     plotAxonClass( ...

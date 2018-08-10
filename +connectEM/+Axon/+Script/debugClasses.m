@@ -6,7 +6,7 @@ clear;
 
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites-wholeCells-03-v2-classified_spine-syn-clust.mat');
+connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-partiallySplit-v2_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v8-classified.mat');
 outputDir = '/home/amotta/Desktop';
 
 minSynPre = 10;
@@ -19,27 +19,17 @@ param = param.p;
 
 segPoints = Seg.Global.getSegToPointMap(param);
 
-[conn, syn] = connectEM.Connectome.load(param, connFile);
-
-synT = connectEM.Connectome.buildSynapseTable(conn, syn);
-synT.type = syn.synapses.type(synT.id);
+[conn, syn, axonClasses] = connectEM.Connectome.load(param, connFile);
+[synIds, synsInConn] = connectEM.Axon.getSynapses(conn, syn);
 
 %% Prepare data
 conn.axonMeta.fullPriSpineSynFrac = ...
     conn.axonMeta.fullPriSpineSynCount ...
  ./ conn.axonMeta.fullSynCount;
 
-axonClasses = struct;
-axonClasses(1).axonIds = find( ...
-    conn.axonMeta.synCount >= minSynPre ...
-  & conn.axonMeta.fullPriSpineSynFrac <= 0.2);
-axonClasses(1).tag = 'less-than-20-percent-pri-spines';
-
-axonClasses(2).axonIds = find( ...
-    conn.axonMeta.synCount >= minSynPre ...
-  & conn.axonMeta.fullPriSpineSynFrac > 0.2 ...
-  & conn.axonMeta.fullPriSpineSynFrac < 0.5);
-axonClasses(2).tag = 'between-20-and-50-percent-pri-spines';
+debugConfigs = struct;
+debugConfigs(1).axonIds = axonClasses(3).axonIds;
+debugConfigs(1).tag = 'thalamocortical';
 
 %% Search for potential shaft-preferring excitatory axons
 clear cur*;
@@ -49,9 +39,11 @@ skel = Skeleton.setParams4Pipeline(skel, param);
 skel = skel.setDescription(sprintf( ...
     '%s (%s)', info.filename, info.git_repos{1}.hash));
 
-for curAxonClass = axonClasses
-    curAxonIds = curAxonClass.axonIds;
-    curOutputDir = fullfile(outputDir, curAxonClass.tag);
+inConnStr = {', not in conn.', ''};
+
+for curConfig = debugConfigs
+    curAxonIds = curConfig.axonIds;
+    curOutputDir = fullfile(outputDir, curConfig.tag);
     
     assert(~exist(curOutputDir, 'dir'));
     mkdir(curOutputDir);
@@ -64,13 +56,16 @@ for curAxonClass = axonClasses
 
     for curIdx = 1:numel(curAxonIds)
         curId = conn.axonMeta.id(curAxonIds(curIdx));
-        curSynT = synT(synT.preAggloId == curId, :);
-
+        
+        curSynIds = synIds{curId};
+        curSynsInConn = synsInConn{curId};
+        curSynTypes = syn.synapses.type(curSynIds);
+        
         curAxon = conn.axons(curId);
         curSynapses = cellfun( ...
             @vertcat, ...
-            syn.synapses.presynId(curSynT.id), ...
-            syn.synapses.postsynId(curSynT.id), ...
+            syn.synapses.presynId(curSynIds), ...
+            syn.synapses.postsynId(curSynIds), ...
             'UniformOutput', false);
 
         curNodes = [curAxon; curSynapses];
@@ -85,8 +80,11 @@ for curAxonClass = axonClasses
         curSkel.colors{1} = [0, 0, 1, 1];
 
         curSkel.names(2:end) = arrayfun( ...
-            @(id, type) sprintf('Synapse %d (%s)', id, type), ...
-            curSynT.id, curSynT.type, 'UniformOutput', false);
+            @(id, type, inConn) sprintf( ...
+                'Synapse %d (%s%s)', ...
+                id, type, inConnStr{1 + inConn}), ...
+            curSynIds, curSynTypes, curSynsInConn, ...
+            'UniformOutput', false);
         curSkel.colors(2:end) = {[1, 1, 0, 1]};
 
         curSkelName = sprintf( ...
