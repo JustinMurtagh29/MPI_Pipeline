@@ -319,7 +319,7 @@ curBinEdges = (-curBinEdges):curBinSizeUm:curBinEdges;
 curSynT = connectEM.Connectome.buildSynapseTable(conn, syn);
 curSynT.synType = conn.axonMeta.axonClass(curSynT.preAggloId);
 
-curSynPos = connectEM.Synapse.calculatePositions(param, syn);
+curSynPos = synPos;
 curSynPos = curSynPos(:, 1) - mean(param.bbox(1, :));
 curSynPos = curSynPos * param.raw.voxelSize(1) / 1E3;
 
@@ -452,11 +452,17 @@ for curVarIdx = 1:numel(curVars)
     curVar = curVars{curVarIdx};
     curVarLabel = curVarLabels{curVarIdx};
     
-    curDirs = dendT.dir(:, 1);
     curFracs = dendT.(curVar);
+    curDirs = dendT.dir(:, 1);
+    curBinIds = discretize(curDirs, curBinEdges);
+    
+    % Statistical tests
+    fitlm(curDirs, curFracs) %#ok
+   [~, curPVal] = ttest2( ...
+       curFracs(curBinIds == 1), ...
+       curFracs(curBinIds == 3)) %#ok
     
     curFit = fit(curDirs, curFracs, 'poly1');
-    curBinIds = discretize(curDirs, curBinEdges);
     
     curAx = subplot(numel(curVars), 2, (curVarIdx - 1) * 2 + 1);
     hold(curAx, 'on');
@@ -519,6 +525,10 @@ fprintf('\n');
 fprintf('\n');
 
 tcCcCellNormalizedWmPiaRatio = ...
+    curFit.predict(+1) / curFit.predict(-1) %#ok
+
+curFit = fitlm(dendT.dir(:, 1), dendT.tcExcRatio);
+tcCcWmPiaRatio = ...
     curFit.predict(+1) / curFit.predict(-1) %#ok
 
 %% Try to find border cells
@@ -634,7 +644,7 @@ globalRatios = [ ...
     globalRatios(3) / sum(globalRatios(1:3)), ...
     globalRatios(2) / sum(globalRatios(1:2))];
 
-for curIdx = 1:height(extWcT)
+for curIdx = height(extWcT)
     curSyns = extWcT.synapses{curIdx};
     if isempty(curSyns); continue; end
     
