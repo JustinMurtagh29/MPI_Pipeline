@@ -255,13 +255,14 @@ curSynPos = connectEM.Synapse.calculatePositions(param, syn, 'pre');
 curSynPos = curSynPos(curSyn.id, :);
 
 curFig = figure;
-curFig.Color = 'none';
+curFig.Color = 'white';
 
 curAx = axes(curFig);
 curAx.Visible = 'off';
 
 curColors = curAx.ColorOrder;
 curColors = cat(1, curColors(1:3, :), [0, 0, 0]);
+curRads = [1, 1, 1, 0.5] .* 1E3;
 
 hold(curAx, 'on');
 daspect(curAx, 1 ./ param.raw.voxelSize);
@@ -275,12 +276,12 @@ material(curP, 'dull');
 curX = curX / param.raw.voxelSize(1);
 curY = curY / param.raw.voxelSize(2);
 curZ = curZ / param.raw.voxelSize(3);
-curRad = 1.0E3;
 
 for curId = 1:height(curSyn)
     curTypeId = double(curSyn.type(curId));
     curColor = curColors(curTypeId, :);
     curPos = curSynPos(curId, :);
+    curRad = curRads(curTypeId);
     
     curSurf = surf(curAx, ...
         curRad * curX + curPos(1), ...
@@ -297,6 +298,28 @@ curAx.CameraUpVector = curCamUpVector;
 curAx.CameraViewAngle = curCamViewAngle;
 
 camlight(curAx);
+
+curScaleBar = 10E3;
+curScaleBar = curScaleBar ./ param.raw.voxelSize;
+
+curOrig = [param.bbox(1, 1), param.bbox(2, 2), param.bbox(3, 1)];
+curDirs = [+1, -1, +1];
+
+plot3(curAx, ...
+    curOrig(1) + curDirs(1) .* [0, curScaleBar(1)], ...
+    repelem(curOrig(2), 2), ...
+    repelem(curOrig(3), 2));
+plot3(curAx, ...
+    repelem(curOrig(1), 2), ...
+    curOrig(2) + curDirs(2) .* [0, curScaleBar(2)], ...
+    repelem(curOrig(3), 2), 'Color', 'black');
+plot3(curAx, ...
+    repelem(curOrig(1), 2), ...
+    repelem(curOrig(2), 2), ...
+    curOrig(3) + curDirs(3) .* [0, curScaleBar(3)]);
+
+curPlots = findobj(curAx, 'Type', 'Line');
+set(curPlots, 'Color', 'black', 'LineWidth', 2);
 
 annotation( ...
     curFig, 'textbox', [0, 0.9, 1, 0.1], ...
