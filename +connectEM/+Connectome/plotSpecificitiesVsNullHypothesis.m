@@ -11,7 +11,9 @@ targetClasses = { ...
     'SmoothDendrite', 'AxonInitialSegment', 'OtherDendrite'};
 
 minSynPre = 10;
+
 info = Util.runInfo();
+Util.showRunInfo(info);
 
 %% loading data
 param = load(fullfile(rootDir, 'allParameter.mat'));
@@ -36,6 +38,14 @@ for curIdx = 1:numel(axonClasses)
     curNullProbs = connectEM.Specificity.calcFirstHitProbs(curNullProbs);
     axonClasses(curIdx).nullTargetClassProbs = curNullProbs;
 end
+
+%% show first hit probabilities
+firstHitProbs = cat(1, axonClasses.nullTargetClassProbs);
+firstHitProbs = array2table(firstHitProbs, 'VariableNames', targetClasses);
+firstHitProbs.Properties.RowNames = {axonClasses.title};
+
+fprintf('# First-hit probabilities\n');
+disp(firstHitProbs);
 
 %% plot
 clear cur*;
