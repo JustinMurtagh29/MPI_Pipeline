@@ -31,10 +31,11 @@ param = param.p;
         conn, axonClasses, 'minSynPre', minSynPre);
 
 %% Find specific axons
-axonClasses = axonClasses(1:2);
+axonClasses = axonClasses(1:3);
 
 axonClasses(1).tag = 'Exc';
 axonClasses(2).tag = 'Inh';
+axonClasses(3).tag = 'TC';
 
 axonClasses = ...
     connectEM.Connectome.buildAxonSpecificityClasses(conn, axonClasses);
