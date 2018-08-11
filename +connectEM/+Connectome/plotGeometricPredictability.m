@@ -83,9 +83,14 @@ allAxonClasses = axonClasses;
 % NOTE(amotta): As discussed with MH on 08.08.2018, let's not predict
 % targets that are not innervated by excitatory axons.
 allAxonClasses(1).title = sprintf( ...
-    '%s (without SOM and AIS)', allAxonClasses(1).title);
+    '%s (without SOM, AIS, and Other)', allAxonClasses(1).title);
 allAxonClasses(1).predictClasses = setdiff( ...
-    targetClasses, {'Somata', 'AxonInitialSegment'});
+    targetClasses, {'Somata', 'AxonInitialSegment', 'OtherDendrite'});
+
+allAxonClasses(2).title = sprintf( ...
+    '%s (without Other)', allAxonClasses(1).title);
+allAxonClasses(2).predictClasses = setdiff( ...
+    targetClasses, {'OtherDendrite'});
 
 % Do same thing with linear regression
 curNewAxonClasses = allAxonClasses(1:numel(axonClasses));
