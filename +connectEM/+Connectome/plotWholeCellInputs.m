@@ -255,7 +255,7 @@ curSynPos = connectEM.Synapse.calculatePositions(param, syn, 'pre');
 curSynPos = curSynPos(curSyn.id, :);
 
 curFig = figure;
-curFig.Color = 'white';
+curFig.Color = 'none';
 
 curAx = axes(curFig);
 curAx.Visible = 'off';
