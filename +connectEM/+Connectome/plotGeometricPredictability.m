@@ -395,8 +395,6 @@ for curAxonClassId = 1:numel(allAxonClasses)
     curCorrect = curAxonClass.correctForBinoVar;
     curAxonIds = curAxonClass.axonIds;
     
-    keyboard
-    
     curPredictClasses = curAxonClass.predictClasses;
    [~, curPredictClassIds] = ismember(curPredictClasses, targetClasses);
     
