@@ -13,6 +13,7 @@ Util.showRunInfo(info);
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 
+maxSegId = Seg.Global.getMaxSegId(param);
 [conn, syn, axonClasses] = connectEM.Connectome.load(param, connFile);
 
 %% Connectome
@@ -74,3 +75,11 @@ numLikelyInhSomaSynapses = sum( ...
     synT.targetClass(synT.isLikelyInhibitory) == 'Somata') %#ok
 fractionOfLikelyInhibitorySynapsesOntoSomata = mean( ...
     synT.targetClass(synT.isLikelyInhibitory) == 'Somata') %#ok
+
+%% AIS synapses, independent of neurites or connectome
+aisLUT = conn.denMeta.targetClass == 'AxonInitialSegment';
+aisLUT = Agglo.buildLUT(maxSegId, conn.dendrites(aisLUT));
+
+numAisSynapsesOverall = sum(cellfun( ...
+    @(segIds) any(aisLUT(segIds)), syn.synapses.postsynId)) %#ok
+numAisSynapses = sum(synT.targetClass == 'AxonInitialSegment') %#ok
