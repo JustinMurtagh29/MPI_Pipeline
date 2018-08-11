@@ -42,6 +42,7 @@ conn(~ismember(conn.edges(:, 2), dendMeta.id), :) = [];
 
 %% Numbers
 numberOfConnections = height(conn) %#ok
+numberOfSynapses = sum(cellfun(@numel, conn.synIdx)) %#ok
 
 %% Group by classes
 axonClasses = { ...
