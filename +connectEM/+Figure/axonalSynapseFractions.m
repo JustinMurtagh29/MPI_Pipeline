@@ -35,19 +35,10 @@ param = param.p;
 [conn, axonClasses] = ...
     connectEM.Connectome.prepareForSpecificityAnalysis( ...
         conn, axonClasses, 'minSynPre', minSynPre);
-
-%% Calculate synapse fractions
 [classConnectome, curSortIds] = ...
     connectEM.Connectome.buildClassConnectome(conn);
 [~, curSortIds] = ismember(targetClasses, curSortIds);
-
 classConnectome = classConnectome(:, curSortIds);
-classConnectome = classConnectome ./ sum(classConnectome, 2);
-
-axonClassMeans = cell2mat(arrayfun(@(a)  ...
-    mean(classConnectome(a.axonIds, :), 1), ...
-    reshape(axonClasses(plotAxonClassIds), [], 1), ...
-    'UniformOutput', false));
 
 %% Calculate target class innervation probabilities for null model
 clear cur*;
@@ -60,7 +51,16 @@ end
 
 %% Plot results
 clear cur*;
-curClassConn =  classConnectome( ...
+curClassConn = ...
+    classConnectome ...
+ ./ sum(classConnectome, 2);
+
+curAxonClassMeans = cell2mat(arrayfun(@(a)  ...
+    mean(curClassConn(a.axonIds, :), 1), ...
+    reshape(axonClasses(plotAxonClassIds), [], 1), ...
+    'UniformOutput', false));
+
+curClassConn = curClassConn( ...
     conn.axonMeta.synCount >= minSynPre, :);
 
 boxGroups = 1:numel(targetClasses);
@@ -97,7 +97,7 @@ for curTargetId = 1:numel(targetClasses)
         'Color', curColor, 'LineWidth', 2);
     
     % Mean over axon classes
-    for curAxonIdx = 1:size(axonClassMeans, 1)
+    for curAxonIdx = 1:size(curAxonClassMeans, 1)
         curAxonClass = axonClasses(plotAxonClassIds(curAxonIdx));
         curNullProb = curAxonClass.nullTargetClassProbs(curTargetId);
         curStyle = plotAxonClassStyles{curAxonIdx};
