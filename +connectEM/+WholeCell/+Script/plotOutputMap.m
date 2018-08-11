@@ -34,6 +34,21 @@ axonData = outputMap.axonData;
 
 [conn, syn] = connectEM.Connectome.load(param, connFile);
 
+%% Ignore interneuron axons for PLASS analysis
+% NOTE(amotta): It turns out that of the two interneurons in the dataset
+% (whole cells 17 and 22), only one has part of its axon in the EM volume.
+% But said axon is mostly myelinated and doesn't make a single synapse.
+% Still, let's remove these tracings for completeness.
+
+interNeuronGtNmlFiles = { ...
+    '5a796fcd67000090172d94f1', ... % Whole cell 17. Ground truth tracing in +connectEM/+WholeCell/+Data/border-cells_axon-dendrites-split/5a796fcd67000090172d94f1.nml
+    '5a796fcd67000060172d94e0'};    % Whole cell 22. Ground truth tracing in +connectEM/+WholeCell/+Data/border-cells_axon-dendrites-split/5a796fcd67000060172d94e0.nml
+
+[~, curNmlFiles] = cellfun( ...
+    @fileparts, {axonData.nmlFile}, 'UniformOutput', false);
+axonData(ismember(curNmlFiles, interNeuronGtNmlFiles)) = [];
+clear cur*;
+
 %% Build grand-average axon
 grandAvgAxon = struct;
 grandAvgAxon.nmlFile = 'grand average';
