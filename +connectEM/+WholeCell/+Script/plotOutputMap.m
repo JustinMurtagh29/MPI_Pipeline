@@ -34,6 +34,11 @@ axonData = outputMap.axonData;
 
 [conn, syn] = connectEM.Connectome.load(param, connFile);
 
+%% Add NML file ID (as proxy of cell ID) to synapse tables
+for curId = 1:numel(axonData)
+    axonData(curId).synapses.nmlId(:) = curId;
+end
+
 %% Ignore interneuron axons for PLASS analysis
 % NOTE(amotta): It turns out that of the two interneurons in the dataset
 % (whole cells 17 and 22), only one has part of its axon in the EM volume.
@@ -71,6 +76,13 @@ binEdges = max(grandAvgAxon.synapses.somaDist / 1E3);
 binEdges = binSizeUm * ceil(binEdges / binSizeUm);
 binEdges = 0:binSizeUm:binEdges;
 
+axonCounts = arrayfun(...
+    @(e) numel(unique( ...
+        grandAvgAxon.synapses.nmlId( ...
+            grandAvgAxon.synapses.somaDist >= 1E3 * e))), ...
+	binEdges);
+axonCounts = axonCounts(1:(end - 1));
+
 %% Plot axon
 clear cur*;
 curPlotData = cat(1, axonData(:), grandAvgAxon);
@@ -95,17 +107,17 @@ for curIdx = 1:numel(curPlotData)
 
     curFig = figure();
     curFig.Color = 'white';
-    curFig.Position(3:4) = [390, 190];
+    curFig.Position(3:4) = [400, 340];
 
-    curAx = axes(curFig); %#ok
+    curAx = subplot(2, 1, 1);
     curAx.TickDir = 'out';
     hold(curAx, 'on');
 
-    curPlotHist = @(counts, varargin) ...
+    curPlotHist = @(curAx, counts, varargin) ...
         plotHist(curAx, binEdges, counts, varargin{:});
 
-    curPlotHist(curData(:, 2), 'EdgeColor', 'magenta');
-    curPlotHist(curData(:, 1), 'EdgeColor', 'black');
+    curPlotHist(curAx, curData(:, 2), 'EdgeColor', 'magenta');
+    curPlotHist(curAx, curData(:, 1), 'EdgeColor', 'black');
     
     xlabel(curAx, 'Axonal path length to soma (µm)');
     curAx.XLim = binEdges([1, end]);
@@ -115,6 +127,16 @@ for curIdx = 1:numel(curPlotData)
         info.filename; info.git_repos{1}.hash; ...
         sprintf('Axon %s', curAxonName)}, ...
         'FontWeight', 'normal', 'FontSize', 10);
+    
+    curAx = subplot(2, 1, 2);
+    curPlotHist(curAx, axonCounts, 'EdgeColor', 'black');
+    
+    curAx.YDir = 'reverse';
+    curAx.XAxisLocation = 'top';
+    
+    curAx.XLim = binEdges([1, end]);
+    curAx.TickDir = 'out';
+    curAx.Box = 'off';
     
     if ~isempty(outputDir)
         curFigFileName = strrep(curAxonName, ' ', '-');
