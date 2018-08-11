@@ -98,11 +98,13 @@ curNewAxonClasses = allAxonClasses(1:numel(axonClasses));
     'predictUsingLinearRegressionOnAllTargetClassAvailabilities');
 allAxonClasses = cat(1, allAxonClasses(:), curNewAxonClasses(:));
 
+%{
 % Do same thing with logistic regression
 curNewAxonClasses = allAxonClasses(1:numel(axonClasses));
 [curNewAxonClasses.predictionMethod] = deal( ...
     'predictUsingMultivariateMultinomialLogisticRegression');
 allAxonClasses = cat(1, allAxonClasses(:), curNewAxonClasses(:));
+%}
 
 % Do everything with binomial variance correction
 curNewAxonClasses = allAxonClasses;
@@ -393,6 +395,8 @@ for curAxonClassId = 1:numel(allAxonClasses)
     curCorrect = curAxonClass.correctForBinoVar;
     curAxonIds = curAxonClass.axonIds;
     
+    keyboard
+    
     curPredictClasses = curAxonClass.predictClasses;
    [~, curPredictClassIds] = ismember(curPredictClasses, targetClasses);
     
@@ -401,7 +405,7 @@ for curAxonClassId = 1:numel(allAxonClasses)
     curConn = curConn ./ curSynCounts;
     curConn = curConn(:, curPredictClassIds);
     
-    curVar = mean((curConn - mean(curConn, 1)) .^ 2, 1);
+    curVar = (curConn - mean(curConn, 1)) .^ 2;
     
     tic();
     for curDistId = 1:numel(avail.dists)
@@ -413,25 +417,23 @@ for curAxonClassId = 1:numel(allAxonClasses)
         curPred = curPredFunc( ...
             curConn, curAvails, curSynCounts, curPredictClassIds);
         
-        curVarUnexplainable = targetDistAxonMnVar( ...
-            curPredictClassIds, curDistId, curAxonClassId);
-        curVarUnexplainable = reshape(curVarUnexplainable, 1, []);
-        curVarUnexplainable = curCorrect * curVarUnexplainable;
+        curBinoVar = curAvails(:, curPredictClassIds);
+        curBinoVar = curBinoVar .* (1 - curBinoVar) ./ curSynCounts;
+        curBinoVar = curCorrect * curBinoVar;
         
         % Per axon and target class
-        curVarLeft = mean((curPred - curConn) .^ 2, 1);
-        curVarLeft = max(curVarLeft - curVarUnexplainable, 0);
+        curVarLeft = (curPred - curConn) .^ 2;
+        curVarLeft = max(curVarLeft - curBinoVar, 0);
         
-        curVarExplained = curVar - curVarLeft;
-        curVarFracExplained = curVarExplained ./ curVar;
+        curVarExplained = sum(curVar - curVarLeft, 1);
+        curVarFracExplained = curVarExplained ./ sum(curVar, 1);
         
         axonTargetClassExplainability(curPredictClassIds, ...
             curDistId, curAxonClassId) = curVarFracExplained;
         
         % Per axon class
-        curVarLeft = sum(curVarLeft);
-        curVarExplained = sum(curVar) - curVarLeft;
-        curVarFracExplained = curVarExplained / sum(curVar);
+        curVarExplained = sum(curVar(:) - curVarLeft(:));
+        curVarFracExplained = curVarExplained / sum(curVar(:));
         
         axonClassExplainability( ...
             curDistId, curAxonClassId) = curVarFracExplained;
