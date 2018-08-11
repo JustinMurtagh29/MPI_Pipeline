@@ -11,25 +11,6 @@ minSynPre = 10;
 maxRadius = 50;
 maxAvail = 0.7;
 
-% Valid prediction methods are
-% * predictTargetClassAvailability: The predicted innervation of a target
-%   class (in fractional synapses) is equal to the fraction of the
-%   available postsynaptic membranes being of the given target class.
-%
-% * predictUsingLinearRegressionOnTargetClassAvailability: The predicted
-%   innervation of a target class is the result of a linear regression
-%   based on the fractional surface availability of the given target class.
-%
-% * predictUsingLinearRegressionOnAllTargetClassAvailabilities: The
-%   predicted innervation of a target class is the result of a multivariate
-%   linear regression based on the fractional surface availability of all
-%   target classes.
-% * predictUsingMultivariateMultinomialLogisticRegression: The predicted
-%   innervation of a target class is the result of a multivariate
-%   multinomial logistic regression based on the fractional surface
-%   availability of all target classes.
-predictionMethod = 'predictUsingMultivariateMultinomialLogisticRegression';
-
 % Set to radius (in µm) to run forward model to generate fake connectome
 % and calibrate the geometric predictability analysis.
 fakeRadius = [];
@@ -57,7 +38,7 @@ param = param.p;
     connectEM.Connectome.prepareForSpecificityAnalysis( ...
         conn, axonClasses, 'minSynPre', minSynPre);
 axonClasses = axonClasses(1:2);
-    
+
 avail = load(availFile);
 
 %% Prepare data
@@ -73,36 +54,82 @@ classConn = classConn(:, classIds);
 availabilities = avail.axonAvail(classIds, :, :);
 availabilities = availabilities ./ sum(availabilities, 1);
 
-% Define target classes we want to predict
-[axonClasses.predictClasses] = deal(targetClasses);
-[axonClasses.correctForBinoVar] = deal(false);
+%% Define configurations
+clear cur*;
+allAxonClasses = axonClasses;
+
+% Valid prediction methods are
+% * predictTargetClassAvailability: The predicted innervation of a target
+%   class (in fractional synapses) is equal to the fraction of the
+%   available postsynaptic membranes being of the given target class.
+%
+% * predictUsingLinearRegressionOnTargetClassAvailability: The predicted
+%   innervation of a target class is the result of a linear regression
+%   based on the fractional surface availability of the given target class.
+%
+% * predictUsingLinearRegressionOnAllTargetClassAvailabilities: The
+%   predicted innervation of a target class is the result of a multivariate
+%   linear regression based on the fractional surface availability of all
+%   target classes.
+%
+% * predictUsingMultivariateMultinomialLogisticRegression: The predicted
+%   innervation of a target class is the result of a multivariate
+%   multinomial logistic regression based on the fractional surface
+%   availability of all target classes.
+[allAxonClasses.predictionMethod] = deal('predictTargetClassAvailability');
+[allAxonClasses.predictClasses] = deal(targetClasses);
+[allAxonClasses.correctForBinoVar] = deal(false);
 
 % NOTE(amotta): As discussed with MH on 08.08.2018, let's not predict
 % targets that are not innervated by excitatory axons.
-axonClasses(1).title = sprintf( ...
-    '%s (without SOM and AIS)', axonClasses(1).title);
-axonClasses(1).predictClasses = setdiff( ...
+allAxonClasses(1).title = sprintf( ...
+    '%s (without SOM and AIS)', allAxonClasses(1).title);
+allAxonClasses(1).predictClasses = setdiff( ...
     targetClasses, {'Somata', 'AxonInitialSegment'});
 
-% Duplicate excitatory axons
-axonClasses(end + 1) = axonClasses(1);
-axonClasses(end).correctForBinoVar = true;
-axonClasses(end).title = sprintf( ...
-    '%s (bino. var. corrected)', axonClasses(end).title);
+% Do same thing with linear regression
+curNewAxonClasses = allAxonClasses(1:numel(axonClasses));
+[curNewAxonClasses.predictionMethod] = deal( ...
+    'predictUsingLinearRegressionOnAllTargetClassAvailabilities');
+allAxonClasses = cat(1, allAxonClasses(:), curNewAxonClasses(:));
 
-% Inhibitory axons without correction
-axonClasses(end + 1) = axonClasses(2);
-axonClasses(end).correctForBinoVar = true;
-axonClasses(end).title = sprintf( ...
-    '%s (bino. var. corrected)', axonClasses(end).title);
+% Do same thing with logistic regression
+curNewAxonClasses = allAxonClasses(1:numel(axonClasses));
+[curNewAxonClasses.predictionMethod] = deal( ...
+    'predictUsingMultivariateMultinomialLogisticRegression');
+allAxonClasses = cat(1, allAxonClasses(:), curNewAxonClasses(:));
+
+% Do everything with binomial variance correction
+curNewAxonClasses = allAxonClasses;
+[curNewAxonClasses.correctForBinoVar] = deal(true);
+allAxonClasses = cat(1, allAxonClasses(:), curNewAxonClasses(:));
+
+% Update class titles
+varCorrectedStr = {'uncorrected', 'corrected'};
+axonClassTitles = arrayfun(@(axC) sprintf('%s (%s, %s)', axC.title, ...
+    varCorrectedStr{1 + axC.correctForBinoVar}, axC.predictionMethod), ...
+    allAxonClasses, 'UniformOutput', false);
+[allAxonClasses.title] = deal(axonClassTitles{:});
 
 % Cosmetics
 curColors = get(groot, 'defaultAxesColorOrder');
-axonClasses(1).styles = {'Color', curColors(1, :), 'LineStyle', '-'};
-axonClasses(2).styles = {'Color', curColors(2, :), 'LineStyle', '-'};
-axonClasses(3).styles = {'Color', curColors(1, :), 'LineStyle', '--'};
-axonClasses(4).styles = {'Color', curColors(2, :), 'LineStyle', '--'};
-plotAxonClasses = 1:numel(axonClasses);
+curLineStyles = {'-', '--'};
+
+curMarkers = {'o', 's', 'd'};
+curMarkerMethods = unique({allAxonClasses.predictionMethod});
+curMarkers = curMarkers(1:numel(curMarkerMethods));
+
+for curId = 1:numel(allAxonClasses)
+    curColor = curColors(1 + mod(curId, numel(axonClasses)), :);
+    
+    allAxonClasses(curId).styles = { ...
+        'Color', curColor, 'MarkerFaceColor', curColor, ...
+        'LineStyle', curLineStyles{1 + allAxonClasses(curId).correctForBinoVar}, ...
+        'Marker', curMarkers{strcmp(allAxonClasses(curId).predictionMethod, curMarkerMethods)}, ...
+        'MarkerEdgeColor', 'none', 'MarkerSize', 6};
+end
+
+plotAxonClasses = 1:numel(allAxonClasses);
 
 %% Build fake connectome for testing
 if ~isempty(fakeRadius)
@@ -120,9 +147,9 @@ if ~isempty(fakeRadius)
     classConn = fakeConn;
     
     fakeAxonClassTitles = strcat( ...
-        {'fake '}, {axonClasses.title}, ...
+        {'fake '}, {allAxonClasses.title}, ...
         sprintf(' (r_{fake} = %d µm)', fakeRadius));
-   [axonClasses.title] = deal(fakeAxonClassTitles{:});
+   [allAxonClasses.title] = deal(fakeAxonClassTitles{:});
 end
 
 %% Plot mean availabilities / specificities
@@ -133,8 +160,8 @@ curFig.Color = 'white';
 
 curDists = avail.dists / 1E3;
 
-for curAxonClassId = 1:numel(axonClasses)
-    curAxonClass = axonClasses(curAxonClassId);
+for curAxonClassId = 1:numel(allAxonClasses)
+    curAxonClass = allAxonClasses(curAxonClassId);
     curAxonIds = curAxonClass.axonIds;
 
     curClassConn = classConn(curAxonIds, :);
@@ -150,7 +177,7 @@ for curAxonClassId = 1:numel(axonClasses)
         curMeanSpec = mean(curSpecs);
         
         curAx = subplot( ...
-            numel(axonClasses), numel(targetClasses), ...
+            numel(allAxonClasses), numel(targetClasses), ...
             numel(targetClasses) * (curAxonClassId - 1) ...
           + curTargetClassId);
         hold(curAx, 'on');
@@ -171,7 +198,7 @@ for curIdx = 1:numel(targetClasses)
         'FontWeight', 'normal', 'FontSize', 10);
 end
 
-for curIdx = 1:numel(axonClasses)
+for curIdx = 1:numel(allAxonClasses)
     ylabel( ...
         curAx(numel(targetClasses) * (curIdx - 1) + 1), ...
         {'Mean fraction of '; 'surface / synapses'});
@@ -201,8 +228,8 @@ curFig.Color = 'white';
 
 curDists = avail.dists / 1E3;
 
-for curAxonClassId = 1:numel(axonClasses)
-    curAxonClass = axonClasses(curAxonClassId);
+for curAxonClassId = 1:numel(allAxonClasses)
+    curAxonClass = allAxonClasses(curAxonClassId);
     curAxonIds = curAxonClass.axonIds;
 
     curClassConn = classConn(curAxonIds, :);
@@ -248,7 +275,7 @@ for curAxonClassId = 1:numel(axonClasses)
         curTotalExplainedVar = curTotalExplainedVar + curExplainedVar(:);
         
         curAx = subplot( ...
-            numel(axonClasses), numel(targetClasses) + 1, ...
+            numel(allAxonClasses), numel(targetClasses) + 1, ...
             (numel(targetClasses) + 1) * (curAxonClassId - 1) ...
           + curTargetClassId);
         hold(curAx, 'on');
@@ -265,7 +292,7 @@ for curAxonClassId = 1:numel(axonClasses)
     
     % Plot total
     curAx = subplot( ...
-        numel(axonClasses), numel(targetClasses) + 1, ...
+        numel(allAxonClasses), numel(targetClasses) + 1, ...
         (numel(targetClasses) + 1) * (curAxonClassId - 1) ...
         + numel(targetClasses) + 1);
     hold(curAx, 'on');
@@ -285,7 +312,7 @@ for curIdx = 1:numel(curTitles)
         'FontWeight', 'normal', 'FontSize', 10);
 end
 
-for curIdx = 1:numel(axonClasses)
+for curIdx = 1:numel(allAxonClasses)
     ylabel( ...
         curAx((numel(targetClasses) + 1) * (curIdx - 1) + 1), ...
         'Variance');
@@ -315,13 +342,13 @@ clear cur*;
 targetDistAxonMnVar = nan( ...
     numel(targetClasses), ...
     numel(avail.dists), ...
-    numel(axonClasses));
+    numel(allAxonClasses));
 targetAxonConnMnVar = nan( ...
     numel(targetClasses), ...
-    numel(axonClasses));
+    numel(allAxonClasses));
 
-for curAxonClassId = 1:numel(axonClasses)
-    curAxonClass = axonClasses(curAxonClassId);
+for curAxonClassId = 1:numel(allAxonClasses)
+    curAxonClass = allAxonClasses(curAxonClassId);
     curAxonIds = curAxonClass.axonIds;
 
     curClassConn = classConn(curAxonIds, :);
@@ -348,17 +375,16 @@ assert(~any(isnan(targetAxonConnMnVar(:))));
 
 %% Calculate explainability
 clear cur*;
-
-curPredFunc = str2func(predictionMethod);
 curWarnConf = warning('off', 'MATLAB:rankDeficientMatrix');
 
 axonClassExplainability = nan( ...
-    numel(avail.dists), numel(axonClasses));
+    numel(avail.dists), numel(allAxonClasses));
 axonTargetClassExplainability = nan( ...
-    numel(targetClasses), numel(avail.dists), numel(axonClasses));
+    numel(targetClasses), numel(avail.dists), numel(allAxonClasses));
 
-for curAxonClassId = 1:numel(axonClasses)
-    curAxonClass = axonClasses(curAxonClassId);
+for curAxonClassId = 1:numel(allAxonClasses)
+    curAxonClass = allAxonClasses(curAxonClassId);
+    curPredFunc = str2func(curAxonClass.predictionMethod);
     curCorrect = curAxonClass.correctForBinoVar;
     curAxonIds = curAxonClass.axonIds;
     
@@ -379,7 +405,8 @@ for curAxonClassId = 1:numel(axonClasses)
         curAvails = transpose(squeeze(curAvails));
         curAvails(:, end + 1) = 1; %#ok
         
-        curPred = curPredFunc(curConn, curAvails, curSynCounts);
+        curPred = curPredFunc( ...
+            curConn, curAvails, curSynCounts, curPredictClassIds);
         
         curVarUnexplainable = targetDistAxonMnVar( ...
             curPredictClassIds, curDistId, curAxonClassId);
@@ -405,9 +432,6 @@ for curAxonClassId = 1:numel(axonClasses)
             curDistId, curAxonClassId) = curVarFracExplained;
     end
 end
-
-warning(curWarnConf);
-clear prevWarning;
 
 %% Show availabilities for two axons
 clear cur*;
@@ -542,7 +566,7 @@ curFig.Position(3:4) = [1100, 550];
 
 for curAxonClassIdx = 1:numel(plotAxonClasses)
     curAxonClassId = plotAxonClasses(curAxonClassIdx);
-    curAxonClass = axonClasses(curAxonClassId);
+    curAxonClass = allAxonClasses(curAxonClassId);
     
     curPredictClasses = curAxonClass.predictClasses;
    [~, curPredictClassIds] = ismember(curPredictClasses, targetClasses);
@@ -587,7 +611,7 @@ annotation(curFig, ...
     'textbox', [0, 0.9, 1, 0.1], ...
     'EdgeColor', 'none', ...
     'HorizontalAlignment', 'center', ...
-    'String', {predictionMethod; info.filename; info.git_repos{1}.hash});
+    'String', {info.filename; info.git_repos{1}.hash});
 
 %% Plot R² over classes
 clear cur*;
@@ -595,7 +619,7 @@ clear cur*;
 % Plotting
 curFig = figure();
 curFig.Color = 'white';
-curFig.Position(3:4) = [600, 590];
+curFig.Position(3:4) = [1300, 590];
 
 curAx = axes(curFig);
 curAx.TickDir = 'out';
@@ -603,11 +627,12 @@ axis(curAx, 'square');
 hold(curAx, 'on');
 
 for curAxonClassId = plotAxonClasses
-    curStyles = axonClasses(curAxonClassId).styles;
+    curStyles = allAxonClasses(curAxonClassId).styles;
     curData = axonClassExplainability(:, curAxonClassId);
-    plot(curAx, ...
+    curPlot = plot(curAx, ...
         avail.dists / 1E3, curData, ...
         'LineWidth', 2, curStyles{:});
+    curPlot.MarkerIndices = curPlot.MarkerIndices(1:10:end);
 end
 
 xlabel(curAx, 'Radius (µm)');
@@ -616,21 +641,21 @@ ylabel(curAx, 'R²');
 ylim(curAx, [0, 1]);
 
 legend(curAx, ...
-    {axonClasses(plotAxonClasses).title}, ...
-    'Location', 'North', 'Box', 'off');
+    {allAxonClasses(plotAxonClasses).title}, ...
+    'Location', 'EastOutside', 'Box', 'off');
 
 annotation(curFig, ...
     'textbox', [0, 0.9, 1, 0.1], ...
     'EdgeColor', 'none', ...
     'HorizontalAlignment', 'center', ...
-    'String', {predictionMethod; info.filename; info.git_repos{1}.hash});
+    'String', {info.filename; info.git_repos{1}.hash});
     
 %% Geometric prediction models
-function preds = predictTargetClassAvailability(~, avails, ~) %#ok
-    preds = avails(:, 1:(end - 1));
+function preds = predictTargetClassAvailability(~, avails, ~, predictClassIds) %#ok
+    preds = avails(:, predictClassIds);
 end
 
-function preds = predictUsingLinearRegressionOnTargetClassAvailability(conn, avails, ~) %#ok
+function preds = predictUsingLinearRegressionOnTargetClassAvailability(conn, avails, ~, ~) %#ok
     preds = nan(size(conn));
     for curIdx = 1:size(conn, 2)
         curAvails = avails(:, [curIdx, end]);
@@ -639,12 +664,12 @@ function preds = predictUsingLinearRegressionOnTargetClassAvailability(conn, ava
     end
 end
 
-function preds = predictUsingLinearRegressionOnAllTargetClassAvailabilities(conn, avails, ~) %#ok
+function preds = predictUsingLinearRegressionOnAllTargetClassAvailabilities(conn, avails, ~, ~) %#ok
     fit = avails \ conn;
     preds = avails * fit;
 end
 
-function preds = predictUsingMultivariateMultinomialLogisticRegression(conn, avails, synCounts) %#ok
+function preds = predictUsingMultivariateMultinomialLogisticRegression(conn, avails, synCounts, ~) %#ok
     % HACK(amotta): Restore absolute synapse counts
     conn = round(conn .* synCounts);
     avails(:, end) = [];
