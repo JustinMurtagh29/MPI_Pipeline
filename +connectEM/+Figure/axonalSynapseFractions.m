@@ -78,7 +78,8 @@ ax = axes(fig);
 hold(ax, 'on');
 
 % Fake plots for legend
-colors = ax.ColorOrder(1:numel(targetClasses), :);
+% colors = ax.ColorOrder(1:numel(targetClasses), :);
+colors = repmat(repelem(0.522, 3), numel(targetClasses), 1);
 cellfun(@(c) plot(ax, nan, nan, '.', 'Color', c), num2cell(colors, 2));
 
 scatter( ...
@@ -110,7 +111,7 @@ end
 
 ax.Box = 'off';
 ax.TickDir = 'out';
-ax.YScale = 'log';
+ax.YLim = [0, 1];
 
 yticklabels(ax, arrayfun( ...
     @(f) sprintf('%g', f), ...
