@@ -53,6 +53,7 @@ for curAxonClass = axonClasses
     curSpecClasses = sort(curSpecClasses);
     
     curCoinMat = nan(1 + numel(curSpecClasses), 1 + numel(targetClasses));
+    curSpecClassRates = nan(1, numel(curSpecClasses));
     
     for curSpecIdx = 1:numel(curSpecClasses)
         curSpecClass = curSpecClasses(curSpecIdx);
@@ -62,6 +63,12 @@ for curAxonClass = axonClasses
         curCoinVec(:, curSpecClass) = 0;
         curCoinVec = sum(curCoinVec, 1) / sum(curCoinVec(:));
         curCoinMat(curSpecIdx, :) = curCoinVec;
+        
+        curSpecClassRate = classConn(curAxonIds, :);
+        curSpecClassRate = ...
+            sum(curSpecClassRate(:, curSpecClass)) ...
+         ./ sum(curSpecClassRate(:));q
+        curSpecClassRates(curSpecIdx) = curSpecClassRate;
     end
     
     % All axons
@@ -69,7 +76,9 @@ for curAxonClass = axonClasses
     curCoinVec = sum(curCoinVec, 1) / sum(curCoinVec(:));
     curCoinMat(end, :) = curCoinVec;
     
-    plotIt(info, targetLabels, curAxonClass, curSpecClasses, curCoinMat);
+    plotIt(info, ...
+        targetLabels, curAxonClass, curSpecClasses, curCoinMat, ...
+        'specClassRates', curSpecClassRates);
 end
 
 %% Utilities
@@ -78,6 +87,7 @@ function plotIt( ...
         specClasses, coinMat, varargin)
     opt = struct;
     opt.maxDelta = 0.20;
+    opt.specClassRates = [];
     opt = Util.modifyStruct(opt, varargin{:});
     
     specLabels = targetClasses(specClasses);
@@ -101,6 +111,10 @@ function plotIt( ...
     deltaMat = coinMat - coinMat(end, :);
     deltaMat(diagIds) = 0;
     
+    if ~isempty(opt.specClassRates)
+        coinMat(diagIds) = opt.specClassRates;
+    end
+    
     fig = figure();
     ax = axes(fig);
     
@@ -110,7 +124,7 @@ function plotIt( ...
         'Parent', ax);
 
     fig.Color = 'white';
-    fig.Position(3:4) = 750 .* [1, frac];
+    fig.Position(3:4) = 350 .* [1, frac];
 
     ax.Visible = 'on';
     ax.TickDir = 'out';
@@ -127,11 +141,13 @@ function plotIt( ...
     
     for curIdx = 1:numel(coinMat)
        [curRow, curCol] = ind2sub(size(coinMat), curIdx);
+        curEdgeColor = 'none';
         
         if curRow <= numel(specClasses) ...
-                && specClasses(curRow) == curCol
-            % Do not label "diagonals"
-            continue;
+                && specClasses(curRow) == curCol ...
+                
+            if isempty(opt.specClassRates); continue; end
+            curEdgeColor = 'black';
         end
 
         curBoxSize = ax.Position(3:4) ./ [cols, rows];
@@ -143,9 +159,10 @@ function plotIt( ...
             'String', sprintf('%.2g', 100 * coinMat(curIdx)));
         curAnn.HorizontalAlignment = 'center';
         curAnn.VerticalAlignment = 'middle';
-        curAnn.EdgeColor = 'none';
+        curAnn.EdgeColor = curEdgeColor;
         curAnn.Color = 'black';
         curAnn.FontSize = 12;
+        curAnn.LineWidth = 2;
     end
     
     cbar = colorbar('peer', ax);
