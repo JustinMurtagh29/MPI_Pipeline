@@ -58,7 +58,7 @@ skel = Skeleton.setParams4Pipeline(skel, param);
 skel = skel.setDescription(sprintf( ...
     '%s (%s)', info.filename, info.git_repos{1}.hash));
 
-for curIdx = 1:5%numel(curExportIds)
+for curIdx = 1:numel(curExportIds)
     curAisRow = curExportIds(curIdx);
     curAxonId = aisT.axonId(curAisRow);
     curAisIds = aisT.aisIds{curAisRow};
