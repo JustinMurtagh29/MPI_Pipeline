@@ -7,7 +7,7 @@ rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 
 % Set output directory to write figures to disk instead of displaying them.
 plotDir = '';
-plotShow = false;
+plotShow = true;
 
 synEmMarginUm = 3;
 
@@ -483,7 +483,7 @@ for curVarIdx = 1:numel(curVars)
     curBinIds = discretize(curDirs, curBinEdges);
     
     % Statistical tests
-    fitlm(curDirs, curFracs) %#ok
+    fitlm(curDirs, curFracs)
    [~, curPVal] = ttest2( ...
        curFracs(curBinIds == 1), ...
        curFracs(curBinIds == 3)) %#ok
@@ -675,8 +675,8 @@ for curIdx = height(extWcT)
     if isempty(curSyns); continue; end
     
     if plotShow
-        curFig = figure(); %#ok
-    elseif ~isempty(plotDir)
+        curFig = figure();
+    elseif ~isempty(plotDir) %#ok
         curFig = figure('visible', 'off');
     else
         % No need to build plot
@@ -817,194 +817,4 @@ for curIdx = height(extWcT)
         export_fig(strcat(curFigFile, '.eps'), curFig);
         clear curFig;
     end
-end
-
-%% Quantitative comparison of whole cells
-wcSynTypes = zeros(size(wcT, 1), numel(synTypes));
-
-for curIdx = 1:size(wcT, 1)
-    curSyns = wcT.synapses{curIdx};
-    
-    curSyns.isSpine = syn.isSpineSyn(curSyns.id);
-    curSyns.isSoma = ismember( ...
-        wcT.agglo(curIdx).nodes(curSyns.nodeId, 4), ...
-        wcT.somaAgglo(curIdx).nodes(:, 4));
-    curSyns.type = conn.axonMeta.axonClass(curSyns.axonId);
-    
-   [~, curSynTypeCount] = ismember(curSyns.type, synTypes);
-    curSynTypeCount = accumarray(curSynTypeCount, 1, size(synTypes(:)));
-    wcSynTypes(curIdx, :) = curSynTypeCount;
-end
-
-%% Plot results
-binEdges = linspace(0, 1, 41);
-
-for curWcGroup = wcGroups
-    curData = wcSynTypes;
-    curData = curData(curWcGroup.wcIds, :);
-    
-    % Remove cells without synapses
-    curData(~any(curData, 2), :) = [];
-    curData = curData ./ sum(curData, 2);
-    
-    curFig = figure();
-    curFig.Color = 'white';
-    curFig.Position(3:4) = [520, 900];
-
-    for curIdx = 1:numel(synTypes)
-        curAx = subplot(numel(synTypes), 1, curIdx);
-
-        histogram( ...
-            curAx, curData(:, curIdx), ...
-            'BinEdges', binEdges, ...
-            'DisplayStyle', 'stairs', ...
-            'LineWidth', 2, ...
-            'FaceAlpha', 1);
-        
-        curAx.XLim = binEdges([1, end]);
-        curAx.YLim = [0, size(curData, 1)];
-        curAx.TickDir = 'out';
-        curAx.Box = 'off';
-
-        title( ...
-            curAx, char(synTypes(curIdx)), ...
-            'FontWeight', 'normal', ...
-            'FontSize', 10);
-    end
-    
-    curMaxY = [curFig.Children.Children];
-    curMaxY = max(arrayfun(@(h) max(h.Values), curMaxY));
-   [curFig.Children.YLim] = deal([0, curMaxY]);
-   
-    xlabel(curAx, 'Fraction of input synapses');
-    ylabel(curAx, 'Cells');
-
-    annotation(curFig, ...
-        'textbox', [0, 0.9, 1, 0.1], ...
-        'String', { ...
-            info.filename; info.git_repos{1}.hash; ...
-            sprintf('Variability across %s', curWcGroup.title)}, ...
-        'EdgeColor', 'none', 'HorizontalAlignment', 'center');
-end
-
-%% Plot intra-cell variability
-binEdges = linspace(0, 1, 21);
-
-dendT = connectEM.WholeCell.splitWholeCellInputs(wcT, splitNmlT);
-
-extWcT = wcT;
-extWcT.dendId(:) = 0;
-extWcT = extWcT(:, [1, end, 2:(end - 1)]);
-extWcT = cat(1, extWcT, dendT);
-
-curWcIds = unique(extWcT.id);
-for curId = reshape(curWcIds, 1, [])
-    curDendT = extWcT(extWcT.id == curId, :);
-    curDendT = sortrows(curDendT, 'dendId');
-    
-    curDendT.synData = cell2mat(cellfun(@(s) ...
-        transpose(accumarray( ...
-            double(conn.axonMeta.axonClass(s.axonId)), ...
-            1, [numel(synTypes), 1])), ...
-        curDendT.synapses, 'UniformOutput', false));
-    
-    curWcT = curDendT(1, :);
-    assert(~curWcT.dendId);
-    
-    curDendT(1, :) = [];
-    curDendT(sum(curDendT.synData, 2) < 50, :) = [];
-    if size(curDendT, 1) < 2; continue; end
-    
-    if plotShow
-        curFig = figure(); %#ok
-    elseif ~isempty(plotDir)
-        curFig = figure('visible', 'off');
-    else
-        % No need to build plot
-        continue;
-    end
-    
-    curFig.Color = 'white';
-    curFig.Position(3:4) = [720, 410];
-    
-    curAx = axes(curFig); %#ok
-    hold(curAx, 'on');
-    
-    curData = ...
-        curDendT.synData ...
-     ./ sum(curDendT.synData, 2);
- 
-    for curDendIdx = 1:size(curData, 1)
-        plot( ...
-            curAx, 1:size(curData, 2), curData(curDendIdx, :), ...
-            'LineWidth', 2, 'Marker', '.', 'MarkerSize', 24);
-    end
-    
-    plot( ...
-        curAx, 1:size(curData, 2), ...
-        curWcT.synData ./ sum(curWcT.synData, 2), ...
-        'Color', 'black', 'LineStyle', '--', 'LineWidth', 2, ...
-        'Marker', '.', 'MarkerSize', 24);
-    
-    curAx.Box = 'off';
-    curAx.TickDir = 'out';
-    
-    curAx.YLim = [0, 1];
-    curAx.XLim = [1 - 0.1, size(curData, 2) + 0.1];
-    
-    curLeg = cell(size(curDendT, 1) + 1, 1);
-    curLeg(1:(end - 1)) = arrayfun( ...
-        @(id, nSyn) sprintf('Dendrite %d (n = %d synapses)', id, nSyn), ...
-        curDendT.dendId, sum(curDendT.synData, 2), 'UniformOutput', false);
-    curLeg{end} = sprintf( ...
-        'Full reconstruction (n = %d synapses)', sum(curWcT.synData, 2));
-    
-    curLeg = legend(curAx, curLeg, 'Location', 'EastOutside');
-    curLeg.Box = 'off';
-    
-    axis(curAx, 'square');
-    xticks(curAx, 1:size(curData, 2));
-    xticklabels(curAx, arrayfun( ...
-        @char, synTypes, 'UniformOutput', false));
-    
-    xlabel('Synapse type');
-    ylabel('Fraction of input synapses');
-    
-    annotation( ...
-        curFig, ...
-        'textbox', [0, 0.9, 1, 0.1], ...
-    	'String', { ...
-            info.filename; info.git_repos{1}.hash; ...
-            sprintf('Cell %d', curWcT.id)}, ...
-        'EdgeColor', 'none', 'HorizontalAlignment', 'center');
-    
-    if ~isempty(plotDir)
-        curFigFile = sprintf('input-variability_%s', curWcT.tag{1});
-        curFigFile = fullfile(plotDir, curFigFile);
-        
-        export_fig(strcat(curFigFile, '.png'), curFig);
-        export_fig(strcat(curFigFile, '.eps'), curFig);
-        clear curFig;
-    end
-end
-
-%% Export interesting cells
-exportCellIds = [];
-exportDir = '/home/amotta/Desktop';
-
-skel = skeleton();
-skel = Skeleton.setParams4Pipeline(skel, param);
-skel = skel.setDescription(sprintf( ...
-    '%s (%s)', info.filename, info.git_repos{1}.hash));
-
-for curCellId = reshape(exportCellIds, 1, [])
-    curDendT = extWcT(extWcT.id == curCellId & extWcT.dendId ~= 0, :);
-    curDendT.agglo = SuperAgglo.connect(curDendT.agglo);
-    
-    curSkel = ...
-        connectEM.WholeCell.inputsOutputsToSkel( ...
-            param, curDendT, syn.synapses, segPoints, skel);
-        
-	curSkelFile = sprintf('cell-%d.nml', curCellId);
-    curSkel.write(fullfile(exportDir, curSkelFile));
 end
