@@ -67,7 +67,7 @@ for curAxonClass = axonClasses
         curSpecClassRate = classConn(curAxonIds, :);
         curSpecClassRate = ...
             sum(curSpecClassRate(:, curSpecClass)) ...
-         ./ sum(curSpecClassRate(:));q
+         ./ sum(curSpecClassRate(:));
         curSpecClassRates(curSpecIdx) = curSpecClassRate;
     end
     
