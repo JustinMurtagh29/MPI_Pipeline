@@ -690,6 +690,10 @@ for curIdx = height(extWcT)
     curSyns.dist = extWcT.nodeDists{curIdx}(curSyns.nodeId);
     curSyns.dist = curSyns.dist / 1E3;
     
+    curCellCount = numel(unique(curSyns.parentId)) %#ok
+    curDendCount = sum(ismember(dendT.id, curSyns.parentId)) %#ok
+    curSynCount = height(curSyns) %#ok
+    
     % Move soma synapses to separate bin
     curSyns.isSoma = ismember( ...
         extWcT.agglo(curIdx).nodes(curSyns.nodeId, 4), ...
