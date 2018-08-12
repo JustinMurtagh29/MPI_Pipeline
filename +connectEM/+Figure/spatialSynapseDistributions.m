@@ -250,8 +250,13 @@ curConfigs(2).binCounts = ...
     typeBinCounts(:, 2) ...
  ./ sum(typeBinCounts(:, 1:2), 2);
 
-curLinFit = (typeBinEdges(1:(end - 1)) + typeBinEdges(2:end)) / 2;
-curLinFit = fit(curLinFit(:), curConfigs(2).binCounts, 'poly1');
+curX = (typeBinEdges(1:(end - 1)) + typeBinEdges(2:end)) / 2;
+curLinFit = fit(curX(:), curConfigs(2).binCounts, 'poly1');
+
+fitlm(curX(:), curConfigs(2).binCounts)
+fprintf('* Number of CC synapses: %d\n', sum(typeBinCounts(:, 1)));
+fprintf('* Number of TC synapses: %d\n', sum(typeBinCounts(:, 2)));
+fprintf('* Number of synapses: %d\n', sum(sum(typeBinCounts(:, 1:2))));
 
 curFig = figure();
 curFig.Color = 'white';
