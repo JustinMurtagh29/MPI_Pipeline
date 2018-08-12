@@ -25,13 +25,15 @@ segPoints = Seg.Global.getSegToPointMap(param);
         conn, axonClasses, 'minSynPre', minSynPre);
 
 %% Find axons with AIS synapses
+clear cur*;
 synT = connectEM.Connectome.buildSynapseTable(conn, syn);
 synT.targetClass = conn.denMeta.targetClass(synT.postAggloId);
 synT = synT(synT.targetClass == 'AxonInitialSegment', :);
 
 aisT = table;
-[aisT.axonId, ~, synIds] = unique(synT.preAggloId);
-aisT.synIds = accumarray(synIds, synT.id, [], @(ids) {ids});
+[aisT.axonId, ~, curUniIds] = unique(synT.preAggloId);
+aisT.synIds = accumarray(curUniIds, synT.id, [], @(ids) {ids});
+aisT.aisIds = accumarray(curUniIds, synT.postAggloId, [], @(ids) {unique(ids)});
 
 %% Generate NML files
 clear cur*;
@@ -59,13 +61,17 @@ skel = skel.setDescription(sprintf( ...
 for curIdx = 1:5%numel(curExportIds)
     curAisRow = curExportIds(curIdx);
     curAxonId = aisT.axonId(curAisRow);
+    curAisIds = aisT.aisIds{curAisRow};
     curSynIds = aisT.synIds{curAisRow};
     
     curAgglos = cellfun(@vertcat, ...
         syn.synapses.presynId(curSynIds), ...
         syn.synapses.postsynId(curSynIds), ...
         'UniformOutput', false);
-    curAgglos = [conn.axons(curAxonId); curAgglos(:)];
+    curAgglos = [ ...
+        conn.axons(curAxonId); ...
+        conn.dendrites(curAisIds); ...
+        curAgglos(:)];
     
     curSkel = skel;
     curSkel = Skeleton.fromMST(cellfun( ...
@@ -73,9 +79,11 @@ for curIdx = 1:5%numel(curExportIds)
         'UniformOutput', false), param.raw.voxelSize, curSkel);
     
     curSkel.names{1} = sprintf('Axon %d', curAxonId);
-    curSkel.names(2:end) = arrayfun(@(id) ...
-        sprintf('Synapse %d', id), curSynIds, ...
-        'UniformOutput', false);
+    curSkel.names(1 + (1:numel(curAisIds))) = arrayfun(@(id) ...
+        sprintf('AIS %d', id), curAisIds, 'UniformOutput', false);
+        
+    curSkel.names((2 + numel(curAisIds)):end) = arrayfun(@(id) ...
+        sprintf('Synapse %d', id), curSynIds, 'UniformOutput', false);
     
     curSkelFile = sprintf( ...
         '%0*d_ais-axon-%d.nml', curDigits, curIdx, curAxonId);
