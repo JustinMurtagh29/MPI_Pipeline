@@ -4,16 +4,17 @@ clear;
 
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-availBlockFile = '/tmpscratch/amotta/l4/2018-04-27-surface-availability-connectome-v5/block-data.mat';
-connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites-wholeCells-03-v2-classified_spine-syn-clust.mat');
+availBlockFile = '/tmpscratch/amotta/l4/2018-07-18-surface-availability-for-connectome-v7-partially-split/block-data.mat';
+connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-partiallySplit-v2_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v8-classified.mat');
 
 boxCount = 100;
 boxSizeVx = [480, 480, 240];
 
 targetClasses = { ...
     'Somata', 'Soma'; ...
-    'ApicalDendrite', 'AD'; ...
+    'ProximalDendrite', 'PD'; ...
     'SmoothDendrite', 'SD'; ...
+    'ApicalDendrite', 'AD'; ...
     'AxonInitialSegment', 'AIS'; ...
     'Rest', 'Rest'};
 
@@ -30,6 +31,7 @@ maxSegId = Seg.Global.getMaxSegId(param);
 segPoints = Seg.Global.getSegToPointMap(param);
 
 [conn, syn] = connectEM.Connectome.load(param, connFile);
+conn = connectEM.Connectome.prepareForSpecificityAnalysis(conn);
 
 availBlock = load(availBlockFile);
 availBlockSize = availBlock.info.param.blockSize;
@@ -145,8 +147,6 @@ hold(curAx, 'on');
 curAx.XLim = [0.001, 1];
 curAx.YLim = [0.001, 1];
 
-line(curAx, curAx.XLim, curAx.YLim, 'Color', 'black');
-
 for curIdx = 1:numel(targetClasses)
     curColor = curAx.ColorOrder(curIdx, :);
     curDataX = reshape(boxData(curIdx, 1, :), [], 1);
@@ -176,13 +176,15 @@ ylabel(curAx, 'Synapse fraction');
 curPlots = flip(cat(1, curAx.Children));
 
 [curLeg, curIcons] = legend( ...
-    curPlots(2:end), targetClasses, ...
-    'Location', 'eastoutside');
+    curPlots(1:numel(targetClasses)), ...
+    targetClasses, 'Location', 'eastoutside');
 curLeg.Box = 'off';
 
 curMarkers = curIcons((end - numel(targetClasses) + 1):end);
 curMarkers = cat(1, curMarkers.Children);
 set(curMarkers, 'MarkerSize', 24);
+
+line(curAx, curAx.XLim, curAx.YLim, 'Color', 'black');
 
 annotation( ...
     curFig, ...
