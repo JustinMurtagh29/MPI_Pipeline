@@ -395,8 +395,10 @@ for curAxonClassId = 1:numel(allAxonClasses)
     
     curConn = classConn(curAxonIds, :);
     curSynCounts = sum(curConn, 2);
-    curConn = curConn ./ curSynCounts;
+    curConn = curConn ./ curSynCounts; 
     curConn = curConn(:, curPredictClassIds);
+    % NOTE (BS): curConn is thus potentially not normalized to 1 in the
+    % second dimension (which should be fine for linear regression though)
     
     curVar = (curConn - mean(curConn, 1)) .^ 2;
     
