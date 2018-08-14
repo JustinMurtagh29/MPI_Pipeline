@@ -1,4 +1,4 @@
-function calculateFeaturesCube(p, cubeNo, fm, voxelMap)
+function calculateFeaturesCube(p, cubeNo, fm, voxelMap, filename)
 % Calculate SynEM features for SegEM classification output on a local cube
 
 % load segmentation
@@ -43,7 +43,10 @@ if ~all(seg(:)==0)
 			features = cat(2, features, curFeatures);
 		end
    end
-   outputFile = [p.local(cubeNo).saveFolder 'Interface' voxelMap 'Features.mat'];
+   if ~exist(filename, 'var') || isempty(filename)
+       filename = ['Interface' voxelMap 'Features.mat'];
+   end
+   outputFile = fullfile(p.local(cubeNo).saveFolder, filename);
    Util.save(outputFile, features);
 end
 end
