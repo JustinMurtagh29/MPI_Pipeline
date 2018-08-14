@@ -43,7 +43,7 @@ if ~all(seg(:)==0)
 			features = cat(2, features, curFeatures);
 		end
    end
-   if ~exist(filename, 'var') || isempty(filename)
+   if ~exist('filename', 'var') || isempty(filename)
        filename = ['Interface' voxelMap 'Features.mat'];
    end
    outputFile = fullfile(p.local(cubeNo).saveFolder, filename);
