@@ -27,7 +27,7 @@ for z=1:sizeRaw(3)
         theseVessels(idx) = 1;
     end
     % Fill holes in detection
-    theseVessels = fillVesselHoles(theseVessels, mask, tunnelCoord);
+    theseVessels = fillHoles(theseVessels, mask, tunnelCoord);
     % Save for output
     vessels(:,:,z) = theseVessels;
     if visualize
@@ -39,17 +39,4 @@ for z=1:sizeRaw(3)
 end
 toc;
 
-end
-
-function vessel = fillVesselHoles(vessel, mask, tunnelCoord)
-% Dataset specific changes needed here, this function takes mask and
-% drill holes into 'outer hull' to be able to use imfill, change drill
-% location according to dataset :)
-vesselMasked = or(vessel,mask);
-if all(vesselMasked(1 : 400, tunnelCoord))
-    warning('Tunnel doesn''t cut through');
-end
-vesselMasked(1 : 400, tunnelCoord) = 0;
-
-vessel = imfill(vesselMasked, 'holes') & ~mask;
 end

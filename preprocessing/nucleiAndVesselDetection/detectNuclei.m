@@ -37,7 +37,7 @@ for z=1:sizeRaw(3)
     theseNuclei = thisImage & ~vessels(:,:,z) & ~mask & ~apicals;
     theseNuclei = bwareaopen(theseNuclei, 2000, 4);
     theseNuclei = imclose(theseNuclei | mask, strel('disk', 3)) & ~mask;
-    theseNuclei = fillNucleiHoles(theseNuclei, mask);
+    theseNuclei = fillHoles(theseNuclei, mask);
     % Save for output
     nuclei(:,:,z) = theseNuclei;
     if visualize 
@@ -49,7 +49,7 @@ for z=1:sizeRaw(3)
     end
 end
 toc;
-
+clear raw vessels
 tic;
 display('Postprocessing');
 % Close to make more constinstent across images
@@ -61,13 +61,4 @@ nucleiPost = imopen(nucleiPost, se);
 nucleiPost = bwareaopen(nucleiPost, 30000);
 toc;
 
-end
-
-function nuclei = fillNucleiHoles(nuclei, mask)
-    % Dataset specific changes needed here, this function takes mask and
-    % drill holes into 'outer hull' to be able to use imfill, change drill
-    % location according to dataset :)
-    vesselMasked = or(nuclei,mask);
-    vesselMasked(1:400, 800) = 0;
-    nuclei = imfill(vesselMasked, 'holes') & ~mask;
 end

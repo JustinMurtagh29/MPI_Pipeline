@@ -5,15 +5,15 @@ function vesselsPost = detectVessels( raw, visualize, tunnelCoord, threshold)
 % closing step in postprocessing
 
 % By default: visualization off
-if nargin == 1
+if nargin < 2 || isempty(visualize)
     visualize = false;
-    tunnelCoord = 200;
 end
-if nargin <= 2
-    tunnelCoord = 200;
+if nargin < 3 || isempty(tunnelCoord)
+    tunnelCoord = [];
 end
-if nargin <= 3
+if nargin < 4 || isempty(threshold)
     threshold = 150;
 end
+
 vessels = detectVesselsPre( raw, visualize, tunnelCoord, threshold);
 vesselsPost = detectVesselsPost(vessels);

@@ -17,8 +17,7 @@ if exist('regionsToRemove','var')
     vessels(cat(1,rp(regionsToRemove).PixelIdxList)) = 0;
 end
 vessels = imclose(vessels, ones(1, 1, 7));
-maskedRaw = raw;
-maskedRaw(vessels) = uint8(121);
-saveRawData(outParam, thisSliceBbox(:,1)', maskedRaw);
+raw(vessels) = uint8(121); % mask the raw data at bw
+saveRawData(outParam, thisSliceBbox(:,1)', raw);
 saveSegDataGlobal(struct( ...
     'root', strrep(outParam.root, '/color/', '/segmentation/')), thisSliceBbox(:, 1)', uint32(vessels));

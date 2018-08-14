@@ -15,7 +15,7 @@ mkdir(datasetVesselsMasked.root)
 mkdir(datasetGradientCorrected.root)
 % Define slice to be loaded in memory in paralell (one KNOSSOS cube z-plane)
 zCoords = dataset.bbox(3,1):dataset.bbox(3,2);
-blocksizeToUse = dataset.blocksize *1;
+blocksizeToUse = dataset.blocksize *0.5; % dataset is too big to have 32*full slice
 lastOfWKWCube = [find(mod(zCoords,blocksizeToUse) == 0) length(zCoords)];
 numberValidInCube = [lastOfWKWCube(1) diff(lastOfWKWCube)];
 zCoords = mat2cell(zCoords, 1, numberValidInCube);
@@ -36,25 +36,26 @@ inputCell = cellfun(@(x,y) {[dataset.bbox(1:2,:);x(1) x(end)],y},zCoords,BVregio
 
 job = Cluster.startJob( ...
     @detectVesselsBBox, inputCell,'sharedInputs',{dataset,datasetVesselsMasked}, ...
-    'cluster', {'memory', 32,'time', '50:00:00','taskConcurrency',20}, ...
+    'cluster', {'memory', 64,'time', '50:00:00','taskConcurrency',20}, ...
     'name', 'vesselDetection','numOutputs',1);
 Cluster.waitForJob(job);
-
+regionInfo = job.fetchOutputs;
 
 display('Downsampling KNOSSOS hierachies');
 tic;
 % Create resoution pyramids for new dataset(s)
 createResolutionPyramid(datasetVesselsMasked.root);
 % Still a bit more complicated for downsampling segmentation(s)
-thisRoot = strrep(datasetVesselsMasked.root, '/color/', '/segmentation/');
+datasetVesselsMaskedSeg = datasetVesselsMasked;
+datasetVesselsMaskedSeg.root = strrep(datasetVesselsMaskedSeg.root, '/color/', '/segmentation/');
 thisBBox = [1 1 1; (ceil(dataset.bbox(:,2)./1024).*1024)']';
-createResolutionPyramid(thisRoot, datasetVesselsMasked.prefix, thisBBox, strrep(thisRoot, '/1/', ''), true);
+createResolutionPyramid(datasetVesselsMaskedSeg, thisBBox, strrep(datasetVesselsMaskedSeg.root, '/1/', ''), true);
 toc;
 
 % Approximate gradients by first (in this function) mean downsampling
 filterSize = [64; 64; 29];
 [rawMean, x, y, z] = approximateGradients(datasetVesselsMasked, dataset.bbox, filterSize);
-Util.save('/gaba/scratch/mberning/rawMean.mat');
+Util.save('/tmpscratch/mbeining/data/cubing/MB_hc_l_31_st013_BKalign/GradientRawMean.mat');
 
 % Gradient calculation
 display('Smoothing gradient estimation');
@@ -87,7 +88,8 @@ toc;
 
 % Need to go to quarter KNOSSOS cube z-slices for next step, interpolation requires too much memory
 zCoords = dataset.bbox(3,1):dataset.bbox(3,2);
-lastOfWKWCube = [find(mod(zCoords,32) == 0) length(zCoords)];
+blocksizeToUse = dataset.blocksize *0.5; % dataset is too big to have 32*full slice
+lastOfWKWCube = [find(mod(zCoords,blocksizeToUse) == 0) length(zCoords)];
 numberValidInCube = [lastOfWKWCube(1) diff(lastOfWKWCube)];
 zCoords = mat2cell(zCoords, 1, numberValidInCube);
 zCoords(numberValidInCube == 0) = [];
@@ -95,27 +97,14 @@ zCoords(numberValidInCube == 0) = [];
 display('Gradient correction');
 thisSliceBbox = dataset.bbox;
 [X,Y,Z] = meshgrid(y,x,z);
-for i=1:length(zCoords)
-    % Determine bounding box and interpolation for this z-slice
-    thisSliceBbox(3,:) = [zCoords{i}(1) zCoords{i}(end)];	
-	xq = thisSliceBbox(1,1):thisSliceBbox(1,2);
-    yq = thisSliceBbox(2,1):thisSliceBbox(2,2);
-    zq = thisSliceBbox(3,1):thisSliceBbox(3,2);
-    [Xq,Yq,Zq] = meshgrid(yq,xq,zq);
-    % Read original data and detected vessel
-    % Interpolate correction voxel for each voxel and multiply
-    correctionForSlice =  interp3(X,Y,Z,correctionVolume,Xq,Yq,Zq, 'linear', 121);
-    raw = loadRawData(datasetVesselsMasked, thisSliceBbox); 
-    vessels =  loadSegDataGlobal(struct( ...
-        'root', strrep(datasetVesselsMasked.root, '/color/', '/segmentation/'), ...
-        'prefix', datasetVesselsMasked.prefix), thisSliceBbox);
-    raw = uint8(correctionForSlice .* double(raw));
-	raw(vessels > 0) = 121;
-    % Save to new datset to be used in pipeline
-    saveRawData(datasetGradientCorrected, thisSliceBbox(:, 1)', raw);
-    clear raw vessels;
-    Util.progressBar(i, length(zCoords));
-end
+
+inputCell = cellfun(@(x,y) {[dataset.bbox(1:2,:);x(1) x(end)]},zCoords,'uni',0);
+job = Cluster.startJob( ...
+    @detectVesselsBBox, inputCell,'sharedInputs',{datasetVesselsMasked,datasetGradientCorrected}, ...
+    'cluster', {'memory', 64,'time', '50:00:00','taskConcurrency',20}, ...
+    'name', 'gradientCorrection');
+Cluster.waitForJob(job);
+
 clear X Xq Y Yq Z Zq;
 
 display('Downsampling KNOSSOS hierachies');
