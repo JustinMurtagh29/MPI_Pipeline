@@ -6,7 +6,7 @@ if ~exist('rawFeatFile', 'var') || isempty(rawFeatFile)
 end
 
 if ~exist('classFeatFile', 'var') || isempty(classFeatFile)
-    classFeatFile = 'InterfaceRawFeatures.mat';
+    classFeatFile = 'InterfaceClassFeatures.mat';
 end
 
 segMeta = load([p.saveFolder 'segmentMeta.mat'], 'cubeIdx', 'segIds');
