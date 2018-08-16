@@ -1,5 +1,13 @@
-function gt = getFeaturesForEdges( p, gt )
+function gt = getFeaturesForEdges( p, gt, rawFeatFile, classFeatFile )
 % Get three different feature sets for given edges
+
+if ~exist('rawFeatFile', 'var') || isempty(rawFeatFile)
+    rawFeatFile = 'InterfaceRawFeatures.mat';
+end
+
+if ~exist('classFeatFile', 'var') || isempty(classFeatFile)
+    classFeatFile = 'InterfaceRawFeatures.mat';
+end
 
 segMeta = load([p.saveFolder 'segmentMeta.mat'], 'cubeIdx', 'segIds');
 for i=1:length(gt)
@@ -7,9 +15,9 @@ for i=1:length(gt)
     uniqueCubes = unique(segMeta.cubeIdx(ismember(segMeta.segIds, gt(i).edges(:))));
     saveFolders = {p.local(uniqueCubes).saveFolder};
     bboxes = {p.local(uniqueCubes).bboxSmall};
-    featureFiles = cellfun(@(x)[x 'InterfaceRawFeatures.mat'], saveFolders, 'uni', 0);
+    featureFiles = cellfun(@(x)[x rawFeatFile], saveFolders, 'uni', 0);
     [gt(i).rawFeatures, edgeIdx1, gt(i).borderCoM] = getFeatures(gt(i).edges, saveFolders, featureFiles, bboxes);
-    featureFiles = cellfun(@(x)[x 'InterfaceClassFeatures.mat'], saveFolders, 'uni', 0);
+    featureFiles = cellfun(@(x)[x classFeatFile], saveFolders, 'uni', 0);
     [gt(i).classFeatures, edgeIdx2, test1] = getFeatures(gt(i).edges, saveFolders, featureFiles, bboxes);
     assert(all(edgeIdx1 == edgeIdx2));
     assert(all(gt(i).borderCoM(:) == test1(:)));
