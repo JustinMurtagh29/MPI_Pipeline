@@ -8,6 +8,8 @@ outDir = '/tmpscratch/amotta/l4/2018-08-29-spine-head-isosurfaces';
 shFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v3_auto.mat');
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-partiallySplit-v2_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v8-classified.mat');
 
+numGroups = 100;
+
 % for speed
 segParam = struct;
 segParam.root = '/tmpscratch/amotta/l4/2012-09-28_ex145_07x2_ROI2017/segmentation/1';
@@ -44,7 +46,18 @@ shAgglos = cellfun( ...
     shAgglos, 'UniformOutput', false);
 shAgglos(cellfun(@isempty, shAgglos)) = [];
 
+%% Group spine heads for performance reasons
+rng(0);
+randIds = randperm(numel(shAgglos));
+
+shGroups = ceil(linspace( ...
+    1, numel(shAgglos), numGroups + 1));
+shGroups = arrayfun( ...
+    @(a, b) cell2mat(shAgglos(randIds(a:b))), ...
+    shGroups(1:(end - 1)), shGroups(2:end), ...
+    'UniformOutput', false);
+
 %% Build isosurfaces
 Visualization.exportAggloToAmira( ...
-    param, shAgglos, outDir, 'reduce', 0.05, ...
+    param, shGroups, outDir, 'reduce', 0.05, ...
     'smoothSizeHalf', 4, 'smoothWidth', 8);
