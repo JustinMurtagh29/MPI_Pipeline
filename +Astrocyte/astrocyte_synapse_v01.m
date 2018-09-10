@@ -25,6 +25,7 @@ syn = load(conn.info.param.synFile); % synapses (segment IDs)
 %location in the L4 dataset
 box_offset = [4179, 4994, 2264];
 box_shape = [178, 178, 72];
+bbox = [box_offset' , (box_offset+box_shape)'];
 
 %Region annotated by CNN (voxel-wise)
 %pred: binary thresholded predictions 1 means astro
@@ -36,11 +37,13 @@ astro_annot = load('/gaba/u/yyener/astrocyte/predictions/unet_aug/v4_val.mat');
 
 syn_points = Seg.Global.getSegToPointMap(param); %segments to point indices
 
+
 %% Save to a mat file for local processing
 save('/gaba/u/yyener/astrocyte/synapses/syn_points.mat', 'syn_points')
 
-
-
-
+%%
+save('/gaba/u/yyener/astrocyte/synapses/syn.mat', 'syn')
+save('/gaba/u/yyener/astrocyte/synapses/param.mat', 'param')
+save('/gaba/u/yyener/astrocyte/synapses/conn.mat', 'conn')
 
 
