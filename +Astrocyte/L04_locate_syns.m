@@ -63,21 +63,27 @@ for l = 1:sum(lut_syn) %1:28
     synVolume(ind_pre) = s;
     synVolume(ind_post) = s;
     
+    % just for simplifying the synapse ids a bit.
     synVolume_l(ind_pre) = l+5;
     synVolume_l(ind_post) = l+5;
     
 end
 
+%% Load astrocytes
 
-%%
+astro_annot = load('~/GABA/astrocyte/predictions/unet_aug/v4_val.mat');
+astro_vol = astro_annot.pred;
+
+%% Plot synapses and astrocytes together
+% dark red is astrocytes
 
 figure; colormap jet
-for z = 1:73
-    imagesc(synVolume_l(:,:,z), [0, 28]); colorbar
+for z = 1:72
+    imagesc(synVolume_l(:,:,z)+double(astro_vol(:,:,z))*37, [0, 37]); colorbar
     pause(0.5)
 end
 
-
+%%
 
 
 
