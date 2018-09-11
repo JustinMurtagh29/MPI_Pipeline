@@ -1,7 +1,7 @@
 
 %Alessandro magic
 
-
+%merge pre and post easier to look at
 synSegments = cellfun(@vertcat, syn.synapses.presynId, syn.synapses.postsynId, 'UniformOutput', false);
 
 %maxSegId = Seg.Global.getMaxSegId(param);
