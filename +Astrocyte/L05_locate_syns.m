@@ -16,6 +16,9 @@ syn = syn.syn;
 seg = load('~/GABA/astrocyte/synapses/seg.mat');
 seg = seg.seg;
 
+astro_annot = load('~/GABA/astrocyte/predictions/unet_aug/v4_val.mat');
+astro_vol = astro_annot.pred;
+
 % Create a look-up table with all possible segment ids with segments in the
 % loaded region are True
 
@@ -38,9 +41,14 @@ fprintf('Total of %d primary spine synapses in this box.\n', sum(lut_syn))
 
 synVolume = zeros(size(seg));
 synVolume_l = synVolume;
+
+mask_pre = zeros(size(seg)); mask_post = zeros(size(seg)); 
 mask = zeros(size(seg));
 
 syn_idx = find(lut_syn);
+
+se = offsetstrel('ball',3,3);
+
 
 for l = 1:sum(lut_syn) %1:28
     
@@ -56,37 +64,35 @@ for l = 1:sum(lut_syn) %1:28
     end
     
     % mark the location as primary spine
-    mask(ind_pre) = 1;
-    mask(ind_post) = 2;
-    
+    mask_pre(ind_pre) = 1;
+    mask_post(ind_post) = 1;
+    % dilate the masks
+    mask_pre = imdilate(mask_pre,se);
+    mask_post = imdilate(mask_post,se);
+       
     % mark the location with synapse idx
-    synVolume(ind_pre) = s;
-    synVolume(ind_post) = s;
+    synVolume(logical(mask_pre)) = s;
+    synVolume(logical(mask_post)) = s;
     
     % just for simplifying the synapse ids a bit.
-    synVolume_l(ind_pre) = l+5;
-    synVolume_l(ind_post) = l+5;
+    synVolume_l(logical(mask_pre)) = l;
+    synVolume_l(logical(mask_post)) = l;
+    
+    % have a mask identifying where the pre and post synapses are (1:pre, 2:post, 0:bg)
+    mask = mask + mask_pre + 2*mask_post; %assuming non-overlapping segments
+    
+    %reset the masks
+    mask_pre = zeros(size(seg)); mask_post = zeros(size(seg)); 
     
 end
-
-%% Load astrocytes
-
-astro_annot = load('~/GABA/astrocyte/predictions/unet_aug/v4_val.mat');
-astro_vol = astro_annot.pred;
 
 %% Plot synapses and astrocytes together
 % dark red is astrocytes
 
 figure; colormap jet
 for z = 1:72
-    imagesc(synVolume_l(:,:,z)+double(astro_vol(:,:,z))*37, [0, 37]); colorbar
+    imagesc(synVolume_l(:,:,z)+5+double(astro_vol(:,:,z))*37, [0, 37]); colorbar
     pause(0.5)
 end
 
-%%
-figure;
-originalI = synVolume_l(:,:,20);
-se = offsetstrel('ball',3,3);
-dilatedI = imdilate(originalI,se);
-imshowpair(originalI,dilatedI,'montage')
 
