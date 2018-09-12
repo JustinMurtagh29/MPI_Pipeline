@@ -32,7 +32,7 @@ lut_seg(setdiff(seg, 0)) = true; %sets sed ids true if unique seg nonzero
 %merge segments of pre and post
 synSegments = cellfun(@vertcat, syn.synapses.presynId, syn.synapses.postsynId, 'UniformOutput', false);
 %tell if the synapse id in the box given its total segments
-lut_syn = cellfun(@(synSegIds) any(lut_seg(synSegIds) == true), synSegments); %look-up table for syns
+lut_syn = cellfun(@(synSegIds) all(lut_seg(synSegIds) == true), synSegments); %look-up table for syns
 
 fprintf('Total of %d synapses in this box.\n', sum(lut_syn))
 lut_syn = lut_syn&syn.isSpineSyn;
@@ -110,7 +110,7 @@ mask_post(mask_d==1) = 0;
 
 figure; colormap jet
 for z = 1:72
-    imagesc(synVolume_d(:,:,z).*mask_post(:,:,z)+double(astro_vol(:,:,z))*37, [0, 37]); colorbar
+    imagesc(synVolume_d(:,:,z)+double(astro_vol(:,:,z))*37, [0, 37]); colorbar
     pause(0.5)
 end
 
@@ -122,6 +122,44 @@ for z = 1:72
     pause(0.5)
 end
 
-%% Define a measure for astrocyte coverage of synapses
+%% number of neighboring astrocyte pixels per synapse
 
 
+% combine syn and astro in one mask (1:synapse, 2:astro)
+mask_syn_astro = double(logical(mask_d)) + 5*double(astro_vol);
+mask_syn_astro(mask_syn_astro>2) = 5;
+
+% detect transition from 1 to 2 in xy plane
+shiftedM = circshift(mask_syn_astro, [1,1]);
+
+synPeriphery = abs(mask_syn_astro-shiftedM)==4 | abs(mask_syn_astro-shiftedM)==1;
+astroSynInterface = abs(mask_syn_astro-shiftedM)==4;
+
+% synPeriphery = (mask_syn_astro-shiftedM)==4 | (mask_syn_astro-shiftedM)==1;
+% astroSynInterface = mask_syn_astro-shiftedM==-4;
+% 
+% 
+% shiftedM2 = circshift(mask_syn_astro, [-1,-1]);
+% synPeriphery = synPeriphery | ((mask_syn_astro-shiftedM2)==-4 | (mask_syn_astro-shiftedM2)==-1);
+% astroSynInterface = astroSynInterface | ((mask_syn_astro-shiftedM2)==-4);
+
+%%
+figure; colormap jet
+for z = 1:72
+    imagesc(abs(mask_syn_astro(:,:,z)-shiftedM(:,:,z))); colorbar
+    pause(0.5)
+end
+
+%% count the number of pixels of astrocyte interface per synapse
+test = zeros(size(synVolume));
+test(synVolume==275594) = 5;
+figure; colormap jet
+imagesc(astroSynInterface(:,:,72)+ test(:,:,72)); colorbar
+
+% 6 in the synapse and 1 out of the synapse
+% can you make sure the mask is in the synapse so that you can get 6 only
+
+%%
+
+figure; colormap jet
+imagesc(astroSynInterface(:,:,72)); colorbar
