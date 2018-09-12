@@ -47,7 +47,7 @@ mask = zeros(size(seg));
 
 syn_idx = find(lut_syn);
 
-se = offsetstrel('ball',3,3);
+se = offsetstrel('ball',3,3); % MAKE IT SQUARE OR STH SO THAT YOU CAN HAVE 1 PIXEL 
 
 
 for l = 1:sum(lut_syn) %1:28

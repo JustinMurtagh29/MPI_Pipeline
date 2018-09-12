@@ -16,6 +16,9 @@ syn = syn.syn;
 seg = load('~/GABA/astrocyte/synapses/seg.mat');
 seg = seg.seg;
 
+astro_annot = load('~/GABA/astrocyte/predictions/unet_aug/v4_val.mat');
+astro_vol = astro_annot.pred;
+
 % Create a look-up table with all possible segment ids with segments in the
 % loaded region are True
 
@@ -34,7 +37,7 @@ lut_syn = cellfun(@(synSegIds) any(lut_seg(synSegIds) == true), synSegments); %l
 fprintf('Total of %d synapses in this box.\n', sum(lut_syn))
 lut_syn = lut_syn&syn.isSpineSyn;
 fprintf('Total of %d primary spine synapses in this box.\n', sum(lut_syn))
-%%
+%% Locate synapses in volume
 
 synVolume = zeros(size(seg));
 synVolume_l = synVolume;
@@ -69,10 +72,6 @@ for l = 1:sum(lut_syn) %1:28
     
 end
 
-%% Load astrocytes
-
-astro_annot = load('~/GABA/astrocyte/predictions/unet_aug/v4_val.mat');
-astro_vol = astro_annot.pred;
 
 %% Plot synapses and astrocytes together
 % dark red is astrocytes
@@ -83,10 +82,46 @@ for z = 1:72
     pause(0.5)
 end
 
-%%
+%% Dilation 
+% merging the segments of a synapse together.
+% in synVolume, pre and post were also merged
+% in 
+
+% 3D object for dilation brush
+[x,y,z] = ndgrid(-3:3);
+se = strel(sqrt(x.^2 + y.^2 + z.^2) <=3);
+
+% dilating-eroding the segments per synapse
+synVolume_d = imdilate(synVolume_l,se);
+synVolume_de = imerode(synVolume_d, se);
 figure;
-originalI = synVolume_l(:,:,20);
-se = offsetstrel('ball',3,3);
-dilatedI = imdilate(originalI,se);
-imshowpair(originalI,dilatedI,'montage')
+imshowpair(synVolume_l(:,:,20),synVolume_de(:,:,20),'montage')
+
+% dilating-eroding segments of pre and post
+mask_d = imdilate(mask,se);
+mask_de = imerode(mask_d, se);
+figure;
+imshowpair(mask(:,:,20),mask_de(:,:,20),'montage')
+%%  Plot either pre or post dilated synapses and astrocytes together
+
+mask_pre = mask_d; mask_post=mask_d/2;
+mask_pre(mask_d==2) = 0;
+mask_post(mask_d==1) = 0;
+
+figure; colormap jet
+for z = 1:72
+    imagesc(synVolume_d(:,:,z).*mask_post(:,:,z)+double(astro_vol(:,:,z))*37, [0, 37]); colorbar
+    pause(0.5)
+end
+
+%% Plot mask and astrocytes together
+
+figure; colormap jet
+for z = 1:72
+    imagesc(mask_d(:,:,z)*12+double(astro_vol(:,:,z))*37, [0, 37]); colorbar
+    pause(0.5)
+end
+
+%% Define a measure for astrocyte coverage of synapses
+
 
