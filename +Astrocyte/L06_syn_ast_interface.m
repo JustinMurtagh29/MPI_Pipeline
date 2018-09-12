@@ -73,15 +73,6 @@ for l = 1:sum(lut_syn) %1:28
 end
 
 
-%% Plot synapses and astrocytes together
-% dark red is astrocytes
-
-figure; colormap jet
-for z = 1:72
-    imagesc(synVolume_l(:,:,z)+double(astro_vol(:,:,z))*37, [0, 37]); colorbar
-    pause(0.5)
-end
-
 %% Dilation 
 % merging the segments of a synapse together.
 % in synVolume, pre and post were also merged
@@ -94,33 +85,37 @@ se = strel(sqrt(x.^2 + y.^2 + z.^2) <=3);
 % dilating-eroding the segments per synapse
 synVolume_d = imdilate(synVolume_l,se);
 synVolume_de = imerode(synVolume_d, se);
-figure;
-imshowpair(synVolume_l(:,:,20),synVolume_de(:,:,20),'montage')
 
 % dilating-eroding segments of pre and post
 mask_d = imdilate(mask,se);
 mask_de = imerode(mask_d, se);
-figure;
-imshowpair(mask(:,:,20),mask_de(:,:,20),'montage')
-%%  Plot either pre or post dilated synapses and astrocytes together
+
+% figure;
+% imshowpair(synVolume_l(:,:,20),synVolume_de(:,:,20),'montage')
+% figure;
+% imshowpair(mask(:,:,20),mask_de(:,:,20),'montage')
+
+
+%  Separate pre and post synapses
 
 mask_pre = mask_de; mask_post=mask_de/2;
 mask_pre(mask_de==2) = 0;
 mask_post(mask_de==1) = 0;
+% 
+% figure; colormap jet
+% for z = 1:72
+%     imagesc(synVolume_d(:,:,z)+double(astro_vol(:,:,z))*37, [0, 37]); colorbar
+%     pause(0.5)
+% end
 
-figure; colormap jet
-for z = 1:72
-    imagesc(synVolume_d(:,:,z)+double(astro_vol(:,:,z))*37, [0, 37]); colorbar
-    pause(0.5)
-end
 
-%% Plot mask and astrocytes together
-
-figure; colormap jet
-for z = 1:72
-    imagesc(mask_d(:,:,z)*12+double(astro_vol(:,:,z))*37, [0, 37]); colorbar
-    pause(0.5)
-end
+% Plot mask and astrocytes together
+% 
+% figure; colormap jet
+% for z = 1:72
+%     imagesc(mask_d(:,:,z)*12+double(astro_vol(:,:,z))*37, [0, 37]); colorbar
+%     pause(0.5)
+% end
 
 %% number of neighboring astrocyte pixels per synapse
 
@@ -130,32 +125,18 @@ mask_syn_astro = double(logical(mask_d)) + 5*double(astro_vol);
 mask_syn_astro(mask_syn_astro>2) = 5;
 
 % detect transition from 1 to 2 in xy plane
-shiftedM = circshift(mask_syn_astro, [1,1]);
-
-% synPeriphery = abs(mask_syn_astro-shiftedM)==4 | abs(mask_syn_astro-shiftedM)==1;
-% astroSynInterface = abs(mask_syn_astro-shiftedM)==4;
-
-synPeriphery = (mask_syn_astro-shiftedM)==-4 | (mask_syn_astro-shiftedM)==-1;
+%make sure the border is within the area of the synapse segment so that one
+%can get their overlap
+shiftedM = circshift(mask_syn_astro, [1,1]); %
+synPeriphery = (mask_syn_astro-shiftedM)==-4 | (mask_syn_astro-shiftedM)==1;
 astroSynInterface = mask_syn_astro-shiftedM==-4;
 
 
-shiftedM2 = circshift(mask_syn_astro, [-1,-1]);
+shiftedM2 = circshift(mask_syn_astro, [-1,-1]); %
 synPeriphery = synPeriphery | ((mask_syn_astro-shiftedM2)==-4 | (mask_syn_astro-shiftedM2)==1);
 astroSynInterface = astroSynInterface | ((mask_syn_astro-shiftedM2)==-4);
 
-%%
-figure; colormap jet
-for z = 1:72
-    imagesc(abs(mask_syn_astro(:,:,z)-shiftedM(:,:,z))); colorbar
-    pause(0.5)
-end
-
-%% count the number of pixels of astrocyte interface per synapse
-% test1 = zeros(size(synVolume));
-% test1(synVolume_d==14) = 5;
-% figure; colormap jet
-% imagesc(astroSynInterface(:,:,72)+ test1(:,:,72)); colorbar
-
+%% count percent coverage of astrocytes of synapses
 
 lut_syn_int = zeros(size(lut_syn));
 synIds_l = unique(setdiff(synVolume_d, 0));
@@ -170,10 +151,4 @@ for i = 1:length(synIds_l)
     
 end
 setdiff(lut_syn_int, 0)
-%%
- 
-figure; colormap jet
-for z = 1:72
-    imagesc(overlapPeripherySyn(:,:,z)); colorbar
-    pause(0.5)
-end
+
