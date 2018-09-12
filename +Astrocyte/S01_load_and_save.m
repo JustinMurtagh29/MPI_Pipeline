@@ -2,6 +2,8 @@
 author: Yagmur Yener
 email: yagmur.yener.yy@gmail.com
 
+run on gaba server
+
 The first test script for looking at the astrocyte annotated regions and
 the synapse regions.
 Trying on a small annotated region.
@@ -19,6 +21,9 @@ param = param.p;
 maxSegId = Seg.Global.getMaxSegId(param);
 conn = load(connFile); %axons, dendrites, connectome
 syn = load(conn.info.param.synFile); % synapses (segment IDs)
+
+%% Get the volumes for synapses
+% not the volume but indices of every point in a synapse segment
 
 %% Load the validation results from file
 
