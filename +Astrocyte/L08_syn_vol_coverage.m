@@ -4,7 +4,8 @@ email: yagmur.yener.yy@gmail.com
 
 run locally
 
-Computing the astrocyte coverage of synapses.
+Locating pre- and post- synapses in the astrocyte annotated segmented
+volume
 %}
 
 % Load all synapses, and segments in small region
@@ -44,7 +45,7 @@ mask = zeros(size(seg));
 
 syn_idx = find(lut_syn);
 
-for l = 1:sum(lut_syn) %1:28
+for l = 1:sum(lut_syn) 
     
     s = syn_idx(l); % syn idx
     
@@ -66,39 +67,28 @@ for l = 1:sum(lut_syn) %1:28
     synVolume(ind_post) = s;
     
     % just for simplifying the synapse ids a bit.
-    synVolume_l(ind_pre) = l+5;
-    synVolume_l(ind_post) = l+5;
+    synVolume_l(ind_pre) = l;
+    synVolume_l(ind_post) = l;
     
 end
 
-% 
-% figure; colormap jet
-% for z = 1:72
-%     imagesc(synVolume_de(:,:,z)*3+double(astro_vol(:,:,z))*50, [0, 50]); colorbar off
-%     pause(0.5)
-% end
 
 %% Dilation 
 % merging the segments of a synapse together.
 % in synVolume, pre and post were also merged
 % in 
 
-% 3D object for dilation brush
+% 3D object as dilation brush
 [x,y,z] = ndgrid(-3:3);
 se = strel(sqrt(x.^2 + y.^2 + z.^2) <=3);
 
 % dilating-eroding the segments per synapse
-synVolume_d = imdilate(synVolume_l,se);
+synVolume_d = imdilate(synVolume_l,se); %note to future: use synVolume here
 synVolume_de = imerode(synVolume_d, se);
 
 % dilating-eroding segments of pre and post
 mask_d = imdilate(mask,se);
 mask_de = imerode(mask_d, se);
-
-% figure;
-% imshowpair(synVolume_l(:,:,20),synVolume_de(:,:,20),'montage')
-% figure;
-% imshowpair(mask(:,:,20),mask_de(:,:,20),'montage')
 
 
 %  Separate pre and post synapses
@@ -106,32 +96,15 @@ mask_de = imerode(mask_d, se);
 mask_pre = mask_de; mask_post=mask_de/2;
 mask_pre(mask_de==2) = 0;
 mask_post(mask_de==1) = 0;
-% 
-
-% Plot synapses and astrocytes
-% figure; colormap jet
-% for z = 1:72
-%     imagesc(synVolume_d(:,:,z)+double(astro_vol(:,:,z))*37, [0, 37]); colorbar
-%     pause(0.5)
-% end
-
-
-% Plot pre-post-mask and astrocytes together
-% 
-% figure; colormap jet
-% for z = 1:72
-%     imagesc(mask_d(:,:,z)*12+double(astro_vol(:,:,z))*37, [0, 37]); colorbar
-%     pause(0.5)
-% end
+ 
 
 %% number of neighboring astrocyte pixels per synapse
 
-
-% combine syn and astro in one mask (1:synapse, 2:astro)
+% combine syn and astro in one mask (1:synapse, 5:astro)
 mask_syn_astro = double(logical(mask_d)) + 5*double(astro_vol);
 mask_syn_astro(mask_syn_astro>2) = 5;
 
-% detect transition from 1 to 2 in xy plane
+% detect transition from 1 to 5 in xy plane
 %make sure the border is within the area of the synapse segment so that one
 %can get their overlap
 shiftedM = circshift(mask_syn_astro, [1,1]); %
@@ -143,25 +116,43 @@ shiftedM2 = circshift(mask_syn_astro, [-1,-1]); %
 synPeriphery = synPeriphery | ((mask_syn_astro-shiftedM2)==-4 | (mask_syn_astro-shiftedM2)==1);
 astroSynInterface = astroSynInterface | ((mask_syn_astro-shiftedM2)==-4);
 
-%%
-figure; colormap jet
-for z = 1:72
-    imagesc(abs(mask_syn_astro(:,:,z)-shiftedM(:,:,z)));
-    pause(0.8)
-end
+
 %% count percent coverage of astrocytes of synapses
 
-lut_syn_int = zeros(size(lut_syn));
-synIds_l = unique(setdiff(synVolume_d, 0));
-synIds = unique(setdiff(synVolume, 0));
 
-for i = 1:length(synIds_l)
+lut_syn_int = zeros(size(lut_syn));
+synIds_d = unique(setdiff(synVolume_d, 0));
+
+for i = 1:length(synIds_d)
+    
+    % a mask for one synapse id only
     test = zeros(size(synVolume));
-    test(synVolume_d==synIds_l(i)) = 5;
+    test(synVolume_d==synIds_d(i)) = 5;
+    
     overlapInterfaceSyn = astroSynInterface+test;
     overlapPeripherySyn = synPeriphery+test;
-    lut_syn_int(synIds(i)) =  sum(overlapInterfaceSyn(:)==6)/sum(overlapPeripherySyn(:)==6);
+    lut_syn_int(syn_idx(i)) =  sum(overlapInterfaceSyn(:)==6)/sum(overlapPeripherySyn(:)==6)*100;
     
 end
 setdiff(lut_syn_int, 0)
+
+
+%% find volume of synapses in um3
+
+lut_syn_vol = zeros(size(lut_syn));
+synIds_de = unique(setdiff(synVolume_de, 0));
+
+for i = 1:length(synIds_de)
+
+    lut_syn_vol(syn_idx(i)) = sum(synVolume_de(:)==synIds_de(i))  *11.4/1000*11.4/1000*28/1000 ;
+
+end
+
+setdiff(lut_syn_vol, 0)
+
+%% plot Volume vs coverage of synapses
+
+plot(lut_syn_vol(logical(lut_syn~=0)), lut_syn_int(logical(lut_syn~=0)), '*')
+xlabel('Synapse Volume (um3)'); ylabel('Astrocyte Coverage (%)')
+
 

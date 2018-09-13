@@ -78,7 +78,7 @@ end
 
 figure; colormap jet
 for z = 1:72
-    imagesc(synVolume_l(:,:,z)+double(astro_vol(:,:,z))*37, [0, 37]); colorbar
+    imagesc(synVolume_de(:,:,z)+double(astro_vol(:,:,z))*37, [0, 37]); colorbar off
     pause(0.5)
 end
 
