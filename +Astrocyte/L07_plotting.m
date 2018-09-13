@@ -38,6 +38,10 @@ for z = 1:72
 end
 
 %% Plot the boundaries astrocyte, synapse, overlap
+% dark red: astrocyte
+% light blue: synapse
+% pink: boundary
+
 
 figure; colormap jet
 for z = 1:72
@@ -47,12 +51,12 @@ end
 
 %% Plot boundaries, astrocyte, synapse, whole synapse, overlap
 vol = double(logical(synVolume_d))*5;
-% 2 astroSynInterface 
-% 1 synPeriphery
+%light red: astro interface
+%dark+light red: all interface
 
 figure; colormap jet
 for z = 1:72
-    imagesc(vol(:,:,z) + astroSynInterface(:,:,z) + synPeriphery(:,:,z), [0,7]); colorbar;
+    imagesc(vol(:,:,z) - astroSynInterface(:,:,z) + 2*synPeriphery(:,:,z), [0,7]); colorbar;
     pause(0.5)
 end
 
@@ -61,7 +65,7 @@ end
 figure(1); figure(2); colormap jet
 for z = 1:72
     figure(1);
-    imagesc(vol(:,:,z) + astroSynInterface(:,:,z) + synPeriphery(:,:,z), [0,7]); colorbar;
+    imagesc(vol(:,:,z) - astroSynInterface(:,:,z) + 2*synPeriphery(:,:,z), [0,7]); colorbar;
     figure(2);
     imagesc(abs(mask_syn_astro(:,:,z)-shiftedM(:,:,z))); colorbar;
     pause(0.5)
@@ -71,5 +75,32 @@ end
 
 plot(lut_syn_vol(logical(lut_syn~=0)), lut_syn_int(logical(lut_syn~=0)), '*')
 xlabel('Synapse Volume (um3)'); ylabel('Astrocyte Coverage (%)')
+
+%% look at the outliers
+%light red: astro interface
+%dark+light red: all this syn interface
+%dark&light blue: syn&astro interface of other synapses
+
+vals = setdiff(lut_syn_int(:),0);
+outliar = vals(1)
+id = find(syn_idx==find(lut_syn_int == outliar));
+
+% a mask for one synapse id only
+test = zeros(size(synVolume));
+test(synVolume_d==id) = 5;
+
+overlapInterfaceSyn = astroSynInterface+test;
+overlapPeripherySyn = synPeriphery+test;
+
+[~,~,Z]=ind2sub(size(synVolume), find(synVolume_d==id));
+z_sorted = unique(Z);
+figure; colormap jet
+for i = 1:numel(z_sorted)
+    z=z_sorted(i);
+    imagesc(test(:,:,z) -astroSynInterface(:,:,z) + 2*synPeriphery(:,:,z), [0, 7]); colorbar;
+    pause(0.5)
+end
+
+
 
 

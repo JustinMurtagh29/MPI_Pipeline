@@ -34,9 +34,10 @@ synSegments = cellfun(@vertcat, syn.synapses.presynId, syn.synapses.postsynId, '
 %tell if the synapse id in the box given its total segments
 lut_syn = cellfun(@(synSegIds) all(lut_seg(synSegIds) == true), synSegments); %look-up table for syns
 
-fprintf('Total of %d synapses in this box.\n', sum(lut_syn))
+box_volume = numel(astro_vol) * 11.4/1000*11.4/1000*28/1000 ;
+fprintf('Total of %d synapses in this %d um3 box.\n', sum(lut_syn), round(box_volume))
 lut_syn = lut_syn&syn.isSpineSyn;
-fprintf('Total of %d primary spine synapses in this box.\n', sum(lut_syn))
+fprintf('Total of %d primary spine synapses in this %d um3 box.\n', sum(lut_syn), round(box_volume))
 %% Locate synapses in volume
 
 synVolume = zeros(size(seg));
@@ -134,7 +135,7 @@ for i = 1:length(synIds_d)
     lut_syn_int(syn_idx(i)) =  sum(overlapInterfaceSyn(:)==6)/sum(overlapPeripherySyn(:)==6)*100;
     
 end
-setdiff(lut_syn_int, 0)
+%setdiff(lut_syn_int, 0)
 
 
 %% find volume of synapses in um3
@@ -148,11 +149,10 @@ for i = 1:length(synIds_de)
 
 end
 
-setdiff(lut_syn_vol, 0)
+%setdiff(lut_syn_vol, 0)
 
 %% plot Volume vs coverage of synapses
 
 plot(lut_syn_vol(logical(lut_syn~=0)), lut_syn_int(logical(lut_syn~=0)), '*')
 xlabel('Synapse Volume (um3)'); ylabel('Astrocyte Coverage (%)')
-
 
