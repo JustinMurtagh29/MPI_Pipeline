@@ -11,7 +11,7 @@ plotting script
 %% Dilated eroded synapse volumes plotting 
 figure; colormap jet
 for z = 1:72
-    imagesc(synVolume_de(:,:,z)*3+double(astro_vol(:,:,z))*50, [0, 50]); colorbar off
+    imagesc(synVolume_l(:,:,z)*3+double(astro_vol(:,:,z))*50, [0, 50]); colorbar off
     pause(0.5)
 end
 

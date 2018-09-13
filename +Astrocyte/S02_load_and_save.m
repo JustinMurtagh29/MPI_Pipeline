@@ -26,8 +26,8 @@ param = param.p;
 %% Load the validation results from file
 
 %location in the L4 dataset
-box_offset = [4179, 4994, 2264];
-box_shape = [178, 178, 72];
+box_offset = [3021, 3883, 700];
+box_shape = [600, 600, 200];
 bbox = [box_offset' , (box_offset+box_shape-1)'];
 
 % segmentation volumes
@@ -38,7 +38,7 @@ param.seg.root = '/tmpscratch/amotta/l4/2012-09-28_ex145_07x2_ROI2017/segmentati
 param.seg.backend = 'wkwrap';
 
 seg = loadSegDataGlobal(param.seg, bbox);
-save('/gaba/u/yyener/astrocyte/synapses/seg.mat', 'seg')
+save('/gaba/u/yyener/astrocyte/synapses/segLarge1.mat', 'seg')
 
 
 

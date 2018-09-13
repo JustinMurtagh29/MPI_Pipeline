@@ -13,10 +13,10 @@ volume
 syn = load('~/GABA/astrocyte/synapses/syn.mat');
 syn = syn.syn;
 
-seg = load('~/GABA/astrocyte/synapses/seg.mat');
+seg = load('~/GABA/astrocyte/synapses/segLarge1.mat');
 seg = seg.seg;
 
-astro_annot = load('~/GABA/astrocyte/predictions/unet_aug/v4_val.mat');
+astro_annot = load('~/GABA/astrocyte/predictions/unet_aug/v4_large1.mat');
 astro_vol = astro_annot.pred;
 
 % Create a look-up table with all possible segment ids with segments in the
