@@ -11,7 +11,7 @@ plotting script
 %% Dilated eroded synapse volumes plotting 
 figure; colormap jet
 for z = 1:72
-    imagesc(synVolume_l(:,:,z)*3+double(astro_vol(:,:,z))*50, [0, 50]); colorbar off
+    imagesc(synVolume_de(:,:,z)*3+double(astro_vol(:,:,z))*37, [0, 50]); colorbar
     pause(0.5)
 end
 
@@ -61,6 +61,7 @@ for z = 1:72
 end
 
 %% plot boundaries and overlap with segments at the same time
+vol = double(logical(synVolume_d))*5;
 
 figure(1); figure(2); colormap jet
 for z = 1:72
@@ -70,6 +71,10 @@ for z = 1:72
     imagesc(abs(mask_syn_astro(:,:,z)-shiftedM(:,:,z))); colorbar;
     pause(0.5)
 end
+%% an example of overlappring syn and astro
+z=167;
+figure; colormap jet
+imagesc(synVolume_de(:,:,z)*2+double(astro_vol(:,:,z))*47, [0, 50]); colorbar
 
 %% plot Volume vs coverage of synapses
 
@@ -79,10 +84,10 @@ xlabel('Synapse Volume (um3)'); ylabel('Astrocyte Coverage (%)')
 %% look at the outliers
 %light red: astro interface
 %dark+light red: all this syn interface
-%dark&light blue: syn&astro interface of other synapses
+%dark&light blue: syn&astro interface of other synapses (dark=asto)
 
 vals = setdiff(lut_syn_int(:),0);
-outliar = vals(1)
+outliar = vals(end)
 id = find(syn_idx==find(lut_syn_int == outliar));
 
 % a mask for one synapse id only
@@ -101,6 +106,15 @@ for i = 1:numel(z_sorted)
     pause(0.5)
 end
 
+%% Plot boundaries, astrocyte, synapse, whole synapse, overlap
+vol = synVolume_d/max(synVolume_d(:))*5;
+%light red: astro interface
+%dark+light red: all interface
 
+figure; colormap jet
+for z = 1:72
+    imagesc(vol(:,:,z) + (- astroSynInterface(:,:,z) + 2*synPeriphery(:,:,z)), [0,7]); colorbar;
+    pause(0.5)
+end
 
 
