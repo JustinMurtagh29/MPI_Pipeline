@@ -20,9 +20,9 @@ info = Util.runInfo();
 %% Loading data
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
-% param.seg = struct;
-% param.seg.root = '/tmpscratch/amotta/l4/2012-09-28_ex145_07x2_ROI2017/segmentation/1';
-% param.seg.backend = 'wkwrap';
+param.seg = struct;
+param.seg.root = '/tmpscratch/amotta/l4/2012-09-28_ex145_07x2_ROI2017/segmentation/1';
+param.seg.backend = 'wkwrap';
 
 segPoints = Seg.Global.getSegToPointMap(param);
 segPoints = param.raw.voxelSize .* segPoints;
@@ -49,5 +49,5 @@ out.info = info;
 out.boutonAgglos = boutonAgglos;
 out.boutonVols = boutonVols;
 
-Util.saveStruct(save('/gaba/u/yyener/astrocyte/synapses/boutons.mat', out);
+Util.saveStruct('/gaba/u/yyener/astrocyte/synapses/boutons.mat', out);
 Util.protect(outFile);
