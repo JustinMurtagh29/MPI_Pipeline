@@ -15,10 +15,10 @@ conn = load('~/GABA/astrocyte/synapses/conn.mat');
 conn = conn.conn;
 shAgglos = load('~/GABA/astrocyte/synapses/shAgglos.mat');
 shAgglos = shAgglos.shAgglos;
+graph = load('~/GABA/astrocyte/synapses/graph.mat');
+graph = graph.graph;
 maxSegId = 15030572; %maximum possible segment ID
-
-graph = 1;
 
 %%
 asiT = buildAxonSpineInterfaces( ...
-        param, graph, shAgglos, conn, syn)
+        maxSegId, graph, shAgglos, conn, syn);
