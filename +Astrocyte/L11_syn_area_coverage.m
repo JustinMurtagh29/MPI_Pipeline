@@ -18,16 +18,23 @@ seg = seg.seg;
 astro_annot = load('~/GABA/astrocyte/predictions/unet_aug/v4_large1.mat');
 astro_vol = astro_annot.pred;
 
-% Create a look-up table with all possible segment ids with segments in the
-% loaded region are True
+asiT = load('~/GABA/astrocyte/synapses/asiT.mat');
+asiT = asiT.asiT;
 
 maxSegId = 15030572; %maximum possible segment ID
-
+%%
+% Segments that are in this volume
 lut_seg = false(maxSegId, 1); %initialize as false
 lut_seg(setdiff(seg, 0)) = true; %sets sed ids true if unique seg nonzero
 
-% Find synapse IDs that are in this seg box (consists of segments)
+% Synapse id to synapse area map
+syn_areas = [asiT.id asiT.area];
+syn_areas = sortrows(syn_areas);
 
+% Remove some synapses (that )
+syn.synapses = syn.synapses(syn_areas(:,1) , :);
+
+%%
 %merge segments of pre and post
 synSegments = cellfun(@vertcat, syn.synapses.presynId, syn.synapses.postsynId, 'UniformOutput', false);
 %tell if the synapse id in the box given its total segments
@@ -35,8 +42,10 @@ lut_syn = cellfun(@(synSegIds) all(lut_seg(synSegIds) == true), synSegments); %l
 
 box_volume = numel(astro_vol) * 11.4/1000*11.4/1000*28/1000 ;
 fprintf('Total of %d synapses in this %d um3 box.\n', sum(lut_syn), round(box_volume))
-lut_syn = lut_syn&syn.isSpineSyn;
+lut_syn = lut_syn&(syn.synapses.type=='PrimarySpine');
 fprintf('Total of %d primary spine synapses in this %d um3 box.\n', sum(lut_syn), round(box_volume))
+
+
 %% Locate synapses in volume
 
 synVolume = zeros(size(seg));
@@ -136,8 +145,7 @@ for i = 1:length(synIds_d)
 end
 %setdiff(lut_syn_int, 0)
 
-
-%% find volume of synapses in um3
+%% synapse volume
 
 lut_syn_vol = zeros(size(lut_syn));
 synIds_de = unique(setdiff(synVolume_de, 0));
@@ -148,10 +156,8 @@ for i = 1:length(synIds_de)
 
 end
 
-%setdiff(lut_syn_vol, 0)
-
-%% plot Volume vs coverage of synapses
-
-plot(lut_syn_vol(logical(lut_syn~=0)), lut_syn_int(logical(lut_syn~=0)), '*')
-xlabel('Synapse Volume (um3)'); ylabel('Astrocyte Coverage (%)')
+%% plot area vs coverage of synapses
+figure
+plot(syn_areas(logical(lut_syn~=0),2), lut_syn_int(logical(lut_syn~=0)), '*')
+xlabel('Synaptic Cleft Area (um2)'); ylabel('Astrocyte Coverage (%)')
 

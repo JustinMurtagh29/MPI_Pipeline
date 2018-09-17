@@ -87,7 +87,7 @@ xlabel('Synapse Volume (um3)'); ylabel('Astrocyte Coverage (%)')
 %dark&light blue: syn&astro interface of other synapses (dark=asto)
 
 vals = setdiff(lut_syn_int(:),0);
-outliar = vals(end)
+outliar = vals(1)
 id = find(syn_idx==find(lut_syn_int == outliar));
 
 % a mask for one synapse id only
@@ -118,3 +118,8 @@ for z = 1:72
 end
 
 
+%% 3D scatter plot surface vs volume vs coverage
+
+figure
+scatter3(lut_syn_vol(logical(lut_syn~=0)), syn_areas(logical(lut_syn~=0),2), lut_syn_int(logical(lut_syn~=0)), 'filled')
+xlabel('Synapse Volume (um3)'); ylabel('Synaptic Cleft Area (um2)'); zlabel('Astrocyte Coverage (%)')
