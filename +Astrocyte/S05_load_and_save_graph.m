@@ -7,4 +7,6 @@ graph = load(graphFile, 'edges', 'borderIdx');
 % NOTE(amotta): Use border idx zero instead of nan
 graph.borderIdx(isnan(graph.borderIdx)) = 0;
 
+graph = struct2table(graph);
+    
 save('/gaba/u/yyener/astrocyte/synapses/graph.mat', 'graph')
