@@ -49,5 +49,5 @@ out.info = info;
 out.boutonAgglos = boutonAgglos;
 out.boutonVols = boutonVols;
 
-Util.saveStruct(save('/gaba/u/yyener/astrocyte/synapses/boutons.mat', out);
+Util.saveStruct('/gaba/u/yyener/astrocyte/synapses/boutons.mat', out);
 Util.protect(outFile);
