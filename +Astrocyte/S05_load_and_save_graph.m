@@ -8,5 +8,35 @@ graph = load(graphFile, 'edges', 'borderIdx');
 graph.borderIdx(isnan(graph.borderIdx)) = 0;
 
 graph = struct2table(graph);
-    
+
+
+
+
+graph(~graph.borderIdx, :) = [];
+
+borderAreas = fullfile(rootDir, 'globalBorder.mat');
+borderAreas = load(borderAreas, 'borderArea2');
+borderAreas = borderAreas.borderArea2;
+
+graph.borderArea = borderAreas(graph.borderIdx);
+clear borderAreas;
+
+% HACK(amotta): For some reason there exist borders, for which
+% `physicalBorderArea2` is zero. This seems wrong.
+%   In order not to be affected by this issue, let's set the area of these
+% borders to NaN. This will result in a total axon-spine interface area of
+% NaN, which we can remove by brute force later on.
+%
+% Corresponding issue on GitLab:
+% https://gitlab.mpcdf.mpg.de/connectomics/auxiliaryMethods/issues/16
+graph.borderArea(~graph.borderArea) = nan;
+graph(:, {'prob', 'borderIdx'}) = [];
+
+
+
+
+
+
+
+
 save('/gaba/u/yyener/astrocyte/synapses/graph.mat', 'graph')

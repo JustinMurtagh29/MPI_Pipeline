@@ -1,8 +1,8 @@
 function asiT = buildAxonSpineInterfaces( ...
-        param, graph, shAgglos, conn, syn)
+        maxSegId, graph, shAgglos, conn, syn)
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
-    maxSegId = Seg.Global.getMaxSegId(param);
+    % maxSegId = Seg.Global.getMaxSegId(param);
     axonLUT = Agglo.buildLUT(maxSegId, conn.axons);
     
     % NOTE(amotta): Find spine heads that overlap with axon agglomerates.
