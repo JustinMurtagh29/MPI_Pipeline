@@ -36,24 +36,35 @@ lut_sh = cellfun(@(shSegId) all(lut_seg(shSegId) == true), shAgglos);
 
 % Segment ids to Spine Heads mapping
 lut_seg_sh = Agglo.buildLUT(maxSegId, shAgglos);
+% Segment ids to Postsynapses mapping
+lut_seg_postsyn = Agglo.buildLUT(maxSegId, syn.synapses.postsynId);
 % Segment ids to Presynapses mapping
 lut_seg_presyn = Agglo.buildLUT(maxSegId, syn.synapses.presynId);
+% Segment ids to axons mapping
+lut_seg_axon = Agglo.buildLUT(maxSegId, conn.axons);
 
-numel(intersect(find(lut_seg_sh) , find(lut_seg_presyn) )) %segments shared by synapses and spine heads
-numel(intersect(intersect(find(lut_seg_sh) , find(lut_seg_presyn) ), find(lut_seg))) %segments shared by synapses and spine heads in this vol
-%%
-lut_presyn_sh = cell(size(syn.synapses.presynId));
-syn_idx = find(lut_syn);
-sh_idx = find(lut_sh);
-for i = syn_idx
-    preSynArray = syn.synapses.presynId{i};
-    
-    temp = cellfun(@(x) any(x==preSynArray),  shAgglos);
-    lut_presyn_sh{i} = find(temp);
-    
-    
+numel(intersect(find(lut_seg_sh) , find(lut_seg_presyn) )) %segments shared by Presynapses and spine heads (647)
+numel(intersect(find(lut_seg_sh) , find(lut_seg_postsyn) )) %segments shared by Postsynapses and spine heads (268601)
+numel(intersect(intersect(find(lut_seg_sh) , find(lut_seg_postsyn) ), find(lut_seg))) %segments shared by synapses and spine heads in this vol
+
+%% Complete presynaptic side with spine heads
+
+common_segs = intersect(intersect(find(lut_seg_sh) , find(lut_seg_postsyn) ), find(lut_seg));
+postSynCompleted = syn.synapses.postsynId;
+for i = 1:numel(common_segs)
+
+sh_id = lut_seg_sh(common_segs(i));
+syn_id = lut_seg_postsyn(common_segs(i));
+
+postSynCompleted{syn_id} = shAgglos{sh_id};
 end
 
-preSynSegments = syn.synapses.presynId;
-%tell if the synapse id in the box given its total segments
-lut_sh_idx = cellfun(@(preSegIds) any(shAgglos==preSegIds), preSynSegments); %look-up table for syns
+%% Complete postsynaptic side with axons
+
+
+
+
+
+
+
+
