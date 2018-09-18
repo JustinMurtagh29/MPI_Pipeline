@@ -22,7 +22,15 @@ asiT = load('~/GABA/astrocyte/synapses/asiT.mat');
 asiT = asiT.asiT;
 
 maxSegId = 15030572; %maximum possible segment ID
+
 %%
+tic
+
+%Segments that are not leaving the cube (remove marginals)
+seg_mask = uint32(seg>0);
+seg_mask = imclearborder(seg_mask,6); %connectivity in 3D
+seg=seg.*seg_mask;
+
 % Segments that are in this volume
 lut_seg = false(maxSegId, 1); %initialize as false
 lut_seg(setdiff(seg, 0)) = true; %sets sed ids true if unique seg nonzero
@@ -48,8 +56,8 @@ fprintf('Total of %d primary spine synapses in this %d um3 box.\n', sum(lut_syn)
 
 %% Locate synapses in volume
 
-synVolume = zeros(size(seg));
-synVolume_l = synVolume;
+synVolumeOrig = zeros(size(seg)); %syn volume with original ids
+synVolume = synVolumeOrig; %syn volume with simplified ids for images
 mask = zeros(size(seg));
 
 syn_idx = find(lut_syn);
@@ -72,12 +80,12 @@ for l = 1:sum(lut_syn)
     mask(ind_post) = 2;
     
     % mark the location with synapse idx
-    synVolume(ind_pre) = s;
-    synVolume(ind_post) = s;
+    synVolumeOrig(ind_pre) = s;
+    synVolumeOrig(ind_post) = s;
     
     % just for simplifying the synapse ids a bit.
-    synVolume_l(ind_pre) = l;
-    synVolume_l(ind_post) = l;
+    synVolume(ind_pre) = l+5;
+    synVolume(ind_post) = l+5;
     
 end
 
@@ -92,7 +100,7 @@ end
 se = strel(sqrt(x.^2 + y.^2 + z.^2) <=3);
 
 % dilating-eroding the segments per synapse
-synVolume_d = imdilate(synVolume_l,se); %note to future: use synVolume here
+synVolume_d = imdilate(synVolume,se); 
 synVolume_de = imerode(synVolume_d, se);
 
 % dilating-eroding segments of pre and post
@@ -106,6 +114,45 @@ mask_pre = mask_de; mask_post=mask_de/2;
 mask_pre(mask_de==2) = 0;
 mask_post(mask_de==1) = 0;
  
+
+%% count percent coverage of astrocytes of synapses
+
+
+lut_syn_int = zeros(size(lut_syn));
+synIds_d = unique(setdiff(synVolume_d, 0));
+
+for i = 1:length(synIds_d)
+    
+    
+    % combine syn and astro in one mask (1:synapse, 5:astro)
+    mask_syn_astro = double(logical(synVolume_d==synIds_d(i))) + 5*double(astro_vol);
+    mask_syn_astro(mask_syn_astro>2) = 5;
+    
+    % detect transition from 1 to 5 in xy plane
+    %make sure the border is within the area of the synapse segment so that one
+    %can get their overlap
+    shiftedM = circshift(mask_syn_astro, [1,1]); %
+    synPeriphery = (mask_syn_astro-shiftedM)==-4 | (mask_syn_astro-shiftedM)==1;
+    astroSynInterface = mask_syn_astro-shiftedM==-4;
+    
+    
+    shiftedM2 = circshift(mask_syn_astro, [-1,-1]); %
+    synPeriphery = synPeriphery | ((mask_syn_astro-shiftedM2)==-4 | (mask_syn_astro-shiftedM2)==1);
+    astroSynInterface = astroSynInterface | ((mask_syn_astro-shiftedM2)==-4);
+    
+    % a mask for one synapse id only
+    test = zeros(size(synVolumeOrig));
+    test(synVolume_d==synIds_d(i)) = 5;
+    
+    overlapInterfaceSyn = astroSynInterface+test;
+    overlapPeripherySyn = synPeriphery+test;
+    lut_syn_int(syn_idx(i)) =  sum(overlapInterfaceSyn(:)==6)/sum(overlapPeripherySyn(:)==6)*100;
+    
+end
+setdiff(lut_syn_int, 0)
+toc
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% number of neighboring astrocyte pixels per synapse
 
@@ -124,27 +171,6 @@ astroSynInterface = mask_syn_astro-shiftedM==-4;
 shiftedM2 = circshift(mask_syn_astro, [-1,-1]); %
 synPeriphery = synPeriphery | ((mask_syn_astro-shiftedM2)==-4 | (mask_syn_astro-shiftedM2)==1);
 astroSynInterface = astroSynInterface | ((mask_syn_astro-shiftedM2)==-4);
-
-
-%% count percent coverage of astrocytes of synapses
-
-
-lut_syn_int = zeros(size(lut_syn));
-synIds_d = unique(setdiff(synVolume_d, 0));
-
-for i = 1:length(synIds_d)
-    
-    % a mask for one synapse id only
-    test = zeros(size(synVolume));
-    test(synVolume_d==synIds_d(i)) = 5;
-    
-    overlapInterfaceSyn = astroSynInterface+test;
-    overlapPeripherySyn = synPeriphery+test;
-    lut_syn_int(syn_idx(i)) =  sum(overlapInterfaceSyn(:)==6)/sum(overlapPeripherySyn(:)==6)*100;
-    
-end
-%setdiff(lut_syn_int, 0)
-
 %% synapse volume
 
 lut_syn_vol = zeros(size(lut_syn));

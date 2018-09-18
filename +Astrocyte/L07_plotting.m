@@ -77,7 +77,7 @@ figure; colormap jet
 imagesc(synVolume_de(:,:,z)*2+double(astro_vol(:,:,z))*47, [0, 50]); colorbar
 
 %% plot Volume vs coverage of synapses
-
+figure
 plot(lut_syn_vol(logical(lut_syn~=0)), lut_syn_int(logical(lut_syn~=0)), '*')
 xlabel('Synapse Volume (um3)'); ylabel('Astrocyte Coverage (%)')
 
@@ -87,7 +87,7 @@ xlabel('Synapse Volume (um3)'); ylabel('Astrocyte Coverage (%)')
 %dark&light blue: syn&astro interface of other synapses (dark=asto)
 
 vals = setdiff(lut_syn_int(:),0);
-outliar = vals(1)
+outliar = vals(end-2)
 id = find(syn_idx==find(lut_syn_int == outliar));
 
 % a mask for one synapse id only
@@ -123,3 +123,6 @@ end
 figure
 scatter3(lut_syn_vol(logical(lut_syn~=0)), syn_areas(logical(lut_syn~=0),2), lut_syn_int(logical(lut_syn~=0)), 'filled')
 xlabel('Synapse Volume (um3)'); ylabel('Synaptic Cleft Area (um2)'); zlabel('Astrocyte Coverage (%)')
+
+%% the remove marginal segments
+figure;imshow(seg_mask(:,:,100))
