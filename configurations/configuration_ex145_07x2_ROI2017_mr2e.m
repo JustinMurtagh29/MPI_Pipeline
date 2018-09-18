@@ -71,10 +71,6 @@ p = setParameterSettings(p);
 
 %%%%%%%%%%%%%%%%%%%%% OVERWRITE SOME DEFAULT SETTINGS %%%%%%%%%%%%%%%%%%%%%
 
-% We will need a WKW segmentation for webKNOSSOS import
-p.seg = rmfield(p.seg, 'prefix');
-p.seg.backend = 'wkwrap';
-
 % Use same normalization values as in 20170217_ROI run
 p.norm = struct;
 p.norm.meanVal = 122.452159881592;
