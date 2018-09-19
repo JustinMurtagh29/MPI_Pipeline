@@ -102,6 +102,8 @@ mask_post(mask_de==1) = 0;
 
 % combine syn and astro in one mask (1:synapse, 5:astro)
 mask_syn_astro = double(logical(mask_d)) + 5*double(astro_vol);
+
+%%
 mask_syn_astro(mask_syn_astro>2) = 5;
 
 % detect transition from 1 to 5 in xy plane

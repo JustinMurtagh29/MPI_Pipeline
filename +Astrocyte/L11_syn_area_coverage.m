@@ -16,7 +16,7 @@ seg = load('~/GABA/astrocyte/synapses/segLarge1.mat');
 seg = seg.seg;
 
 astro_annot = load('~/GABA/astrocyte/predictions/unet_aug/v4_large1.mat');
-astro_vol = astro_annot.pred;
+astro_vol_orig = int32(astro_annot.pred);
 
 asiT = load('~/GABA/astrocyte/synapses/asiT.mat');
 asiT = asiT.asiT;
@@ -25,6 +25,15 @@ maxSegId = 15030572; %maximum possible segment ID
 
 %%
 tic
+
+% clean the astrocyte annotations
+% astro_vol=astro_vol_orig;
+[x,y,z] = ndgrid(-4:4);
+se = strel(sqrt(x.^2 + y.^2 + z.^2) <=4);
+astro_vol = imclose(astro_vol_orig,se); 
+astro_vol = bwareaopen(astro_vol, 5000,26);
+% pred = astro_vol;prediction = astro_vol_orig;
+% save('~/GABA/astrocyte/synapses/astro_vol.mat', 'pred', 'prediction')
 
 %Segments that are not leaving the cube (remove marginals)
 seg_mask = uint32(seg>0);
@@ -149,7 +158,7 @@ for i = 1:length(synIds_d)
     lut_syn_int(syn_idx(i)) =  sum(overlapInterfaceSyn(:)==6)/sum(overlapPeripherySyn(:)==6)*100;
     
 end
-setdiff(lut_syn_int, 0)
+%setdiff(lut_syn_int, 0)
 toc
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -183,7 +192,19 @@ for i = 1:length(synIds_de)
 end
 
 %% plot area vs coverage of synapses
-figure
-plot(syn_areas(logical(lut_syn~=0),2), lut_syn_int(logical(lut_syn~=0)), '*')
+x=syn_areas(logical(lut_syn~=0),2);
+y=lut_syn_int(logical(lut_syn~=0));
+
+c=-linspace(1,10,length(x));
+figure;colormap(lines);
+scatter(x, y, 36, c, 'filled','MarkerFaceAlpha',.5,'MarkerEdgeAlpha',1)
+% plot(syn_areas(logical(lut_syn~=0),2), lut_syn_int(logical(lut_syn~=0)), '*')
 xlabel('Synaptic Cleft Area (um2)'); ylabel('Astrocyte Coverage (%)')
 
+
+coefficients = polyfit(x, y, 1);
+xFit = linspace(min(x), max(x), 1000);
+yFit = polyval(coefficients , xFit);
+hold on;
+plot(xFit, yFit, 'k-');
+grid on;

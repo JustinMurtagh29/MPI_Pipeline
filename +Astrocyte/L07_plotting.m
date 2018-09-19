@@ -7,11 +7,14 @@ run locally
 plotting script
 %}
 
-
-%% Dilated eroded synapse volumes plotting 
+%%
+figure; colormap jet
+z=5;
+imagesc(double(astro_vol(:,:,z))*37, [0, 37]); colorbar
+%% Dilated synapse volumes with astrocytes plotting 
 figure; colormap jet
 for z = 1:72
-    imagesc(synVolume_d(:,:,z)*3+double(astro_vol(:,:,z))*37, [0, 50]); colorbar
+    imagesc(synVolume_d(:,:,z)*3+double(astro_vol(:,:,z))*37, [0, 37]); colorbar
     pause(0.5)
 end
 
@@ -63,7 +66,8 @@ end
 %% plot boundaries and overlap with segments at the same time
 vol = double(logical(synVolume_d))*5;
 
-figure(1); figure(2); colormap jet
+figure(1); colormap jet
+figure(2); colormap jet
 for z = 1:72
     figure(1);
     imagesc(vol(:,:,z) - astroSynInterface(:,:,z) + 2*synPeriphery(:,:,z), [0,7]); colorbar;
@@ -74,7 +78,7 @@ end
 %% an example of overlappring syn and astro
 z=167;
 figure; colormap jet
-imagesc(synVolume_de(:,:,z)*2+double(astro_vol(:,:,z))*47, [0, 50]); colorbar
+imagesc(synVolume_de(:,:,z)+double(astro_vol(:,:,z))*37, [0, 37]); colorbar
 
 %% plot Volume vs coverage of synapses
 figure
@@ -87,8 +91,8 @@ xlabel('Synapse Volume (um3)'); ylabel('Astrocyte Coverage (%)')
 %dark&light blue: syn&astro interface of other synapses (dark=asto)
 
 vals = setdiff(lut_syn_int(:),0);
-outliar = vals(end-2)
-id = find(syn_idx==find(lut_syn_int == outliar));
+outliar = vals(1)
+id = find(syn_idx==find(lut_syn_int == outliar))+5;
 
 % a mask for one synapse id only
 test = zeros(size(synVolume));
@@ -124,5 +128,19 @@ figure
 scatter3(lut_syn_vol(logical(lut_syn~=0)), syn_areas(logical(lut_syn~=0),2), lut_syn_int(logical(lut_syn~=0)), 'filled')
 xlabel('Synapse Volume (um3)'); ylabel('Synaptic Cleft Area (um2)'); zlabel('Astrocyte Coverage (%)')
 
-%% the remove marginal segments
+%% the removed marginal segments
 figure;imshow(seg_mask(:,:,100))
+
+%% copy two figures into one subfigure 
+
+figure; colormap(lines)
+h(1)=subplot(1,2,1);
+title('Without Postprocessing')
+xlabel('Synaptic Cleft Area (um2)'); ylabel('Astrocyte Coverage (%)')
+h(2)=subplot(1,2,2);
+title('With Postprocessing')
+xlabel('Synaptic Cleft Area (um2)'); ylabel('Astrocyte Coverage (%)')
+copyobj(allchild(get(figure(1),'Children')),h(1));
+copyobj(allchild(get(figure(2),'CurrentAxes')),h(2));
+grid(h(1), 'on')
+grid(h(2), 'on')
