@@ -94,3 +94,8 @@ Util.save(outFile, p);
 
 runPipeline(p, PipelineStep.MyelinFix, PipelineStep.CompressSegmentation);
 
+% 21.09.2018
+% for documentation (this was run manually and not from this script)
+% not sure why I skipped that in the first place
+runPipeline(p, PipelineStep.GraphConstruction, ...
+    PipelineStep.GlobalGraphStruct);
