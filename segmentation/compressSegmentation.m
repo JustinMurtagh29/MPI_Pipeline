@@ -18,8 +18,10 @@ function compressSegmentation(seg)
     outRoot = strcat(inRoot, '-wip');
     
     % create output directory, if needed
-    assert(not(exist(bakRoot, 'dir')));
-    assert(not(exist(outRoot, 'dir')));
+    assert(not(exist(bakRoot, 'dir')), ...
+        'Folder %s already exists.', bakRoot);
+    assert(not(exist(outRoot, 'dir')), ...
+        'Folder %s already exists.', outRoot);
     mkdir(outRoot);
     
     resDirs = dir(inRoot);
