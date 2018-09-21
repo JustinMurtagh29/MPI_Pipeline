@@ -142,8 +142,10 @@ function p = runPipeline(p, startStep, endStep)
         clear classifierPath outPath;
     end
     
-    p = load(synParamFile);
-    p = p.p;
+    if endStep >= PipelineStep.RawFeatures
+        p = load(synParamFile);
+        p = p.p;
+    end
 
     % Calculate raw features on smaller (wrt SynEM) borders (down to 10 voxel)
     if startStep <= PipelineStep.RawFeatures ...
