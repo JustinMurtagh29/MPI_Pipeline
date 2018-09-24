@@ -164,3 +164,23 @@ excShaftSyns.excFrac = accumarray(curTemp, 1);
 excShaftSyns.excFrac = excShaftSyns.excFrac / sum(excShaftSyns.excFrac);
 
 excShaftSyns %#ok
+
+%% E / I ratio for shaft synapses onto spiny dendrites
+clear cur*;
+
+curTargetClasses = {'ApicalDendrite', 'OtherDendrite'};
+
+curSyns = syn.synapses;
+curSyns = curSyns(cellfun(@isscalar, curSyns.dendIds), :);
+curSyns.targetClass = conn.denMeta.targetClass(cell2mat(curSyns.dendIds));
+
+curSyns = curSyns(cellfun(@isscalar, curSyns.polarities), :);
+curSyns.polarities = cell2mat(curSyns.polarities);
+
+curSyns = curSyns( ...
+    curSyns.type == 'Shaft' & ismember( ...
+    curSyns.targetClass, curTargetClasses), :);
+
+spinyDendExcInhRatio = ...
+    sum(curSyns.polarities > 0) ...
+  / numel(curSyns.polarities)
