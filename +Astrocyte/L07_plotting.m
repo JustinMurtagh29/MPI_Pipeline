@@ -144,3 +144,113 @@ copyobj(allchild(get(figure(1),'Children')),h(1));
 copyobj(allchild(get(figure(2),'CurrentAxes')),h(2));
 grid(h(1), 'on')
 grid(h(2), 'on')
+
+%% Astrocyte Volume Percentage per Slice
+figure; hold on 
+idx = [40:160];
+perc1 = zeros(1,size(astro_vol,3));
+for i = 1:size(astro_vol,3)
+    perc1(i) = sum(sum(astroSynInterface(:,:,i)==1) / sum(synPeriphery(:,:,i)==1));
+end
+plot(idx, perc1(idx)/mean(perc1))
+
+% perc = zeros(1,size(astro_vol,3));
+% for i = 1:size(astro_vol,3)
+%     perc(i) = sum(sum(synPeriphery(:,:,i)==1));
+% end
+% plot([40:160], perc([40:160])/max(perc))
+
+perc = zeros(1,size(astro_vol,3));
+for i = 1:size(astro_vol,3)
+    perc(i) = sum(sum(astro_vol(:,:,i)==1))/ (size(astro_vol,1)*size(astro_vol,2)) *100;
+end
+plot(idx, perc(idx)/mean(perc))
+
+legend('AstroBorder Perc', 'Astro Density', 'Location', 'southeast')
+ylabel('Boundary')
+xlabel('Z slice')
+grid on
+
+figure;
+colors=[1:size(astro_vol,3)];
+scatter(perc(idx), perc1(idx), 36,idx,'filled')
+xlabel('Astro Density'); ylabel('AstroBorderPerc')
+h = colorbar;
+ylabel(h, 'Z slices')
+%% Synapse alongation in z versus astro coverage
+
+figure; hold on
+for i = 1:length(synIds_d)
+        
+    % a mask for one synapse id only
+    test = zeros(size(synVolumeOrig));
+    test(synVolume_d==synIds_d(i)) = 5;
+    
+    plot(lut_syn_int(syn_idx(i))*(squeeze(sum(sum(test, 1),2))>1), '.')
+
+%     overlapInterfaceSyn = astroSynInterface+test;
+%     overlapPeripherySyn = synPeriphery+test;
+%     lut_syn_int(syn_idx(i)) =  sum(overlapInterfaceSyn(:)==6)/sum(overlapPeripherySyn(:)==6)*100;
+    
+end
+
+%% Look at one synapse pre and post astro coverage
+
+vals = setdiff(lut_syn_int(:),0);
+outliar = vals(1)
+id = find(syn_idx==find(lut_syn_int == outliar))+5;
+
+% a mask for one synapse id only
+test = zeros(size(synVolume));
+test(synVolume_d==id) = 1;
+
+overlapInterfaceSyn = astroSynInterface+test;
+overlapPeripherySyn = synPeriphery+test;
+
+[~,~,Z]=ind2sub(size(synVolume), find(synVolume_d==id));
+z_sorted = unique(Z);
+figure(1); colormap jet
+for i = 1:numel(z_sorted)
+    z=z_sorted(i);
+%     imagesc(test(:,:,z) -astroSynInterface(:,:,z) + 2*synPeriphery(:,:,z), [0, 7]); colorbar;
+    imagesc(test(:,:,z).*mask_d(:,:,z)*12+double(astro_vol(:,:,z))*37, [0, 37]); colorbar
+
+    pause(0.5)
+end
+
+%% RAW OVERLAY
+
+raw = load('~/GABA/astrocyte/synapses/raw_val.mat');
+raw = raw.raw;
+E = raw(:,:,1);
+red = cat( 3, ones(size(E)), zeros(size(E)), zeros(size(E)) );
+blue = cat( 3, zeros(size(E)), zeros(size(E)), ones(size(E)) );
+green = cat( 3, ones(size(E)), zeros(size(E)), 3*ones(size(E)) );
+%% Transparent mask overlay on Raw
+
+for z = 1:72
+    imshow(raw(:,:,z), 'InitialMag', 'fit');
+    hold on
+    r = imshow(red);
+    r.AlphaData = astro_vol(:,:,z)*0.3;
+    b = imshow(blue);
+    b.AlphaData = mask_d(:,:,z)*0.3;
+    hold off
+    pause(0.5)
+end
+
+%% Raw overlay with boundaries
+
+figure; colormap gray
+for z = 1:72
+    imagesc(raw(:,:,z))%, 'InitialMag', 'fit');
+    hold on
+    r = imshow(red);
+    r.AlphaData = (abs(mask_syn_astro(:,:,z)-shiftedM(:,:,z))==5);
+    b = imshow(blue);
+    b.AlphaData = (abs(mask_syn_astro(:,:,z)-shiftedM(:,:,z))==1);
+    g = imshow(green);
+    g.AlphaData = (abs(mask_syn_astro(:,:,z)-shiftedM(:,:,z))==4);
+    hold off
+    pause(0.5)
+end

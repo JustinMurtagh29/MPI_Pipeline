@@ -12,11 +12,11 @@ astrocyte coverage vs volume
 syn = load('~/GABA/astrocyte/synapses/syn.mat');
 syn = syn.syn;
 
-seg = load('~/GABA/astrocyte/synapses/seg.mat');
+seg = load('~/GABA/astrocyte/synapses/segLarge1.mat');
 seg = seg.seg;
 
-astro_annot = load('~/GABA/astrocyte/predictions/unet_aug/v4_val.mat');
-astro_vol_orig = int32(astro_annot.pred);
+astro_annot = load('~/GABA/astrocyte/predictions/unet_aug/v4_large1_postproc.mat');
+astro_vol = int32(astro_annot.pred);
 
 asiT = load('~/GABA/astrocyte/synapses/asiT.mat');
 asiT = asiT.asiT;
@@ -25,15 +25,6 @@ maxSegId = 15030572; %maximum possible segment ID
 
 %%
 tic
-
-% clean the astrocyte annotations
-% astro_vol=astro_vol_orig;
-[x,y,z] = ndgrid(-4:4);
-se = strel(sqrt(x.^2 + y.^2 + z.^2) <=4);
-astro_vol = imclose(astro_vol_orig,se); 
-astro_vol = bwareaopen(astro_vol, 5000,26);
-% pred = astro_vol;prediction = astro_vol_orig;
-% save('~/GABA/astrocyte/synapses/astro_vol.mat', 'pred', 'prediction')
 
 %Segments that are not leaving the cube (remove marginals)
 seg_mask = uint32(seg>0);
@@ -118,7 +109,6 @@ mask_de = imerode(mask_d, se);
 
 
 %  Separate pre and post synapses
-
 mask_pre = mask_de; mask_post=mask_de/2;
 mask_pre(mask_de==2) = 0;
 mask_post(mask_de==1) = 0;
@@ -144,7 +134,6 @@ for i = 1:length(synIds_d)
     synPeriphery = (mask_syn_astro-shiftedM)==-4 | (mask_syn_astro-shiftedM)==1;
     astroSynInterface = mask_syn_astro-shiftedM==-4;
     
-    
     shiftedM2 = circshift(mask_syn_astro, [-1,-1]); %
     synPeriphery = synPeriphery | ((mask_syn_astro-shiftedM2)==-4 | (mask_syn_astro-shiftedM2)==1);
     astroSynInterface = astroSynInterface | ((mask_syn_astro-shiftedM2)==-4);
@@ -163,7 +152,7 @@ toc
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%% number of neighboring astrocyte pixels per synapse
+%% number of neighboring astrocyte pixels to synapse clusters
 
 % combine syn and astro in one mask (1:synapse, 5:astro)
 mask_syn_astro = double(logical(mask_d)) + 5*double(astro_vol);
@@ -207,4 +196,6 @@ xFit = linspace(min(x), max(x), 1000);
 yFit = polyval(coefficients , xFit);
 hold on;
 plot(xFit, yFit, 'k-');
-grid on;
+ax = gca;
+ax.YGrid = 'on';
+ax.XMinorGrid = 'on';
