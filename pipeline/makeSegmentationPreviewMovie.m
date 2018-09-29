@@ -1,4 +1,4 @@
-function outputFile = makeSegmentationPreviewMovie(p, bbox, doClass)
+function outputFile = makeSegmentationPreviewMovie(p, bbox, doClass, useClass)
 % outputFile = makeSegmentationPreviewMovie(p, bbox, doClass)
 %   Generates a segmentation preview movie (in AVI format)
 %   with a given set of parameters.
@@ -16,12 +16,20 @@ function outputFile = makeSegmentationPreviewMovie(p, bbox, doClass)
 %     This flag can be used to disable (and reuse) old cla-
 %     ssification results for improved performance.
 %     Default: true
+%   
+%   useClass
+%   This flag can be used to create tempClass folder that
+%   uses cnn output from p.class and writes to tempClass
 %
 %   outputFile
 %     Path to generated segmentation preview movie
 
 if ~exist('doClass', 'var')
     doClass = true;
+end
+
+if ~exist('useClass','var')
+    useClass= false;
 end
 
 % also accept webKNOSSOS-style bouding boxes,
@@ -52,6 +60,16 @@ else
     warning('> Skipping classification');
 end
 
+% create temp classification from p.class available output
+if useClass
+    if isfield(tempClass, 'backend') && strcmp(tempClass.backend,'wkwrap')
+        wkwInit('new', tempClass.root, 32, 32, 'single', 1);
+    end
+
+    tempClassificationStep(p, tempClass, bbox);
+    warning('> Using classification from p.class');
+end
+
 % Segmentation
 tempSegFile = [p.tempFolder 'seg.mat'];
 segmentationStep(p, tempClass, tempSegFile, bbox);
@@ -72,6 +90,12 @@ function classificationStep(p, tempClass, bbox)
     end
 
     Cluster.waitForJob(job);
+end
+
+function tempClassificationStep(p, tempClass, bbox)
+data = loadClassData(p.class, bbox);
+offset = bbox(:,1);
+saveClassData(tempClass, offset, data);
 end
 
 function segmentationStep(p, tempClass, tempSegFile, bbox)
