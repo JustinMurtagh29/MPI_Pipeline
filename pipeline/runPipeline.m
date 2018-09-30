@@ -181,6 +181,12 @@ function p = runPipeline(p, startStep, endStep)
         job = collectGraphStructOnCluster(p);
         Cluster.waitForJob(job);
     end
+
+    % send email notification when pipeline run finished at endStep
+    if p.email.notify
+        Util.sendEmail(p.email.address,'Grattis! Finished pipeline run!');
+    end
+    
 end
 
 % Some comments that one might want to run in addition:
