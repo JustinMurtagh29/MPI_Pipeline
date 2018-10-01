@@ -120,7 +120,7 @@ function outputFile = movieStep(p, tempSegFile, bbox)
     load(tempSegFile, 'seg');
 
     % Make movie
-    outputFile = [p.tempFolder '_' num2str(p.seg.threshold) '_' datestr(clock, 30) '.avi']; % seg imposed on raw
-    outputFile2 = [p.tempFolder '_' num2str(p.seg.threshold) '_' datestr(clock,30) '_RawAndSeg.avi']; % raw and seg side-by-side
+    outputFile = [p.tempFolder 'movie_' num2str(p.seg.threshold) '_' datestr(clock, 30) '.avi']; % seg imposed on raw
+    outputFile2 = [p.tempFolder 'movie_' num2str(p.seg.threshold) '_' datestr(clock,30) '_RawAndSeg.avi']; % raw and seg side-by-side
     makeSegMovie(seg, raw, outputFile,outputFile2);
 end
