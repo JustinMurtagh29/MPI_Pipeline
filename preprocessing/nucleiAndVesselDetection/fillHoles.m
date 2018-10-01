@@ -6,7 +6,7 @@ function binIm = fillHoles(binIm, mask,oldmethod)
 
 binIm = or(binIm,mask);
 
-if exist('oldmethod','var') && oldmethod
+if exist('oldmethod','var') && ~isempty(oldmethod) && oldmethod == 1
     %     holeLoc = round(size(binIm,1)/2);
     [~,holeLoc] = min(sum(binIm,2));
     
