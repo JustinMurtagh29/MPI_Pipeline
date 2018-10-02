@@ -10,6 +10,7 @@ if ~exist('minmaxArea','var') || isempty(minmaxArea)
 end
 
 thisbbox = [offset(:),offset(:)+cubesize-1];
+thisbbox = max(1,thisbbox);  % delete negative parts of the bbox
 heur = loadRawData(datasetMag4Heur, thisbbox);
 raw = loadRawData(datasetMag4, thisbbox);
 sizeRaw = size(raw);
@@ -130,6 +131,6 @@ end
     
 heur(nuclei) = 255;
 
-saveRawData(datasetMag4Heur, offset,heur);
+saveRawData(datasetMag4Heur, max(1,offset),heur);  % save and again delete negative parts
 
 toc;
