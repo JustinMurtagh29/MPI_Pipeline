@@ -1,5 +1,5 @@
 function detectNucleiInCube(datasetMag4, datasetMag4Heur,cubesize,remSmallObjects, offset,newmethod,minmaxArea,visualize)
-if ~exist('visualize','var') || isempty(newmethod)
+if ~exist('newmethod','var') || isempty(newmethod)
     newmethod = true;
 end
 if ~exist('visualize','var') || isempty(visualize)
