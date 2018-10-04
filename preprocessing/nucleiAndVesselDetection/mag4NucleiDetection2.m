@@ -28,7 +28,7 @@ datasetMag4Heur.root = strrep(datasetMag4.root,'/color/','/heur/');
 mkdir(datasetMag4Heur.root)
 mkdir(outputFolder);
 %% Load raw and vessels
-mag4bbox = (mag1bbox - 1) ./4 + 1;
+mag4bbox = (mag1bbox - 1) ./[4 4 2;4 4 2]' + 1;
 mag4bbox(:,1) = ceil(mag4bbox(:,1));
 mag4bbox(:,2) = floor(mag4bbox(:,2));
 
@@ -61,18 +61,21 @@ shift = 448;  % has to be multiple of wkw block and file length (here 32)
 % them so that each can run in parallel without cube overwriting problems
 [X,Y,Z] = meshgrid(mag4bbox(1,1):cubesize:mag4bbox(1,2),mag4bbox(2,1):cubesize:mag4bbox(2,2),mag4bbox(3,1):cubesize:mag4bbox(3,2));
 offsets1 = mat2cell([X(:),Y(:),Z(:)],ones(numel(X),1),3);
-[X,Y,Z] = meshgrid(mag4bbox(1,1)+shift-cubesize:cubesize:mag4bbox(1,2)+shift,mag4bbox(2,1)+shift-cubesize:cubesize:mag4bbox(2,2)+shift,mag4bbox(3,1)+shift-cubesize:cubesize:mag4bbox(3,2)+shift);
+[X,Y,Z] = meshgrid(mag4bbox(1,1)+shift-cubesize:cubesize:mag4bbox(1,2),mag4bbox(2,1)+shift-cubesize:cubesize:mag4bbox(2,2),mag4bbox(3,1)+shift-cubesize:cubesize:mag4bbox(3,2));
 offsets2 = mat2cell([X(:),Y(:),Z(:)],ones(numel(X),1),3);
 % negative parts of bounding boxes will be ignored by detectNucleiInCube
 
 figure;hold all;
 for f =1:numel(offsets1)
-    Visualization.plotBbox([offsets1{f};offsets1{f}+800]','r',0.2,'k')
+    Visualization.plotBbox([offsets1{f};offsets1{f}+800]','g',0.1,'k')
+end
+for f =1:numel(offsets1)
+    Visualization.plotBbox(mag4bbox,'k',0.1,'r')
 end
 for f =1:numel(offsets2)
-    Visualization.plotBbox([offsets2{f};offsets2{f}+800]','b',0.2,'k')
+    Visualization.plotBbox([offsets2{f};offsets2{f}+800]','b',0.1,'k')
 end
-axis equal;xlabel('x');ylabel('y');zlabel('z');set(gca,'ZDir','reverse')
+axis equal;xlabel('x');ylabel('y');zlabel('z');set(gca,'ZDir','reverse'),set(gca,'YDir','reverse')
 
 display('Start nuclei detection');
 job = Cluster.startJob( ...
