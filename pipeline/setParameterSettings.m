@@ -52,8 +52,7 @@ function p = setParameterSettings(p)
     p.class = Util.modifyStruct( ...
         p.raw, ...
         'dtype', 'single', ...
-        'func', @bigFwdPass, ...
-        'root', fixPath(fullfile(p.tempFolder, 'class')));
+        'root', fixPath(fullfile(p.tempFolder, 'segem')));
 
     % Correspondence p
     p.correspondence.overlap = 1; % overlap of local segmentation to compare on each side around a face
@@ -83,7 +82,6 @@ function p = setParameterSettings(p)
                 % Where to save
                 p.local(i,j,k).segFile = [p.local(i,j,k).saveFolder 'seg.mat'];
                 p.local(i,j,k).tempSegFile = strrep(p.local(i,j,k).segFile, '/local/', '/temp/');
-                %p.local(i,j,k).tempSegMaskFile = strrep(p.local(i,j,k).tempSegFile, 'seg.mat', 'segmask.mat');
                 p.local(i,j,k).edgeFile = [p.local(i,j,k).saveFolder 'edges.mat'];
                 p.local(i,j,k).borderFile =  [p.local(i,j,k).saveFolder 'borders.mat'];
                 p.local(i,j,k).weightFile = [p.local(i,j,k).saveFolder 'weights.mat'];
