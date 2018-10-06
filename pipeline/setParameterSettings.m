@@ -14,13 +14,6 @@ function p = setParameterSettings(p)
     p.saveFolder = fixPath(p.saveFolder);
     p.raw.root = fixPath(p.raw.root);
     p.seg.root = fixPath(p.seg.root);
-    if isfield(p,'mask')
-        p.mask.root = fixPath(p.mask.root);
-        if ~isfield(p.mask, 'dtype')
-            p.mask.dtype = 'uint8';
-        end
-        p.mask.voxelSize = p.raw.voxelSize;
-    end
     
     % Size of local segmentation and local graph construction
     p.tileSize =  [512; 512; 256];
@@ -36,16 +29,23 @@ function p = setParameterSettings(p)
     p.tiles = ceil((p.bbox(:,2) - p.bbox(:,1) + 1) ./ p.tileSize);
 
     % Which function to use to normalize data to zero mean and one std
-    [meanVal, stdVal] = ...
-        Knossos.estGlobalMeanAndStd(p);
-    p.norm.func = @(x)normalizeStack(x,meanVal,stdVal);
+    if ~isfield(p, 'norm')
+        p.norm = struct;
+       [p.norm.meanVal, p.norm.stdVal] = ...
+            Knossos.estGlobalMeanAndStd(p);
+    end
+    
+    p.norm.func = @(x) normalizeStack( ...
+        x, p.norm.meanVal, p.norm.stdVal);
 
     % Which classifier to use
     p.cnn.dateStrings = '20130516T204040';
     p.cnn.iter = 8;
     p.cnn.gpu = 3;
-    p.cnn.first = ['/gaba/u/mberning/results/parameterSearch/' p.cnn.dateStrings ...
-        '/iter' num2str(p.cnn.iter, '%.2i') '/gpu' num2str(p.cnn.gpu, '%.2i') '/saveNet0000000001.mat'];
+    p.cnn.first = [ ...
+        '/gaba/u/mberning/results/parameterSearch/', p.cnn.dateStrings, ...
+        '/iter', num2str(p.cnn.iter, '%.2i'), '/gpu', ...
+        num2str(p.cnn.gpu, '%.2i'), '/saveNet0000000001.mat'];
     p.cnn.GPU = false;
     
     % Location to store CNN classification
@@ -54,47 +54,10 @@ function p = setParameterSettings(p)
         'dtype', 'single', ...
         'func', @bigFwdPass, ...
         'root', fixPath(fullfile(p.tempFolder, 'class')));
-    
-    % Check if user provided a segmentation root
-    p.seg = Util.modifyStruct( ...
-        p.raw, ...
-        'dtype', 'uint32', ...
-        'root', p.seg.root, ...
-        'func', @(x) watershedSeg_v1_cortex(x, {p.seg.threshold, 10}), ...
-        'threshold', p.seg.threshold);
-    
-    % Specify arguments for filterbank applied to raw and aff data each
-    p.filter = {
-        {'sortedeigenvalueshessian' [3 5] []}...
-        {'gaussiansmoothedgradmagnitude' [3 5] []}...
-        {'intensitygaussiansmoothed' [3 5] []}...
-        {'sortedeigenvaluesstructure' [3 5] [5 7]}...
-        {'laplaceofgaussian' [3 5] []}...
-        {'differenceofgaussians' [3 5] []}};
-
-    % Feature p
-    p.feature.root = [p.saveFolder 'features/'];
-
-    % Function to use for feature calculation
-    p.feature.func = @calcFeatures;
-
-    % Choose to filter 'raw' and 'class' data
-    p.feature.input = {'raw', 'aff'};
 
     % Correspondence p
     p.correspondence.overlap = 1; % overlap of local segmentation to compare on each side around a face
     p.correspondence.saveFolder = [p.tempFolder 'correspondences/'];
-
-    % GLOBAL SETTINGS FOR fromGraphToDB.m
-    % State variables from the GP
-    p.gp.stateFolder = [p.saveFolder 'state/'];
-    p.gp.normValues = [p.gp.stateFolder 'normValues.mat'];
-    p.gp.hyperParameter = [p.gp.stateFolder 'hyperParameter.mat'];
-    p.gp.initialGroundTruth = [p.gp.stateFolder 'initialGroundTruth.mat'];
-
-    % Define cutoff(s) for writing to knowledge DB
-    %p.gp.upperCut = .95;
-    %p.gp.lowerCut = .15;
 
     % LOCAL SETTINGS for each tile
     for i=1:p.tiles(1)
@@ -134,15 +97,9 @@ function p = setParameterSettings(p)
             end
         end
     end
-    
-    % Create state folder for this p settings GP
-    if ~exist(p.gp.stateFolder, 'dir')
-        mkdir(p.gp.stateFolder);
-    end
 
     % Save everything
     Util.save([p.saveFolder 'allParameter.mat'], p);
-
 end
 
 function p = fixPath(p)
