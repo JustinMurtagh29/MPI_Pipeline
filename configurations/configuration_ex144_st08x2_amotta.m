@@ -39,8 +39,8 @@ p.raw.backend = 'wkwrap';
 p.raw.voxelSize = [11.24, 11.24, 28];
 
 p.norm = struct;
-p.norm.mean = 165.2;
-p.norm.std = 19.8;
+p.norm.meanVal= 165.2;
+p.norm.stdVal = 19.8;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%% STOP EDITING HERE %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
