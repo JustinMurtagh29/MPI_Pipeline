@@ -5,15 +5,18 @@ function p = setParameterSettings(p)
         p.raw.dtype = 'uint8';
     end
     
-    if ~isfield(p.seg, 'root')
-        % default path for segmentation
-        p.seg.root = fullfile(p.saveFolder, 'globalSeg', '1');
-    end
-    
     % Sanitize paths by adding trailing slashes
     p.saveFolder = fixPath(p.saveFolder);
     p.raw.root = fixPath(p.raw.root);
-    p.seg.root = fixPath(p.seg.root);
+    
+    if isfield(p, 'seg')
+        if ~isfield(p.seg, 'root')
+            % Default segmentation location
+            p.seg.root = fullfile(p.saveFolder, 'globalSeg', '1');
+        end
+        
+        p.seg.root = fixPath(p.seg.root);
+    end
     
     % Size of local segmentation and local graph construction
     p.tileSize =  [512; 512; 256];
