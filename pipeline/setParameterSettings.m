@@ -55,7 +55,7 @@ function p = setParameterSettings(p)
     p.class = Util.modifyStruct( ...
         p.raw, ...
         'dtype', 'single', ...
-        'root', fixPath(fullfile(p.tempFolder, 'segem')));
+        'root', fixPath(fullfile(p.saveFolder, 'segem')));
 
     % Correspondence p
     p.correspondence.overlap = 1; % overlap of local segmentation to compare on each side around a face
@@ -100,7 +100,8 @@ function p = setParameterSettings(p)
     end
 
     % Save everything
-    Util.save([p.saveFolder 'allParameter.mat'], p);
+    info = Util.runInfo(false);
+    Util.save([p.saveFolder 'allParameter.mat'], p, info);
 end
 
 function p = fixPath(p)
