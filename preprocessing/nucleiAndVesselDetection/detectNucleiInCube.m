@@ -24,12 +24,12 @@ for z=1:size(raw,3)
     vessels = heur(:,:,z) == 128;
     % Update for speed at some point
     % Initialization
-    thisImage = single(raw(:,:,z));
+    thisImage = (raw(:,:,z));
     % Calculate mask (zeros voxel touching border of matrix)
     mask = ~imfill(~imdilate(thisImage == 0, ones([10 10])), 'holes');
     % Detect nuclei
     if newmethod
-        thisImage = (raw(:,:,z));
+%         thisImage = imgaussfilt(thisImage, 2);
         thisImage(imclose(thisImage<100,strel('disk',3))) = 0;
         % find regions of similar intensity
         regions = detectMSERFeatures(thisImage, 'ThresholdDelta', 0.5, 'MaxAreaVariation', 0.2, 'RegionAreaRange', minmaxArea);
@@ -41,60 +41,65 @@ for z=1:size(raw,3)
             % keep only regions which have a smooth surrounding boundary (like nuclei)
             % by calculating the convex hull and check how much its area resembles the
             % area of the region
-            if regions.Count == 1
-                % account for 1 region where PixelList is then a array
-                % instead of cell array...
-                [~,a] = cellfun(@(x) convhull(double(x(:,1)),double(x(:,2))),{regions(:).PixelList},'uni',0);
-                regions = regions(cellfun(@(x) size(x,1),{regions(:).PixelList})./cell2mat(a) > 0.75);
-            else
-                [~,a] = cellfun(@(x) convhull(double(x(:,1)),double(x(:,2))),regions(:).PixelList,'uni',0);
-                regions = regions(cellfun(@(x) size(x,1),regions(:).PixelList)./cell2mat(a) > 0.75);
-                if regions.Count > 1
-                    % also check if two regions are for the same nucleus,
-                    % and if yes, check which of them has a smoother
-                    % surrounding
-                    combinations = nchoosek(1:regions.Count,2);
-                    closeToEachOther = pdist(regions(:).Location) < 25;
-                    if any(closeToEachOther)
-                        regionSets = Graph.findConnectedComponents(combinations(closeToEachOther,:),0,0,regions.Count);
-                        
-                        [~,a] = cellfun(@(x) convhull(double(x(:,1)),double(x(:,2))),regions(:).PixelList,'uni',0);
-                        a = cell2mat(a);
-                        [~,ind] = cellfun(@(x) max(a(x)),regionSets);
-                        regions = regions(arrayfun(@(x) regionSets{x}(ind(x)),1:numel(regionSets)));
-                    end
+            keepReg = false(regions.Count,1);
+            for i=1:regions.Count
+                testIm = false(size(thisImage));
+                idx = sub2ind(size(thisImage), regions.PixelList{i}(:,2), regions.PixelList{i}(:,1));
+                testIm(idx) = 1;
+                P = bwboundaries(testIm,'noholes');
+                [~,ind] = max(cellfun(@numel,P));
+                B = P{ind};
+                pa = polyarea(B(:,1),B(:,2));
+                [~,ca] = convhull(B(:,1),B(:,2));
+                keepReg(i) = ca <= minmaxArea(2) & pa/ca > 0.85 & size(regions.PixelList{i},1)/ca > 0.65;
+            end
+            regions = regions(keepReg);
+            %                 [~,a] = cellfun(@(x) convhull(double(x(:,1)),double(x(:,2))),regions(:).PixelList,'uni',0);
+            %                 regions = regions(cellfun(@(x) size(x,1),regions(:).PixelList)./cell2mat(a) > 0.75);
+            if regions.Count > 1
+                % also check if two regions are for the same nucleus,
+                % and if yes, check which of them has a smoother
+                % surrounding
+                combinations = nchoosek(1:regions.Count,2);
+                closeToEachOther = pdist(regions(:).Location) < 25;
+                if any(closeToEachOther)
+                    regionSets = Graph.findConnectedComponents(combinations(closeToEachOther,:),0,0,regions.Count);
+                    
+                    [~,a] = cellfun(@(x) convhull(double(x(:,1)),double(x(:,2))),regions(:).PixelList,'uni',0);
+                    a = cell2mat(a);
+                    [~,ind] = cellfun(@(x) max(a(x)),regionSets);
+                    regions = regions(arrayfun(@(x) regionSets{x}(ind(x)),1:numel(regionSets)));
                 end
             end
 %             figure;
 %             imshow(thisImage),hold on
 %             plot(regions, 'showPixelList', true, 'showEllipses', true);
         end
-        thisImage = thisImage * 0;
+        detImage = false(size(thisImage));
         for i=1:regions.Count
-            idx = sub2ind(size(thisImage), regions.PixelList{i}(:,2), regions.PixelList{i}(:,1));
-            thisImage(idx) = 1;
+            idx = sub2ind(size(detImage), regions.PixelList{i}(:,2), regions.PixelList{i}(:,1));
+            detImage(idx) = 1;
         end
-        thisImage = imopen(thisImage,strel('disk',1));
-        
+        detImage = imopen(detImage,strel('disk',1));
     else
         % Detect apicals for later exclusion
         apicals = medfilt2(thisImage, [5 5]) > 150 & ~vessels;
         apicals = bwareaopen(apicals, 2000);
         apicals = imclose(apicals, strel('disk', 5));
         % detect nuclei with edge detection of nuclei membrane
-        thisImage = ~edge(thisImage, 'canny');
-        thisImage = imopen(thisImage, strel('disk', 5));
-        thisImage = thisImage & ~apicals;
+        detImage = ~edge(thisImage, 'canny');
+        detImage = imopen(detImage, strel('disk', 5));
+        detImage = detImage & ~apicals;
     end
-    thisImage = thisImage & ~vessels & ~mask;
-    thisImage = bwareaopen(thisImage, 4000, 4);
-    thisImage = imclose(thisImage | mask, strel('disk', 4)) & ~mask;
-    thisImage = fillHoles(thisImage, mask);
-    nuclei(:,:,z) = thisImage;
+    detImage = detImage & ~vessels & ~mask;
+    detImage = bwareaopen(detImage, 4000, 4);
+    detImage = imclose(detImage | mask, strel('disk', 4)) & ~mask;
+    detImage = fillHoles(detImage, mask);
+    nuclei(:,:,z) = detImage;
     if visualize
         subplot(1,2,1); imshow(raw(:,:,z));
         title(sprintf('Plane %d',z))
-        subplot(1,2,2); imshow(raw(:,:,z)); hold on; h = imshow(green); set(h, 'AlphaData', thisImage.*0.5);
+        subplot(1,2,2); imshow(raw(:,:,z)); hold on; h = imshow(green); set(h, 'AlphaData', detImage.*0.5);
         title(sprintf('Plane %d',z))
         hold off;
         drawnow;

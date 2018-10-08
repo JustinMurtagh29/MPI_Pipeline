@@ -9,7 +9,7 @@
 thresholdVessel = 200;
 divideInN = 4;   % if dataset is too big, this number can be increased to chop the task into N parts
 % nuclei-specific parameters 
-minmaxArea = [3000 45000]; % this is the 2D minimum and maximum area the soma is allowed to have (adjusted for mag4)
+minmaxArea = [3000 80000]; % this is the 2D minimum and maximum area the soma is allowed to have (adjusted for mag4)
 
 % user-specific locations
 addpath(genpath('/gaba/u/mbeining/code/auxiliaryMethods/'));
