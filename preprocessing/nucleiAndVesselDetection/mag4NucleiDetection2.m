@@ -10,6 +10,7 @@ thresholdVessel = 200;
 divideInN = 4;   % if dataset is too big, this number can be increased to chop the task into N parts
 % nuclei-specific parameters 
 minmaxArea = [3000 80000]; % this is the 2D minimum and maximum area the soma is allowed to have (adjusted for mag4)
+delObjSmallerThan = 70000; % this deletes 3d objects which are smaller than this amount of voxels (should be changed if mag4 is the old format and not 4-4-2)
 
 % user-specific locations
 addpath(genpath('/gaba/u/mbeining/code/auxiliaryMethods/'));
@@ -19,16 +20,25 @@ dataset.root = '/wKlive/2018_08_06_MB_HCl31_st013_BKfull_adjHist/color/1/';
 dataset.backend = 'wkwrap';
 dataset.blocksize = 32;
 mag1bbox =  [1   28485;1   18320;1    7164];
+oldMag4 = false;
 
 %% set some folders
 datasetMag4 = dataset;
-datasetMag4.root = strrep(dataset.root,'/1/','/4-4-2/');
+if oldMag4
+    datasetMag4.root = strrep(dataset.root,'/1/','/4/');
+else
+    datasetMag4.root = strrep(dataset.root,'/1/','/4-4-2/');
+end
 datasetMag4Heur = datasetMag4;
 datasetMag4Heur.root = strrep(datasetMag4.root,'/color/','/heur/');
 mkdir(datasetMag4Heur.root)
 mkdir(outputFolder);
 %% Load raw and vessels
-mag4bbox = (mag1bbox - 1) ./[4 4 2;4 4 2]' + 1;
+if oldMag4
+    mag4bbox = (mag1bbox - 1)/4 + 1;
+else
+    mag4bbox = (mag1bbox - 1) ./[4 4 2;4 4 2]' + 1;
+end
 mag4bbox(:,1) = ceil(mag4bbox(:,1));
 mag4bbox(:,2) = floor(mag4bbox(:,2));
 
@@ -79,14 +89,14 @@ axis equal;xlabel('x');ylabel('y');zlabel('z');set(gca,'ZDir','reverse'),set(gca
 
 display('Start nuclei detection');
 job = Cluster.startJob( ...
-    @detectNucleiInCube, offsets1,'sharedInputs',{datasetMag4, datasetMag4Heur,cubesize,true,minmaxArea}, ...
-    'sharedInputsLocation',[1,2,3,4,6],'cluster', {'memory', 12,'time', '30:00:00','taskConcurrency',20,'scheduler','slurm'}, ...
+    @detectNucleiInCube, offsets1,'sharedInputs',{datasetMag4, datasetMag4Heur,cubesize,true,minmaxArea,delObjSmallerThan,oldMag4}, ...
+    'sharedInputsLocation',[1,2,3,4,6,7,8],'cluster', {'memory', 12,'time', '30:00:00','taskConcurrency',20,'scheduler','slurm'}, ...
     'name', 'nucleiDetection');
 Cluster.waitForJob(job);
 
 job = Cluster.startJob( ...
-    @detectNucleiInCube, offsets2,'sharedInputs',{datasetMag4, datasetMag4Heur,cubesize,true,minmaxArea}, ...
-    'sharedInputsLocation',[1,2,3,4,6],'cluster', {'memory', 12,'time', '30:00:00','taskConcurrency',20,'scheduler','slurm'}, ...
+    @detectNucleiInCube, offsets2,'sharedInputs',{datasetMag4, datasetMag4Heur,cubesize,true,minmaxArea,delObjSmallerThan,oldMag4}, ...
+    'sharedInputsLocation',[1,2,3,4,6,7,8],'cluster', {'memory', 12,'time', '30:00:00','taskConcurrency',20,'scheduler','slurm'}, ...
     'name', 'nucleiDetection');
 Cluster.waitForJob(job);
 

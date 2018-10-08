@@ -1,9 +1,15 @@
-function detectNucleiInCube(datasetMag4, datasetMag4Heur,cubesize,remSmallObjects, offset,newmethod,minmaxArea,visualize)
+function detectNucleiInCube(datasetMag4, datasetMag4Heur,cubesize,remSmallObjects, offset,newmethod,minmaxArea,visualize,delObjSmallerThan,oldMag4)
 if ~exist('newmethod','var') || isempty(newmethod)
     newmethod = true;
 end
 if ~exist('visualize','var') || isempty(visualize)
     visualize = false;
+end
+if ~exist('oldMag4','var') || isempty(oldMag4)
+    oldMag4 = false;
+end
+if ~exist('delObjSmallerThan','var') || isempty(delObjSmallerThan)
+    delObjSmallerThan = 70000;
 end
 if ~exist('minmaxArea','var') || isempty(minmaxArea)
     minmaxArea = [3000 45000]; % this is the 2D minimum and maximum area the soma is allowed to have (adjusted for mag4)
@@ -112,16 +118,26 @@ tic;
 display('Postprocessing');
 % Close to make more constinstent across images
 % close with a smaller sphere than opening
-[x,y,z] = meshgrid(-4:4,-4:4,-2:2);
-se1 = (x/4).^2 + (y/4).^2 + (z/2).^2 <= 1;
-% in mag 4 this creates a sphere of ~450 nm radius
-[x,y,z] = meshgrid(-10:10,-10:10,-7:7);
-se2 = (x/10).^2 + (y/10).^2 + (z/7).^2 <= 1;
+if oldMag4
+    % in mag 4 this creates a sphere of ~250 nm radius
+    [x,y,z] = meshgrid(-4:4,-4:4,-2:2);
+    se1 = (x/4).^2 + (y/4).^2 + (z/2).^2 <= 1;
+    % in mag 4 this creates a sphere of ~450 nm radius
+    [x,y,z] = meshgrid(-10:10,-10:10,-4:4);
+    se2 = (x/10).^2 + (y/10).^2 + (z/4).^2 <= 1;
+else
+    % in mag 4 this creates a sphere of ~250 nm radius
+    [x,y,z] = meshgrid(-4:4,-4:4,-3:3);
+    se1 = (x/4).^2 + (y/4).^2 + (z/2).^2 <= 1;
+    % in mag 4 this creates a sphere of ~450 nm radius
+    [x,y,z] = meshgrid(-10:10,-10:10,-7:7);
+    se2 = (x/10).^2 + (y/10).^2 + (z/7).^2 <= 1;
+end
 nuclei = imclose(nuclei, se1); % merge soma parts where a few z planes are missing or some hole occurred
 nuclei = imopen(nuclei, se2); % divide merged somata (e.g. when label leaked into cytosol and then across soma membranes)
 if remSmallObjects
     % Remove very small objects (smaller than 100*70*10 voxel
-    nuclei = bwareaopen(nuclei, 70000);
+    nuclei = bwareaopen(nuclei, delObjSmallerThan);
 end
 if 0
     figure;
