@@ -225,16 +225,17 @@ raw = raw.raw;
 E = raw(:,:,1);
 red = cat( 3, ones(size(E)), zeros(size(E)), zeros(size(E)) );
 blue = cat( 3, zeros(size(E)), zeros(size(E)), ones(size(E)) );
-green = cat( 3, ones(size(E)), zeros(size(E)), 3*ones(size(E)) );
+green = cat( 3, zeros(size(E)), ones(size(E)), zeros(size(E)) );
+magenta = cat( 3, ones(size(E)), zeros(size(E)), 3*ones(size(E)) );
 %% Transparent mask overlay on Raw
-
+% figure; colormap gray
 for z = 1:72
-    imshow(raw(:,:,z), 'InitialMag', 'fit');
+    a = imshow(raw(:,:,z), [], 'InitialMag', 'fit');
     hold on
     r = imshow(red);
-    r.AlphaData = astro_vol(:,:,z)*0.3;
+    r.AlphaData = logical(astro_vol(:,:,z))*0.3;
     b = imshow(blue);
-    b.AlphaData = mask_d(:,:,z)*0.3;
+    b.AlphaData = mask_de(:,:,z)*0.15;
     hold off
     pause(0.5)
 end
@@ -249,8 +250,30 @@ for z = 1:72
     r.AlphaData = (abs(mask_syn_astro(:,:,z)-shiftedM(:,:,z))==5);
     b = imshow(blue);
     b.AlphaData = (abs(mask_syn_astro(:,:,z)-shiftedM(:,:,z))==1);
+    m = imshow(magenta);
+    m.AlphaData = (abs(mask_syn_astro(:,:,z)-shiftedM(:,:,z))==4);
+    hold off
+    pause(0.5)
+end
+
+%% Raw overlay with pre and post overlap
+[x,y,z] = ndgrid(-2:2);
+se = strel(sqrt(x.^2 + y.^2 + z.^2) <=2);
+mask_syn = (synVolume_d==synIds_d(1));
+% mask_overlap=((imdilate((mask_de==1).*mask_syn,se)) & (imdilate((mask_de==2).*mask_syn,se)));
+mask_overlap=(imdilate(mask_pre,se)) & (imdilate(mask_post,se));
+
+
+for z = 1:72
+    a = imshow(raw(:,:,z), [], 'InitialMag', 'fit');
+    hold on
+    r = imshow(red);
+    r.AlphaData = logical(astro_vol(:,:,z))*0.3;
+    b = imshow(blue);
+%     b.AlphaData = (mask_de(:,:,z) .* (synVolume_d(:,:,z)==synIds_d(1)))*0.15;
+    b.AlphaData = (mask_de(:,:,z))*0.15;
     g = imshow(green);
-    g.AlphaData = (abs(mask_syn_astro(:,:,z)-shiftedM(:,:,z))==4);
+    g.AlphaData = mask_overlap(:,:,z)*0.5;
     hold off
     pause(0.5)
 end

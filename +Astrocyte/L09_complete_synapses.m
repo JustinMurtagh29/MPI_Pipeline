@@ -19,7 +19,7 @@ shAgglos = shAgglos.shAgglos;
 
 maxSegId = 15030572; %maximum possible segment ID
 
-%Segments in this Volume
+%Segments in this Volume (IN THIS SMALL VOLUME)
 lut_seg = false(maxSegId, 1); %initialize as false
 lut_seg(setdiff(seg, 0)) = true; %sets sed ids true if unique seg nonzero
 
@@ -32,16 +32,17 @@ lut_seg_presyn = Agglo.buildLUT(maxSegId, syn.synapses.presynId);
 % Segment ids to axons mapping
 lut_seg_axon = Agglo.buildLUT(maxSegId, conn.axons);
 
+%Error
 numel(intersect(find(lut_seg_sh) , find(lut_seg_presyn) )) %segments shared by Presynapses and spine heads (647)
-numel(intersect(find(lut_seg_axon) , find(lut_seg_postsyn) )) %axons and presynapse overlap
-
-numel(intersect(find(lut_seg_axon) , find(lut_seg_presyn) ))
+numel(intersect(find(lut_seg_axon) , find(lut_seg_postsyn) )) %axons and postynapse overlap (6886)
+%Correct
+numel(intersect(find(lut_seg_axon) , find(lut_seg_presyn) )) %axons and presyn overlap (387528)
 numel(intersect(find(lut_seg_sh) , find(lut_seg_postsyn) )) %segments shared by Postsynapses and spine heads (268601)
-
+% Error within vol
 numel(intersect(intersect(find(lut_seg_axon) , find(lut_seg_presyn) ), find(lut_seg)))
-numel(intersect(intersect(find(lut_seg_sh) , find(lut_seg_postsyn) ), find(lut_seg))) %segments shared by synapses and spine heads in this vol
+numel(intersect(intersect(find(lut_seg_sh) , find(lut_seg_postsyn) ), find(lut_seg))) %segments shared by synapses and spine heads in this vol (20)
 
-%% Complete presynaptic side with spine heads
+%% Complete postsynaptic side with spine heads
 
 common_segs = intersect(intersect(find(lut_seg_sh) , find(lut_seg_postsyn) ), find(lut_seg));
 postSynCompleted = syn.synapses.postsynId;
@@ -55,7 +56,7 @@ end
 
 save('~/GABA/astrocyte/synapses/postSynCompleted.mat', 'postSynCompleted')
 
-%% Complete postsynaptic side with axons
+%% Complete presynaptic side with axons
 
 
 common_segs = intersect(intersect(find(lut_seg_axon) , find(lut_seg_presyn) ), find(lut_seg));

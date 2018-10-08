@@ -30,11 +30,8 @@ clear borderAreas;
 % Corresponding issue on GitLab:
 % https://gitlab.mpcdf.mpg.de/connectomics/auxiliaryMethods/issues/16
 graph.borderArea(~graph.borderArea) = nan;
-<<<<<<< HEAD
 graph(:, {'prob', 'borderIdx'}) = [];
-=======
 graph(:, {'borderIdx'}) = [];
->>>>>>> a239cf1c32a6935ec48f6d522d4c6a5bed9838a5
 
 
 
