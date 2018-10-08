@@ -1,4 +1,4 @@
-function detectNucleiInCube(datasetMag4, datasetMag4Heur,cubesize,remSmallObjects, offset,newmethod,minmaxArea,visualize,delObjSmallerThan,oldMag4)
+function detectNucleiInCube(datasetMag4, datasetMag4Heur,cubesize,delObjSmallerThan, offset,newmethod,minmaxArea,oldMag4,visualize)
 if ~exist('newmethod','var') || isempty(newmethod)
     newmethod = true;
 end
@@ -8,11 +8,8 @@ end
 if ~exist('oldMag4','var') || isempty(oldMag4)
     oldMag4 = false;
 end
-if ~exist('delObjSmallerThan','var') || isempty(delObjSmallerThan)
-    delObjSmallerThan = 70000;
-end
 if ~exist('minmaxArea','var') || isempty(minmaxArea)
-    minmaxArea = [3000 45000]; % this is the 2D minimum and maximum area the soma is allowed to have (adjusted for mag4)
+    minmaxArea = [3000 80000]; % this is the 2D minimum and maximum area the soma is allowed to have (adjusted for mag4)
 end
 
 thisbbox = [offset(:),offset(:)+cubesize-1];
@@ -135,21 +132,19 @@ else
 end
 nuclei = imclose(nuclei, se1); % merge soma parts where a few z planes are missing or some hole occurred
 nuclei = imopen(nuclei, se2); % divide merged somata (e.g. when label leaked into cytosol and then across soma membranes)
-if remSmallObjects
+if exist('delObjSmallerThan','var') && ~isempty(delObjSmallerThan)
     % Remove very small objects (smaller than 100*70*10 voxel
     nuclei = bwareaopen(nuclei, delObjSmallerThan);
 end
-if 0
-    figure;
-    for z=1:size(raw,3)
-        imshow(raw(:,:,z)); hold on; h = imshow(green); set(h, 'AlphaData', nuclei(:,:,z).*0.5);
-        title(sprintf('Plane %d',z))
-        hold off;
-        drawnow;
-        pause(0.3)
-    end
-end
-    
+
+%     figure;
+%     for z=1:size(raw,3)
+%         imshow(raw(:,:,z)); hold on; h = imshow(green); set(h, 'AlphaData', nuclei(:,:,z).*0.5);
+%         title(sprintf('Plane %d',z))
+%         hold off;
+%         drawnow;
+%         pause(0.3)
+%     end    
 heur(nuclei) = 255;
 
 saveRawData(datasetMag4Heur, max(1,offset),heur);  % save and again delete negative parts
