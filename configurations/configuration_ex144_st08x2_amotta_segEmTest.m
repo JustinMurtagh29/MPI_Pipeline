@@ -25,7 +25,7 @@ p.saveFolder = '/tmpscratch/amotta/l23/2018-10-08-segem-segmentation-test/';
 
 % Define region of interest
 % This can be copied directly from webKNOSSOS bounding box field
-p.bbox_wK = [3584, 2048, 512, 3 * 512, 3 * 512, 3 * 256];
+p.bbox_wK = [512, 512, 512, 3 * 512, 3 * 512, 3 * 256];
 
 % Name of the experiment. It's the same as the Dataset name on webKnossos.
 % Also in the "Info" section when you open your dataset in webKnossos.
