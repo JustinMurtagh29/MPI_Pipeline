@@ -75,13 +75,12 @@ fprintf('Total of %d primary spine synapses in this %d um3 box.\n', sum(lut_syn_
 
 %% Locate synapses in volume
 
-synVolumeOrig = cell(size(seg)); %syn volume with original ids
-synVolume = synVolumeOrig; %syn volume with simplified ids for images
 mask = zeros(size(seg));
 
 syn_idx = find(lut_syn_idx);
+lut_syn_int = zeros(size(lut_syn_id));
 
-for l = 1:sum(lut_syn_idx) 
+for l = 1:1%sum(lut_syn_idx) 
     
     s = syn_idx(l); % syn idx
     
@@ -94,113 +93,36 @@ for l = 1:sum(lut_syn_idx)
         ind_post =[ind_post; find(seg == postSynCompleted{s}(i))]; %syn.synapses.postsynId
     end
    
-    % mark the location as primary spine
     mask(ind_pre) = 1;
     mask(ind_post) = 2;
-           
-    % mark the location with synapse idx
-    synVolumeOrig(ind_pre) = {s};
-    synVolumeOrig(ind_post) = {s};
+    mask_pre = mask==1;
+    mask_post = mask==2;
+
+    mask_overlap_pre_post_astro = (imdilate(mask_pre,se)) + (imdilate(mask_post,se)) + 5*double(imdilate(astro_vol,se));
+    mask_overlap_pre_post_astro(mask_overlap_pre_post_astro>2) = 5;
     
-    % just for simplifying the synapse ids a bit.
-    synVolume(ind_pre) = {[synVolume{ind_pre},l+5]};
-    synVolume(ind_post) = {[synVolume{ind_post},l+5]};
+    % Find periphery of the cleft
+    shiftedM = circshift(mask_overlap_pre_post_astro, [1,1]); %
+    synPeriphery = (mask_overlap_pre_post_astro-shiftedM)==-3 | (mask_overlap_pre_post_astro-shiftedM)==2;
+    astroSynInterface = mask_overlap_pre_post_astro-shiftedM==-3;
+    
+    shiftedM2 = circshift(mask_overlap_pre_post_astro, [-1,-1]); %
+    synPeriphery = synPeriphery | ((mask_overlap_pre_post_astro-shiftedM2)==-3 | (mask_overlap_pre_post_astro-shiftedM2)==2);
+    astroSynInterface = astroSynInterface | ((mask_overlap_pre_post_astro-shiftedM2)==-3);
+           
+    test = zeros(size(seg));
+    test(logical(mask)) = 5;
+    
+    overlapInterfaceSyn = astroSynInterface+test;
+    overlapPeripherySyn = synPeriphery+test;
+    lut_syn_int(s) =  sum(overlapInterfaceSyn(:)==6)/sum(overlapPeripherySyn(:)==6)*100;
     
    
 end
 
-
-%% Dilation 
-% merging the segments of a synapse together.
-% in synVolume, pre and post were also merged
-% in 
-
-% 3D object as dilation brush
-[x,y,z] = ndgrid(-3:3);
-se = strel(sqrt(x.^2 + y.^2 + z.^2) <=3);
-
-% % dilating-eroding the segments per synapse
-% synVolume_d = imdilate(synVolume,se); 
-% synVolume_de = imerode(synVolume_d, se);
-
-% dilating-eroding segments of pre and post
-mask_d = imdilate(mask,se);
-mask_de = imerode(mask_d, se);
-
-
-%  Separate pre and post synapses
-mask_pre = mask_de; mask_post=mask_de/2;
-mask_pre(mask_de==2) = 0;
-mask_post(mask_de==1) = 0;
-mask_overlap=(imdilate(mask_pre,se)) & (imdilate(mask_post,se));
-mask_overlap_pre_post = (imdilate(mask_pre,se)) + (imdilate(mask_post,se));
-
-%% count percent coverage of astrocytes of synapses
-
-
-lut_syn_int = zeros(size(lut_syn_id));
-synIds_d = unique(setdiff(synVolume_d, 0));
-
-for i = 1:length(synIds_d)
-    
-%     mask_syn = cellfun(@(vox) vox==synIds_d(i),synVolume,'UniformOutput',false);
-        
-    % combine syn and astro in one mask (1:synapse, 5:astro)
-    mask_syn_astro = double(logical(synVolume_d==synIds_d(i))) + 5*double(astro_vol);
-    mask_syn_astro(mask_syn_astro>2) = 5;
-    
-    % detect transition from 1 to 5 in xy plane
-    %make sure the border is within the area of the synapse segment so that one
-    %can get their overlap
-    shiftedM = circshift(mask_syn_astro, [1,1]); %
-    synPeriphery = (mask_syn_astro-shiftedM)==-4 | (mask_syn_astro-shiftedM)==1;
-    astroSynInterface = mask_syn_astro-shiftedM==-4;
-    
-    shiftedM2 = circshift(mask_syn_astro, [-1,-1]); %
-    synPeriphery = synPeriphery | ((mask_syn_astro-shiftedM2)==-4 | (mask_syn_astro-shiftedM2)==1);
-    astroSynInterface = astroSynInterface | ((mask_syn_astro-shiftedM2)==-4);
-    
-    % a mask for one synapse id only
-    test = zeros(size(synVolumeOrig));
-    test(synVolume_d==synIds_d(i)) = 5;
-    
-    overlapInterfaceSyn = astroSynInterface+test;
-    overlapPeripherySyn = synPeriphery+test;
-    lut_syn_int(syn_idx(i)) =  sum(overlapInterfaceSyn(:)==6)/sum(overlapPeripherySyn(:)==6)*100;
-    
-end
-%setdiff(lut_syn_int, 0)
 toc
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%% number of neighboring astrocyte pixels to synapse clusters
-
-% combine syn and astro in one mask (1:synapse, 5:astro)
-mask_syn_astro = double(logical(mask_d)) + 5*double(astro_vol);
-mask_syn_astro(mask_syn_astro>2) = 5;
-
-% detect transition from 1 to 5 in xy plane
-%make sure the border is within the area of the synapse segment so that one
-%can get their overlap
-shiftedM = circshift(mask_syn_astro, [1,1]); %
-synPeriphery = (mask_syn_astro-shiftedM)==-4 | (mask_syn_astro-shiftedM)==1;
-astroSynInterface = mask_syn_astro-shiftedM==-4;
-
-
-shiftedM2 = circshift(mask_syn_astro, [-1,-1]); %
-synPeriphery = synPeriphery | ((mask_syn_astro-shiftedM2)==-4 | (mask_syn_astro-shiftedM2)==1);
-astroSynInterface = astroSynInterface | ((mask_syn_astro-shiftedM2)==-4);
-%% synapse volume
-
-lut_syn_vol = zeros(size(lut_syn_id));
-synIds_de = unique(setdiff(synVolume_de, 0));
-
-for i = 1:length(synIds_de)
-
-    lut_syn_vol(syn_idx(i)) = sum(synVolume_de(:)==synIds_de(i))  *11.4/1000*11.4/1000*28/1000 ;
-
-end
 
 %% plot area vs coverage of synapses
 x=syn_areas(logical(lut_syn_idx~=0),2);

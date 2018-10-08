@@ -257,10 +257,9 @@ for z = 1:72
 end
 
 %% Raw overlay with pre and post overlap
-[x,y,z] = ndgrid(-2:2);
-se = strel(sqrt(x.^2 + y.^2 + z.^2) <=2);
-mask_syn = (synVolume_d==synIds_d(1));
-% mask_overlap=((imdilate((mask_de==1).*mask_syn,se)) & (imdilate((mask_de==2).*mask_syn,se)));
+% [x,y,z] = ndgrid(-2:2);
+% se = strel(sqrt(x.^2 + y.^2 + z.^2) <=2);
+% % mask_overlap=((imdilate((mask_de==1).*mask_syn,se)) & (imdilate((mask_de==2).*mask_syn,se)));
 mask_overlap=(imdilate(mask_pre,se)) & (imdilate(mask_post,se));
 
 
@@ -270,8 +269,7 @@ for z = 1:72
     r = imshow(red);
     r.AlphaData = logical(astro_vol(:,:,z))*0.3;
     b = imshow(blue);
-%     b.AlphaData = (mask_de(:,:,z) .* (synVolume_d(:,:,z)==synIds_d(1)))*0.15;
-    b.AlphaData = (mask_de(:,:,z))*0.15;
+    b.AlphaData = (mask(:,:,z))*0.15;
     g = imshow(green);
     g.AlphaData = mask_overlap(:,:,z)*0.5;
     hold off

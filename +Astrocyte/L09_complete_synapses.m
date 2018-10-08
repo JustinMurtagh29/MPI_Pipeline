@@ -51,7 +51,7 @@ for i = 1:numel(common_segs)
 sh_id = lut_seg_sh(common_segs(i));
 syn_id = lut_seg_postsyn(common_segs(i));
 
-postSynCompleted{syn_id} = shAgglos{sh_id};
+postSynCompleted(syn_id) = {shAgglos{sh_id}};
 end
 
 save('~/GABA/astrocyte/synapses/postSynCompleted.mat', 'postSynCompleted')
@@ -65,8 +65,9 @@ for i = 1:numel(common_segs)
 
 axon_id = lut_seg_axon(common_segs(i));
 syn_id = lut_seg_presyn(common_segs(i));
-
-preSynAxon{syn_id} = conn.axons{axon_id};
+disp(syn_id)
+disp('------')
+preSynAxon(syn_id) = {conn.axons{axon_id}};
 end
 
 save('~/GABA/astrocyte/synapses/preSynAxon.mat', 'preSynAxon')
