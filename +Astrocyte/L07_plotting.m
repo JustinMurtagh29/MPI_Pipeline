@@ -260,10 +260,10 @@ end
 % [x,y,z] = ndgrid(-2:2);
 % se = strel(sqrt(x.^2 + y.^2 + z.^2) <=2);
 % % mask_overlap=((imdilate((mask_de==1).*mask_syn,se)) & (imdilate((mask_de==2).*mask_syn,se)));
-mask_overlap=(imdilate(mask_pre,se)) & (imdilate(mask_post,se));
+% mask_overlap=(imdilate(mask_pre,se)) & (imdilate(mask_post,se));
 
-
-for z = 1:72
+figure(1); colormap gray
+for z = 10:52
     a = imshow(raw(:,:,z), [], 'InitialMag', 'fit');
     hold on
     r = imshow(red);
@@ -272,6 +272,22 @@ for z = 1:72
     b.AlphaData = (mask(:,:,z))*0.15;
     g = imshow(green);
     g.AlphaData = mask_overlap(:,:,z)*0.5;
+    hold off
+    pause(0.5)
+end
+
+%% mask_overlap_pre_post_astro
+
+figure(); colormap gray
+for z = 10:45
+    a = imshow(raw(:,:,z), [], 'InitialMag', 'fit');
+    hold on
+    r = imshow(red);
+    r.AlphaData = (mask_overlap_pre_post_astro(:,:,z)==5)*0.3;
+    b = imshow(blue);
+    b.AlphaData = (mask_overlap_pre_post_astro(:,:,z)==1)*0.15;
+    g = imshow(green);
+    g.AlphaData = (mask_overlap_pre_post_astro(:,:,z)==2)*0.5;
     hold off
     pause(0.5)
 end

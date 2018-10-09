@@ -12,17 +12,17 @@ astrocyte coverage synaptic cleft periphery vs synaptic cleft area
 syn = load('~/GABA/astrocyte/synapses/syn.mat');
 syn = syn.syn;
 
-seg = load('~/GABA/astrocyte/synapses/seg.mat');
+seg = load('~/GABA/astrocyte/synapses/segLarge1.mat');
 seg = seg.seg;
 
-astro_annot = load('~/GABA/astrocyte/predictions/unet_aug/v4_val.mat');
+astro_annot = load('~/GABA/astrocyte/predictions/unet_aug/v4_large1_postproc.mat');
 astro_vol = int32(astro_annot.pred);
 
 asiT = load('~/GABA/astrocyte/synapses/asiT.mat');
 asiT = asiT.asiT;
 
-preSynAxon = load('~/GABA/astrocyte/synapses/preSynAxon.mat');
-preSynAxon = preSynAxon.preSynAxon;
+preSynAxon = load('~/GABA/astrocyte/synapses/synID_axonSeg.mat');
+preSynAxon = preSynAxon.syn_axon_segs;
 
 postSynCompleted = load('~/GABA/astrocyte/synapses/postSynCompleted.mat');
 postSynCompleted = postSynCompleted.postSynCompleted;
@@ -55,11 +55,6 @@ maxSynId = height(syn.synapses);
 syn.synapses = syn.synapses(syn_areas(:,1) , :);
 preSynAxon = preSynAxon(syn_areas(:,1));
 postSynCompleted = postSynCompleted(syn_areas(:,1));
-%%
-%merge segments of pre and post
-% synSegments = cellfun(@vertcat, syn.synapses.presynId, syn.synapses.postsynId, 'UniformOutput', false);
-% %tell if the synapse id in the box given its total segments
-% lut_syn_idx = cellfun(@(synSegIds) all(lut_seg(synSegIds) == true), synSegments); %look-up table for syns
 
 %tell if the synapse id in the box given it's spine head
 lut_syn_idx = cellfun(@(synSegIds) all(lut_seg(synSegIds) == true), syn.synapses.presynId);
@@ -75,12 +70,10 @@ fprintf('Total of %d primary spine synapses in this %d um3 box.\n', sum(lut_syn_
 
 %% Locate synapses in volume
 
-mask = zeros(size(seg));
-
 syn_idx = find(lut_syn_idx);
 lut_syn_int = zeros(size(lut_syn_id));
 
-for l = 1:1%sum(lut_syn_idx) 
+for l = 1:sum(lut_syn_idx) 
     
     s = syn_idx(l); % syn idx
     
@@ -93,12 +86,18 @@ for l = 1:1%sum(lut_syn_idx)
         ind_post =[ind_post; find(seg == postSynCompleted{s}(i))]; %syn.synapses.postsynId
     end
    
+    mask = zeros(size(seg));
     mask(ind_pre) = 1;
     mask(ind_post) = 2;
     mask_pre = mask==1;
     mask_post = mask==2;
 
-    mask_overlap_pre_post_astro = (imdilate(mask_pre,se)) + (imdilate(mask_post,se)) + 5*double(imdilate(astro_vol,se));
+    mask_overlap=(imdilate(mask_pre,se)) & (imdilate(mask_post,se));
+    
+    mask_overlap_pre_post_astro = (mask_pre | mask_post) + 2*mask_overlap;
+    mask_overlap_pre_post_astro(mask_overlap_pre_post_astro>1) = 2;
+%     mask_overlap_pre_post_astro = mask_overlap_pre_post_astro + 5*double(imdilate(astro_vol,se));
+    mask_overlap_pre_post_astro = mask_overlap_pre_post_astro + 5*double(astro_vol);
     mask_overlap_pre_post_astro(mask_overlap_pre_post_astro>2) = 5;
     
     % Find periphery of the cleft
@@ -110,12 +109,8 @@ for l = 1:1%sum(lut_syn_idx)
     synPeriphery = synPeriphery | ((mask_overlap_pre_post_astro-shiftedM2)==-3 | (mask_overlap_pre_post_astro-shiftedM2)==2);
     astroSynInterface = astroSynInterface | ((mask_overlap_pre_post_astro-shiftedM2)==-3);
            
-    test = zeros(size(seg));
-    test(logical(mask)) = 5;
-    
-    overlapInterfaceSyn = astroSynInterface+test;
-    overlapPeripherySyn = synPeriphery+test;
-    lut_syn_int(s) =  sum(overlapInterfaceSyn(:)==6)/sum(overlapPeripherySyn(:)==6)*100;
+
+    lut_syn_int(s) =  sum(astroSynInterface(:)==1)/sum(synPeriphery(:)==1)*100;
     
    
 end

@@ -5,6 +5,11 @@ email: yagmur.yener.yy@gmail.com
 run locally
 
 Completing the synapses using segments from spine heads
+
+
+PROBLEM !!!!
+AXONS ARE NOT UNIQUE FOR SYNAPSES AS WELL AS SEGMENTS. SYNAPSES CHAN SHARE
+BOUTONS AND AXONS.
 %}
 
 syn = load('~/GABA/astrocyte/synapses/syn.mat');
@@ -71,7 +76,6 @@ preSynAxon(syn_id) = {conn.axons{axon_id}};
 end
 
 save('~/GABA/astrocyte/synapses/preSynAxon.mat', 'preSynAxon')
-
 
 
 
