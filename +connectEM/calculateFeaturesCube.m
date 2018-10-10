@@ -21,6 +21,12 @@ if ~all(seg(:)==0)
 			vMap = loadClassData(p.class, bboxFM);
 		case 'raw'
 			vMap = loadRawData(p.raw, bboxFM);
+            
+            % NOTE(amotta): KMB's L2/3 dataset is significantly brighter
+            % than his L4 dataset (by ~43 uint8). To train the classifiers
+            % for L2/3, we fake the same distribution in L4.
+            warning('Hard-coded offset for L2/3 simulation in L4');
+            vMap = vMap + 43;
 		case 'svm'
 			vMap = loadSvmData(p, bboxFM);
 		otherwise
