@@ -56,8 +56,10 @@ syn.synapses = syn.synapses(syn_areas(:,1) , :);
 preSynAxon = preSynAxon(syn_areas(:,1));
 postSynCompleted = postSynCompleted(syn_areas(:,1));
 
-%tell if the synapse id in the box given it's spine head
-lut_syn_idx = cellfun(@(synSegIds) all(lut_seg(synSegIds) == true), syn.synapses.presynId);
+%merge segments of pre and post
+synSegments = cellfun(@vertcat, syn.synapses.presynId, syn.synapses.postsynId, 'UniformOutput', false);
+%tell if the synapse id in the box given its total segments
+lut_syn_idx = cellfun(@(synSegIds) all(lut_seg(synSegIds) == true), synSegments); %look-up table for syns
 
 lut_syn_id = false([maxSynId,1]);
 lut_syn_id(syn_areas(lut_syn_idx,1)) = true;
@@ -129,12 +131,13 @@ scatter(x, y, 36, c, 'filled','MarkerFaceAlpha',.5,'MarkerEdgeAlpha',1)
 % plot(syn_areas(logical(lut_syn~=0),2), lut_syn_int(logical(lut_syn~=0)), '*')
 xlabel('Synaptic Cleft Area (um2)'); ylabel('Astrocyte Coverage (%)')
 
-
-coefficients = polyfit(x, y, 1);
+idx = isnan(y);
+coefficients = polyfit(x(~idx), y(~idx), 1);
 xFit = linspace(min(x), max(x), 1000);
 yFit = polyval(coefficients , xFit);
 hold on;
 plot(xFit, yFit, 'k-');
-ax = gca;
-ax.YGrid = 'on';
-ax.XMinorGrid = 'on';
+% ax = gca;
+% ax.YGrid = 'on';
+% ax.XMinorGrid = 'on';
+grid on

@@ -220,7 +220,7 @@ end
 
 %% RAW OVERLAY
 
-raw = load('~/GABA/astrocyte/synapses/raw_val.mat');
+raw = load('~/GABA/astrocyte/synapses/raw_large1_val.mat');
 raw = raw.raw;
 E = raw(:,:,1);
 red = cat( 3, ones(size(E)), zeros(size(E)), zeros(size(E)) );
@@ -278,8 +278,8 @@ end
 
 %% mask_overlap_pre_post_astro
 
-figure(); colormap gray
-for z = 10:45
+% figure(); colormap gray
+for z = 1:200
     a = imshow(raw(:,:,z), [], 'InitialMag', 'fit');
     hold on
     r = imshow(red);
@@ -288,6 +288,68 @@ for z = 10:45
     b.AlphaData = (mask_overlap_pre_post_astro(:,:,z)==1)*0.15;
     g = imshow(green);
     g.AlphaData = (mask_overlap_pre_post_astro(:,:,z)==2)*0.5;
+    hold off
+    pause(0.2)
+end
+
+%% INSPECTION
+
+syn_idx = find(lut_syn_idx);
+lut_syn_int = zeros(size(lut_syn_id));
+
+for l = 6%sum(lut_syn_idx) 
+    
+    s = syn_idx(l); % syn idx
+    
+    ind_pre = []; ind_post = [];
+    for i = 1:length(preSynAxon{s})
+        ind_pre = [ind_pre; find(seg == preSynAxon{s}(i))]; %syn.synapses.presynId
+    end
+    
+    for i = 1:length(syn.synapses.postsynId{s})
+        ind_post =[ind_post; find(seg == postSynCompleted{s}(i))]; %syn.synapses.postsynId
+    end
+   
+    mask = zeros(size(seg));
+    mask(ind_pre) = 1;
+    mask(ind_post) = 2;
+    mask_pre = mask==1;
+    mask_post = mask==2;
+
+    mask_overlap=(imdilate(mask_pre,se)) & (imdilate(mask_post,se));
+    
+    mask_overlap_pre_post_astro = (mask_pre | mask_post) + 2*mask_overlap;
+    mask_overlap_pre_post_astro(mask_overlap_pre_post_astro>1) = 2;
+%     mask_overlap_pre_post_astro = mask_overlap_pre_post_astro + 5*double(imdilate(astro_vol,se));
+    mask_overlap_pre_post_astro = mask_overlap_pre_post_astro + 5*double(astro_vol);
+    mask_overlap_pre_post_astro(mask_overlap_pre_post_astro>2) = 5;
+    
+    % Find periphery of the cleft
+    shiftedM = circshift(mask_overlap_pre_post_astro, [1,1]); %
+    synPeriphery = (mask_overlap_pre_post_astro-shiftedM)==-3 | (mask_overlap_pre_post_astro-shiftedM)==2;
+    astroSynInterface = mask_overlap_pre_post_astro-shiftedM==-3;
+    
+    shiftedM2 = circshift(mask_overlap_pre_post_astro, [-1,-1]); %
+    synPeriphery = synPeriphery | ((mask_overlap_pre_post_astro-shiftedM2)==-3 | (mask_overlap_pre_post_astro-shiftedM2)==2);
+    astroSynInterface = astroSynInterface | ((mask_overlap_pre_post_astro-shiftedM2)==-3);
+           
+
+    lut_syn_int(s) =  sum(astroSynInterface(:)==1)/sum(synPeriphery(:)==1)*100;
+    
+   
+end
+%%
+% figure(); colormap gray
+for z = 150:180
+    a = imshow(raw(:,:,z), [], 'InitialMag', 'fit');
+    hold on
+    r = imshow(red);
+    r.AlphaData = (mask_overlap_pre_post_astro(:,:,z)==5)*0.3;
+    b = imshow(blue);
+    b.AlphaData = (mask(:,:,z))*0.15;
+    g = imshow(green);
+    g.AlphaData = (mask_overlap_pre_post_astro(:,:,z)==2)*0.5;
+    xlabel(z)
     hold off
     pause(0.5)
 end
