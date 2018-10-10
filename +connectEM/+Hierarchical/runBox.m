@@ -26,11 +26,11 @@ function [mergedEdges, mergeScores] = runBox(param, box, varargin)
     
     mask = any(ismember(edges, coreSegIds), 2);
     mask = cellfun(@(ids) any(mask(ids)), mergedBorders);
-    
-    mergedEdges = cellfun( ...
+
+    mergedEdges = [{corrEdges}; cellfun( ...
         @(ids) unique(edges(ids, :), 'rows'), ...
-        mergedBorders(mask), 'UniformOutput', false);
-    mergeScores = mergeScores(mask);
+        mergedBorders(mask), 'UniformOutput', false)];
+    mergeScores = [inf; mergeScores(mask)];
 end
 
 function coreSegIds = findCoreSegIds(box, boxLarge, seg)
