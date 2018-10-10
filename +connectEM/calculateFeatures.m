@@ -5,8 +5,12 @@ function job = calculateFeatures(p, voxelSource)
 %   Manuel Berning <manuel.berning@brain.mpg.de>
 %   Alessandro Motta <alessandro.motta@brain.mpg.de>
 
+synEmFile = fullfile( ...
+    fileparts(fileparts(mfilename('fullpath'))), ...
+    '+SynEM', 'data', 'SynEMPaperClassifier.mat');
+
 % load fm
-fm = fullfile(p.saveFolder, 'SynapseClassifier.mat');
+fm = fullfile(synEmFile);
 fm = load(fm, 'fm');
 fm = fm.fm;
 
