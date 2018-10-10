@@ -10,9 +10,8 @@ synEmFile = fullfile( ...
     '+SynEM', 'data', 'SynEMPaperClassifier.mat');
 
 % load fm
-fm = fullfile(synEmFile);
-fm = load(fm, 'fm');
-fm = fm.fm;
+fm = load(synEmFile);
+fm = fm.classifier.options.fm;
 
 % needed changes
 fm.areaT = 10;
