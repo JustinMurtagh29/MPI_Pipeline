@@ -141,11 +141,6 @@ function p = runPipeline(p, startStep, endStep)
         Cluster.waitForJob(job);
         clear classifierPath outPath;
     end
-    
-    if endStep >= PipelineStep.RawFeatures
-        p = load(synParamFile);
-        p = p.p;
-    end
 
     % Calculate raw features on smaller (wrt SynEM) borders (down to 10 voxel)
     if startStep <= PipelineStep.RawFeatures ...
