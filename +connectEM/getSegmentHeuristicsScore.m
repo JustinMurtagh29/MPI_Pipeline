@@ -17,7 +17,7 @@ function [segmentOverlap, uniSegIds, voxelCount] = ...
    [~, segSizes] = ismember(seg(:), uniSegIds);
     segSizes = accumarray(nonzeros(segSizes), 1, size(uniSegIds));
     
-    segmentOverlap = cell(numel(labelMap),1);
+    segmentOverlap = cell(1, numel(labelMap));
     if nargout > 2; voxelCount = cell(numel(labelMap), 1); end
     
     for i = 1:numel(labelMap)
