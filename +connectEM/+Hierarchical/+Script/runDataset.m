@@ -28,3 +28,24 @@ job = Cluster.startJob( ...
     'sharedInputsLocation', sharedArgLocs, ...
     'cluster', {'priority', 100, 'time', '1:00:00', 'memory', 48});
 Cluster.waitForJob(job);
+
+%% Fetch outputs
+out = fetchOutputs(job);
+edges = cat(1, out{:, 1});
+scores = cat(1, out{:, 2});
+clear out;
+
+%% Build graph
+clear cur*;
+[curCount, ~] = cellfun(@size, edges);
+scores = repelem(scores, curCount, 1);
+edges = cat(1, edges{:});
+
+graph = table;
+graph.edge = edges;
+graph.score = scores;
+clear edges scores;
+
+graph = sortrows(graph, 'score', 'descend');
+[~, curUni] = unique(graph.edge, 'rows', 'stable');
+graph = graph(curUni, :);
