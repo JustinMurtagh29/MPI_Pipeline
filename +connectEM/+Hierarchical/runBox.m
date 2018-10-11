@@ -26,11 +26,11 @@ function [mergedEdges, mergeScores] = runBox(param, box, varargin)
     
     mask = any(ismember(edges, coreSegIds), 2);
     mask = cellfun(@(ids) any(mask(ids)), mergedBorders);
-    
-    mergedEdges = cellfun( ...
+
+    mergedEdges = [{corrEdges}; cellfun( ...
         @(ids) unique(edges(ids, :), 'rows'), ...
-        mergedBorders(mask), 'UniformOutput', false);
-    mergeScores = mergeScores(mask);
+        mergedBorders(mask), 'UniformOutput', false)];
+    mergeScores = [inf; mergeScores(mask)];
 end
 
 function coreSegIds = findCoreSegIds(box, boxLarge, seg)
@@ -90,8 +90,10 @@ function corrEdges = loadCorrespondences(param, box)
                    [~, curMask] = ismember( ...
                        curCorr.uniqueCorrespondences, ...
                        curCorr.uniqueSegments);
-                    curMask = min(curCorr.countsS(curMask), [], 2);
-                    
+                    curMask = curCorr.countsS(curMask);
+                    curMask = reshape(curMask, [], 2);
+                    curMask = min(curMask, [], 2);
+
                     curMask = ...
                         curCorr.countsC > 10 ...
                       & curCorr.countsC ./ curMask > 0.9;
