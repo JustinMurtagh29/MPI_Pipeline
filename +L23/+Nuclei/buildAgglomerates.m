@@ -6,7 +6,10 @@ clear;
 rootDir = '/tmpscratch/amotta/l23/2018-10-09-mrnet-pipeline-run';
 graphFile = '/gaba/u/amotta/l23/2018-10-11-hierarchical-agglomeration/graph.mat';
 
-scoreThresh = -0.58;
+seedNmlFile = fileparts(mfilename('fullpath'));
+seedNmlFile = fullfile(seedNmlFile, '+Data', 'nuclei.nml');
+
+scoreThresh = 0.5;
 distThreshNm = 10E3;
 
 info = Util.runInfo();
@@ -26,34 +29,82 @@ graphT = graphT.graph;
 %% Limit graph (mainly to reduce RAM usage)
 graphT = graphT(graphT.score > scoreThresh, :);
 
+%% Load seed positions and segments
+clear cur*;
+
+curNml = slurpNml(seedNmlFile);
+curNodes = NML.buildNodeTable(curNml);
+curNodes.coord = curNodes.coord + 1;
+curTrees = NML.buildTreeTable(curNml);
+
+% Santity checks
+assert(isequal(sort(curTrees.id), sort(curNodes.treeId)));
+assert(isequal(sort(curTrees.id), unique(curTrees.id)));
+
+nucleusT = table;
+nucleusT.label = categorical(lower(curTrees.name));
+[~, nucleusT.nodePos] = ismember(curTrees.id, curNodes.treeId);
+nucleusT.nodePos = curNodes.coord(nucleusT.nodePos, :);
+
+nucleusT.seedSegId = ...
+    Skeleton.getSegmentIdsOfNodes( ...
+        param, nucleusT.nodePos, 26);
+nucleusT.seedSegId = num2cell(nucleusT.seedSegId, 2);
+
+nucleusT.seedSegId = cellfun( ...
+    @(ids) mode(nonzeros(ids)), nucleusT.seedSegId);
+assert(all(nucleusT.seedSegId > 0));
+
 %% Build nuclear agglomerates
-curSeedPos = [3669, 4737, 3983] + 1;
-curSeedSegId = Seg.Global.getSegIds(param, curSeedPos);
+clear cur*;
 
-curBox = round(distThreshNm ./ param.raw.voxelSize(:));
-curBox = transpose(curSeedPos(:) + [-1, +1] .* curBox);
+nucleusT.agglo(:) = {[]};
 
-curCandSegIds = find( ...
-    all(segPoints >= curBox(1, :), 2) ...
-  & all(segPoints <= curBox(2, :), 2));
-assert(any(curCandSegIds == curSeedSegId));
+for curId = 1:height(nucleusT)
+    disp(curId);
+    
+    curSeedPos = nucleusT.nodePos(curId, :);
+    curSeedSegId = nucleusT.seedSegId(curId);
+    
+    curBox = round(distThreshNm ./ param.raw.voxelSize(:));
+    curBox = transpose(curSeedPos(:) + [-1, +1] .* curBox);
 
-curGraphT = graphT;
-[curMask, curEdgeIds] = ismember(graphT.edge, curCandSegIds);
-curGraphT = curGraphT(all(curMask, 2), :);
-curGraphT.edge = curEdgeIds(all(curMask, 2), :);
+    curCandSegIds = find( ...
+        all(segPoints >= curBox(1, :), 2) ...
+      & all(segPoints <= curBox(2, :), 2));
+    assert(any(curCandSegIds == curSeedSegId));
 
-curGraph = graph( ...
-    curGraphT.edge(:, 1), ...
-    curGraphT.edge(:, 2), ...
-    curGraphT.score, ...
-    numel(curCandSegIds));
-curComps = conncomp(curGraph);
+    curGraphT = graphT;
+   [~, curEdgeIds] = ismember(graphT.edge, curCandSegIds);
+   
+    curGraphT.edge = curEdgeIds;
+    curGraphT = curGraphT(all(curEdgeIds, 2), :);
 
-curAggloId = curComps(curCandSegIds == curSeedSegId);
-curAgglo = curCandSegIds(curComps == curAggloId);
+    curGraph = graph( ...
+        curGraphT.edge(:, 1), ...
+        curGraphT.edge(:, 2), ...
+        curGraphT.score, ...
+        numel(curCandSegIds));
+    curComps = conncomp(curGraph);
+
+    curAggloId = curComps(curCandSegIds == curSeedSegId);
+    curAgglo = curCandSegIds(curComps == curAggloId);
+    nucleusT.agglo{curId} = curAgglo(:);
+end
 
 %% Inspect
+clear cur*;
+
 curSkel = skeleton();
 curSkel = Skeleton.setParams4Pipeline(curSkel, param);
-curSkel = curSkel.addTree('Nucleus', segPoints(curAgglo, :));
+
+curDigits = ceil(log10(1 + height(nucleusT)));
+curUp = @(s) [upper(s(1)), s(2:end)];
+
+for curId = 1:height(nucleusT)
+    curName = sprintf( ...
+        'Nucleus %0*d. %s', curDigits, ...
+        curId, curUp(char(nucleusT.label(curId))));
+    curSkel = curSkel.addTree( ...
+        curName, segPoints(nucleusT.agglo{curId}, :));
+end
