@@ -1,0 +1,1167 @@
+<things>
+  <meta name="writer" content="NmlWriter.scala" />
+  <meta name="writerGitCommit" content="59c4b9ab7fc99698c43c5fd3a2a96f4b3dd36913" />
+  <meta name="timestamp" content="1539338208575" />
+  <meta name="annotationId" content="5bbdbff001000057005b29fa" />
+  <meta name="username" content="Alessandro Motta" />
+  <parameters>
+    <experiment name="2018-10-01_ex144_st08x2" description="Annotation of all nuclei in KMB's L2/3 dataset" />
+    <scale x="11.24" y="11.24" z="28.0" />
+    <offset x="0" y="0" z="0" />
+    <time ms="1539162096125" />
+    <editPosition x="7925" y="5079" z="2991" />
+    <editRotation xRot="180.0" yRot="270.0" zRot="180.0" />
+    <zoomLevel zoom="3.221019999999965" />
+    <activeNode id="235" />
+    <userBoundingBox topLeftX="512" topLeftY="512" topLeftZ="512" width="7869" height="5024" depth="7631" />
+  </parameters>
+  <thing id="221" color.r="0.8627451062202454" color.g="0.0" color.b="0.03529411926865578" color.a="1.0" name="Glia">
+    <nodes>
+      <node id="235" radius="112.399994" x="7925" y="5079" z="2991" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="3" bitDepth="8" interpolation="false" time="1539170471322" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="220" color.r="0.0" color.g="0.10196078568696976" color.b="0.1725490242242813" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="218" radius="112.399994" x="7319" y="2099" z="543" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="3" bitDepth="8" interpolation="false" time="1539165541912" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="219" color.r="0.48235294222831726" color.g="0.8274509906768799" color.b="0.8627451062202454" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="217" radius="112.399994" x="4792" y="1456" z="530" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="3" bitDepth="8" interpolation="false" time="1539165506829" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="218" color.r="0.2078431397676468" color.g="0.03529411926865578" color.b="0.4470588266849518" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="216" radius="112.399994" x="1693" y="744" z="627" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="3" bitDepth="8" interpolation="false" time="1539165462911" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="217" color.r="0.4156862795352936" color.g="0.8274509906768799" color.b="0.48235294222831726" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="215" radius="112.399994" x="5551" y="2633" z="736" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="3" bitDepth="8" interpolation="false" time="1539165345279" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="216" color.r="0.5843137502670288" color.g="0.07058823853731155" color.b="0.10196078568696976" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="214" radius="112.399994" x="7818" y="4076" z="712" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="3" bitDepth="8" interpolation="false" time="1539165308513" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="215" color.r="1.0" color.g="0.8274509906768799" color.b="0.8980392217636108" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="213" radius="112.399994" x="3093" y="4207" z="8135" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="4" bitDepth="8" interpolation="false" time="1539164772165" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="214" color.r="0.0" color.g="0.3803921639919281" color.b="0.1725490242242813" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="212" radius="112.399994" x="3818" y="798" z="7623" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="4" bitDepth="8" interpolation="false" time="1539164730910" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="213" color.r="0.8274509906768799" color.g="0.6196078658103943" color.b="0.7568627595901489" color.a="1.0" name="Pericyte">
+    <nodes>
+      <node id="211" radius="112.399994" x="4787" y="5291" z="7623" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="4" bitDepth="8" interpolation="false" time="1539164721073" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="212" color.r="0.7254902124404907" color.g="0.4156862795352936" color.b="0.8274509906768799" color.a="1.0" name="Pericyte">
+    <nodes>
+      <node id="210" radius="112.399994" x="5789" y="5392" z="7655" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="4" bitDepth="8" interpolation="false" time="1539164713219" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="211" color.r="0.5529412031173706" color.g="0.30980393290519714" color.b="0.3450980484485626" color.a="1.0" name="Pericyte">
+    <nodes>
+      <node id="351" radius="112.399994" x="6106" y="3573" z="7790" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="3" bitDepth="8" interpolation="false" time="1539173883278" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="210" color.r="1.0" color.g="0.0" color.b="0.8274509906768799" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="350" radius="112.399994" x="4555" y="1568" z="7178" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="3" bitDepth="8" interpolation="false" time="1539173872874" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="209" color.r="0.0" color.g="0.5529412031173706" color.b="0.7568627595901489" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="349" radius="112.399994" x="4595" y="1538" z="6149" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="3" bitDepth="8" interpolation="false" time="1539173860423" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="208" color.r="0.6549019813537598" color.g="0.3803921639919281" color.b="0.2078431397676468" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="206" radius="112.399994" x="5231" y="2844" z="4959" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="4" bitDepth="8" interpolation="false" time="1539164623305" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="207" color.r="0.9647058844566345" color.g="0.9647058844566345" color.b="0.5529412031173706" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="348" radius="112.399994" x="4783" y="1389" z="4971" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="3" bitDepth="8" interpolation="false" time="1539173840888" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="206" color.r="0.3803921639919281" color.g="0.8980392217636108" color.b="0.8274509906768799" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="347" radius="112.399994" x="4851" y="1203" z="4496" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="3" bitDepth="8" interpolation="false" time="1539173829809" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="205" color.r="0.27450981736183167" color.g="0.27450981736183167" color.b="0.3450980484485626" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="346" radius="112.399994" x="4759" y="3791" z="4450" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="3" bitDepth="8" interpolation="false" time="1539173819870" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="204" color.r="0.6196078658103943" color.g="0.07058823853731155" color.b="0.30980393290519714" color.a="1.0" name="Pericyte">
+    <nodes>
+      <node id="202" radius="112.399994" x="4574" y="4045" z="3871" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="4" bitDepth="8" interpolation="false" time="1539164579864" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="203" color.r="0.30980393290519714" color.g="0.5529412031173706" color.b="1.0" color.a="1.0" name="Astrocyte">
+    <nodes>
+      <node id="201" radius="112.399994" x="5496" y="1232" z="3471" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="4" bitDepth="8" interpolation="false" time="1539164552549" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="202" color.r="1.0" color.g="0.30980393290519714" color.b="0.3803921639919281" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="200" radius="112.399994" x="5236" y="3280" z="2575" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="4" bitDepth="8" interpolation="false" time="1539164517608" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="201" color.r="0.8274509906768799" color.g="0.48235294222831726" color.b="0.7921568751335144" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="199" radius="112.399994" x="4379" y="4057" z="2015" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="4" bitDepth="8" interpolation="false" time="1539164489066" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="200" color.r="0.3803921639919281" color.g="0.1725490242242813" color.b="0.27450981736183167" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="198" radius="112.399994" x="4785" y="2431" z="2119" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="4" bitDepth="8" interpolation="false" time="1539164483313" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="199" color.r="0.6901960968971252" color.g="0.5843137502670288" color.b="0.07058823853731155" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="345" radius="112.399994" x="5888" y="562" z="1995" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="2" bitDepth="8" interpolation="false" time="1539173738817" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="198" color.r="0.7568627595901489" color.g="0.8627451062202454" color.b="0.8274509906768799" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="344" radius="112.399994" x="4649" y="818" z="1795" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="8" interpolation="false" time="1539173725426" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="197" color.r="0.48235294222831726" color.g="0.7568627595901489" color.b="0.0" color.a="1.0" name="Pericyte">
+    <nodes>
+      <node id="343" radius="112.399994" x="4886" y="1566" z="1593" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="8" interpolation="false" time="1539173706926" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="195" color.r="0.7921568751335144" color.g="0.4470588266849518" color.b="0.0" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="342" radius="112.399994" x="5369" y="4453" z="6640" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="8" interpolation="false" time="1539173657553" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="193" color.r="0.07058823853731155" color.g="0.4470588266849518" color.b="0.7568627595901489" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="341" radius="112.399994" x="4609" y="5232" z="1471" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="8" interpolation="false" time="1539173629556" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="192" color.r="0.48235294222831726" color.g="0.003921568859368563" color.b="0.6549019813537598" color.a="1.0" name="Pericyte">
+    <nodes>
+      <node id="340" radius="112.399994" x="541" y="1750" z="1490" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="8" interpolation="false" time="1539173596200" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="190" color.r="0.7568627595901489" color.g="0.3450980484485626" color.b="0.4156862795352936" color.a="1.0" name="Astrocyte">
+    <nodes>
+      <node id="339" radius="112.399994" x="3485" y="2829" z="4410" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="8" interpolation="false" time="1539173557195" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="189" color.r="0.6196078658103943" color.g="0.07058823853731155" color.b="0.8980392217636108" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="338" radius="112.399994" x="4031" y="2273" z="4727" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="3" bitDepth="8" interpolation="false" time="1539173542360" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="187" color.r="0.6901960968971252" color.g="1.0" color.b="0.9647058844566345" color.a="1.0" name="Glia">
+    <nodes>
+      <node id="185" radius="112.399994" x="1018" y="1002" z="6783" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="4" bitDepth="8" interpolation="false" time="1539164026232" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="186" color.r="0.8627451062202454" color.g="0.27450981736183167" color.b="0.7921568751335144" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="184" radius="112.399994" x="2053" y="1934" z="8079" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="4" bitDepth="8" interpolation="false" time="1539163988887" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="185" color.r="0.24313725531101227" color.g="0.27450981736183167" color.b="0.13725490868091583" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="183" radius="112.399994" x="2286" y="1260" z="8015" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="4" bitDepth="8" interpolation="false" time="1539163979758" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="184" color.r="0.7568627595901489" color.g="0.8274509906768799" color.b="0.9647058844566345" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="337" radius="112.399994" x="552" y="3107" z="7905" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="3" bitDepth="8" interpolation="false" time="1539173489212" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="183" color.r="0.5529412031173706" color.g="0.4156862795352936" color.b="0.8274509906768799" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="181" radius="112.399994" x="3041" y="2828" z="7767" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="4" bitDepth="8" interpolation="false" time="1539163969320" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="182" color.r="0.3803921639919281" color.g="0.6901960968971252" color.b="0.5176470875740051" color.a="1.0" name="Pericyte">
+    <nodes>
+      <node id="336" radius="112.399994" x="645" y="4468" z="8006" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="8" interpolation="false" time="1539173452221" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="181" color.r="0.30980393290519714" color.g="0.3450980484485626" color.b="0.929411768913269" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="179" radius="112.399994" x="1615" y="4485" z="7839" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="4" bitDepth="8" interpolation="false" time="1539163955770" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="180" color.r="0.30980393290519714" color.g="0.03529411926865578" color.b="0.6196078658103943" color.a="1.0" name="Glia">
+    <nodes>
+      <node id="335" radius="112.399994" x="1162" y="4495" z="7598" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="1" bitDepth="8" interpolation="false" time="1539173381068" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="179" color.r="0.4470588266849518" color.g="1.0" color.b="0.8274509906768799" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="334" radius="112.399994" x="519" y="1528" z="7598" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="8" interpolation="false" time="1539173356256" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="178" color.r="0.5176470875740051" color.g="0.8274509906768799" color.b="1.0" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="333" radius="112.399994" x="1265" y="781" z="7445" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="8" interpolation="false" time="1539173339668" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="177" color.r="0.8274509906768799" color.g="0.6901960968971252" color.b="0.0" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="175" radius="112.399994" x="3844" y="4555" z="7311" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="4" bitDepth="8" interpolation="false" time="1539163931621" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="176" color.r="0.929411768913269" color.g="0.7254902124404907" color.b="1.0" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="332" radius="112.399994" x="3813" y="4337" z="7666" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="8" interpolation="false" time="1539173304408" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="175" color.r="1.0" color.g="0.3450980484485626" color.b="0.5529412031173706" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="331" radius="112.399994" x="2938" y="4873" z="7509" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="8" interpolation="false" time="1539173286781" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="174" color.r="0.5176470875740051" color.g="0.5529412031173706" color.b="0.0" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="172" radius="112.399994" x="2335" y="4534" z="7295" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="4" bitDepth="8" interpolation="false" time="1539163918557" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="173" color.r="1.0" color.g="0.7921568751335144" color.b="0.7254902124404907" color.a="1.0" name="Glia">
+    <nodes>
+      <node id="171" radius="112.399994" x="1849" y="4058" z="7183" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="4" bitDepth="8" interpolation="false" time="1539163914667" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="172" color.r="0.8980392217636108" color.g="0.8627451062202454" color.b="0.1725490242242813" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="330" radius="112.399994" x="1110" y="1270" z="7119" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="8" interpolation="false" time="1539173246100" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="171" color.r="0.3450980484485626" color.g="0.13725490868091583" color.b="0.4156862795352936" color.a="1.0" name="Pericyte">
+    <nodes>
+      <node id="169" radius="112.399994" x="662" y="4583" z="6991" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="4" bitDepth="8" interpolation="false" time="1539163902013" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="170" color.r="0.7254902124404907" color.g="0.8627451062202454" color.b="0.6549019813537598" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="329" radius="112.399994" x="3518" y="2178" z="6962" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="8" interpolation="false" time="1539173188889" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="169" color.r="0.5529412031173706" color.g="0.1725490242242813" color.b="0.7568627595901489" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="328" radius="112.399994" x="2328" y="4466" z="6594" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="8" interpolation="false" time="1539173172224" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="168" color.r="0.8274509906768799" color.g="0.13725490868091583" color.b="0.5843137502670288" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="327" radius="112.399994" x="2661" y="954" z="6338" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="8" interpolation="false" time="1539173159163" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="167" color.r="0.8274509906768799" color.g="0.3803921639919281" color.b="0.1725490242242813" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="326" radius="112.399994" x="989" y="605" z="6094" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="8" interpolation="false" time="1539173142921" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="166" color.r="0.0" color.g="0.3803921639919281" color.b="0.7921568751335144" color.a="1.0" name="Pericyte">
+    <nodes>
+      <node id="325" radius="112.399994" x="570" y="2397" z="6117" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="2" bitDepth="8" interpolation="false" time="1539173120778" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="165" color.r="0.0" color.g="0.3450980484485626" color.b="0.5176470875740051" color.a="1.0" name="Pericyte">
+    <nodes>
+      <node id="324" radius="112.399994" x="1613" y="5067" z="6351" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="8" interpolation="false" time="1539173096041" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="164" color.r="1.0" color.g="0.10196078568696976" color.b="1.0" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="323" radius="112.399994" x="3506" y="5497" z="6287" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="2" bitDepth="8" interpolation="false" time="1539173078564" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="163" color.r="0.3803921639919281" color.g="0.6901960968971252" color.b="0.30980393290519714" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="322" radius="112.399994" x="932" y="5511" z="6243" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="8" interpolation="false" time="1539173067806" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="162" color.r="0.30980393290519714" color.g="0.24313725531101227" color.b="0.03529411926865578" color.a="1.0" name="Glia">
+    <nodes>
+      <node id="160" radius="112.399994" x="1333" y="4582" z="6071" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="4" bitDepth="8" interpolation="false" time="1539163809713" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="161" color.r="0.0" color.g="0.5176470875740051" color.b="0.3803921639919281" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="159" radius="112.399994" x="2523" y="4190" z="5999" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="4" bitDepth="8" interpolation="false" time="1539163805035" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="160" color.r="0.0" color.g="0.3803921639919281" color.b="0.3803921639919281" color.a="1.0" name="Glia">
+    <nodes>
+      <node id="321" radius="112.399994" x="3719" y="1898" z="5809" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="8" interpolation="false" time="1539173016379" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="159" color.r="0.7921568751335144" color.g="0.07058823853731155" color.b="0.3803921639919281" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="320" radius="112.399994" x="3334" y="1470" z="5990" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="8" interpolation="false" time="1539172994688" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="158" color.r="0.27450981736183167" color.g="0.4156862795352936" color.b="0.0" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="156" radius="112.399994" x="1807" y="1433" z="5831" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="4" bitDepth="8" interpolation="false" time="1539163786813" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="157" color.r="0.6196078658103943" color.g="0.003921568859368563" color.b="0.5843137502670288" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="155" radius="112.399994" x="3574" y="2585" z="5647" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="4" bitDepth="8" interpolation="false" time="1539163779679" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="156" color.r="0.13725490868091583" color.g="0.0" color.b="0.13725490868091583" color.a="1.0" name="Glia">
+    <nodes>
+      <node id="319" radius="112.399994" x="3544" y="1472" z="5578" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="8" interpolation="false" time="1539172963702" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="155" color.r="0.5176470875740051" color.g="0.5843137502670288" color.b="0.8627451062202454" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="318" radius="112.399994" x="3401" y="779" z="5558" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="8" interpolation="false" time="1539172948454" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="154" color.r="0.7921568751335144" color.g="0.13725490868091583" color.b="0.24313725531101227" color.a="1.0" name="Pericyte">
+    <nodes>
+      <node id="152" radius="112.399994" x="1254" y="973" z="5239" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="4" bitDepth="8" interpolation="false" time="1539163758894" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="153" color.r="1.0" color.g="0.3803921639919281" color.b="0.6901960968971252" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="317" radius="112.399994" x="3124" y="564" z="5188" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="8" interpolation="false" time="1539172893382" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="152" color.r="0.7254902124404907" color.g="0.48235294222831726" color.b="0.6901960968971252" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="316" radius="112.399994" x="540" y="4503" z="5273" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="2" bitDepth="8" interpolation="false" time="1539172878869" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="151" color.r="0.0" color.g="0.8274509906768799" color.b="0.24313725531101227" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="149" radius="112.399994" x="566" y="3097" z="5295" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="4" bitDepth="8" interpolation="false" time="1539163736090" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="150" color.r="0.7921568751335144" color.g="0.6196078658103943" color.b="0.30980393290519714" color.a="1.0" name="Astrocyte">
+    <nodes>
+      <node id="315" radius="112.399994" x="2652" y="3327" z="5353" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="8" interpolation="false" time="1539172849440" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="149" color.r="0.5529412031173706" color.g="0.9647058844566345" color.b="0.4470588266849518" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="314" radius="112.399994" x="2673" y="3950" z="5202" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="8" interpolation="false" time="1539172831498" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="148" color.r="0.8274509906768799" color.g="0.4470588266849518" color.b="0.3803921639919281" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="313" radius="112.399994" x="2647" y="1563" z="4991" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="8" interpolation="false" time="1539172813128" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="147" color.r="0.6901960968971252" color.g="0.6196078658103943" color.b="0.5176470875740051" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="312" radius="112.399994" x="1214" y="5412" z="4710" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="8" interpolation="false" time="1539172799810" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="146" color.r="0.7568627595901489" color.g="0.8274509906768799" color.b="0.3450980484485626" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="311" radius="112.399994" x="2712" y="4422" z="4711" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="2" bitDepth="8" interpolation="false" time="1539172787395" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="145" color.r="0.5843137502670288" color.g="0.24313725531101227" color.b="0.6196078658103943" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="310" radius="112.399994" x="767" y="2138" z="4440" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="2" bitDepth="8" interpolation="false" time="1539172768871" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="144" color.r="0.3803921639919281" color.g="0.4470588266849518" color.b="0.24313725531101227" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="309" radius="112.399994" x="526" y="4361" z="4527" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="2" bitDepth="8" interpolation="false" time="1539172750958" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="143" color.r="0.9647058844566345" color.g="0.5176470875740051" color.b="0.6901960968971252" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="308" radius="112.399994" x="956" y="4443" z="4420" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="8" interpolation="false" time="1539172692775" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="142" color.r="1.0" color.g="0.8980392217636108" color.b="0.6196078658103943" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="307" radius="112.399994" x="2375" y="4398" z="4140" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="8" interpolation="false" time="1539172678729" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="141" color.r="0.2078431397676468" color.g="0.8980392217636108" color.b="0.5529412031173706" color.a="1.0" name="Glia">
+    <nodes>
+      <node id="306" radius="112.399994" x="536" y="5267" z="3977" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="2" bitDepth="8" interpolation="false" time="1539172662289" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="140" color.r="0.27450981736183167" color.g="0.6901960968971252" color.b="0.9647058844566345" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="305" radius="112.399994" x="3669" y="4737" z="3983" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="8" interpolation="false" time="1539172652717" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="138" color.r="0.4470588266849518" color.g="0.24313725531101227" color.b="1.0" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="304" radius="112.399994" x="1447" y="607" z="3982" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="2" bitDepth="8" interpolation="false" time="1539172624806" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="137" color.r="0.4156862795352936" color.g="0.07058823853731155" color.b="0.13725490868091583" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="303" radius="112.399994" x="597" y="1858" z="3807" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="2" bitDepth="8" interpolation="false" time="1539172610762" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="136" color.r="0.1725490242242813" color.g="0.5176470875740051" color.b="0.13725490868091583" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="302" radius="112.399994" x="1957" y="2373" z="3672" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="8" interpolation="false" time="1539172592240" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="135" color.r="0.5176470875740051" color.g="0.2078431397676468" color.b="0.03529411926865578" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="301" radius="112.399994" x="4142" y="2423" z="3605" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="8" interpolation="false" time="1539172574095" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="134" color.r="0.6901960968971252" color.g="0.48235294222831726" color.b="0.07058823853731155" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="300" radius="112.399994" x="3976" y="1525" z="3392" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="8" interpolation="false" time="1539172560896" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="133" color.r="0.8274509906768799" color.g="0.7921568751335144" color.b="0.8274509906768799" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="299" radius="112.399994" x="4644" y="1206" z="3152" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="8" interpolation="false" time="1539172545912" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="132" color.r="0.3450980484485626" color.g="1.0" color.b="0.30980393290519714" color.a="1.0" name="Glia">
+    <nodes>
+      <node id="298" radius="112.399994" x="3886" y="1024" z="3167" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="8" interpolation="false" time="1539172531760" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="131" color.r="0.1725490242242813" color.g="0.07058823853731155" color.b="0.03529411926865578" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="297" radius="112.399994" x="575" y="572" z="3085" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="8" interpolation="false" time="1539172513860" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="130" color.r="1.0" color.g="0.6901960968971252" color.b="0.0" color.a="1.0" name="Glia">
+    <nodes>
+      <node id="128" radius="112.399994" x="869" y="4972" z="3047" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="4" bitDepth="8" interpolation="false" time="1539163587879" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="129" color.r="0.3803921639919281" color.g="0.6196078658103943" color.b="0.0" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="296" radius="112.399994" x="2462" y="3110" z="3109" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="8" interpolation="false" time="1539172487409" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="128" color.r="0.7254902124404907" color.g="0.48235294222831726" color.b="1.0" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="295" radius="112.399994" x="3544" y="5417" z="3067" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="8" interpolation="false" time="1539172469710" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="126" color.r="1.0" color.g="0.6901960968971252" color.b="0.7921568751335144" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="125" radius="112.399994" x="3412" y="4155" z="3119" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="4" bitDepth="8" interpolation="false" time="1539163566258" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="125" color.r="0.8980392217636108" color.g="1.0" color.b="0.8627451062202454" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="294" radius="112.399994" x="848" y="3158" z="2928" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="8" interpolation="false" time="1539172453412" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="124" color.r="0.9647058844566345" color.g="0.48235294222831726" color.b="1.0" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="293" radius="112.399994" x="2314" y="5259" z="2945" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="8" interpolation="false" time="1539172437410" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="122" color.r="0.3803921639919281" color.g="0.3450980484485626" color.b="0.5843137502670288" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="292" radius="112.399994" x="3915" y="4543" z="2270" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="8" interpolation="false" time="1539172408925" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="121" color.r="0.24313725531101227" color.g="0.27450981736183167" color.b="0.24313725531101227" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="120" radius="112.399994" x="1716" y="3824" z="2511" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="4" bitDepth="8" interpolation="false" time="1539163533361" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="120" color.r="0.03529411926865578" color.g="0.10196078568696976" color.b="0.3450980484485626" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="119" radius="112.399994" x="3375" y="659" z="2551" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="4" bitDepth="8" interpolation="false" time="1539163525899" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="119" color.r="0.8274509906768799" color.g="1.0" color.b="0.5529412031173706" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="118" radius="112.399994" x="3382" y="1609" z="2559" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="4" bitDepth="8" interpolation="false" time="1539163521478" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="118" color.r="0.7568627595901489" color.g="0.30980393290519714" color.b="1.0" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="291" radius="112.399994" x="3539" y="2612" z="2516" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="8" interpolation="false" time="1539172365581" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="117" color.r="0.6901960968971252" color.g="0.30980393290519714" color.b="0.5843137502670288" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="290" radius="112.399994" x="3056" y="3819" z="2344" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="2" bitDepth="8" interpolation="false" time="1539172347276" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="115" color.r="0.0" color.g="0.13725490868091583" color.b="0.5176470875740051" color.a="1.0" name="Glia">
+    <nodes>
+      <node id="289" radius="112.399994" x="2108" y="4170" z="1760" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="8" interpolation="false" time="1539172306028" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="114" color.r="0.27450981736183167" color.g="0.4156862795352936" color.b="0.48235294222831726" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="287" radius="112.399994" x="2244" y="3366" z="1778" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="8" interpolation="false" time="1539172269366" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="113" color.r="0.5176470875740051" color.g="1.0" color.b="0.0" color.a="1.0" name="Glia">
+    <nodes>
+      <node id="286" radius="112.399994" x="1608" y="3326" z="1805" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="8" interpolation="false" time="1539172250102" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="112" color.r="0.07058823853731155" color.g="0.2078431397676468" color.b="0.3803921639919281" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="285" radius="112.399994" x="579" y="3323" z="1671" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="2" bitDepth="8" interpolation="false" time="1539172226495" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="111" color.r="0.5529412031173706" color.g="0.7921568751335144" color.b="0.7254902124404907" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="110" radius="112.399994" x="1350" y="5462" z="1551" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="4" bitDepth="8" interpolation="false" time="1539163472594" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="109" color.r="0.3450980484485626" color.g="0.8274509906768799" color.b="0.6196078658103943" color.a="1.0" name="Glia">
+    <nodes>
+      <node id="283" radius="112.399994" x="1209" y="3414" z="1171" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="3" bitDepth="8" interpolation="false" time="1539171596029" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="108" color.r="0.3803921639919281" color.g="0.6549019813537598" color.b="0.7921568751335144" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="282" radius="112.399994" x="3783" y="5434" z="1211" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="3" bitDepth="8" interpolation="false" time="1539171580031" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="107" color.r="1.0" color.g="0.9647058844566345" color.b="0.0" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="281" radius="112.399994" x="2190" y="5306" z="1025" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="3" bitDepth="8" interpolation="false" time="1539171567747" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="106" color.r="0.0" color.g="0.4470588266849518" color.b="1.0" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="280" radius="112.399994" x="7006" y="619" z="8047" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="3" bitDepth="8" interpolation="false" time="1539171555628" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="105" color.r="0.7254902124404907" color.g="0.27450981736183167" color.b="0.2078431397676468" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="279" radius="112.399994" x="7932" y="599" z="8088" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="3" bitDepth="8" interpolation="false" time="1539171536980" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="103" color.r="0.5843137502670288" color.g="0.9803921580314636" color.b="0.30980393290519714" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="278" radius="112.399994" x="6246" y="890" z="8024" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="3" bitDepth="8" interpolation="false" time="1539171515289" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="102" color.r="0.0" color.g="0.1725490242242813" color.b="0.13725490868091583" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="277" radius="112.399994" x="6595" y="4878" z="8120" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="3" bitDepth="8" interpolation="false" time="1539171498761" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="101" color.r="0.10196078568696976" color.g="0.7254902124404907" color.b="0.7921568751335144" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="100" radius="112.399994" x="7279" y="3673" z="7981" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="4" bitDepth="8" interpolation="false" time="1539163240459" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="100" color.r="0.6196078658103943" color.g="0.4470588266849518" color.b="0.4156862795352936" color.a="1.0" name="Glia">
+    <nodes>
+      <node id="99" radius="112.399994" x="6203" y="3182" z="8117" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="4" bitDepth="8" interpolation="false" time="1539163234633" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="99" color.r="0.6549019813537598" color.g="0.0" color.b="0.4156862795352936" color.a="1.0" name="Pericyte">
+    <nodes>
+      <node id="276" radius="112.399994" x="5444" y="3169" z="8096" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="3" bitDepth="8" interpolation="false" time="1539171473113" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="98" color.r="0.07058823853731155" color.g="0.13725490868091583" color.b="0.7254902124404907" color.a="1.0" name="Pericyte">
+    <nodes>
+      <node id="97" radius="112.399994" x="6146" y="1529" z="7421" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="4" bitDepth="8" interpolation="false" time="1539163216897" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="97" color.r="1.0" color.g="0.8627451062202454" color.b="0.4470588266849518" color.a="1.0" name="Pericyte">
+    <nodes>
+      <node id="96" radius="112.399994" x="6200" y="1930" z="7397" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="4" bitDepth="8" interpolation="false" time="1539163212773" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="96" color.r="0.7254902124404907" color.g="0.0" color.b="0.7921568751335144" color.a="1.0" name="Pericyte">
+    <nodes>
+      <node id="273" radius="112.399994" x="5050" y="851" z="7390" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="3" bitDepth="8" interpolation="false" time="1539171413096" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="95" color.r="0.30980393290519714" color.g="0.5843137502670288" color.b="0.5176470875740051" color.a="1.0" name="Glia">
+    <nodes>
+      <node id="272" radius="112.399994" x="5382" y="643" z="7111" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="3" bitDepth="8" interpolation="false" time="1539171377982" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="94" color.r="0.0" color.g="1.0" color.b="0.929411768913269" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="271" radius="112.399994" x="7043" y="1688" z="7340" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="3" bitDepth="8" interpolation="false" time="1539171361587" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="93" color.r="0.3803921639919281" color.g="0.4470588266849518" color.b="0.7921568751335144" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="270" radius="112.399994" x="7427" y="1074" z="7647" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="3" bitDepth="8" interpolation="false" time="1539171351025" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="92" color.r="0.48235294222831726" color.g="0.30980393290519714" color.b="0.07058823853731155" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="269" radius="112.399994" x="8058" y="3382" z="7661" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="3" bitDepth="8" interpolation="false" time="1539171334758" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="91" color.r="0.929411768913269" color.g="0.5529412031173706" color.b="0.27450981736183167" color.a="1.0" name="Glia">
+    <nodes>
+      <node id="268" radius="112.399994" x="8000" y="3796" z="7427" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="3" bitDepth="8" interpolation="false" time="1539171316845" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="90" color.r="0.8980392217636108" color.g="0.3450980484485626" color.b="0.4156862795352936" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="89" radius="112.399994" x="6600" y="3971" z="7413" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="4" bitDepth="8" interpolation="false" time="1539163130465" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="89" color.r="0.27450981736183167" color.g="0.7921568751335144" color.b="0.3450980484485626" color.a="1.0" name="Pericyte">
+    <nodes>
+      <node id="88" radius="112.399994" x="5382" y="4054" z="7413" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="4" bitDepth="8" interpolation="false" time="1539163124552" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="88" color.r="0.6901960968971252" color.g="1.0" color.b="0.30980393290519714" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="87" radius="112.399994" x="5669" y="4539" z="7229" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="4" bitDepth="8" interpolation="false" time="1539163115836" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="87" color.r="0.27450981736183167" color.g="0.5176470875740051" color.b="0.27450981736183167" color.a="1.0" name="Glia">
+    <nodes>
+      <node id="267" radius="112.399994" x="7363" y="749" z="7053" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="2" bitDepth="8" interpolation="false" time="1539171237298" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="86" color.r="0.3450980484485626" color.g="0.24313725531101227" color.b="0.5843137502670288" color.a="1.0" name="Pericyte">
+    <nodes>
+      <node id="264" radius="112.399994" x="8319" y="3976" z="7060" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="8" interpolation="false" time="1539171197480" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="85" color.r="0.7254902124404907" color.g="0.929411768913269" color.b="1.0" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="262" radius="112.399994" x="8321" y="2958" z="6869" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="8" interpolation="false" time="1539171173448" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="84" color.r="0.0" color.g="0.07058823853731155" color.b="0.8274509906768799" color.a="1.0" name="Glia">
+    <nodes>
+      <node id="83" radius="112.399994" x="5869" y="2557" z="6589" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="4" bitDepth="8" interpolation="false" time="1539163049895" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="83" color.r="0.5843137502670288" color.g="0.7921568751335144" color.b="0.48235294222831726" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="82" radius="112.399994" x="7291" y="1626" z="6733" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="4" bitDepth="8" interpolation="false" time="1539163046409" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="82" color.r="0.03529411926865578" color.g="0.2078431397676468" color.b="0.0" color.a="1.0" name="Astrocyte">
+    <nodes>
+      <node id="260" radius="112.399994" x="8011" y="934" z="6453" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="8" interpolation="false" time="1539171124544" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="81" color.r="0.8627451062202454" color.g="0.27450981736183167" color.b="0.0" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="259" radius="112.399994" x="5882" y="1813" z="6583" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="3" bitDepth="8" interpolation="false" time="1539171099141" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="80" color.r="0.4470588266849518" color.g="0.19607843458652496" color.b="0.4470588266849518" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="258" radius="112.399994" x="8140" y="2882" z="5933" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="8" interpolation="false" time="1539171081315" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="79" color.r="0.5176470875740051" color.g="0.1725490242242813" color.b="0.30980393290519714" color.a="1.0" name="Pericyte">
+    <nodes>
+      <node id="257" radius="112.399994" x="8343" y="818" z="6159" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="1" bitDepth="8" interpolation="false" time="1539171060711" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="78" color.r="0.6549019813537598" color.g="0.19607843458652496" color.b="0.7568627595901489" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="256" radius="112.399994" x="7186" y="659" z="6112" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="2" bitDepth="8" interpolation="false" time="1539171008699" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="77" color.r="0.7254902124404907" color.g="0.6549019813537598" color.b="1.0" color.a="1.0" name="Pericyte">
+    <nodes>
+      <node id="255" radius="112.399994" x="8065" y="5426" z="6241" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="2" bitDepth="8" interpolation="false" time="1539170991031" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="76" color.r="0.4156862795352936" color.g="0.0" color.b="0.0" color.a="1.0" name="Pericyte">
+    <nodes>
+      <node id="254" radius="112.399994" x="8054" y="4792" z="6209" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="3" bitDepth="8" interpolation="false" time="1539170970615" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="75" color.r="0.6901960968971252" color.g="0.0" color.b="0.5843137502670288" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="253" radius="112.399994" x="8272" y="4154" z="6045" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="3" bitDepth="8" interpolation="false" time="1539170956924" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="74" color.r="0.929411768913269" color.g="0.0" color.b="0.5176470875740051" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="252" radius="112.399994" x="6686" y="1152" z="6068" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="3" bitDepth="8" interpolation="false" time="1539170941945" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="73" color.r="0.3803921639919281" color.g="0.24313725531101227" color.b="0.24313725531101227" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="251" radius="112.399994" x="6870" y="3462" z="6034" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="8" interpolation="false" time="1539170927576" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="71" color.r="0.8980392217636108" color.g="0.5843137502670288" color.b="1.0" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="250" radius="112.399994" x="8366" y="2873" z="5493" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="1" bitDepth="8" interpolation="false" time="1539170871080" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="70" color.r="0.8627451062202454" color.g="0.8274509906768799" color.b="0.6901960968971252" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="249" radius="112.399994" x="7469" y="1691" z="5455" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="3" bitDepth="8" interpolation="false" time="1539170851024" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="69" color.r="0.27450981736183167" color.g="0.30980393290519714" color.b="0.0" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="248" radius="112.399994" x="5751" y="2383" z="5203" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="3" bitDepth="8" interpolation="false" time="1539170836327" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="67" color.r="0.7254902124404907" color.g="0.5176470875740051" color.b="0.3450980484485626" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="66" radius="112.399994" x="6955" y="4317" z="5093" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="4" bitDepth="8" interpolation="false" time="1539162901936" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="65" color.r="0.6901960968971252" color.g="0.4156862795352936" color.b="0.5176470875740051" color.a="1.0" name="Glia">
+    <nodes>
+      <node id="247" radius="112.399994" x="5386" y="3094" z="4677" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="2" bitDepth="8" interpolation="false" time="1539170763379" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="64" color.r="0.929411768913269" color.g="0.1725490242242813" color.b="0.2078431397676468" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="245" radius="112.399994" x="8145" y="619" z="4169" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="8" interpolation="false" time="1539170745310" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="63" color.r="0.7568627595901489" color.g="0.7254902124404907" color.b="0.3803921639919281" color.a="1.0" name="Glia">
+    <nodes>
+      <node id="243" radius="112.399994" x="7921" y="5172" z="4345" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="8" interpolation="false" time="1539170727749" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="62" color.r="0.5843137502670288" color.g="0.3803921639919281" color.b="1.0" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="61" radius="112.399994" x="6862" y="4411" z="4613" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="4" bitDepth="8" interpolation="false" time="1539162843901" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="61" color.r="1.0" color.g="0.30980393290519714" color.b="0.9647058844566345" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="60" radius="112.399994" x="7517" y="2864" z="4485" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="4" bitDepth="8" interpolation="false" time="1539162840027" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="60" color.r="0.6196078658103943" color.g="1.0" color.b="0.6196078658103943" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="59" radius="112.399994" x="8043" y="3571" z="4381" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="4" bitDepth="8" interpolation="false" time="1539162833743" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="59" color.r="0.929411768913269" color.g="0.8274509906768799" color.b="1.0" color.a="1.0" name="Glia">
+    <nodes>
+      <node id="242" radius="112.399994" x="7106" y="2209" z="4037" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="3" bitDepth="8" interpolation="false" time="1539170675604" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="58" color.r="0.8980392217636108" color.g="0.3803921639919281" color.b="0.7568627595901489" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="241" radius="112.399994" x="5425" y="5347" z="4047" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="3" bitDepth="8" interpolation="false" time="1539170663017" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="57" color.r="0.4156862795352936" color.g="0.07058823853731155" color.b="0.5529412031173706" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="56" radius="112.399994" x="8176" y="4499" z="4085" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="4" bitDepth="8" interpolation="false" time="1539162812855" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="56" color.r="0.9647058844566345" color.g="0.5529412031173706" color.b="0.5843137502670288" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="55" radius="112.399994" x="6430" y="3997" z="4085" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="4" bitDepth="8" interpolation="false" time="1539162810413" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="55" color.r="0.8980392217636108" color.g="0.6549019813537598" color.b="0.2078431397676468" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="54" radius="112.399994" x="6961" y="1535" z="4085" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="4" bitDepth="8" interpolation="false" time="1539162808599" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="54" color.r="0.4470588266849518" color.g="0.5843137502670288" color.b="0.2078431397676468" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="53" radius="112.399994" x="7850" y="1918" z="3869" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="4" bitDepth="8" interpolation="false" time="1539162805130" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="53" color.r="0.3450980484485626" color.g="0.8274509906768799" color.b="0.0" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="52" radius="112.399994" x="8290" y="1700" z="3349" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="4" bitDepth="8" interpolation="false" time="1539162788367" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="52" color.r="0.10196078568696976" color.g="0.27450981736183167" color.b="0.7568627595901489" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="240" radius="112.399994" x="6515" y="3275" z="3293" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="3" bitDepth="8" interpolation="false" time="1539170606032" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="51" color.r="0.30980393290519714" color.g="0.48235294222831726" color.b="0.6901960968971252" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="50" radius="112.399994" x="6308" y="1501" z="3165" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="4" bitDepth="8" interpolation="false" time="1539162779446" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="50" color.r="0.6196078658103943" color.g="0.0" color.b="0.2078431397676468" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="239" radius="112.399994" x="7206" y="550" z="3013" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="3" bitDepth="8" interpolation="false" time="1539170586351" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="49" color.r="0.0" color.g="0.7254902124404907" color.b="0.6549019813537598" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="48" radius="112.399994" x="4900" y="5294" z="2101" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="4" bitDepth="8" interpolation="false" time="1539162700504" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="48" color.r="0.30980393290519714" color.g="0.13725490868091583" color.b="0.0" color.a="1.0" name="Pericyte">
+    <nodes>
+      <node id="238" radius="112.399994" x="8163" y="1140" z="2789" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="1" bitDepth="8" interpolation="false" time="1539170563278" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="47" color.r="0.0" color.g="0.7921568751335144" color.b="1.0" color.a="1.0" name="Glia">
+    <nodes>
+      <node id="237" radius="112.399994" x="7558" y="4687" z="2401" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="3" bitDepth="8" interpolation="false" time="1539170548994" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="46" color.r="0.1725490242242813" color.g="0.0" color.b="0.30980393290519714" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="236" radius="112.399994" x="5473" y="5336" z="2801" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="3" bitDepth="8" interpolation="false" time="1539170533804" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="45" color.r="0.6901960968971252" color.g="0.6901960968971252" color.b="0.03529411926865578" color.a="1.0" name="Glia">
+    <nodes>
+      <node id="44" radius="112.399994" x="5922" y="695" z="2737" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="5" bitDepth="8" interpolation="false" time="1539162597496" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="44" color.r="0.5843137502670288" color.g="0.3921568691730499" color.b="0.7254902124404907" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="43" radius="112.399994" x="6076" y="2278" z="2737" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="5" bitDepth="8" interpolation="false" time="1539162592899" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="43" color.r="0.6549019813537598" color.g="0.9647058844566345" color.b="0.7921568751335144" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="42" radius="112.399994" x="7781" y="2085" z="2737" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="5" bitDepth="8" interpolation="false" time="1539162589419" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="42" color.r="1.0" color.g="1.0" color.b="0.4470588266849518" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="234" radius="112.399994" x="8117" y="4362" z="2731" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="3" bitDepth="8" interpolation="false" time="1539170455021" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="41" color.r="0.6196078658103943" color.g="0.19607843458652496" color.b="0.7254902124404907" color.a="1.0" name="Astrocyte">
+    <nodes>
+      <node id="233" radius="112.399994" x="7222" y="4284" z="2663" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="3" bitDepth="8" interpolation="false" time="1539170440981" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="40" color.r="0.03529411926865578" color.g="0.5843137502670288" color.b="0.0" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="39" radius="112.399994" x="7445" y="676" z="2625" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="5" bitDepth="8" interpolation="false" time="1539162578396" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="39" color.r="0.4470588266849518" color.g="0.5882353186607361" color.b="0.24313725531101227" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="38" radius="112.399994" x="7804" y="1503" z="2129" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="5" bitDepth="8" interpolation="false" time="1539162550788" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="38" color.r="0.6549019813537598" color.g="0.3450980484485626" color.b="0.03529411926865578" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="232" radius="112.399994" x="8275" y="5415" z="2232" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="3" bitDepth="8" interpolation="false" time="1539170398486" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="37" color.r="0.03529411926865578" color.g="0.24313725531101227" color.b="0.30980393290519714" color.a="1.0" name="Glia">
+    <nodes>
+      <node id="36" radius="112.399994" x="8008" y="4542" z="2065" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="5" bitDepth="8" interpolation="false" time="1539162539795" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="36" color.r="0.0" color.g="0.5843137502670288" color.b="0.9647058844566345" color.a="1.0" name="Astrocyte">
+    <nodes>
+      <node id="230" radius="112.399994" x="6538" y="5085" z="1872" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="3" bitDepth="8" interpolation="false" time="1539170344284" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="35" color.r="0.1725490242242813" color.g="0.3803921639919281" color.b="0.27450981736183167" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="229" radius="112.399994" x="8324" y="1574" z="1849" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="3" bitDepth="8" interpolation="false" time="1539170331565" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="34" color.r="0.4156862795352936" color.g="0.0" color.b="0.7568627595901489" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="33" radius="112.399994" x="6689" y="1598" z="1505" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="5" bitDepth="8" interpolation="false" time="1539162518995" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="33" color.r="0.8274509906768799" color.g="0.30980393290519714" color.b="0.5176470875740051" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="228" radius="112.399994" x="8297" y="1569" z="1213" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="3" bitDepth="8" interpolation="false" time="1539170312177" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="32" color.r="0.8274509906768799" color.g="0.6549019813537598" color.b="0.6549019813537598" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="31" radius="112.399994" x="7739" y="2830" z="1249" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="5" bitDepth="8" interpolation="false" time="1539162503972" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="31" color.r="0.07058823853731155" color.g="0.6549019813537598" color.b="0.3803921639919281" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="30" radius="112.399994" x="5861" y="3635" z="1489" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="5" bitDepth="8" interpolation="false" time="1539162496161" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="30" color.r="0.27450981736183167" color.g="1.0" color.b="0.48235294222831726" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="29" radius="112.399994" x="6923" y="5339" z="1329" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="5" bitDepth="8" interpolation="false" time="1539162488113" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="29" color.r="1.0" color.g="0.48235294222831726" color.b="0.3803921639919281" color.a="1.0" name="Glia">
+    <nodes>
+      <node id="227" radius="112.399994" x="7287" y="4436" z="866" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="3" bitDepth="8" interpolation="false" time="1539170257037" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="28" color.r="0.929411768913269" color.g="1.0" color.b="0.6901960968971252" color.a="1.0" name="Glia">
+    <nodes>
+      <node id="27" radius="112.399994" x="6061" y="2928" z="1009" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="5" bitDepth="8" interpolation="false" time="1539162472808" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="27" color.r="0.24313725531101227" color.g="0.0" color.b="0.10196078568696976" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="26" radius="112.399994" x="2792" y="1526" z="1057" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="5" bitDepth="8" interpolation="false" time="1539162460868" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="26" color.r="0.7254902124404907" color.g="0.30980393290519714" color.b="0.8274509906768799" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="226" radius="112.399994" x="564" y="4926" z="953" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="3" bitDepth="8" interpolation="false" time="1539170204376" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="25" color.r="0.8274509906768799" color.g="1.0" color.b="0.0" color.a="1.0" name="Glia">
+    <nodes>
+      <node id="24" radius="112.399994" x="888" y="4058" z="817" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="5" bitDepth="8" interpolation="false" time="1539162450756" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="24" color.r="0.0" color.g="0.27450981736183167" color.b="0.5843137502670288" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="225" radius="112.399994" x="2819" y="3561" z="889" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="3" bitDepth="8" interpolation="false" time="1539170161665" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="23" color.r="0.0" color.g="0.30980393290519714" color.b="1.0" color.a="1.0" name="Astrocyte">
+    <nodes>
+      <node id="224" radius="298.23065" x="2777" y="4779" z="898" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="3" bitDepth="8" interpolation="false" time="1539170138056" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="22" color.r="0.6196078658103943" color.g="0.0" color.b="0.0" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="223" radius="112.399994" x="6840" y="5107" z="872" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="3" bitDepth="8" interpolation="false" time="1539170120048" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="21" color.r="0.4470588266849518" color.g="0.7843137383460999" color.b="0.48235294222831726" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="222" radius="112.399994" x="573" y="2689" z="553" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="3" bitDepth="8" interpolation="false" time="1539165689184" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="20" color.r="0.6196078658103943" color.g="0.7568627595901489" color.b="1.0" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="221" radius="112.399994" x="2962" y="2552" z="681" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="3" bitDepth="8" interpolation="false" time="1539165666284" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="19" color.r="0.4470588266849518" color.g="0.9647058844566345" color.b="1.0" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="220" radius="112.399994" x="7502" y="581" z="697" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="2" bitDepth="8" interpolation="false" time="1539165645212" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="16" color.r="1.0" color.g="0.239215686917305" color.b="0.5882353186607361" color.a="1.0" name="Neuron">
+    <nodes>
+      <node id="219" radius="112.399994" x="4608" y="5062" z="710" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="3" bitDepth="8" interpolation="false" time="1539165602585" />
+    </nodes>
+    <edges />
+  </thing>
+  <branchpoints />
+  <comments />
+  <groups />
+</things>
