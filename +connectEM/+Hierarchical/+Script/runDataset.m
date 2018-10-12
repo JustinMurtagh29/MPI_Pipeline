@@ -4,6 +4,7 @@ clear;
 
 %% Configuration
 rootDir = '/tmpscratch/amotta/l23/2018-10-09-mrnet-pipeline-run';
+graphFile = '/gaba/u/amotta/l23/2018-10-11-hierarchical-agglomeration/graph.mat';
 
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
@@ -49,3 +50,5 @@ clear edges scores;
 graph = sortrows(graph, 'score', 'descend');
 [~, curUni] = unique(graph.edge, 'rows', 'stable');
 graph = graph(curUni, :);
+
+Util.save(graphFile, graph);
