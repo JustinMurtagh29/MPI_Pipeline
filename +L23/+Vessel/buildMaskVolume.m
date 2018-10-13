@@ -7,7 +7,7 @@ rootDir = '/tmpscratch/amotta/l23/2018-10-09-mrnet-pipeline-run';
 outDir = '/tmpscratch/amotta/l23/2018-10-13-vessel-and-nuclei-mask';
 
 % Segmentation for further annotation in webKnossos
-annSegOut = param;
+annSegOut = struct;
 annSegOut.root = '/tmpscratch/webknossos/Connectomics_Department/2018-10-13_ex144_08x2_blood-vessel-mask/segmentation/1';
 annSegOut.backend = 'wkwrap';
 
