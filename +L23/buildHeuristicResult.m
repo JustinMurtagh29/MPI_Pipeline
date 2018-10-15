@@ -54,7 +54,8 @@ Util.saveStruct(saveFile, result);
 function [segIds, vesselScore, nucleiScore] = ...
         jobFunction(segParam, vesselFile, nucleiFile, mag, box)
     mag = reshape(mag, 1, []);
-    magBox = ceil(box ./ mag(:));
+    magBox = box - box(:, 1) + 1;
+    magBox = ceil(magBox ./ mag(:));
     
     seg = loadSegDataGlobal(segParam, box);
    [segIds, ~, seg] = unique(seg(:));
