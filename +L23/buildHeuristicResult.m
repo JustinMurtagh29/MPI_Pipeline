@@ -56,7 +56,6 @@ function [segIds, vesselScore, nucleiScore] = ...
     mag = reshape(mag, 1, []);
     magBox = box - box(:, 1) + 1;
     magBox = ceil(magBox ./ mag(:));
-    magBox(:, 1) = magBox(:, 1) - mag(:) + 1;
     
     seg = loadSegDataGlobal(segParam, box);
    [segIds, ~, seg] = unique(seg(:));
