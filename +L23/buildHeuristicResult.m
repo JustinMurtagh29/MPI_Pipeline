@@ -21,7 +21,7 @@ param = param.p;
 curTaskArgs = arrayfun( ...
     @(local) {local.bboxSmall}, ...
     param.local, 'UniformOutput', false);
-curSharedArgs = {param.seg, vesselFile, nucleiFile, mag};
+curSharedArgs = {param, vesselFile, nucleiFile, mag};
 
 % Execute and retrieve results
 job = Cluster.startJob( ...
@@ -52,12 +52,13 @@ Util.saveStruct(saveFile, result);
 
 %% Main function
 function [segIds, vesselScore, nucleiScore] = ...
-        jobFunction(segParam, vesselFile, nucleiFile, mag, box)
+        jobFunction(param, vesselFile, nucleiFile, mag, box)
     mag = reshape(mag, 1, []);
-    magBox = box - box(:, 1) + 1;
+    
+    magBox = box - param.bbox(:, 1) + 1;
     magBox = ceil(magBox ./ mag(:));
     
-    seg = loadSegDataGlobal(segParam, box);
+    seg = loadSegDataGlobal(param.seg, box);
    [segIds, ~, seg] = unique(seg(:));
     seg = reshape(seg, 1 + diff(box, 1, 2)');
     
