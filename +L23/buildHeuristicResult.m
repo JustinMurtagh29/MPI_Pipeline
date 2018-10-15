@@ -55,21 +55,24 @@ function [segIds, vesselScore, nucleiScore] = ...
         jobFunction(param, vesselFile, nucleiFile, mag, box)
     mag = reshape(mag, 1, []);
     
-    magBox = box - param.bbox(:, 1) + 1;
-    magBox = ceil(magBox ./ mag(:));
-    
     seg = loadSegDataGlobal(param.seg, box);
    [segIds, ~, seg] = unique(seg(:));
     seg = reshape(seg, 1 + diff(box, 1, 2)');
     
     vesselScore = load(vesselFile);
-    vesselScore = withMask(seg, mag, magBox, vesselScore.vesMask);
+    vesselScore = withMask(param, mag, box, seg, vesselScore.vesMask);
     
     nucleiScore = load(nucleiFile);
-    nucleiScore = withMask(seg, mag, magBox, nucleiScore.nucMask);
+    nucleiScore = withMask(param, mag, box, seg, nucleiScore.nucMask);
 end
 
-function scores = withMask(seg, mag, magBox, mask)
+function scores = withMask(param, mag, box, seg, mask)
+    magBox = box - param.bbox(:, 1) + 1;
+    magBox = ceil(magBox ./ mag(:));
+    
+    maskOff = (magBox - [1, 0]) .* mag(:) - [0, 1];
+    maskOff = maskOff + param.bbox(:, 1) - box;
+    
     mask = mask( ...
         magBox(1, 1):magBox(1, 2), ...
         magBox(2, 1):magBox(2, 2), ...
@@ -77,5 +80,11 @@ function scores = withMask(seg, mag, magBox, mask)
     
     mask = double(mask);
     mask = imresize3(mask, size(mask) .* mag);
+    
+    mask = mask( ...
+        (1 + maskOff(1, 1)):(end - maskOff(1, 2)), ...
+        (1 + maskOff(2, 1)):(end - maskOff(2, 2)), ...
+        (1 + maskOff(3, 1)):(end - maskOff(3, 2)));
+    
     scores = accumarray(seg(:), mask(:), [], @mean);
 end
