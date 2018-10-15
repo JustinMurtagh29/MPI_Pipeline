@@ -53,7 +53,7 @@ Util.saveStruct(saveFile, result);
 %% Main function
 function [segIds, vesselScore, nucleiScore] = ...
         jobFunction(segParam, vesselFile, nucleiFile, mag, box)
-    box = reshape(box, 1, []);
+    mag = reshape(mag, 1, []);
     magBox = ceil(box ./ mag(:));
     
     seg = loadSegDataGlobal(segParam, box);
@@ -74,6 +74,6 @@ function scores = withMask(seg, mag, magBox, mask)
         magBox(3, 1):magBox(3, 2));
     
     mask = double(mask);
-    mask = imresize(mask, size(mask) .* mag);
+    mask = imresize3(mask, size(mask) .* mag);
     scores = accumarray(seg(:), mask(:), [], @mean);
 end
