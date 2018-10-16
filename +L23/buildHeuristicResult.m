@@ -38,7 +38,7 @@ result.vesselScore = cat(1, out{:, 2});
 result.nucleiScore = cat(1, out{:, 3});
 
 % NOTE(amotta): For backward compatibility
-result.myelinScore = nan(size(vesselScore));
+result.myelinScore = nan(size(result.vesselScore));
 
 % Remove background and sort
 result = result(result.segIds > 0, :);
@@ -78,8 +78,8 @@ function scores = withMask(param, mag, box, seg, mask)
         magBox(2, 1):magBox(2, 2), ...
         magBox(3, 1):magBox(3, 2));
     
-    mask = double(mask);
-    mask = imresize3(mask, size(mask) .* mag);
+    mask = size(mask) .* mag;
+    mask = imresize3(double(mask), mask, 'bilinear');
     
     mask = mask( ...
         (1 + maskOff(1, 1)):(end - maskOff(1, 2)), ...
