@@ -78,8 +78,8 @@ function scores = withMask(param, mag, box, seg, mask)
         magBox(2, 1):magBox(2, 2), ...
         magBox(3, 1):magBox(3, 2));
     
-    mask = size(mask) .* mag;
-    mask = imresize3(double(mask), mask, 'bilinear');
+    mask = double(mask);
+    mask = imresize3(mask, size(mask) .* mag, 'linear');
     
     mask = mask( ...
         (1 + maskOff(1, 1)):(end - maskOff(1, 2)), ...
