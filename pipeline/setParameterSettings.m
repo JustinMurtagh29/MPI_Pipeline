@@ -4,7 +4,9 @@ function p = setParameterSettings(p)
     if ~isfield(p.raw, 'dtype')
         p.raw.dtype = 'uint8';
     end
-    
+    if ~exist(p.saveFolder,'dir')
+        mkdir(p.saveFolder)
+    end
     if ~isfield(p.seg, 'root')
         % default path for segmentation
         p.seg.root = fullfile(p.saveFolder, 'globalSeg', '1');
@@ -164,18 +166,22 @@ function bbox = fixBoundingBox(p)
     % Transform from webKNOSSOS style bounding box to
     % bounding box format used in pipeline
     bbox = Util.convertWebknossosToMatlabBbox(p.bbox_wK);
-
+    if isfield(p.raw, 'backend') && strcmp(p.raw.backend,'wkwrap')
+        multipleOf = 32;
+    else
+        multipleOf = 128;
+    end
     % First check whether bounding box is aligned with KNOSSOS cubes
-    lowerLimitMod = mod(bbox(:,1) - 1, 128);
+    lowerLimitMod = mod(bbox(:,1) - 1, multipleOf);
     upperLimitMod = mod(diff(bbox, 1, 2) + 1, p.tileSize);
 
     if any(lowerLimitMod)
         warning('Lower edge of bounding box not aligned to KNOSSOS cubes, fixing, please check p.bbox');
         idx = lowerLimitMod ~= 0;
-        bbox(idx,1) = bbox(idx,1) + 128 - lowerLimitMod(idx);
+        bbox(idx,1) = bbox(idx,1) + multipleOf - lowerLimitMod(idx);
     end
 
-    if any(upperLimitMod < 64 & upperLimitMod ~= 0)
+    if any(upperLimitMod < multipleOf/2 & upperLimitMod ~= 0)
         error('Upper edge of bounding box produces small last cube.');
     end
 end

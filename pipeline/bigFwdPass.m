@@ -7,10 +7,16 @@ function job = bigFwdPass( p, bbox )
 % can be choosen for computational efficency, currenlty optimized for
 % running on GPU with 12GB, should be multiples of 128, this is same
 % as tileSize right now, no reason it has to be.
-cubeSize = [512 512 256];
-assert(all(mod(cubeSize, 128) == 0));
+if isfield(p.raw, 'backend') && strcmp(p.raw.backend, 'wkwrap')
+    wkCubeSize = 32;
+else
+    wkCubeSize = 128;
+end
 
-assert(all(mod(bbox(:, 1), 128) == 1));
+cubeSize = [512 512 256];
+assert(all(mod(cubeSize, wkCubeSize) == 0));
+
+assert(all(mod(bbox(:, 1), wkCubeSize) == 1));
 
 X = [bbox(1, 1):cubeSize(1):bbox(1, 2), bbox(1, 2) + 1];
 Y = [bbox(2, 1):cubeSize(2):bbox(2, 2), bbox(2, 2) + 1];
@@ -31,7 +37,7 @@ end
     
     % init wkw dataset, if needed
 if isfield(p.class, 'backend') && strcmp(p.class.backend, 'wkwrap')
-	wkwInit('new', p.class.root, 32, 32, 'single', 1);
+	wkwInit('new', p.class.root, wkCubeSize, wkCubeSize, 'single', 1);
 end
 
 if p.cnn.GPU

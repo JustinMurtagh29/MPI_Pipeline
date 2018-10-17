@@ -1,4 +1,4 @@
-function job = runFix(p, newClassRoot)
+function job = runFixMasks(p, newClassRoot)
     % job = runFix(p, newPrefix)
     %   Applies `Myelin.enforceMyelinMasks` to the entire dataset.
     %   For further information, check out the documentation of said
