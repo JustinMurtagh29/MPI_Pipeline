@@ -158,7 +158,7 @@ if ~existentAxons(3) || ~existentDendrites(3)
     %     [dendriteProbDend,axonProbDend,gliaProbDend,voxSize,hasSoma] = arrayfun(@(x) deal(median(segmentMeta.dendriteProb(x.nodes(:,4))),median(segmentMeta.axonProb(x.nodes(:,4))),median(segmentMeta.gliaProb(x.nodes(:,4))),sum(segmentMeta.voxelCount(x.nodes(:,4))),any(ismember(x.nodes(:,4),somaAggloIds))),dendrites);
     [numSeg,voxSize] = arrayfun(@(x) deal(size(x.nodes,1),sum(segmentMeta.voxelCount(x.nodes(:,4)))),dendrites);
     dendLUT = repelem(1:numel(dendrites),numSeg);
-    hasSoma = false(numel(dendrites),1);
+    hasSoma = false(numel(dendrites),1);    
     hasSoma(dendLUT(ismember(cell2mat(Superagglos.transformAggloNewOldRepr(dendrites)),somaAggloIds))) = true;
     % use the empiric myelin threshold for dendrite agglos and other
     % thresholds to get the myelinated axons

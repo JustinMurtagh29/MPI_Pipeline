@@ -45,6 +45,13 @@ end
 train = Util.concatStructs(1, train(1), train(2), train(3));
 test = Util.concatStructs(1, test(1), test(2), test(3));
 
+% NOTE(amotta): At this point the label vector of the training set
+% indicates not only positive and negative samples, but also contains zeros
+% that make up ~15 % of the entires.
+%   What's the meaning of these zeros? It's not clear to me what value
+% these samples add for the training of a classifier. Shouldn't we just
+% remove them from the training set?
+
 %% Augment training & test set (by adding features for "inverted" edges)
 
 load([p.saveFolder 'SynapseClassifier.bkp'], 'fm', '-mat');

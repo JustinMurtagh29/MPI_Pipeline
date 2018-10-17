@@ -97,10 +97,19 @@ clear unsolvedT;
 
 requery = struct;
 requery.exits = exits(requeryMask, :);
+requery.taskDefs = taskDefs;
+
+% NOTE(amotta): Martin and I independently discovered a huge bug in the
+% generation of requeries. This bug was present throughout the entire L4
+% project, and rendered requeries effectively useless.
+%   To properly document the L4 project, the bug is left in place. But we
+% prevent anybody from using this code without uncommenting the fix first.
+error('Uncomment the following bug-fix before generating requeries');
+% requery.taskDefs = taskDefs(requeryMask, :);
 clear requeryMask;
 
 [requery.exits, shuffledRows] = shuffleExits(requery.exits, 500);
-requery.taskDefs = taskDefs(shuffledRows, :);
+requery.taskDefs = requery.taskDefs(shuffledRows, :);
 clear shuffledRows;
 
 requeryTaskDefFile = fullfile( ...

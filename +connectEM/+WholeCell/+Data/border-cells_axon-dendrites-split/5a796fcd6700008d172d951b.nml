@@ -1,4 +1,9 @@
 <things>
+  <meta name="writer" content="NmlWriter.scala" />
+  <meta name="writerGitCommit" content="265a9da58d61fc963ce4db2e99336efc899e9e35" />
+  <meta name="timestamp" content="1532597778586" />
+  <meta name="annotationId" content="5b5995f529000053014a1679" />
+  <meta name="username" content="Alessandro Motta" />
   <parameters>
     <experiment name="2012-09-28_ex145_07x2_ROI2017" description="" />
     <scale x="11.4" y="11.4" z="28.0" />
@@ -9,7 +14,7 @@
     <zoomLevel zoom="0.6372616354207123" />
     <activeNode id="4723" />
   </parameters>
-  <thing id="4" color.r="0.0" color.g="1.0" color.b="0.7568627595901489" color.a="1.0" name="explorative_2018-03-02_Raphael_Jakoby_004">
+  <thing id="4" color.r="0.0" color.g="1.0" color.b="0.7568627595901489" color.a="1.0" name="Dendrite">
     <nodes>
       <node id="7759" radius="120.0" x="3972" y="5643" z="1073" rotX="293.2022980813296" rotY="32.288624150361954" rotZ="75.48172898119986" inVp="4" inMag="0" bitDepth="4" interpolation="true" time="1512411311081" />
       <node id="8508" radius="120.0" x="3259" y="7639" z="1009" rotX="262.45346130563007" rotY="17.724025695291857" rotZ="352.5100505142283" inVp="4" inMag="0" bitDepth="4" interpolation="true" time="1512415077545" />
@@ -7914,7 +7919,7 @@
       <edge source="2524" target="2525" />
     </edges>
   </thing>
-  <thing id="3" color.r="0.6784313917160034" color.g="0.1411764770746231" color.b="0.05098039284348488" color.a="1.0" name="2012-09-28_ex145_07x2_ROI2017__5a0b045b3300004802c5353e__lschuetz__c3e85d_task_5a0b045b3300004802c5353e_Lilli_Schuetz_001">
+  <thing id="3" color.r="0.6784313917160034" color.g="0.1411764770746231" color.b="0.05098039284348488" color.a="1.0" name="Axon">
     <nodes>
       <node id="7022" radius="120.0" x="1270" y="8335" z="294" rotX="184.50729109331536" rotY="29.24608156081291" rotZ="14.944021422521018" inVp="4" inMag="0" bitDepth="4" interpolation="true" time="1512408103632" />
       <node id="28224" radius="120.0" x="1602" y="1183" z="1495" rotX="280.6063152799983" rotY="26.311948592391786" rotZ="247.54015097282235" inVp="4" inMag="0" bitDepth="4" interpolation="true" time="1512068406307" />
@@ -18752,6 +18757,9 @@
   <branchpoints />
   <comments>
     <comment node="3382" content="dendrite" />
+    <comment node="2524" content="soma" />
     <comment node="4724" content="axon" />
+    <comment node="4723" content="soma" />
   </comments>
+  <groups />
 </things>

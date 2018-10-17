@@ -4,7 +4,7 @@ clear;
 
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites-wholeCells-03-v2-classified_spine-syn-clust.mat');
+connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-partiallySplit-v2_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v8-classified.mat');
 
 targetClasses = { ...
     'Somata', 'SO'; ...
@@ -23,15 +23,19 @@ info = Util.runInfo();
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 
-[conn, ~, axonClasses] = connectEM.Connectome.load(param, connFile);
-
-%% Prepare connectome
+[conn, ~, axonClasses] = ...
+    connectEM.Connectome.load(param, connFile);
 [conn, axonClasses] = ...
     connectEM.Connectome.prepareForSpecificityAnalysis( ...
         conn, axonClasses, 'minSynPre', minSynPre);
+
+%% Find specific exc. and inh. axons
+axonClasses = axonClasses(1:2);
+
 axonClasses = ...
     connectEM.Connectome.buildAxonSpecificityClasses(conn, axonClasses);
-
+    
+%% Build class connectome
 [classConn, targetIds] = ...
     connectEM.Connectome.buildClassConnectome(conn);
 [~, targetIds] = ismember(targetClasses, targetIds);
@@ -49,6 +53,7 @@ for curAxonClass = axonClasses
     curSpecClasses = sort(curSpecClasses);
     
     curCoinMat = nan(1 + numel(curSpecClasses), 1 + numel(targetClasses));
+    curSpecClassRates = nan(1, numel(curSpecClasses));
     
     for curSpecIdx = 1:numel(curSpecClasses)
         curSpecClass = curSpecClasses(curSpecIdx);
@@ -58,6 +63,12 @@ for curAxonClass = axonClasses
         curCoinVec(:, curSpecClass) = 0;
         curCoinVec = sum(curCoinVec, 1) / sum(curCoinVec(:));
         curCoinMat(curSpecIdx, :) = curCoinVec;
+        
+        curSpecClassRate = classConn(curAxonIds, :);
+        curSpecClassRate = ...
+            sum(curSpecClassRate(:, curSpecClass)) ...
+         ./ sum(curSpecClassRate(:));
+        curSpecClassRates(curSpecIdx) = curSpecClassRate;
     end
     
     % All axons
@@ -65,20 +76,33 @@ for curAxonClass = axonClasses
     curCoinVec = sum(curCoinVec, 1) / sum(curCoinVec(:));
     curCoinMat(end, :) = curCoinVec;
     
-    plotIt(info, targetLabels, curAxonClass, curSpecClasses, curCoinMat);
+    plotIt(info, ...
+        targetLabels, curAxonClass, curSpecClasses, curCoinMat, ...
+        'specClassRates', curSpecClassRates);
 end
 
 %% Utilities
-function plotIt(info, targetClasses, axonClass, specClasses, coinMat)
-    maxDelta = 0.25;
+function plotIt( ...
+        info, targetClasses, axonClass, ...
+        specClasses, coinMat, varargin)
+    opt = struct;
+    opt.maxDelta = 0.20;
+    opt.specClassRates = [];
+    opt = Util.modifyStruct(opt, varargin{:});
     
-    targetClasses{end + 1} = 'Other';
     specLabels = targetClasses(specClasses);
     specLabels{end + 1} = 'All';
+    
+    % Don't show the synapses, which do not fall in one of the target
+    % classes listed in `targetClasses`.
+    coinMat(:, end) = [];
     
     rows = numel(specLabels);
     cols = numel(targetClasses);
     frac = rows / cols;
+    
+    % Sanity checks
+    assert(isequal(size(coinMat), [rows, cols]));
     
     diagIds = arrayfun( ...
         @(idx, id) sub2ind(size(coinMat), idx, id), ...
@@ -87,16 +111,20 @@ function plotIt(info, targetClasses, axonClass, specClasses, coinMat)
     deltaMat = coinMat - coinMat(end, :);
     deltaMat(diagIds) = 0;
     
+    if ~isempty(opt.specClassRates)
+        coinMat(diagIds) = opt.specClassRates;
+    end
+    
     fig = figure();
     ax = axes(fig);
     
     imshow( ...
-        deltaMat, [-maxDelta, +maxDelta], ...
-        'Colormap', connectEM.Figure.redBlue(128), ...
+        deltaMat, [-opt.maxDelta, +opt.maxDelta], ...
+        'Colormap', buildColormap(129), ...
         'Parent', ax);
 
     fig.Color = 'white';
-    fig.Position(3:4) = 750 .* [1, frac];
+    fig.Position(3:4) = 350 .* [1, frac];
 
     ax.Visible = 'on';
     ax.TickDir = 'out';
@@ -113,11 +141,13 @@ function plotIt(info, targetClasses, axonClass, specClasses, coinMat)
     
     for curIdx = 1:numel(coinMat)
        [curRow, curCol] = ind2sub(size(coinMat), curIdx);
+        curEdgeColor = 'none';
         
         if curRow <= numel(specClasses) ...
-                && specClasses(curRow) == curCol
-            % Do not label "diagonals"
-            continue;
+                && specClasses(curRow) == curCol ...
+                
+            if isempty(opt.specClassRates); continue; end
+            curEdgeColor = 'black';
         end
 
         curBoxSize = ax.Position(3:4) ./ [cols, rows];
@@ -129,9 +159,10 @@ function plotIt(info, targetClasses, axonClass, specClasses, coinMat)
             'String', sprintf('%.2g', 100 * coinMat(curIdx)));
         curAnn.HorizontalAlignment = 'center';
         curAnn.VerticalAlignment = 'middle';
-        curAnn.EdgeColor = 'none';
+        curAnn.EdgeColor = curEdgeColor;
         curAnn.Color = 'black';
         curAnn.FontSize = 12;
+        curAnn.LineWidth = 2;
     end
     
     cbar = colorbar('peer', ax);
@@ -145,4 +176,16 @@ function plotIt(info, targetClasses, axonClass, specClasses, coinMat)
     title(ax, ...
         {info.filename; info.git_repos{1}.hash; axonClass.title}, ...
         'FontWeight', 'normal', 'FontSize', 10);
+end
+
+function cmap = buildColormap(n)
+    c = 1 + (n - 1) / 2;
+    alpha = linspace(0, 1, c);
+    alpha = transpose(alpha);
+    
+    cmap = zeros(n, 3);
+    cmap(1:c, :) = alpha .* [1, 1, 1];
+    cmap(c:n, :) = sqrt(( ...
+        alpha .* [0.301, 0.745, 0.933] .^ 2 ...
+      + (1 - alpha) .* [1, 1, 1] .^ 2));
 end

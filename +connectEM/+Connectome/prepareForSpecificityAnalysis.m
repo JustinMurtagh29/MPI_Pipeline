@@ -3,8 +3,10 @@ function [conn, axonClasses] = ...
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     opt = struct;
+    opt.syn = [];
     opt.minSynPre = 1;
     opt.perisomaClass = false;
+    opt.removeSecondarySpines = false;
     opt = Util.modifyStruct(opt, varargin{:});
     
     %% Configuration
@@ -48,6 +50,16 @@ function [conn, axonClasses] = ...
         targetClassOrder = horzcat({'Perisoma'}, targetClassOrder);
     end
     
+    %% Remove secondary spine innervations
+    % As discussed with MH in a meeting on 05.07.2018.
+    if opt.removeSecondarySpines
+        assert(~isempty(opt.syn));
+        conn = removeSecondarySpineSynapses(conn, opt.syn);
+    end
+    
+    %% Update meta data (after potential synapse removal)
+    conn = updateMetaData(conn);
+    
     %% Fix order of categories
     cats = unique(conn.denMeta.targetClass);
     conn.denMeta.targetClass = categorical( ...
@@ -72,6 +84,16 @@ function [conn, axonClasses] = ...
     end
 end
 
+function conn = removeSecondarySpineSynapses(conn, syn)
+    synMask = syn.synapses.type ~= 'SecondarySpine';
+    
+    conn.connectome.synIdx = cellfun( ...
+        @(synIds) synIds(synMask(synIds)), ...
+        conn.connectome.synIdx, 'UniformOutput', false);
+    conn.connectome(cellfun( ...
+        @isempty, conn.connectome.synIdx), :) = [];
+end
+
 function conn = removeExcSynapsesOntoExcSomata(conn)
     excAxonIds = ismember( ...
         conn.axonMeta.axonClass, ...
@@ -91,21 +113,15 @@ function conn = removeExcSynapsesOntoExcSomata(conn)
     
     % Remove synapses from connectome
     conn.connectome(excSomaConn.row, :) = [];
-    
-    % Decrease synapse count
-    synT = table;
-    synT.id = cell2mat(excSomaConn.synIdx);
-    synT.axonId(:) = repelem( ...
-        excSomaConn.edges(:, 1), ...
-        cellfun(@numel, excSomaConn.synIdx));
-    synT = unique(synT, 'rows');
-    
-   [excAxonRows, ~, excAxonSynCount] = unique(synT.axonId);
-   [~, excAxonRows] = ismember(excAxonRows, conn.axonMeta.id);
-    excAxonSynCount = accumarray(excAxonSynCount, 1);
-    
-    conn.axonMeta.synCount(excAxonRows) = ...
-        conn.axonMeta.synCount(excAxonRows) - excAxonSynCount;
+end
+
+function conn = updateMetaData(conn)
+    axonIds = repelem( ...
+        conn.connectome.edges(:, 1), ...
+        cellfun(@numel, conn.connectome.synIdx));
+   [~, axonIds] = ismember(axonIds, conn.axonMeta.id);
+    conn.axonMeta.synCount = accumarray( ...
+        axonIds, 1, [numel(conn.axons), 1]);
     
     % HACK(amotta): I'm too lazy to update the `spineSynCount`,
     % `fullSynCount`, `fullSpineSynCount`, and `fullPriSpineSynCount`
@@ -118,6 +134,10 @@ function conn = removeExcSynapsesOntoExcSomata(conn)
         'fullPriSpineSynCount', ...
         'fullPriSpineSynFrac', ...
         'fullPriSpineSynDens'}) = [];
+    
+    conn.denMeta(:, { ...
+        'synCount', ...
+        'spineSynCount'}) = [];
     
     % Same for connectome meta data
     conn = rmfield(conn, 'connectomeMeta');

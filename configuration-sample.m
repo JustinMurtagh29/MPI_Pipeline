@@ -30,6 +30,12 @@ p.bbox_wK = [128, 128, 128, 5446, 8381, 3286];
 % Name of the experiment. It's the same as the Dataset name on webKnossos.
 % Also in the "Info" section when you open your dataset in webKnossos.
 p.experimentName = '2012-09-28_ex145_07x2_segNew';
+
+% If you want to be notified via email after the completion of your pipeline run
+p.email.notify = false; %default no notification
+if p.email.notify
+    p.email.address = 'max.mustermann@domainname.de';
+end
   
 % Define directory and file prefix and voxel size for KNOSSOS hierachy
 % with raw data READABLE to you on gaba

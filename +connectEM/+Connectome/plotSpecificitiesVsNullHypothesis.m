@@ -4,14 +4,16 @@ clear;
 
 %% configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites-wholeCells-03-v2-classified_spine-syn-clust.mat');
+connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-partiallySplit-v2_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v8-classified.mat');
 
 targetClasses = { ...
     'Somata', 'ProximalDendrite', 'ApicalDendrite', ...
     'SmoothDendrite', 'AxonInitialSegment', 'OtherDendrite'};
 
 minSynPre = 10;
+
 info = Util.runInfo();
+Util.showRunInfo(info);
 
 %% loading data
 param = load(fullfile(rootDir, 'allParameter.mat'));
@@ -27,30 +29,32 @@ param = param.p;
 classConnectome = ...
     connectEM.Connectome.buildClassConnectome( ...
         conn, 'targetClasses', targetClasses);
-    
-%% generate a class with all axons
-allAxonClass = struct;
-allAxonClass.axonIds = find( ...
-    conn.axonMeta.synCount >= minSynPre);
-allAxonClass.nullAxonIds = find( ...
-    conn.axonMeta.synCount >= minSynPre);
-allAxonClass.title = sprintf( ...
-    'all axons with ≥ %d synapses (n = %d)', ...
-    minSynPre, numel(allAxonClass.axonIds));
-
-axonClasses(end + 1) = allAxonClass;
 
 %% calculate target class innervation probabilities for null model
 clear cur*;
 
-curNullProbs = sum(classConnectome, 1);
-curNullProbs = curNullProbs / sum(curNullProbs);
-[axonClasses.nullTargetClassProbs] = deal(curNullProbs);
+for curIdx = 1:numel(axonClasses)
+    curNullProbs = classConnectome(axonClasses(curIdx).nullAxonIds, :);
+    curNullProbs = connectEM.Specificity.calcFirstHitProbs(curNullProbs);
+    axonClasses(curIdx).nullTargetClassProbs = curNullProbs;
+end
+
+%% show first hit probabilities
+firstHitProbs = cat(1, axonClasses.nullTargetClassProbs);
+firstHitProbs = array2table(firstHitProbs, 'VariableNames', targetClasses);
+firstHitProbs.Properties.RowNames = {axonClasses.title};
+
+fprintf('# First-hit probabilities\n');
+disp(firstHitProbs);
 
 %% plot
 clear cur*;
-
 curAxonClasses = axonClasses;
+
+% NOTE(amotta): The list of axons to induce the null model is no longer
+% needed. Let's remove it to cause an error in case a weird code path still
+% tries to use it.
+curAxonClasses = curAxonClasses(1:4);
 curAxonClasses = rmfield(curAxonClasses, 'nullAxonIds');
 
 for curIdx = 1:numel(curAxonClasses)

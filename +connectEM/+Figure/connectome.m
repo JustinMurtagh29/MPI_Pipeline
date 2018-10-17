@@ -4,7 +4,7 @@ clear;
 
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites-wholeCells-03-v2-classified_spine-syn-clust.mat');
+connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-partiallySplit-v2_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v8-classified.mat');
 
 minSynCount = 10;
 
@@ -28,16 +28,13 @@ dendMeta( ...
     dendMeta.targetClass ~= 'AxonInitialSegment' ...
   & dendMeta.synCount < minSynCount, :) = [];
 
-% Separate between exc. and inh. cells
-inMask = dendMeta.isInterneuron;
+% Rename "Somata" to "Soma"
 somaMask = dendMeta.targetClass == 'Somata';
-dendMeta.targetClass(somaMask &  inMask) = 'SomaInh';
-dendMeta.targetClass(somaMask & ~inMask) = 'SomaExc';
+dendMeta.targetClass(somaMask) = 'Soma';
 
-% Also rename "whole cells" to "proximal dendrites"
+% Rename "WholeCell" to "ProximalDendrite"
 proxDendMask = dendMeta.targetClass == 'WholeCell';
-dendMeta.targetClass(proxDendMask &  inMask) = 'ProximalDendriteInh';
-dendMeta.targetClass(proxDendMask & ~inMask) = 'ProximalDendriteExc';
+dendMeta.targetClass(proxDendMask) = 'ProximalDendrite';
 
 conn = conn.connectome;
 conn(~ismember(conn.edges(:, 1), axonMeta.id), :) = [];
@@ -45,17 +42,17 @@ conn(~ismember(conn.edges(:, 2), dendMeta.id), :) = [];
 
 %% Numbers
 numberOfConnections = height(conn) %#ok
+numberOfSynapses = sum(cellfun(@numel, conn.synIdx)) %#ok
 
 %% Group by classes
 axonClasses = { ...
     'Corticocortical'; ...
     'Thalamocortical'; ...
-    'Inhibitory';};
+    'Other'; ...
+    'Inhibitory'};
 dendClasses = { ...
-    'SomaExc'; ...
-    'SomaInh';
-    'ProximalDendriteExc';
-    'ProximalDendriteInh';
+    'Soma'; ...
+    'ProximalDendrite';
     'SmoothDendrite'; ...
     'ApicalDendrite'; ...
     'AxonInitialSegment'; ...
@@ -165,10 +162,8 @@ axDend.YDir = 'reverse';
 axDend.TickDir = 'out';
 axDend.YMinorTick = 'off';
 
-axDend.YLim(1) = minSynCount;
-axDend.YLim(2) = 10 ^ ceil(log10(max(dendSynCount)));
-yTicks = log10(axDend.YLim);
-yTicks = 10 .^ (yTicks(1):yTicks(2));
+axDend.YLim = 10 .^ [log10(0.9), ceil(log10(max(dendSynCount)))];
+yTicks = 10 .^ (0:log10(axDend.YLim(end)));
 
 yticks(axDend, yTicks);
 yticklabels(axDend, arrayfun( ...

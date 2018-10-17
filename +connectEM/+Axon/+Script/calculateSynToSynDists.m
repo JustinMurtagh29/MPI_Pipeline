@@ -6,10 +6,10 @@ clear;
 
 %% configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-linearized_dendrites-wholeCells-03-v2-classified_spine-syn-clust.mat');
+connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-linearized_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v8-classified.mat');
 
 [interSynFile, interSynName] = fileparts(connFile);
-interSynName = sprintf('%s_intersynapse.mat', interSynName);
+interSynName = sprintf('%s_intersynapse_v2.mat', interSynName);
 interSynFile = fullfile(interSynFile, interSynName);
 clear interSynName;
 
@@ -58,20 +58,16 @@ synapses.pos = cell2mat(cellfun( ...
 % only consider axons with at least two output synapses
 out = struct;
 out.info = info;
-out.axonIds = find(conn.axonMeta.synCount >= 2);
+out.axonIds = conn.axonMeta.id;
 out.axonPathLens = nan(size(out.axonIds));
 out.synToSynDists = cell(size(out.axonIds));
-out.synIds = cell(size(out.axonIds));
+out.synIds = connectEM.Axon.getSynapses(conn, syn);
 
 tic;
 for idx = 1:numel(out.axonIds)
     axonId = out.axonIds(idx);
+    synapseIds = out.synIds{axonId};
     axonSegIds = conn.axons{axonId};
-
-    % find synapses for axon
-    synapseIds = conn.connectome.edges(:, 1) == axonId;
-    synapseIds = conn.connectome.synIdx(synapseIds);
-    synapseIds = cell2mat(synapseIds);
 
     if numel(axonSegIds) > 1
         % map synapses to segments
@@ -98,17 +94,14 @@ for idx = 1:numel(out.axonIds)
         axonPathLen = 0;
         synToSynDist = zeros(numel(synapseIds));
     end
-
-    % set self-distance to infinity
-    synToSynDist(1:(size(synToSynDist, 1) + 1):end) = inf;
     
     % store output
     out.axonPathLens(idx) = axonPathLen;
     out.synToSynDists{idx} = synToSynDist;
-    out.synIds{idx} = synapseIds(:);
     
     Util.progressBar(idx, numel(out.axonIds));
 end
 
 % save results
 Util.saveStruct(interSynFile, out);
+Util.protect(interSynFile);

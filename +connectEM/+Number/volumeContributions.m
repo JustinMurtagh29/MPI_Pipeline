@@ -15,6 +15,9 @@ somaFile = fullfile(rootDir, 'aggloState', 'somata_07.mat');
 vesselThreshold = 0.5;
 nucleiThreshold = 0.5;
 
+% EM data margin around processed bounding box
+segEmFov = [25, 25, 10];
+
 info = Util.runInfo();
 Util.showRunInfo(info);
 
@@ -43,6 +46,11 @@ vessel = heuristics.segIds(heuristics.vesselScore > vesselThreshold);
 
 neuropilSegIds = setdiff( ...
     1:numel(segSizes), cat(1, somata, nuclei, vessel));
+
+%% Dataset extent
+rawSize = 1 + diff(param.bbox, 1, 2)';
+rawSize = rawSize + 2 * segEmFov;
+rawSizeUm = round(rawSize .* voxelSize, 1) %#ok
 
 %% Calculate contributions
 volT = struct;

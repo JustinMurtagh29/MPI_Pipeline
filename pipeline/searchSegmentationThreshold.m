@@ -1,4 +1,4 @@
-function outFiles = searchSegmentationThreshold(p, bbox, tRange, doClass)
+function outFiles = searchSegmentationThreshold(p, bbox, tRange, doClass, useClass)
     % outFiles = searchSegmentationThreshold(p, bbox, tRange, doClass)
     %   Function that allows you to create multiple segmentation
     %   preview movies of different thresholds.
@@ -19,6 +19,9 @@ function outFiles = searchSegmentationThreshold(p, bbox, tRange, doClass)
     %   region of interest, you can set this flag to false.
     %   Default: true
     %
+    % useClass
+    %   Flag which can be used to use existing classification 
+    %   results stored in p.class 
     % outFiles
     %   Cell array with the same shape as `tRange`. Each entry
     %   contains the path to the corresponding preview movie.
@@ -30,7 +33,9 @@ function outFiles = searchSegmentationThreshold(p, bbox, tRange, doClass)
     if ~exist('doClass', 'var')
         doClass = true;
     end
-    
+    if ~exist('useClass', 'var')
+        useClass = false;
+    end
     % prepare output
     tCount = numel(tRange);
     outFiles = cell(size(tRange));
@@ -43,9 +48,10 @@ function outFiles = searchSegmentationThreshold(p, bbox, tRange, doClass)
         p.seg.func = @(x) watershedSeg_v1_cortex(x, {curT, 10});
         
         fprintf('Making movie %d of %d\n', curIdx, tCount);
-        outFiles{curIdx} = makeSegmentationPreviewMovie(p, bbox, doClass);
+        outFiles{curIdx} = makeSegmentationPreviewMovie(p, bbox, doClass, useClass);
 
         % prevent classification in subsequent runs
         doClass = false;
+        useClass= false;
     end
 end

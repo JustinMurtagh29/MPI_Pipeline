@@ -4,7 +4,7 @@ clear;
 
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites-wholeCells-03-v2-classified_spine-syn-clust.mat');
+connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-partiallySplit-v2_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v8-classified.mat');
 
 info = Util.runInfo();
 Util.showRunInfo(info);
@@ -13,6 +13,7 @@ Util.showRunInfo(info);
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 
+maxSegId = Seg.Global.getMaxSegId(param);
 [conn, syn, axonClasses] = connectEM.Connectome.load(param, connFile);
 
 %% Connectome
@@ -65,6 +66,8 @@ numSomaSynapsesInConnectome = sum( ...
     synT.targetClass(synT.inConnectome) == 'Somata') %#ok
 fractionOfSynapsesInCommectomeOntoSomata = mean( ...
     synT.targetClass(synT.inConnectome) == 'Somata') %#ok
+numAisSynapsesInConnectome = sum( ...
+    synT.targetClass(synT.inConnectome) == 'AxonInitialSegment') %#ok
 
 % Analyse likely inhibitory synapses
 synT.isLikelyInhibitory = ismember( ...
@@ -74,3 +77,13 @@ numLikelyInhSomaSynapses = sum( ...
     synT.targetClass(synT.isLikelyInhibitory) == 'Somata') %#ok
 fractionOfLikelyInhibitorySynapsesOntoSomata = mean( ...
     synT.targetClass(synT.isLikelyInhibitory) == 'Somata') %#ok
+
+%% AIS synapses, independent of neurites or connectome
+aisLUT = conn.denMeta.targetClass == 'AxonInitialSegment';
+aisLUT = Agglo.buildLUT(maxSegId, conn.dendrites(aisLUT));
+
+numAisSynapsesOverall = sum(cellfun( ...
+    @(segIds) any(aisLUT(segIds)), syn.synapses.postsynId)) %#ok
+numAisSynapses = sum(synT.targetClass == 'AxonInitialSegment') %#ok
+numAisInnervatingAxonsInConnectome = sum(axonMask(unique( ...
+    synT.preAggloId(synT.targetClass == 'AxonInitialSegment')))) %#ok

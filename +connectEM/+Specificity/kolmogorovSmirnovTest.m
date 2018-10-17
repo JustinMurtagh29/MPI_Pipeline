@@ -7,7 +7,7 @@ function [pValue, ksStat] = ...
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     opt = struct;
-    opt.tail = 'unequal';
+    opt.tail = 'equal';
     opt.nullWeights = ones(numel(nullSamples), 1);
     opt = Util.modifyStruct(opt, varargin{:});
     
