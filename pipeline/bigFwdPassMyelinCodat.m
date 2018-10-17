@@ -1,18 +1,19 @@
-function job = bigFwdPassMyelin( p, bbox )
+function job = bigFwdPassMyelinCodat( p, bbox )
 % job = bigFwdPass( p, bbox )
 %   Applies the CNN for myelin detection to the raw data
 %   within the specified bounding box.
 
 % This is not of any importance due to CNN translation invariance,
 % can be choosen for computational efficency, currenlty optimized for
-% running on GPU with 12GB, should be multiples of 128, this is same
+% running on GPU with 12GB, should be multiples of 32, this is same
 % as tileSize right now, no reason it has to be.
 % Author: Manuel Berning <manuel.berning@brain.mpg.de>
 %         Sahil Loomba <sahil.loomba@brain.mpg.de>
+wkwCubeSize = 32;
 cubeSize = [512 512 256];
-assert(all(mod(cubeSize, 128) == 0));
+assert(all(mod(cubeSize, wkwCubeSize) == 0));
 
-assert(all(mod(bbox(:, 1), 128) == 1));
+assert(all(mod(bbox(:, 1), wkwCubeSize) == 1));
 
 X = [bbox(1, 1):cubeSize(1):bbox(1, 2), bbox(1, 2) + 1];
 Y = [bbox(2, 1):cubeSize(2):bbox(2, 2), bbox(2, 2) + 1];
@@ -33,7 +34,7 @@ end
     
     % init wkw dataset, if needed
 if isfield(p.class, 'backend') && strcmp(p.class.backend, 'wkwrap')
-	wkwInit('new', p.classMyelin.root, 32, 32, 'single', 1);
+	wkwInit('new', p.classMyelin.root, wkwCubeSize, wkwCubeSize, 'single', 1);
 end
 
 if p.cnn.GPU
