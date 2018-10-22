@@ -71,7 +71,7 @@ if useClass
 end
 
 % Segmentation
-tempSegFile = [p.tempFolder 'seg.mat'];
+tempSegFile = [p.tempFolder 'segForMovie.mat'];
 segmentationStep(p, tempClass, tempSegFile, bbox);
 
 % Movie

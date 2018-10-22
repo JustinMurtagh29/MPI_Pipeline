@@ -37,7 +37,11 @@ end
     
     % init wkw dataset, if needed
 if isfield(p.class, 'backend') && strcmp(p.class.backend, 'wkwrap')
-	wkwInit('new', p.class.root, wkCubeSize, wkCubeSize, 'single', 1);
+    if exist(fullfile(p.class.root,'header.wkw'),'file')
+        warning('Classification dataset already exists at %s! Data will be overwritten during this new run',p.class.root)
+    else
+        wkwInit('new', p.class.root, wkCubeSize, wkCubeSize, 'single', 1);
+    end
 end
 
 if p.cnn.GPU
