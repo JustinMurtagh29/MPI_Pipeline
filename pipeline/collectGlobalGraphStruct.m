@@ -1,4 +1,6 @@
 function collectGlobalGraphStruct(p)
+    info = Util.runInfo(false);
+
     edgeFile = fullfile(p.saveFolder, 'globalEdges.mat');
     probFile = fullfile(p.saveFolder, 'globalNeuriteContinuityProb.mat');
     corrFile = fullfile(p.saveFolder, 'mapping.mat');
@@ -30,6 +32,7 @@ function collectGlobalGraphStruct(p)
     graph.edges = edges;
     graph.prob = prob;
     graph.borderIdx = borderIdx;
+    graph.info = info;
 
     % save output
     graphFile = fullfile(p.saveFolder, 'graph.mat');
