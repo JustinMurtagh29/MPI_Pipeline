@@ -82,6 +82,12 @@ volT(5).vol = sum(segSizes(vessel));
 volT(6).name = 'Neuropil';
 volT(6).vol = sum(segSizes(neuropilSegIds));
 
+volT(7).name = 'Axon';
+volT(7).vol = sum(segSizes(axonSegIds));
+
+volT(8).name = 'Dendrite and spines';
+volT(8).vol = sum(segSizes(dendAndSpineSegIds));
+
 volT = struct2table(volT);
 volT.percent = 100 * volT.vol / volT.vol(1);
 volT.vol = volT.vol * voxelVol;
