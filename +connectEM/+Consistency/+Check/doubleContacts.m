@@ -88,7 +88,7 @@ axonDendT = axonDendT(cellfun(@numel, axonDendT.shInd) == 2, :);
 
 %% Export random examples to webKnossos
 clear cur*;
-exportRange = 1:10;
+exportRange = 1:100;
 
 % NOTE(amotta): Only look at spine synapses from excitatory axons
 curAxonDendT = axonDendT(ismember( ...
