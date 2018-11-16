@@ -1,5 +1,5 @@
 % Manually inspect configurations where an excitatory axon makes contact
-% with exactly two spine synapses of a dendrite.
+% with at least two spine synapses of a dendrite.
 %
 % Written by
 %   Alessandro Motta <alessandro.motta@brain.mpg.de>
@@ -75,7 +75,7 @@ curAxonLUT = Agglo.buildLUT(maxSegId, conn.axons);
 graph.axonId = max(curAxonLUT(graph.edges), [], 2);
 graph = graph(graph.axonId > 0, :);
 
-%% Find double spine contacts
+%% Find multi-spine contacts
 clear cur*;
 [axonShT, ~, graph.uniId] = unique(graph(:, {'shIdx', 'axonId'}), 'rows');
 axonShT.dendId = shT.dendId(axonShT.shIdx);
@@ -84,7 +84,7 @@ axonShT.dendId = shT.dendId(axonShT.shIdx);
     axonShT(:, {'axonId', 'dendId'}), 'rows');
 axonDendT.shInd = accumarray( ...
     curShIndices, axonShT.shIdx, [], @(ids) {ids});
-axonDendT = axonDendT(cellfun(@numel, axonDendT.shInd) == 2, :);
+axonDendT = axonDendT(cellfun(@numel, axonDendT.shInd) > 1, :);
 
 %% Export random examples to webKnossos
 clear cur*;
