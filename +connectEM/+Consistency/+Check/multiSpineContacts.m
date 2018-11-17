@@ -9,7 +9,8 @@ clear;
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-linearized_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v8-classified.mat');
 shFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v3_auto.mat');
-outputDir = '/home/amotta/Desktop/double-spine-contacts';
+
+outputDir = '';
 
 info = Util.runInfo();
 Util.showRunInfo(info);
@@ -89,6 +90,9 @@ axonDendT = axonDendT(cellfun(@numel, axonDendT.shInd) > 1, :);
 %% Export random examples to webKnossos
 clear cur*;
 exportRange = 1:100;
+
+% HACK(amotta): Only run exports if output directory was set
+if isempty(outputDir); exportRange = []; end
 
 % NOTE(amotta): Only look at spine synapses from excitatory axons
 curAxonDendT = axonDendT(ismember( ...
