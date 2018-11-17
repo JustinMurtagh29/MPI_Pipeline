@@ -11,6 +11,9 @@ connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-linearize
 shFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v3_auto.mat');
 
 outputDir = '';
+annotationDir = fullfile( ...
+    fileparts(mfilename('fullpath')), ...
+    'annotations', 'multi-spine-contacts');
 
 info = Util.runInfo();
 Util.showRunInfo(info);
@@ -32,6 +35,24 @@ shAgglos = shAgglos.shAgglos;
 % Loading augmented graph
 graph = Graph.load(rootDir);
 graph(~graph.borderIdx, :) = [];
+graph(:, {'prob'}) = [];
+
+borderAreas = fullfile(rootDir, 'globalBorder.mat');
+borderAreas = load(borderAreas, 'borderArea2');
+borderAreas = borderAreas.borderArea2;
+
+graph.borderArea = borderAreas(graph.borderIdx);
+clear borderAreas;
+
+% HACK(amotta): For some reason there exist borders, for which
+% `physicalBorderArea2` is zero. This seems wrong.
+%   In order not to be affected by this issue, let's set the area of these
+% borders to NaN. This will result in a total axon-spine interface area of
+% NaN, which we can remove by brute force later on.
+%
+% Corresponding issue on GitLab:
+% https://gitlab.mpcdf.mpg.de/connectomics/auxiliaryMethods/issues/16
+graph.borderArea(~graph.borderArea) = nan;
 
 %% Assign spine heads to dendrites
 shT = table;
@@ -78,8 +99,10 @@ graph = graph(graph.axonId > 0, :);
 
 %% Find multi-spine contacts
 clear cur*;
-[axonShT, ~, graph.uniId] = unique(graph(:, {'shIdx', 'axonId'}), 'rows');
+[axonShT, ~, graph.axonShId] = unique( ...
+    graph(:, {'shIdx', 'axonId'}), 'rows');
 axonShT.dendId = shT.dendId(axonShT.shIdx);
+axonShT.area = accumarray(graph.axonShId, graph.borderArea);
 
 [axonDendT, ~, curShIndices] = unique( ...
     axonShT(:, {'axonId', 'dendId'}), 'rows');
@@ -88,6 +111,7 @@ axonDendT.shInd = accumarray( ...
 axonDendT = axonDendT(cellfun(@numel, axonDendT.shInd) > 1, :);
 
 %% Export random examples to webKnossos
+% Note that this section is essentialy skipped if `outputDir` is not set
 clear cur*;
 exportRange = 1:100;
 
@@ -145,3 +169,100 @@ for curIdx = 1:numel(exportRange)
         disp(err)
     end
 end
+
+%% Evaluate annotated contact sites
+clear cur*;
+
+curNmlFiles = dir(fullfile(annotationDir, '*.nml'));
+curNmlFiles = {curNmlFiles(~[curNmlFiles.isdir]).name};
+
+annT = table;
+annT.nmlFile = reshape(curNmlFiles, [], 1);
+
+curLastCurly = @(c) c{end};
+
+for curIdx = 1:height(annT)
+    curNmlPath = fullfile(annotationDir, annT.nmlFile{curIdx});
+    curNml = slurpNml(curNmlPath);
+    
+    curTreeNames = NML.buildTreeTable(curNml);
+    curTreeNames = curTreeNames.name;
+    
+    curAxonId = curTreeNames(startsWith(curTreeNames, 'Axon'));
+    curAxonId = str2double(curLastCurly(strsplit(curAxonId{end})));
+    
+    curDendId = curTreeNames(startsWith(curTreeNames, 'Dendrite'));
+    curDendId = str2double(curLastCurly(strsplit(curDendId{end})));
+    
+    curAxonShT = axonShT( ...
+        axonShT.axonId == curAxonId ...
+      & axonShT.dendId == curDendId, :);
+    
+    curSh = curTreeNames(startsWith(curTreeNames, 'Spine head'));
+    curSh = regexpi(curSh, 'spine head (\d+) \((\w+)\)', 'tokens', 'once');
+    assert(numel(curSh) == height(curAxonShT))
+    
+    curShT = vertcat(curSh{:});
+    curShT = cell2table(curShT, 'VariableNames', {'shId', 'isSyn'});
+    curShT.shId = cellfun(@str2double, curShT.shId);
+    curShT.isSyn = strcmpi(curShT.isSyn, 'yes');
+    
+    annT.areas{curIdx} = curAxonShT.area(curShT.isSyn);
+end
+
+%% Plot results
+clear cur*;
+
+curCount = cellfun(@numel, annT.areas);
+curGroup = repelem(curCount, curCount);
+curAreas = cell2mat(annT.areas);
+
+
+% Histogram
+curFig = figure;
+curFig.Position(3:4) = [385, 335];
+curFig.Color = 'white';
+curAx = axes(curFig);
+hold(curAx, 'on');
+
+curBins = linspace(-2, 1, 7);
+histogram(curAx, ...
+    log10(curAreas(curGroup == 1)), ...
+    'BinEdges', curBins, 'DisplayStyle', 'stairs', ...
+    'LineWidth', 2, 'Normalization', 'probability');
+histogram(curAx, ...
+    log10(curAreas(curGroup == 2)), ...
+    'BinEdges', curBins, 'DisplayStyle', 'stairs', ...
+    'Normalization', 'probability', 'LineWidth', 2);
+
+xlabel(curAx, 'log10(axon-spine interface area (µm²))');
+ylabel(curAx, 'Probability');
+
+curAx.TickDir = 'out';
+curLeg = legend(curAx, { ...
+    '1 spine synapse per connection', ...
+    '2 spine synapses per connection'}, ...
+    'Location', 'SouthOutside');
+curLeg.Box = 'off';
+
+title(curAx, ...
+    {info.filename; info.git_repos{1}.hash}, ...
+    'FontWeight', 'normal', 'FontSize', 10);
+
+
+% Box plot
+curFig = figure();
+curFig.Position(3:4) = [290, 420];
+curFig.Color = 'white';
+curAx = axes(curFig);
+
+boxplot(curAx, log10(curAreas), curGroup, 'width', 0.8)
+xlabel(curAx, 'Spine synapses per connection');
+ylabel(curAx, 'log10(axon-spine interface area (µm²))');
+
+curAx.TickDir = 'out';
+curAx.Box = 'off';
+
+title(curAx, ...
+    {info.filename; info.git_repos{1}.hash}, ...
+    'FontWeight', 'normal', 'FontSize', 10);
