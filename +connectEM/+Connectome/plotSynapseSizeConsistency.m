@@ -46,27 +46,11 @@ borderAreas = borderAreas.borderArea2;
 graph.borderArea = borderAreas(graph.borderIdx);
 clear borderAreas;
 
-% HACK(amotta): For some reason there exist borders, for which
-% `physicalBorderArea2` is zero. This seems wrong.
-%   In order not to be affected by this issue, let's set the area of these
-% borders to NaN. This will result in a total axon-spine interface area of
-% NaN, which we can remove by brute force later on.
-%
-% Corresponding issue on GitLab:
-% https://gitlab.mpcdf.mpg.de/connectomics/auxiliaryMethods/issues/16
-graph.borderArea(~graph.borderArea) = nan;
-graph(:, {'prob', 'borderIdx'}) = [];
-
 %% Build axon-spine interface areas
 asiT = ...
     connectEM.Connectome.buildAxonSpineInterfaces( ...
         param, graph, shAgglos, conn, syn);
 asiT(asiT.type ~= 'PrimarySpine', :) = [];
-
-% HACK(amotta): This is the counter-part to the above hack. (This is not
-% really needed, since `buildAxonSpineInterface` does exactly the same
-% thing internally. But let's be explicit and future-proof.)
-asiT(isnan(asiT.area), :) = [];
 
 synT = asiT;
 synT.isSpine(:) = true;
