@@ -44,16 +44,6 @@ borderAreas = borderAreas.borderArea2;
 graph.borderArea = borderAreas(graph.borderIdx);
 clear borderAreas;
 
-% HACK(amotta): For some reason there exist borders, for which
-% `physicalBorderArea2` is zero. This seems wrong.
-%   In order not to be affected by this issue, let's set the area of these
-% borders to NaN. This will result in a total axon-spine interface area of
-% NaN, which we can remove by brute force later on.
-%
-% Corresponding issue on GitLab:
-% https://gitlab.mpcdf.mpg.de/connectomics/auxiliaryMethods/issues/16
-graph.borderArea(~graph.borderArea) = nan;
-
 %% Assign spine heads to dendrites
 shT = table;
 shT.id = reshape(1:numel(shAgglos), [], 1);
@@ -134,14 +124,14 @@ for curIdx = 1:numel(exportRange)
         curAxonId = curAxonDendT.axonId(curIdx);
         curDendId = curAxonDendT.dendId(curIdx);
 
-        curAxon = conn.axons{curAxonId};
+        curAxonSegIds = conn.axons{curAxonId};
         curDend = conn.dendrites{curDendId};
         curShT = shT(curAxonDendT.shInd{curIdx}, :);
 
         curSkel = skeleton();
 
         curSkel = Skeleton.fromMST( ...
-            points(curAxon, :), param.raw.voxelSize, curSkel);
+            points(curAxonSegIds, :), param.raw.voxelSize, curSkel);
         curSkel.names{end} = sprintf('Axon %d', curAxonId);
         curSkel.colors{end} = [1, 0, 0, 1];
 
@@ -179,35 +169,72 @@ curNmlFiles = {curNmlFiles(~[curNmlFiles.isdir]).name};
 annT = table;
 annT.nmlFile = reshape(curNmlFiles, [], 1);
 
-curLastCurly = @(c) c{end};
-
 for curIdx = 1:height(annT)
-    curNmlPath = fullfile(annotationDir, annT.nmlFile{curIdx});
-    curNml = slurpNml(curNmlPath);
+    curNmlName = annT.nmlFile{curIdx};
+    curNmlPath = fullfile(annotationDir, curNmlName);
     
-    curTreeNames = NML.buildTreeTable(curNml);
-    curTreeNames = curTreeNames.name;
+    % HACK(amotta): Extract axon and dendrite ID from file name
+    curIds = '\d+_axon-(\d+)_dendrite-(\d+)\.nml';
+    curIds = regexpi(curNmlName, curIds, 'tokens', 'once');
     
-    curAxonId = curTreeNames(startsWith(curTreeNames, 'Axon'));
-    curAxonId = str2double(curLastCurly(strsplit(curAxonId{end})));
-    
-    curDendId = curTreeNames(startsWith(curTreeNames, 'Dendrite'));
-    curDendId = str2double(curLastCurly(strsplit(curDendId{end})));
-    
-    curAxonShT = axonShT( ...
+    curIds = cellfun(@str2double, curIds, 'UniformOutput', false);
+   [curAxonId, curDendId] = deal(curIds{:});
+   
+    curExpectedShCount = sum( ...
         axonShT.axonId == curAxonId ...
-      & axonShT.dendId == curDendId, :);
+      & axonShT.dendId == curDendId);
+   
+    curNml = slurpNml(curNmlPath);
+    curTrees = NML.buildTreeTable(curNml);
     
-    curSh = curTreeNames(startsWith(curTreeNames, 'Spine head'));
-    curSh = regexpi(curSh, 'spine head (\d+) \((\w+)\)', 'tokens', 'once');
-    assert(numel(curSh) == height(curAxonShT))
+    curAxonMask = startsWith(curTrees.name, 'Axon');
+    curShMask = startsWith(curTrees.name, 'Spine head');
+    
+    assert(sum(curShMask) == curExpectedShCount);
+    assert(all(curAxonMask | curShMask));
+    
+    curNodes = NML.buildNodeTable(curNml);
+    curNodes.coord = curNodes.coord + 1;
+    
+    % NOTE(amotta): Agglomerate one is the axon, followed by the spine head
+    % agglomerates in the same order as in `curTrees`.
+   [~, curNodes.aggloId] = ismember( ...
+       curNodes.treeId, curTrees.id(curShMask));
+    assert(all(ismember( ...
+        curNodes.treeId(~curNodes.aggloId), ...
+        curTrees.id(curAxonMask))));
+    
+    curNodes.aggloId = curNodes.aggloId + 1;
+    curNodes.segId = Seg.Global.getSegIds(param, curNodes.coord);
+    
+    curAgglos = accumarray( ...
+        curNodes.aggloId, curNodes.segId, [], @(segIds) {segIds});
+    curLUT = Agglo.buildLUT(maxSegId, curAgglos);
+    Agglo.check(curAgglos);
+    
+    % Calculate ASI areas
+    curGraph = graph;
+    curGraph.shId = curLUT(curGraph.edges);
+    
+    curGraph = curGraph( ...
+        any(curGraph.shId == 1, 2) ...
+      & any(curGraph.shId>= 2, 2), :);
+    curGraph.shId = max(curGraph.shId, [], 2) - 1;
+  
+    curSh = regexpi( ...
+        curTrees.name(curShMask), ...
+        'spine head (\d+) \((\w+)\)', ...
+        'tokens', 'once');
     
     curShT = vertcat(curSh{:});
     curShT = cell2table(curShT, 'VariableNames', {'shId', 'isSyn'});
+    
     curShT.shId = cellfun(@str2double, curShT.shId);
     curShT.isSyn = strcmpi(curShT.isSyn, 'yes');
     
-    annT.areas{curIdx} = curAxonShT.area(curShT.isSyn);
+    curShT.area = accumarray( ...
+        curGraph.shId, curGraph.borderArea, [height(curShT), 1]);
+    annT.areas{curIdx} = curShT.area(curShT.isSyn);
 end
 
 %% Plot results
