@@ -1,7 +1,7 @@
 <things>
   <meta name="writer" content="NmlWriter.scala" />
   <meta name="writerGitCommit" content="9ce8fa1ce4cdecbdd7c9ce86244c3b680b5113a2" />
-  <meta name="timestamp" content="1542632646171" />
+  <meta name="timestamp" content="1542703746719" />
   <meta name="annotationId" content="5bf2b42e0100004701b95784" />
   <meta name="username" content="Alessandro Motta" />
   <parameters>
@@ -9,12 +9,12 @@
     <scale x="11.4" y="11.4" z="28.0" />
     <offset x="0" y="0" z="0" />
     <time ms="0" />
-    <editPosition x="2459" y="7030" z="613" />
-    <editRotation xRot="0.0" yRot="0.0" zRot="0.0" />
+    <editPosition x="2510" y="7029" z="613" />
+    <editRotation xRot="180.0" yRot="270.0" zRot="180.0" />
     <zoomLevel zoom="0.5266625086121592" />
-    <activeNode id="4419" />
+    <activeNode id="4422" />
   </parameters>
-  <thing id="5" color.r="1.0" color.g="0.8392156958580017" color.b="0.239215686917305" color.a="1.0" name="explorative_2018-11-19_Alessandro_Motta_005">
+  <thing id="5" color.r="1.0" color.g="0.8392156958580017" color.b="0.239215686917305" color.a="1.0" name="Axon">
     <nodes>
       <node id="4420" radius="113.99999" x="2457" y="7045" z="601" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="0" bitDepth="8" interpolation="false" time="1542632590536" />
       <node id="4421" radius="113.99999" x="2453" y="7043" z="593" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="0" bitDepth="8" interpolation="false" time="1542632607323" />
