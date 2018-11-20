@@ -318,3 +318,46 @@ curAx.Box = 'off';
 title(curAx, ...
     {info.filename; info.git_repos{1}.hash}, ...
     'FontWeight', 'normal', 'FontSize', 10);
+
+%% Look at synapse size similarity
+clear cur*;
+
+curCv = @(a) std(a) / mean(a);
+curSaSdMask = cellfun(@numel, annT.areas) > 1;
+curSaSdCvs = cellfun(curCv, annT.areas(curSaSdMask));
+
+curRandCvs = cell2mat(annT.areas(~curSaSdMask));
+curRandCvs = curRandCvs(randi(numel(curRandCvs), [1000, 2]));
+curRandCvs = cellfun(curCv, num2cell(curRandCvs, 2));
+
+% Plot
+curFig = figure;
+curFig.Color = 'white';
+curFig.Position(3:4) = [450, 305];
+
+curAx = axes(curFig);
+curAx.TickDir = 'out';
+hold(curAx, 'on');
+
+curBins = linspace(0, 1.5, 6);
+curHist = @(data) histogram( ...
+    curAx, data, 'BinEdges', curBins, ...
+    'DisplayStyle', 'stairs', 'LineWidth', 2, ...
+    'Normalization', 'probability');
+
+curHist(curSaSdCvs);
+curHist(curRandCvs);
+
+xlim(curAx, curBins([1, end]));
+xlabel(curAx, 'Coefficient of variation');
+ylabel(curAx, 'Probability');
+
+curLeg = legend(curAx, { ...
+    'Same-axon same-dendrite', ...
+    'Random pairs of spine synapses'}, ...
+    'Location', 'NorthEast');
+curLeg.Box = 'off';
+
+title(curAx, ...
+    {info.filename; info.git_repos{1}.hash}, ...
+    'FontWeight', 'normal', 'FontSize', 10);
