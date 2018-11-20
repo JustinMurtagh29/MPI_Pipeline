@@ -4,7 +4,6 @@ clear;
 
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-linearized_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v8-classified.mat');
 shFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v3_auto.mat');
 
 modeConfigs = struct;
@@ -23,8 +22,8 @@ Util.showRunInfo(info);
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 
-[conn, syn, axonClasses] = ...
-    connectEM.Connectome.load(param, connFile);
+[conn, syn, connFile] = ...
+    connectEM.Consistency.loadConnectome(param);
 
 [~, synToSynFile] = fileparts(connFile);
 synToSynFile = sprintf('%s_synToSynDists.mat', synToSynFile);
