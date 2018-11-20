@@ -31,7 +31,7 @@ function fig = plotCouplingHistogram(info, synT, plotConfigs, varargin)
             'FaceAlpha', 1);
     end
     
-    xMax = cat(1, ax.Children.BinEdges);
+    xMax = cat(2, ax.Children.BinEdges);
     xMax = max(xMax(:));
     
     xlim(ax, [0.5, xMax]);
