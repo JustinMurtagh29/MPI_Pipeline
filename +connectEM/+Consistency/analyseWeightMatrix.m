@@ -100,7 +100,7 @@ curBinEdges = linspace(-2, 0.5, 21);
 for curPlotConfig = plotConfigs
     curClasses = curPlotConfig.classes;
     
-    curConns = cell(size(curClasses, 1), 1);
+    curCvs = cell(size(curClasses, 1), 1);
     for curClassIdx = 1:size(curClasses, 1)
         curPreId = curClasses(curClassIdx, 1);
         curPostId = curClasses(curClassIdx, 2);
@@ -109,7 +109,7 @@ for curPlotConfig = plotConfigs
             (~curPreId | double(pairT.axonClass) == curPreId) ...
           & (~curPostId | double(pairT.targetClass) == curPostId);
         
-        curConns{curClassIdx} = pairT.medianLog10AsiArea(curMask);
+        curCvs{curClassIdx} = pairT.medianLog10AsiArea(curMask);
     end
     
     curAxonLeg = [{''}; categories(conn.axonMeta.axonClass)];
@@ -135,7 +135,7 @@ for curPlotConfig = plotConfigs
             'BinEdges', curBinEdges, ...
             'Normalization', 'probability', ...
             'DisplayStyle', 'stairs', 'LineWidth', 2), ...
-        curConns);
+        curCvs);
     
     curHistLeg = legend(curHistAx, curLegends, 'Location', 'NorthWest');
     curHistLeg.Box = 'off';
@@ -157,8 +157,8 @@ for curPlotConfig = plotConfigs
     curBoxAx = axes(curBoxFig); %#ok
     hold(curBoxAx, 'on');
     
-    curGroupId = repelem(1:numel(curConns), cellfun(@numel, curConns));
-    boxplot(cell2mat(curConns), curGroupId(:));
+    curGroupId = repelem(1:numel(curCvs), cellfun(@numel, curCvs));
+    boxplot(cell2mat(curCvs), curGroupId(:));
     
     curBoxAx.Box = 'off';
     curBoxAx.TickDir = 'out';
@@ -175,8 +175,8 @@ end
 % Ratio of medians
 curT = table;
 curT.title = curLegends;
-curT.n = cellfun(@numel, curConns);
-curT.median = 10 .^ cellfun(@median, curConns);
+curT.n = cellfun(@numel, curCvs);
+curT.median = 10 .^ cellfun(@median, curCvs);
 curT.otherCcRatio = curT.median ./ ...
     curT.median(all(curClasses == [1, 4], 2));
 curT.ccRatio = curT.median ./ arrayfun(@(a) ...
@@ -195,14 +195,17 @@ curMedTcCcRatio = curMedTc / curMedCc %#ok
 %% Look at synapse size similarity
 clear cur*;
 
-curCvThresh = 0.54;
+curPValThresh = 0.10;
 curBinEdges = linspace(0, 1.5, 16);
 
 for curPlotConfig = plotConfigs
     curClasses = curPlotConfig.classes;
     
-    curAsis = cell(size(curClasses, 1), 1);
-    curConns = cell(size(curClasses, 1), 1);
+    curCvs = cell(size(curClasses, 1), 1);
+    curMedAsis = cell(size(curClasses, 1), 1);
+    curNullCvs = cell(size(curClasses, 1), 1);
+    curNullMedAsis = cell(size(curClasses, 1), 1);
+    
     for curClassIdx = 1:size(curClasses, 1)
         curPreId = curClasses(curClassIdx, 1);
         curPostId = curClasses(curClassIdx, 2);
@@ -212,18 +215,28 @@ for curPlotConfig = plotConfigs
           & (~curPreId | double(pairT.axonClass) == curPreId) ...
           & (~curPostId | double(pairT.targetClass) == curPostId);
       
-        curConns{curClassIdx} = pairT.cvAsiAreas(curMask);
-        curAsis{curClassIdx} = asiT.area(cell2mat(pairT.asiIds(curMask)));
+        curCvs{curClassIdx} = pairT.cvAsiAreas(curMask);
+        curMedAsis{curClassIdx} = pairT.medianLog10AsiArea(curMask);
+        
+        % Build random pairs
+        curAsis = asiT.area(cell2mat(pairT.asiIds(curMask)));
+        
+        if isempty(curAsis)
+            curNullCvs{curClassIdx} = nan(0, 1);
+            curNullMedAsis{curClassIdx} = nan(0, 1);
+            continue;
+        end
+        
+        rng(0);
+        curRandPairs = randi(numel(curAsis), [10000, 2]);
+        curRandPairs = curAsis(curRandPairs);
+        
+        curNullCvs{curClassIdx} = ...
+            std(curRandPairs, 0, 2) ...
+         ./ mean(curRandPairs, 2);
+        curNullMedAsis{curClassIdx} = ...
+            median(log10(curRandPairs), 2);
     end
-    
-    rng(0);
-    curCv = @(v) std(v, 0, 2) ./ mean(v, 2);
-    curNullCvs = repmat({zeros(0, 1)}, size(curAsis));
-    
-    curMask = ~cellfun(@isempty, curAsis);
-    curNullCvs(curMask) = cellfun( ...
-        @(v) curCv(v(randi(numel(v), [10000, 2]))), ...
-        curAsis(curMask), 'UniformOutput', false);
     
     curAxonLeg = [{''}; categories(conn.axonMeta.axonClass)];
     curAxonLeg = curAxonLeg(1 + curClasses(:, 1));
@@ -234,6 +247,34 @@ for curPlotConfig = plotConfigs
     curLegends = arrayfun( ...
         @(ax, dend) strjoin(cat(2, ax, dend), ' → '), ...
         curAxonLeg, curDendLeg, 'UniformOutput', false);
+    
+    % NOTE(amotta): Let's check if CVs are significantly smaller than
+    % expected. If yes (using a certain p-value threshold), we determine
+    % the CV value at which the difference between the cumulative density
+    % functions is largest. This corresponds to the intersection of the
+    % probability density functions.
+    
+    curT = table;
+    curT.name = curLegends;
+    curT.n = cellfun(@numel, curCvs);
+    
+    % NOTE(amotta): `kstest2` throws an error if any of the inputs is
+    % empty. Let's handle this case by returning NaN as p-value.
+   [~, curT.pVal] = cellfun( ...
+       @(obs, null) kstest2(obs, null, 'tail', 'larger'), ...
+       curCvs, curNullCvs, 'ErrorHandler', @(varargin) deal(false, nan));
+   
+    curSumTwo = @(v) [v(:, 1), cumsum(v(:, 2))];
+    curCdfDiffs = cellfun(@(obs, null) ...
+        curSumTwo(sortrows([ ...
+           [obs, repmat(+1 / numel(obs), size(obs))]; ...
+           [null, repmat(-1 / numel(null), size(null))]], 1)), ...
+            curCvs, curNullCvs, 'UniformOutput', false);
+    
+    curT.cvThresh = nan(size(curCdfDiffs));
+    curT.cvThresh(curT.pVal < curPValThresh) = cellfun( ...
+        @(v) v(Util.nthOutput(2, @() max(v(:, 2))), 1), ...
+        curCdfDiffs(curT.pVal < curPValThresh));
     
     % Histogram
     curHistFig = figure();
@@ -248,7 +289,7 @@ for curPlotConfig = plotConfigs
             'BinEdges', curBinEdges, ...
             'Normalization', 'probability', ...
             'DisplayStyle', 'stairs', 'LineWidth', 2), ...
-        curConns);
+        curCvs);
     
     curHistLeg = legend(curHistAx, curLegends, 'Location', 'NorthEast');
     curHistLeg.Box = 'off';
@@ -270,23 +311,50 @@ for curPlotConfig = plotConfigs
     curBoxAx = axes(curBoxFig); %#ok
     hold(curBoxAx, 'on');
     
-    curGroupId = repelem(1:numel(curConns), cellfun(@numel, curConns));
-    boxplot(cell2mat(curConns), curGroupId(:));
+    curGroupId = repelem(1:numel(curCvs), cellfun(@numel, curCvs));
+    boxplot(cell2mat(curCvs), curGroupId(:));
     
     curBoxAx.Box = 'off';
     curBoxAx.TickDir = 'out';
     
     ylabel(curBoxAx, 'Median ASI area of connection');
-    xticklabels(curBoxAx, curLegends(cellfun(@numel, curConns) > 0));
+    xticklabels(curBoxAx, curLegends(cellfun(@numel, curCvs) > 0));
     curBoxAx.XTickLabelRotation = 20;
     
     title(curBoxAx, ...
         {info.filename; info.git_repos{1}.hash}, ...
         'FontSize', 10, 'FontWeight', 'normal');
-    
+        
     % Bar plot
-    curNullFrac = cellfun(@(v) mean(v < curCvThresh), curNullCvs);
-    curConnFrac = cellfun(@(v) mean(v < curCvThresh), curConns);
+    curT.nullFracBelowThresh = cellfun( ...
+        @(cvs, t) mean(cvs < t), curNullCvs, num2cell(curT.cvThresh));
+    curT.obsFracBelowThresh = cellfun( ...
+        @(cvs, t) mean(cvs < t), curCvs, num2cell(curT.cvThresh));
+    curT.diffFracBelowThresh = ...
+        curT.obsFracBelowThresh - curT.nullFracBelowThresh;
+    
+   [~, curT.areaP] = cellfun( ...
+       @(aO, cO, aN, cN, t) kstest2(aO(cO < t), aN(cN < t)), ...
+       curMedAsis, curCvs, curNullMedAsis, ...
+       curNullCvs, num2cell(curT.cvThresh), ...
+       'ErrorHandler', @(varargin) deal(false, nan));
+    curT %#ok
+    
+    %{
+    for curIdx = reshape(find(curT.areaP < 0.1), 1, [])
+        curBins = linspace(-2, 0.5, 26);
+        figure;
+        hold on;
+        histogram( ...
+            curMedAsis{curIdx}(curCvs{curIdx} < curT.cvThresh(curIdx)), ...
+            'Normalization', 'probability', 'BinEdges', curBins, ...
+            'DisplayStyle', 'stairs', 'LineWidth', 2);
+        histogram( ...
+            curNullMedAsis{curIdx}(curNullCvs{curIdx} < curT.cvThresh(curIdx)), ...
+            'Normalization', 'probability', 'BinEdges', curBins, ...
+            'DisplayStyle', 'stairs', 'LineWidth', 2);
+    end
+    %}
     
     curBarFig = figure();
     curBarFig.Color = 'white';
@@ -295,23 +363,23 @@ for curPlotConfig = plotConfigs
     hold(curBarAx, 'on');
     
     curColors = get(groot, 'defaultAxesColorOrder');
-    bar(curBarAx, curNullFrac, 'FaceColor', 'none', ...
+    bar(curBarAx, curT.nullFracBelowThresh, 'FaceColor', 'none', ...
         'EdgeColor', 'black', 'LineWidth', 2);
-    bar(curBarAx, curConnFrac, 'FaceColor', 'none', ...
+    bar(curBarAx, curT.obsFracBelowThresh, 'FaceColor', 'none', ...
         'EdgeColor', curColors(1, :), 'LineWidth', 2);
     
     curBarAx.Box = 'off';
     curBarAx.TickDir = 'out';
     
     ylim(curBarAx, [0, 1]);
-    xlim(curBarAx, [0, numel(curConns) + 1]);
-    xticks(curBarAx, 1:numel(curConns));
+    xlim(curBarAx, [0, numel(curCvs) + 1]);
+    xticks(curBarAx, 1:numel(curCvs));
     xticklabels(curBarAx, curLegends);
     curBarAx.XTickLabelRotation = 20;
     
     ylabel(curBarAx, { ...
         'Fraction of bi-synaptic connections'; ...
-       ['with CV below ', num2str(curCvThresh)]});
+        'with unexpetedly small size variability'});
     
     curLeg = {'Null model', 'Observed'};
     curLeg = legend(curBarAx, curLeg, 'Location', 'NorthEast');
