@@ -56,6 +56,8 @@ pairT.asiIds = accumarray( ...
     curIds, asiT.relId, [], @(ids) {ids});
 pairT.meanLog10AsiArea = cellfun( ...
     @(ids) mean(log10(asiT.area(ids))), pairT.asiIds);
+pairT.medianLog10AsiArea = cellfun( ...
+    @(ids) median(log10(asiT.area(ids))), pairT.asiIds);
 
 curCv = @(areas) std(areas) / mean(areas);
 curMask = cellfun(@numel, pairT.asiIds) > 1;
@@ -107,7 +109,7 @@ for curPlotConfig = plotConfigs
             (~curPreId | double(pairT.axonClass) == curPreId) ...
           & (~curPostId | double(pairT.targetClass) == curPostId);
         
-        curVals{curClassIdx} = pairT.meanLog10AsiArea(curMask);
+        curVals{curClassIdx} = pairT.medianLog10AsiArea(curMask);
     end
     
     curAxonLeg = [{''}; categories(conn.axonMeta.axonClass)];
@@ -141,6 +143,13 @@ for curPlotConfig = plotConfigs
     curHistAx.XLim = curBinEdges([1, end]);
     curHistAx.TickDir = 'out';
     
+    xlabel(curHistAx, 'Median ASI area of connection');
+    ylabel(curHistAx, 'Probability');
+    
+    title(curHistAx, ...
+        {info.filename; info.git_repos{1}.hash}, ...
+        'FontSize', 10, 'FontWeight', 'normal');
+    
     % Boxplot
     curBoxFig = figure();
     curBoxFig.Color = 'white';
@@ -150,14 +159,35 @@ for curPlotConfig = plotConfigs
     
     curGroupId = repelem(1:numel(curVals), cellfun(@numel, curVals));
     boxplot(cell2mat(curVals), curGroupId(:));
+    
+    curBoxAx.Box = 'off';
+    curBoxAx.TickDir = 'out';
+    
+    ylabel(curBoxAx, 'Median ASI area of connection');
+    xticklabels(curBoxAx, curLegends);
+    curBoxAx.XTickLabelRotation = 20;
+    
+    title(curBoxAx, ...
+        {info.filename; info.git_repos{1}.hash}, ...
+        'FontSize', 10, 'FontWeight', 'normal');
 end
 
-% Ratio of means
+% Ratio of medians
 curT = table;
 curT.title = curLegends;
+curT.n = cellfun(@numel, curVals);
 curT.median = 10 .^ cellfun(@median, curVals);
 curT.otherCcRatio = curT.median ./ ...
     curT.median(all(curClasses == [1, 4], 2));
+curT.ccRatio = curT.median ./ arrayfun(@(a) ...
+    curT.median(all(curClasses == [1, a], 2)), curClasses(:, 2));
 curT.otherRatio = curT.median ./ arrayfun(@(a) ...
     curT.median(all(curClasses == [a, 4], 2)), curClasses(:, 1));
 curT %#ok
+
+% For comparison, ratio between median TC vs. CC synapse size
+curMedTc = median(asiT.area( ...
+    conn.axonMeta.axonClass(asiT.preAggloId) == 'Thalamocortical'));
+curMedCc = median(asiT.area( ...
+    conn.axonMeta.axonClass(asiT.preAggloId) == 'Corticocortical'));
+curMedTcCcRatio = curMedTc / curMedCc %#ok
