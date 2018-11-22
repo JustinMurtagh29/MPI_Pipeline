@@ -100,7 +100,7 @@ curBinEdges = linspace(-2, 0.5, 21);
 for curPlotConfig = plotConfigs
     curClasses = curPlotConfig.classes;
     
-    curVals = cell(size(curClasses, 1), 1);
+    curConns = cell(size(curClasses, 1), 1);
     for curClassIdx = 1:size(curClasses, 1)
         curPreId = curClasses(curClassIdx, 1);
         curPostId = curClasses(curClassIdx, 2);
@@ -109,7 +109,7 @@ for curPlotConfig = plotConfigs
             (~curPreId | double(pairT.axonClass) == curPreId) ...
           & (~curPostId | double(pairT.targetClass) == curPostId);
         
-        curVals{curClassIdx} = pairT.medianLog10AsiArea(curMask);
+        curConns{curClassIdx} = pairT.medianLog10AsiArea(curMask);
     end
     
     curAxonLeg = [{''}; categories(conn.axonMeta.axonClass)];
@@ -135,7 +135,7 @@ for curPlotConfig = plotConfigs
             'BinEdges', curBinEdges, ...
             'Normalization', 'probability', ...
             'DisplayStyle', 'stairs', 'LineWidth', 2), ...
-        curVals);
+        curConns);
     
     curHistLeg = legend(curHistAx, curLegends, 'Location', 'NorthWest');
     curHistLeg.Box = 'off';
@@ -157,8 +157,8 @@ for curPlotConfig = plotConfigs
     curBoxAx = axes(curBoxFig); %#ok
     hold(curBoxAx, 'on');
     
-    curGroupId = repelem(1:numel(curVals), cellfun(@numel, curVals));
-    boxplot(cell2mat(curVals), curGroupId(:));
+    curGroupId = repelem(1:numel(curConns), cellfun(@numel, curConns));
+    boxplot(cell2mat(curConns), curGroupId(:));
     
     curBoxAx.Box = 'off';
     curBoxAx.TickDir = 'out';
@@ -175,8 +175,8 @@ end
 % Ratio of medians
 curT = table;
 curT.title = curLegends;
-curT.n = cellfun(@numel, curVals);
-curT.median = 10 .^ cellfun(@median, curVals);
+curT.n = cellfun(@numel, curConns);
+curT.median = 10 .^ cellfun(@median, curConns);
 curT.otherCcRatio = curT.median ./ ...
     curT.median(all(curClasses == [1, 4], 2));
 curT.ccRatio = curT.median ./ arrayfun(@(a) ...
@@ -191,3 +191,133 @@ curMedTc = median(asiT.area( ...
 curMedCc = median(asiT.area( ...
     conn.axonMeta.axonClass(asiT.preAggloId) == 'Corticocortical'));
 curMedTcCcRatio = curMedTc / curMedCc %#ok
+
+%% Look at synapse size similarity
+clear cur*;
+
+curCvThresh = 0.54;
+curBinEdges = linspace(0, 1.5, 16);
+
+for curPlotConfig = plotConfigs
+    curClasses = curPlotConfig.classes;
+    
+    curAsis = cell(size(curClasses, 1), 1);
+    curConns = cell(size(curClasses, 1), 1);
+    for curClassIdx = 1:size(curClasses, 1)
+        curPreId = curClasses(curClassIdx, 1);
+        curPostId = curClasses(curClassIdx, 2);
+        
+        curMask = ...
+            cellfun(@numel, pairT.asiIds) == 2 ...
+          & (~curPreId | double(pairT.axonClass) == curPreId) ...
+          & (~curPostId | double(pairT.targetClass) == curPostId);
+      
+        curConns{curClassIdx} = pairT.cvAsiAreas(curMask);
+        curAsis{curClassIdx} = asiT.area(cell2mat(pairT.asiIds(curMask)));
+    end
+    
+    rng(0);
+    curCv = @(v) std(v, 0, 2) ./ mean(v, 2);
+    curNullCvs = repmat({zeros(0, 1)}, size(curAsis));
+    
+    curMask = ~cellfun(@isempty, curAsis);
+    curNullCvs(curMask) = cellfun( ...
+        @(v) curCv(v(randi(numel(v), [10000, 2]))), ...
+        curAsis(curMask), 'UniformOutput', false);
+    
+    curAxonLeg = [{''}; categories(conn.axonMeta.axonClass)];
+    curAxonLeg = curAxonLeg(1 + curClasses(:, 1));
+    
+    curDendLeg = [{''}; categories(conn.denMeta.targetClass)];
+    curDendLeg = curDendLeg(1 + curClasses(:, 2));
+    
+    curLegends = arrayfun( ...
+        @(ax, dend) strjoin(cat(2, ax, dend), ' → '), ...
+        curAxonLeg, curDendLeg, 'UniformOutput', false);
+    
+    % Histogram
+    curHistFig = figure();
+    curHistFig.Color = 'white';
+    
+    curHistAx = axes(curHistFig); %#ok
+    hold(curHistAx, 'on');
+    
+    cellfun(...
+        @(data) histogram( ...
+            curHistAx, data, ...
+            'BinEdges', curBinEdges, ...
+            'Normalization', 'probability', ...
+            'DisplayStyle', 'stairs', 'LineWidth', 2), ...
+        curConns);
+    
+    curHistLeg = legend(curHistAx, curLegends, 'Location', 'NorthEast');
+    curHistLeg.Box = 'off';
+    
+    curHistAx.XLim = curBinEdges([1, end]);
+    curHistAx.TickDir = 'out';
+    
+    xlabel(curHistAx, 'Median ASI area of connection');
+    ylabel(curHistAx, 'Probability');
+    
+    title(curHistAx, ...
+        {info.filename; info.git_repos{1}.hash}, ...
+        'FontSize', 10, 'FontWeight', 'normal');
+    
+    % Boxplot
+    curBoxFig = figure();
+    curBoxFig.Color = 'white';
+    
+    curBoxAx = axes(curBoxFig); %#ok
+    hold(curBoxAx, 'on');
+    
+    curGroupId = repelem(1:numel(curConns), cellfun(@numel, curConns));
+    boxplot(cell2mat(curConns), curGroupId(:));
+    
+    curBoxAx.Box = 'off';
+    curBoxAx.TickDir = 'out';
+    
+    ylabel(curBoxAx, 'Median ASI area of connection');
+    xticklabels(curBoxAx, curLegends(cellfun(@numel, curConns) > 0));
+    curBoxAx.XTickLabelRotation = 20;
+    
+    title(curBoxAx, ...
+        {info.filename; info.git_repos{1}.hash}, ...
+        'FontSize', 10, 'FontWeight', 'normal');
+    
+    % Bar plot
+    curNullFrac = cellfun(@(v) mean(v < curCvThresh), curNullCvs);
+    curConnFrac = cellfun(@(v) mean(v < curCvThresh), curConns);
+    
+    curBarFig = figure();
+    curBarFig.Color = 'white';
+    
+    curBarAx = axes(curBarFig); %#ok
+    hold(curBarAx, 'on');
+    
+    curColors = get(groot, 'defaultAxesColorOrder');
+    bar(curBarAx, curNullFrac, 'FaceColor', 'none', ...
+        'EdgeColor', 'black', 'LineWidth', 2);
+    bar(curBarAx, curConnFrac, 'FaceColor', 'none', ...
+        'EdgeColor', curColors(1, :), 'LineWidth', 2);
+    
+    curBarAx.Box = 'off';
+    curBarAx.TickDir = 'out';
+    
+    ylim(curBarAx, [0, 1]);
+    xlim(curBarAx, [0, numel(curConns) + 1]);
+    xticks(curBarAx, 1:numel(curConns));
+    xticklabels(curBarAx, curLegends);
+    curBarAx.XTickLabelRotation = 20;
+    
+    ylabel(curBarAx, { ...
+        'Fraction of bi-synaptic connections'; ...
+       ['with CV below ', num2str(curCvThresh)]});
+    
+    curLeg = {'Null model', 'Observed'};
+    curLeg = legend(curBarAx, curLeg, 'Location', 'NorthEast');
+    curLeg.Box = 'off';
+    
+    title(curBarAx, ...
+        {info.filename; info.git_repos{1}.hash}, ...
+        'FontSize', 10, 'FontWeight', 'normal');
+end
