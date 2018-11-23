@@ -1,4 +1,4 @@
-function [connLin, synLin, connLinFile] = loadConnectome(param)
+function [connLin, synLin, connLinFile] = loadConnectome(param, classDef)
     % loadConnectome(param)
     %   This is a wrapper around the standard connectEM.Connectome.load
     %   function specifically for the analysis of synapse size consistency.
@@ -13,6 +13,11 @@ function [connLin, synLin, connLinFile] = loadConnectome(param)
     %
     % Written by
     %   Alessandro motta <alessandro.motta@brain.mpg.de>
+    
+    if ~exist('classDef', 'var') || isempty(classDef)
+        classDef = 'axonClasses';
+    end
+    
     rootDir = param.saveFolder;
     
     % Connectome based on partially split axons, which were used to develop
@@ -28,7 +33,7 @@ function [connLin, synLin, connLinFile] = loadConnectome(param)
     param = load(fullfile(rootDir, 'allParameter.mat'));
     param = param.p;
 
-    conn = connectEM.Connectome.load(param, connFile);
+   [conn, ~, axonClasses] = connectEM.Connectome.load(param, connFile);
 
     % HACK(amotta): The connectome used `axons_19_a_partiallySplit_v2.mat`,
     % but the parent IDs were only added later in version 4...
@@ -36,12 +41,49 @@ function [connLin, synLin, connLinFile] = loadConnectome(param)
     conn.axonMeta.unsplitParentId = ...
         curMeta.parentIds(conn.axonMeta.parentId);
 
-   [connLin, synLin] = connectEM.Connectome.load(param, connLinFile);
+    %% Define axon classes
+    switch classDef
+        case 'axonClasses'
+            conn.axonMeta.axonClass = renamecats( ...
+                conn.axonMeta.axonClass, 'Inhibitory', 'Ignore');
+            
+        case 'specificityClasses'
+           [conn, axonClasses] = ...
+                connectEM.Connectome.prepareForSpecificityAnalysis( ...
+                    conn, axonClasses, 'minSynPre', 10);
+            curClasses = ...
+                connectEM.Connectome.buildAxonSpecificityClasses( ...
+                    conn, axonClasses(1));
+            curClasses = curClasses.specs;
 
-    curMeta = load(connLin.info.param.axonFile);
-    connLin.axonMeta.unsplitParentId = ...
-        curMeta.parentIds(connLin.axonMeta.parentId);
+            curNames = fieldnames(curClasses);
+            curAxonIds = cellfun( ...
+                @(n) curClasses.(n).axonIds, ...
+                curNames, 'UniformOutput', false);
 
+            % Make specificity classes mutually non-overlapping
+            curDupAxonIds = sort(cell2mat(curAxonIds));
+            curDupAxonIds = curDupAxonIds(diff(curDupAxonIds) == 0);
+
+            curAxonIds = cellfun( ...
+                @(ids) setdiff(ids, curDupAxonIds), ...
+                curAxonIds, 'UniformOutput', false);
+            curExcAxonIds = axonClasses(1).axonIds;
+
+            % NOTE(amotta): All non-excitatory axons (i.e., inhibitory and
+            % unidentified axons) are marked "ignore". Excitatory axons
+            % with no target specificity will be in the "other" category.
+            conn.axonMeta.axonClass = repelem( ...
+                {'Ignore'}, numel(conn.axons), 1);
+            conn.axonMeta.axonClass(curExcAxonIds) = {'Other'};
+            conn.axonMeta.axonClass(cell2mat(curAxonIds)) = ...
+                repelem(curNames, cellfun(@numel, curAxonIds), 1);
+            conn.axonMeta.axonClass = categorical(conn.axonMeta.axonClass);
+            
+        otherwise
+            error('Unknown class definition "%s"', classDef);
+    end
+    
     %% Translate classes from partially split to fully linearized axons
     % NOTE(amotta): The partially split and the linearized version of the
     % axons were both derived from axons 19a. To translate the axon classes
@@ -51,42 +93,36 @@ function [connLin, synLin, connLinFile] = loadConnectome(param)
     % fully linearized axons, we only look at the axons 19a which were
     % uniquely classified in the partially split version.
     clear cur*;
-
-    % Find parents of axons classified as TC / CC
-    curTcParentIds = conn.axonMeta.unsplitParentId( ...
-        conn.axonMeta.axonClass == 'Thalamocortical');
-    curCcParentIds = conn.axonMeta.unsplitParentId( ...
-        conn.axonMeta.axonClass == 'Corticocortical');
-
-    % Check if there exist siblings of TC axons that were classified
-    % differently (i.e., as corticocortical or inhibitory; other is okay).
-    % If yes, we do not trust or use these TC axons.
-    curTcSiblingsOkay = accumarray( ...
+    
+    curAllCats = conn.axonMeta.axonClass;
+    curOtherCat = cat(1, curAllCats([]), {'Other'});
+    curCats = setdiff(curAllCats, {'Other'; 'Ignore'});
+    
+    curParentIds = find(accumarray( ...
         conn.axonMeta.unsplitParentId, ...
         double(conn.axonMeta.axonClass), [], ...
-        @(types) isequal(setdiff(types, 4), 2)); % 2 = TC, 4 = other
-    curTcSiblingsOkay = curTcSiblingsOkay(curTcParentIds);
-    curTcParentIds = curTcParentIds(curTcSiblingsOkay);
-
-    curCcSiblingsOkay = accumarray( ...
-        conn.axonMeta.unsplitParentId, ...
-        double(conn.axonMeta.axonClass), [], ...
-        @(types) isequal(setdiff(types, 4), 1)); % 1 = CC, 4 = other
-    curCcSiblingsOkay = curCcSiblingsOkay(curCcParentIds);
-    curCcParentIds = curCcParentIds(curCcSiblingsOkay);
-
-    % Sanity check
-    assert(isempty(intersect(curTcParentIds, curCcParentIds)));
+        @(t) isscalar(setdiff(t, double(curOtherCat)))));
+    curParentIds = arrayfun( ...
+        @(c) intersect(conn.axonMeta.unsplitParentId( ...
+            conn.axonMeta.axonClass == c), curParentIds), ...
+        curCats, 'UniformOutput', false);
+    
+    % Make sure that parent lists are mutually non-overlapping
+    Agglo.check(curParentIds);
+    
+   [connLin, synLin] = ...
+       connectEM.Connectome.load(param, connLinFile);
+   
+    curMeta = load(connLin.info.param.axonFile);
+    connLin.axonMeta.unsplitParentId = ...
+        curMeta.parentIds(connLin.axonMeta.parentId);
 
     % Assign axon classes to linearized axons
-    connLin.axonMeta.axonClass(:) = 'Other';
-    connLin.axonMeta.axonClass(ismember( ...
-        connLin.axonMeta.unsplitParentId, ...
-        curTcParentIds)) = 'Thalamocortical';
-    connLin.axonMeta.axonClass(ismember( ...
-        connLin.axonMeta.unsplitParentId, ...
-        curCcParentIds)) = 'Corticocortical';
-    
-    % Remove temporary field
-    connLin.axonMeta(:, {'unsplitParentId'}) = [];
+    connLin.axonMeta.axonClass = repelem( ...
+        curOtherCat, numel(connLin.axons), 1);
+    for curIdx = 1:numel(curCats)
+        connLin.axonMeta.axonClass(ismember( ...
+            connLin.axonMeta.unsplitParentId, ...
+            curParentIds{curIdx})) = curCats(curIdx);
+    end
 end
