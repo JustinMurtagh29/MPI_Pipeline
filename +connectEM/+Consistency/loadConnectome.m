@@ -53,8 +53,8 @@ function [connLin, synLin, connLinFile] = loadConnectome(param, classDef)
                     conn, axonClasses, 'minSynPre', 10);
             curClasses = ...
                 connectEM.Connectome.buildAxonSpecificityClasses( ...
-                    conn, axonClasses(1));
-            curClasses = curClasses.specs;
+                    conn, axonClasses(1:2));
+            curClasses = curClasses(1).specs;
 
             curNames = fieldnames(curClasses);
             curAxonIds = cellfun( ...
