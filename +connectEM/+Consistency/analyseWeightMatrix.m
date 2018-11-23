@@ -14,7 +14,7 @@ param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 
 [conn, syn, connFile] = ...
-    connectEM.Consistency.loadConnectome(param);
+    connectEM.Consistency.loadConnectome(param, 'specificityClasses');
 
 % Loading spine head agglomerates
 shAgglos = load(shFile, 'shAgglos');
@@ -70,7 +70,7 @@ pairT.cvAsiAreas(curMask) = cellfun( ...
 clear cur*;
 
 curAxonClasses = setdiff( ...
-    conn.axonMeta.axonClass, {'Inhibitory', 'Other'});
+    conn.axonMeta.axonClass, {'Ignore', 'Other'});
 curTargetClasses = setdiff( ...
     conn.denMeta.targetClass, { ...
     'AxonInitialSegment', 'Ignore', 'Somata'});
