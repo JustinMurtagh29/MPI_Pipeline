@@ -297,7 +297,7 @@ for curPlotConfig = plotConfigs
     curHistAx.XLim = curBinEdges([1, end]);
     curHistAx.TickDir = 'out';
     
-    xlabel(curHistAx, 'Median ASI area of connection');
+    xlabel(curHistAx, 'Coefficient of variation');
     ylabel(curHistAx, 'Probability');
     
     title(curHistAx, ...
@@ -317,7 +317,7 @@ for curPlotConfig = plotConfigs
     curBoxAx.Box = 'off';
     curBoxAx.TickDir = 'out';
     
-    ylabel(curBoxAx, 'Median ASI area of connection');
+    ylabel(curBoxAx, 'Coefficient of variation');
     xticklabels(curBoxAx, curLegends(cellfun(@numel, curCvs) > 0));
     curBoxAx.XTickLabelRotation = 20;
     
