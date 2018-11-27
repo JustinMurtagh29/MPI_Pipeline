@@ -37,7 +37,7 @@ clear cur*;
 rng(0);
 mkdir(outputDir);
 
-curAxonIds = specClasses(3).specs.SmoothDendrite.axonIds;
+curAxonIds = specClasses(1).specs.SmoothDendrite.axonIds;
 curAxonIds = curAxonIds(randperm(numel(curAxonIds)));
 curAxonIds = curAxonIds(1:10);
 
@@ -51,6 +51,7 @@ curNumDigits = ceil(log10(1 + numel(curAxonIds)));
 for curIdx = 1:numel(curAxonIds)
     curId = conn.axonMeta.id(curAxonIds(curIdx));
     curSynT = synT(synT.preAggloId == curId, :);
+    curSynT.type = syn.synapses.type(curSynT.id);
     
     curAxon = conn.axons(curId);
     curSynapses = cellfun( ...
@@ -71,8 +72,10 @@ for curIdx = 1:numel(curAxonIds)
     curSkel.colors{1} = [0, 0, 1, 1];
     
     curSkel.names(2:end) = arrayfun( ...
-        @(id, type) sprintf('Synapse %d (onto %s)', id, type), ...
-        curSynT.id, curSynT.ontoTarget, 'UniformOutput', false);
+        @(id, type, target) sprintf( ...
+            'Synapse %d (%s onto %s)', id, type, target), ...
+        curSynT.id, curSynT.type, curSynT.ontoTarget, ...
+        'UniformOutput', false);
     curSkel.colors(2:end) = {[1, 1, 0, 1]};
     
     curSkelName = sprintf( ...
