@@ -19,7 +19,7 @@ param.local(1) = struct;
 param.local(1).bboxSmall = ...
     Util.convertWebknossosToMatlabBbox([9600, 5000, 10, 1250, 1250, 132]);
 
-margin = [0, 0, 0];
+margin = [0; 0; 0];
 % margin = param.tileBorder(:, 2);
 % assert(isequal(margin, [256; 256; 128]));
 
