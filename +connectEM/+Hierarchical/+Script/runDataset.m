@@ -3,14 +3,25 @@
 clear;
 
 %% Configuration
-rootDir = '/tmpscratch/amotta/l23/2018-10-09-mrnet-pipeline-run';
-graphFile = '/gaba/u/amotta/l23/2018-10-11-hierarchical-agglomeration/graph.mat';
+graphFile = '/gaba/u/hkebiri/hierarchical-agglo-graph.mat';
 
-param = load(fullfile(rootDir, 'allParameter.mat'));
-param = param.p;
+param = struct;
 
-margin = param.tileBorder(:, 2);
-assert(isequal(margin, [256; 256; 128]));
+param.class = struct;
+param.class.root = '/tmpscratch/hkebiri/unet_1fSEP_05_Noise/results/wkw';
+param.class.backend = 'wkwrap';
+
+param.seg = struct;
+param.seg.root = '/tmpscratch/hkebiri/unet_1fSEP_05_Noise/segmentations_logDistTransform/h0.2_thresh_0.5_voxelSize_4435';
+param.seg.backend = 'wkwrap';
+
+param.local(1) = struct;
+param.local(1).bboxSmall = ...
+    Util.convertWebknossosToMatlabBbox([9600, 5000, 10, 1250, 1250, 132]);
+
+margin = [0, 0, 0];
+% margin = param.tileBorder(:, 2);
+% assert(isequal(margin, [256; 256; 128]));
 
 info = Util.runInfo();
 Util.showRunInfo(info);
@@ -27,7 +38,7 @@ job = Cluster.startJob( ...
     taskArgs, 'numOutputs', 2, ...
     'sharedInputs', sharedArgs, ...
     'sharedInputsLocation', sharedArgLocs, ...
-    'cluster', {'priority', 100, 'time', '6:00:00', 'memory', 48});
+    'cluster', {'priority', 100, 'time', '24:00:00', 'memory', 128});
 Cluster.waitForJob(job);
 
 %% Fetch outputs

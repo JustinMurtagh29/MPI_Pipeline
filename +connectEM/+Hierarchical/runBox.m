@@ -12,8 +12,8 @@ function [mergedEdges, mergeScores] = runBox(param, box, varargin)
     seg = loadSegDataGlobal(param.seg, boxLarge);
     coreSegIds = findCoreSegIds(box, boxLarge, seg);
     
-    maxSegId = Seg.Global.getMaxSegId(param);
-    corrEdges = loadCorrespondences(param, boxLarge);
+    maxSegId = max(seg(:));
+    corrEdges = zeros(0, 2, 'uint32');
     corrLUT = buildCorrespondenceLUT(maxSegId, corrEdges);
     seg(seg ~= 0) = corrLUT(seg(seg ~= 0));
     
