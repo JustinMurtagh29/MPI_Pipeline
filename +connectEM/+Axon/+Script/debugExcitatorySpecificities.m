@@ -38,6 +38,8 @@ rng(0);
 mkdir(outputDir);
 
 curAxonIds = specClasses(1).specs.ProximalDendrite.axonIds;
+curAxonIds = intersect(curAxonIds, axonClasses(4).axonIds);
+
 curAxonIds = curAxonIds(randperm(numel(curAxonIds)));
 curAxonIds = curAxonIds(1:10);
 
