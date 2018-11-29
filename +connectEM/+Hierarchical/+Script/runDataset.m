@@ -5,7 +5,11 @@ clear;
 %% Configuration
 graphFile = '/gaba/u/hkebiri/hierarchical-agglo-graph.mat';
 
+box = [9600, 5000, 10, 1250, 1250, 132];
+box = Util.convertWebknossosToMatlabBbox(box);
+
 param = struct;
+param.bbox = box;
 
 param.class = struct;
 param.class.root = '/tmpscratch/hkebiri/unet_1fSEP_05_Noise/results/wkw';
@@ -16,8 +20,7 @@ param.seg.root = '/tmpscratch/hkebiri/unet_1fSEP_05_Noise/segmentations_logDistT
 param.seg.backend = 'wkwrap';
 
 param.local(1) = struct;
-param.local(1).bboxSmall = ...
-    Util.convertWebknossosToMatlabBbox([9600, 5000, 10, 1250, 1250, 132]);
+param.local(1).bboxSmall = box;
 
 margin = [0; 0; 0];
 % margin = param.tileBorder(:, 2);
