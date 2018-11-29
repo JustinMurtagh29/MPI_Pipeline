@@ -12,7 +12,7 @@ param = struct;
 param.bbox = box;
 
 param.class = struct;
-param.class.root = '/tmpscratch/hkebiri/unet_1fSEP_05_Noise/results/wkw';
+param.class.root = '/u/hkebiri/python/unet/unet_1fSEP_05_Noise/results/wkwPredRaw990748fSEP_05_NoiseSkeletonTracedRightDimensions';
 param.class.backend = 'wkwrap';
 
 param.seg = struct;
