@@ -5,7 +5,7 @@ clear;
 %% configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-partiallySplit-v2_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v8-classified.mat');
-outputDir = '/home/amotta/Desktop/exc-specs';
+outputDir = '/home/amotta/Desktop/inh-specs';
 
 minSynPre = 10;
 info = Util.runInfo();
@@ -37,9 +37,7 @@ clear cur*;
 rng(0);
 mkdir(outputDir);
 
-curAxonIds = specClasses(1).specs.ProximalDendrite.axonIds;
-curAxonIds = intersect(curAxonIds, axonClasses(4).axonIds);
-
+curAxonIds = specClasses(2).specs.SmoothDendrite.axonIds;
 curAxonIds = curAxonIds(randperm(numel(curAxonIds)));
 curAxonIds = curAxonIds(1:10);
 
