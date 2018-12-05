@@ -523,13 +523,8 @@ for curIdx = 1:numel(curPairIds)
         curPairT.preAggloId(curCollPairIds));
     curCollPairIds = curPairIds(ismember( ...
         curPairT.preAggloId(curPairIds), curCollAxonIds));
-    
-    %{
-    curCollAsiIds = unique(cell2mat(curPairT.asiIds( ...
-        ismember(curPairT.preAggloId, curCollAxonIds))));
-    %}
-    
-    curCollAsiIds = unique(cell2mat(curPairT.asiIds(curCollPairIds)));
+    curCollAsiIds = unique(cell2mat( ...
+        curPairT.asiIds(curCollPairIds)));
     
     rng(0);
     curRandPairs = randi(numel(curCollAsiIds), 1000);
