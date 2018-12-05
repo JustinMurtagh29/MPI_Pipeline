@@ -14,7 +14,7 @@ param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 
 [conn, syn, connFile] = ...
-    connectEM.Consistency.loadConnectome(param, 'specificityClasses');
+    connectEM.Consistency.loadConnectome(param);
 
 % Loading spine head agglomerates
 shAgglos = load(shFile, 'shAgglos');
@@ -391,4 +391,95 @@ for curPlotConfig = plotConfigs
     title(curBarAx, ...
         {info.filename; info.git_repos{1}.hash}, ...
         'FontSize', 10, 'FontWeight', 'normal');
+end
+
+%% Look at remaining synapses from axons with small / large SASD pairs
+clear cur*;
+
+curClassName = 'Corticocortical';
+curBinEdges = linspace(-1.5, 0.5, 21);
+
+curRois = struct;
+curRois(1).title = ...
+    'Remaining synapses from axons with large area, low CV pair';
+curRois(1).cvRange = [0, 0.4];
+curRois(1).log10AsiRange = [-0.2, +0.2];
+
+curRois(2).title = ...
+    'Remaining synapses from axons with small area, low CV pair';
+curRois(2).cvRange = [0.1, 0.5];
+curRois(2).log10AsiRange = [-0.8, -0.5];
+
+% Find bi-spiny connections within CV-log10(ASI) regions of interest
+curPairIds = arrayfun( ...
+    @(roi) find( ...
+        pairT.cvAsiAreas >= roi.cvRange(1) ...
+      & pairT.cvAsiAreas <= roi.cvRange(end) ...
+      & pairT.meanLog10AsiArea >= roi.log10AsiRange(1) ...
+      & pairT.meanLog10AsiArea <= roi.log10AsiRange(end) ...
+      & cellfun(@numel, pairT.asiIds) == 2 ...
+      & pairT.axonClass == curClassName), ...
+	curRois, 'UniformOutput', false);
+[curRois.pairIds] = deal(curPairIds{:});
+
+curAxonIds = arrayfun( ...
+    @(roi) unique(pairT.preAggloId(roi.pairIds)), ...
+    curRois, 'UniformOutput', false);
+[curRois.axonIds] = deal(curAxonIds{:});
+
+curOtherAsiIds = arrayfun( ...
+    @(roi) unique(cell2mat(pairT.asiIds( ...
+        setdiff(find( ...
+        ismember(pairT.preAggloId, roi.axonIds) ...
+      & cellfun(@numel, pairT.asiIds) ~= 2), roi.pairIds)))), ...
+    curRois, 'UniformOutput', false);
+
+% Add fake ROI with all synapses
+curRois(end + 1).title = 'All synapses';
+curOtherAsiIds{end + 1} = unique(cell2mat(pairT.asiIds));
+
+curFig = figure();
+curFig.Color = 'white';
+curFig.Position(3:4) = [560, 545];
+curAx = axes(curFig);
+hold(curAx, 'on');
+
+for curIdx = 1:numel(curRois)
+    histogram(curAx, ...
+        log10(asiT.area(curOtherAsiIds{curIdx})), ...
+        'BinEdges', curBinEdges, 'Normalization', 'probability', ...
+        'DisplayStyle', 'stairs', 'LineWidth', 2);
+end
+
+curLeg = legend(curAx, {curRois.title}, 'Location', 'SouthOutside');
+curLeg.Box = 'off';
+
+curAx.TickDir = 'out';
+curAx.XLim = curBinEdges([1, end]);
+
+xlim(curAx, curBinEdges([1, end]));
+xlabel(curAx, 'Average log_{10}(ASI area [µm²])');
+ylabel(curAx, 'Probability');
+
+title(curAx, ...
+    {info.filename; info.git_repos{1}.hash; sprintf( ...
+    'Primary spine synapses from %s axons', curClassName)}, ...
+    'FontSize', 10, 'FontWeight', 'normal');
+
+% Report some numbers
+for curIdx = 1:(numel(curRois) - 1)
+    curRoi = curRois(curIdx);
+    
+   [~, curPVal] = kstest2( ...
+       log10(asiT.area(curOtherAsiIds{curIdx})), ...
+       log10(asiT.area(curOtherAsiIds{end})));
+   
+   fprintf('# %s\n', curRoi.title);
+   fprintf('* CV range: %g to %g\n', curRoi.cvRange);
+   fprintf('* Average log10(ASI) range: %g to %g\n', curRoi.cvRange);
+   fprintf('* No. SASD pairs meeting criteria: %d\n', numel(curRoi.pairIds));
+   fprintf('* No. axons with at least one such SASD pair: %d\n', numel(curRoi.axonIds));
+   fprintf('* No. remaining synapses from above axons: %d\n', numel(curOtherAsiIds{curIdx}));
+   fprintf('* Prob. of remaining synapses being different from overall: %g\n', curPVal);
+   fprintf('\n');
 end
