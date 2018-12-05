@@ -483,3 +483,84 @@ for curIdx = 1:(numel(curRois) - 1)
    fprintf('* Prob. of remaining synapses being different from overall: %g\n', curPVal);
    fprintf('\n');
 end
+
+%% Prototyping
+clear cur*;
+
+curCvRange = [0, 0.4];
+curClassName = 'Corticocortical';
+
+curPairT = pairT;
+curPairT = curPairT(curPairT.axonClass == curClassName, :);
+curPairT = sortrows(curPairT, 'meanLog10AsiArea', 'ascend');
+
+curPairIds = find(...
+    curPairT.cvAsiAreas >= curCvRange(1) ...
+  & curPairT.cvAsiAreas <= curCvRange(end) ...
+  & cellfun(@numel, curPairT.asiIds) == 2);
+
+% Collected pairs
+curCollPairIds = zeros(0, 1);
+curMeanLog10Asi = zeros(0, 1);
+curPVals = zeros(0, 1);
+
+curFst = @(vals) vals(1);
+curCv = @(areas) std(areas, 0, 2) ./ mean(areas, 2);
+
+tic;
+for curIdx = 1:numel(curPairIds)
+    Util.progressBar(curIdx, numel(curPairIds));
+    
+    curPairId = setdiff(curPairIds, curCollPairIds);
+    if isempty(curPairId); break; end
+    curPairId = curPairId(1);
+    
+    curCollPairIds = cat(1, curCollPairIds, curPairId);
+    
+    % Complete
+    curCollAxonIds = unique( ...
+        curPairT.preAggloId(curCollPairIds));
+    curCollPairIds = curPairIds(ismember( ...
+        curPairT.preAggloId(curPairIds), curCollAxonIds));
+    
+    curCollAsiIds = unique(cell2mat(curPairT.asiIds( ...
+        ismember(curPairT.preAggloId, curCollAxonIds))));
+    
+    rng(0);
+    curRandPairs = randi(numel(curCollAsiIds), 1000);
+    curRandPairs = reshape(curRandPairs, [], 2);
+    
+    curRandCvs = curCv(asiT.area(curRandPairs));
+    curRandMeanLog10AsiArea = mean(log10(asiT.area(curRandPairs)), 2);
+    
+    curRandMask = ...
+        curRandCvs >= curCvRange(1) ...
+      & curRandCvs <= curCvRange(end);
+  
+    curA = curPairT.meanLog10AsiArea(curCollPairIds);
+    curB = curRandMeanLog10AsiArea(curRandMask);
+    
+   [~, curPVals(curIdx)] = kstest2(curA, curB);
+    curMeanLog10Asi(curIdx) = curPairT.meanLog10AsiArea(curPairId);
+end
+
+% Plotting
+curFig = figure();
+curFig.Color = 'white';
+curFig.Position(3:4) = [560, 540];
+
+curAx = subplot(2, 1, 1);
+plot(curAx, log10(curPVals));
+ylabel(curAx, {'log(p-value)'; 'for low-CV sizes'});
+
+curAx = subplot(2, 1, 2);
+plot(curAx, curMeanLog10Asi);
+ylabel(curAx, {'Average log_{10}(ASI)'; 'of SASD pair'});
+xlabel(curAx, 'SASD size threshold / axons');
+
+set(curFig.Children, 'TickDir', 'out');
+
+annotation( ...
+    curFig, 'textbox', [0, 0.9, 1, 0.1], ...
+    'String', {info.filename; info.git_repos{1}.hash}, ...
+    'EdgeColor', 'none', 'HorizontalAlignment', 'center');
