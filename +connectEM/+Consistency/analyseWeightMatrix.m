@@ -502,7 +502,8 @@ curPairIds = find(...
 % Collected pairs
 curCollPairIds = zeros(0, 1);
 curMeanLog10Asi = zeros(0, 1);
-curPVals = zeros(0, 1);
+curMeanLog10AsiPVal = zeros(0, 1);
+curCvPVal = zeros(0, 1);
 
 curFst = @(vals) vals(1);
 curCv = @(areas) std(areas, 0, 2) ./ mean(areas, 2);
@@ -523,8 +524,12 @@ for curIdx = 1:numel(curPairIds)
     curCollPairIds = curPairIds(ismember( ...
         curPairT.preAggloId(curPairIds), curCollAxonIds));
     
+    %{
     curCollAsiIds = unique(cell2mat(curPairT.asiIds( ...
         ismember(curPairT.preAggloId, curCollAxonIds))));
+    %}
+    
+    curCollAsiIds = unique(cell2mat(curPairT.asiIds(curCollPairIds)));
     
     rng(0);
     curRandPairs = randi(numel(curCollAsiIds), 1000);
@@ -537,10 +542,14 @@ for curIdx = 1:numel(curPairIds)
         curRandCvs >= curCvRange(1) ...
       & curRandCvs <= curCvRange(end);
   
-    curA = curPairT.meanLog10AsiArea(curCollPairIds);
-    curB = curRandMeanLog10AsiArea(curRandMask);
+    curA = curRandMeanLog10AsiArea(curRandMask);
+    curB = curPairT.meanLog10AsiArea(curCollPairIds);
+   [~, curMeanLog10AsiPVal(curIdx)] = kstest2(curA, curB);
+   
+    curA = curRandCvs;
+    curB = curPairT.cvAsiAreas(curCollPairIds);
+   [~, curCvPVal(curIdx)] = kstest2(curA, curB);
     
-   [~, curPVals(curIdx)] = kstest2(curA, curB);
     curMeanLog10Asi(curIdx) = curPairT.meanLog10AsiArea(curPairId);
 end
 
@@ -549,11 +558,15 @@ curFig = figure();
 curFig.Color = 'white';
 curFig.Position(3:4) = [560, 540];
 
-curAx = subplot(2, 1, 1);
-plot(curAx, log10(curPVals));
-ylabel(curAx, {'log(p-value)'; 'for low-CV sizes'});
+curAx = subplot(3, 1, 1);
+plot(curAx, log10(curCvPVal));
+ylabel(curAx, {'log(p-value)'; 'for CV distribution'});
 
-curAx = subplot(2, 1, 2);
+curAx = subplot(3, 1, 2);
+plot(curAx, log10(curMeanLog10AsiPVal));
+ylabel(curAx, {'log(p-value)'; 'for low-CV ASI areas'});
+
+curAx = subplot(3, 1, 3);
 plot(curAx, curMeanLog10Asi);
 ylabel(curAx, {'Average log_{10}(ASI)'; 'of SASD pair'});
 xlabel(curAx, 'SASD size threshold / axons');
