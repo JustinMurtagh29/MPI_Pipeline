@@ -5,7 +5,7 @@ clear;
 %% Configuration
 numSyn = 2;
 numSteps = 2;
-numRuns = 1000;
+numRuns = 10000;
 
 tau = 10; % ms
 
@@ -26,16 +26,23 @@ sigma = 1;
 
 %% Simulate
 rng(0);
+
+% Normal initialization
+wMat(:, 1, :) = min(1, lognrnd(mu, sigma, [2, 1, numRuns]));
+
+% Biased initialization
+% curInitWeights = wMat(:, end, :);
+% wMat(:, 1, :) = curInitWeights(randi(numel(curInitWeights), [2, 1, numRuns]));
+
 for curRun = 1:numRuns
     curHasStdp = rand(1) < stdpProb;
-    wMat(:, 1, curRun) = min(1, lognrnd(mu, sigma, [2, 1]));
 
     for curStep = 2:numSteps
         curOldW = wMat(:, curStep - 1, curRun);
         curDeltaT = 2 * tau * (2 * rand(1) - 1);
 
         % HACK(amotta): Correlate strength and 
-        % curDeltaT = curDeltaT + 2 * sum(curOldW);
+        % curDeltaT = curDeltaT + 4 * sum(curOldW);
 
         if curDeltaT > 0
             curDeltaW = +aPos(curOldW) * exp(-curDeltaT / tau);
@@ -94,24 +101,25 @@ hold on;
 
 histogram(cvs(:, 1, :), ...
     'BinEdges', curEdges, ...
-    'Normalization', 'probability', ...
     'DisplayStyle', 'stairs', 'LineWidth', 2);
 histogram(cvs(:, end, :), ...
     'BinEdges', curEdges, ...
-    'Normalization', 'probability', ...
     'DisplayStyle', 'stairs', 'LineWidth', 2);
 histogram(cvs(:, end, ltpMask), ...
     'BinEdges', curEdges, ...
-    'Normalization', 'probability', ...
-    'DisplayStyle', 'stairs', 'LineWidth', 2);
-histogram(cvs(:, end, ltdMask), ...
-    'BinEdges', curEdges, ...
-    'Normalization', 'probability', ...
     'DisplayStyle', 'stairs', 'LineWidth', 2);
 
+curKnots = unique(cvs(:, [1, end], :));
+curBefore = histcounts(cvs(:, 1, :), curKnots, 'Normalization', 'cdf');
+curAfter = histcounts(cvs(:, end, :), curKnots, 'Normalization', 'cdf');
+
+[~, curThreshIdx] = max(curAfter - curBefore);
+curThresh = curKnots(curThreshIdx)
+curAfter(curThreshIdx) - curBefore(curThreshIdx)
+
 %%
-asis = 10 .^ mean(log10(wMat), 1);
-curEdges = linspace(0, 1, 21);
+asis = log10(wMat);
+curEdges = linspace(-2.5, 0, 26);
 
 figure;
 hold on;
@@ -317,51 +325,4 @@ annotation( ...
     info.filename; info.git_repos{1}.hash; ...
     curConfig.title; curCtrlConfig.title}, ...
     'EdgeColor', 'none', 'HorizontalAlignment', 'center');
-%}
-
-
-%%
-
-curEdges = linspace(0, 1, 21);
-eW = wMat(:, end, :);
-wCv = std(eW, 0, 1) ./ mean(eW, 1);
-eMask = wCv < 0.4;
-
-figure;
-hold on;
-histogram(eW, 'BinEdges', curEdges, 'Normalization', 'probability');
-histogram(eW(:, :, eMask), 'BinEdges', curEdges, 'Normalization', 'probability');
-
-%% Simulate
-%{
-curInitWeights = wMat(:, end, :);
-
-curInitCv = std(curInitWeights, 0, 1) ./ mean(curInitWeights, 1);
-curInitWeights = curInitWeights(:, :, curInitCv < 0.4);
-
-rng(0);
-for curRun = 1:numRuns
-    curRandIds = randperm(numel(curInitWeights), 2);
-    wMat(:, 1, curRun) = curInitWeights(curRandIds);
-
-    for curStep = 2:numSteps
-        curOldW = wMat(:, curStep - 1, curRun);
-        curDeltaT = 2 * tau * (2 * rand(1) - 1);
-
-        % HACK(amotta): Correlate strength and 
-        % curDeltaT = curDeltaT + 2 * sum(curOldW);
-
-        if curDeltaT > 0
-            curDeltaW = +nuPos * aPos(curOldW);
-        else
-            curDeltaW = -nuNeg * aNeg(curOldW);
-        end
-
-        % Make synapses unreliable
-        curErr = rand(numSyn, 1) < errProb;
-        curDeltaW = (1 - curErr) .* curDeltaW;
-
-        wMat(:, curStep, curRun) = curOldW + curDeltaW;
-    end
-end
 %}
