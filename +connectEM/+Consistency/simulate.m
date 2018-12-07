@@ -4,8 +4,8 @@ clear;
 
 %% Configuration
 numSyn = 2;
-numSteps = 2;
-numRuns = 10000;
+numSteps = 40;
+numRuns = 1;
 
 tau = 10; % ms
 
@@ -18,8 +18,8 @@ aNeg = @(w) w * nuNeg;
 
 wMat = nan(numSyn, numSteps, numRuns);
 
-errProb = 0;
-stdpProb = 0.25;
+errProb = 0.1;
+stdpProb = 1;
 
 mu = -2;
 sigma = 1;
@@ -64,19 +64,25 @@ ltpMask = all(wMat(:, end, :) > wMat(:, 1, :), 1);
 ltdMask = all(wMat(:, end, :) < wMat(:, 1, :), 1);
 
 %%
-%{
-figure;
+curFig = figure;
+curFig.Color = 'white';
+curFig.Position(3:4) = [355, 319];
 
 subplot(2, 1, 1);
 hold on;
-plot(wMat(1, :, 1));
-plot(wMat(2, :, 1));
+plot(wMat(1, :, 1), 'LineWidth', 2);
+plot(wMat(2, :, 1), 'LineWidth', 2);
+
 ylim([0, 1]);
+ylabel('Synaptic weights');
+set(gca, 'TickDir', 'out');
 
 subplot(2, 1, 2);
-plot(std(wMat(:, :, 1), 0, 1) ./ mean(wMat(:, :, 1), 1));
+hold on;
+plot(std(wMat(:, :, 1), 0, 1) ./ mean(wMat(:, :, 1), 1), 'black', 'LineWidth', 2);
 ylim([0, sqrt(2)]);
-%}
+ylabel('CV');
+set(gca, 'TickDir', 'out');
 
 %%
 %{
