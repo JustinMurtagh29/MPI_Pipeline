@@ -4,8 +4,8 @@ clear;
 
 %% Configuration
 numSyn = 2;
-numSteps = 40;
-numRuns = 1;
+numSteps = 2;
+numRuns = 10000;
 
 tau = 10; % ms
 
@@ -18,8 +18,8 @@ aNeg = @(w) w * nuNeg;
 
 wMat = nan(numSyn, numSteps, numRuns);
 
-errProb = 0.1;
-stdpProb = 1;
+errProb = 0;
+stdpProb = 0.25;
 
 mu = -2;
 sigma = 1;
@@ -64,6 +64,7 @@ ltpMask = all(wMat(:, end, :) > wMat(:, 1, :), 1);
 ltdMask = all(wMat(:, end, :) < wMat(:, 1, :), 1);
 
 %%
+%{
 curFig = figure;
 curFig.Color = 'white';
 curFig.Position(3:4) = [355, 319];
@@ -83,6 +84,7 @@ plot(std(wMat(:, :, 1), 0, 1) ./ mean(wMat(:, :, 1), 1), 'black', 'LineWidth', 2
 ylim([0, sqrt(2)]);
 ylabel('CV');
 set(gca, 'TickDir', 'out');
+%}
 
 %%
 %{
@@ -102,7 +104,13 @@ ylim([0, sqrt(2)]);
 cvs = std(wMat, 0, 1) ./ mean(wMat, 1);
 curEdges = linspace(0, 1.5, 16);
 
-figure;
+curFig = figure();
+curFig.Color = 'white';
+curFig.Position(3:4) = [205, 165];
+
+curAx = axes(curFig);
+axis(curAx, 'square');
+curAx.TickDir = 'out';
 hold on;
 
 histogram(cvs(:, 1, :), ...
@@ -113,7 +121,11 @@ histogram(cvs(:, end, :), ...
     'DisplayStyle', 'stairs', 'LineWidth', 2);
 histogram(cvs(:, end, ltpMask), ...
     'BinEdges', curEdges, ...
-    'DisplayStyle', 'stairs', 'LineWidth', 2);
+	'DisplayStyle', 'stairs', 'LineWidth', 2);
+
+xlim(curAx, [0, 1.5]);
+xlabel(curAx, 'Coefficient of variation');
+ylabel(curAx, 'Connections');
 
 curKnots = unique(cvs(:, [1, end], :));
 curBefore = histcounts(cvs(:, 1, :), curKnots, 'Normalization', 'cdf');
@@ -124,6 +136,7 @@ curThresh = curKnots(curThreshIdx)
 curAfter(curThreshIdx) - curBefore(curThreshIdx)
 
 %%
+%{
 asis = log10(wMat);
 curEdges = linspace(-2.5, 0, 26);
 
@@ -173,7 +186,8 @@ curLtd = curAfter - (curBefore - curLtp);
 
 histogram('BinEdges', curEdges, 'BinCounts', max(curLtd, 0))
 %}
-    
+%}
+
 %%
 %{
 curEdges = linspace(-15, 0, 31);
@@ -189,6 +203,7 @@ curAx.YScale = 'log';
 %}
 
 %%
+%{
 curSaSdT = table;
 curSaSdT.areas = transpose(sort(squeeze(wMat(:, end, :)), 1));
 curSaSdT.cv = std(curSaSdT.areas, 0, 2) ./ mean(curSaSdT.areas, 2);
@@ -331,4 +346,5 @@ annotation( ...
     info.filename; info.git_repos{1}.hash; ...
     curConfig.title; curCtrlConfig.title}, ...
     'EdgeColor', 'none', 'HorizontalAlignment', 'center');
+%}
 %}
