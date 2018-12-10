@@ -18,21 +18,18 @@ points = Seg.Global.getSegToPointMap(param);
 [conn, syn] = connectEM.Connectome.load(param, connFile);
 
 %% Select synapses
-spinyDendIds = find(conn.denMeta.targetClass == 'OtherDendrite');
-apicalDendIds = find(conn.denMeta.targetClass == 'ApicalDendrite');
-smoothDendIds = find(conn.denMeta.targetClass == 'SmoothDendrite');
-
 synT = connectEM.Connectome.buildSynapseTable(conn, syn);
 synT(synT.isSpine, :) = [];
 
-spinySynT = synT(ismember(synT.postAggloId, spinyDendIds), :);
-apicalSynT = synT(ismember(synT.postAggloId, apicalDendIds), :);
-smoothSynT = synT(ismember(synT.postAggloId, smoothDendIds), :);
+targetClasses = unique(conn.denMeta.targetClass);
+targetSynT = arrayfun(@(t) ...
+    synT(ismember(synT.postAggloId, ...
+        find(conn.denMeta.targetClass == t)), :), ...
+    targetClasses, 'UniformOutput', false);
 
 %% Export random examples
-exportSyns(1) = struct('tag', 'spiny', 'syns', spinySynT);
-exportSyns(2) = struct('tag', 'apical', 'syns', apicalSynT);
-exportSyns(3) = struct('tag', 'smooth', 'syns', smoothSynT);
+exportSyns = lower(arrayfun(@char, targetClasses, 'UniformOutput', false));
+exportSyns = struct('tag', exportSyns(:), 'syns', targetSynT(:));
 
 skel = skeleton();
 skel = Skeleton.setParams4Pipeline(skel, param);
