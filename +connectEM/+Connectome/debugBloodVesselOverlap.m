@@ -8,10 +8,6 @@ connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-partially
 
 outDir = '/home/amotta/Desktop';
 
-[~, lengthFile] = fileparts(connFile);
-lengthFile = sprintf('%s_pathLengths.mat', lengthFile);
-lengthFile = fullfile(fileparts(connFile), lengthFile);
-
 vesselScoreThresh = 0.5;
 vesselFracThresh = 0.05;
 
@@ -21,8 +17,6 @@ Util.showRunInfo(info);
 %% Loading data
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
-
-lengths = load(lengthFile);
 
 [conn, ~, axonClasses] = ...
     connectEM.Connectome.load(param, connFile);
