@@ -271,12 +271,47 @@ arrayfun(@(ax) ylabel(ax, ...
     'Average log_{10}(ASI area [µm²])'), curAxes);
 xlabel(curAxes(end), 'Coefficient of variation');
 
-%{
-annotation( ...
-    curFig, ...
-    'textbox', [0, 0.9, 1, 0.1], ...
-    'String', { ...
-    info.filename; info.git_repos{1}.hash; ...
-    curConfig.title; curCtrlConfig.title}, ...
-    'EdgeColor', 'none', 'HorizontalAlignment', 'center');
-%}
+%% LTP
+numSteps = 5;
+
+ltpMat = [0; 0.75];
+for curStep = 1:(numSteps - 1)
+    ltpMat(:, curStep + 1) = ltpMat(:, curStep) + 0.5 * (1 - ltpMat(:, curStep));
+end
+
+tVec = repelem(0:numSteps, 2);
+tVec = tVec(2:(end - 1));
+ltpMat = repelem(ltpMat, 1, 2);
+
+curFig = figure;
+curFig.Color = 'white';
+curFig.Position(3:4) = [250, 90];
+hold on;
+plot(tVec, ltpMat(1, :), 'black', 'LineWidth', 2);
+plot(tVec, ltpMat(2, :), 'black', 'LineWidth', 2);
+
+set(gca, 'TickDir', 'out');
+xlim(tVec([1, end]));
+
+%% LTP
+numSteps = 5;
+
+ltdMat = [1; 0.25];
+for curStep = 1:(numSteps - 1)
+    ltdMat(:, curStep + 1) = ltdMat(:, curStep) - 0.5 * ltdMat(:, curStep);
+end
+
+tVec = repelem(0:numSteps, 2);
+tVec = tVec(2:(end - 1));
+ltdMat = repelem(ltdMat, 1, 2);
+
+curFig = figure;
+curFig.Color = 'white';
+curFig.Position(3:4) = [250, 90];
+hold on;
+plot(tVec, ltdMat(1, :), 'black', 'LineWidth', 2);
+plot(tVec, ltdMat(2, :), 'black', 'LineWidth', 2);
+
+set(gca, 'TickDir', 'out');
+xlim(tVec([1, end]));
+
