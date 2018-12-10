@@ -15,11 +15,12 @@ param = param.p;
 
 points = Seg.Global.getSegToPointMap(param);
 
-[conn, syn] = connectEM.Connectome.load(param, connFile);
+[conn, syn, axonClasses] = connectEM.Connectome.load(param, connFile);
+inhAxonIds = axonClasses(2).axonIds;
 
 %% Select synapses
 synT = connectEM.Connectome.buildSynapseTable(conn, syn);
-synT(synT.isSpine, :) = [];
+synT = synT(ismember(synT.preAggloId, inhAxonIds) & ~synT.isSpine, :);
 
 targetClasses = unique(conn.denMeta.targetClass);
 targetSynT = arrayfun(@(t) ...
