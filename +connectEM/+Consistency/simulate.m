@@ -30,10 +30,6 @@ rng(0);
 % Normal initialization
 wMat(:, 1, :) = min(1, lognrnd(mu, sigma, [2, 1, numRuns]));
 
-% Biased initialization
-% curInitWeights = wMat(:, end, :);
-% wMat(:, 1, :) = curInitWeights(randi(numel(curInitWeights), [2, 1, numRuns]));
-
 for curRun = 1:numRuns
     curHasStdp = rand(1) < stdpProb;
 
@@ -132,78 +128,15 @@ curBefore = histcounts(cvs(:, 1, :), curKnots, 'Normalization', 'cdf');
 curAfter = histcounts(cvs(:, end, :), curKnots, 'Normalization', 'cdf');
 
 [~, curThreshIdx] = max(curAfter - curBefore);
-curThresh = curKnots(curThreshIdx)
-curAfter(curThreshIdx) - curBefore(curThreshIdx)
+curThresh = curKnots(curThreshIdx);
+curAfter(curThreshIdx) - curBefore(curThreshIdx) %#ok
 
 %%
-%{
-asis = log10(wMat);
-curEdges = linspace(-2.5, 0, 26);
-
-figure;
-hold on;
-
-histogram(asis(:, 1, :), ...
-    'BinEdges', curEdges, ...
-    'DisplayStyle', 'stairs', 'LineWidth', 2);
-histogram(asis(:, end, :), ...
-    'BinEdges', curEdges, ...
-    'DisplayStyle', 'stairs', 'LineWidth', 2);
-
-%{
-curBefore = histcounts(asis(:, 1, :), curEdges);
-curLtp = histcounts(asis(:, 1, ltpMask), curEdges);
-curLtpEst = 0.125 * curBefore;
-
-histogram( ...
-    'BinEdges', curEdges, 'BinCounts', max(curBefore - curLtp, 0), ...
-    'DisplayStyle', 'stairs', 'LineWidth', 2)
-
-histogram(asis(:, 1, ltpMask), ...
-    'BinEdges', curEdges, ...
-    'DisplayStyle', 'stairs', 'LineWidth', 2);
-histogram(asis(:, end, ltdMask), ...
-    'BinEdges', curEdges, ...
-    'DisplayStyle', 'stairs', 'LineWidth', 2);
-
-curKnots = unique(-asis(:, [1, end], :));
-curA = histcounts(-asis(:, 1, :), curKnots, 'Normalization', 'cdf');
-curB = histcounts(-asis(:, end, :), curKnots, 'Normalization', 'cdf');
-
-[~, curThresh] = max(curB - curA);
-curThresh = -curKnots(curThresh);
-
-curLtpFrac = ...
-    mean(asis(:, end, :) > curThresh) ...
-  - mean(asis(:, 1, :) > curThresh);
-curLtpFrac = 0.125;
-
-curBefore = histcounts(asis(:, 1, :), curEdges);
-curAfter = histcounts(asis(:, end, :), curEdges);
-curLtp = histcounts(asis(:, 1, ltpMask), curEdges);
-% curLtd = curAfter - (curBefore - curLtpFrac * curBefore);
-curLtd = curAfter - (curBefore - curLtp);
-
-histogram('BinEdges', curEdges, 'BinCounts', max(curLtd, 0))
-%}
-%}
+% Biased initialization
+curInitWeights = wMat(:, end, :);
+wMat(:, 1, :) = curInitWeights(randi(numel(curInitWeights), [2, 1, numRuns]));
 
 %%
-%{
-curEdges = linspace(-15, 0, 31);
-curPBefore = sum(log(logncdf(wMat(:, 1, :), mu, sigma)), 1);
-curPAfter = sum(log(logncdf(wMat(:, end, :), mu, sigma)), 1);
-
-figure; hold on;
-histogram(curPBefore, 'BinEdges', curEdges, 'DisplayStyle', 'stairs', 'LineWidth', 2);
-histogram(curPAfter, 'BinEdges', curEdges, 'DisplayStyle', 'stairs', 'LineWidth', 2);
-
-curAx = gca;
-curAx.YScale = 'log';
-%}
-
-%%
-%{
 curSaSdT = table;
 curSaSdT.areas = transpose(sort(squeeze(wMat(:, end, :)), 1));
 curSaSdT.cv = std(curSaSdT.areas, 0, 2) ./ mean(curSaSdT.areas, 2);
@@ -346,5 +279,4 @@ annotation( ...
     info.filename; info.git_repos{1}.hash; ...
     curConfig.title; curCtrlConfig.title}, ...
     'EdgeColor', 'none', 'HorizontalAlignment', 'center');
-%}
 %}
