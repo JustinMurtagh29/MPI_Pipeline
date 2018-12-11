@@ -10,6 +10,13 @@ targetClasses = { ...
     'Somata', 'ProximalDendrite', 'ApicalDendrite', ...
     'SmoothDendrite', 'AxonInitialSegment', 'OtherDendrite'};
 
+% NOTE(amotta): Rows correspond to shaft and spine synapses, respectively.
+% Columns correspond to the target classes listed above. All-zeros mark
+% rates that were not measured (because biologically implausible).
+inhFpRates = [ ...
+     (1 / 20), (1 / 19), (5 / 17), (1 / 17), (4 / 18), (3 / 17); ...
+     (000000), (6 / 18), (6 / 18), (4 / 16), (000000), (6 / 17)];
+
 minSynPre = 10;
 
 info = Util.runInfo();
@@ -19,22 +26,55 @@ Util.showRunInfo(info);
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 
-[conn, ~, axonClasses] = ...
+[conn, syn, axonClasses] = ...
     connectEM.Connectome.load(param, connFile);
 
+%% build class connectome for shaft synapses
+clear cur*;
+
+curShaftConn = conn;
+curShaftConn.connectome.synIdx = cellfun( ...
+    @(ids) ids(syn.synapses.type(ids) == 'Shaft'), ...
+    curShaftConn.connectome.synIdx, 'UniformOutput', false);
+
+curShaftConn = ...
+    connectEM.Connectome.prepareForSpecificityAnalysis( ...
+        curShaftConn, axonClasses, 'minSynPre', minSynPre);
+classConnShafts = ...
+    connectEM.Connectome.buildClassConnectome( ...
+        curShaftConn, 'targetClasses', targetClasses);
+    
+%% build complete class connectome
 [conn, axonClasses] = ...
     connectEM.Connectome.prepareForSpecificityAnalysis( ...
         conn, axonClasses, 'minSynPre', minSynPre);
 
-classConnectome = ...
+classConn = ...
     connectEM.Connectome.buildClassConnectome( ...
         conn, 'targetClasses', targetClasses);
+classConnOrig = classConn;
+
+%% take into account false positive synapse detections for inh. axons
+clear cur*;
+
+curSh = classConnShafts;
+curSp = classConn - classConnShafts;
+
+% TODO(amotta): Subtract expected errors instead of sampling. Even better:
+% Sample from possible corrected class connectomes.
+rng(0);
+curMod = ...
+    curSh - binornd(curSh, repmat(inhFpRates(1, :), size(curSh, 1), 1)) ...
+  + curSp - binornd(curSp, repmat(inhFpRates(2, :), size(curSp, 1), 1));
+
+curAxonIds = axonClasses(2).axonIds;
+classConn(curAxonIds, :) = curMod(curAxonIds, :);
 
 %% calculate target class innervation probabilities for null model
 clear cur*;
 
 for curIdx = 1:numel(axonClasses)
-    curNullProbs = classConnectome(axonClasses(curIdx).nullAxonIds, :);
+    curNullProbs = classConn(axonClasses(curIdx).nullAxonIds, :);
     curNullProbs = connectEM.Specificity.calcFirstHitProbs(curNullProbs, 'multinomial');
     axonClasses(curIdx).nullTargetClassProbs = curNullProbs;
 end
@@ -58,9 +98,7 @@ curAxonClasses = curAxonClasses(1:4);
 curAxonClasses = rmfield(curAxonClasses, 'nullAxonIds');
 
 for curIdx = 1:numel(curAxonClasses)
-    plotAxonClass( ...
-        info, classConnectome, ...
-        targetClasses, curAxonClasses(curIdx));
+    plotAxonClass(info, classConn, targetClasses, curAxonClasses(curIdx));
 end
 
 %% plotting
