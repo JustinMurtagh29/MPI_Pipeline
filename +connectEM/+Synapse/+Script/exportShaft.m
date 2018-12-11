@@ -43,7 +43,8 @@ for curSyn = reshape(exportSyns, 1, [])
     
     rng(0);
     curRandIds = randperm(size(curSyns, 1));
-    curSyns = curSyns(curRandIds(1:50), :);
+    curRandIds = curRandIds(1:min(50, numel(curRandIds)));
+    curSyns = curSyns(curRandIds, :);
     
     curSynAgglos = cellfun( ...
         @vertcat, ...
