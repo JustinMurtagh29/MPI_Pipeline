@@ -20,7 +20,7 @@ inhAxonIds = axonClasses(2).axonIds;
 
 %% Select synapses
 synT = connectEM.Connectome.buildSynapseTable(conn, syn);
-synT = synT(ismember(synT.preAggloId, inhAxonIds) & ~synT.isSpine, :);
+synT = synT(ismember(synT.preAggloId, inhAxonIds) & synT.isSpine, :);
 
 targetClasses = unique(conn.denMeta.targetClass);
 targetSynT = arrayfun(@(t) ...
@@ -63,6 +63,6 @@ for curSyn = reshape(exportSyns, 1, [])
         reshape(1:size(curSyns, 1), [], 1), curSyns.id, ...
         'UniformOutput', false);
     
-    curFile = sprintf('shaft-synapses_onto-%s.nml', curTag);
+    curFile = sprintf('spine-synapses_onto-%s.nml', curTag);
     curSkel.write(fullfile(outputDir, curFile));
 end
