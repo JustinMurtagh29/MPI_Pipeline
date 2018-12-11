@@ -60,12 +60,10 @@ clear cur*;
 curSh = classConnShafts;
 curSp = classConn - classConnShafts;
 
-% TODO(amotta): Subtract expected errors instead of sampling. Even better:
-% Sample from possible corrected class connectomes.
 rng(0);
 curMod = ...
-    curSh - binornd(curSh, repmat(inhFpRates(1, :), size(curSh, 1), 1)) ...
-  + curSp - binornd(curSp, repmat(inhFpRates(2, :), size(curSp, 1), 1));
+    curSh - round(curSh .* inhFpRates(1, :)) ...
+  + curSp - round(curSp .* inhFpRates(2, :));
 
 curAxonIds = axonClasses(2).axonIds;
 classConn(curAxonIds, :) = curMod(curAxonIds, :);
