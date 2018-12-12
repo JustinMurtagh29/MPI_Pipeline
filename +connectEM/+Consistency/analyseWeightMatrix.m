@@ -124,7 +124,7 @@ for curPlotConfig = plotConfigs
     curBoxAx.Box = 'off';
     curBoxAx.TickDir = 'out';
     
-    ylabel(curBoxAx, 'Median ASI area of connection');
+    ylabel(curBoxAx, 'log_{10}(axon-spine interface area [µm²])');
     xticklabels(curBoxAx, curLegends);
     curBoxAx.XTickLabelRotation = 20;
     
@@ -199,6 +199,13 @@ for curPlotConfig = plotConfigs
         curCtrlIds{curClassIdx} = curRands;
     end
     
+    % Remove empty classes
+    curMask = cellfun(@isempty, curSasdIds);
+    curClasses(curMask, :) = [];
+    curAsiIds(curMask, :) = [];
+    curSasdIds(curMask, :) = [];
+    curCtrlIds(curMask, :) = [];
+    
     % Build legends
     curAxonLeg = [{''}; categories(conn.axonMeta.axonClass)];
     curAxonLeg = curAxonLeg(1 + curClasses(:, 1));
@@ -227,19 +234,6 @@ for curPlotConfig = plotConfigs
             'method', 'maxdifference'), ...
         curSasdIds, curCtrlIds);
     
-    curTitles = cellfun(@(legend, asiIds) regexprep( ...
-        legend, 'n = \d+', sprintf('n = %d pairs', numel(asiIds) / 2)), ...
-        curLegends, curSasdIds, 'UniformOutput', false);
-    curShuffle = @(vals) vals(reshape(randperm(numel(vals)), [], 2));
-    cellfun(@(title, asiIds) ...
-        connectEM.Consistency.plotSizeSimilarityHeatmap( ...
-            asiT, ...
-            struct('synIdPairs', asiIds), ...
-            struct('synIdPairs', curShuffle(asiIds)), ...
-            'title', {info.filename; info.git_repos{1}.hash; title}), ...
-        curTitles, curSasdIds);
-    
-    %{
     for curRow = 1:size(curCvs, 1)
         curFig = figure;
         curFig.Color = 'white';
@@ -283,6 +277,18 @@ for curPlotConfig = plotConfigs
             curLegends{curRow}; curTitle}; %#ok
         title(curAx, curTitle, 'FontWeight', 'normal', 'FontSize', 10);
     end
+    
+    curTitles = cellfun(@(legend, asiIds) regexprep( ...
+        legend, 'n = \d+', sprintf('n = %d pairs', numel(asiIds) / 2)), ...
+        curLegends, curSasdIds, 'UniformOutput', false);
+    curShuffle = @(vals) vals(reshape(randperm(numel(vals)), [], 2));
+    cellfun(@(title, asiIds) ...
+        connectEM.Consistency.plotSizeSimilarityHeatmap( ...
+            asiT, ...
+            struct('synIdPairs', asiIds), ...
+            struct('synIdPairs', curShuffle(asiIds)), ...
+            'title', {info.filename; info.git_repos{1}.hash; title}), ...
+        curTitles, curSasdIds);
 end
 
 %% Look at remaining synapses from axons with small / large SASD pairs
