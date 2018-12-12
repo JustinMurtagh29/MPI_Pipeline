@@ -54,19 +54,8 @@ pairT.targetClass = conn.denMeta.targetClass(pairT.postAggloId);
 
 pairT.asiIds = accumarray( ...
     curIds, asiT.relId, [], @(ids) {ids});
-pairT.meanLog10AsiArea = cellfun( ...
-    @(ids) mean(log10(asiT.area(ids))), pairT.asiIds);
-pairT.medianLog10AsiArea = cellfun( ...
-    @(ids) median(log10(asiT.area(ids))), pairT.asiIds);
 
-curCv = @(areas) std(areas) / mean(areas);
-curMask = cellfun(@numel, pairT.asiIds) > 1;
-
-pairT.cvAsiAreas(:) = nan;
-pairT.cvAsiAreas(curMask) = cellfun( ...
-    @(ids) curCv(asiT.area(ids)), pairT.asiIds(curMask));
-
-%% Prepare for analysis
+%% Build plot configurations
 clear cur*;
 
 curAxonClasses = setdiff( ...
@@ -86,21 +75,19 @@ plotConfigs = struct;
 plotConfigs(1).classes = [ ...
     double(curAxonClasses(:)), ...
     zeros(size(curAxonClasses(:)))];
-
 plotConfigs(2).classes = [ ...
     zeros(size(curTargetClasses(:))), ...
     double(curTargetClasses(:))];
-
 plotConfigs(3).classes = curClassPairs;
 
-%% Look synapse size vs. axon / dendrite classes and combinations thereof
+%% Look at synapse sizes
 clear cur*;
 
-curBinEdges = linspace(-2, 0.5, 21);
 for curPlotConfig = plotConfigs
     curClasses = curPlotConfig.classes;
     
-    curCvs = cell(size(curClasses, 1), 1);
+    % Collect axon-spine interface areas
+    curAsiIds = cell(size(curClasses, 1), 1);
     for curClassIdx = 1:size(curClasses, 1)
         curPreId = curClasses(curClassIdx, 1);
         curPostId = curClasses(curClassIdx, 2);
@@ -108,47 +95,20 @@ for curPlotConfig = plotConfigs
         curMask = ...
             (~curPreId | double(pairT.axonClass) == curPreId) ...
           & (~curPostId | double(pairT.targetClass) == curPostId);
-        
-        curCvs{curClassIdx} = pairT.medianLog10AsiArea(curMask);
+        curAsiIds{curClassIdx} = unique(cell2mat(pairT.asiIds(curMask)));
     end
     
+    % Build legends
     curAxonLeg = [{''}; categories(conn.axonMeta.axonClass)];
     curAxonLeg = curAxonLeg(1 + curClasses(:, 1));
     
     curDendLeg = [{''}; categories(conn.denMeta.targetClass)];
     curDendLeg = curDendLeg(1 + curClasses(:, 2));
     
-    curLegends = arrayfun( ...
-        @(ax, dend) strjoin(cat(2, ax, dend), ' → '), ...
-        curAxonLeg, curDendLeg, 'UniformOutput', false);
-    
-    % Histogram
-    curHistFig = figure();
-    curHistFig.Color = 'white';
-    
-    curHistAx = axes(curHistFig); %#ok
-    hold(curHistAx, 'on');
-    
-    cellfun(...
-        @(data) histogram( ...
-            curHistAx, data, ...
-            'BinEdges', curBinEdges, ...
-            'Normalization', 'probability', ...
-            'DisplayStyle', 'stairs', 'LineWidth', 2), ...
-        curCvs);
-    
-    curHistLeg = legend(curHistAx, curLegends, 'Location', 'NorthWest');
-    curHistLeg.Box = 'off';
-    
-    curHistAx.XLim = curBinEdges([1, end]);
-    curHistAx.TickDir = 'out';
-    
-    xlabel(curHistAx, 'Median ASI area of connection');
-    ylabel(curHistAx, 'Probability');
-    
-    title(curHistAx, ...
-        {info.filename; info.git_repos{1}.hash}, ...
-        'FontSize', 10, 'FontWeight', 'normal');
+    curLegends = cellfun( ...
+        @(ax, dend, n) sprintf('%s → %s (n = %d)', ax, dend, n), ...
+        curAxonLeg, curDendLeg, num2cell(cellfun(@numel, curAsiIds)), ...
+        'UniformOutput', false);
     
     % Boxplot
     curBoxFig = figure();
@@ -157,8 +117,9 @@ for curPlotConfig = plotConfigs
     curBoxAx = axes(curBoxFig); %#ok
     hold(curBoxAx, 'on');
     
-    curGroupId = repelem(1:numel(curCvs), cellfun(@numel, curCvs));
-    boxplot(cell2mat(curCvs), curGroupId(:));
+    curVals = log10(asiT.area(cell2mat(curAsiIds)));
+    curGroupIds = repelem(1:numel(curAsiIds), cellfun(@numel, curAsiIds));
+    boxplot(curVals(:), curGroupIds(:));
     
     curBoxAx.Box = 'off';
     curBoxAx.TickDir = 'out';
@@ -170,27 +131,39 @@ for curPlotConfig = plotConfigs
     title(curBoxAx, ...
         {info.filename; info.git_repos{1}.hash}, ...
         'FontSize', 10, 'FontWeight', 'normal');
+    
+    % Quantitative evaluation
+    curPVals = nan(size(curClasses, 1));
+    curMedRatios = nan(size(curClasses, 1));
+    for curIdxA = 1:size(curClasses, 1)
+        for curIdxB = curIdxA:size(curClasses, 1)
+            
+            curAreasA = asiT.area(curAsiIds{curIdxA});
+            curAreasB = asiT.area(curAsiIds{curIdxB});
+            
+           [~, curPVal] = kstest2(curAreasA, curAreasB);
+            curPVals(curIdxA, curIdxB) = curPVal;
+            curPVals(curIdxB, curIdxA) = curPVal;
+           
+            curMedAreaA = median(curAreasA);
+            curMedAreaB = median(curAreasB);
+            
+            curMedRatios(curIdxA, curIdxB) = curMedAreaA / curMedAreaB;
+            curMedRatios(curIdxB, curIdxA) = curMedAreaB / curMedAreaA;
+        end
+    end
+    
+    curPVals = array2table(curPVals);
+    curPVals.Properties.RowNames = curLegends;
+    curPVals %#ok
+    
+    curMedRatios = array2table(curMedRatios);
+    curMedRatios.Properties.RowNames = curLegends;
+    curMedRatios %#ok
 end
 
-% Ratio of medians
-curT = table;
-curT.title = curLegends;
-curT.n = cellfun(@numel, curCvs);
-curT.median = 10 .^ cellfun(@median, curCvs);
-curT.otherCcRatio = curT.median ./ ...
-    curT.median(all(curClasses == [1, 4], 2));
-curT.ccRatio = curT.median ./ arrayfun(@(a) ...
-    curT.median(all(curClasses == [1, a], 2)), curClasses(:, 2));
-curT.otherRatio = curT.median ./ arrayfun(@(a) ...
-    curT.median(all(curClasses == [a, 4], 2)), curClasses(:, 1));
-curT %#ok
-
-% For comparison, ratio between median TC vs. CC synapse size
-curMedTc = median(asiT.area( ...
-    conn.axonMeta.axonClass(asiT.preAggloId) == 'Thalamocortical'));
-curMedCc = median(asiT.area( ...
-    conn.axonMeta.axonClass(asiT.preAggloId) == 'Corticocortical'));
-curMedTcCcRatio = curMedTc / curMedCc %#ok
+%% Look at synapse size similarity
+clear cur*;
 
 %% Look at synapse size similarity
 clear cur*;
@@ -311,8 +284,8 @@ for curPlotConfig = plotConfigs
     curBoxAx = axes(curBoxFig); %#ok
     hold(curBoxAx, 'on');
     
-    curGroupId = repelem(1:numel(curCvs), cellfun(@numel, curCvs));
-    boxplot(cell2mat(curCvs), curGroupId(:));
+    curGroupIds = repelem(1:numel(curCvs), cellfun(@numel, curCvs));
+    boxplot(cell2mat(curCvs), curGroupIds(:));
     
     curBoxAx.Box = 'off';
     curBoxAx.TickDir = 'out';
@@ -394,6 +367,7 @@ for curPlotConfig = plotConfigs
 end
 
 %% Look at remaining synapses from axons with small / large SASD pairs
+%{
 clear cur*;
 
 curClassName = 'Corticocortical';
@@ -572,3 +546,4 @@ annotation( ...
     curFig, 'textbox', [0, 0.9, 1, 0.1], ...
     'String', {info.filename; info.git_repos{1}.hash}, ...
     'EdgeColor', 'none', 'HorizontalAlignment', 'center');
+%}
