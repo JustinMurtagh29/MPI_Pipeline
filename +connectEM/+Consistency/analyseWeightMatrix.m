@@ -234,6 +234,11 @@ for curPlotConfig = plotConfigs
             'method', 'maxdifference'), ...
         curSasdIds, curCtrlIds);
     
+    curRes = {'pVal', 'cvTresh', 'learnedFrac', 'unlearnedFrac'};
+    curRes = array2table( ...
+        [curPVals, curCvThresh, curLearnedFrac, curUnlearnedFrac], ...
+        'VariableNames', curRes, 'RowNames', curLegends) %#ok
+    
     for curRow = 1:size(curCvs, 1)
         curFig = figure;
         curFig.Color = 'white';
