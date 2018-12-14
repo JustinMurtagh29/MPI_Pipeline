@@ -298,6 +298,37 @@ for curPlotConfig = plotConfigs
         curTitles, curSasdIds);
 end
 
+%% Actually analyse weight matrix
+clear cur*;
+
+curAxonClass = 'Corticocortical';
+curTargetClass = 'OtherDendrite';
+
+curPairT = pairT( ...
+    pairT.axonClass == curAxonClass ...
+  & pairT.targetClass == curTargetClass, :);
+
+[curAxonIds, ~, curPairT.preAggloId] = unique(curPairT.preAggloId);
+[curDendIds, ~, curPairT.postAggloId] = unique(curPairT.postAggloId);
+
+curPairT.medLog10AsiArea = cellfun(@(ids) ...
+    median(log10(asiT.area(ids))), curPairT.asiIds);
+
+[curUniDendIds, ~, curRowCombs] = unique(curPairT.postAggloId);
+curRowCombs = accumarray(curRowCombs, ...
+    1:numel(curRowCombs), [], @(ids) {ids});
+curRowCombs = cell2mat(cellfun(@(rowIds) ...
+    combnk(rowIds, 2), curRowCombs, 'UniformOutput', false));
+
+curC = size(curRowCombs, 1);
+curI = repelem(reshape(1:curC, [], 1), 1, 2);
+curJ = curPairT.preAggloId(curRowCombs);
+curV = [+ones(curC, 1), -ones(curC, 1)];
+
+curM = sparse(curI(:), curJ(:), curV(:));
+curDiffs = diff(curPairT.medLog10AsiArea(curRowCombs), 1, 2);
+curSim = curM \ curDiffs;
+
 %% Look at remaining synapses from axons with small / large SASD pairs
 %{
 clear cur*;
