@@ -301,6 +301,7 @@ end
 %% Actually analyse weight matrix
 clear cur*;
 
+%{
 curAxonClass = 'Corticocortical';
 curTargetClass = 'OtherDendrite';
 
@@ -313,21 +314,65 @@ curPairT = pairT( ...
 
 curPairT.medLog10AsiArea = cellfun(@(ids) ...
     median(log10(asiT.area(ids))), curPairT.asiIds);
+%}
 
-[curUniDendIds, ~, curRowCombs] = unique(curPairT.postAggloId);
-curRowCombs = accumarray(curRowCombs, ...
-    1:numel(curRowCombs), [], @(ids) {ids});
-curRowCombs = cell2mat(cellfun(@(rowIds) ...
-    combnk(rowIds, 2), curRowCombs, 'UniformOutput', false));
+%% Generate fake data
+clear cur*;
 
-curC = size(curRowCombs, 1);
-curI = repelem(reshape(1:curC, [], 1), 1, 2);
-curJ = curPairT.preAggloId(curRowCombs);
-curV = [+ones(curC, 1), -ones(curC, 1)];
+curDendCount = 10;
+curAxonCount = 20;
+curAxonSynCount = 100;
 
-curM = sparse(curI(:), curJ(:), curV(:));
-curDiffs = diff(curPairT.medLog10AsiArea(curRowCombs), 1, 2);
-curSim = curM \ curDiffs;
+curAxonClasses = [ ...
+    +0.5, -0.5, 1 / 3; ...
+     0.0,  0.0, 1 / 3; ...
+    -0.5, +0.5, 1 / 3];
+curDendClasses = [1 / 2; 1 / 2];
+
+rng(0);
+curConn = cell(curAxonCount, curDendCount);
+
+curAxonClassIds = repelem( ...
+    1:size(curAxonClasses, 1), ceil(curAxonClasses(:, end)' * curAxonCount));
+curAxonClassIds = curAxonClassIds(randperm(curAxonCount));
+curDendClassIds = repelem( ...
+    1:numel(curDendClasses), ceil(curDendClasses * curDendCount));
+curDendClassIds = curDendClassIds(randperm(curDendCount));
+
+for curAxId = 1:curAxonCount
+    curAxClass = curAxonClassIds(curAxId);
+    curDendIds = randi(curDendCount, 1, curAxonSynCount);
+    
+    curSynSizes = curDendClassIds(curDendIds);
+    curSynSizes = curAxonClasses(curAxClass, curSynSizes);
+    curSynSizes = curSynSizes + randn(size(curSynSizes));
+    
+    curConn(curAxId, :) = accumarray( ...
+        curDendIds(:), curSynSizes(:), ...
+       [curDendCount, 1], @(sizes) {sizes}, {zeros(0, 1)});
+end
+
+curMask = ~cellfun(@isempty, curConn);
+curPairT = nan(sum(curMask(:)), 3);
+[curPairT(:, 1), curPairT(:, 2)] = find(curMask);
+curPairT(:, 3) = cellfun(@median, curConn(curMask));
+curPairT = array2table(curPairT, 'VariableNames', { ...
+    'preAggloId', 'postAggloId', 'medLog10AsiArea'});
+
+%%
+curAreas = cellfun(@median, curConn);
+curMu = mean(curAreas(:), 'omitnan');
+curM = curAreas - curMu;
+curM(isnan(curM)) = 0;
+
+curNorm = 1 - isnan(curAreas);
+curNorm = curNorm * curNorm';
+curCorr = (curM * curM') ./ curNorm;
+curCorr(isinf(curCorr)) = nan;
+
+curLink = linkage(curCorr, 'average');
+curSort = connectEM.Consistency.linkageToSorting(curLink);
+figure; imagesc(curCorr(curSort, curSort)); axis square
 
 %% Look at remaining synapses from axons with small / large SASD pairs
 %{
