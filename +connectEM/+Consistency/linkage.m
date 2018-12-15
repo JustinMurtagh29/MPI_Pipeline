@@ -17,7 +17,7 @@ function out = linkage(rawArea)
     
     dist = squareform(pdist(area, ...
         @(a, b) mean(sq(a - b), 2, 'omitnan')));
-    dist(1:(numAxons + 1):end) = inf;
+    dist(1:(numAxons + 1):end) = nan;
     
     while true
        [minDist, minIdx] = min(dist(:));
