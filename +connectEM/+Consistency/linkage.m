@@ -9,6 +9,9 @@ function out = linkage(area)
     clusterIds = 1:numAxons;
     clusters = num2cell(1:numAxons);
     
+    lastGcRun = 0;
+    gcDuration = 0;
+    
     % WARNING(amotta): For performance reasons, the `w` and `m` matrices
     % use the following convention: row are dendrites, columns are axons!
     area = area - mean(area(:), 'omitnan');
@@ -65,19 +68,26 @@ function out = linkage(area)
         clusterIds(idxA) = maxClusterId;
         clusterIds(idxB) = nan;
         
-        % NOTE(amotta): For large axon counts, the speed of the loop is
+        % NOTE(amotta): For large axon counts the speed of the loop is
         % limited by `max` having to scan the entire `corr` matrix. Hence,
         % we should reduce the size of the correlation matrix (of the whole
         % problem, actually). But due to the overhead of creating the new,
         % smaller matrix, this shouldn't be done too often.
-        mask = ~isnan(clusterIds);
-        if mean(mask) < 0.95
+        if ~lastGcRun || toc(lastGcRun) > 10 * gcDuration
+            Util.log('GC pause');
+            gcDuration = tic();
+            
+            % Garbage collection
+            mask = ~isnan(clusterIds);
             clusterIds = clusterIds(mask);
             clusters = clusters(mask);
             w = w(:, mask);
             m = m(:, mask);
             corr = corr(mask, :);
             corr = corr(:, mask);
+            
+            gcDuration = toc(gcDuration);
+            lastGcRun = tic();
         end
     end
     
