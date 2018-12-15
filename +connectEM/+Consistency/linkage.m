@@ -3,18 +3,20 @@ function out = linkage(area)
     % columns are dendrites
     numAxons = size(area, 1);
     out = nan(numAxons - 1, 3);
-    outRow = 1;
+    outRow = 0;
     
     maxClusterId = numAxons;
     clusterIds = 1:numAxons;
     clusters = num2cell(1:numAxons);
     
+    % WARNING(amotta): For performance reasons, the `w` and `m` matrices
+    % use the following convention: row are dendrites, columns are axons!
     area = area - mean(area(:), 'omitnan');
-    w = fillmissing(area, 'constant', 0);
-    m = 1 - isnan(area);
+    w = fillmissing(transpose(area), 'constant', 0);
+    m = 1 - isnan(transpose(area));
     
-    corr = w * w';
-    norm = m * m';
+    corr = transpose(w) * w;
+    norm = transpose(m) * m;
     corr = corr ./ norm;
     
     corr(~norm) = nan;
@@ -27,9 +29,9 @@ function out = linkage(area)
        [idxB, idxA] = ind2sub(size(corr), maxIdx);
         assert(idxA < idxB);
         
+        outRow = outRow + 1;
         out(outRow, 1:2) = clusterIds([idxA, idxB]);
         out(outRow, 3) = maxCorr;
-        outRow = outRow + 1;
         
         cluster = [clusters{idxA}; clusters{idxB}];
         
@@ -39,14 +41,14 @@ function out = linkage(area)
         curW(~curM) = 0;
         
         % Update weights and mask
-        w(idxA, :) = curW;
-        w(idxB, :) = nan;
-        m(idxA, :) = curM;
-        m(idxB, :) = 0;
+        w(:, idxA) = curW;
+        w(:, idxB) = nan;
+        m(:, idxA) = curM;
+        m(:, idxB) = 0;
         
         % Update correlation
-        curCorr = w * curW(:);
-        curNorm = m * curM(:);
+        curCorr = curW * w;
+        curNorm = curM * m;
         curCorr = curCorr ./ curNorm;
         
         curCorr(~curNorm) = nan;
@@ -58,6 +60,7 @@ function out = linkage(area)
         corr(:, idxB) = nan;
         
         clusters{idxA} = cluster;
+        clusters{idxB} = zeros(0, 1);
         maxClusterId = maxClusterId + 1;
         clusterIds(idxA) = maxClusterId;
         clusterIds(idxB) = nan;
@@ -67,15 +70,16 @@ function out = linkage(area)
         % we should reduce the size of the correlation matrix (of the whole
         % problem, actually). But due to the overhead of creating the new,
         % smaller matrix, this shouldn't be done too often.
-        mask = isnan(clusterIds);
-        if mean(mask) > 0.05
-            clusterIds(mask) = [];
-            clusters(mask) = [];
-            w(mask, :) = [];
-            m(mask, :) = [];
-            corr(mask, :) = [];
-            corr(:, mask) = [];
+        mask = ~isnan(clusterIds);
+        if mean(mask) < 0.95
+            clusterIds = clusterIds(mask);
+            clusters = clusters(mask);
+            w = w(:, mask);
+            m = m(:, mask);
+            corr = corr(mask, :);
+            corr = corr(:, mask);
         end
     end
     
+    out = out(1:outRow, :);
 end
