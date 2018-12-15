@@ -1,7 +1,7 @@
-function out = linkage(area)
+function out = linkage(rawArea)
     % rows are axons
     % columns are dendrites
-    numAxons = size(area, 1);
+    numAxons = size(rawArea, 1);
     out = nan(numAxons - 1, 3);
     outRow = 0;
     
@@ -12,58 +12,41 @@ function out = linkage(area)
     lastGcRun = 0;
     gcDuration = 0;
     
-    % WARNING(amotta): For performance reasons, the `w` and `m` matrices
-    % use the following convention: row are dendrites, columns are axons!
-    area = area - mean(area(:), 'omitnan');
-    w = fillmissing(transpose(area), 'constant', 0);
-    m = 1 - isnan(transpose(area));
+    area = rawArea;
+    sq = @(a) a .* a;
     
-    corr = transpose(w) * w;
-    norm = transpose(m) * m;
-    corr = corr ./ norm;
-    
-    corr(~norm) = nan;
-    corr(1:(numAxons + 1):end) = nan;
+    dist = squareform(pdist(area, ...
+        @(a, b) mean(sq(a - b), 2, 'omitnan')));
+    dist(1:(numAxons + 1):end) = inf;
     
     while true
-       [maxCorr, maxIdx] = max(corr(:));
-        if isnan(maxCorr); break; end
+       [minDist, minIdx] = min(dist(:));
+        if isnan(minDist); break; end
         
-       [idxB, idxA] = ind2sub(size(corr), maxIdx);
+       [idxB, idxA] = ind2sub(size(dist), minIdx);
         assert(idxA < idxB);
         
         outRow = outRow + 1;
         out(outRow, 1:2) = clusterIds([idxA, idxB]);
-        out(outRow, 3) = maxCorr;
+        out(outRow, 3) = minDist;
         
         cluster = [clusters{idxA}; clusters{idxB}];
+        clusterArea = mean(rawArea(cluster, :), 1, 'omitnan');
+        clusterDist = mean(sq(area - clusterArea), 2, 'omitnan');
         
-        curW = area(cluster, :);
-        curW = mean(curW, 1, 'omitnan');
-        curM = 1 - isnan(curW);
-        curW(~curM) = 0;
+        % Update state
+        area(idxA, :) = clusterArea;
+        area(idxB, :) = nan;
         
-        % Update weights and mask
-        w(:, idxA) = curW;
-        w(:, idxB) = nan;
-        m(:, idxA) = curM;
-        m(:, idxB) = 0;
-        
-        % Update correlation
-        curCorr = curW * w;
-        curNorm = curM * m;
-        curCorr = curCorr ./ curNorm;
-        
-        curCorr(~curNorm) = nan;
-        curCorr(idxA) = nan;
-        
-        corr(idxA, :) = curCorr;
-        corr(idxB, :) = nan;
-        corr(:, idxA) = curCorr;
-        corr(:, idxB) = nan;
+        dist(idxA, :) = clusterDist;
+        dist(:, idxA) = clusterDist;
+        dist(idxA, idxA) = nan;
+        dist(idxB, :) = nan;
+        dist(:, idxB) = nan;
         
         clusters{idxA} = cluster;
         clusters{idxB} = zeros(0, 1);
+        
         maxClusterId = maxClusterId + 1;
         clusterIds(idxA) = maxClusterId;
         clusterIds(idxB) = nan;
@@ -74,17 +57,14 @@ function out = linkage(area)
         % problem, actually). But due to the overhead of creating the new,
         % smaller matrix, this shouldn't be done too often.
         if ~lastGcRun || toc(lastGcRun) > 10 * gcDuration
-            Util.log('GC pause');
             gcDuration = tic();
             
             % Garbage collection
             mask = ~isnan(clusterIds);
             clusterIds = clusterIds(mask);
             clusters = clusters(mask);
-            w = w(:, mask);
-            m = m(:, mask);
-            corr = corr(mask, :);
-            corr = corr(:, mask);
+            area = area(mask, :);
+            dist = dist(mask, mask);
             
             gcDuration = toc(gcDuration);
             lastGcRun = tic();
