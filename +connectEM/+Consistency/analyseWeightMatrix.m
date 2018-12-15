@@ -81,6 +81,7 @@ plotConfigs(2).classes = [ ...
 plotConfigs(3).classes = curClassPairs;
 
 %% Look at synapse sizes
+%{
 clear cur*;
 
 for curPlotConfig = plotConfigs
@@ -297,11 +298,11 @@ for curPlotConfig = plotConfigs
             'title', {info.filename; info.git_repos{1}.hash; title}), ...
         curTitles, curSasdIds);
 end
+%}
 
 %% Actually analyse weight matrix
 clear cur*;
 
-%{
 curAxonClass = 'Corticocortical';
 curTargetClass = 'OtherDendrite';
 
@@ -314,11 +315,16 @@ curPairT = pairT( ...
 
 curPairT.medLog10AsiArea = cellfun(@(ids) ...
     median(log10(asiT.area(ids))), curPairT.asiIds);
-%}
 
-%% Generate fake data
+curAreas = [ ...
+    curPairT.preAggloId, ...
+    curPairT.postAggloId];
+curAreas = accumarray( ...
+    curAreas, curPairT.medLog10AsiArea, ...
+   [numel(curAxonIds), numel(curDendIds)], [], nan);
+
+%%
 clear cur*;
-
 curDendCount = 10;
 curAxonCount = 20;
 curAxonSynCount = 100;
@@ -359,8 +365,9 @@ curPairT(:, 3) = cellfun(@median, curConn(curMask));
 curPairT = array2table(curPairT, 'VariableNames', { ...
     'preAggloId', 'postAggloId', 'medLog10AsiArea'});
 
-%%
 curAreas = cellfun(@median, curConn);
+
+%%
 curMu = mean(curAreas(:), 'omitnan');
 curM = curAreas - curMu;
 curM(isnan(curM)) = 0;
@@ -369,10 +376,21 @@ curNorm = 1 - isnan(curAreas);
 curNorm = curNorm * curNorm';
 curCorr = (curM * curM') ./ curNorm;
 curCorr(isinf(curCorr)) = nan;
+clear curNorm;
 
-curLink = linkage(curCorr, 'average');
-curSort = connectEM.Consistency.linkageToSorting(curLink);
-figure; imagesc(curCorr(curSort, curSort)); axis square
+curLinkOld = linkage(curCorr, 'average');
+curPermOld = connectEM.Consistency.linkageToPermutation(curLinkOld);
+
+curLinkNew = connectEM.Consistency.linkage(curAreas);
+curPermNew = connectEM.Consistency.linkageToPermutation(curLinkNew);
+
+figure; imagesc(curAreas);
+figure; imagesc(curAreas(curPermOld, :));
+figure; imagesc(curAreas(curPermNew, :));
+
+figure; imagesc(curCorr);
+figure; imagesc(curCorr(curPermOld, curPermOld)); axis square;
+figure; imagesc(curCorr(curPermNew, curPermNew)); axis square;
 
 %% Look at remaining synapses from axons with small / large SASD pairs
 %{

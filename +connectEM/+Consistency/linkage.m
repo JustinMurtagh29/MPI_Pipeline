@@ -92,4 +92,5 @@ function out = linkage(area)
     end
     
     out = out(1:outRow, :);
+    out(:, 1:2) = sort(out(:, 1:2), 2);
 end
