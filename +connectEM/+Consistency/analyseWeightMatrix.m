@@ -55,7 +55,7 @@ curTargetClasses = {};
 
 curPairT = pairT( ...
     (isempty(curAxonClasses) | ismember(pairT.axonClass, curAxonClasses)) ...
-  & (isempty(curTargetClasses) | ismember(pairT.targetClass, curTargetClasses)));
+  & (isempty(curTargetClasses) | ismember(pairT.targetClass, curTargetClasses)), :);
 
 [curAxonIds, ~, curPairT.preAggloId] = unique(curPairT.preAggloId);
 [curDendIds, ~, curPairT.postAggloId] = unique(curPairT.postAggloId);
