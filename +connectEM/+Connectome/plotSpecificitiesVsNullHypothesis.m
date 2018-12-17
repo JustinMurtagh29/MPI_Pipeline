@@ -283,4 +283,3 @@ function plotAxonClass(info, classConn, targetClasses, axonClass)
             'Observed synapse fractions vs. null hypothesis'; ...
             axonClass.title; info.git_repos{1}.hash});
 end
-%}
