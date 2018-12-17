@@ -36,6 +36,7 @@ asiT = ...
     connectEM.Connectome.buildAxonSpineInterfaces( ...
         param, graph, shAgglos, conn, syn);
 asiT = asiT(asiT.type == 'PrimarySpine', :);
+asiT.relId = reshape(1:height(asiT), [], 1);
 
 %% Build connectivity matrix
 clear cur*;
