@@ -54,8 +54,8 @@ curAxonClasses = {'Corticocortical', 'Thalamocortical'};
 curTargetClasses = {};
 
 curPairT = pairT( ...
-    ismember(pairT.axonClass, curAxonClasses) ...
-  & ismember(pairT.targetClass, curTargetClasses), :);
+    (isempty(curAxonClasses) | ismember(pairT.axonClass, curAxonClasses)) ...
+  & (isempty(curTargetClasses) | ismember(pairT.targetClass, curTargetClasses)));
 
 [curAxonIds, ~, curPairT.preAggloId] = unique(curPairT.preAggloId);
 [curDendIds, ~, curPairT.postAggloId] = unique(curPairT.postAggloId);
