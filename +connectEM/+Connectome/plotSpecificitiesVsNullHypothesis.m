@@ -52,29 +52,48 @@ classConnShafts = ...
 classConn = ...
     connectEM.Connectome.buildClassConnectome( ...
         conn, 'targetClasses', targetClasses);
-classConnOrig = classConn;
+    
+%% prepare for analysis while accounting for false positive inh. synapses
+[axonClasses.synFalsePosRates] = deal([]);
+axonClasses(2).synFalsePosRates = inhFpRates;
 
-%% take into account false positive synapse detections for inh. axons
+%% plot
 clear cur*;
 
-curSh = classConnShafts;
-curSp = classConn - classConnShafts;
+for curClassId = 1:numel(axonClasses)
+    curAxonClass = axonClasses(curClassId);
+    curFpRates = curAxonClass.synFalsePosRates;
+    
+    % NOTE(amotta): If empirically determined synapse false positive rates
+    % have been specified, we simulate the effect of synapse removal under
+    % a binomial distribution. This necessitates multiple multiple runs to
+    % get a feeling for the variability across trials.
+    switch isempty(curFpRates)
+        case true, numRuns = 1;
+        case false, numRuns = 5;
+    end
+    
+    for curRun = 1:numRuns
+        curConn = classConn(curAxonClass.nullAxonIds, :);
 
-rng(0);
-curMod = ...
-    curSh - round(curSh .* inhFpRates(1, :)) ...
-  + curSp - round(curSp .* inhFpRates(2, :));
+        if ~isempty(curFpRates)
+            % Take into account false positive synapse rates
+            curShaftConn = classConnShafts(curAxonClass.nullAxonIds, :);
+            curSpineConn = curConn - curShaftConn;
 
-curAxonIds = axonClasses(2).axonIds;
-classConn(curAxonIds, :) = curMod(curAxonIds, :);
-
-%% calculate target class innervation probabilities for null model
-clear cur*;
-
-for curIdx = 1:numel(axonClasses)
-    curNullProbs = classConn(axonClasses(curIdx).nullAxonIds, :);
-    curNullProbs = connectEM.Specificity.calcFirstHitProbs(curNullProbs, 'multinomial');
-    axonClasses(curIdx).nullTargetClassProbs = curNullProbs;
+            rng(curRun);
+            curShaftConn = curShaftConn - binornd(curShaftConn, ...
+                repelem(curFpRates(1, :), size(curShaftConn, 1), 1));
+            curSpineConn = curSpineConn - binornd(curSpineConn, ...
+                repelem(curFpRates(2, :), size(curSpineConn, 1), 1));
+            curConn = curShaftConn + curSpineConn;
+        end
+        
+        axonClasses(curClassId).nullTargetClassProbs = ...
+            connectEM.Specificity.calcFirstHitProbs(curConn, 'multinomial');
+        plotAxonClass( ...
+            info, classConn, targetClasses, axonClasses(curClassId));
+    end
 end
 
 %% show first hit probabilities
@@ -84,20 +103,6 @@ firstHitProbs.Properties.RowNames = {axonClasses.title};
 
 fprintf('# First-hit probabilities\n');
 disp(firstHitProbs);
-
-%% plot
-clear cur*;
-curAxonClasses = axonClasses;
-
-% NOTE(amotta): The list of axons to induce the null model is no longer
-% needed. Let's remove it to cause an error in case a weird code path still
-% tries to use it.
-curAxonClasses = curAxonClasses(1:4);
-curAxonClasses = rmfield(curAxonClasses, 'nullAxonIds');
-
-for curIdx = 1:numel(curAxonClasses)
-    plotAxonClass(info, classConn, targetClasses, curAxonClasses(curIdx));
-end
 
 %% plotting
 function plotAxonClass(info, classConn, targetClasses, axonClass)
@@ -278,3 +283,4 @@ function plotAxonClass(info, classConn, targetClasses, axonClass)
             'Observed synapse fractions vs. null hypothesis'; ...
             axonClass.title; info.git_repos{1}.hash});
 end
+%}
