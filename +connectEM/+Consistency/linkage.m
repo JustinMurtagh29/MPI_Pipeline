@@ -1,8 +1,8 @@
-function out = linkage(rawArea)
+function [links, initDist] = linkage(rawArea)
     % rows are axons
     % columns are dendrites
     numAxons = size(rawArea, 1);
-    out = nan(numAxons - 1, 3);
+    links = nan(numAxons - 1, 3);
     outRow = 0;
     
     maxClusterId = numAxons;
@@ -18,6 +18,7 @@ function out = linkage(rawArea)
     dist = squareform(pdist(area, ...
         @(a, b) mean(sq(a - b), 2, 'omitnan')));
     dist(1:(numAxons + 1):end) = nan;
+    if nargout >= 2; initDist = dist; end
     
     while true
        [minDist, minIdx] = min(dist(:));
@@ -27,8 +28,8 @@ function out = linkage(rawArea)
         assert(idxA < idxB);
         
         outRow = outRow + 1;
-        out(outRow, 1:2) = clusterIds([idxA, idxB]);
-        out(outRow, 3) = minDist;
+        links(outRow, 1:2) = clusterIds([idxA, idxB]);
+        links(outRow, 3) = minDist;
         
         cluster = [clusters{idxA}; clusters{idxB}];
         clusterArea = mean(rawArea(cluster, :), 1, 'omitnan');
@@ -71,6 +72,14 @@ function out = linkage(rawArea)
         end
     end
     
-    out = out(1:outRow, :);
-    out(:, 1:2) = sort(out(:, 1:2), 2);
+    links = links(1:outRow, :);
+    links(:, 1:2) = sort(links(:, 1:2), 2);
+    
+    % Add links that are missing due to undefined distance
+    missingIds = setdiff(1:links(end, 2), links(:, 1:2));
+    missingIds = reshape(missingIds, [], 1);
+    
+    missingLinks = reshape(links(end, 2) + (1:numel(missingIds)), [], 1);
+    missingLinks = [missingIds, missingLinks, nan(size(missingIds))];
+    links = [links; missingLinks];
 end
