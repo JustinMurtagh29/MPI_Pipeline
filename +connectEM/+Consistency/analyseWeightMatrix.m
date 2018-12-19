@@ -71,13 +71,18 @@ curAreas = accumarray( ...
    [numel(curAxonIds), numel(curDendIds)], [], nan);
 
 Util.log('Clustering weight matrix');
-[curLink, curDist] = connectEM.Consistency.linkage(curAreas);
+[curAxonLink, curAxonDist] = connectEM.Consistency.linkage(curAreas);
+[curDendLink, curDendDist] = connectEM.Consistency.linkage(curAreas');
 Util.log('Done!');
 
-[~, ~, curPerm] = dendrogram(curLink, 0);
+curFig = figure;
+[~, ~, curAxonPerm] = dendrogram(curAxonLink, 0);
+[~, ~, curDendPerm] = dendrogram(curDendLink, 0);
+close(curFig);
+clear curFig;
 
 %% Plot synapse sizes
-curTemp = curAreas(curPerm, :);
+curTemp = curAreas(curAxonPerm, curDendPerm);
 
 curFig = figure();
 curFig.Color = 'white';
@@ -111,7 +116,7 @@ title(curAx, ...
     'FontWeight', 'normal', 'FontSize', 10);
 
 %% Plot distance matrix
-curTemp = curDist(curPerm, curPerm);
+curTemp = curAxonDist(curAxonPerm, curAxonPerm);
 
 curFig = figure();
 curFig.Color = 'white';
