@@ -50,8 +50,8 @@ pairT.asiIds = accumarray(curIds, asiT.relId, [], @(ids) {ids});
 %% Actually analyse weight matrix
 clear cur*;
 
-curAxonClasses = {'Corticocortical', 'Thalamocortical'};
-curTargetClasses = {};
+curAxonClasses = {'Corticocortical'};
+curTargetClasses = {'OtherDendrite'};
 
 curPairT = pairT( ...
     (isempty(curAxonClasses) | ismember(pairT.axonClass, curAxonClasses)) ...
