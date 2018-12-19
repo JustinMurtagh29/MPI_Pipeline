@@ -50,6 +50,7 @@ pairT.asiIds = accumarray(curIds, asiT.relId, [], @(ids) {ids});
 %% Actually analyse weight matrix
 clear cur*;
 
+%{
 curAxonClasses = {'Corticocortical'};
 curTargetClasses = {'OtherDendrite'};
 
@@ -57,11 +58,53 @@ curPairT = pairT( ...
     (isempty(curAxonClasses) | ismember(pairT.axonClass, curAxonClasses)) ...
   & (isempty(curTargetClasses) | ismember(pairT.targetClass, curTargetClasses)), :);
 
-[curAxonIds, ~, curPairT.preAggloId] = unique(curPairT.preAggloId);
-[curDendIds, ~, curPairT.postAggloId] = unique(curPairT.postAggloId);
-
 curPairT.medLog10AsiArea = cellfun( ...
     @(ids) median(log10(asiT.area(ids))), curPairT.asiIds);
+%}
+
+% Generate fake data
+curDendCount = 10;
+curAxonCount = 20;
+curAxonSynCount = 100;
+
+curAxonClasses = [ ...
+    +0.5, -0.5, 1 / 3; ...
+     0.0,  0.0, 1 / 3; ...
+    -0.5, +0.5, 1 / 3];
+curDendClasses = [1 / 2; 1 / 2];
+
+rng(0);
+curConn = cell(curAxonCount, curDendCount);
+
+curAxonClassIds = repelem( ...
+    1:size(curAxonClasses, 1), ceil(curAxonClasses(:, end)' * curAxonCount));
+curAxonClassIds = curAxonClassIds(randperm(curAxonCount));
+curDendClassIds = repelem( ...
+    1:numel(curDendClasses), ceil(curDendClasses * curDendCount));
+curDendClassIds = curDendClassIds(randperm(curDendCount));
+
+for curAxId = 1:curAxonCount
+    curAxClass = curAxonClassIds(curAxId);
+    curDendIds = randi(curDendCount, 1, curAxonSynCount);
+    
+    curSynSizes = curDendClassIds(curDendIds);
+    curSynSizes = curAxonClasses(curAxClass, curSynSizes);
+    curSynSizes = curSynSizes + randn(size(curSynSizes));
+    
+    curConn(curAxId, :) = accumarray( ...
+        curDendIds(:), curSynSizes(:), ...
+       [curDendCount, 1], @(sizes) {sizes}, {zeros(0, 1)});
+end
+
+curMask = ~cellfun(@isempty, curConn);
+curPairT = nan(sum(curMask(:)), 3);
+[curPairT(:, 1), curPairT(:, 2)] = find(curMask);
+curPairT(:, 3) = cellfun(@median, curConn(curMask));
+curPairT = array2table(curPairT, 'VariableNames', { ...
+    'preAggloId', 'postAggloId', 'medLog10AsiArea'});
+
+[curAxonIds, ~, curPairT.preAggloId] = unique(curPairT.preAggloId);
+[curDendIds, ~, curPairT.postAggloId] = unique(curPairT.postAggloId);
 
 curAreas = [ ...
     curPairT.preAggloId, ...
@@ -72,12 +115,14 @@ curAreas = accumarray( ...
 
 Util.log('Clustering weight matrix');
 [curLink, curDist] = connectEM.Consistency.linkage(curAreas);
+[curDendLink, ~] = connectEM.Consistency.linkage(curAreas');
 Util.log('Done!');
-
-[~, ~, curPerm] = dendrogram(curLink, 0);
+   
+figure; [~, ~, curAxonPerm] = dendrogram(curLink, 0);
+figure; [~, ~, curDendPerm] = dendrogram(curDendLink, 0);
 
 %% Plot synapse sizes
-curTemp = curAreas(curPerm, :);
+curTemp = curAreas(curAxonPerm, curDendPerm);
 
 curFig = figure();
 curFig.Color = 'white';
@@ -111,7 +156,7 @@ title(curAx, ...
     'FontWeight', 'normal', 'FontSize', 10);
 
 %% Plot distance matrix
-curTemp = curDist(curPerm, curPerm);
+curTemp = curDist(curAxonPerm, curAxonPerm);
 
 curFig = figure();
 curFig.Color = 'white';
