@@ -63,9 +63,17 @@ curSeedConfigs = cellfun( ...
         'color', curColorT.color(curColorT.targetClass == t, :)), ...
     reshape(curInhSeedTargets, [], 1));
 
-% inhibitory axons only
+% Inhibitory axons only
 plotConfigs = axonClasses(2);
 plotConfigs.seedConfigs = curSeedConfigs;
+plotConfigs.plotIndividualAxons = false;
+
+% Smooth dendrite-seeded inhibitory axons (shown individually)
+plotConfigs(end + 1) = plotConfigs;
+plotConfigs(end).seedConfigs = ...
+    plotConfigs(end).seedConfigs(strcmpi( ...
+        curInhSeedTargets, 'SmoothDendrite'));
+plotConfigs(end).plotIndividualAxons = true;
 
 %% Plot
 clear cur*;
@@ -89,7 +97,7 @@ function withConfig(synT, classConn, targetClasses, info, weighted, config)
     axonCounts = nan(size(config.seedConfigs));
     for curIdx = 1:numel(config.seedConfigs)
         curSeedConfig = config.seedConfigs(curIdx);
-      	% curTargetClass = curSeedConfig.targetClass;
+        curTargetClass = curSeedConfig.targetClass;
         
        [obsConn, obsAxonIds, obsWeights] = forTargetClass( ...
             synT, classConn, targetClasses, curSeedConfig);
@@ -105,31 +113,47 @@ function withConfig(synT, classConn, targetClasses, info, weighted, config)
         % Calculate and plot fractional synapses
         obsConn = obsConn ./ sum(obsConn, 2);
         
-        if weighted
-            % Calculate weighted mean and standard deviation. Axons are
-            % weighted by the probability of being reconstructed in sparse
-            % synapse-seeded reconstructions.
-            curWeights = obsWeights;
+        if config.plotIndividualAxons
+            % Sort axons by fractional synapses. This pushes axons with
+            % strongest target innervations to the top of line plot stack.
+            curTargetClassMask = targetClasses == curTargetClass;
+           [~, curObsConn] = sort(obsConn(:, curTargetClassMask));
+            curObsConn = obsConn(curObsConn, :);
+            
+            curPlot = plot(1:size(obsConn, 2), curObsConn);
+            
+            % Color according to fractional synapses
+            curColors = parula(101);
+            curColors = curColors(1 + round( ...
+                100 * curObsConn(:, curTargetClassMask)), :);
+            set(curPlot, {'Color'}, num2cell(curColors, 2));
+            set(curPlot, 'LineWidth', 2);
         else
-            % Calculate unweighted mean and standard deviation.
-            curWeights = ones(size(obsWeights));
-        end
-        
-        curPerc = repelem(obsConn, curWeights, 1);
-        curPerc = prctile(curPerc, [25, 50, 75], 1);
-        
-        curMed = curPerc(2, :);
-        curNeg = curMed - curPerc(1, :);
-        curPos = curPerc(3, :) - curMed;
-        % curMu = sum(curWeights .* obsConn, 1);
-        % curSigma = std(obsConn, curWeights, 1);
+            % Plot summary statistics over all axons
+            if weighted
+                % Calculate weighted mean and standard deviation. Axons are
+                % weighted by the probability of being reconstructed in
+                % sparse synapse-seeded reconstructions.
+                curWeights = obsWeights;
+            else
+                % Calculate unweighted mean and standard deviation.
+                curWeights = ones(size(obsWeights));
+            end
 
-        errorbar( ...
-            1:size(obsConn, 2), curMed, curNeg, curPos, ...
-            'Color', curSeedConfig.color, ...
-            'LineWidth', 1.25, ...
-            'Marker', '.', ...
-            'MarkerSize', 18);
+            curPerc = repelem(obsConn, curWeights, 1);
+            curPerc = prctile(curPerc, [25, 50, 75], 1);
+
+            curMed = curPerc(2, :);
+            curNeg = curMed - curPerc(1, :);
+            curPos = curPerc(3, :) - curMed;
+
+            errorbar( ...
+                1:size(obsConn, 2), curMed, curNeg, curPos, ...
+                'Color', curSeedConfig.color, ...
+                'LineWidth', 1.25, ...
+                'Marker', '.', ...
+                'MarkerSize', 18);
+        end
     end
     
     xlim(ax, [0.5, (numel(targetClasses) + 0.5)]);
