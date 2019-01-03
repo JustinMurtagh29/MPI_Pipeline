@@ -109,17 +109,23 @@ function withConfig(synT, classConn, targetClasses, info, weighted, config)
             % Calculate weighted mean and standard deviation. Axons are
             % weighted by the probability of being reconstructed in sparse
             % synapse-seeded reconstructions.
-            curWeights = obsWeights ./ sum(obsWeights);
+            curWeights = obsWeights;
         else
             % Calculate unweighted mean and standard deviation.
-            curWeights = ones(size(obsWeights)) / numel(obsWeights);
+            curWeights = ones(size(obsWeights));
         end
         
-        curMu = sum(curWeights .* obsConn, 1);
-        curSigma = std(obsConn, curWeights, 1);
+        curPerc = repelem(obsConn, curWeights, 1);
+        curPerc = prctile(curPerc, [25, 50, 75], 1);
+        
+        curMed = curPerc(2, :);
+        curNeg = curMed - curPerc(1, :);
+        curPos = curPerc(3, :) - curMed;
+        % curMu = sum(curWeights .* obsConn, 1);
+        % curSigma = std(obsConn, curWeights, 1);
 
         errorbar( ...
-            1:numel(curMu), curMu, curSigma, ...
+            1:size(obsConn, 2), curMed, curNeg, curPos, ...
             'Color', curSeedConfig.color, ...
             'LineWidth', 1.25, ...
             'Marker', '.', ...
