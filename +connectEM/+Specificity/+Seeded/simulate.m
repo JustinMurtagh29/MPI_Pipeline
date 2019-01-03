@@ -142,7 +142,7 @@ function withConfig(synT, classConn, targetClasses, info, weighted, config)
     xtickangle(ax, 30);
 
     ylabel(ax, 'Fraction of synapses');
-    ylim(ax, [0, 0.5]);
+    ylim(ax, [0, 0.75]);
     
     legends = arrayfun( ...
         @(c, n) sprintf( ...
