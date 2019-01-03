@@ -14,8 +14,8 @@ targetClasses = { ...
 % Columns correspond to the target classes listed above. All-zeros mark
 % rates that were not measured (because biologically implausible).
 inhFpRates = [ ...
-     (1 / 20), (1 / 19), (5 / 17), (1 / 17), (4 / 18), (3 / 17); ...
-     (000000), (6 / 18), (6 / 18), (4 / 16), (000000), (6 / 17)];
+     (1 / 20), (1 / 19), (5 / 17), (1 / 17), (4 / 18), (3 / 17);  % shaft
+     (000000), (6 / 18), (6 / 18), (4 / 16), (000000), (6 / 17)]; % spine
 
 minSynPre = 10;
 
