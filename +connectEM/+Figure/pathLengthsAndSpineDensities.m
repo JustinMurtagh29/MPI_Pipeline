@@ -206,6 +206,11 @@ pathClasses = [1, 3, 2];
 densityEdges = linspace(0, 2.5, 51);
 densityClasses = [1, 3, 2, 4];
 
+% Make sure that `pathClasses` and `densityClasses` share prefix.
+assert(feval( ...
+    @(n) isequal(pathClasses(1:n), densityClasses(1:n)), ...
+    min(numel(pathClasses), numel(densityClasses))));
+
 colors = get(groot, 'defaultAxesColorOrder');
 
 plotHist = @(ax, edges, data) ...
@@ -260,7 +265,11 @@ set(fig.Children, ...
     'PlotBoxAspectRatio', ones(1, 3), ...
     'DataAspectRatioMode', 'auto');
 
-leg = legend(ax, plotLabels, 'Location', 'NorthEast');
+% NOTE(amotta): `pathClasses` and `densityClasses` might be different. But
+% they share the same prefix (see above sanity check). So, we can just use
+% the longer of the two vectors. This is equivalent to the `stable` union.
+leg = flip(union(pathClasses, densityClasses, 'stable'));
+leg = legend(ax, plotLabels(leg), 'Location', 'NorthEast');
 leg.Box = 'off';
 
 annotation( ...
