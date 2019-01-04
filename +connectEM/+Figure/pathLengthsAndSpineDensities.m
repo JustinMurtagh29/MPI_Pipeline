@@ -145,7 +145,17 @@ for curIdx = 1:numel(calibClasses)
     curCalibT = calibData.(curCalibClass);
     
     curCalibT.autoLength = conn.denMeta.trunkLength(curCalibT.aggloId);
-    curInterp = fit(curCalibT.autoLength, curCalibT.calibLength, 'poly1');
+    
+    % NOTE(amotta): This is what we did previously. This fits both an
+    % offset and a slope parameter. However, for the axon and dendrite path
+    % length calibration we did not allow non-zero offsets. So, let's use
+    % the same approach here.
+    %
+    % curInterp = fit(curCalibT.autoLength, curCalibT.calibLength, 'poly1');
+    
+    curInterp = fit( ...
+        [0; sum(curCalibT.autoLength)], ...
+        [0; sum(curCalibT.calibLength)], 'poly1');
 
     curAx = subplot(1, numel(calibClasses), curIdx);
     axis(curAx, 'square');
