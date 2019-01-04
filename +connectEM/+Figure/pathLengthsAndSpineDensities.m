@@ -148,8 +148,8 @@ for curIdx = 1:numel(calibClasses)
     
     % NOTE(amotta): This is what we did previously. This fits both an
     % offset and a slope parameter. However, for the axon and dendrite path
-    % length calibration we did not allow non-zero offsets. So, let's use
-    % the same approach here.
+    % length calibration (connectEM.calibrateNeuritePathLength). we did not
+    % allow non-zero offsets. So, let's use the same approach here.
     %
     % curInterp = fit(curCalibT.autoLength, curCalibT.calibLength, 'poly1');
     
@@ -199,7 +199,13 @@ for curIdx = 1:numel(plotTargetClasses)
     
     curCalibT = calibData.(curCalibClass);
     curCalibT.autoLength = conn.denMeta.trunkLength(curCalibT.aggloId);
-    curInterp = fit(curCalibT.autoLength, curCalibT.calibLength, 'poly1');
+    
+    % NOTE(amotta): This is what we used to do here. See above for details.
+    % curInterp = fit(curCalibT.autoLength, curCalibT.calibLength, 'poly1');
+    
+    curInterp = fit( ...
+        [0; sum(curCalibT.autoLength)], ...
+        [0; sum(curCalibT.calibLength)], 'poly1');
     
     curMask = dendT.targetClass == curTargetClass;
     dendT.corrTrunkLength(curMask) = curInterp(dendT.trunkLength(curMask));
