@@ -162,7 +162,11 @@ for curIdx = 1:numel(calibClasses)
     plot(curAx, curLimits(:), curInterp(1E3 * curLimits) / 1E3);
     plot(curAx, curLimits, curLimits, 'Color', 'black', 'LineStyle', '--');
     
-    title(curAx, curCalibClass, 'FontWeight', 'normal', 'FontSize', 10);
+    curTitle = { ...
+        curCalibClass; ...
+        sprintf('%d calibration points', height(curCalibT)); ...
+        sprintf('Correction coefficient: %.3f', curInterp.p1)};
+    title(curAx, curTitle, 'FontWeight', 'normal', 'FontSize', 10);
 end
 
 curAxes = flip(curFig.Children);
