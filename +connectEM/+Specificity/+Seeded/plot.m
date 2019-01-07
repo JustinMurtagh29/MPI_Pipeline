@@ -12,6 +12,7 @@ connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-partially
 minSynPre = 10;
 
 info = Util.runInfo();
+Util.showRunInfo(info);
 
 %% Loading data
 param = load(fullfile(rootDir, 'allParameter.mat'));
@@ -69,11 +70,31 @@ plotConfigs.seedConfigs = curSeedConfigs;
 plotConfigs.plotIndividualAxons = false;
 
 % Smooth dendrite-seeded inhibitory axons (shown individually)
-plotConfigs(end + 1) = plotConfigs;
+plotConfigs(end + 1) = plotConfigs(1);
 plotConfigs(end).seedConfigs = ...
     plotConfigs(end).seedConfigs(strcmpi( ...
         curInhSeedTargets, 'SmoothDendrite'));
 plotConfigs(end).plotIndividualAxons = true;
+
+% For comparison with Anjali's tracings in this dataset
+% NOTE(amotta): Anjali seeded inhibitory (?) axons at shaft synapses onto
+% apical dendrites but also counted spine synapses for the output.
+curInhSeedTargets = {
+    'ApicalDendrite', 'Somata', 'AxonInitialSegment'};
+curSeedConfigs = cellfun( ...
+    @(t) struct( ...
+        'targetClass', t, ...
+        'synIds', synT.id( ...
+            synT.ontoTargetClass == t ...
+          & ismember(synT.type, {'Shaft', 'Soma'})), ...
+        'title', sprintf('Axons seeded at synapse onto %s', t), ...
+        'color', curColorT.color(curColorT.targetClass == t, :)), ...
+    reshape(curInhSeedTargets, [], 1));
+
+% Inhibitory axons only
+plotConfigs(end + 1) = plotConfigs(1);
+plotConfigs(end).seedConfigs = curSeedConfigs;
+plotConfigs(end).plotIndividualAxons = false;
 
 %% Plot
 clear cur*;
@@ -94,7 +115,10 @@ function withConfig(synT, classConn, targetClasses, info, weighted, config)
     ax.TickDir = 'out';
     hold(ax, 'on');
     
+    synFracT = numel(config.seedConfigs);
+    synFracT = nan(synFracT, numel(targetClasses));
     axonCounts = nan(size(config.seedConfigs));
+    
     for curIdx = 1:numel(config.seedConfigs)
         curSeedConfig = config.seedConfigs(curIdx);
         curTargetClass = curSeedConfig.targetClass;
@@ -110,22 +134,20 @@ function withConfig(synT, classConn, targetClasses, info, weighted, config)
         % Count axons (for legend)
         axonCounts(curIdx) = size(obsConn, 1);
         
-        % Calculate and plot fractional synapses
-        obsConn = obsConn ./ sum(obsConn, 2);
-        
         if config.plotIndividualAxons
             % Sort axons by fractional synapses. This pushes axons with
             % strongest target innervations to the top of line plot stack.
+            obsConn = obsConn ./ sum(obsConn, 2);
             curTargetClassMask = targetClasses == curTargetClass;
-           [~, curObsConn] = sort(obsConn(:, curTargetClassMask));
-            curObsConn = obsConn(curObsConn, :);
+           [~, sortIds] = sort(obsConn(:, curTargetClassMask));
+            obsConn = obsConn(sortIds, :);
             
-            curPlot = plot(1:size(obsConn, 2), curObsConn);
+            curPlot = plot(1:size(obsConn, 2), obsConn);
             
             % Color according to fractional synapses
             curColors = parula(101);
             curColors = curColors(1 + round( ...
-                100 * curObsConn(:, curTargetClassMask)), :);
+                100 * obsConn(:, curTargetClassMask)), :);
             set(curPlot, {'Color'}, num2cell(curColors, 2));
             set(curPlot, 'LineWidth', 2);
         else
@@ -134,18 +156,21 @@ function withConfig(synT, classConn, targetClasses, info, weighted, config)
                 % Calculate weighted mean and standard deviation. Axons are
                 % weighted by the probability of being reconstructed in
                 % sparse synapse-seeded reconstructions.
-                curWeights = obsWeights;
+                obsConn = repelem(obsConn, obsWeights, 1);
             else
                 % Calculate unweighted mean and standard deviation.
-                curWeights = ones(size(obsWeights));
+                obsConn = obsConn; %#ok
             end
-
-            curPerc = repelem(obsConn, curWeights, 1);
-            curPerc = prctile(curPerc, [25, 50, 75], 1);
-
+            
+            % Update synapse fraction
+            synFracT(curIdx, :) = sum(obsConn, 1);
+            
+            obsConn = obsConn ./ sum(obsConn, 2);
+            curPerc = prctile(obsConn, [25, 50, 75], 1);
+            
+            curNeg = curPerc(2, :) - curPerc(1, :);
+            curPos = curPerc(3, :) - curPerc(2, :);
             curMed = curPerc(2, :);
-            curNeg = curMed - curPerc(1, :);
-            curPos = curPerc(3, :) - curMed;
 
             errorbar( ...
                 1:size(obsConn, 2), curMed, curNeg, curPos, ...
@@ -156,6 +181,7 @@ function withConfig(synT, classConn, targetClasses, info, weighted, config)
         end
     end
     
+    % Polish plot
     xlim(ax, [0.5, (numel(targetClasses) + 0.5)]);
     xticks(ax, 1:numel(targetClasses));
 
@@ -183,6 +209,24 @@ function withConfig(synT, classConn, targetClasses, info, weighted, config)
        {info.filename; info.git_repos{1}.hash; ...
         sprintf('%s (%s)', config.title, weightStr)}, ...
         'FontWeight', 'normal', 'FontSize', 10);
+    
+    % Report synapse fractions
+    theseTargetClasses = {config.seedConfigs.targetClass};
+   [~, sortIds] = ismember(theseTargetClasses, targetClasses);
+    
+    synFracT = feval(@(sf) ...
+       [sf, sum(synFracT, 2) - sum(sf, 2)], synFracT(:, sortIds));
+    synFracT = 100 * synFracT ./ sum(synFracT, 2);
+    
+    synFracT = array2table( ...
+        synFracT, 'RowNames', theseTargetClasses, ...
+        'VariableNames', [theseTargetClasses, {'Other'}]);
+    
+    fprintf( ...
+        'Synapse fractions for %s (%s)\n\n', ...
+        config.title, weightStr);
+    disp(synFracT);
+    fprintf('\n\n');
 end
 
 function [obsConn, axonIds, axonSeedCount] = ...
