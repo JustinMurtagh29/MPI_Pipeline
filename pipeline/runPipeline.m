@@ -41,7 +41,12 @@ function p = runPipeline(p, startStep, endStep)
     % This uses CNN subfolder in code repository
     if startStep <= PipelineStep.Classification ...
             && endStep >= PipelineStep.Classification
-        job = bigFwdPass(p, p.bbox);
+        if strcmp(p.cnn.version,'codat')
+            cnet = load('/u/bstaffle/results/SegEM/20130516T204040_08_03_paper.mat');
+            job = Codat.CNN.Cluster.predictDataset( cnet.cnet, p.bbox, Datasets.WkDataset(p.raw), Datasets.WkDataset(p.class),[],Cluster.config('gpu',1,'memory',44,'time','100:00:00'));
+        else
+            job = bigFwdPass(p, p.bbox);
+        end
         Cluster.waitForJob(job);
     end
 

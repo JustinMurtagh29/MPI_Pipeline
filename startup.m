@@ -1,16 +1,16 @@
 thisDir = fileparts(mfilename('fullpath'));
-beneDir = fullfile(thisDir, 'benedikt');
+% beneDir = fullfile(thisDir, 'benedikt');
 
 % Add current directory and its sub-directories to path
 addpath(genpathGit(thisDir));
-
+addpath(fullfile(thisDir,'filterbank'))
 % Make sure that Benedikt's repository doesn't shadow anything
-benePath = genpath(beneDir);
+% benePath = genpath(beneDir);
 
-rmpath(benePath);
-addpath(benePath, '-end');
+% rmpath(benePath);
+% addpath(benePath, '-end');
 
-SynEM.setup();
+% SynEM.setup();
 
 % Mark as ready
 global PIPELINE_READY;

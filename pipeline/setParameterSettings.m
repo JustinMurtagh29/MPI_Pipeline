@@ -43,14 +43,20 @@ function p = setParameterSettings(p)
     p.norm.func = @(x)normalizeStack(x,meanVal,stdVal);
 
     % Which classifier to use
-    p.cnn.dateStrings = '20130516T204040';
-    p.cnn.iter = 8;
-    p.cnn.gpu = 3;
-    p.cnn.first = ['/gaba/u/mberning/results/parameterSearch/' p.cnn.dateStrings ...
-        '/iter' num2str(p.cnn.iter, '%.2i') '/gpu' num2str(p.cnn.gpu, '%.2i') '/saveNet0000000001.mat'];
-    p.cnn.GPU = false;
+    if isfield(p.cnn,'version') && strcmp(p.cnn.version,'codat')
+        p.cnn.first = 'u/bstaffle/results/SegEM/20130516T204040_08_03_paper.mat';
+        p.cnn.GPU = true;
+    else
+        p.cnn.version = 'original';
+        p.cnn.dateStrings = '20130516T204040';
+        p.cnn.iter = 8;
+        p.cnn.gpu = 3;
+        p.cnn.first = ['/gaba/u/mberning/results/parameterSearch/' p.cnn.dateStrings ...
+            '/iter' num2str(p.cnn.iter, '%.2i') '/gpu' num2str(p.cnn.gpu, '%.2i') '/saveNet0000000001.mat'];
+        p.cnn.GPU = false;
+    end
     p.cnn.myelin = '/gaba/u/sahilloo/myelinCNN/iter/myelin_segem_3_codat.mat';
-
+    
     % Location to store CNN classification
     p.class = Util.modifyStruct( ...
         p.raw, ...

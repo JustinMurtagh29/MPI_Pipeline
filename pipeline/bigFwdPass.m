@@ -61,8 +61,36 @@ job = Cluster.startJob( ...
 end
 
 function jobWrapper(p, bbox)
+if strcmp(p.cnn.version,'codat')
+    onlyFwdPass3DonKnossosFolderCodat( ...
+        p.cnn.first, p.raw, ...
+        p.class, bbox, p.norm.func);
+else
     onlyFwdPass3DonKnossosFolder( ...
         p.cnn.first, p.cnn.GPU, p.raw, ...
         p.class, bbox, p.norm.func);
+end
+end
+
+function onlyFwdPass3DonKnossosFolderCodat(cnetLocation, input, result, bbox, normFunc)                                                                     
+    % Load the CNN used for classification
+    load(cnetLocation, 'cnet');
+    
+    randOfConvn = [50,50,20]; % used from cnet.randOfConvn in segem cnn
+
+    % Load data with right border for cnet
+    bboxWithBorder(:,1) = bbox(:,1) - ceil(randOfConvn'/2);
+    bboxWithBorder(:,2) = bbox(:,2) + ceil(randOfConvn'/2);
+    raw = loadRawData(input, bboxWithBorder);
+    
+    % Normalize data
+    raw = normFunc(single(raw));
+    
+    % Memory efficent fwd pass
+    cnet = cnet.setConvMode('fft2');
+    classification = cnet.predict(raw);
+    
+    % Save result to KNOSSOS folder
+    saveClassData(result, bbox(:, 1)', classification);
 end
 
