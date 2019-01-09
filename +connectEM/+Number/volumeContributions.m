@@ -7,6 +7,10 @@ clear;
 
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
+connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-partiallySplit-v2_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v8-classified.mat');
+
+minSynCount = 10;
+plotSynCountHists = true;
 
 % See connectEM.WholeCell.Script.separateSomata
 % 18c1bc8c43fb633af38dfa1ee60aba93424a9581
@@ -24,6 +28,8 @@ Util.showRunInfo(info);
 %% Loading data
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
+
+conn = connectEM.Connectome.load(param, connFile);
 
 % Segment sizes
 segSizes = Seg.Global.getSegToSizeMap(param);
@@ -46,6 +52,10 @@ vessel = heuristics.segIds(heuristics.vesselScore > vesselThreshold);
 
 neuropilSegIds = setdiff( ...
     1:numel(segSizes), cat(1, somata, nuclei, vessel));
+
+axonSegIds = cell2mat(conn.axons);
+dendAndSpineSegIds = cell2mat(conn.dendrites(~ismember( ...
+    conn.denMeta.targetClass, {'AxonInitialSegment', 'Somata'})));
 
 %% Dataset extent
 rawSize = 1 + diff(param.bbox, 1, 2)';
@@ -72,6 +82,12 @@ volT(5).vol = sum(segSizes(vessel));
 volT(6).name = 'Neuropil';
 volT(6).vol = sum(segSizes(neuropilSegIds));
 
+volT(7).name = 'Axon';
+volT(7).vol = sum(segSizes(axonSegIds));
+
+volT(8).name = 'Dendrite and spines';
+volT(8).vol = sum(segSizes(dendAndSpineSegIds));
+
 volT = struct2table(volT);
 volT.percent = 100 * volT.vol / volT.vol(1);
 volT.vol = volT.vol * voxelVol;
@@ -82,3 +98,13 @@ nonBorderVol = volT.vol(1) - volT.vol(2);
 volT.borderCorrPercent = nan(size(volT.percent));
 volT.borderCorrPercent(3:end) = 100 * volT.vol(3:end) ./ nonBorderVol;
 disp(volT)
+
+%% Volumetric axon to dendrite ratio
+axonVol = sum(segSizes(axonSegIds));
+dendAndSpineVol = sum(segSizes(dendAndSpineSegIds));
+ourDendAndSpineToAxonVolumeRatio = dendAndSpineVol / axonVol %#ok
+
+% From Braitenberg & Schüz. (1998) Cortex: Statistics and geometry of
+% neuronal connectivity. Second thoroughly revised edition.
+bsDendToAxonVolumeRatio = 35 / 34 %#ok
+bsDendAndSpineToAxonVolumeRatio = (35 + 14) / 34 %#ok

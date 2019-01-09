@@ -1,0 +1,57 @@
+<things>
+  <meta name="writer" content="NmlWriter.scala" />
+  <meta name="writerGitCommit" content="9ce8fa1ce4cdecbdd7c9ce86244c3b680b5113a2" />
+  <meta name="timestamp" content="1542634882923" />
+  <meta name="annotationId" content="5bf2bd300100004104b9594d" />
+  <meta name="username" content="Alessandro Motta" />
+  <parameters>
+    <experiment name="2012-09-28_ex145_07x2_ROI2017" description="connectEM.Consistency.Check.doubleContacts (2095acb1c6a8d227fb0ef34208cc211f89545d3c)" />
+    <scale x="11.4" y="11.4" z="28.0" />
+    <offset x="0" y="0" z="0" />
+    <time ms="0" />
+    <editPosition x="2038" y="4395" z="1283" />
+    <editRotation xRot="0.0" yRot="0.0" zRot="0.0" />
+    <zoomLevel zoom="0.43525827158029695" />
+    <activeNode id="4411" />
+  </parameters>
+  <thing id="5" color.r="1.0" color.g="0.8392156958580017" color.b="0.239215686917305" color.a="1.0" name="Axon">
+    <nodes>
+      <node id="4407" radius="113.99999" x="1946" y="4395" z="1315" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="8" interpolation="false" time="1542634833534" />
+      <node id="4409" radius="113.99999" x="1930" y="4381" z="1315" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="8" interpolation="false" time="1542634835257" />
+      <node id="4404" radius="113.99999" x="1988" y="4394" z="1292" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="8" interpolation="false" time="1542634807786" />
+      <node id="4408" radius="113.99999" x="1960" y="4370" z="1315" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="8" interpolation="false" time="1542634834342" />
+      <node id="4410" radius="113.99999" x="1944" y="4390" z="1303" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="8" interpolation="false" time="1542634843832" />
+      <node id="4405" radius="113.99999" x="1997" y="4377" z="1292" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="8" interpolation="false" time="1542634827849" />
+      <node id="4406" radius="113.99999" x="1995" y="4385" z="1301" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="8" interpolation="false" time="1542634830789" />
+    </nodes>
+    <edges>
+      <edge source="4409" target="4410" />
+      <edge source="4408" target="4409" />
+      <edge source="4407" target="4408" />
+      <edge source="4406" target="4407" />
+      <edge source="4405" target="4406" />
+      <edge source="4404" target="4405" />
+    </edges>
+  </thing>
+  <thing id="3" color.r="0.0" color.g="1.0" color.b="0.0" color.a="1.0" name="Spine head 22266 (No)">
+    <nodes>
+      <node id="4401" radius="1.5" x="1895" y="4400" z="1327" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+      <node id="4402" radius="1.5" x="1860" y="4380" z="1343" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+    </nodes>
+    <edges>
+      <edge source="4401" target="4402" />
+    </edges>
+  </thing>
+  <thing id="4" color.r="0.0" color.g="1.0" color.b="0.0" color.a="1.0" name="Spine head 193341 (Yes)">
+    <nodes>
+      <node id="4403" radius="1.5" x="1989" y="4410" z="1294" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+      <node id="4411" radius="1.5" x="1984" y="4395" z="1283" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="8" interpolation="false" time="1542634862178" />
+    </nodes>
+    <edges>
+      <edge source="4403" target="4411" />
+    </edges>
+  </thing>
+  <branchpoints />
+  <comments />
+  <groups />
+</things>

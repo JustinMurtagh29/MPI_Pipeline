@@ -5,11 +5,7 @@ clear;
 %% configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-partiallySplit-v2_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v8-classified.mat');
-outputDir = '/home/amotta/Desktop/exc-specs';
-
-targetClasses = { ...
-    'Somata', 'ProximalDendrite', 'ApicalDendrite', ...
-    'SmoothDendrite', 'AxonInitialSegment', 'OtherDendrite'};
+outputDir = '/home/amotta/Desktop/inh-specs';
 
 minSynPre = 10;
 info = Util.runInfo();
@@ -33,7 +29,7 @@ synT.ontoTarget = conn.denMeta.targetClass(synT.postAggloId);
 
 specClasses = ...
     connectEM.Connectome.buildAxonSpecificityClasses( ...
-        conn, axonClasses(1:(end - 1)));
+        conn, axonClasses(1:2));
 
 %% Export samples
 clear cur*;
@@ -41,7 +37,7 @@ clear cur*;
 rng(0);
 mkdir(outputDir);
 
-curAxonIds = specClasses(3).specs.ApicalDendrite.axonIds;
+curAxonIds = specClasses(2).specs.SmoothDendrite.axonIds;
 curAxonIds = curAxonIds(randperm(numel(curAxonIds)));
 curAxonIds = curAxonIds(1:10);
 
@@ -55,6 +51,7 @@ curNumDigits = ceil(log10(1 + numel(curAxonIds)));
 for curIdx = 1:numel(curAxonIds)
     curId = conn.axonMeta.id(curAxonIds(curIdx));
     curSynT = synT(synT.preAggloId == curId, :);
+    curSynT.type = syn.synapses.type(curSynT.id);
     
     curAxon = conn.axons(curId);
     curSynapses = cellfun( ...
@@ -75,8 +72,10 @@ for curIdx = 1:numel(curAxonIds)
     curSkel.colors{1} = [0, 0, 1, 1];
     
     curSkel.names(2:end) = arrayfun( ...
-        @(id, type) sprintf('Synapse %d (onto %s)', id, type), ...
-        curSynT.id, curSynT.ontoTarget, 'UniformOutput', false);
+        @(id, type, target) sprintf( ...
+            'Synapse %d (%s onto %s)', id, type, target), ...
+        curSynT.id, curSynT.type, curSynT.ontoTarget, ...
+        'UniformOutput', false);
     curSkel.colors(2:end) = {[1, 1, 0, 1]};
     
     curSkelName = sprintf( ...

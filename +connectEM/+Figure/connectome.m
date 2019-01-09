@@ -7,6 +7,7 @@ rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-partiallySplit-v2_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v8-classified.mat');
 
 minSynCount = 10;
+plotSynCountHists = true;
 
 info = Util.runInfo();
 Util.showRunInfo(info);
@@ -80,14 +81,15 @@ dendMeta = dendMeta(randIds, :);
 assert(all(dendMeta.classIdx));
 dendMeta = sortrows(dendMeta, 'classIdx');
 
-%% Plot
-colorMap = parula(5);
-
+%% Prepare connectome
 conn.synCount = cellfun(@numel, conn.synIdx);
 conn.coord = nan(size(conn.edges));
 [~, conn.coord(:, 1)] = ismember(conn.edges(:, 1), axonMeta.id);
 [~, conn.coord(:, 2)] = ismember(conn.edges(:, 2), dendMeta.id);
 conn = sortrows(conn, 'synCount', 'ascend');
+
+%% Plot
+colorMap = parula(5);
 
 fig = figure();
 fig.Color = 'white';
@@ -144,100 +146,102 @@ ylim(ax, yMinorTicks([1, end]));
 
 ax.Position = [0.15, 0.15, 0.7, 0.7];
 
-% Histogram over incoming synapses
-axDend = axes(fig);
-axDend.Position = ax.Position;
-axDend.Position(2:2:end) = [0.05, ax.Position(2) - 0.05];
+if plotSynCountHists
+    % Histogram over incoming synapses
+    axDend = axes(fig);
+    axDend.Position = ax.Position;
+    axDend.Position(2:2:end) = [0.05, ax.Position(2) - 0.05];
 
-dendSynCount = accumarray( ...
-    conn.coord(:, 2), conn.synCount, size(dendMeta.id));
-histogram(axDend, ...
-    'BinCount', dendSynCount, ...
-    'BinEdges', 0:1:numel(dendSynCount), ...
-    'EdgeColor', ax.ColorOrder(1, :), ...
-    'FaceAlpha', 1);
+    dendSynCount = accumarray( ...
+        conn.coord(:, 2), conn.synCount, size(dendMeta.id));
+    histogram(axDend, ...
+        'BinCount', dendSynCount, ...
+        'BinEdges', 0:1:numel(dendSynCount), ...
+        'EdgeColor', ax.ColorOrder(1, :), ...
+        'FaceAlpha', 1);
 
-axDend.YScale = 'log';
-axDend.YDir = 'reverse';
-axDend.TickDir = 'out';
-axDend.YMinorTick = 'off';
+    axDend.YScale = 'log';
+    axDend.YDir = 'reverse';
+    axDend.TickDir = 'out';
+    axDend.YMinorTick = 'off';
 
-axDend.YLim = 10 .^ [log10(0.9), ceil(log10(max(dendSynCount)))];
-yTicks = 10 .^ (0:log10(axDend.YLim(end)));
+    axDend.YLim = 10 .^ [log10(0.9), ceil(log10(max(dendSynCount)))];
+    yTicks = 10 .^ (0:log10(axDend.YLim(end)));
 
-yticks(axDend, yTicks);
-yticklabels(axDend, arrayfun( ...
-    @(d) sprintf('%d', d), ...
-    yTicks, 'UniformOutput', false));
+    yticks(axDend, yTicks);
+    yticklabels(axDend, arrayfun( ...
+        @(d) sprintf('%d', d), ...
+        yTicks, 'UniformOutput', false));
 
-xlim(axDend, [0, numel(dendSynCount)]);
-xticks(axDend, [xticks(axDend), axDend.XLim(2)]);
-ylabel(axDend, 'Synapses');
+    xlim(axDend, [0, numel(dendSynCount)]);
+    xticks(axDend, [xticks(axDend), axDend.XLim(2)]);
+    ylabel(axDend, 'Synapses');
 
-% Histogram over outgoing synapses
-axAxon = axes(fig);
-axAxon.Position = ax.Position;
-axAxon.Position(1) = sum(ax.Position(1:2:end));
-axAxon.Position(3) = 0.95 - axAxon.Position(1);
+    % Histogram over outgoing synapses
+    axAxon = axes(fig);
+    axAxon.Position = ax.Position;
+    axAxon.Position(1) = sum(ax.Position(1:2:end));
+    axAxon.Position(3) = 0.95 - axAxon.Position(1);
 
-axonSynCount = accumarray( ...
-    conn.coord(:, 1), conn.synCount, size(axonMeta.id));
-histogram(axAxon, ...
-    'BinCounts', axonSynCount, ...
-    'BinEdges', 0:1:numel(axonSynCount), ...
-    'Orientation', 'horizontal', ...
-    'EdgeColor', ax.ColorOrder(1, :), ...
-    'FaceAlpha', 1);
+    axonSynCount = accumarray( ...
+        conn.coord(:, 1), conn.synCount, size(axonMeta.id));
+    histogram(axAxon, ...
+        'BinCounts', axonSynCount, ...
+        'BinEdges', 0:1:numel(axonSynCount), ...
+        'Orientation', 'horizontal', ...
+        'EdgeColor', ax.ColorOrder(1, :), ...
+        'FaceAlpha', 1);
 
-axAxon.TickDir = 'out';
-axAxon.XScale = 'log';
-axAxon.XAxisLocation = 'top';
-axAxon.XMinorTick = 'off';
-axAxon.YDir = 'reverse';
-axAxon.YAxisLocation = 'right';
+    axAxon.TickDir = 'out';
+    axAxon.XScale = 'log';
+    axAxon.XAxisLocation = 'top';
+    axAxon.XMinorTick = 'off';
+    axAxon.YDir = 'reverse';
+    axAxon.YAxisLocation = 'right';
 
-axAxon.XLim(1) = minSynCount;
-axAxon.XLim(2) = 10 ^ ceil(log10(max(axonSynCount)));
-xTicks = log10(axAxon.XLim);
-xTicks = 10 .^ (xTicks(1):xTicks(2));
+    axAxon.XLim(1) = minSynCount;
+    axAxon.XLim(2) = 10 ^ ceil(log10(max(axonSynCount)));
+    xTicks = log10(axAxon.XLim);
+    xTicks = 10 .^ (xTicks(1):xTicks(2));
 
-xticks(axAxon, xTicks);
-xticklabels(axAxon, arrayfun( ...
-    @(d) sprintf('%d', d), ...
-    xTicks, 'UniformOutput', false));
+    xticks(axAxon, xTicks);
+    xticklabels(axAxon, arrayfun( ...
+        @(d) sprintf('%d', d), ...
+        xTicks, 'UniformOutput', false));
 
-ylim(axAxon, [0, numel(axonSynCount)]);
-yticks(axAxon, [yticks(axAxon), numel(axonSynCount)]);
-xlabel('Synapses');
+    ylim(axAxon, [0, numel(axonSynCount)]);
+    yticks(axAxon, [yticks(axAxon), numel(axonSynCount)]);
+    xlabel('Synapses');
 
-% Legend
-axLeg = axes(fig);
-hold(axLeg, 'on');
+    % Legend
+    axLeg = axes(fig);
+    hold(axLeg, 'on');
 
-axLeg.Position = [ ...
-    axAxon.Position(1), axDend.Position(2), ...
-    axAxon.Position(3), axDend.Position(4)];
+    axLeg.Position = [ ...
+        axAxon.Position(1), axDend.Position(2), ...
+        axAxon.Position(3), axDend.Position(4)];
 
-% Invisible plot for legend
-legPlots = cellfun( ...
-    @(color) plot( ...
-        axLeg, nan, nan, '.', ...
-        'MarkerSize', 12, ...
-        'MarkerEdgeColor', color, ...
-        'MarkerFaceColor', color), ...
-    num2cell(colorMap, 2));
+    % Invisible plot for legend
+    legPlots = cellfun( ...
+        @(color) plot( ...
+            axLeg, nan, nan, '.', ...
+            'MarkerSize', 12, ...
+            'MarkerEdgeColor', color, ...
+            'MarkerFaceColor', color), ...
+        num2cell(colorMap, 2));
 
-leg = arrayfun( ...
-    @num2str, 1:size(colorMap, 1), ...
-    'UniformOutput', false);
-leg(end) = strcat(leg(end), '+');
+    leg = arrayfun( ...
+        @num2str, 1:size(colorMap, 1), ...
+        'UniformOutput', false);
+    leg(end) = strcat(leg(end), '+');
 
-leg = legend(axLeg, leg, 'Location', 'SouthEast');
-leg.Position = axLeg.Position;
-leg.Box = 'off';
+    leg = legend(axLeg, leg, 'Location', 'SouthEast');
+    leg.Position = axLeg.Position;
+    leg.Box = 'off';
 
-axLeg.XAxis.Visible = 'off';
-axLeg.YAxis.Visible = 'off';
+    axLeg.XAxis.Visible = 'off';
+    axLeg.YAxis.Visible = 'off';
+end
 
 annotation( ...
     fig, 'textbox', [0, 0.9, 1, 0.1], ...

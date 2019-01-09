@@ -1,0 +1,64 @@
+<things>
+  <meta name="writer" content="NmlWriter.scala" />
+  <meta name="writerGitCommit" content="9ce8fa1ce4cdecbdd7c9ce86244c3b680b5113a2" />
+  <meta name="timestamp" content="1542642742062" />
+  <meta name="annotationId" content="5bf2db8c010000d909b95e20" />
+  <meta name="username" content="Alessandro Motta" />
+  <parameters>
+    <experiment name="2012-09-28_ex145_07x2_ROI2017" description="connectEM.Consistency.Check.doubleContacts (2095acb1c6a8d227fb0ef34208cc211f89545d3c)" />
+    <scale x="11.4" y="11.4" z="28.0" />
+    <offset x="0" y="0" z="0" />
+    <time ms="0" />
+    <editPosition x="2692" y="7954" z="1266" />
+    <editRotation xRot="0.0" yRot="0.0" zRot="0.0" />
+    <zoomLevel zoom="0.48" />
+    <activeNode id="2124" />
+  </parameters>
+  <thing id="6" color.r="0.0784313753247261" color.g="0.4000000059604645" color.b="0.4901960790157318" color.a="1.0" name="Axon">
+    <nodes>
+      <node id="2118" radius="113.99999" x="2706" y="7984" z="1273" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="8" interpolation="false" time="1542642712241" />
+      <node id="2119" radius="113.99999" x="2683" y="7989" z="1273" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="8" interpolation="false" time="1542642713825" />
+      <node id="2117" radius="113.99999" x="2660" y="7998" z="1273" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="8" interpolation="false" time="1542642710981" />
+      <node id="2121" radius="113.99999" x="2692" y="7986" z="1278" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="8" interpolation="false" time="1542642716384" />
+      <node id="2122" radius="113.99999" x="2706" y="7984" z="1270" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="8" interpolation="false" time="1542642724139" />
+      <node id="2115" radius="113.99999" x="2678" y="7974" z="1268" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="8" interpolation="false" time="1542642644251" />
+      <node id="2120" radius="113.99999" x="2699" y="8005" z="1274" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="8" interpolation="false" time="1542642714959" />
+      <node id="2116" radius="113.99999" x="2693" y="7978" z="1269" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="8" interpolation="false" time="1542642702923" />
+      <node id="2123" radius="113.99999" x="2714" y="7989" z="1270" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="8" interpolation="false" time="1542642725271" />
+    </nodes>
+    <edges>
+      <edge source="2122" target="2123" />
+      <edge source="2121" target="2122" />
+      <edge source="2120" target="2121" />
+      <edge source="2119" target="2120" />
+      <edge source="2118" target="2119" />
+      <edge source="2117" target="2118" />
+      <edge source="2116" target="2117" />
+      <edge source="2115" target="2116" />
+    </edges>
+  </thing>
+  <thing id="3" color.r="0.0" color.g="1.0" color.b="0.0" color.a="1.0" name="Spine head 145025 (No)">
+    <nodes>
+      <node id="2112" radius="1.5" x="3656" y="7555" z="779" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="4" color.r="0.0" color.g="1.0" color.b="0.0" color.a="1.0" name="Spine head 145177 (No)">
+    <nodes>
+      <node id="2113" radius="1.5" x="3770" y="7434" z="728" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="5" color.r="0.0" color.g="1.0" color.b="0.0" color.a="1.0" name="Spine head 205621 (Yes)">
+    <nodes>
+      <node id="2114" radius="1.5" x="2679" y="7948" z="1265" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+      <node id="2124" radius="1.5" x="2692" y="7954" z="1265" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="8" interpolation="false" time="1542642734745" />
+    </nodes>
+    <edges>
+      <edge source="2114" target="2124" />
+    </edges>
+  </thing>
+  <branchpoints />
+  <comments />
+  <groups />
+</things>

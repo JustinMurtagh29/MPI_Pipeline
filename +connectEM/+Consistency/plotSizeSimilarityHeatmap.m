@@ -1,0 +1,136 @@
+function plotSizeSimilarityHeatmap(synT, saSdConfig, ctrlConfig, varargin)
+    % Written by
+    %   Alessandro Motta <alessandro.motta@brain.mpg.de>
+    
+    opt = struct;
+    opt.title = '';
+    opt = Util.modifyStruct(opt, varargin{:});
+    
+    limX = [0, 1.5];
+    limY = [-1.5, 0.5];
+    imSize = [301, 301];
+    
+    ticksX = linspace(limX(1), limX(2), 4);
+    ticksY = linspace(limY(1), limY(2), 5);
+    
+    saSdT = table;
+    saSdT.areas = synT.area(saSdConfig.synIdPairs);
+    saSdT.cv = std(saSdT.areas, 0, 2) ./ mean(saSdT.areas, 2);
+    saSdT.avgLogAreas = mean(log10(saSdT.areas), 2);
+
+    ctrlT = table;
+    ctrlT.areas = synT.area(ctrlConfig.synIdPairs);
+    ctrlT.cv = std(ctrlT.areas, 0, 2) ./ mean(ctrlT.areas, 2);
+    ctrlT.avgLogAreas = mean(log10(ctrlT.areas), 2);
+
+   [imGridY, imGridX] = ndgrid( ...
+        linspace(limY(1), limY(2), imSize(1)), ...
+        linspace(limX(1), limX(2), imSize(2)));
+    imGrid = cat(2, imGridY(:), imGridX(:));
+    
+    saSdImg = horzcat(saSdT.avgLogAreas, saSdT.cv);
+    curMask = ...
+        limY(1) <= saSdImg(:, 1) & saSdImg(:, 1) <= limY(2) ...
+      & limX(1) <= saSdImg(:, 2) & saSdImg(:, 2) <= limX(2);
+
+    saSdImg = ksdensity( ...
+        saSdImg(curMask, :), imGrid, ...
+        'Support', transpose(cat(1, limY, limX)), ...
+        'BoundaryCorrection', 'reflection');
+    saSdImg = mean(curMask) * saSdImg / sum(saSdImg(:));
+    saSdImg = reshape(saSdImg, imSize);
+
+    ctrlImg = horzcat( ...
+        ctrlT.avgLogAreas, ctrlT.cv);
+    curMask = ...
+        limY(1) <= ctrlImg(:, 1) & ctrlImg(:, 1) <= limY(2) ...
+      & limX(1) <= ctrlImg(:, 2) & ctrlImg(:, 2) <= limX(2);
+
+    ctrlImg = ksdensity( ...
+        ctrlImg(curMask, :), imGrid, ...
+        'Support', transpose(cat(1, limY, limX)), ...
+        'BoundaryCorrection', 'reflection');
+    ctrlImg = mean(curMask) * ctrlImg / sum(ctrlImg(:));
+    ctrlImg = reshape(ctrlImg, imSize);
+
+    maxVal = max(max(saSdImg(:)), max(ctrlImg(:)));
+    diffImg = saSdImg - ctrlImg;
+    maxDiff = max(abs(diffImg(:)));
+    
+    fig = figure();
+    fig.Color = 'white';
+    fig.Position(3:4) = [360, 1020];
+
+    curAx = subplot(3, 1, 1);
+    image(curAx, uint8(double(intmax('uint8')) * saSdImg / maxVal));
+    colormap(curAx, jet(256));
+
+    curBar = colorbar('peer', curAx);
+    curBar.Ticks = curBar.Limits;
+    curBar.TickLabels = {'0', sprintf('%.3g', maxVal)};
+    
+    curAx = subplot(3, 1, 2);
+    image(curAx, uint8(double(intmax('uint8')) * ctrlImg / maxVal));
+    colormap(curAx, jet(256));
+
+    curBar = colorbar('peer', curAx);
+    curBar.Ticks = curBar.Limits;
+    curBar.TickLabels = {'0', sprintf('%.3g', maxVal)};
+    
+    curAx = subplot(3, 1, 3);
+    image(curAx, uint8( ...
+        double(intmax('uint8')) ...
+      * (1 + diffImg / maxDiff) / 2));
+    colormap(curAx, jet(256));
+    
+    curBar = colorbar('peer', curAx);
+    curBar.Label.String = { ...
+        'Fraction of observe pairs'; ...
+        'relative to null model'};
+    curBar.Ticks = [ ...
+        curBar.Limits(1), ...
+        mean(curBar.Limits), ...
+        curBar.Limits(end)];
+    curBar.TickLabels = { ...
+        sprintf('%.3g', -maxDiff), '0', ...
+        sprintf('%.3g', +maxDiff)};
+
+    set(findobj(fig.Children, 'Type', 'ColorBar'), ...
+        'Location', 'EastOutside', ...
+        'TickDirection', 'out', ...
+        'Box', 'off');
+
+   [~, tickIdsX] = ismember(ticksX, linspace(limX(1), limX(2), imSize(2)));
+    tickLabelsX = arrayfun(@num2str, ticksX, 'UniformOutput', false);
+   [~, tickIdsY] = ismember(ticksY, linspace(limY(1), limY(2), imSize(1)));
+    tickLabelsY = arrayfun(@num2str, ticksY, 'UniformOutput', false);
+
+    axes = reshape(flip(findobj(fig, 'Type', 'Axes')), 1, []);
+    arrayfun(@(ax) hold(ax, 'on'), axes);
+
+    set(axes, ...
+        'Box', 'off', ...
+        'TickDir', 'out', ...
+        'YDir', 'normal', ...
+        'YTick', tickIdsY, ...
+        'YTickLabels', tickLabelsY, ...
+        'XTick', [], ...
+        'PlotBoxAspectRatio', [1, 1, 1], ...
+        'DataAspectRatioMode', 'auto');
+    set(axes(end), ...
+        'XTick', tickIdsX, ...
+        'XTickLabels', tickLabelsX);
+
+    arrayfun(@(ax) ylabel(ax, ...
+        'Average log_{10}(ASI area [µm²])'), axes);
+    xlabel(axes(end), 'Coefficient of variation');
+    
+    if ~isempty(opt.title)
+        annotation( ...
+            fig, ...
+            'textbox', [0, 0.9, 1, 0.1], ...
+            'String', opt.title, ...
+            'EdgeColor', 'none', ...
+            'HorizontalAlignment', 'center');
+    end
+end

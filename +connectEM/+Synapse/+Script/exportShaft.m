@@ -15,24 +15,22 @@ param = param.p;
 
 points = Seg.Global.getSegToPointMap(param);
 
-[conn, syn] = connectEM.Connectome.load(param, connFile);
+[conn, syn, axonClasses] = connectEM.Connectome.load(param, connFile);
+inhAxonIds = axonClasses(2).axonIds;
 
 %% Select synapses
-spinyDendIds = find(conn.denMeta.targetClass == 'OtherDendrite');
-apicalDendIds = find(conn.denMeta.targetClass == 'ApicalDendrite');
-smoothDendIds = find(conn.denMeta.targetClass == 'SmoothDendrite');
-
 synT = connectEM.Connectome.buildSynapseTable(conn, syn);
-synT(synT.isSpine, :) = [];
+synT = synT(ismember(synT.preAggloId, inhAxonIds) & synT.isSpine, :);
 
-spinySynT = synT(ismember(synT.postAggloId, spinyDendIds), :);
-apicalSynT = synT(ismember(synT.postAggloId, apicalDendIds), :);
-smoothSynT = synT(ismember(synT.postAggloId, smoothDendIds), :);
+targetClasses = unique(conn.denMeta.targetClass);
+targetSynT = arrayfun(@(t) ...
+    synT(ismember(synT.postAggloId, ...
+        find(conn.denMeta.targetClass == t)), :), ...
+    targetClasses, 'UniformOutput', false);
 
 %% Export random examples
-exportSyns(1) = struct('tag', 'spiny', 'syns', spinySynT);
-exportSyns(2) = struct('tag', 'apical', 'syns', apicalSynT);
-exportSyns(3) = struct('tag', 'smooth', 'syns', smoothSynT);
+exportSyns = lower(arrayfun(@char, targetClasses, 'UniformOutput', false));
+exportSyns = struct('tag', exportSyns(:), 'syns', targetSynT(:));
 
 skel = skeleton();
 skel = Skeleton.setParams4Pipeline(skel, param);
@@ -45,7 +43,8 @@ for curSyn = reshape(exportSyns, 1, [])
     
     rng(0);
     curRandIds = randperm(size(curSyns, 1));
-    curSyns = curSyns(curRandIds(1:50), :);
+    curRandIds = curRandIds(1:min(50, numel(curRandIds)));
+    curSyns = curSyns(curRandIds, :);
     
     curSynAgglos = cellfun( ...
         @vertcat, ...
@@ -65,6 +64,6 @@ for curSyn = reshape(exportSyns, 1, [])
         reshape(1:size(curSyns, 1), [], 1), curSyns.id, ...
         'UniformOutput', false);
     
-    curFile = sprintf('shaft-synapses_onto-%s.nml', curTag);
+    curFile = sprintf('spine-synapses_onto-%s.nml', curTag);
     curSkel.write(fullfile(outputDir, curFile));
 end

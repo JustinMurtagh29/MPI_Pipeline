@@ -1,0 +1,69 @@
+<things>
+  <meta name="writer" content="NmlWriter.scala" />
+  <meta name="writerGitCommit" content="9ce8fa1ce4cdecbdd7c9ce86244c3b680b5113a2" />
+  <meta name="timestamp" content="1542644148143" />
+  <meta name="annotationId" content="5bf2e125010000570cb95f4b" />
+  <meta name="username" content="Alessandro Motta" />
+  <parameters>
+    <experiment name="2012-09-28_ex145_07x2_ROI2017" description="connectEM.Consistency.Check.doubleContacts (2095acb1c6a8d227fb0ef34208cc211f89545d3c)" />
+    <scale x="11.4" y="11.4" z="28.0" />
+    <offset x="0" y="0" z="0" />
+    <time ms="0" />
+    <editPosition x="4787" y="4990" z="632" />
+    <editRotation xRot="0.0" yRot="0.0" zRot="0.0" />
+    <zoomLevel zoom="0.35971757981842706" />
+    <activeNode id="5338" />
+  </parameters>
+  <thing id="5" color.r="1.0" color.g="0.8392156958580017" color.b="0.239215686917305" color.a="1.0" name="Axon">
+    <nodes>
+      <node id="5331" radius="113.99999" x="4787" y="4999" z="631" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="8" interpolation="false" time="1542644039279" />
+      <node id="5335" radius="113.99999" x="4794" y="4984" z="641" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="0" bitDepth="8" interpolation="false" time="1542644057812" />
+      <node id="5338" radius="113.99999" x="4756" y="4990" z="623" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="8" interpolation="false" time="1542644106672" />
+      <node id="5328" radius="113.99999" x="4790" y="4989" z="636" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="8" interpolation="false" time="1542644035784" />
+      <node id="5330" radius="113.99999" x="4795" y="4968" z="636" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="8" interpolation="false" time="1542644037509" />
+      <node id="5337" radius="113.99999" x="4785" y="4980" z="641" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="0" bitDepth="8" interpolation="false" time="1542644062006" />
+      <node id="5332" radius="113.99999" x="4793" y="4981" z="626" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="8" interpolation="false" time="1542644043023" />
+      <node id="5329" radius="113.99999" x="4777" y="4986" z="636" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="8" interpolation="false" time="1542644036562" />
+      <node id="5336" radius="113.99999" x="4789" y="4987" z="640" rotX="0.0" rotY="270.0" rotZ="0.0" inVp="1" inMag="0" bitDepth="8" interpolation="false" time="1542644060312" />
+      <node id="5334" radius="113.99999" x="4846" y="5004" z="628" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="8" interpolation="false" time="1542644048787" />
+      <node id="5333" radius="113.99999" x="4809" y="4987" z="626" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="8" interpolation="false" time="1542644043839" />
+      <node id="5327" radius="113.99999" x="4803" y="4994" z="636" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="8" interpolation="false" time="1542644015648" />
+    </nodes>
+    <edges>
+      <edge source="5337" target="5338" />
+      <edge source="5336" target="5337" />
+      <edge source="5335" target="5336" />
+      <edge source="5334" target="5335" />
+      <edge source="5333" target="5334" />
+      <edge source="5332" target="5333" />
+      <edge source="5331" target="5332" />
+      <edge source="5330" target="5331" />
+      <edge source="5329" target="5330" />
+      <edge source="5328" target="5329" />
+      <edge source="5327" target="5328" />
+    </edges>
+  </thing>
+  <thing id="3" color.r="0.0" color.g="1.0" color.b="0.0" color.a="1.0" name="Spine head 6971 (Yes)">
+    <nodes>
+      <node id="5322" radius="1.5" x="4789" y="5016" z="630" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+      <node id="5323" radius="1.5" x="4780" y="4993" z="643" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+    </nodes>
+    <edges>
+      <edge source="5322" target="5323" />
+    </edges>
+  </thing>
+  <thing id="4" color.r="0.0" color.g="1.0" color.b="0.0" color.a="1.0" name="Spine head 7407 (No)">
+    <nodes>
+      <node id="5324" radius="1.5" x="2569" y="6114" z="636" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+      <node id="5325" radius="1.5" x="2575" y="6110" z="642" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+      <node id="5326" radius="1.5" x="2569" y="6106" z="644" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+    </nodes>
+    <edges>
+      <edge source="5324" target="5325" />
+      <edge source="5325" target="5326" />
+    </edges>
+  </thing>
+  <branchpoints />
+  <comments />
+  <groups />
+</things>

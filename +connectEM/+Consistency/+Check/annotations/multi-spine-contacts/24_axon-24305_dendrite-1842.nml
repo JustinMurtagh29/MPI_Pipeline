@@ -1,0 +1,59 @@
+<things>
+  <meta name="writer" content="NmlWriter.scala" />
+  <meta name="writerGitCommit" content="9ce8fa1ce4cdecbdd7c9ce86244c3b680b5113a2" />
+  <meta name="timestamp" content="1542633533903" />
+  <meta name="annotationId" content="5bf2b7d0010000ca02b9583b" />
+  <meta name="username" content="Alessandro Motta" />
+  <parameters>
+    <experiment name="2012-09-28_ex145_07x2_ROI2017" description="connectEM.Consistency.Check.doubleContacts (d7aecc27bddcc6cef302daea61c11d02036652d4)" />
+    <scale x="11.4" y="11.4" z="28.0" />
+    <offset x="0" y="0" z="0" />
+    <time ms="0" />
+    <editPosition x="3292" y="6540" z="2126" />
+    <editRotation xRot="0.0" yRot="0.0" zRot="0.0" />
+    <zoomLevel zoom="0.4787840987383265" />
+    <activeNode id="1955" />
+  </parameters>
+  <thing id="5" color.r="1.0" color.g="0.8392156958580017" color.b="0.239215686917305" color.a="1.0" name="Axon">
+    <nodes>
+      <node id="1959" radius="113.99999" x="3316" y="6545" z="2133" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="8" interpolation="false" time="1542633467295" />
+      <node id="1965" radius="113.99999" x="3364" y="6545" z="2137" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="8" interpolation="false" time="1542633489551" />
+      <node id="1957" radius="113.99999" x="3311" y="6541" z="2128" rotX="90.0" rotY="0.0" rotZ="0.0" inVp="2" inMag="0" bitDepth="8" interpolation="false" time="1542633433484" />
+      <node id="1961" radius="113.99999" x="3338" y="6540" z="2137" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="8" interpolation="false" time="1542633471889" />
+      <node id="1966" radius="113.99999" x="3355" y="6532" z="2129" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="8" interpolation="false" time="1542633494072" />
+      <node id="1964" radius="113.99999" x="3361" y="6534" z="2137" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="8" interpolation="false" time="1542633488318" />
+      <node id="1960" radius="113.99999" x="3340" y="6525" z="2137" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="8" interpolation="false" time="1542633470750" />
+      <node id="1958" radius="113.99999" x="3312" y="6552" z="2128" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="8" interpolation="false" time="1542633453336" />
+      <node id="1967" radius="113.99999" x="3352" y="6549" z="2126" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="8" interpolation="false" time="1542633495618" />
+      <node id="1962" radius="113.99999" x="3325" y="6569" z="2137" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="8" interpolation="false" time="1542633472785" />
+      <node id="1963" radius="113.99999" x="3349" y="6554" z="2137" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="8" interpolation="false" time="1542633486578" />
+    </nodes>
+    <edges>
+      <edge source="1966" target="1967" />
+      <edge source="1965" target="1966" />
+      <edge source="1964" target="1965" />
+      <edge source="1963" target="1964" />
+      <edge source="1962" target="1963" />
+      <edge source="1961" target="1962" />
+      <edge source="1960" target="1961" />
+      <edge source="1959" target="1960" />
+      <edge source="1957" target="1959" />
+      <edge source="1957" target="1958" />
+    </edges>
+  </thing>
+  <thing id="3" color.r="0.0" color.g="1.0" color.b="0.0" color.a="1.0" name="Spine head 285206 (Yes)">
+    <nodes>
+      <node id="1955" radius="1.5" x="3292" y="6540" z="2126" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+    </nodes>
+    <edges />
+  </thing>
+  <thing id="4" color.r="0.0" color.g="1.0" color.b="0.0" color.a="1.0" name="Spine head 312368 (No)">
+    <nodes>
+      <node id="1956" radius="1.5" x="3330" y="6738" z="2220" rotX="0.0" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+    </nodes>
+    <edges />
+  </thing>
+  <branchpoints />
+  <comments />
+  <groups />
+</things>

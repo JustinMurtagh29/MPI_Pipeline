@@ -10,6 +10,13 @@ targetClasses = { ...
     'Somata', 'ProximalDendrite', 'ApicalDendrite', ...
     'SmoothDendrite', 'AxonInitialSegment', 'OtherDendrite'};
 
+% NOTE(amotta): Rows correspond to shaft and spine synapses, respectively.
+% Columns correspond to the target classes listed above. All-zeros mark
+% rates that were not measured (because biologically implausible).
+inhFpRates = [ ...
+     (1 / 20), (1 / 19), (5 / 17), (1 / 17), (4 / 18), (3 / 17);  % shaft
+     (000000), (6 / 18), (6 / 18), (4 / 16), (000000), (6 / 17)]; % spine
+
 minSynPre = 10;
 
 info = Util.runInfo();
@@ -19,24 +26,74 @@ Util.showRunInfo(info);
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 
-[conn, ~, axonClasses] = ...
+[conn, syn, axonClasses] = ...
     connectEM.Connectome.load(param, connFile);
 
+%% build class connectome for shaft synapses
+clear cur*;
+
+curShaftConn = conn;
+curShaftConn.connectome.synIdx = cellfun( ...
+    @(ids) ids(syn.synapses.type(ids) == 'Shaft'), ...
+    curShaftConn.connectome.synIdx, 'UniformOutput', false);
+
+curShaftConn = ...
+    connectEM.Connectome.prepareForSpecificityAnalysis( ...
+        curShaftConn, axonClasses, 'minSynPre', minSynPre);
+classConnShafts = ...
+    connectEM.Connectome.buildClassConnectome( ...
+        curShaftConn, 'targetClasses', targetClasses);
+    
+%% build complete class connectome
 [conn, axonClasses] = ...
     connectEM.Connectome.prepareForSpecificityAnalysis( ...
         conn, axonClasses, 'minSynPre', minSynPre);
 
-classConnectome = ...
+classConn = ...
     connectEM.Connectome.buildClassConnectome( ...
         conn, 'targetClasses', targetClasses);
+    
+%% prepare for analysis while accounting for false positive inh. synapses
+[axonClasses.synFalsePosRates] = deal([]);
+axonClasses(2).synFalsePosRates = inhFpRates;
 
-%% calculate target class innervation probabilities for null model
+%% plot
 clear cur*;
 
-for curIdx = 1:numel(axonClasses)
-    curNullProbs = classConnectome(axonClasses(curIdx).nullAxonIds, :);
-    curNullProbs = connectEM.Specificity.calcFirstHitProbs(curNullProbs);
-    axonClasses(curIdx).nullTargetClassProbs = curNullProbs;
+for curClassId = 1:numel(axonClasses)
+    curAxonClass = axonClasses(curClassId);
+    curFpRates = curAxonClass.synFalsePosRates;
+    
+    % NOTE(amotta): If empirically determined synapse false positive rates
+    % have been specified, we simulate the effect of synapse removal under
+    % a binomial distribution. This necessitates multiple multiple runs to
+    % get a feeling for the variability across trials.
+    switch isempty(curFpRates)
+        case true, numRuns = 1;
+        case false, numRuns = 5;
+    end
+    
+    for curRun = 1:numRuns
+        curConn = classConn(curAxonClass.nullAxonIds, :);
+
+        if ~isempty(curFpRates)
+            % Take into account false positive synapse rates
+            curShaftConn = classConnShafts(curAxonClass.nullAxonIds, :);
+            curSpineConn = curConn - curShaftConn;
+
+            rng(curRun);
+            curShaftConn = curShaftConn - binornd(curShaftConn, ...
+                repelem(curFpRates(1, :), size(curShaftConn, 1), 1));
+            curSpineConn = curSpineConn - binornd(curSpineConn, ...
+                repelem(curFpRates(2, :), size(curSpineConn, 1), 1));
+            curConn = curShaftConn + curSpineConn;
+        end
+        
+        axonClasses(curClassId).nullTargetClassProbs = ...
+            connectEM.Specificity.calcFirstHitProbs(curConn, 'multinomial');
+        plotAxonClass( ...
+            info, classConn, targetClasses, axonClasses(curClassId));
+    end
 end
 
 %% show first hit probabilities
@@ -46,22 +103,6 @@ firstHitProbs.Properties.RowNames = {axonClasses.title};
 
 fprintf('# First-hit probabilities\n');
 disp(firstHitProbs);
-
-%% plot
-clear cur*;
-curAxonClasses = axonClasses;
-
-% NOTE(amotta): The list of axons to induce the null model is no longer
-% needed. Let's remove it to cause an error in case a weird code path still
-% tries to use it.
-curAxonClasses = curAxonClasses(1:4);
-curAxonClasses = rmfield(curAxonClasses, 'nullAxonIds');
-
-for curIdx = 1:numel(curAxonClasses)
-    plotAxonClass( ...
-        info, classConnectome, ...
-        targetClasses, curAxonClasses(curIdx));
-end
 
 %% plotting
 function plotAxonClass(info, classConn, targetClasses, axonClass)
