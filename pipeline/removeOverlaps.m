@@ -9,5 +9,6 @@ function removeOverlaps(p)
     functionH = @rewriteWithoutOverlaps;
     job = startCPU(functionH, inputCell, 'overlapRemoval', 12, 10);
     Cluster.waitForJob(job);
+    rmdir(fileparts(fileparts(p.local(1).tempSegFile)),'s') % remove temp structure (which is huge)
 end
 
