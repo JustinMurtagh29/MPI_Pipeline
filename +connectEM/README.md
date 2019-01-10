@@ -1,4 +1,7 @@
 # README
+**NOTE:** There exists a newer and more complete version of these notes.
+Ask @amotta if you need this information (tag:
+2018-08-01-Reconstruction-Workflow-and-State-Files)
 
 ## Blood vessel detection and correction for intensity gradient
 See `preprocessing/preprocessData.m`
