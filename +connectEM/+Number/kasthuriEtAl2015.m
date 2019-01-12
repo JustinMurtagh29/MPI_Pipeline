@@ -17,12 +17,14 @@ xlsFile = fileparts(mfilename('fullpath'));
 xlsFile = fullfile(xlsFile, 'kasthuriEtAl2015CellTableS1.xls');
 
 data = xlsread(xlsFile);
+data = data(3:end, :); % Get rid of header
+
 colToId = @(c) 1 + double(lower(c)) - double('a');
-dataRows = 3:1702;
 
 synT = table;
-synT.id = data(dataRows, colToId('A'));
-synT.axonId = data(dataRows, colToId('I'));
+synT.id = data(:, colToId('A'));
+synT.axonId = data(:, colToId('I'));
+synT.dendId = data(:, colToId('J'));
 
 % Sanity check
 assert(isequal(synT.id, reshape(1:height(synT), [], 1)));
@@ -43,3 +45,7 @@ axonT.synCount = accumarray(synT.relAxonId, 1, size(axonT.id));
 numSynsPerAxonMean = mean(axonT.synCount) %#ok
 numSynsPerAxonStd = std(axonT.synCount) %#ok
 numAxonsWithAtLeastTenSynapses = sum(axonT.synCount >= 10) %#ok
+
+% Count multi-synaptic connections
+[~, ~, numMultiSynPairs] = unique(synT(:, {'axonId', 'dendId'}), 'rows');
+numMultiSynConnections = sum(accumarray(numMultiSynPairs, 1) > 1) %#ok
