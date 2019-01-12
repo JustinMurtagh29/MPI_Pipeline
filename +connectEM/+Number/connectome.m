@@ -36,7 +36,10 @@ numApicalDendrites = sum( ...
 numAxonInitialSegments = sum(dendMask & aisMask) %#ok
 numAxonInitialSegmentsAll = sum(aisMask) %#ok
 
-%% Axon classes
+%% Axons
+numSynsPerAxonMean = mean(conn.axonMeta.synCount) %#ok
+numSynsPerAxonStd = std(conn.axonMeta.synCount) %#ok
+
 numLikelyExcitatoryAxons = numel(axonClasses(1).axonIds) %#ok
 numLikelyThalamocorticalAxons = numel(axonClasses(3).axonIds) %#ok
 numLikelyInhibitoryAxons = numel(axonClasses(2).axonIds) %#ok
