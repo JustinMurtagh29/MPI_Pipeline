@@ -42,3 +42,4 @@ axonT.synCount = accumarray(synT.relAxonId, 1, size(axonT.id));
 %% Evaluation
 numSynsPerAxonMean = mean(axonT.synCount) %#ok
 numSynsPerAxonStd = std(axonT.synCount) %#ok
+numAxonsWithAtLeastTenSynapses = sum(axonT.synCount >= 10) %#ok
