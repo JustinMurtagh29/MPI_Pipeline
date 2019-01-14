@@ -35,8 +35,10 @@ rng(0);
 tcMask = linspace(0, 1, numAxons) < tcSynFrac;
 fracMultiSynBoutons = arrayfun(@(isTc) mean(simulateAxon( ...
     synPerBoutonProb(1 + isTc, :), numSynsPerAxon) > 1), tcMask);
+isMultiSynBouton = arrayfun(@(isTc) ...
+    rand(1) > synPerBoutonProb(1 + isTc, 1), tcMask);
 
-%% Plot
+%% Plot histogram
 curFig = figure();
 curAx = axes(curFig);
 hold(curAx, 'on');
@@ -65,6 +67,56 @@ title(curAx,  ...
     {info.filename; info.git_repos{1}.hash}, ...
     'FontWeight', 'normal', 'FontSize', 10);
 
+%% Plot precision / recall
+clear cur*;
+
+[precVec, recVec, threshVec] = ...
+    precisionRecall(fracMultiSynBoutons, tcMask);
+[boutonPrecVec, boutonRecVec, boutonThreshVec] = ...
+    precisionRecall(isMultiSynBouton, tcMask);
+
+curF1Vec = 1 ./ (((1 ./ precVec) + (1 ./ recVec)) / 2);
+[~, curMaxF1Idx] = max(curF1Vec);
+
+curFig = figure();
+curAx = axes(curFig);
+
+hold(curAx, 'on');
+grid(curAx, 'on');
+axis(curAx, 'square');
+
+curColors = get(groot, 'defaultAxesColorOrder');
+plot(curAx, boutonRecVec, boutonPrecVec, 'LineWidth', 2, 'Color', 'black');
+plot(curAx, recVec, precVec, 'LineWidth', 2, 'Color', curColors(1, :));
+
+plot(curAx, ...
+    recVec(curMaxF1Idx), precVec(curMaxF1Idx), 'o', ...
+    'Color', 'black', 'LineWidth', 2, 'MarkerSize', 10);
+
+curLeg = legend( ...
+    'Individual axonal boutons', sprintf( ...
+    'Axons with %d synapses', numSynsPerAxon));
+set(curLeg, 'Location', 'SouthWest', 'Box', 'off');
+
+curFig.Position(3:4) = [346, 313];
+curFig.Color = 'white';
+curAx.TickDir = 'out';
+
+xticks(curAx, 0:0.1:1); curAx.XTickLabel(2:2:end) = {''};
+yticks(curAx, 0:0.1:1); curAx.YTickLabel(2:2:end) = {''};
+
+xlabel(curAx, 'Recall');
+ylabel(curAx, 'Precision');
+title(curAx,  ...
+    {info.filename; info.git_repos{1}.hash}, ...
+    'FontWeight', 'normal', 'FontSize', 10);
+
+% Report numbers
+fprintf('Maximum F1 Score\n');
+fprintf('* Precision: %.2f %%\n', 100 * precVec(curMaxF1Idx));
+fprintf('* Recall: %.2f %%\n', 100 * recVec(curMaxF1Idx));
+fprintf('* Threshold: %.2f %%\n', 100 * threshVec(curMaxF1Idx));
+
 %% Utilities
 function synsPerBouton = simulateAxon(synPerBoutonProb, numSyn)
     synsPerBouton = datasample( ...
@@ -78,4 +130,16 @@ function synsPerBouton = simulateAxon(synPerBoutonProb, numSyn)
     
    [~, ~, synsPerBouton] = unique(synsPerBouton);
     synsPerBouton = accumarray(synsPerBouton, 1);
+end
+
+function [precVec, recVec, threshVec] = precisionRecall(data, labels)
+   [threshVec, sortIds] = sort(data, 'descend');
+    label = labels(sortIds);
+
+    posAll = sum(labels);
+    posPred = 1:numel(data);
+    truePosPred = cumsum(label);
+
+    precVec = truePosPred ./ posPred;
+    recVec = truePosPred / posAll;
 end
