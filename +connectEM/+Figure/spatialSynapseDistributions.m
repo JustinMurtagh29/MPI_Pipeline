@@ -6,7 +6,7 @@ clear;
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-partiallySplit-v2_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v8-classified.mat');
 
-dimIds = [2, 1];
+dimIds = [3, 1];
 maxImSize = 300;
 bandWidth = [2, 2];
 binSizeUm = 2;
