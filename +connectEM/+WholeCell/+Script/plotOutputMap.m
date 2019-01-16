@@ -33,10 +33,31 @@ connFile = outputMap.info.param.connFile;
 axonData = outputMap.axonData;
 
 [conn, syn] = connectEM.Connectome.load(param, connFile);
+synT = connectEM.Connectome.buildSynapseTable(conn, syn);
 
-%% Add NML file ID (as proxy of cell ID) to synapse tables
+%% Ad-hoc patching axon-specific data
+% * Add NML file ID (as proxy of cell ID) to synapse tables
+% * Add target class (we will later use the WholeCell and ApicalDendrite
+%   categories as proxies to find likely synapses onto L4 vs. L5 cells).
+curDendClasses = [ ...
+    categorical({'OtherDendrite'}); ...
+    conn.denMeta.targetClass];
+
 for curId = 1:numel(axonData)
     axonData(curId).synapses.nmlId(:) = curId;
+    
+    curTargetClass = axonData(curId).synapses.id;
+   [~, curTargetClass] = ismember(curTargetClass, synT.id);
+    
+    % NOTE(amotta): Synapses were picked up regardless of the postsynaptic
+    % process. A subset of these synapses are onto targets that are missing
+    % from the connectome. This subset is not in the synapse table.
+    %   For now, these synapses are treated as being onto OtherDendrite.
+    curTargetClass(curTargetClass > 0) = ...
+        synT.postAggloId(curTargetClass(curTargetClass > 0));
+    curTargetClass = curDendClasses(1 + curTargetClass);
+    
+    axonData(curId).synapses.targetClass = curTargetClass;
 end
 
 %% Ignore interneuron axons for PLASS analysis
@@ -44,6 +65,7 @@ end
 % (whole cells 17 and 22), only one has part of its axon in the EM volume.
 % But said axon is mostly myelinated and doesn't make a single synapse.
 % Still, let's remove these tracings for completeness.
+clear cur*;
 
 interNeuronGtNmlFiles = { ...
     '5a796fcd67000090172d94f1', ... % Whole cell 17. Ground truth tracing in +connectEM/+WholeCell/+Data/border-cells_axon-dendrites-split/5a796fcd67000090172d94f1.nml
