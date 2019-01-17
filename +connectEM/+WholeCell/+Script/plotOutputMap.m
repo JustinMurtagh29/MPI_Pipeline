@@ -14,16 +14,6 @@ outputDir = '';
 info = Util.runInfo();
 Util.showRunInfo(info);
 
-%% Utility functions
-plotHist = @(ax, edges, counts, varargin) ...
-    histogram(ax, ...
-        'BinEdges', edges, ...
-        'BinCounts', counts, ...
-        'DisplayStyle', 'stairs', ...
-        'LineWidth', 2, ...
-        'FaceAlpha', 1, ...
-        varargin{:});
-
 %% Loading data
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
@@ -108,22 +98,23 @@ axonCounts = axonCounts(1:(end - 1));
 
 %% Plot axon
 clear cur*;
-curPlotData = cat(1, axonData(:), grandAvgAxon);
-curPlotData = reshape(curPlotData, 1, []);
+curData = cat(1, axonData(:), grandAvgAxon);
+curData = reshape(curData, 1, []);
 
-curNumDigits = ceil(log10(1 + numel(curPlotData)));
+curNumDigits = ceil(log10(1 + numel(curData)));
 
-for curIdx = 1:numel(curPlotData)
-    curAxonData = curPlotData(curIdx);
+for curIdx = 1:numel(curData)
+    curAxonData = curData(curIdx);
     curSynapses = curAxonData.synapses;
     if isempty(curSynapses); continue; end
     
     curSynapses.somaDist = curSynapses.somaDist / 1E3;
     curSynapses.ontoSpine = syn.isSpineSyn(curSynapses.id);
    [~, curAxonName] = fileparts(curAxonData.nmlFile);
-
-    curPlotHist = @(curAx, counts, varargin) ...
-        plotHist(curAx, binEdges, counts, varargin{:});
+   
+    curPlotData = @(varargin) plotData( ...
+        binEdges, curSynapses.somaDist, varargin{:});
+    curReport = curIdx == numel(curData);
 
     curFig = figure();
     curFig.Color = 'white';
@@ -131,20 +122,11 @@ for curIdx = 1:numel(curPlotData)
     
     % Panel #1 - Spine vs. shaft synapses
     curAx = subplot(3, 1, 1);
-    curAx.TickDir = 'out';
-    hold(curAx, 'on');
-
-    curData = discretize( ...
-        curSynapses.somaDist, binEdges);
-    curData = accumarray( ...
-       [curData, 1 + curSynapses.ontoSpine], ...
-        1, [numel(binEdges) - 1, 2]);
-
-    curPlotHist(curAx, curData(:, 2), 'EdgeColor', 'magenta');
-    curPlotHist(curAx, curData(:, 1), 'EdgeColor', 'black');
-    
-    curLeg = legend(curAx, {'Onto spine', 'Not onto spine'});
-    set(curLeg, 'Location', 'EastOutside', 'Box', 'off');
+    curPlotData( ...
+        curAx, 1 + not(curSynapses.ontoSpine), ...
+        {'Spine synapse', 'Non-spine synapse'}, ...
+        'classColors', {'magenta', 'black'}, ...
+        'report', curReport);
     
     xlabel(curAx, 'Axonal path length to soma (µm)');
     curAx.YLim(1) = 0;
@@ -157,24 +139,19 @@ for curIdx = 1:numel(curPlotData)
     % Panel #2 - L4 vs. L5 synapses. The WholeCell and ApicalDendrite
     % target classes serve as proxies for likely L4 and L5 cells, resp.
     curAx = subplot(3, 1, 2);
-    curAx.TickDir = 'out';
-    hold(curAx, 'on');
 
-   [~, curData] = ismember( ...
-       curSynapses.targetClass, {'ProximalDendrite', 'ApicalDendrite'});
-    curData = [discretize(curSynapses.somaDist, binEdges), 1 + curData];
-    curData = accumarray(curData, 1, [numel(binEdges) - 1, 3]);
-
-    curPlotHist(curAx, curData(:, 2));
-    curPlotHist(curAx, curData(:, 3));
-    
-    curLeg = legend(curAx, {'Onto PD', 'Onto AD'});
-    set(curLeg, 'Location', 'EastOutside', 'Box', 'off');
+   [~, curSynClasses] = ismember( ...
+       curSynapses.targetClass, ...
+       {'ProximalDendrite', 'ApicalDendrite'});
+    curPlotData( ...
+        curAx, curSynClasses, ...
+        {'Onto PD', 'Onto AD'}, ...
+        'report', curReport);
     curAx.YLim(1) = 0;
     
     % Panel #3 - Number of cells contributing to bin
     curAx = subplot(3, 1, 3);
-    curPlotHist(curAx, axonCounts, 'EdgeColor', 'black');
+    plotHist(curAx, binEdges, axonCounts, 'EdgeColor', 'black');
     
     curAx.YDir = 'reverse';
     curAx.XAxisLocation = 'top';
@@ -199,4 +176,49 @@ for curIdx = 1:numel(curPlotData)
         export_fig('-r172', strcat(curFigFileName, '.png'), curFig);
         export_fig('-r172', strcat(curFigFileName, '.eps'), curFig);
     end
+end
+
+function plotData(binEdges, synDists, ax, synClasses, classNames, varargin)
+    opt = struct;
+    opt.report = false;
+    opt.classColors = num2cell( ...
+        get(groot, 'defaultAxesColorOrder'), 2);
+    opt = Util.modifyStruct(opt, varargin{:});
+    
+    %% Reporting
+    if opt.report
+        report = table;
+        report.name = [{'Rest'}; classNames(:)];
+        report.medianDistanceToSoma = accumarray( ...
+            1 + synClasses, synDists, [], @median);
+        report = report([2:end, 1], :);
+        disp(report);
+    end
+    
+    %% Plotting
+    data = accumarray( ...
+       [discretize(synDists, binEdges), 1 + synClasses], 1, ...
+       [numel(binEdges) - 1, numel(classNames) + 1]);
+    
+    ax.TickDir = 'out';
+    hold(ax, 'on');
+    
+    for curIdx = 1:numel(classNames)
+        plotHist(ax, ...
+            binEdges, data(:, 1 + curIdx), ...
+            'EdgeColor', opt.classColors{curIdx});
+    end
+    
+    leg = legend(ax, classNames);
+    set(leg, 'Location', 'EastOutside', 'Box', 'off');
+end
+
+function plotHist(ax, edges, counts, varargin)
+    histogram(ax, ...
+        'BinEdges', edges, ...
+        'BinCounts', counts, ...
+        'DisplayStyle', 'stairs', ...
+        'LineWidth', 2, ...
+        'FaceAlpha', 1, ...
+        varargin{:});
 end
