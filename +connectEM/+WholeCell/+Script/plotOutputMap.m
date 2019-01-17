@@ -33,6 +33,7 @@ connFile = outputMap.info.param.connFile;
 axonData = outputMap.axonData;
 
 [conn, syn] = connectEM.Connectome.load(param, connFile);
+conn = connectEM.Connectome.prepareForSpecificityAnalysis(conn);
 synT = connectEM.Connectome.buildSynapseTable(conn, syn);
 
 %% Ad-hoc patching axon-specific data
@@ -160,7 +161,7 @@ for curIdx = 1:numel(curPlotData)
     hold(curAx, 'on');
 
    [~, curData] = ismember( ...
-       curSynapses.targetClass, {'WholeCell', 'ApicalDendrite'});
+       curSynapses.targetClass, {'ProximalDendrite', 'ApicalDendrite'});
     curData = [discretize(curSynapses.somaDist, binEdges), 1 + curData];
     curData = accumarray(curData, 1, [numel(binEdges) - 1, 3]);
 
