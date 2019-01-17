@@ -178,6 +178,7 @@ for curIdx = 1:numel(curData)
     end
 end
 
+%% Utilities
 function plotData(binEdges, synDists, ax, synClasses, classNames, varargin)
     opt = struct;
     opt.report = false;
@@ -189,6 +190,8 @@ function plotData(binEdges, synDists, ax, synClasses, classNames, varargin)
     if opt.report
         report = table;
         report.name = [{'Rest'}; classNames(:)];
+        report.synCount = accumarray(1 + synClasses, 1);
+        report.synFrac = report.synCount ./ sum(report.synCount);
         report.medianDistanceToSoma = accumarray( ...
             1 + synClasses, synDists, [], @median);
         report = report([2:end, 1], :);
