@@ -121,28 +121,31 @@ for curIdx = 1:numel(curPlotData)
     curSynapses.ontoSpine = syn.isSpineSyn(curSynapses.id);
    [~, curAxonName] = fileparts(curAxonData.nmlFile);
 
+    curPlotHist = @(curAx, counts, varargin) ...
+        plotHist(curAx, binEdges, counts, varargin{:});
+
+    curFig = figure();
+    curFig.Color = 'white';
+    curFig.Position(3:4) = [600, 590];
+    
+    % Panel #1 - Spine vs. shaft synapses
+    curAx = subplot(3, 1, 1);
+    curAx.TickDir = 'out';
+    hold(curAx, 'on');
+
     curData = discretize( ...
         curSynapses.somaDist, binEdges);
     curData = accumarray( ...
        [curData, 1 + curSynapses.ontoSpine], ...
         1, [numel(binEdges) - 1, 2]);
 
-    curFig = figure();
-    curFig.Color = 'white';
-    curFig.Position(3:4) = [400, 340];
-
-    curAx = subplot(2, 1, 1);
-    curAx.TickDir = 'out';
-    hold(curAx, 'on');
-
-    curPlotHist = @(curAx, counts, varargin) ...
-        plotHist(curAx, binEdges, counts, varargin{:});
-
     curPlotHist(curAx, curData(:, 2), 'EdgeColor', 'magenta');
     curPlotHist(curAx, curData(:, 1), 'EdgeColor', 'black');
     
+    curLeg = legend(curAx, {'Onto spine', 'Not onto spine'});
+    set(curLeg, 'Location', 'EastOutside', 'Box', 'off');
+    
     xlabel(curAx, 'Axonal path length to soma (µm)');
-    curAx.XLim = binEdges([1, end]);
     curAx.YLim(1) = 0;
 
     title(curAx, { ...
@@ -150,15 +153,42 @@ for curIdx = 1:numel(curPlotData)
         sprintf('Axon %s', curAxonName)}, ...
         'FontWeight', 'normal', 'FontSize', 10);
     
-    curAx = subplot(2, 1, 2);
+    % Panel #2 - L4 vs. L5 synapses. The WholeCell and ApicalDendrite
+    % target classes serve as proxies for likely L4 and L5 cells, resp.
+    curAx = subplot(3, 1, 2);
+    curAx.TickDir = 'out';
+    hold(curAx, 'on');
+
+   [~, curData] = ismember( ...
+       curSynapses.targetClass, {'WholeCell', 'ApicalDendrite'});
+    curData = [discretize(curSynapses.somaDist, binEdges), 1 + curData];
+    curData = accumarray(curData, 1, [numel(binEdges) - 1, 3]);
+
+    curPlotHist(curAx, curData(:, 2));
+    curPlotHist(curAx, curData(:, 3));
+    
+    curLeg = legend(curAx, {'Onto PD', 'Onto AD'});
+    set(curLeg, 'Location', 'EastOutside', 'Box', 'off');
+    curAx.YLim(1) = 0;
+    
+    % Panel #3 - Number of cells contributing to bin
+    curAx = subplot(3, 1, 3);
     curPlotHist(curAx, axonCounts, 'EdgeColor', 'black');
     
     curAx.YDir = 'reverse';
     curAx.XAxisLocation = 'top';
     
     curAx.XLim = binEdges([1, end]);
+    curAx.XTickLabel = {''};
     curAx.TickDir = 'out';
     curAx.Box = 'off';
+    
+    % Make sure all axes have same length in plot
+    curAxes = findobj(curFig.Children, 'Type', 'Axes');
+    curAxesPos = cell2mat(get(curAxes, {'Position'}));
+    curAxesPos(:, 3) = min(curAxesPos(:, 3));
+    set(curAxes, {'Position'}, num2cell(curAxesPos, 2));
+    set(curAxes, 'XLim', binEdges([1, end]));
     
     if ~isempty(outputDir)
         curFigFileName = strrep(curAxonName, ' ', '-');
