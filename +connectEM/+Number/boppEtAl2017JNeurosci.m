@@ -35,8 +35,9 @@ rng(0);
 tcMask = linspace(0, 1, numAxons) < tcSynFrac;
 fracMultiSynBoutons = arrayfun(@(isTc) mean(simulateAxon( ...
     synPerBoutonProb(1 + isTc, :), numSynsPerAxon) > 1), tcMask);
-isMultiSynBouton = arrayfun(@(isTc) ...
-    rand(1) > synPerBoutonProb(1 + isTc, 1), tcMask);
+numSynsPerBouton = arrayfun(@(isTc) datasample( ...
+    1:size(synPerBoutonProb, 2), 1, ...
+    'Weights', synPerBoutonProb(1 + isTc, :)), tcMask);
 
 %% Plot histogram
 curFig = figure();
@@ -56,7 +57,7 @@ curHist(fracMultiSynBoutons(~tcMask), 'black');
 curLeg = legend('Thalamocortical axons', 'Corticocortical axons');
 set(curLeg, 'Location', 'NorthEast', 'Box', 'off');
 
-curFig.Position(3:4) = [390, 265];
+curFig.Position(3:4) = [261, 187];
 curFig.Color = 'white';
 curAx.TickDir = 'out';
 
@@ -73,7 +74,7 @@ clear cur*;
 [precVec, recVec, threshVec] = ...
     precisionRecall(fracMultiSynBoutons, tcMask);
 [boutonPrecVec, boutonRecVec, boutonThreshVec] = ...
-    precisionRecall(isMultiSynBouton, tcMask);
+    precisionRecall(numSynsPerBouton, tcMask);
 
 curF1Vec = 1 ./ (((1 ./ precVec) + (1 ./ recVec)) / 2);
 [~, curMaxF1Idx] = max(curF1Vec);
@@ -98,7 +99,7 @@ curLeg = legend( ...
     'Axons with %d synapses', numSynsPerAxon));
 set(curLeg, 'Location', 'SouthWest', 'Box', 'off');
 
-curFig.Position(3:4) = [346, 313];
+curFig.Position(3:4) = [189, 202];
 curFig.Color = 'white';
 curAx.TickDir = 'out';
 
