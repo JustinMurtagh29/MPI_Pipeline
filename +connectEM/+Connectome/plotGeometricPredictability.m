@@ -659,10 +659,10 @@ function preds = predictTargetClassAvailability(~, avails, ~, predictClassIds) %
     preds = avails(:, predictClassIds);
 end
 
-function preds = predictUsingLinearRegressionOnTargetClassAvailability(conn, avails, ~, ~) %#ok
+function preds = predictUsingLinearRegressionOnTargetClassAvailability(conn, avails, ~, predictClassIds) %#ok
     preds = nan(size(conn));
     for curIdx = 1:size(conn, 2)
-        curAvails = avails(:, [curIdx, end]);
+        curAvails = avails(:, [predictClassIds(curIdx), end]);
         curFit = curAvails \ conn(:, curIdx);
         preds(:, curIdx) = curAvails * curFit;
     end
