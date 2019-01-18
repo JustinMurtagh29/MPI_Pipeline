@@ -79,14 +79,11 @@ l4Out.synCount = accumarray(double(l4SynT.targetClass), 1);
 l4Out.synFrac = l4Out.synCount ./ sum(l4Out.synCount);
 disp(l4Out);
 
-%% Plot synapse sizes
-clear cur*;
+%% Prepare data for plotting
+binEdges = linspace(-1.5, +0.5, 21);
 
-curPlotT = table;
-curPlotT.name = {...
-    'L4 → PD'; 'L4 → AD'; ...
-    'TC → PD'; 'TC → AD'};
-curPlotT.asiAreas = { ...
+plotT = table;
+plotT.asiAreas = { ...
     l4AsiT.area(l4Conn.denMeta.targetClass( ...
         l4AsiT.postAggloId) == 'ProximalDendrite'); ...
     l4AsiT.area(l4Conn.denMeta.targetClass( ...
@@ -98,8 +95,16 @@ curPlotT.asiAreas = { ...
         conn.axonMeta.axonClass(asiT.preAggloId) == 'Thalamocortical' ...
       & conn.denMeta.targetClass(asiT.postAggloId) == 'ApicalDendrite')};
   
-curBinEdges = linspace(-1.5, +0.5, 21);
-curPlotPair = @(ax, ids) plotPair(curBinEdges, curPlotT, ax, ids);
+plotT.name = {...
+    'L4 → PD'; 'L4 → AD'; ...
+    'TC → PD'; 'TC → AD'};
+plotT.name = cellfun(@(name, areas) ...
+    sprintf('%s (n = %d)', name, numel(areas)), ...
+    plotT.name, plotT.asiAreas, 'UniformOutput', false);
+
+%% Histogram of synapse sizes
+clear cur*;
+curPlotPair = @(ax, ids) plotPair(binEdges, plotT, ax, ids);
 
 curFig = figure();
 curAx = subplot(2, 2, 1); curPlotPair(curAx, [1, 2]);
@@ -113,7 +118,7 @@ curAxes = findobj(curFig, 'type', 'Axes');
 curYLims = cell2mat(get(curAxes, {'YLim'}));
 curYLims(:, 2) = max(curYLims(:, 2));
 set(curAxes, {'YLim'}, num2cell(curYLims, 2));
-set(curAxes, 'TickDir', 'out', 'XLim', curBinEdges([1, end]));
+set(curAxes, 'TickDir', 'out', 'XLim', binEdges([1, end]));
 
 curAx = subplot(2, 2, 3);
 xlabel(curAx, 'log_{10}(axon-spine interface area [µm²])');
@@ -124,6 +129,31 @@ annotation(curFig, ...
     'EdgeColor', 'none', ...
     'HorizontalAlignment', 'center', ...
     'String', {info.filename; info.git_repos{1}.hash});
+
+%% Box plot of synapse sizes
+clear cur*;
+curVals = log10(cell2mat(plotT.asiAreas));
+curGroups = repelem(1:height(plotT), cellfun(@numel, plotT.asiAreas));
+
+curFig = figure();
+curAx = axes(curFig);
+
+boxplot(curVals, curGroups);
+
+% Cosmetics
+curFig.Color = 'white';
+curFig.Position(3:4) = [320, 422];
+curAx.TickDir = 'out';
+curAx.Box = 'off';
+
+ylim(curAx, binEdges([1, end]));
+ylabel(curAx, 'log_{10}(axon-spine interface area [µm²])');
+xticklabels(curAx, plotT.name);
+curAx.XTickLabelRotation = 15;
+
+title(curAx, ...
+    {info.filename; info.git_repos{1}.hash}, ...
+    'FontWeight', 'normal', 'FontSize', 10);
 
 %% Utilities
 function [l4Conn, l4SynT, l4AsiT] = forL4( ...
@@ -192,7 +222,8 @@ function plotPair(binEdges, plotT, ax, plotIds)
             'Normalization', 'probability', ...
             'DisplayStyle', 'stairs', ...
             'EdgeColor', color, ...
-            'LineWidth', 2), ...
+            'LineWidth', 2, ...
+            'FaceAlpha', 1), ...
         plotT.asiAreas(plotIds), colors(plotIds));
 
     curLeg = legend(ax, plotT.name(plotIds));
