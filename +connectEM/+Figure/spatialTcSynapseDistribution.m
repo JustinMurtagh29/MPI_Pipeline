@@ -66,34 +66,47 @@ toc;
 densVol = reshape(densVol, gridSize(:)');
 
 %% Try isosurface visualization
-fig = figure;
-ax = axes(fig);
-hold(ax, 'on');
+clear cur*;
 
+curAxisIds = [2, 3, 1];
+curQuantVec = [0.5, 0.85];
 curColors = jet();
 
-quantVec = [0.5, 0.85];
-for curQuant = quantVec
+for curQuant = curQuantVec
+    fig = figure;
+    ax = axes(fig); %#ok
+    hold(ax, 'on');
+    
     curThresh = quantile(densVol(:), curQuant);
     curIso = isosurface(densVol, curThresh);
     curIso.vertices = curIso.vertices(:, [2, 1, 3]);
+    curIso.vertices = curIso.vertices(:, curAxisIds);
+    
     curPatch = patch(curIso);
     curPatch.EdgeColor = 'none';
     
-    curColor = curQuant / max(quantVec);
+    curColor = curQuant / max(curQuantVec);
     curColor = ceil(curColor * size(curColors, 1));
     curPatch.FaceColor = curColors(curColor, :);
     curPatch.FaceAlpha = curQuant / 2;
+
+    axis(ax, 'equal');
+    xlim(ax, [1, size(densVol, curAxisIds(1))]);
+    set(ax.XAxis, 'Visible', 'off');
+    ylim(ax, [1, size(densVol, curAxisIds(2))]);
+    set(ax.YAxis, 'Visible', 'off', 'Direction', 'reverse');
+    zlim(ax, [1, size(densVol, curAxisIds(3))]);
+    set(ax.ZAxis, 'Visible', 'off', 'Direction', 'reverse');
+    set(ax, 'Box', 'on', 'BoxStyle', 'full');
+
+    view(ax, 3);
+    camlight(ax);
+
+    title(ax, { ...
+        info.filename; info.git_repos{1}.hash; ...
+        sprintf('Isosurface threshold: %g %%', 100 * curQuant)}, ...
+        'FontWeight', 'normal', 'FontSize', 10);
 end
-
-axis(ax, 'equal');
-xlim(ax, [1, size(densVol, 1)]);
-ylim(ax, [1, size(densVol, 2)]);
-zlim(ax, [1, size(densVol, 3)]);
-set(ax, 'Box', 'on', 'BoxStyle', 'full');
-
-view(ax, 3);
-camlight(ax);
 
 %% Tangential view
 clear cur*;
