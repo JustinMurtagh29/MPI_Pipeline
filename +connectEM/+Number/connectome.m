@@ -37,8 +37,8 @@ numAxonInitialSegments = sum(dendMask & aisMask) %#ok
 numAxonInitialSegmentsAll = sum(aisMask) %#ok
 
 %% Axons
-numSynsPerAxonMean = mean(conn.axonMeta.synCount) %#ok
-numSynsPerAxonStd = std(conn.axonMeta.synCount) %#ok
+numSynsPerAxonMean = mean(conn.axonMeta.synCount(axonMask)) %#ok
+numSynsPerAxonStd = std(conn.axonMeta.synCount(axonMask)) %#ok
 
 numLikelyExcitatoryAxons = numel(axonClasses(1).axonIds) %#ok
 numLikelyThalamocorticalAxons = numel(axonClasses(3).axonIds) %#ok
