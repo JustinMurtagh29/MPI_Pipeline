@@ -74,6 +74,27 @@ boutonT.isTc = tcMask(:);
 boutonT.numSyn = arrayfun(curSampleFun(synPerBoutonProb), boutonT.isTc);
 boutonT.vol = arrayfun(curSampleFun(boutonVolProb), boutonT.isTc);
 
+% Simulate entire axons
+axonT = table;
+axonT.isTc = tcMask(:);
+
+axonT.synsPerBouton = arrayfun( ...
+    @(isTc) simulateAxon( ...
+        synPerBoutonProb(1 + isTc, :), numSynsPerAxon), ...
+    axonT.isTc, 'UniformOutput', false);
+axonT.boutonVols = arrayfun( ...
+    @(isTc, numBoutons) datasample( ...
+        1:size(boutonVolProb, 2), numBoutons, ...
+        'Weights', boutonVolProb(1 + isTc, :)), ...
+    axonT.isTc, cellfun(@numel, axonT.synsPerBouton), ...
+    'UniformOutput', false);
+
+axonT.avgNumSyn = cellfun(@mean, axonT.synsPerBouton);
+axonT.fracMultiSyn = cellfun(@(n) mean(n > 1), axonT.synsPerBouton);
+axonT.medianVol = cellfun(@median, axonT.boutonVols);
+
+axonT(:, {'synsPerBouton', 'boutonVols'}) = [];
+
 %% Plots for individual boutons
 clear cur*;
 
