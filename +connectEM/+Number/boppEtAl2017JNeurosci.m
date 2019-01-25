@@ -135,42 +135,70 @@ end
 % Individual features and then combination of them
 clear cur*;
 
-curT = boutonT(randperm(height(boutonT)), :);
-curT.isTrain(:) = linspace(0, 1, height(curT)) < 1 / 2;
+curTables = {boutonT, axonT};
+for curTableIdx = 1:numel(curTables)
+    curT = curTables{curTableIdx};
+    curT = curT(randperm(height(curT)), :);
+    curT.isTrain(:) = linspace(0, 1, height(curT)) < 1 / 2;
 
-curVars = curT.Properties.VariableNames;
-curVars = setdiff(curVars, {'isTc', 'isTrain'});
+    curVars = curT.Properties.VariableNames;
+    curVars = setdiff(curVars, {'isTc', 'isTrain'});
 
-curT.data = table2array(curT(:, curVars));
-curT.data = zscore(curT.data, 0, 1);
+    curT.data = table2array(curT(:, curVars));
+    curT.data = zscore(curT.data, 0, 1);
+    
+    % Logistic regression
+    curModel = fitglm( ...
+        curT.data(curT.isTrain, :), ...
+        curT.isTc(curT.isTrain), ...
+        'Distribution', 'binomial');
 
-curModel = fitglm( ...
-    curT.data(curT.isTrain, :), ...
-    curT.isTc(curT.isTrain), ...
-    'Distribution', 'binomial');
+    curT.logReg = predict(curModel, curT.data);
+    curVars{end + 1} = 'logReg'; %#ok
+    curT = curT(~curT.isTrain, :);
 
-curT.logReg = predict(curModel, curT.data);
-curVars{end + 1} = 'logReg';
+    curFig = figure();
+    curAx = axes(curFig); %#ok
+    hold(curAx, 'on');
+    
+    for curVarIdx = 1:numel(curVars)
+       [curPrec, curRec, curThresh] = ...
+           precisionRecall(curT.(curVars{curVarIdx}), curT.isTc);
+        plot(curRec, curPrec, 'LineWidth', 2);
+    end
+    
+    curF1Vec = 1 ./ (((1 ./ curPrec) + (1 ./ curRec)) / 2);
+   [~, curMaxF1Idx] = max(curF1Vec);
+   
+    plot(curAx, ...
+        curRec(curMaxF1Idx), curPrec(curMaxF1Idx), 'o', ...
+        'Color', 'black', 'LineWidth', 2, 'MarkerSize', 10);
 
-curT = curT(~curT.isTrain, :);
-
-curFig = figure();
-curFig.Color = 'white';
-curAx = axes(curFig);
-curAx.TickDir = 'out';
-
-axis(curAx, 'square');
-hold(curAx, 'on');
-grid(curAx, 'on');
-
-for curIdx = 1:numel(curVars)
-    curVar = curVars{curIdx};
-   [curPrec, curRec] = precisionRecall(curT.(curVar), curT.isTc);
-    plot(curRec, curPrec, 'LineWidth', 2);
+    curLeg = legend(curAx, curVars);
+    set(curLeg, 'Location', 'SouthWest', 'Box', 'off');
+    
+    % Cosmetics
+    curFig.Color = 'white';
+    curFig.Position(3:4) = [189, 202];
+    curAx.TickDir = 'out';
+    
+    grid(curAx, 'on');
+    axis(curAx, 'square');
+    xticks(curAx, 0:0.1:1); curAx.XTickLabel(2:2:end) = {''};
+    yticks(curAx, 0:0.1:1); curAx.YTickLabel(2:2:end) = {''};
+    
+    xlabel(curAx, 'Recall');
+    ylabel(curAx, 'Precision');
+    title(curAx,  ...
+        {info.filename; info.git_repos{1}.hash}, ...
+        'FontWeight', 'normal', 'FontSize', 10);
+    
+    fprintf('Maximum F1 Score\n');
+    fprintf('* Precision: %.2f %%\n', 100 * curPrec(curMaxF1Idx));
+    fprintf('* Recall: %.2f %%\n', 100 * curRec(curMaxF1Idx));
+    fprintf('* Threshold: %.2f %%\n', 100 * curThresh(curMaxF1Idx));
+    fprintf('\n');
 end
-
-curLeg = legend(curAx, curVars);
-set(curLeg, 'Location', 'SouthWest', 'Box', 'off');
 
 %% Utilities
 function synsPerBouton = simulateAxon(synPerBoutonProb, numSyn)
