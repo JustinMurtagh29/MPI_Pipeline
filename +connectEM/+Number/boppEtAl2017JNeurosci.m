@@ -19,9 +19,7 @@ synPerBoutonProb = ...
 %
 % Rows corresponds to VGluT2- and VGluT2+
 % Columns corresponds to bouton volumes.
-%
-% IMPORTANT: Note the transposition at the end!
-boutonVolProb = [ ...
+boutonVolProb = transpose([ ...
     32.329,  4.770;
     30.978, 11.954;
      9.426,  5.977;
@@ -42,7 +40,7 @@ boutonVolProb = [ ...
      0.000,  0.000;
      0.000,  1.178;
      0.000,  0.000;
-     0.000,  1.178]';
+     0.000,  1.178]);
 boutonVolProb = ...
     boutonVolProb ...
  ./ sum(boutonVolProb, 2);
