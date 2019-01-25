@@ -14,6 +14,39 @@ synPerBoutonProb = ...
     synPerBoutonProb ...
  ./ sum(synPerBoutonProb, 2);
 
+% NOTE(amotta): These following values were extracted from panel 6b of
+% Bopp, Holler-Rickauer, Martin, Schuhknecht (2017). J Neurosci
+%
+% Rows corresponds to VGluT2- and VGluT2+
+% Columns corresponds to bouton volumes.
+%
+% IMPORTANT: Note the transposition at the end!
+boutonVolProb = [ ...
+    32.329,  4.770;
+    30.978, 11.954;
+     9.426,  5.977;
+     8.075, 10.776;
+     1.322,  3.592;
+     0.000,  4.770;
+     2.672,  7.184;
+     0.000,  9.569;
+     0.000,  8.362;
+     1.322,  7.184;
+     0.000,  4.770;
+     0.000,  0.000;
+     0.000,  2.385;
+     0.000,  1.178;
+     0.000,  0.000;
+     0.000,  0.000;
+     0.000,  1.178;
+     0.000,  0.000;
+     0.000,  1.178;
+     0.000,  0.000;
+     0.000,  1.178]';
+boutonVolProb = ...
+    boutonVolProb ...
+ ./ sum(boutonVolProb, 2);
+
 % See global "percentage of VGluT2 synapses" values for S1 in Table 1. This
 % synapse fraction also roughly corresponds to the axon fraction under the
 % following assumptions:
