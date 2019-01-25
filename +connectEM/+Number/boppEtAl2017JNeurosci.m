@@ -1,5 +1,7 @@
 % Written by
 %   Alessandro Motta <alessandro.motta@brain.mpg.de>
+clear;
+rng(0);
 
 %% Configuration
 % NOTE(amotta): These following values were extracted from panel 5b of
@@ -54,100 +56,100 @@ boutonVolProb = ...
 % * All excitatory axons make exactly the same number of synapses
 tcSynFrac = 0.172;
 
-numAxons = 1000;
+numAxons = 5000;
 numSynsPerAxon = 10;
 
 info = Util.runInfo();
 Util.showRunInfo(info);
 
 %% Simulate
-rng(0);
-
 tcMask = linspace(0, 1, numAxons) < tcSynFrac;
-fracMultiSynBoutons = arrayfun(@(isTc) mean(simulateAxon( ...
-    synPerBoutonProb(1 + isTc, :), numSynsPerAxon) > 1), tcMask);
-numSynsPerBouton = arrayfun(@(isTc) datasample( ...
-    1:size(synPerBoutonProb, 2), 1, ...
-    'Weights', synPerBoutonProb(1 + isTc, :)), tcMask);
 
-%% Plot histogram
-curFig = figure();
-curAx = axes(curFig);
-hold(curAx, 'on');
+curSampleFun = @(probs) @(isTc) datasample( ...
+    1:size(probs, 2), 1, 'Weights', probs(1 + isTc, :));
 
-curColors = get(groot, 'defaultAxesColorOrder');
-curBinEdges = linspace(0, 1, 11);
+% Simulate individual boutons
+boutonT = table;
+boutonT.isTc = tcMask(:);
+boutonT.numSyn = arrayfun(curSampleFun(synPerBoutonProb), boutonT.isTc);
+boutonT.vol = arrayfun(curSampleFun(boutonVolProb), boutonT.isTc);
 
-curHist = @(data, color) histogram(curAx, ...
-    'BinCounts', histcounts(data, curBinEdges) / numAxons, ...
-    'BinEdges', curBinEdges, 'EdgeColor', 'none', ...
-    'FaceColor', color, 'FaceAlpha', 1);
-curHist(fracMultiSynBoutons, curColors(1, :));
-curHist(fracMultiSynBoutons(~tcMask), 'black');
-
-curLeg = legend('Thalamocortical axons', 'Corticocortical axons');
-set(curLeg, 'Location', 'NorthEast', 'Box', 'off');
-
-curFig.Position(3:4) = [261, 187];
-curFig.Color = 'white';
-curAx.TickDir = 'out';
-
-xlim(curAx, curBinEdges([1, end]));
-xlabel(curAx, 'Fraction of multi-synaptic boutons');
-ylabel(curAx, 'Fraction of axons');
-title(curAx,  ...
-    {info.filename; info.git_repos{1}.hash}, ...
-    'FontWeight', 'normal', 'FontSize', 10);
-
-%% Plot precision / recall
+%% Plots for individual boutons
 clear cur*;
 
-[precVec, recVec, threshVec] = ...
-    precisionRecall(fracMultiSynBoutons, tcMask);
-[boutonPrecVec, boutonRecVec, boutonThreshVec] = ...
-    precisionRecall(numSynsPerBouton, tcMask);
+curConfigs = struct;
+curConfigs(1).table = boutonT;
+curConfigs(1).prob = synPerBoutonProb;
+curConfigs(1).var = 'numSyn';
 
-curF1Vec = 1 ./ (((1 ./ precVec) + (1 ./ recVec)) / 2);
-[~, curMaxF1Idx] = max(curF1Vec);
-
-curFig = figure();
-curAx = axes(curFig);
-
-hold(curAx, 'on');
-grid(curAx, 'on');
-axis(curAx, 'square');
+curConfigs(2) = curConfigs(1);
+curConfigs(2).prob = boutonVolProb;
+curConfigs(2).var = 'vol';
 
 curColors = get(groot, 'defaultAxesColorOrder');
-plot(curAx, boutonRecVec, boutonPrecVec, 'LineWidth', 2, 'Color', 'black');
-plot(curAx, recVec, precVec, 'LineWidth', 2, 'Color', curColors(1, :));
 
-plot(curAx, ...
-    recVec(curMaxF1Idx), precVec(curMaxF1Idx), 'o', ...
-    'Color', 'black', 'LineWidth', 2, 'MarkerSize', 10);
+for curConfig = curConfigs
+    curIsTc = curConfig.table.isTc;
+    curVar = curConfig.table.(curConfig.var);
+    
+    % Histogram
+    curFig = figure();
+    curFig.Color = 'white';
+    curAx = axes(curFig); %#ok
+    curAx.TickDir = 'out';
+    
+    hold(curAx, 'on');
+    curBinEdges = (0:size(curConfig.prob, 2)) + 1 / 2;
 
-curLeg = legend( ...
-    'Individual axonal boutons', sprintf( ...
-    'Axons with %d synapses', numSynsPerAxon));
-set(curLeg, 'Location', 'SouthWest', 'Box', 'off');
+    curHist = @(data, color) histogram(curAx, ...
+        'BinCounts', histcounts(data, curBinEdges) / numAxons, ...
+        'BinEdges', curBinEdges, 'EdgeColor', 'none', ...
+        'FaceColor', color, 'FaceAlpha', 1);
+    
+    curHist(curVar, curColors(1, :));
+    curHist(curVar(~curIsTc), 'black');
+end
 
-curFig.Position(3:4) = [189, 202];
+%% Plot precision / recall for boutons
+% Individual features and then combination of them
+clear cur*;
+
+curT = boutonT(randperm(height(boutonT)), :);
+curT.isTrain(:) = linspace(0, 1, height(curT)) < 1 / 2;
+
+curVars = curT.Properties.VariableNames;
+curVars = setdiff(curVars, {'isTc', 'isTrain'});
+
+curT.data = table2array(curT(:, curVars));
+curT.data = zscore(curT.data, 0, 1);
+
+curModel = fitglm( ...
+    curT.data(curT.isTrain, :), ...
+    curT.isTc(curT.isTrain), ...
+    'Distribution', 'binomial');
+
+curT.logReg = predict(curModel, curT.data);
+curVars{end + 1} = 'logReg';
+
+curT = curT(~curT.isTrain, :);
+
+curFig = figure();
 curFig.Color = 'white';
+curAx = axes(curFig);
 curAx.TickDir = 'out';
 
-xticks(curAx, 0:0.1:1); curAx.XTickLabel(2:2:end) = {''};
-yticks(curAx, 0:0.1:1); curAx.YTickLabel(2:2:end) = {''};
+axis(curAx, 'square');
+hold(curAx, 'on');
+grid(curAx, 'on');
 
-xlabel(curAx, 'Recall');
-ylabel(curAx, 'Precision');
-title(curAx,  ...
-    {info.filename; info.git_repos{1}.hash}, ...
-    'FontWeight', 'normal', 'FontSize', 10);
+for curIdx = 1:numel(curVars)
+    curVar = curVars{curIdx};
+   [curPrec, curRec] = precisionRecall(curT.(curVar), curT.isTc);
+    plot(curRec, curPrec, 'LineWidth', 2);
+end
 
-% Report numbers
-fprintf('Maximum F1 Score\n');
-fprintf('* Precision: %.2f %%\n', 100 * precVec(curMaxF1Idx));
-fprintf('* Recall: %.2f %%\n', 100 * recVec(curMaxF1Idx));
-fprintf('* Threshold: %.2f %%\n', 100 * threshVec(curMaxF1Idx));
+curLeg = legend(curAx, curVars);
+set(curLeg, 'Location', 'SouthWest', 'Box', 'off');
 
 %% Utilities
 function synsPerBouton = simulateAxon(synPerBoutonProb, numSyn)
@@ -165,8 +167,9 @@ function synsPerBouton = simulateAxon(synPerBoutonProb, numSyn)
 end
 
 function [precVec, recVec, threshVec] = precisionRecall(data, labels)
+    data = reshape(data, 1, []);
    [threshVec, sortIds] = sort(data, 'descend');
-    label = labels(sortIds);
+    label = reshape(labels(sortIds), 1, []);
 
     posAll = sum(labels);
     posPred = 1:numel(data);
