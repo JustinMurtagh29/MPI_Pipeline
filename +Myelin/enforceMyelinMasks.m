@@ -37,7 +37,7 @@ function enforceMyelinMasks(p, newClassRoot, bbox)
     class(border) = borderHeight;
     
     % write result
-    saveParam = Util.modifyStruct(p.class, 'root', newClassRoot);
+    saveParam = Util.modifyStruct(p.class, 'root', newClassRoot, 'backend', 'wkwrap');
     saveOffset = reshape(bbox(:, 1), 1, []);
     saveClassData(saveParam, saveOffset, class);
 end

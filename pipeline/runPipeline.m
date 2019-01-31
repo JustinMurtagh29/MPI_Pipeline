@@ -71,7 +71,7 @@ function p = runPipeline(p, startStep, endStep)
             Cluster.waitForJob(job);
         end
         
-        p.class.root = newClassRoot;
+        p.class = Util.modifyStruct(p.class,'roor',newClassRoot,'backend','wkwrap');
         clear newClassRoot;
     end
 
@@ -172,6 +172,8 @@ function p = runPipeline(p, startStep, endStep)
             && endStep >= PipelineStep.ClassFeatures
         job = connectEM.calculateFeatures(p, 'Class');
         Cluster.waitForJob(job);
+        % remove temp structure (which is huge) as it is now not used anymore
+        rmdir(fileparts(fileparts(p.local(1).tempSegFile)),'s')
     end
 
     % Calculate neurite continuity predictions
