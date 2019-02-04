@@ -105,7 +105,7 @@ Util.save(outFile, p);
 
 %%%%%%%%%%%%%%%%% START PIPELINE (WITHOUT CLASSIFICATION) %%%%%%%%%%%%%%%%%
 
-runPipeline(p, PipelineStep.MyelinFix, PipelineStep.CompressSegmentation);
+%runPipeline(p, PipelineStep.OverlapRemoval, PipelineStep.CompressSegmentation);
 %{
 % 21.09.2018
 % for documentation (this was run manually and not from this script)
