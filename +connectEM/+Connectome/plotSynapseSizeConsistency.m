@@ -6,7 +6,9 @@ clear;
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 shFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v3_auto.mat');
 
-modeConfigs = struct;
+modeConfigs = struct(zeros(0, 1));
+
+%{
 modeConfigs(1).name = 'large';
 modeConfigs(1).cvRange = [0, 0.4];
 modeConfigs(1).avgLogAsiRange = [-0.14, 0.23];
@@ -14,6 +16,7 @@ modeConfigs(1).avgLogAsiRange = [-0.14, 0.23];
 modeConfigs(2).name = 'small';
 modeConfigs(2).cvRange = [0, 0.5];
 modeConfigs(2).avgLogAsiRange = [-0.97, -0.6];
+%}
 
 info = Util.runInfo();
 Util.showRunInfo(info);
