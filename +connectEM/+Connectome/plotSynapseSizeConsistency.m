@@ -6,7 +6,7 @@ clear;
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 shFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v3_auto.mat');
 
-modeConfigs = struct(zeros(0, 1));
+modeConfigs = struct(zeros(1, 0));
 
 %{
 modeConfigs(1).name = 'large';
@@ -458,7 +458,7 @@ for curConfig = plotConfigs
 
         curAxes = reshape(flip(findobj(curFig, 'Type', 'Axes')), 1, []);
         arrayfun(@(ax) hold(ax, 'on'), curAxes);
-
+        
         for curModeConfig = modeConfigs
             fprintf('# Evaluation of mode "%s"\n', curModeConfig.name);
 
