@@ -31,7 +31,7 @@ job = Cluster.startJob( ...
     'cluster', {'priority', 100, 'time', '24:00:00', 'memory', 48});
 Cluster.waitForJob(job);
 
-function jobWrapper(param, box, graphFile, margin)
+function jobWrapper(param, bbox, graphFile, margin)
 
     [edges, scores] = connectEM.Hierarchical.runBox(param, bbox, 'margin', margin);
 
