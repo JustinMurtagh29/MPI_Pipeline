@@ -1,12 +1,12 @@
 % load old p and new p parameters and save new segmentation after Hierarchichal clustering
-
+Util.log('Loading old and new pipeline parameter...')
 m = load('/tmpscratch/sahilloo/data/H2_3_v2_U1_SubI/pipelineRun_mr2e_wsmrnet/allParameter.mat');
 p = m.p;
 
 m = load('/tmpscratch/sahilloo/data/H2_3_v2_U1_SubI/pipelineRun_mr2e_wsmrnet_HC/allParameter.mat');
 pNew = m.p;
 
-% submit job for segmentation writing per cube
+Util.log('submitting job for segmentation writing per cube')
 job = runSegmentation(p, pNew);
 
 % wait for job to finish
