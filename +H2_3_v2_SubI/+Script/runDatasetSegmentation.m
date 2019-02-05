@@ -25,7 +25,8 @@ function job = runSegmentation(p, pNew)
     % generate new segmentation per cube
     inputCell = arrayfun( ...
             @(newLocal, oldLocal) { ...
-                newLocal.tempSegFile, [oldLocal.saveFolder 'graphH.mat']}, ...
+                newLocal.tempSegFile, [oldLocal.saveFolder 'graphH.mat'] ...
+                [oldLocal.saveFolder 'seg.mat']}, ...
             pNew.local(:), p.local(:), 'UniformOutput', false);
         
     job = Cluster.startJob( ...
@@ -38,10 +39,14 @@ function job = runSegmentation(p, pNew)
             'time', '24:00:00'});
 end
 
-function jobWrapper(p, maxSegId, saveFile, graphFile)
+function jobWrapper(p, maxSegId, saveFile, graphFile, segFile)
     Util.log('loading graph...')
     graph = load(graphFile);
     graph = graph.graph;
+
+    Util.log('loading segmentation...')
+    seg = load(segFile);
+    seg = seg.seg;
 
     % Agglomerate down to this score treshold
     minScore = 0;
