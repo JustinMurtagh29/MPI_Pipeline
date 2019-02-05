@@ -48,8 +48,8 @@ function jobWrapper(p, maxSegId, saveFile, graphFile, segFile)
     graph = graph.graph;
 
     Util.log('loading segmentation...')
-    seg = load(segFile);
-    seg = seg.seg;
+    segOld = load(segFile);
+    segOld = segOld.seg;
 
     % Agglomerate down to this score treshold
     minScore = 0;
@@ -61,12 +61,12 @@ function jobWrapper(p, maxSegId, saveFile, graphFile, segFile)
     lut = Agglo.buildLUT(maxSegId, agglos);
     lut(lut == 0) = max(lut) + (1:sum(lut == 0));
     lut = [0; lut(:)];
-    segNew = lut(seg + 1);
+    seg = lut(segOld + 1);
 
     saveFolder = fileparts(saveFile);
     if ~exist(saveFolder, 'dir')
         mkdir(saveFolder);
     end
-    Util.save(saveFile, segNew);
+    Util.save(saveFile, seg);
 
 end
