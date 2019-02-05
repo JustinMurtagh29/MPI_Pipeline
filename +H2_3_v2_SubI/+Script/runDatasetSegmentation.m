@@ -13,7 +13,7 @@ job = runSegmentation(p, pNew);
 Cluster.waitForJob(job);
 
 Util.log('run pipeline steps for segmentation generation')
-runPipeline(pNew, PipelineStep.OverlapRemoval, PipelineStep.CompressSegmentation)
+runPipeline(pNew, PipelineStep.GlobalSegmentID, PipelineStep.CompressSegmentation)
 
 function job = runSegmentation(p, pNew)
     
@@ -22,14 +22,13 @@ function job = runSegmentation(p, pNew)
     %% Loading data
     meta = load(fullfile(p.saveFolder, 'segmentMeta.mat'));
     maxSegId = meta.maxSegId;
-    points = transpose(meta.point);
     clear meta;
     
     % generate new segmentation per cube
     inputCell = arrayfun( ...
             @(newLocal, oldLocal) { ...
-                newLocal.tempSegFile, [oldLocal.saveFolder 'graphH.mat'] ...
-                [oldLocal.saveFolder 'seg.mat']}, ...
+                newLocal.segFile, [oldLocal.saveFolder 'graphH.mat'] ...
+                oldLocal.segFile}, ...
             pNew.local(:), p.local(:), 'UniformOutput', false);
         
     job = Cluster.startJob( ...
