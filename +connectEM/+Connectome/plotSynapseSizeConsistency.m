@@ -66,7 +66,7 @@ plotConfigs = struct;
 plotConfigs(1).synIds = find( ...
     synT.isSpine & ismember(synT.preAggloId, excAxonIds));
 plotConfigs(1).title = 'excitatory spine synapses';
-plotConfigs(1).tag = 'sp';
+plotConfigs(1).tag = 'exc sp';
 
 plotConfigs(2).synIds = find( ...
     synT.isSpine & ismember(synT.preAggloId, tcAxonIds));
@@ -77,6 +77,10 @@ plotConfigs(3).synIds = find( ...
     synT.isSpine & ismember(synT.preAggloId, ccAxonIds));
 plotConfigs(3).title = 'corticocortical spine synapses';
 plotConfigs(3).tag = 'cc sp';
+
+plotConfigs(4).synIds = find(synT.isSpine);
+plotConfigs(4).title = 'spine synapses';
+plotConfigs(4).tag = 'sp';
 
 %% Report synapse sizes
 clear cur*;
@@ -324,6 +328,10 @@ for curConfig = plotConfigs
         connectEM.Consistency.buildPairConfigs(synT, curConfig);
     curSaSdConfig = curPairConfigs(1);
     curRandConfig = curPairConfigs(end);
+    
+    curConfig.title = sprintf( ...
+        '%s (n = %d)', curConfig.title, ...
+        size(curSaSdConfig.synIdPairs, 1));
 
     curRandSaSdConfig = ...
         connectEM.Consistency.buildPairConfigs( ...
@@ -332,7 +340,7 @@ for curConfig = plotConfigs
     curRandSaSdConfig.title = sprintf( ...
         'Random pairs from above set (n = %d)', ...
         size(curRandSaSdConfig.synIdPairs, 1));
-
+    
     for curCtrlConfig = [curRandConfig, curRandSaSdConfig]
         curSaSdT = table;
         curSaSdT.areas = synT.area(curSaSdConfig.synIdPairs);
