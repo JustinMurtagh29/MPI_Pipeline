@@ -61,11 +61,21 @@ function jobWrapper(p, maxSegId, saveFile, graphFile, segFile)
     lut(lut == 0) = max(lut) + (1:sum(lut == 0));
     lut = [0; lut(:)];
     seg = lut(segOld + 1);
+    [oldSegments, newSegments] = determineChanges(segOld, seg);    
+    numEl = calcNumberSegments(seg);
 
     saveFolder = fileparts(saveFile);
     if ~exist(saveFolder, 'dir')
         mkdir(saveFolder);
     end
-    Util.save(saveFile, seg);
+    Util.save(saveFile, seg, numEl, oldSegments, newSegments);
 
 end
+
+function [segIdsOld, segIdsNew] = determineChanges(old, new)
+    uniqueRows = unique(cat(2, uint32(old(:)), new(:)), 'rows');
+    uniqueRows = uniqueRows(~any(uniqueRows == 0, 2),:);
+    segIdsOld = uniqueRows(:,1);
+    segIdsNew = uniqueRows(:,2);
+end
+
