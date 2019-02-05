@@ -400,6 +400,7 @@ for curConfig = plotConfigs
         curDiffImg = curSaSdImg - curCtrlImg;
         curMaxDiff = max(abs(curDiffImg(:)));
 
+        %% Plotting
         curFig = figure();
         curFig.Color = 'white';
         curFig.Position(3:4) = [360, 1020];
@@ -427,9 +428,16 @@ for curConfig = plotConfigs
         curBar.Label.String = {'Fraction of'; curCtrlConfig.title};
 
         curAx = subplot(3, 1, 3);
+        hold(curAx, 'on');
+        
+        curLevels = linspace(-curMaxDiff, +curMaxDiff, 7);
+        curLevels((1 + end) / 2) = [];
+        
         image(curAx, ...
             uint8(double(intmax('uint8')) ...
           * (1 + curDiffImg / curMaxDiff) / 2));
+        contour(curAx, curDiffImg, curLevels, 'LineColor', 'black');
+        
         colormap(curAx, jet(256));
         curBar = colorbar('peer', curAx);
         curBar.Label.String = { ...
