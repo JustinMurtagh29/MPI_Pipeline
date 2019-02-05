@@ -97,10 +97,12 @@ for curConfig = plotConfigs
 end
 
 %% Plot distribution of synapse size
-connectEM.Consistency.plotSizeHistogram( ...
-    info, synT, plotConfigs(1), 'scale', 'log');
-connectEM.Consistency.plotSizeHistogram( ...
-    info, synT, plotConfigs(2:3), 'scale', 'log');
+for curScale = ["log", "ln"]
+    connectEM.Consistency.plotSizeHistogram( ...
+        info, synT, plotConfigs(1), 'scale', curScale);
+    connectEM.Consistency.plotSizeHistogram( ...
+        info, synT, plotConfigs(2:3), 'scale', curScale);
+end
 
 %% Report number of occurences for degree of coupling
 clear cur*;

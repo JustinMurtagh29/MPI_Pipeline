@@ -12,7 +12,11 @@ function fig = plotSizeHistogram(info, synT, plotConfigs, varargin)
     switch opt.scale
         case 'linear'
             defaultBinEdges = linspace(0, 1.2, 61);
-        case 'log'
+        case {'ln', 'loge'}
+            synT.area = log(synT.area);
+            defaultBinEdges = linspace(-4, 2, 51);
+            xLabelText = sprintf('log_{e}(%s)', xLabelText);
+        case {'log', 'log10'}
             synT.area = log10(synT.area);
             defaultBinEdges = linspace(-2, 1, 61);
             xLabelText = sprintf('log_{10}(%s)', xLabelText);
