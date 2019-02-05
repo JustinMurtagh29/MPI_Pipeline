@@ -12,6 +12,9 @@ job = runSegmentation(p, pNew);
 % wait for job to finish
 Cluster.waitForJob(job);
 
+% run pipeline for segmentation generation
+runPipeline(pNew, PipelineStep.OverlapRemoval, PipelineStep.CompressSegmentation)
+
 function job = runSegmentation(p, pNew)
     
     info = Util.runInfo();
