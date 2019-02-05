@@ -59,6 +59,11 @@ function jobWrapper(p, maxSegId, saveFile, graphFile, segFile)
     lut(lut == 0) = max(lut) + (1:sum(lut == 0));
     lut = [0; lut(:)];
     segNew = lut(seg + 1);
+
+    saveFolder = fileparts(saveFile);
+    if ~exist(saveFolder, 'dir')
+        mkdir(saveFolder);
+    end
     Util.save(saveFile, segNew);
 
 end
