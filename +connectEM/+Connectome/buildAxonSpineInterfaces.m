@@ -1,7 +1,11 @@
 function asiT = buildAxonSpineInterfaces( ...
-        param, graph, shAgglos, conn, syn)
+        param, graph, shAgglos, conn, syn, varargin)
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
+    opt = struct;
+    opt.addBorderIdsVar = false;
+    opt = Util.modifyStruct(opt, varargin{:});
+    
     maxSegId = Seg.Global.getMaxSegId(param);
     axonLUT = Agglo.buildLUT(maxSegId, conn.axons);
     
@@ -38,6 +42,15 @@ function asiT = buildAxonSpineInterfaces( ...
         graph.axonSpineId(mask), ...
         graph.borderArea(mask), ...
        [height(asiT), 1], @sum, nan);
+    
+    if opt.addBorderIdsVar
+        % NOTE(amotta): The `borderIds` variable is only addedn when
+        % explicitly asked for by the user. It's rather slow to allocate so
+        % many cells...
+        asiT.borderIds = accumarray( ...
+            graph.axonSpineId(mask), graph.borderIdx(mask), ...
+           [height(asiT), 1], @(ids) {ids(:)}, {zeros(0, 1)});
+    end
     
     % NOTE(amotta): The synapse agglomeration happened independently of the
     % neurite reconstruction. In very rare cases (55 times at the time of
