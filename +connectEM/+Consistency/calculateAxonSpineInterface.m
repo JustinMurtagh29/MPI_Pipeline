@@ -8,17 +8,18 @@ function areas = calculateAxonSpineInterface( ...
     opts = Util.modifyStruct(opts, varargin{:});
     opts.box = reshape(opts.box, 3, 1);
     
-    areas = nan(height(asiT), 1);
+    areas = nan(height(asiT), 2);
     for curId = 1:height(asiT)
         curAsi = asiT(curId, :);
 
-        areas(curId) = doIt( ...
+       [areas(curId, 1), areas(curId, 2)] = doIt( ...
             param, opts, asiT(curId, :), ...
             axons{curAsi.preAggloId}, spineHeads{curAsi.shId});
     end
 end
 
-function areaSleep = doIt(param, opts, asi, axonSegIds, shSegIds)
+function [areaRetina, areaSleep] = ...
+        doIt(param, opts, asi, axonSegIds, shSegIds)
     invalidSegIds = intersect(axonSegIds, shSegIds);
     axonSegIds = setdiff(axonSegIds, invalidSegIds);
     shSegIds = setdiff(shSegIds, invalidSegIds);
@@ -62,41 +63,11 @@ function areaSleep = doIt(param, opts, asi, axonSegIds, shSegIds)
         borders, edges, seg, param.raw.voxelSize, true) %#ok
     
     %% de Vivo et al. 2017 Science
+    % via surface area measurement method of TrakEM2 
     mask = false(size(seg));
     mask(borders.PixelIdxList) = true;
     
-    maskIdsZ = mask;
-    maskIdsZ = shiftdim(any(maskIdsZ, 1), 1);
-    maskIdsZ = shiftdim(any(maskIdsZ, 1), 1);
-    maskIdsZ = reshape(find(maskIdsZ), 1, []);
-    
-    areas = zeros(size(mask, 3), 1);
-    perim = zeros(size(mask, 3), 1);
-    
-    for curId = maskIdsZ
-        curMask = mask(:, :, curId);
-        areas(curId) = bwarea(curMask);
-        
-        curPerim = regionprops(curMask, 'Perimeter');
-        perim(curId) = curPerim.Perimeter;
-    end
-    
-    areas = areas .* prod(param.raw.voxelSize(1:2));
-    perim = perim .* param.raw.voxelSize(1);
-    
-    areaSleep = ...
-        perim(1:(end - 1)) * param.raw.voxelSize(3) / 2 ...
-      + perim(2:end) * param.raw.voxelSize(3) / 2 ...
-      + areas(1:(end - 1)) - areas(2:end);
-    areaSleep = sum(areaSleep);
-  
-    % Correct for capping at top and bottom
-    areaSleep = ...
-        areaSleep ...
-      - areas(maskIdsZ(1)) ...
-      - areas(maskIdsZ(end));
-  
-    % Correct for two-facedness
-    areaSleep = areaSleep / 2;
-    areaSleep = areaSleep / (1E3 ^ 2) %#ok
+   [~, curSurfArea, curCapArea] = ...
+        Seg.Local.physicalSurfaceArea(mask, param.raw.voxelSize);
+    areaSleep = (curSurfArea - curCapArea) / 2 / (1E3) ^ 2 %#ok
 end
