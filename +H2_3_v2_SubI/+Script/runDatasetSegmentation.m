@@ -3,7 +3,7 @@ Util.log('Loading old and new pipeline parameter...')
 m = load('/tmpscratch/sahilloo/data/H2_3_v2_U1_SubI/pipelineRun_mr2e_wsmrnet/allParameter.mat');
 p = m.p;
 
-m = load('/tmpscratch/sahilloo/data/H2_3_v2_U1_SubI/pipelineRun_mr2e_wsmrnet_HC/allParameter.mat');
+m = load('/tmpscratch/sahilloo/data/H2_3_v2_U1_SubI/pipelineRun_mr2e_wsmrnet_HC_v2/allParameter.mat');
 pNew = m.p;
 
 Util.log('submitting job for segmentation writing per cube')
@@ -13,7 +13,7 @@ job = runSegmentation(p, pNew);
 Cluster.waitForJob(job);
 
 Util.log('run pipeline steps for segmentation generation')
-runPipeline(pNew, PipelineStep.GlobalSegmentID, PipelineStep.CompressSegmentation)
+runPipeline(pNew, PipelineStep.OverlapRemoval, PipelineStep.CompressSegmentation)
 
 function job = runSegmentation(p, pNew)
     
@@ -23,31 +23,37 @@ function job = runSegmentation(p, pNew)
     meta = load(fullfile(p.saveFolder, 'segmentMeta.mat'));
     maxSegId = meta.maxSegId;
     clear meta;
-    
+
+    margin = p.tileBorder(:, 2);
+    assert(isequal(margin, [256; 256; 128]));
+
     % generate new segmentation per cube
     inputCell = arrayfun( ...
             @(newLocal, oldLocal) { ...
-                newLocal.segFile, [oldLocal.saveFolder 'graphH.mat'] ...
-                oldLocal.segFile}, ...
+                newLocal.tempSegFile, [oldLocal.saveFolder 'graphH.mat'] ...
+                oldLocal.bboxSmall}, ...
             pNew.local(:), p.local(:), 'UniformOutput', false);
         
     job = Cluster.startJob( ...
             @jobWrapper, inputCell, ...
-            'sharedInputs', {p, maxSegId}, ...
-            'sharedInputsLocation', [1,2], ...
+            'sharedInputs', {p, maxSegId, margin}, ...
+            'sharedInputsLocation', [1,2,3], ...
             'name', 'segNew', ...
             'cluster', { ...
             'memory', 36, ...
             'time', '24:00:00'});
 end
 
-function jobWrapper(p, maxSegId, saveFile, graphFile, segFile)
+function jobWrapper(p, maxSegId, margin, saveFile, graphFile, bboxSmall)
     Util.log('loading graph...')
     graph = load(graphFile);
     graph = graph.graph;
 
     Util.log('loading segmentation...')
-    segOld = load(segFile);
+    boxLarge = bboxSmall + [-1, +1] .* margin(:);
+    boxLarge = max(boxLarge, p.bbox(:, 1));
+    boxLarge = min(boxLarge, p.bbox(:, 2));
+    segOld = loadSegDataGlobal(p.seg, boxLarge);;
     segOld = segOld.seg;
 
     % Agglomerate down to this score treshold
@@ -61,21 +67,11 @@ function jobWrapper(p, maxSegId, saveFile, graphFile, segFile)
     lut(lut == 0) = max(lut) + (1:sum(lut == 0));
     lut = [0; lut(:)];
     seg = lut(segOld + 1);
-    [oldSegments, newSegments] = determineChanges(segOld, seg);    
-    numEl = calcNumberSegments(seg);
 
     saveFolder = fileparts(saveFile);
     if ~exist(saveFolder, 'dir')
         mkdir(saveFolder);
     end
-    Util.save(saveFile, seg, numEl, oldSegments, newSegments);
+    Util.save(saveFile, seg);
 
 end
-
-function [segIdsOld, segIdsNew] = determineChanges(old, new)
-    uniqueRows = unique(cat(2, uint32(old(:)), new(:)), 'rows');
-    uniqueRows = uniqueRows(~any(uniqueRows == 0, 2),:);
-    segIdsOld = uniqueRows(:,1);
-    segIdsNew = uniqueRows(:,2);
-end
-
