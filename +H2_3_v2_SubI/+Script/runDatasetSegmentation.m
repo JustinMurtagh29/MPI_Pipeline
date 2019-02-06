@@ -53,8 +53,7 @@ function jobWrapper(p, maxSegId, margin, saveFile, graphFile, bboxSmall)
     boxLarge = bboxSmall + [-1, +1] .* margin(:);
     boxLarge = max(boxLarge, p.bbox(:, 1));
     boxLarge = min(boxLarge, p.bbox(:, 2));
-    segOld = loadSegDataGlobal(p.seg, boxLarge);;
-    segOld = segOld.seg;
+    segOld = loadSegDataGlobal(p.seg, boxLarge);
 
     % Agglomerate down to this score treshold
     minScore = 0;
