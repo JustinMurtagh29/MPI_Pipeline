@@ -49,13 +49,9 @@ graph.borderArea = borderAreas(graph.borderIdx);
 clear borderAreas;
 
 %% Build axon-spine interface areas
-asiT = ...
+synT = ...
     connectEM.Connectome.buildAxonSpineInterfaces( ...
         param, graph, shAgglos, conn, syn);
-asiT(asiT.type ~= 'PrimarySpine', :) = [];
-
-synT = asiT;
-synT.isSpine(:) = true;
 
 %% Prepare data
 ccAxonIds = conn.axonMeta.id(conn.axonMeta.axonClass == 'Corticocortical');
@@ -64,23 +60,32 @@ excAxonIds = union(ccAxonIds, tcAxonIds);
 
 plotConfigs = struct;
 plotConfigs(1).synIds = find( ...
-    synT.isSpine & ismember(synT.preAggloId, excAxonIds));
-plotConfigs(1).title = 'excitatory spine synapses';
-plotConfigs(1).tag = 'exc sp';
+    synT.type == 'PrimarySpine' ...
+  & ismember(synT.preAggloId, excAxonIds));
+plotConfigs(1).title = 'excitatory primary spine synapses';
+plotConfigs(1).tag = 'exc pri sp';
 
 plotConfigs(2).synIds = find( ...
-    synT.isSpine & ismember(synT.preAggloId, tcAxonIds));
-plotConfigs(2).title = 'thalamocortical spine synapses';
-plotConfigs(2).tag = 'tc sp';
+    synT.type == 'PrimarySpine' ...
+  & ismember(synT.preAggloId, tcAxonIds));
+plotConfigs(2).title = 'thalamocortical primary spine synapses';
+plotConfigs(2).tag = 'tc pri sp';
 
 plotConfigs(3).synIds = find( ...
-    synT.isSpine & ismember(synT.preAggloId, ccAxonIds));
-plotConfigs(3).title = 'corticocortical spine synapses';
-plotConfigs(3).tag = 'cc sp';
+    synT.type == 'PrimarySpine' ...
+  & ismember(synT.preAggloId, ccAxonIds));
+plotConfigs(3).title = 'corticocortical primary spine synapses';
+plotConfigs(3).tag = 'cc pri sp';
 
-plotConfigs(4).synIds = find(synT.isSpine);
-plotConfigs(4).title = 'spine synapses';
-plotConfigs(4).tag = 'sp';
+plotConfigs(4).synIds = find( ...
+    synT.type == 'PrimarySpine');
+plotConfigs(4).title = 'primary spine synapses';
+plotConfigs(4).tag = 'pri sp';
+
+plotConfigs(5).synIds = find(ismember( ...
+    synT.type, {'PrimarySpine', 'SecondarySpine'}));
+plotConfigs(5).title = 'spine synapses';
+plotConfigs(5).tag = 'sp';
 
 %% Report synapse sizes
 clear cur*;
@@ -99,7 +104,7 @@ end
 %% Plot distribution of synapse size
 for curScale = ["log", "ln"]
     connectEM.Consistency.plotSizeHistogram( ...
-        info, synT, plotConfigs(1), 'scale', curScale);
+        info, synT, plotConfigs([5, 4, 1]), 'scale', curScale);
     connectEM.Consistency.plotSizeHistogram( ...
         info, synT, plotConfigs(2:3), 'scale', curScale);
 end
