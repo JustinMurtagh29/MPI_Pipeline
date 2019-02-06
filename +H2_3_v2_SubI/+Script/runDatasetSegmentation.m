@@ -10,7 +10,7 @@ Util.log('submitting job for segmentation writing per cube')
 job = runSegmentation(p, pNew);
 
 % wait for job to finish
-Cluster.waitForJob(job);
+Cluster.waitForJob(job,'',true);
 
 Util.log('run pipeline steps for segmentation generation')
 runPipeline(pNew, PipelineStep.OverlapRemoval, PipelineStep.CompressSegmentation)
