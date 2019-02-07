@@ -8,7 +8,7 @@ function areas = axonSpineInterfaceArea( ...
     opts = Util.modifyStruct(opts, varargin{:});
     opts.box = reshape(opts.box, 3, 1);
     
-    areas = nan(height(asiT), 3);
+    areas = nan(height(asiT), 4);
     for curId = 1:height(asiT)
         curAsi = asiT(curId, :);
         curAreas = cell(1, size(areas, 2));
@@ -16,11 +16,12 @@ function areas = axonSpineInterfaceArea( ...
        [curAreas{:}] = doIt( ...
             param, opts, asiT(curId, :), ...
             axons{curAsi.preAggloId}, spineHeads{curAsi.shId});
-        areas(curId, :) = cell2mat(curAreas);
+        curAreas = cell2mat(curAreas) %#ok
+        areas(curId, :) = curAreas;
     end
 end
 
-function [areaRetina, areaSleep, areaIso] = ...
+function [areaRetina, areaSleep, areaIso, areaAlpha] = ...
         doIt(param, opts, asi, axonSegIds, shSegIds)
     invalidSegIds = intersect(axonSegIds, shSegIds);
     axonSegIds = setdiff(axonSegIds, invalidSegIds);
@@ -85,4 +86,10 @@ function [areaRetina, areaSleep, areaIso] = ...
       - iso.vertices(iso.faces(:, 1), :), 2);
     areaIso = sum(sqrt(sum(areaIso .* areaIso, 2)) / 2);
     areaIso = areaIso / 2 / (1E3) ^ 2;
+    
+    %% Alpha Shape
+    areaAlpha = ...
+        Seg.Local.physicalBorderAreaAlphaShapes( ...
+            borders, param.raw.voxelSize, size(seg));
+    areaAlpha = areaAlpha / (1E3) ^ 2;
 end
