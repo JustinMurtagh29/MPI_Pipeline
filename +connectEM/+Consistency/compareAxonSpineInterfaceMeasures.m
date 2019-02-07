@@ -68,25 +68,34 @@ labels = { ...
 
 for curA = 1:(size(areas, 2) - 1)
     for curB = (curA + 1):size(areas, 2)
-        figure;
-        hold on;
-        axis equal;
+        curFig = figure();
+        curAx = axes(curFig); %#ok
+        
+        hold(curAx, 'on');
+        axis(curAx, 'equal');
+        
         curFit = fitlm(areas(:, curA), areas(:, curB));
-        scatter(areas(:, curA), areas(:, curB), '.');
-        plot(xlim(), curFit.predict(xlim()'));
+        scatter(curAx, areas(:, curA), areas(:, curB), '.');
+        plot(curAx, xlim(), curFit.predict(xlim()'));
 
-        legend({ ...
+        curFig.Color = 'white';
+        curFig.Position(3:4) = 360;
+        curAx.TickDir = 'out';
+
+        curLeg = legend(curAx, { ...
             sprintf('Data points (n = %d)', size(areas, 1)); ...
             sprintf('y = %.2g + %.2gx', curFit.Coefficients.Estimate)}, ...
             'Location', 'NorthWest');
+        curLeg.Box = 'off';
 
-        set(gcf, 'Color', 'white');
-        set(gca, 'TickDir', 'out');
+        xlim(curAx, [0, 1.5]);
+        xlabel(curAx, {'ASI area à la'; labels{curA}});
 
-        xlim([0, 1.5]);
-        xlabel({'ASI area à la'; labels{curA}});
-
-        ylim([0, 1.5]);
-        ylabel({'ASI area à la'; labels{curB}});
+        ylim(curAx, [0, 1.5]);
+        ylabel(curAx, {'ASI area à la'; labels{curB}});
+        
+        title(curAx, ...
+            {info.filename; info.git_repos{1}.hash}, ...
+            'FontWeight', 'normal', 'FontSize', 10)
     end
 end
