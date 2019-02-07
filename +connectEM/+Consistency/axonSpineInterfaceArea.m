@@ -1,4 +1,4 @@
-function areas = calculateAxonSpineInterface( ...
+function areas = axonSpineInterfaceArea( ...
         param, asiT, axons, spineHeads, varargin)
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
@@ -8,18 +8,17 @@ function areas = calculateAxonSpineInterface( ...
     opts = Util.modifyStruct(opts, varargin{:});
     opts.box = reshape(opts.box, 3, 1);
     
-    areas = nan(height(asiT), 2);
+    areas = nan(height(asiT), 1);
     for curId = 1:height(asiT)
         curAsi = asiT(curId, :);
 
-       [areas(curId, 1), areas(curId, 2)] = doIt( ...
+       areas(curId) = doIt( ...
             param, opts, asiT(curId, :), ...
             axons{curAsi.preAggloId}, spineHeads{curAsi.shId});
     end
 end
 
-function [areaRetina, areaSleep] = ...
-        doIt(param, opts, asi, axonSegIds, shSegIds)
+function area = doIt(param, opts, asi, axonSegIds, shSegIds)
     invalidSegIds = intersect(axonSegIds, shSegIds);
     axonSegIds = setdiff(axonSegIds, invalidSegIds);
     shSegIds = setdiff(shSegIds, invalidSegIds);
@@ -54,20 +53,16 @@ function [areaRetina, areaSleep] = ...
     %% Helmstaedter et al. 2013 Nature
    [edges, borders] = ...
         SynEM.Svg.findEdgesAndBorders(seg);
-    
    [~, mask] = ismember([1, 2], edges, 'rows');
+    
     edges = edges(mask, :);
     borders = borders(mask);
     
-    areaRetina = Seg.Local.physicalBorderArea2( ...
-        borders, edges, seg, param.raw.voxelSize, true) %#ok
-    
-    %% de Vivo et al. 2017 Science
-    % via surface area measurement method of TrakEM2 
     mask = false(size(seg));
     mask(borders.PixelIdxList) = true;
     
-   [~, curSurfArea, curCapArea] = ...
-        Seg.Local.physicalSurfaceArea(mask, param.raw.voxelSize);
-    areaSleep = (curSurfArea - curCapArea) / 2 / (1E3) ^ 2 %#ok
+   [~, surfArea, capArea] = Seg.Local.physicalSurfaceArea( ...
+        mask, param.raw.voxelSize, 'method', 'trakem2');
+    area = (surfArea - capArea) / 2;
+    area = area / (1E3) ^ 2;
 end
