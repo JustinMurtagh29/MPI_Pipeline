@@ -8,17 +8,20 @@ function areas = axonSpineInterfaceArea( ...
     opts = Util.modifyStruct(opts, varargin{:});
     opts.box = reshape(opts.box, 3, 1);
     
-    areas = nan(height(asiT), 1);
+    areas = nan(height(asiT), 3);
     for curId = 1:height(asiT)
         curAsi = asiT(curId, :);
-
-       areas(curId) = doIt( ...
+        curAreas = cell(1, size(areas, 2));
+        
+       [curAreas{:}] = doIt( ...
             param, opts, asiT(curId, :), ...
             axons{curAsi.preAggloId}, spineHeads{curAsi.shId});
+        areas(curId, :) = cell2mat(curAreas);
     end
 end
 
-function area = doIt(param, opts, asi, axonSegIds, shSegIds)
+function [areaRetina, areaSleep, areaIso] = ...
+        doIt(param, opts, asi, axonSegIds, shSegIds)
     invalidSegIds = intersect(axonSegIds, shSegIds);
     axonSegIds = setdiff(axonSegIds, invalidSegIds);
     shSegIds = setdiff(shSegIds, invalidSegIds);
@@ -58,11 +61,28 @@ function area = doIt(param, opts, asi, axonSegIds, shSegIds)
     edges = edges(mask, :);
     borders = borders(mask);
     
+    areaRetina = Seg.Local.physicalBorderArea2( ...
+        borders, edges, seg, param.raw.voxelSize, true);
+    
+    %% de Vivo et al. 2017 Science
     mask = false(size(seg));
     mask(borders.PixelIdxList) = true;
     
    [~, surfArea, capArea] = Seg.Local.physicalSurfaceArea( ...
         mask, param.raw.voxelSize, 'method', 'trakem2');
-    area = (surfArea - capArea) / 2;
-    area = area / (1E3) ^ 2;
+    areaSleep = (surfArea - capArea) / 2;
+    areaSleep = areaSleep / (1E3) ^ 2;
+    
+    %% Isosurface
+    iso = isosurface(mask, 0.5);
+    iso.vertices = iso.vertices .* param.raw.voxelSize;
+    iso = reducepatch(iso, 0.05);
+    
+    areaIso = cross( ...
+        iso.vertices(iso.faces(:, 2), :) ...
+      - iso.vertices(iso.faces(:, 1), :), ...
+        iso.vertices(iso.faces(:, 3), :) ...
+      - iso.vertices(iso.faces(:, 1), :), 2);
+    areaIso = sum(sqrt(sum(areaIso .* areaIso, 2)) / 2);
+    areaIso = areaIso / 2 / (1E3) ^ 2;
 end
