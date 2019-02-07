@@ -1,5 +1,5 @@
 function areas = axonSpineInterfaceArea( ...
-        param, asiT, axons, spineHeads, varargin)
+        param, axons, spineHeads, asiT, varargin)
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     opts = struct;
