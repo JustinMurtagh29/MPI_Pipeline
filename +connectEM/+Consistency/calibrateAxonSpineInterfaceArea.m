@@ -16,36 +16,42 @@ assert(all(cellfun(@isscalar, trees.z)));
 % Sort trees by Z slice
 trees.z = cell2mat(trees.z);
 trees = sortrows(trees, 'z', 'ascend');
+assert(numel(trees.z) == numel(unique(trees.z)));
 
 maxNodeCount = max(cellfun(@(n) numel(n.id), trees.nodes));
 
-%%
-% NOTE(amotta): T for "top" and "B" for bottom
+%% Generate vertices for rough mesh
+% NOTE(amotta): `curT` and `curB` are the top and bottom skeletons
 clear cur*;
-curT = [];
+curT = struct;
 
-curOut = struct;
-curOut.nodes = cell(height(trees), 1);
+mesh = struct;
+mesh.nodes = cell(height(trees), 1);
 
 for curIdB = 1:height(trees)
     curB = struct;
     curB.nodes = trees.nodes{curIdB};
-    
     curB.edges = trees.edges{curIdB};
+    
+    % Convert to tree-local node indices
     curB.edges = [curB.edges.source, curB.edges.target];
-    [~, curB.edges] = ismember(curB.edges, curB.nodes.id);
+   [~, curB.edges] = ismember(curB.edges, curB.nodes.id);
     curB.edges = sort(curB.edges, 2, 'ascend');
     
     curB.nodes = [curB.nodes.x, curB.nodes.y, curB.nodes.z];
     
-    % Make sure that path is linear. Sort nodes linearly
+    % Make sure that path is linear
     curNodeOccur = accumarray(curB.edges(:), 1, [size(curB.nodes, 1), 1]);
     curEndIds = find(curNodeOccur == 1);
     assert(isempty(setdiff(curNodeOccur, 1:2)));
     assert(numel(curEndIds) == 2);
     
     if curIdB > 1
-        % Check which end is closer to start in previous slice
+        % NOTE(amotta): Each linear path has two ends, d'uh! In the first
+        % Z-slice we pick an arbitrary one of the two endings as the start
+        % of the linear path. But starting from the second Z-slice we want
+        % to pick the ending which is closer to the start of the path in
+        % the previous Z-slice.
         curDist = pdist2( ...
             curT.nodes(1, :) .* voxelSize, ...
             curB.nodes(curEndIds, :) .* voxelSize);
@@ -54,82 +60,110 @@ for curIdB = 1:height(trees)
         curEndIds = curEndIds(curSortIds);
     end
     
+    % Sort nodes in order of linear path
     curSortIds = graph(curB.edges(:, 1), curB.edges(:, 2));
     curSortIds = curSortIds.shortestpath(curEndIds(1), curEndIds(2));
     
-    curB = rmfield(curB, 'edges');
     curB.nodes = curB.nodes(curSortIds, :);
+    curB = rmfield(curB, 'edges');
     
-    % Interpolate
+    % NOTE(amotta): Interpolate linear path. We're not doing this to smooth
+    % the curves or get better path length. It's just soooo much easier to
+    % generate a quad mesh if both tracings have the same number of nodes.
     curLens = curB.nodes(2:end, :) - curB.nodes(1:(end - 1), :);
     curLens = [-eps; cumsum(sqrt(sum((curLens .* voxelSize) .^ 2, 2)))];
     curLens = curLens / curLens(end);
     
     curAlpha = reshape(linspace(0, 1, maxNodeCount), [], 1);
-    curIds = arrayfun(@(p) find(curLens < p, 1, 'last'), curAlpha);
-    curIds = [curIds, (curIds + 1)];
+    curNodeIds = arrayfun(@(p) find(curLens < p, 1, 'last'), curAlpha);
     
     curAlpha = ...
-        (curAlpha - curLens(curIds(:, 1))) ...
-     ./ (curLens(curIds(:, 2)) - curLens(curIds(:, 1)));
+        (curAlpha - curLens(curNodeIds)) ...
+     ./ (curLens(curNodeIds + 1) - curLens(curNodeIds));
     curAlpha = 1 - curAlpha;
     
     curB.nodes = ...
-        curAlpha .* curB.nodes(curIds(:, 1), :) ...
-      + (1 - curAlpha) .* curB.nodes(curIds(:, 2), :);
+        curAlpha .* curB.nodes(curNodeIds, :) ...
+      + (1 - curAlpha) .* curB.nodes(curNodeIds + 1, :);
   
-    curOut.nodes{curIdB} = curB.nodes;
-    
+    % Save nodes and move on
+    mesh.nodes{curIdB} = curB.nodes;
     curT = curB;
 end
 
-% Build triangles
-curEdgesXY = (1:maxNodeCount * height(trees)) - 1;
-curEdgesXY(1:maxNodeCount:end) = [];
-curEdgesXY = reshape(curEdgesXY, [], 1);
-curEdgesXY = [curEdgesXY, (curEdgesXY + 1)];
+mesh.nodes = cell2mat(mesh.nodes);
 
-curEdgesZ = reshape(1:maxNodeCount, [], 1);
-curEdgesZ = curEdgesZ + ((1:(height(trees) - 1)) - 1) * maxNodeCount;
-curEdgesZ = curEdgesZ(:) + [0, maxNodeCount];
+%% Build edges of triangle mesh
+clear cur*;
 
-curEdgesXZ = reshape(1:(maxNodeCount - 1), [], 1);
-curEdgesXZ = curEdgesXZ + ((1:(height(trees) - 1)) - 1) * maxNodeCount;
-curEdgesXZ = curEdgesXZ(:) + [0, (maxNodeCount + 1)];
+% Edges within linear path
+curIds = reshape(1:(maxNodeCount - 1), [], 1);
+curIds = curIds + ((1:height(trees)) - 1) * maxNodeCount;
+curEdgesXY = [curIds(:), curIds(:) + 1];
 
-curOut.nodes = cell2mat(curOut.nodes);
-curOut.edges = [curEdgesXY; curEdgesZ; curEdgesXZ];
+% Edges to partner node in linear path below
+curIds = reshape(1:maxNodeCount, [], 1);
+curIds = curIds + ((1:(height(trees) - 1)) - 1) * maxNodeCount;
+curEdgesZ = [curIds(:), curIds(:) + maxNodeCount];
 
-% Smooth
-curIds = [ ...
-    (1:size(curOut.edges, 1))', curOut.edges(:, 1); ...
-    (1:size(curOut.edges, 1))', curOut.edges(:, 2)];
+% Diagonal edges to next node after partner node in linear path below
+curIds = reshape(1:(maxNodeCount - 1), [], 1);
+curIds = curIds + ((1:(height(trees) - 1)) - 1) * maxNodeCount;
+curEdgesXYZ = [curIds(:), curIds(:) + maxNodeCount];
+
+mesh.edges = [curEdgesXY; curEdgesZ; curEdgesXYZ];
+
+%% Smooth mesh
+clear cur*;
+
+% NOTE(amotta); Build system of equations
+% * Part A of the coefficient matrix represents the edges of the mesh. We
+%   try to smooth the surface by minimizing the squared distance to all
+%   neighboring nodes.
+% * Part B of the coefficient matrix represents the manually placed nodes.
+%   In the absence of part B, all nodes would collapse to a single point
+%   during least-squares optimization. Instead, we add "virtual" edges to
+%   the original nodes.
+curNodeIds = [ ...
+    (1:size(mesh.edges, 1))', mesh.edges(:, 1); ...
+    (1:size(mesh.edges, 1))', mesh.edges(:, 2)];
 curEntries = [ ...
-    +ones(size(curOut.edges, 1), 1); ...
-    -ones(size(curOut.edges, 1), 1)];
+    +ones(size(mesh.edges, 1), 1); ...
+    -ones(size(mesh.edges, 1), 1)];
 curMatA = sparse( ...
-    curIds(:, 1), curIds(:, 2), curEntries, ...
-    size(curOut.edges, 1), size(curOut.nodes, 1));
+    curNodeIds(:, 1), curNodeIds(:, 2), curEntries, ...
+    size(mesh.edges, 1), size(mesh.nodes, 1));
 
-curIds = [ ...
-    (1:size(curOut.nodes, 1))', (1:size(curOut.nodes, 1))'];
+curNodeIds = [ ...
+    (1:size(mesh.nodes, 1))', (1:size(mesh.nodes, 1))'];
 curEntries = [ ...
-    +ones(size(curOut.nodes, 1), 1)];
+    +ones(size(mesh.nodes, 1), 1)];
 curMatB = sparse( ...
-    curIds(:, 1), curIds(:, 2), curEntries, ...
-    size(curOut.nodes, 1), size(curOut.nodes, 1));
+    curNodeIds(:, 1), curNodeIds(:, 2), curEntries, ...
+    size(mesh.nodes, 1), size(mesh.nodes, 1));
 
+% NOTE(amotta): All edge constraints (part A of coefficient matrix) have
+% unit weight. To preserve the circumference of the axon-spine interface
+% while allowing more smoothing in its center, we weight the virtual edges
+% inversely proportional to the number of "actual edges". Nodes at the
+% circumference have few "actual neighbors", which makes sure that the
+% virtual edge weight is high, keeping them close to home.
 curWeights = [ ...
-    ones(size(curOut.edges, 1), 1); ...
-    9 ./ accumarray(curOut.edges(:), 1)];
+    ones(size(mesh.edges, 1), 1); ...
+    2 * 6 ./ accumarray(mesh.edges(:), 1)];
 curMat = [curMatA; curMatB] .* curWeights;
 
-curOut.nodesNew = curOut.nodes;
-for curDimId = 1:3
-    curGoal = [zeros(size(curOut.edges, 1), 1); curOut.nodes(:, curDimId)];
-    curOut.nodesNew(:, curDimId) = full(curMat \ (curGoal .* curWeights));
+mesh.nodesSmooth = mesh.nodes;
+for curDimId = 1:size(mesh.nodes, 2)
+    curTarget = [zeros(size(mesh.edges, 1), 1); mesh.nodes(:, curDimId)];
+    curNodesSmooth = full(curMat \ (curTarget .* curWeights));
+    mesh.nodesSmooth(:, curDimId) = curNodesSmooth;
 end
 
+%% Debugging: Show isosurface
+clear cur*;
+
+% Generate triangles
 curFaces = reshape(1:(maxNodeCount - 1), [], 1);
 curFaces = curFaces + ((1:(height(trees) - 1)) - 1) * maxNodeCount;
 curFaces = reshape(curFaces, [], 1);
@@ -137,25 +171,41 @@ curFaces = reshape(curFaces, [], 1);
 curFaces = [ ...
     (curFaces + [0, 1, (maxNodeCount + 1)]);
     (curFaces + [0, maxNodeCount + [0, 1]])];
+curFaces = sort(curFaces, 2);
 
-curP = struct;
-curP.vertices = curOut.nodesNew;
-curP.faces = sort(curFaces, 2);
+curFig = figure();
+curAx = axes(curFig);
+axis(curAx, 'equal');
+view(curAx, 3);
 
-figure;
-axis equal
-view(3);
+origTriMesh = struct('vertices', mesh.nodes, 'faces', curFaces);
+curOrigPatch = patch(origTriMesh);
+curOrigPatch.FaceColor = 'blue';
+curOrigPatch.EdgeColor = 'none';
+curOrigPatch.FaceAlpha = 0.1;
 
-curFigP = patch(curP);
-curFigP.EdgeColor = 'none';
-curFigP.FaceColor = 'red';
-curFigP.FaceAlpha = 0.5;
+smoothTriMesh = struct('vertices', mesh.nodesSmooth, 'faces', curFaces);
+curSmoothPatch = patch(smoothTriMesh);
+curSmoothPatch.FaceColor = 'red';
+curOrigPatch.FaceAlpha = 0.5;
 
-curP.vertices = curOut.nodes;
+camlight(curAx);
 
-curFigP = patch(curP);
-curFigP.EdgeColor = 'none';
-curFigP.FaceColor = 'blue';
-curFigP.FaceAlpha = 0.5;
+%% Calculate areas
+clear cur*;
 
-camlight
+origArea = origTriMesh.vertices .* voxelSize;
+origArea = cross( ...
+    origArea(origTriMesh.faces(:, 2), :) ...
+  - origArea(origTriMesh.faces(:, 1), :), ...
+    origArea(origTriMesh.faces(:, 3), :) ...
+  - origArea(origTriMesh.faces(:, 1), :), 2);
+origArea = sum(sqrt(sum(origArea .* origArea, 2)) / 2) / 1E6 %#ok
+
+smoothArea = smoothTriMesh.vertices .* voxelSize;
+smoothArea = cross( ...
+    smoothArea(smoothTriMesh.faces(:, 2), :) ...
+  - smoothArea(smoothTriMesh.faces(:, 1), :), ...
+    smoothArea(smoothTriMesh.faces(:, 3), :) ...
+  - smoothArea(smoothTriMesh.faces(:, 1), :), 2);
+smoothArea = sum(sqrt(sum(smoothArea .* smoothArea, 2)) / 2) / 1E6 %#ok
