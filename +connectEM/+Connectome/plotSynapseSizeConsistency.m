@@ -271,7 +271,8 @@ for curConfig = curConfigs
 
        [curLearnedFrac, curUnlearnedFrac, curCvThresh] = ...
             connectEM.Consistency.calculateLearnedFraction( ...
-                curConfig.synT, curPairConfigs(1), curPairConfigs(end));
+                curConfig.synT, curPairConfigs(1), curPairConfigs(end), ...
+                'method', 'maxdifference');
         curOpenFrac = 1 - curLearnedFrac - curUnlearnedFrac;
         
         % Quantitative reporting
