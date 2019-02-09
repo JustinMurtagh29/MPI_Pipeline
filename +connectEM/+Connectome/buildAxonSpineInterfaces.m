@@ -38,24 +38,9 @@ function asiT = buildAxonSpineInterfaces( ...
         asiT(:, {'preAggloId', 'shId'}), 'rows');
     mask = (graph.axonSpineId ~= 0);
     
-    asiT.area = accumarray( ...
-        graph.axonSpineId(mask), ...
-        graph.borderArea(mask), ...
-       [height(asiT), 1], @sum, nan);
-    
     if opt.addBorderIdsVar
-        % NOTE(amotta): The `borderIds` variable is only addedn when
-        % explicitly asked for by the user. It's rather slow to allocate so
-        % many cells...
         asiT.borderIds = accumarray( ...
             graph.axonSpineId(mask), graph.borderIdx(mask), ...
            [height(asiT), 1], @(ids) {ids(:)}, {zeros(0, 1)});
     end
-    
-    % NOTE(amotta): The synapse agglomeration happened independently of the
-    % neurite reconstruction. In very rare cases (55 times at the time of
-    % writing) it can thus happen that there does not exist any border
-    % between a axon and spine head agglomerates.
-    %   For now, this case is eliminated by brute force.
-    asiT(isnan(asiT.area), :) = [];
 end
