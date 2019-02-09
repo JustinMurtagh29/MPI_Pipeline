@@ -1,6 +1,4 @@
 function calibT = loadAsiAreaNmls(param, nmlDir)
-    % calibT = loadAsiAreaNmls(param, nmlDir)
-    %
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     nmlNames = dir(fullfile(nmlDir, '*.nml'));
