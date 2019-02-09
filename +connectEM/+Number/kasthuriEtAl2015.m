@@ -24,7 +24,11 @@ colToId = @(c) 1 + double(lower(c)) - double('a');
 synT = table;
 synT.id = data(:, colToId('A'));
 synT.axonId = data(:, colToId('I'));
+synT.axonType = categorical( ...
+    data(:, colToId('K')), [0, 1, 2, -1], ...
+    {'Excitatory', 'Inhibitory', 'Myelinated', 'Unknown'});
 synT.dendId = data(:, colToId('J'));
+synT.ontoSpine = logical(data(:, colToId('R')));
 
 % Sanity check
 assert(isequal(synT.id, reshape(1:height(synT), [], 1)));
@@ -49,3 +53,10 @@ numAxonsWithAtLeastTenSynapses = sum(axonT.synCount >= 10) %#ok
 % Count multi-synaptic connections
 [~, ~, numMultiSynPairs] = unique(synT(:, {'axonId', 'dendId'}), 'rows');
 numMultiSynConnections = sum(accumarray(numMultiSynPairs, 1) > 1) %#ok
+
+% Count multi-synaptic exc. connections onto spine heads
+numExcShMultiSynPairs = synT( ...
+    synT.axonType == 'Excitatory' ...
+  & synT.ontoSpine, {'axonId', 'dendId'});
+[~, ~, numExcShMultiSynPairs] = unique(numExcShMultiSynPairs, 'rows');
+numExcShMultiSynConnections = sum(accumarray(numExcShMultiSynPairs, 1) > 1) %#ok
