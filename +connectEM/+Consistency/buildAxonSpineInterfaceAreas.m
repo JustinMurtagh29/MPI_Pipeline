@@ -60,12 +60,12 @@ function area = doIt(param, opts, pos, axonSegIds, shSegIds)
     seg(:, 1, :) = 3; seg(:, end, :) = 3;
     seg(:, :, 1) = 3; seg(:, :, end) = 3;
     
-   [edges, border] = SynEM.Svg.findEdgesAndBorders(seg);
-    border = border(all(edges == [1, 2], 2));
-    assert(isscalar(border));
+   [edges, borders] = SynEM.Svg.findEdgesAndBorders(seg);
+    borders = borders(all(edges == [1, 2], 2));
+    assert(not(isempty(borders)));
     
     area = ...
         Seg.Local.physicalBorderAreaAlphaShapes( ...
-            border, param.raw.voxelSize, size(seg));
-    area = area / 1E6;
+            borders, param.raw.voxelSize, size(seg));
+    area = sum(area) / 1E6;
 end
