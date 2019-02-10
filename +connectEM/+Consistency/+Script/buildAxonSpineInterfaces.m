@@ -46,15 +46,27 @@ asiT.pos = cellfun( ...
 	asiT.borderIds, 'UniformOutput', false);
 asiT.pos = round(cell2mat(asiT.pos));
 
+% NOTE(amotta): The synapse agglomeration happened independently of the
+% neurite reconstruction. In very rare cases (55 times at the time of
+% writing) it can thus happen that there does not exist any border
+% between a axon and spine head agglomerates.
+%   If the set of border IDs is empty, the empty sum in the weighted
+% mean above returns all zeros. Let's set the position of these alien
+% interfaces to not-a-number instead.
+asiT.pos(cellfun(@isempty, asiT.borderIds), :) = nan;
+
 %% Calculate ASI areas
 curBatchSize = 500;
 curSharedArgs = {param, conn.axons, shAgglos};
 
-curArgs = 1:curBatchSize:height(asiT);
-curArgs = [curArgs; min(curArgs + curBatchSize - 1, height(asiT))];
+% Restrict to interfaces with valid positions
+curIds = find(not(any(isnan(asiT.pos), 2)));
+
+curArgs = 1:curBatchSize:numel(curIds);
+curArgs = [curArgs; min(curArgs + curBatchSize - 1, numel(curIds))];
 
 curArgs = arrayfun( ...
-    @(a, b) {asiT(a:b, :)}, ...
+    @(a, b) {asiT(curIds(a:b), :)}, ...
     curArgs(1, :), curArgs(2, :), ...
     'UniformOutput', false);
 
@@ -65,10 +77,11 @@ curJob = Cluster.startJob( ...
 Cluster.waitForJob(curJob);
 
 areas = fetchOutputs(curJob);
+areas = cell2mat(areas);
 delete(curJob);
 
-areas = cell2mat(areas);
-asiT.area = areas;
+asiT.area = nan(height(asiT), 1);
+asiT.area(curIds) = areas;
 
 %% Write output
 clear cur*;
