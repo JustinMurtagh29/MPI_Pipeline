@@ -49,7 +49,7 @@ clear cur*;
 fprintf('\nSynapse sizes\n');
 for curConfig = plotConfigs
     curSynT = asiT(curConfig.synIds, :);
-    curLogeAsi = log10(curSynT.area);
+    curLogeAsi = log(curSynT.area);
     curMeanLogeAsi = mean(curLogeAsi);
     curStdLogeAsi = std(curLogeAsi);
     
@@ -60,12 +60,10 @@ end
 
 
 %% Plot distribution of synapse size
-for curScale = ["log", "ln"]
-    curFig = connectEM.Consistency.plotSizeHistogram( ...
-        info, asiT, plotConfigs(1), 'scale', curScale);
-    connectEM.Consistency.plotSizeHistogram( ...
-        info, asiT, plotConfigs(2:3), 'scale', curScale);
-end
+connectEM.Consistency.plotSizeHistogram( ...
+    info, asiT, plotConfigs(1), 'scale', 'loge');
+connectEM.Consistency.plotSizeHistogram( ...
+    info, asiT, plotConfigs(2:3), 'scale', 'loge');
 
 %% Report number of occurences for degree of coupling
 clear cur*;
@@ -185,20 +183,20 @@ for curConfig = plotConfigs
     for curCtrlConfig = [curRandConfig, curRandSaSdConfig]
         curSaSdT = table;
         curSaSdT.areas = asiT.area(curSaSdConfig.synIdPairs);
+        curSaSdT.logeAvgArea = log(mean(curSaSdT.areas, 2));
         curSaSdT.cv = std(curSaSdT.areas, 0, 2) ./ mean(curSaSdT.areas, 2);
-        curSaSdT.avgLogAreas = mean(log10(curSaSdT.areas), 2);
 
         curCtrlT = table;
         curCtrlT.areas = asiT.area(curCtrlConfig.synIdPairs);
+        curCtrlT.logeAvgArea = log(mean(curCtrlT.areas, 2));
         curCtrlT.cv = std(curCtrlT.areas, 0, 2) ./ mean(curCtrlT.areas, 2);
-        curCtrlT.avgLogAreas = mean(log10(curCtrlT.areas), 2);
 
         % Density difference map
         curLimX = [0, 1.5];
-        curLimY = [-1.5, 0.5];
+        curLimY = [-4, 1];
 
         curTicksX = linspace(curLimX(1), curLimX(2), 4);
-        curTicksY = linspace(curLimY(1), curLimY(2), 5);
+        curTicksY = linspace(curLimY(1), curLimY(2), 6);
 
         curImSize = [301, 301];
 
@@ -208,7 +206,7 @@ for curConfig = plotConfigs
         curImGrid = cat(2, curImGridY(:), curImGridX(:));
 
         curSaSdImg = horzcat( ...
-            curSaSdT.avgLogAreas, curSaSdT.cv);
+            curSaSdT.logeAvgArea, curSaSdT.cv);
         curMask = ...
             curLimY(1) <= curSaSdImg(:, 1) ...
           & curSaSdImg(:, 1) <= curLimY(2) ...
@@ -223,7 +221,7 @@ for curConfig = plotConfigs
         curSaSdImg = reshape(curSaSdImg, curImSize);
 
         curCtrlImg = horzcat( ...
-            curCtrlT.avgLogAreas, curCtrlT.cv);
+            curCtrlT.logeAvgArea, curCtrlT.cv);
         curMask = ...
             curLimY(1) <= curCtrlImg(:, 1) ...
           & curCtrlImg(:, 1) <= curLimY(2) ...
@@ -315,36 +313,6 @@ for curConfig = plotConfigs
 
         curAxes = reshape(flip(findobj(curFig, 'Type', 'Axes')), 1, []);
         arrayfun(@(ax) hold(ax, 'on'), curAxes);
-        
-        for curModeConfig = modeConfigs
-            fprintf('# Evaluation of mode "%s"\n', curModeConfig.name);
-
-            curX = curModeConfig.cvRange - curLimX(1);
-            curX = curX / (curLimX(end) - curLimX(1));
-            curX = round(0.5 + (curImSize(2) - 1) * curX);
-            curY = curModeConfig.avgLogAsiRange - curLimY(1);
-            curY = curY / (curLimY(end) - curLimY(1));
-            curY = round(0.5 + (curImSize(1) - 1) * curY);
-
-            for curIdx = 1:numel(curAxes)
-                curAx = curAxes(curIdx);
-                curTitle = curTitles{curIdx};
-                curColor = curColors{curIdx};
-
-                plot(curAx, ...
-                    curX([1, 2, 2, 1, 1]), ...
-                    curY([1, 1, 2, 2, 1]), ...
-                    'Color', curColor, ...
-                    'LineStyle', '--', ...
-                    'LineWidth', 2);
-
-                curProb = sum(sum(curImages{curIdx}( ...
-                    curY(1):curY(end), curX(1):curX(end))));
-                fprintf('* %s: %f %%\n', curTitle, 100 * curProb);
-            end
-
-            fprintf('\n');
-        end
 
         set(curAxes, ...
             'Box', 'off', ...
@@ -360,7 +328,7 @@ for curConfig = plotConfigs
             'XTickLabels', curTickLabelsX);
 
         arrayfun(@(ax) ylabel(ax, ...
-            'Average log_{10}(ASI area [µm²])'), curAxes);
+            'log_{e}(Average ASI area [µm²])'), curAxes);
         xlabel(curAxes(end), 'Coefficient of variation');
 
         annotation( ...
