@@ -82,14 +82,17 @@ if ~exist(curAsiFile, 'file')
     curIds = find(not(any(isnan(l4AsiT.pos), 2)));
     curAxonAgglos = {axonData.segIds};
 
-    curAreas = nan(height(l4AsiT), 1);
-    parfor curId = reshape(curIds, 1, [])
-        curAreas(curId) = ...
+    curAreas = nan(numel(curIds), 1);
+    parfor curIdx = 1:numel(curIds)
+        curId = curIds(curIdx);
+        
+        curAreas(curIdx) = ...
             connectEM.Consistency.buildAxonSpineInterfaceAreas( ...
                     param, curAxonAgglos, shAgglos, l4AsiT(curId, :));
     end
     
-    l4AsiT.area = curAreas;
+    l4AsiT.area = nan(height(l4AsiT), 1);
+    l4AsiT.area(curIds) = curAreas;
     Util.save(curAsiFile, l4AsiT);
     Util.protect(curAsiFile);
 end
