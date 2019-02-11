@@ -100,6 +100,9 @@ end
 l4AsiT = load(curAsiFile);
 l4AsiT = l4AsiT.l4AsiT;
 
+l4AsiT = l4AsiT(l4AsiT.area > 0, :);
+l4AsiT = connectEM.Consistency.Calibration.apply(l4AsiT);
+
 %% Analyse TC → L4 and TC → L5 connections
 tcOut = table;
 tcOut.name = categories(conn.denMeta.targetClass);
@@ -118,6 +121,56 @@ l4Out.name = strcat({'L4 → '}, l4Out.name);
 l4Out.synCount = accumarray(double(l4SynT.targetClass), 1);
 l4Out.synFrac = l4Out.synCount ./ sum(l4Out.synCount);
 disp(l4Out);
+
+%% Plot ASI areas for L4→L4 and L4→L5 connections
+clear cur*;
+
+curDataT = table;
+curDataT.targetClass = { ...
+    'ProximalDendrite'; ...
+    'ApicalDendrite'};
+curDataT.areas = cellfun( ...
+    @(t) l4AsiT.area(l4AsiT.targetClass == t), ...
+    curDataT.targetClass, 'UniformOutput', false);
+curDataT.medianArea = cellfun( ...
+    @(a) median(a, 'omitnan'), curDataT.areas);
+    
+curBinEdges = linspace(-4, 0, 9);
+curColors = get(groot, 'defaultAxesColorOrder');
+curColors = num2cell(curColors(1:height(curDataT), :), 2);
+
+curFig = figure();
+curAx = axes(curFig);
+hold(curAx, 'on');
+
+curPlotHist = @(areas) histogram( ...
+    curAx, log(areas), curBinEdges, ...
+	'DisplayStyle', 'stairs', ...
+	'Normalization', 'probability', ...
+    'LineWidth', 2, 'FaceAlpha', 1);
+cellfun(curPlotHist, curDataT.areas);
+
+curPlotMedian = @(median) plot(curAx, ...
+    repelem(log(median), 1, 2), ylim(curAx), ...
+    'LineStyle', '--', 'LineWidth', 2);
+curMedianPlots = arrayfun(curPlotMedian, curDataT.medianArea);
+set(curMedianPlots, {'Color'}, curColors);
+
+curFig.Color = 'white';
+curFig.Position(3:4) = [215, 160];
+curAx.TickDir = 'out';
+curAx.XLim = curBinEdges([1, end]);
+curAx.XTick = curBinEdges(mod(curBinEdges, 1) == 0);
+
+xlabel(curAx, 'log_{e}(ASI area [µm²])');
+ylabel(curAx, 'Probability');
+
+curLeg = legend(curAx, {'L4 → PD'; 'L4 → AD'});
+set(curLeg, 'Box', 'off', 'Location', 'NorthWest');
+
+title(curAx, ...
+    {info.filename; info.git_repos{1}.hash}, ...
+    'FontWeight', 'normal', 'FontSize', 10);
 
 %% Prepare data for plotting
 binEdges = linspace(-1.5, +0.5, 21);
