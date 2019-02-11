@@ -15,7 +15,7 @@ rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 outputMapFile = '/tmpscratch/amotta/l4/2018-07-26-tracing-based-output-maps/20190117T143833_results.mat';
 shFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v3_auto.mat');
 
-asiRunId = '20190211T101515';
+asiRunId = '20190211T111321';
 
 info = Util.runInfo();
 Util.showRunInfo(info);
@@ -93,7 +93,7 @@ if ~exist(curAsiFile, 'file')
     
     l4AsiT.area = nan(height(l4AsiT), 1);
     l4AsiT.area(curIds) = curAreas;
-    Util.save(curAsiFile, l4AsiT);
+    Util.save(curAsiFile, l4AsiT, info);
     Util.protect(curAsiFile);
 end
 
