@@ -17,8 +17,6 @@ runPipeline(pNew, PipelineStep.OverlapRemoval, PipelineStep.CompressSegmentation
 
 function job = runSegmentation(p, pNew)
     
-    info = Util.runInfo();
-    
     %% Loading data
     meta = load(fullfile(p.saveFolder, 'segmentMeta.mat'));
     maxSegId = meta.maxSegId;
