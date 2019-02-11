@@ -15,6 +15,8 @@ rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 outputMapFile = '/tmpscratch/amotta/l4/2018-07-26-tracing-based-output-maps/20190117T143833_results.mat';
 shFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v3_auto.mat');
 
+asiRunId = '20190211T101515';
+
 info = Util.runInfo();
 Util.showRunInfo(info);
 
@@ -30,12 +32,9 @@ shAgglos = shAgglos.shAgglos;
 graph = Graph.load(rootDir);
 graph = graph(graph.borderIdx ~= 0, :);
 
-borderAreas = fullfile(rootDir, 'globalBorder.mat');
-borderAreas = load(borderAreas, 'borderArea2');
-borderAreas = borderAreas.borderArea2;
-
-graph.borderArea = borderAreas(graph.borderIdx);
-clear borderAreas;
+borderMeta = fullfile(rootDir, 'globalBorder.mat');
+borderMeta = load(borderMeta, 'borderSize', 'borderCoM');
+borderMeta = structfun(@double, borderMeta, 'UniformOutput', false);
 
 % Loading tracings and synapses of L4 cells
 outputMap = load(outputMapFile);
@@ -46,27 +45,65 @@ axonData = outputMap.axonData;
 [conn, syn] = connectEM.Connectome.load(param, connFile);
 conn = connectEM.Connectome.prepareForSpecificityAnalysis(conn);
 
-%%
+%% Build synapse and axon-spine interface tables
 synT = connectEM.Connectome.buildSynapseTable(conn, syn);
 synT.axonClass = conn.axonMeta.axonClass(synT.preAggloId);
 synT.targetClass = conn.denMeta.targetClass(synT.postAggloId);
 
-asiT = ...
-    connectEM.Connectome.buildAxonSpineInterfaces( ...
-        param, graph, shAgglos, conn, syn);
-
 [l4Conn, l4SynT, l4AsiT] = ...
     forL4(param, graph, shAgglos, conn, syn, axonData);
+
 l4SynT.targetClass = l4Conn.denMeta.targetClass(l4SynT.postAggloId);
-l4AsiT = l4AsiT(l4AsiT.type == 'PrimarySpine', :);
+l4AsiT.targetClass = conn.denMeta.targetClass(l4AsiT.postAggloId);
+
+%% Calculate ASI position
+% See also connectEM.Consistency.Script.buildAxonSpineInterfaces
+weightedMean = @(w, v) ...
+    sum((w / sum(w, 1)) .* v, 1);
+
+l4AsiT.pos = cellfun( ...
+    @(ids) weightedMean( ...
+        borderMeta.borderSize(ids), ...
+        borderMeta.borderCoM(ids, :)), ...
+    l4AsiT.borderIds, 'UniformOutput', false);
+
+l4AsiT.pos = round(cell2mat(l4AsiT.pos));
+l4AsiT.pos(cellfun(@isempty, l4AsiT.borderIds), :) = nan;
+
+%% Calculate ASI area
+clear cur*;
+
+[curDir, curFile] = fileparts(outputMapFile);
+curAsiFile = sprintf('%s__%s_asiT.mat', curFile, asiRunId);
+curAsiFile = fullfile(curDir, curAsiFile);
+
+if ~exist(curAsiFile, 'file')
+    % Calculate area
+    curIds = find(not(any(isnan(l4AsiT.pos), 2)));
+    curAxonAgglos = {axonData.segIds};
+
+    curAreas = nan(height(l4AsiT), 1);
+    parfor curId = reshape(curIds, 1, [])
+        curAreas(curId) = ...
+            connectEM.Consistency.buildAxonSpineInterfaceAreas( ...
+                    param, curAxonAgglos, shAgglos, l4AsiT(curId, :));
+    end
+    
+    l4AsiT.area = curAreas;
+    Util.save(curAsiFile, l4AsiT);
+    Util.protect(curAsiFile);
+end
+
+l4AsiT = load(curAsiFile);
+l4AsiT = l4AsiT.l4AsiT;
 
 %% Analyse TC → L4 and TC → L5 connections
 tcOut = table;
 tcOut.name = categories(conn.denMeta.targetClass);
 tcOut.name = strcat({'TC → '}, tcOut.name);
 
-curMask = synT.axonClass == 'Thalamocortical';
-tcOut.synCount = accumarray(double(synT.targetClass(curMask)), 1);
+curIds = synT.axonClass == 'Thalamocortical';
+tcOut.synCount = accumarray(double(synT.targetClass(curIds)), 1);
 tcOut.synFrac = tcOut.synCount ./ sum(tcOut.synCount);
 disp(tcOut)
 
@@ -209,7 +246,7 @@ function [l4Conn, l4SynT, l4AsiT] = forL4( ...
         connectEM.Connectome.buildSynapseTable(l4Conn, syn);
     l4AsiT = ...
         connectEM.Connectome.buildAxonSpineInterfaces( ...
-            param, graph, shAgglos, l4Conn, syn);
+            param, graph, shAgglos, l4Conn, syn, 'addBorderIdsVar', true);
 end
 
 function plotPair(binEdges, plotT, ax, plotIds)
