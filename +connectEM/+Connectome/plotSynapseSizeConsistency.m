@@ -5,114 +5,72 @@ clear;
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 shFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v3_auto.mat');
+connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-linearized_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v8-classified.mat');
 
 modeConfigs = struct(zeros(1, 0));
-
-%{
-modeConfigs(1).name = 'large';
-modeConfigs(1).cvRange = [0, 0.4];
-modeConfigs(1).avgLogAsiRange = [-0.14, 0.23];
-
-modeConfigs(2).name = 'small';
-modeConfigs(2).cvRange = [0, 0.5];
-modeConfigs(2).avgLogAsiRange = [-0.97, -0.6];
-%}
 
 info = Util.runInfo();
 Util.showRunInfo(info);
 
-%% Loading data
-param = load(fullfile(rootDir, 'allParameter.mat'));
-param = param.p;
+%% Load axon-spine interfaces
+[curDir, curAsiFile] = fileparts(connFile);
+curAsiFile = fullfile(curDir, sprintf('%s_asiT.mat', curAsiFile));
 
-[conn, syn, connFile] = ...
-    connectEM.Consistency.loadConnectome(param);
+asiT = load(curAsiFile);
+asiT = asiT.asiT;
 
-[~, synToSynFile] = fileparts(connFile);
-synToSynFile = sprintf('%s_synToSynDists.mat', synToSynFile);
-synToSynFile = fullfile(fileparts(connFile), synToSynFile);
-synToSyn = load(synToSynFile);
-
-% Loading spine head agglomerates
-shAgglos = load(shFile, 'shAgglos');
-shAgglos = shAgglos.shAgglos;
-
-% Loading augmented graph
-graph = Graph.load(rootDir);
-graph = graph(graph.borderIdx ~= 0, :);
-
-borderAreas = fullfile(rootDir, 'globalBorder.mat');
-borderAreas = load(borderAreas, 'borderArea2');
-borderAreas = borderAreas.borderArea2;
-
-graph.borderArea = borderAreas(graph.borderIdx);
-clear borderAreas;
-
-%% Build axon-spine interface areas
-synT = ...
-    connectEM.Connectome.buildAxonSpineInterfaces( ...
-        param, graph, shAgglos, conn, syn);
+asiT = asiT(asiT.area > 0, :);
+asiT = connectEM.Consistency.Calibration.apply(asiT);
 
 %% Prepare data
-ccAxonIds = conn.axonMeta.id(conn.axonMeta.axonClass == 'Corticocortical');
-tcAxonIds = conn.axonMeta.id(conn.axonMeta.axonClass == 'Thalamocortical');
-excAxonIds = union(ccAxonIds, tcAxonIds);
+clear cur*;
 
 plotConfigs = struct;
 plotConfigs(1).synIds = find( ...
-    synT.type == 'PrimarySpine' ...
-  & ismember(synT.preAggloId, excAxonIds));
+    asiT.type == 'PrimarySpine' & ismember( ...
+    asiT.axonClass, {'Corticocortical', 'Thalamocortical'}));
 plotConfigs(1).title = 'excitatory primary spine synapses';
 plotConfigs(1).tag = 'exc pri sp';
 
 plotConfigs(2).synIds = find( ...
-    synT.type == 'PrimarySpine' ...
-  & ismember(synT.preAggloId, tcAxonIds));
+    asiT.type == 'PrimarySpine' ...
+  & asiT.axonClass == 'Thalamocortical');
 plotConfigs(2).title = 'thalamocortical primary spine synapses';
 plotConfigs(2).tag = 'tc pri sp';
 
 plotConfigs(3).synIds = find( ...
-    synT.type == 'PrimarySpine' ...
-  & ismember(synT.preAggloId, ccAxonIds));
+    asiT.type == 'PrimarySpine' ...
+  & asiT.axonClass == 'Corticocortical');
 plotConfigs(3).title = 'corticocortical primary spine synapses';
 plotConfigs(3).tag = 'cc pri sp';
 
-plotConfigs(4).synIds = find( ...
-    synT.type == 'PrimarySpine');
-plotConfigs(4).title = 'primary spine synapses';
-plotConfigs(4).tag = 'pri sp';
-
-plotConfigs(5).synIds = find(ismember( ...
-    synT.type, {'PrimarySpine', 'SecondarySpine'}));
-plotConfigs(5).title = 'spine synapses';
-plotConfigs(5).tag = 'sp';
-
 %% Report synapse sizes
 clear cur*;
-fprintf('Synapse sizes\n');
+fprintf('\nSynapse sizes\n');
 for curConfig = plotConfigs
-    curSynT = synT(curConfig.synIds, :);
-    curLogAsi = log10(curSynT.area);
-    curMeanLog10Asi = mean(curLogAsi);
-    curStdLog10Asi = std(curLogAsi);
+    curSynT = asiT(curConfig.synIds, :);
+    curLogeAsi = log10(curSynT.area);
+    curMeanLogeAsi = mean(curLogeAsi);
+    curStdLogeAsi = std(curLogeAsi);
     
     fprintf( ...
-        '* log10(%s ASI): %f ± %f (mean ± std)\n', ...
-        curConfig.title, curMeanLog10Asi, curStdLog10Asi)
+        '* log_e(%s ASI): %f ± %f (mean ± std)\n', ...
+        curConfig.title, curMeanLogeAsi, curStdLogeAsi)
 end
+
 
 %% Plot distribution of synapse size
 for curScale = ["log", "ln"]
+    curFig = connectEM.Consistency.plotSizeHistogram( ...
+        info, asiT, plotConfigs(1), 'scale', curScale);
     connectEM.Consistency.plotSizeHistogram( ...
-        info, synT, plotConfigs([5, 4, 1]), 'scale', curScale);
-    connectEM.Consistency.plotSizeHistogram( ...
-        info, synT, plotConfigs(2:3), 'scale', curScale);
+        info, asiT, plotConfigs(2:3), 'scale', curScale);
 end
 
 %% Report number of occurences for degree of coupling
 clear cur*;
 curPlotConfig = plotConfigs(1);
-curSynT = synT(curPlotConfig.synIds, :);
+curSynT = asiT(curPlotConfig.synIds, :);
 [~, ~, curDegreeOfCoupling] = unique(curSynT( ...
     :, {'preAggloId', 'postAggloId'}), 'rows');
 curDegreeOfCoupling = accumarray(curDegreeOfCoupling, 1);
@@ -123,144 +81,19 @@ docT = table;
 docT.occurences = accumarray(curDocCount, 1);
 docT(docT.degreeOfCoupling == 1, :) = [];
 
+fprintf('\nDegree of coupling histogram\n');
 disp(docT)
 
 %% Plot histogram of degree of coupling
 connectEM.Consistency.plotCouplingHistogram( ...
-    info, synT, plotConfigs(1), 'normalization', 'count');
-connectEM.Consistency.plotCouplingHistogram( ...
-    info, synT, plotConfigs(2:3), 'normalization', 'probability');
-
-%% Check if partners of small synapses follow the global size distribution
-clear cur*;
-curQuant = 10;
-curCvLimits = [ ...
-    -inf,  inf; ...
-    -inf, 0.54; ...
-    0.54,  inf];
-
-curPairConfigs = ...
-    connectEM.Consistency.buildPairConfigs(synT, plotConfigs(1));
-
-curPairT = table;
-curPairT.areas = synT.area(curPairConfigs(1).synIdPairs);
-curPairT.cv = std(curPairT.areas, 0, 2) ./ mean(curPairT.areas, 2);
-curPairT.areas = log10(curPairT.areas);
-assert(issorted(curPairT.areas, 2, 'descend'));
-
-curRandT = table;
-curRandT.areas = synT.area(curPairConfigs(end).synIdPairs);
-curRandT.cv = std(curRandT.areas, 0, 2) ./ mean(curRandT.areas, 2);
-curRandT.areas = log10(curRandT.areas);
-assert(issorted(curRandT.areas, 2, 'descend'));
-
-curQuantThresh = prctile(curPairT.areas(:), curQuant);
-curQuantMask = curPairT.areas(:, 2) < curQuantThresh;
-curRandQuantMask = curRandT.areas(:, 2) < curQuantThresh;
-
-for curIdx = 1:size(curCvLimits, 1)
-    curCvLim = curCvLimits(curIdx, :);
-    
-    curCvMask = ...
-        curPairT.cv > curCvLim(1) ...
-      & curPairT.cv < curCvLim(2);
-    curRandCvMask = ...
-        curRandT.cv > curCvLim(1) ...
-      & curRandT.cv < curCvLim(2);
-
-    curFig = figure();
-    curAx = axes(curFig); %#ok
-    hold(curAx, 'on');
-
-    curBinEdges = linspace(-1.5, 0.5, 21);
-    curHist = @(data) histogram( ...
-            curAx, data, ...
-            'BinEdges', curBinEdges, ...
-            'Normalization', 'probability', ...
-            'DisplayStyle', 'stairs', ...
-            'LineWidth', 2);
-
-	curHist(curPairT.areas(:));
-    curHist(curPairT.areas(curCvMask, :));
-    curHist(curRandT.areas(curRandCvMask & curRandQuantMask, 1));
-    curHist(curPairT.areas(curCvMask & curQuantMask, 1));
-
-    curFig.Color = 'white';
-    curAx.TickDir = 'out';
-    
-    curLeg = legend(curAx, { ...
-        'Overall', ...
-        'Overall in CV range', ...
-        'Larger partner of random pair', ...
-        'Larger partner'});
-    set(curLeg, 'Box', 'off');
-
-    xlabel(curAx, 'log_{10}(ASI area [µm²])');
-    ylabel(curAx, 'Probability');
-    
-    title(curAx, ...
-        {info.filename; info.git_repos{1}.hash; ...
-        sprintf('CV range from %g to %g', curCvLim)}, ...
-        'FontWeight', 'normal', 'FontSize', 10);
-end
-
-%% Synapse areas vs. degree of coupling
-clear cur*;
-curPlotCouplings = 1:4;
-curConfigs = arrayfun(@(curConfig) struct( ...
-    'synT', synT, 'plotConfig', curConfig), plotConfigs);
-
-for curConfig = reshape(curConfigs, 1, [])
-    curPlotConfig = curConfig.plotConfig;
-
-    curSynT = curConfig.synT(curPlotConfig.synIds, :);
-   [~, ~, curSynT.pairId] = unique(curSynT(:, ...
-        {'preAggloId', 'postAggloId'}), 'rows');
-
-    curCouplings = accumarray(curSynT.pairId, 1);
-    curSynT.coupling = curCouplings(curSynT.pairId);
-
-    curPlotConfigs = arrayfun( ...
-        @(c) struct( ...
-            'coupling', c, ...
-            'synIds', curPlotConfig.synIds(curSynT.coupling == c), ...
-            'title', sprintf('%d-fold %s', c, curPlotConfig.title)), ...
-        curPlotCouplings);
-    
-    connectEM.Consistency.plotSizeHistogram( ...
-        info, curConfig.synT, curPlotConfigs, ...
-        'scale', 'log', 'title', curPlotConfig.title);
-
-   [curFig, curFit] = ...
-        connectEM.Consistency.plotSizeBoxPlot( ...
-            info, curConfig.synT, curPlotConfigs, ...
-            'title', curPlotConfig.title);
-    curFig.Position(3:4) = [250, 420];
-    
-    curAsiGainVsDoc = 10 ^ curFit.p1;
-    fprintf('Fit results for "%s"\n', curPlotConfig.title);
-    fprintf('* Fold ASI per degree of coupling: %f\n', curAsiGainVsDoc);
-end
-
-%% Illustrate synapse size similarity
-clear cur*;
-curPlotConfig = plotConfigs(1);
-curPairConfigs = ...
-    connectEM.Consistency.buildPairConfigs(synT, curPlotConfig);
-
-for curPairConfig = curPairConfigs(1:(end - 1))
-    curPairConfig(2) = curPairConfigs(end); %#ok
-    curFig = connectEM.Consistency.plotVariabilityPaired( ...
-        info, synT, curPlotConfig, curPairConfig, 'lineCount', 10);
-    curFig.Position(3:4) = [700, 330];
-end
+    info, asiT, plotConfigs(1), 'normalization', 'count');
 
 %% Synapse area variability
 clear cur*;
-curConfigs = struct('synT', synT, 'plotConfigs', plotConfigs);
+curConfigs = struct('synT', asiT, 'plotConfigs', plotConfigs);
 
 for curConfig = curConfigs
-    for curPlotConfig = curConfig.plotConfigs
+    for curPlotConfig = curConfig.plotConfigs(1)
         curPairConfigs = ...
             connectEM.Consistency.buildPairConfigs( ...
                 curConfig.synT, curPlotConfig);
@@ -333,7 +166,7 @@ clear cur*;
 
 for curConfig = plotConfigs
     curPairConfigs = ...
-        connectEM.Consistency.buildPairConfigs(synT, curConfig);
+        connectEM.Consistency.buildPairConfigs(asiT, curConfig);
     curSaSdConfig = curPairConfigs(1);
     curRandConfig = curPairConfigs(end);
     
@@ -343,7 +176,7 @@ for curConfig = plotConfigs
 
     curRandSaSdConfig = ...
         connectEM.Consistency.buildPairConfigs( ...
-            synT, struct('synIds', curSaSdConfig.synIdPairs(:)));
+            asiT, struct('synIds', curSaSdConfig.synIdPairs(:)));
     curRandSaSdConfig = curRandSaSdConfig(end);
     curRandSaSdConfig.title = sprintf( ...
         'Random pairs from above set (n = %d)', ...
@@ -351,12 +184,12 @@ for curConfig = plotConfigs
     
     for curCtrlConfig = [curRandConfig, curRandSaSdConfig]
         curSaSdT = table;
-        curSaSdT.areas = synT.area(curSaSdConfig.synIdPairs);
+        curSaSdT.areas = asiT.area(curSaSdConfig.synIdPairs);
         curSaSdT.cv = std(curSaSdT.areas, 0, 2) ./ mean(curSaSdT.areas, 2);
         curSaSdT.avgLogAreas = mean(log10(curSaSdT.areas), 2);
 
         curCtrlT = table;
-        curCtrlT.areas = synT.area(curCtrlConfig.synIdPairs);
+        curCtrlT.areas = asiT.area(curCtrlConfig.synIdPairs);
         curCtrlT.cv = std(curCtrlT.areas, 0, 2) ./ mean(curCtrlT.areas, 2);
         curCtrlT.avgLogAreas = mean(log10(curCtrlT.areas), 2);
 
@@ -538,101 +371,4 @@ for curConfig = plotConfigs
                 curConfig.title; curCtrlConfig.title}, ...
             'EdgeColor', 'none', 'HorizontalAlignment', 'center');
     end
-end
-
-%% Synapse size variability vs. degrees of coupling
-clear cur*;
-curPlotCouplings = 2:5;
-curConfigs = arrayfun(@(curConfig) ...
-    struct('synT', synT, 'plotConfig', curConfig), plotConfigs);
-
-for curConfig = curConfigs
-    curPlotConfig = curConfig.plotConfig;
-
-    curSynT = curConfig.synT(curPlotConfig.synIds, :);
-    curSynT.synId = curPlotConfig.synIds;
-    
-   [~, ~, curSynT.pairId] = unique(curSynT(:, ...
-        {'preAggloId', 'postAggloId'}), 'rows');
-    curSynT = sortrows(curSynT, 'pairId');
-
-    curCouplings = accumarray(curSynT.pairId, 1);
-    curSynT.coupling = curCouplings(curSynT.pairId);
-    
-    curPairs = arrayfun( ...
-        @(c) struct( ...
-            'synIdPairs', transpose(reshape( ...
-                curSynT.synId(curSynT.coupling == c), c, [])), ...
-            'title', sprintf( ...
-                '%d-fold %s', c, curPlotConfig.title)), ...
-        curPlotCouplings);
-    curCtrlPairs = arrayfun( ...
-        @(c) struct( ...
-            'synIdPairs', reshape(curPlotConfig.synIds(randperm( ...
-                c * floor(numel(curPlotConfig.synIds) / c))), [], c), ...
-            'title', sprintf( ...
-                '%d-fold %s (random)', c, curPlotConfig.title)), ...
-        curPlotCouplings);
-    
-    curPlotPairs = cat(1, curPairs, curCtrlPairs);
-    curPlotConfigs = repelem(curPlotConfig, 1, numel(curPlotCouplings));
-    
-    curFig = ...
-        connectEM.Consistency.plotVariabilityHistogram( ...
-            info, curConfig.synT, curPlotConfigs, curPlotPairs);
-    curFig.Position(3:4) = [1300, 500];
-    
-    fprintf('* Significance tests\n');
-    fprintf('  p-values for unexpected synapse size similarity\n');
-    for curPairConfig = curPlotPairs
-        curPValue = ...
-            connectEM.Consistency.testVariability( ...
-                curConfig.synT, curPairConfig(1), curPairConfig(2));
-        fprintf('→ %s: %g\n', curPairConfig(1).title, curPValue);
-    end
-    
-    fprintf('\n');
-end
-            
-%% Variability of largest two synapses
-curPlotCouplings = 2:5;
-[~, curCouplings, curPlotConfigs] = ...
-    ndgrid(1, curPlotCouplings, plotConfigs);
-
-curPairConfigs = @(conf, coup) ...
-    connectEM.Consistency.buildLargestPairConfigs(synT, conf, coup);
-curPairConfigs = cell2mat(arrayfun( ...
-    @(conf, coup) reshape(curPairConfigs(conf, coup), [], 1), ...
-    curPlotConfigs, curCouplings, 'UniformOutput', false));
-
-curTitles = arrayfun( ...
-    @(coup, conf) sprintf('%d-fold %s', coup, conf.title), ...
-    curCouplings, curPlotConfigs, 'UniformOutput', false);
-[curPlotConfigs.title] = deal(curTitles{:});
-
-connectEM.Consistency.plotVariabilityHistogram( ...
-    info, synT, curPlotConfigs, curPairConfigs);
-
-%% Variability vs. distance
-clear cur*;
-curConfigs = [ ...
-    struct( ...
-        'synT', synT, 'plotConfig', plotConfigs(1), ...
-        'synToSyn', synToSyn, 'maxDistUm', []), ...
-    struct( ...
-        'synT', synT, 'plotConfig', plotConfigs(1), ...
-        'synToSyn', synToSyn, 'maxDistUm', 20)];
-        
-for curConfig = curConfigs
-    curSynT = curConfig.synT;
-    curPlotConfig = curConfig.plotConfig;
-    curSynToSyn = curConfig.synToSyn;
-    
-    curPairConfig = ...
-        connectEM.Consistency.buildPairConfigs(curSynT, curPlotConfig);
-    curPairConfig = curPairConfig(1);
-    
-    connectEM.Consistency.plotVariabilityVsDistance( ...
-        curSynT, curSynToSyn, curPairConfig, ...
-        'maxDistUm', curConfig.maxDistUm);
 end

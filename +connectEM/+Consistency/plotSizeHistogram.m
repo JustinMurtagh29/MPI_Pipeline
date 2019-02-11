@@ -14,7 +14,7 @@ function fig = plotSizeHistogram(info, synT, plotConfigs, varargin)
             defaultBinEdges = linspace(0, 1.2, 61);
         case {'ln', 'loge'}
             synT.area = log(synT.area);
-            defaultBinEdges = linspace(-4, 2, 51);
+            defaultBinEdges = linspace(-4, 1, 51);
             xLabelText = sprintf('log_{e}(%s)', xLabelText);
         case {'log', 'log10'}
             synT.area = log10(synT.area);
@@ -33,7 +33,7 @@ function fig = plotSizeHistogram(info, synT, plotConfigs, varargin)
 
     fig = figure();
     fig.Color = 'white';
-    fig.Position(3:4) = [820, 475];
+    fig.Position(3:4) = [360, 230];
 
     ax = axes(fig);
     hold(ax, 'on');

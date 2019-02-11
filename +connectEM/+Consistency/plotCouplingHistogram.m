@@ -7,7 +7,7 @@ function fig = plotCouplingHistogram(info, synT, plotConfigs, varargin)
     
     fig = figure();
     fig.Color = 'white';
-    fig.Position(3:4) = [495, 400];
+    fig.Position(3:4) = [275, 175];
 
     ax = axes(fig);
     axis(ax, 'square');
