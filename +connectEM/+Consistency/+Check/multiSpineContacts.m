@@ -28,6 +28,9 @@ points = Seg.Global.getSegToPointMap(param);
 [conn, syn, axonClasses] = ...
     connectEM.Connectome.load(param, connFile);
 
+dendrites = load(conn.info.param.dendriteFile);
+dendrites = dendrites.dendrites(conn.denMeta.parentId);
+
 % Loading spine head agglomerates
 shAgglos = load(shFile, 'shAgglos');
 shAgglos = shAgglos.shAgglos;
@@ -103,7 +106,7 @@ axonDendT = axonDendT(cellfun(@numel, axonDendT.shInd) > 1, :);
 %% Export random examples to webKnossos
 % Note that this section is essentialy skipped if `outputDir` is not set
 clear cur*;
-exportRange = 1:100;
+exportRange = [9, 54, 56];
 
 % HACK(amotta): Only run exports if output directory was set
 if isempty(outputDir); exportRange = []; end
@@ -117,8 +120,6 @@ rng(0);
 curAxonDendT = curAxonDendT(randperm(height(curAxonDendT)), :);
 curAxonDendT = curAxonDendT(exportRange, :);
 
-curNumDigits = ceil(log10(1 + numel(exportRange)));
-
 for curIdx = 1:numel(exportRange)
     try
         curAxonId = curAxonDendT.axonId(curIdx);
@@ -128,24 +129,34 @@ for curIdx = 1:numel(exportRange)
         curDend = conn.dendrites{curDendId};
         curShT = shT(curAxonDendT.shInd{curIdx}, :);
 
-        curSkel = skeleton();
+        curSkel = ...
+            Superagglos.buildAggloAndFlightSkels(dendrites(curDendId));
+       [curSkel, curGroupId] = ...
+            curSkel.addGroup(sprintf('Dendrite %d', curDendId));
+
+       [curSkel, curId] = ...
+            curSkel.addGroup('Agglomerates', curGroupId);
+        curSkel = curSkel.addTreesToGroup( ...
+            find(strcmp(curSkel.names, 'Agglomerate')), curId); %#ok
+
+       [curSkel, curId] = ...
+            curSkel.addGroup('Skeletons', curGroupId);
+        curSkel = curSkel.addTreesToGroup( ...
+            find(strcmp(curSkel.names, 'Flight')), curId); %#ok
 
         curSkel = Skeleton.fromMST( ...
             points(curAxonSegIds, :), param.raw.voxelSize, curSkel);
         curSkel.names{end} = sprintf('Axon %d', curAxonId);
-        curSkel.colors{end} = [1, 0, 0, 1];
-
-        curSkel = Skeleton.fromMST( ...
-            points(curDend, :), param.raw.voxelSize, curSkel);
-        curSkel.names{end} = sprintf('Dendrite %d', curDendId);
-        curSkel.colors{end} = [0, 0, 1, 1];
+        curSkel.colors{end} = [1, 1, 0, 1];
 
         curSkel = Skeleton.fromMST( ...
             cellfun(@(ids) {points(ids, :)}, curShT.agglo), ...
             param.raw.voxelSize, curSkel);
-        curSkel.names(3:end) = arrayfun(@(id) sprintf( ...
+
+        curIds = flip(numel(curSkel.names) - (0:(height(curShT) - 1)));
+        curSkel.names(curIds) = arrayfun(@(id) sprintf( ...
             'Spine head %d', id), curShT.id, 'UniformOutput', false);
-        curSkel.colors(3:end) = {[0, 1, 0, 1]};
+        curSkel.colors(curIds) = {[0, 1, 0, 1]};
 
         curSkel = Skeleton.setParams4Pipeline(curSkel, param);
         curSkel = Skeleton.setDescriptionFromRunInfo(curSkel, info);
