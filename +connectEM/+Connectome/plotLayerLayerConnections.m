@@ -132,8 +132,11 @@ curDataT.targetClass = { ...
 curDataT.areas = cellfun( ...
     @(t) l4AsiT.area(l4AsiT.targetClass == t), ...
     curDataT.targetClass, 'UniformOutput', false);
-curDataT.medianArea = cellfun( ...
-    @(a) median(a, 'omitnan'), curDataT.areas);
+curDataT.meanArea = cellfun(@(a) mean(a, 'omitnan'), curDataT.areas);
+curDataT.medianArea = cellfun(@(a) median(a, 'omitnan'), curDataT.areas);
+
+fprintf('Connections originating from L4\n\n');
+disp(curDataT);
     
 curBinEdges = linspace(-4, 0, 9);
 curColors = get(groot, 'defaultAxesColorOrder');
