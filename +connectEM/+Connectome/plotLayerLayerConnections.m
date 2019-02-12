@@ -138,7 +138,7 @@ curDataT.medianArea = cellfun(@(a) median(a, 'omitnan'), curDataT.areas);
 fprintf('Connections originating from L4\n\n');
 disp(curDataT);
     
-curBinEdges = linspace(-4, 0, 9);
+curBinEdges = linspace(-2, 0.5, 11);
 curColors = get(groot, 'defaultAxesColorOrder');
 curColors = num2cell(curColors(1:height(curDataT), :), 2);
 
@@ -147,14 +147,14 @@ curAx = axes(curFig);
 hold(curAx, 'on');
 
 curPlotHist = @(areas) histogram( ...
-    curAx, log(areas), curBinEdges, ...
+    curAx, log10(areas), curBinEdges, ...
 	'DisplayStyle', 'stairs', ...
 	'Normalization', 'probability', ...
     'LineWidth', 2, 'FaceAlpha', 1);
 cellfun(curPlotHist, curDataT.areas);
 
 curPlotMedian = @(median) plot(curAx, ...
-    repelem(log(median), 1, 2), ylim(curAx), ...
+    repelem(log10(median), 1, 2), ylim(curAx), ...
     'LineStyle', '--', 'LineWidth', 2);
 curMedianPlots = arrayfun(curPlotMedian, curDataT.medianArea);
 set(curMedianPlots, {'Color'}, curColors);
@@ -165,7 +165,7 @@ curAx.TickDir = 'out';
 curAx.XLim = curBinEdges([1, end]);
 curAx.XTick = curBinEdges(mod(curBinEdges, 1) == 0);
 
-xlabel(curAx, 'log_{e}(ASI area [µm²])');
+xlabel(curAx, 'log_{10}(ASI area [µm²])');
 ylabel(curAx, 'Probability');
 
 curLeg = legend(curAx, {'L4 → PD'; 'L4 → AD'});
