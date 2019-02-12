@@ -49,21 +49,19 @@ clear cur*;
 fprintf('\nSynapse sizes\n');
 for curConfig = plotConfigs
     curSynT = asiT(curConfig.synIds, :);
-    curLogeAsi = log(curSynT.area);
-    curMeanLogeAsi = mean(curLogeAsi);
-    curStdLogeAsi = std(curLogeAsi);
+    curLog10MeanAsi = log10(mean(curSynT.area));
     
     fprintf( ...
-        '* log_e(%s ASI): %f ± %f (mean ± std)\n', ...
-        curConfig.title, curMeanLogeAsi, curStdLogeAsi)
+        '* log_10(Mean %s ASI [µm²]): %f\n', ...
+        curConfig.title, curLog10MeanAsi)
 end
 
 
 %% Plot distribution of synapse size
 connectEM.Consistency.plotSizeHistogram( ...
-    info, asiT, plotConfigs(1), 'scale', 'loge');
+    info, asiT, plotConfigs(1), 'scale', 'log10');
 connectEM.Consistency.plotSizeHistogram( ...
-    info, asiT, plotConfigs(2:3), 'scale', 'loge');
+    info, asiT, plotConfigs(2:3), 'scale', 'log10');
 
 %% Report number of occurences for degree of coupling
 clear cur*;
@@ -183,30 +181,30 @@ for curConfig = plotConfigs
     for curCtrlConfig = [curRandConfig, curRandSaSdConfig]
         curSaSdT = table;
         curSaSdT.areas = asiT.area(curSaSdConfig.synIdPairs);
-        curSaSdT.logeAvgArea = log(mean(curSaSdT.areas, 2));
+        curSaSdT.log10AvgArea = log10(mean(curSaSdT.areas, 2));
         curSaSdT.cv = std(curSaSdT.areas, 0, 2) ./ mean(curSaSdT.areas, 2);
 
         curCtrlT = table;
         curCtrlT.areas = asiT.area(curCtrlConfig.synIdPairs);
-        curCtrlT.logeAvgArea = log(mean(curCtrlT.areas, 2));
+        curCtrlT.log10AvgArea = log10(mean(curCtrlT.areas, 2));
         curCtrlT.cv = std(curCtrlT.areas, 0, 2) ./ mean(curCtrlT.areas, 2);
 
         % Density difference map
         curLimX = [0, 1.5];
-        curLimY = [-4, 1];
+        curLimY = [-1.5, 0.5];
 
         curTicksX = linspace(curLimX(1), curLimX(2), 4);
-        curTicksY = linspace(curLimY(1), curLimY(2), 6);
+        curTicksY = linspace(curLimY(1), curLimY(2), 5);
         
         %% Scatter plot
         curFig = figure();
         curFig.Position(3:4) = [350, 650];
         
         subplot(2, 1, 1);
-        scatter(curSaSdT.cv, curSaSdT.logeAvgArea, 2, '.');
+        scatter(curSaSdT.cv, curSaSdT.log10AvgArea, 2, '.');
         
         subplot(2, 1, 2);
-        scatter(curCtrlT.cv, curCtrlT.logeAvgArea, 2, '.');
+        scatter(curCtrlT.cv, curCtrlT.log10AvgArea, 2, '.');
         
         set(curFig, 'Color', 'white');
 
@@ -219,7 +217,7 @@ for curConfig = plotConfigs
             'DataAspectRatioMode', 'auto');
 
         arrayfun(@(ax) ylabel(ax, ...
-            'log_{e}(Average ASI area [µm²])'), curFig.Children);
+            'log_{10}(Average ASI area [µm²])'), curFig.Children);
         xlabel(curFig.Children(1), 'Coefficient of variation');
 
         annotation( ...
@@ -239,7 +237,7 @@ for curConfig = plotConfigs
         curImGrid = cat(2, curImGridY(:), curImGridX(:));
 
         curSaSdImg = horzcat( ...
-            curSaSdT.logeAvgArea, curSaSdT.cv);
+            curSaSdT.log10AvgArea, curSaSdT.cv);
         curMask = ...
             curLimY(1) <= curSaSdImg(:, 1) ...
           & curSaSdImg(:, 1) <= curLimY(2) ...
@@ -254,7 +252,7 @@ for curConfig = plotConfigs
         curSaSdImg = reshape(curSaSdImg, curImSize);
 
         curCtrlImg = horzcat( ...
-            curCtrlT.logeAvgArea, curCtrlT.cv);
+            curCtrlT.log10AvgArea, curCtrlT.cv);
         curMask = ...
             curLimY(1) <= curCtrlImg(:, 1) ...
           & curCtrlImg(:, 1) <= curLimY(2) ...
@@ -361,7 +359,7 @@ for curConfig = plotConfigs
             'XTickLabels', curTickLabelsX);
 
         arrayfun(@(ax) ylabel(ax, ...
-            'log_{e}(Average ASI area [µm²])'), curAxes);
+            'log_{10}(Average ASI area [µm²])'), curAxes);
         xlabel(curAxes(end), 'Coefficient of variation');
 
         annotation( ...
