@@ -7,14 +7,14 @@ boxesWk = [ ...
     11599, 7708, 2779, 267, 267, 108];
 sampleRange = [402, 600];
 
-outDir = '/tmpscratch/sahilloo/data/H2_3_v2_U1_SubI/pipelineRun_mr2e_wsmrnet/connectEM';
-
 info = Util.runInfo();
 Util.showRunInfo(info);
 %% Configuration
-rootDir = '/tmpscratch/sahilloo/data/H2_3_v2_U1_SubI/pipelineRun_mr2e_wsmrnet/';
+rootDir = '/tmpscratch/sahilloo/data/H2_3_v2_U1_SubI/pipelineRun_mr2e_wsmrnet_HC/';
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
+
+outDir = fullfile(p.saveFolder,'tracings','connectEM');
 
 segPoints = Seg.Global.getSegToPointMap(param);
 

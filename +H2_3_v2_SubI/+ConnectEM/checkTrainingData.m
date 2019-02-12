@@ -11,7 +11,7 @@ clear;
 % in the pipeline repository up to different `border` values in the
 % `AverageFilter`. But this doesn't affect `fm.invertDirection`.
 addpath('/gaba/u/amotta/code/benedikt', '-end');
-
+%{
 %% Configuration
 config = 'ex144_08x2_mrNet';
 
@@ -19,6 +19,12 @@ nmlDir = Util.getGitReposOnPath();
 nmlDir = fullfile( ...
     nmlDir{1}, 'data', 'tracings', ...
     'ex144-08x2-mrNet', 'connect-em');
+%}
+rootDir = '/tmpscratch/sahilloo/data/H2_3_v2_U1_SubI/pipelineRun_mr2e_wsmrnet_HC/';
+param = load(fullfile(rootDir, 'allParameter.mat'));
+param = param.p;
+
+nmlDir = fullfile( p.saveFolder, 'tracings', 'connectEM','proofread');
 
 folds = 3;
 
@@ -27,11 +33,11 @@ fm = SynEM.getFeatureMap('paper');
 
 info = Util.runInfo();
 Util.showRunInfo(info);
-
+%{
 %% Loading data
 config = loadConfig(config);
 param = config.param;
-
+%}
 %% Load ground truth
 nmlFiles = dir(fullfile(nmlDir, '*.nml'));
 nmlFiles(cat(1, nmlFiles.isdir)) = [];

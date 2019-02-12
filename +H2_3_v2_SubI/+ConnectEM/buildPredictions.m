@@ -11,21 +11,26 @@ clear;
 % in the pipeline repository up to different `border` values in the
 % `AverageFilter`. But this doesn't affect `fm.invertDirection`.
 addpath('/gaba/u/amotta/code/benedikt', '-end');
-
+%{
 %% Configuration
 config = 'ex144_08x2_mrNet';
-classifierFile = '/gaba/u/amotta/l23/2018-10-19-connect-em/classifier.mat';
+%}
+rootDir = '/tmpscratch/sahilloo/data/H2_3_v2_U1_SubI/pipelineRun_mr2e_wsmrnet_HC/';
+param = load(fullfile(rootDir, 'allParameter.mat'));
+param = param.p;
+
+classifierFile = '/gaba/u/sahilloo/H2_3_v2_U1_SubI/connect-em/classifier.mat';
 
 areaT = 10;
 fmap = SynEM.getFeatureMap('paper');
 
 info = Util.runInfo();
 Util.showRunInfo(info);
-
+%{
 %% Loading data
 config = loadConfig(config);
 param = config.param;
-
+%}
 %% Build predictions
 ConnectEM.Pipeline.buildPredictions( ...
     param, classifierFile, 'areaT', areaT, 'fmap', fmap);
