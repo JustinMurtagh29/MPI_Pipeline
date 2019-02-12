@@ -16,44 +16,42 @@ function [agglos, flights] = splitIntoAgglosAndFlights(sagglos)
     for curIdx = 1:numel(sagglos)
         curSagglo = sagglos(curIdx);
         assert(issorted(curSagglo.edges, 2));
+        
+        curSegNodeMask = not(isnan(curSagglo.nodes(:, 4)));
+        
+        % Segment-based parts
+        curNodeIds = find(curSegNodeMask);
+       [~, curEdges] = ismember(curSagglo.edges, curNodeIds);
+        curEdges = curEdges(all(curEdges, 2), :);
+        
+        agglos{curIdx} = doIt(curSagglo, curNodeIds, curEdges);
+        
+        % Flight-based parts
+        curNodeIds = not(all(curSegNodeMask(curSagglo.edges), 2));
+        curNodeIds = unique(curSagglo.edges(curNodeIds, :));
+       [~, curEdges] = ismember(curSagglo.edges, curNodeIds);
+        curEdges = curEdges(all(curEdges, 2), :);
+        
+        flights{curIdx} = doIt(curSagglo, curNodeIds, curEdges);
+    end
+end
 
-        % separate flight paths from agglomerates
-        curIntraEdges = find(isnan(curSagglo.nodes(:, 4)));
-        curIntraEdges = ismember(curSagglo.edges, curIntraEdges);
-        curIntraEdges = curSagglo.edges(sum(curIntraEdges, 2) ~= 1, :);
-
-       [curNodeIds, ~, curIntraEdges] = unique(curIntraEdges);
-        curIntraEdges = reshape(curIntraEdges, [], 2);
-
-        curNodeCount = numel(curNodeIds);
-        curNodes = curSagglo.nodes(curNodeIds, :);
-
-        % find components
-        curAdj = sparse( ...
-            curIntraEdges(:, 2), curIntraEdges(:, 1), ...
-            true, curNodeCount, curNodeCount);
-       [curCompCount, curLUT] = ...
-            graphconncomp(curAdj, 'Directed', false);
-        assert(all(curLUT > 0));
-
-        % extract components
-        for curCompIdx = 1:curCompCount
-            curCompNodeIds = find(curLUT == curCompIdx);
-            curCompNodes = curNodes(curCompNodeIds, :);
-
-            % edges
-           [~, curCompEdges] = ismember(curIntraEdges, curCompNodeIds);
-            curCompEdges(~all(curCompEdges, 2), :) = [];
-            
-            curCompSagglo = struct( ...
-                'nodes', curCompNodes, ...
-                'edges', curCompEdges);
-            
-            if any(isnan(curNodes(curCompNodeIds, 4)))
-                flights{curIdx}(end + 1, 1) = curCompSagglo;
-            else
-                agglos{curIdx}(end + 1, 1) = curCompSagglo;
-            end
-        end
+function skels = doIt(sagglo, nodeIds, relEdges)
+    curGraph = graph(relEdges(:, 1), relEdges(:, 2), [], numel(nodeIds));
+    curComps = curGraph.conncomp('OutputForm', 'cell');
+    
+    skels = struct('nodes', {}, 'edges', {});
+    skels = repelem(skels, numel(nodeIds), 1);
+    
+    for curId = 1:numel(curComps)
+        curRelIds = curComps{curId};
+        
+        curNodes = nodeIds(curRelIds);
+        curNodes = sagglo.nodes(curNodes, :);
+        skels(curId).nodes = curNodes;
+        
+       [~, curEdges] = ismember(relEdges, curRelIds);
+        curEdges = curEdges(all(curEdges, 2), :);
+        skels(curId).edges = curEdges;
     end
 end
