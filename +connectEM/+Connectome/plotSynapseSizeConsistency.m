@@ -11,7 +11,6 @@ cacheDir = '/tmpscratch/amotta/l4/2019-02-13-null-density-maps-for-consistency-a
 modeConfigs = struct(zeros(1, 0));
 runId = '20190213T143952';
 
-
 info = Util.runInfo();
 Util.showRunInfo(info);
 
