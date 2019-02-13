@@ -6,8 +6,11 @@ clear;
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 shFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v3_auto.mat');
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-linearized_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v8-classified.mat');
+cacheDir = '/tmpscratch/amotta/l4/2019-02-13-null-density-maps-for-consistency-analysis';
 
 modeConfigs = struct(zeros(1, 0));
+runId = '20190213T143952';
+
 
 info = Util.runInfo();
 Util.showRunInfo(info);
@@ -216,81 +219,73 @@ end
 %% Correlation of synapse size correlation with synapse size
 clear cur*;
 
-for curConfig = plotConfigs
-    curPairConfigs = ...
-        connectEM.Consistency.buildPairConfigs(asiT, curConfig);
-    curSaSdConfig = curPairConfigs(1);
-    curRandConfig = curPairConfigs(end);
-    
-    curConfig.title = sprintf( ...
-        '%s (n = %d)', curConfig.title, ...
-        size(curSaSdConfig.synIdPairs, 1));
+% Density difference map
+curLimX = [0, 1.5];
+curLimY = [-1.5, 0.5];
+curImSize = [301, 301];
 
-    curRandSaSdConfig = ...
-        connectEM.Consistency.buildPairConfigs( ...
-            asiT, struct('synIds', curSaSdConfig.synIdPairs(:)));
-    curRandSaSdConfig = curRandSaSdConfig(end);
-    curRandSaSdConfig.title = sprintf( ...
-        'Random pairs from above set (n = %d)', ...
-        size(curRandSaSdConfig.synIdPairs, 1));
+curTicksX = linspace(curLimX(1), curLimX(2), 4);
+curTicksY = linspace(curLimY(1), curLimY(2), 5);
+
+for curConfig = plotConfigs(1)
+    curSaSdConfig = ...
+        connectEM.Consistency.buildPairConfigs(asiT, curConfig);
+    curSaSdConfig = curSaSdConfig(1);
     
-    for curCtrlConfig = [curRandConfig, curRandSaSdConfig]
+    curCtrlConfigs = struct('synIds', {}, 'title', {}, 'tag', {});
+    curCtrlConfigs(1).synIds = curConfig.synIds(:);
+    curCtrlConfigs(1).title = 'all';
+    curCtrlConfigs(2).synIds = curSaSdConfig.synIdPairs(:);
+    curCtrlConfigs(2).title = 'SASD';
+    
+    for curCtrlConfig = curCtrlConfigs(2)
+        curCacheFile = sprintf( ...
+            '%s_sasd-vs-rand-pairs-of-%s_%s.mat', ...
+            strrep(lower(curConfig.tag), ' ', '-'), ...
+            strrep(lower(curCtrlConfig.title), ' ', '-'), runId);
+        curCacheFile = fullfile(cacheDir, curCacheFile);
+        
+        if ~exist(curCacheFile, 'file')
+            curKvPairs = { ...
+                'xLim', curLimX, ...
+                'yLim', curLimY, ...
+                'mapSize', curImSize};
+            
+           [curSasdMap, curBw] = ...
+                connectEM.Consistency.densityMap( ...
+                    asiT.area(curSaSdConfig.synIdPairs), curKvPairs{:});
+            curCtrlMaps = ...
+                connectEM.Consistency.nullDensityMaps( ...
+                    asiT.area(curCtrlConfig.synIds), curKvPairs, ...
+                    'scheduler', 'slurm', ...
+                    'bandWidth', curBw, ...
+                    'numMaps', 2000);
+                
+            curOut = struct;
+            curOut.sasdMap = curSasdMap;
+            curOut.ctrlMaps = curCtrlMaps;
+            curOut.bandWidth = curBw;
+            curOut.info = info;
+            
+            Util.saveStruct(curCacheFile, curOut);
+            Util.protect(curCacheFile);
+        else
+            % Load from cache
+            curOut = load(curCacheFile);
+            curSasdMap = curOut.sasdMap;
+            curCtrlMaps = curOut.ctrlMaps;
+        end
+    end
+    
+    %{
+    for
         curSaSdT = table;
         curSaSdT.areas = asiT.area(curSaSdConfig.synIdPairs);
-        curSaSdT.log10AvgArea = log10(mean(curSaSdT.areas, 2));
-        curSaSdT.cv = std(curSaSdT.areas, 0, 2) ./ mean(curSaSdT.areas, 2);
 
         curCtrlT = table;
         curCtrlT.areas = asiT.area(curCtrlConfig.synIdPairs);
-        curCtrlT.log10AvgArea = log10(mean(curCtrlT.areas, 2));
-        curCtrlT.cv = std(curCtrlT.areas, 0, 2) ./ mean(curCtrlT.areas, 2);
-
-        % Density difference map
-        curLimX = [0, 1.5];
-        curLimY = [-1.5, 0.5];
-
-        curTicksX = linspace(curLimX(1), curLimX(2), 4);
-        curTicksY = linspace(curLimY(1), curLimY(2), 5);
-        
-        %% Scatter plot
-        curFig = figure();
-        curFig.Position(3:4) = [350, 650];
-        
-        subplot(2, 1, 1);
-        scatter(curSaSdT.cv, curSaSdT.log10AvgArea, 2, '.');
-        
-        subplot(2, 1, 2);
-        scatter(curCtrlT.cv, curCtrlT.log10AvgArea, 2, '.');
-        
-        set(curFig, 'Color', 'white');
-
-        set(curFig.Children, ...
-            'Box', 'off', ...
-            'XLim', curLimX, ...
-            'YLim', curLimY, ...
-            'TickDir', 'out', ...
-            'PlotBoxAspectRatio', [1, 1, 1], ...
-            'DataAspectRatioMode', 'auto');
-
-        arrayfun(@(ax) ylabel(ax, ...
-            'log_{10}(Average ASI area [µm²])'), curFig.Children);
-        xlabel(curFig.Children(1), 'Coefficient of variation');
-
-        annotation( ...
-            curFig, ...
-            'textbox', [0, 0.9, 1, 0.1], ...
-            'String', { ...
-                info.filename; info.git_repos{1}.hash; ...
-                curConfig.title; curCtrlConfig.title}, ...
-            'EdgeColor', 'none', 'HorizontalAlignment', 'center');
         
         %% Density map
-        curImSize = [301, 301];
-        
-        curKvPairs = { ...
-            'xLim', curLimX, ...
-            'yLim', curLimY, ...
-            'mapSize', curImSize};
         
        [curSaSdImg, curBandWidth] = ...
             connectEM.Consistency.densityMap( ...
@@ -403,4 +398,5 @@ for curConfig = plotConfigs
                 curConfig.title; curCtrlConfig.title}, ...
             'EdgeColor', 'none', 'HorizontalAlignment', 'center');
     end
+    %}
 end
