@@ -9,7 +9,7 @@ connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-linearize
 cacheDir = '/tmpscratch/amotta/l4/2019-02-13-null-density-maps-for-consistency-analysis';
 
 modeConfigs = struct(zeros(1, 0));
-runId = '20190213T143952';
+runId = '20190213T160434';
 
 info = Util.runInfo();
 Util.showRunInfo(info);
@@ -226,7 +226,7 @@ curImSize = [301, 301];
 curTicksX = linspace(curLimX(1), curLimX(2), 4);
 curTicksY = linspace(curLimY(1), curLimY(2), 5);
 
-for curConfig = plotConfigs(1)
+for curConfig = plotConfigs
     curSaSdConfig = ...
         connectEM.Consistency.buildPairConfigs(asiT, curConfig);
     curSaSdConfig = curSaSdConfig(1);
@@ -237,7 +237,7 @@ for curConfig = plotConfigs(1)
     curCtrlConfigs(2).synIds = curSaSdConfig.synIdPairs(:);
     curCtrlConfigs(2).title = 'SASD';
     
-    for curCtrlConfig = curCtrlConfigs(2)
+    for curCtrlConfig = curCtrlConfigs
         curCacheFile = sprintf( ...
             '%s_sasd-vs-rand-pairs-of-%s_%s.mat', ...
             strrep(lower(curConfig.tag), ' ', '-'), ...
@@ -256,9 +256,7 @@ for curConfig = plotConfigs(1)
             curCtrlMaps = ...
                 connectEM.Consistency.nullDensityMaps( ...
                     asiT.area(curCtrlConfig.synIds), curKvPairs{:}, ...
-                    'scheduler', 'slurm', ...
-                    'bandWidth', curBw, ...
-                    'numMaps', 2000);
+                    'bandWidth', curBw, 'numMaps', 5000);
                 
             curOut = struct;
             curOut.sasdMap = curSasdMap;
