@@ -14,7 +14,7 @@ rootDir = '/tmpscratch/sahilloo/data/H2_3_v2_U1_SubI/pipelineRun_mr2e_wsmrnet_HC
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 
-outDir = fullfile(p.saveFolder,'tracings','connectEM');
+outDir = fullfile(param.saveFolder,'tracings','connectEM');
 
 segPoints = Seg.Global.getSegToPointMap(param);
 
