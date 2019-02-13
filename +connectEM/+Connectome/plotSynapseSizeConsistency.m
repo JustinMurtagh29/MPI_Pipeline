@@ -56,6 +56,7 @@ for curConfig = plotConfigs
         curConfig.title, curLog10MeanAsi)
 end
 
+fprintf('\n');
 
 %% Plot distribution of synapse size
 connectEM.Consistency.plotSizeHistogram( ...
