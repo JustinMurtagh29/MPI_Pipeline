@@ -254,6 +254,7 @@ for curConfig = plotConfigs
         curDiffMap = curSaSdMap - curCtrlMap;
         curMaxDiff = max(abs(curDiffMap(:)));
         
+        % NOTE(amotta): Division by two for Bonferroni correction.
         curPvalMap = min( ...
             1 - mean(curCtrlMaps < curSaSdMap, 3), ...
             1 - mean(curCtrlMaps > curSaSdMap, 3)) / 2;
