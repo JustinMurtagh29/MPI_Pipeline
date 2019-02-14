@@ -49,17 +49,22 @@ plotConfigs(4).tag = 'pri sp';
 
 %% Report synapse sizes
 clear cur*;
-fprintf('\nSynapse sizes\n');
+fprintf('Synapse sizes\n');
 for curConfig = plotConfigs
     curSynT = asiT(curConfig.synIds, :);
+    
     curLog10MeanAsi = log10(mean(curSynT.area));
+    curMeanLog10Asi = mean(log10(curSynT.area));
+    curStdLog10Asi = std(log10(curSynT.area));
     
     fprintf( ...
-        '* log_10(Mean %s ASI [µm²]): %f\n', ...
-        curConfig.title, curLog10MeanAsi)
+        '* log10(Mean %s ASI [µm²]): %f\n', ...
+        curConfig.title, curLog10MeanAsi);
+    fprintf( ...
+        '* log10(%s ASI [µm²]): %f ± %f (mean ± std.)\n', ...
+        curConfig.title, curMeanLog10Asi, curStdLog10Asi);
+    fprintf('\n');
 end
-
-fprintf('\n');
 
 %% Plot distribution of synapse size
 connectEM.Consistency.plotSizeHistogram( ...
