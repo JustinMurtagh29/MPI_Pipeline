@@ -6,10 +6,6 @@ clear;
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 shFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v3_auto.mat');
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-linearized_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v8-classified.mat');
-cacheDir = '/tmpscratch/amotta/l4/2019-02-13-null-density-maps-for-consistency-analysis';
-
-modeConfigs = struct(zeros(1, 0));
-runId = '20190213T160434';
 
 info = Util.runInfo();
 Util.showRunInfo(info);
@@ -221,7 +217,8 @@ clear cur*;
 % Density difference map
 curLimX = [0, 1.5];
 curLimY = [-1.5, 0.5];
-curImSize = [301, 301];
+curImSize = [256, 256];
+curMethod = 'kde2d';
 
 curTicksX = linspace(curLimX(1), curLimX(2), 4);
 curTicksY = linspace(curLimY(1), curLimY(2), 5);
@@ -238,51 +235,51 @@ for curConfig = plotConfigs
     curCtrlConfigs(2).title = 'SASD';
     
     for curCtrlConfig = curCtrlConfigs
-        curCacheFile = sprintf( ...
-            '%s_sasd-vs-rand-pairs-of-%s_%s.mat', ...
-            strrep(lower(curConfig.tag), ' ', '-'), ...
-            strrep(lower(curCtrlConfig.title), ' ', '-'), runId);
-        curCacheFile = fullfile(cacheDir, curCacheFile);
+        curKvPairs = { ...
+            'xLim', curLimX, 'yLim', curLimY, ...
+            'mapSize', curImSize, 'method', curMethod};
         
-        if ~exist(curCacheFile, 'file')
-            curKvPairs = { ...
-                'xLim', curLimX, ...
-                'yLim', curLimY, ...
-                'mapSize', curImSize};
-            
-           [curSasdMap, curBw] = ...
-                connectEM.Consistency.densityMap( ...
-                    asiT.area(curSaSdConfig.synIdPairs), curKvPairs{:});
-            curCtrlMaps = ...
-                connectEM.Consistency.nullDensityMaps( ...
-                    asiT.area(curCtrlConfig.synIds), curKvPairs{:}, ...
-                    'bandWidth', curBw, 'numMaps', 5000);
-                
-            curOut = struct;
-            curOut.sasdMap = curSasdMap;
-            curOut.ctrlMaps = curCtrlMaps;
-            curOut.bandWidth = curBw;
-            curOut.info = info;
-            
-            Util.saveStruct(curCacheFile, curOut);
-            Util.protect(curCacheFile);
-        else
-            % Load from cache
-            curOut = load(curCacheFile);
-            curSasdMap = curOut.sasdMap;
-            curCtrlMaps = curOut.ctrlMaps;
-        end
-    
+       [curSaSdMap, curBw] = ...
+            connectEM.Consistency.densityMap( ...
+            asiT.area(curSaSdConfig.synIdPairs), curKvPairs{:});
+        curCtrlMaps = ...
+            connectEM.Consistency.nullDensityMaps( ...
+            asiT.area(curCtrlConfig.synIds), curKvPairs{:}, ...
+            'bandWidth', curBw, 'numMaps', 5000);
+        
+        %% Prepare for figure
         curCtrlMap = mean(curCtrlMaps, 3);
+        
+        curMax = max(max(curSaSdMap(:)), max(curCtrlMap(:)));
+        curDiffMap = curSaSdMap - curCtrlMap;
+        curMaxDiff = max(abs(curDiffMap(:)));
+        
         curPvalMap = min( ...
-            1 - mean(curCtrlMaps < curSasdMap, 3), ...
-            1 - mean(curCtrlMaps > curSasdMap, 3));
+            1 - mean(curCtrlMaps < curSaSdMap, 3), ...
+            1 - mean(curCtrlMaps > curSaSdMap, 3)) / 2;
+        curPvalMap = -log10(curPvalMap);
         
-        %% Generate plot
-        curMax = max(max(curSasdMap(:)), max(curCtrlMap(:)));
-        curDiffImg = curSasdMap - curCtrlMap;
-        curMaxDiff = max(abs(curDiffImg(:)));
+        % NOTE(amotta): Detect statistically significant regions. Drop tiny
+        % regions (with less than 100 pixels), which are most likely caused
+        % by outliers.
+        curRegionMask = curPvalMap > 2.5;
+        curRegionMask = bwlabel(curRegionMask);
         
+        curRegionProps = regionprops( ...
+            curRegionMask, {'Area', 'Centroid'}); %#ok
+        curKeepRegionIds = find([curRegionProps.Area] >= 100);
+        
+        curRegionProps = curRegionProps(curKeepRegionIds);
+       [~, curRegionMask] = ismember(curRegionMask, curKeepRegionIds);
+        
+        curConfigTitle = sprintf( ...
+            '%s (n = %d pairs)', curConfig.title, ...
+            size(curSaSdConfig.synIdPairs, 1));
+        curCtrlTitle = sprintf( ...
+            'vs. random pairs of %s (n = %d)', ...
+            curCtrlConfig.title, floor(numel(curCtrlConfig.synIds) / 2));
+        
+        %% Figure
         curFig = figure();
         curFig.Color = 'white';
         curFig.Position(3:4) = [1060, 970];
@@ -290,7 +287,7 @@ for curConfig = plotConfigs
         curAx = subplot(2, 2, 1);
         image(curAx, ...
             uint8(double(intmax('uint8')) ...
-          * curSasdMap / curMax));
+          * curSaSdMap / curMax));
         colormap(curAx, jet(256));
 
         curBar = colorbar('peer', curAx);
@@ -308,8 +305,8 @@ for curConfig = plotConfigs
         curBar.TickLabels = {'0', sprintf('%.3g', curMax)};
         
         curAx = subplot(2, 2, 3);
-        imagesc(curAx, -log10(curPvalMap));
-        colormap(curAx, jet(256));
+        imagesc(curAx, curPvalMap);
+        colormap(curAx, 'jet');
         
         curBar = colorbar('peer', curAx);
         curBar.Ticks = curBar.Limits;
@@ -318,13 +315,21 @@ for curConfig = plotConfigs
             curBar.Limits, 'UniformOutput', false);
         curBar.Label.String = '-log_{10}(p-value)';
         
+        for curRegionId = 1:numel(curRegionProps)
+            curPos = curRegionProps(curRegionId).Centroid;
+            
+            text(curAx, ...
+                curPos(1), curPos(2), num2str(curRegionId), ...
+                'Color', 'white', 'FontWeight', 'bold');
+        end
+        
         curAx = subplot(2, 2, 4);
         hold(curAx, 'on');
         
         image(curAx, ...
             uint8(double(intmax('uint8')) ...
-          * (1 + curDiffImg / curMaxDiff) / 2));
-        contour(curAx, curPvalMap < 1E-3, 'LineColor', 'black');
+          * (1 + curDiffMap / curMaxDiff) / 2));
+        contour(curAx, curRegionMask, 'LineColor', 'black');
         colormap(curAx, jet(256));
         
         curBar = colorbar('peer', curAx);
@@ -342,17 +347,18 @@ for curConfig = plotConfigs
             'TickDirection', 'out', ...
             'Box', 'off');
 
-       [~, curTickIdsX] = ismember(curTicksX, ...
-           linspace(curLimX(1), curLimX(2), curImSize(2)));
-        curTickLabelsX = arrayfun( ...
-            @num2str, curTicksX, 'UniformOutput', false);
-       [~, curTickIdsY] = ismember(curTicksY, ...
-           linspace(curLimY(1), curLimY(2), curImSize(1)));
-        curTickLabelsY = arrayfun( ...
-            @num2str, curTicksY, 'UniformOutput', false);
-
         curAxes = reshape(flip(findobj(curFig, 'Type', 'Axes')), 1, []);
         arrayfun(@(ax) hold(ax, 'on'), curAxes);
+
+        curTickIdsX = 1 + floor((curImSize(2) - 1) * ...
+            (curTicksX - curLimX(1)) / (curLimX(2) - curLimX(1)));
+        curTickLabelsX = arrayfun( ...
+            @num2str, curTicksX, 'UniformOutput', false);
+        
+        curTickIdsY = 1 + floor((curImSize(1) - 1) * ...
+            (curTicksY - curLimY(1)) / (curLimY(2) - curLimY(1)));
+        curTickLabelsY = arrayfun( ...
+            @num2str, curTicksY, 'UniformOutput', false);
 
         set(curAxes, ...
             'Box', 'off', ...
@@ -360,8 +366,10 @@ for curConfig = plotConfigs
             'YDir', 'normal', ...
             'YTick', curTickIdsY, ...
             'YTickLabels', curTickLabelsY, ...
+            'YLim', [1, curImSize(2)], ...
             'XTick', curTickIdsX, ...
             'XTickLabels', curTickLabelsX, ...
+            'XLim', [1, curImSize(1)], ...
             'PlotBoxAspectRatio', [1, 1, 1], ...
             'DataAspectRatioMode', 'auto');
 
@@ -369,13 +377,6 @@ for curConfig = plotConfigs
             'log_{10}(Average ASI area [µm²])'), curAxes);
         arrayfun(@(ax) xlabel(ax, ...
             'Coefficient of variation'), curAxes);
-        
-        curConfigTitle = sprintf( ...
-            '%s (n = %d pairs)', curConfig.title, ...
-            size(curSaSdConfig.synIdPairs, 1));
-        curCtrlTitle = sprintf( ...
-            'vs. random pairs of %s (n = %d)', ...
-            curCtrlConfig.title, floor(numel(curCtrlConfig.synIds) / 2));
 
         annotation( ...
             curFig, ...
@@ -384,5 +385,26 @@ for curConfig = plotConfigs
                 info.filename; info.git_repos{1}.hash; ...
                 curConfigTitle; curCtrlTitle}, ...
             'EdgeColor', 'none', 'HorizontalAlignment', 'center');
+        
+        %% Evaluation
+        fprintf('Evaluation of\n');
+        fprintf('%s\n', curConfigTitle);
+        fprintf('%s\n', curCtrlTitle);
+        fprintf('\n');
+        
+        for curRegionId = 1:numel(curRegionProps)
+            curMask = curRegionMask == curRegionId;
+            curSaSdFrac = sum(curSaSdMap(curMask));
+            curCtrlFrac = sum(curCtrlMap(curMask));
+            curDiffFrac = sum(curDiffMap(curMask));
+            
+            fprintf('  Region %d\n', curRegionId);
+            fprintf([ ...
+                '    * Fraction of SASD connections: %.2f %%\n', ...
+                '    * Fraction of ctrl. connections: %.2f %%\n', ...
+                '    * Delta: %.2f %%\n'], ...
+                100 * [curSaSdFrac, curCtrlFrac, curDiffFrac]);
+            fprintf('\n');
+        end
     end
 end
