@@ -1,4 +1,4 @@
-function [bandwidth,density,X,Y]=kde2d(data,n,MIN_XY,MAX_XY)
+function [bandwidth,density]=kde2d(data,n,MIN_XY,MAX_XY,bandwidth)
 % fast and accurate state-of-the-art
 % bivariate kernel density estimator
 % with diagonal bandwidth matrix.
@@ -26,52 +26,21 @@ function [bandwidth,density,X,Y]=kde2d(data,n,MIN_XY,MAX_XY)
 %                     bandwidth=[bandwidth_X, bandwidth_Y];
 %          density  - an n by n matrix containing the density values over the n by n grid;
 %                     density is not computed unless the function is asked for such an output;
-%              X,Y  - the meshgrid over which the variable "density" has been computed;
-%                     the intended usage is as follows:
-%                     surf(X,Y,density)
-% Example (simple Gaussian mixture)
-% clear all
-%   % generate a Gaussian mixture with distant modes
-%   data=[randn(500,2);
-%       randn(500,1)+3.5, randn(500,1);];
-%   % call the routine
-%     [bandwidth,density,X,Y]=kde2d(data);
-%   % plot the data and the density estimate
-%     contour3(X,Y,density,50), hold on
-%     plot(data(:,1),data(:,2),'r.','MarkerSize',5)
-%
-% Example (Gaussian mixture with distant modes):
-%
-% clear all
-%  % generate a Gaussian mixture with distant modes
-%  data=[randn(100,1), randn(100,1)/4;
-%      randn(100,1)+18, randn(100,1);
-%      randn(100,1)+15, randn(100,1)/2-18;];
-%  % call the routine
-%    [bandwidth,density,X,Y]=kde2d(data);
-%  % plot the data and the density estimate
-%  surf(X,Y,density,'LineStyle','none'), view([0,60])
-%  colormap hot, hold on, alpha(.8)
-%  set(gca, 'color', 'blue');
-%  plot(data(:,1),data(:,2),'w.','MarkerSize',5)
-%
-% Example (Sinusoidal density):
-%
-% clear all
-%   X=rand(1000,1); Y=sin(X*10*pi)+randn(size(X))/3; data=[X,Y];
-%  % apply routine
-%  [bandwidth,density,X,Y]=kde2d(data);
-%  % plot the data and the density estimate
-%  surf(X,Y,density,'LineStyle','none'), view([0,70])
-%  colormap hot, hold on, alpha(.8)
-%  set(gca, 'color', 'blue');
-%  plot(data(:,1),data(:,2),'w.','MarkerSize',5)
 %
 %  Reference:
 % Kernel density estimation via diffusion
 % Z. I. Botev, J. F. Grotowski, and D. P. Kroese (2010)
 % Annals of Statistics, Volume 38, Number 5, pages 2916-2957.
-global N A2 I
+%
+% Changelog
+%   2019-02-14
+%   * Removal X and Y output arguments
+%   * Addition of optional bandwidth input argument. If set, its value is
+%     used instead of computing the optimal squared bandwidth.
+%
+% Authored by Zdravko Botev
+% Modified by Alessandro Motta <alessandro.motta@brain.mpg.de>
+global N A2 I;
 if nargin<2
     n=2^8;
 end
@@ -90,20 +59,28 @@ transformed_data=(data-repmat(MIN_XY,N,1))./repmat(scaling,N,1);
 initial_data=ndhist(transformed_data,n);
 % discrete cosine transform of initial data
 a= dct2d(initial_data);
-% now compute the optimal bandwidth^2
-  I=(0:n-1).^2; A2=a.^2;
- t_star=root(@(t)(t-evolve(t)),N);
-p_02=func([0,2],t_star);p_20=func([2,0],t_star); p_11=func([1,1],t_star);
-t_y=(p_02^(3/4)/(4*pi*N*p_20^(3/4)*(p_11+sqrt(p_20*p_02))))^(1/3);
-t_x=(p_20^(3/4)/(4*pi*N*p_02^(3/4)*(p_11+sqrt(p_20*p_02))))^(1/3);
-% smooth the discrete cosine transform of initial data using t_star
-a_t=exp(-(0:n-1)'.^2*pi^2*t_x/2)*exp(-(0:n-1).^2*pi^2*t_y/2).*a; 
+
+if ~exist('bandwidth', 'var') || isempty(bandwidth)
+    % now compute the optimal bandwidth^2
+    I=(0:n-1).^2; A2=a.^2;
+    t_star=root(@(t)(t-evolve(t)),N);
+    p_02=func([0,2],t_star);p_20=func([2,0],t_star); p_11=func([1,1],t_star);
+
+    t_y=(p_02^(3/4)/(4*pi*N*p_20^(3/4)*(p_11+sqrt(p_20*p_02))))^(1/3);
+    t_x=(p_20^(3/4)/(4*pi*N*p_02^(3/4)*(p_11+sqrt(p_20*p_02))))^(1/3);
+else
+    t_x=(bandwidth(1)/scaling(1))^2;
+    t_y=(bandwidth(2)/scaling(2))^2;
+end
+
 % now apply the inverse discrete cosine transform
 if nargout>1
+    % smooth the discrete cosine transform of initial data using t_star
+    a_t=exp(-(0:n-1)'.^2*pi^2*t_x/2)*exp(-(0:n-1).^2*pi^2*t_y/2).*a;
     density=idct2d(a_t)*(numel(a_t)/prod(scaling));
 	density(density<0)=eps; % remove any negative density values
-    [X,Y]=meshgrid(MIN_XY(1):scaling(1)/(n-1):MAX_XY(1),MIN_XY(2):scaling(2)/(n-1):MAX_XY(2));
 end
+
 bandwidth=sqrt([t_x,t_y]).*scaling; 
 end
 %#######################################
@@ -147,7 +124,7 @@ if nrows~=ncols
     error('data is not a square array!')
 end
 % Compute weights to multiply DFT coefficients
-w = [1;2*(exp(-i*(1:nrows-1)*pi/(2*nrows))).'];
+w = [1;2*(exp(-i*(1:nrows-1)*pi/(2*nrows))).']; %#ok
 weight=w(:,ones(1,ncols));
 data=dct1d(dct1d(data)')';
     function transform1d=dct1d(x)
@@ -164,7 +141,7 @@ function data = idct2d(data)
 % computes the 2 dimensional inverse discrete cosine transform
 [nrows,ncols]=size(data);
 % Compute wieghts
-w = exp(i*(0:nrows-1)*pi/(2*nrows)).';
+w = exp(i*(0:nrows-1)*pi/(2*nrows)).'; %#ok
 weights=w(:,ones(1,ncols));
 data=idct1d(idct1d(data)');
     function out=idct1d(x)
@@ -185,7 +162,7 @@ function binned_data=ndhist(data,M)
 [nrows,ncols]=size(data);
 bins=zeros(nrows,ncols);
 for i=1:ncols
-    [dum,bins(:,i)] = histc(data(:,i),[0:1/M:1],1);
+    [~,bins(:,i)] = histc(data(:,i),[0:1/M:1],1); %#ok
     bins(:,i) = min(bins(:,i),M);
 end
 % Combine the  vectors of 1D bin counts into a grid of nD bin
@@ -210,22 +187,3 @@ while flag==0
     end
 end
 end
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
