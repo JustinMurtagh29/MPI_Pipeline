@@ -45,6 +45,9 @@ function fig = plotCouplingHistogram(info, synT, plotConfigs, varargin)
             ylabel(ax, 'Probability');
     end
     
+    curYTicks = log10(ax.YLim);
+    curYTicks = [floor(curYTicks(1)), ceil(curYTicks(end))];
+    yticks(ax, 10 .^ (curYTicks(1):curYTicks(end)));
     yticklabels(ax, arrayfun( ...
         @num2str, yticks(ax), 'UniformOutput', false));
     
