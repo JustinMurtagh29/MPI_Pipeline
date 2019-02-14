@@ -42,6 +42,11 @@ plotConfigs(3).synIds = find( ...
 plotConfigs(3).title = 'corticocortical primary spine synapses';
 plotConfigs(3).tag = 'cc pri sp';
 
+plotConfigs(4).synIds = find( ...
+    asiT.type == 'PrimarySpine');
+plotConfigs(4).title = 'primary spine synapses';
+plotConfigs(4).tag = 'pri sp';
+
 %% Report synapse sizes
 clear cur*;
 fprintf('\nSynapse sizes\n');
