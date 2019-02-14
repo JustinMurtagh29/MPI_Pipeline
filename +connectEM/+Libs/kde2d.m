@@ -37,10 +37,11 @@ function [bandwidth,density]=kde2d(data,n,MIN_XY,MAX_XY,bandwidth)
 %   * Removal X and Y output arguments
 %   * Addition of optional bandwidth input argument. If set, its value is
 %     used instead of computing the optimal squared bandwidth.
+%   * Removal of N, I, and A2 from global workspace. Pass these values as
+%     function input arguments instead.
 %
 % Authored by Zdravko Botev
 % Modified by Alessandro Motta <alessandro.motta@brain.mpg.de>
-global N A2 I;
 if nargin<2
     n=2^8;
 end
@@ -63,8 +64,10 @@ a= dct2d(initial_data);
 if ~exist('bandwidth', 'var') || isempty(bandwidth)
     % now compute the optimal bandwidth^2
     I=(0:n-1).^2; A2=a.^2;
-    t_star=root(@(t)(t-evolve(t)),N);
-    p_02=func([0,2],t_star);p_20=func([2,0],t_star); p_11=func([1,1],t_star);
+    t_star=root(@(t)(t-evolve(N,I,A2,t)),N);
+    p_02=func(N,I,A2,[0,2],t_star);
+    p_20=func(N,I,A2,[2,0],t_star);
+    p_11=func(N,I,A2,[1,1],t_star);
 
     t_y=(p_02^(3/4)/(4*pi*N*p_20^(3/4)*(p_11+sqrt(p_20*p_02))))^(1/3);
     t_x=(p_20^(3/4)/(4*pi*N*p_02^(3/4)*(p_11+sqrt(p_20*p_02))))^(1/3);
@@ -84,27 +87,24 @@ end
 bandwidth=sqrt([t_x,t_y]).*scaling; 
 end
 %#######################################
-function  [out,time]=evolve(t)
-global N
-Sum_func = func([0,2],t) + func([2,0],t) + 2*func([1,1],t);
+function  [out,time]=evolve(N,I,A2,t)
+Sum_func = func(N,I,A2,[0,2],t) + func(N,I,A2,[2,0],t) + 2*func(N,I,A2,[1,1],t);
 time=(2*pi*N*Sum_func)^(-1/3);
 out=(t-time)/time;
 end
 %#######################################
-function out=func(s,t)
-global N
+function out=func(N,I,A2,s,t)
 if sum(s)<=4
-    Sum_func=func([s(1)+1,s(2)],t)+func([s(1),s(2)+1],t); const=(1+1/2^(sum(s)+1))/3;
+    Sum_func=func(N,I,A2,[s(1)+1,s(2)],t)+func(N,I,A2,[s(1),s(2)+1],t); const=(1+1/2^(sum(s)+1))/3;
     time=(-2*const*K(s(1))*K(s(2))/N/Sum_func)^(1/(2+sum(s)));
-    out=psi(s,time);
+    out=psi(I,A2,s,time);
 else
-    out=psi(s,t);
+    out=psi(I,A2,s,t);
 end
 
 end
 %#######################################
-function out=psi(s,Time)
-global I A2
+function out=psi(I,A2,s,Time)
 % s is a vector
 w=exp(-I*pi^2*Time).*[1,.5*ones(1,length(I)-1)];
 wx=w.*(I.^s(1));
