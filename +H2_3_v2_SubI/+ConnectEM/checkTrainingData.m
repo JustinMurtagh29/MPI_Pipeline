@@ -10,7 +10,7 @@ clear;
 % feature map de-novo. The `paper` version is identical to the one stored
 % in the pipeline repository up to different `border` values in the
 % `AverageFilter`. But this doesn't affect `fm.invertDirection`.
-addpath('/gaba/u/sahilloo/repos/benedikt', '-end');
+%addpath('/gaba/u/sahilloo/repos/benedikt', '-end');
 addpath(genpath('/gaba/u/sahilloo/repos/amotta/matlab/'))
 %{
 %% Configuration
@@ -62,7 +62,9 @@ gt(~gt.label, :) = [];
 assert(isequal(rawBorderIds, classBorderIds));
 
 [~, curRowIds] = ismember(rawBorderIds, gt.borderId);
-gt = gt(curRowIds, :);
+if ~isempty(curRowIds)
+    gt = gt(curRowIds, :);
+end
 
 %% Run cross-validation
 clear cur*;
