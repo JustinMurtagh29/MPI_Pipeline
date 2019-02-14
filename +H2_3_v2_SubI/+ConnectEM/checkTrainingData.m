@@ -25,7 +25,7 @@ rootDir = '/tmpscratch/sahilloo/data/H2_3_v2_U1_SubI/pipelineRun_mr2e_wsmrnet_HC
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 
-nmlDir = fullfile( p.saveFolder, 'tracings', 'connectEM','proofread');
+nmlDir = fullfile( param.saveFolder, 'tracings', 'connectEM','proofread');
 
 folds = 3;
 
