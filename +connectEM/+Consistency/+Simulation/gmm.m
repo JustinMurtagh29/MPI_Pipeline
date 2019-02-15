@@ -10,6 +10,7 @@ learnedFracs = [0.086, 0.379, 0.5];
 mix = struct('mean', {}, 'std', {}, 'coeff', {});
 mixNames = {};
 
+%{
 % L4 → proximal dendrite synapses
 % connectEM.Connectome.plotLayerLayerConnections 67e320ec88ac4369e8205118be2544f6dbc8de70
 mix(1).mean = -0.70476; mix(1).std = 0.30209; mix(1).coeff = 1;
@@ -24,11 +25,20 @@ mixNames{2} = 'L4 → apical dendrites synapses';
 % connectEM.Connectome.plotSynapseSizeConsistency 9476c84415afa274ce8e80df679014bb37172a72
 mix(3).mean = -0.707029; mix(3).std = 0.298972; mix(3).coeff = 1;
 mixNames{3} = 'Corticocortical primary spine synapses';
+%}
+
+mix(1).mean = -0.484; mix(1).std = 0.215; mix(1).coeff = 0.475 / 0.525;
+mixNames{1} = 'Blue';
+
+mix(2).mean = -0.909; mix(2).std = 0.207; mix(2).coeff = 0.525 / 0.525;
+mixNames{2} = 'Red';
 
 % NOTE(amotta): Mixing coefficient of the L4 connections
 mixGrid = mix;
+%{
 mixGrid(1).coeff = 10 .^ linspace(-3, 0, 61);
 mixGrid(2).coeff = 10 .^ linspace(-3, 0, 61);
+%}
 
 % Sanity check
 assert(isequal(numel(mix), numel(mixNames)));
@@ -54,7 +64,7 @@ grid = reshape(grid, [], numel(curGridVars));
 clear cur*;
 rng(0);
 
-plotIds = [];
+plotIds = 1;
 
 fracs = nan(size(grid, 1), 3);
 pVals = nan(size(grid, 1), 1);
