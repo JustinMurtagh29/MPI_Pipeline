@@ -36,7 +36,7 @@ shAgglos = shAgglos.shAgglos;
 
 % Loading augmented graph
 graph = Graph.load(rootDir);
-graph(~graph.borderIdx, :) = [];
+graph = graph(graph.borderIdx ~= 0, :);
 
 borderAreas = fullfile(rootDir, 'globalBorder.mat');
 borderAreas = load(borderAreas, 'borderArea2');
@@ -116,6 +116,79 @@ connectEM.Consistency.plotCouplingHistogram( ...
     info, synT, plotConfigs(1), 'normalization', 'count');
 connectEM.Consistency.plotCouplingHistogram( ...
     info, synT, plotConfigs(2:3), 'normalization', 'probability');
+
+%% Check if partners of small synapses follow the global size distribution
+clear cur*;
+curQuant = 10;
+curCvLimits = [ ...
+    -inf,  inf; ...
+    -inf, 0.54; ...
+    0.54,  inf];
+
+curPairConfigs = ...
+    connectEM.Consistency.buildPairConfigs(synT, plotConfigs(1));
+
+curPairT = table;
+curPairT.areas = synT.area(curPairConfigs(1).synIdPairs);
+curPairT.cv = std(curPairT.areas, 0, 2) ./ mean(curPairT.areas, 2);
+curPairT.areas = log10(curPairT.areas);
+assert(issorted(curPairT.areas, 2, 'descend'));
+
+curRandT = table;
+curRandT.areas = synT.area(curPairConfigs(end).synIdPairs);
+curRandT.cv = std(curRandT.areas, 0, 2) ./ mean(curRandT.areas, 2);
+curRandT.areas = log10(curRandT.areas);
+assert(issorted(curRandT.areas, 2, 'descend'));
+
+curQuantThresh = prctile(curPairT.areas(:), curQuant);
+curQuantMask = curPairT.areas(:, 2) < curQuantThresh;
+curRandQuantMask = curRandT.areas(:, 2) < curQuantThresh;
+
+for curIdx = 1:size(curCvLimits, 1)
+    curCvLim = curCvLimits(curIdx, :);
+    
+    curCvMask = ...
+        curPairT.cv > curCvLim(1) ...
+      & curPairT.cv < curCvLim(2);
+    curRandCvMask = ...
+        curRandT.cv > curCvLim(1) ...
+      & curRandT.cv < curCvLim(2);
+
+    curFig = figure();
+    curAx = axes(curFig); %#ok
+    hold(curAx, 'on');
+
+    curBinEdges = linspace(-1.5, 0.5, 21);
+    curHist = @(data) histogram( ...
+            curAx, data, ...
+            'BinEdges', curBinEdges, ...
+            'Normalization', 'probability', ...
+            'DisplayStyle', 'stairs', ...
+            'LineWidth', 2);
+
+	curHist(curPairT.areas(:));
+    curHist(curPairT.areas(curCvMask, :));
+    curHist(curRandT.areas(curRandCvMask & curRandQuantMask, 1));
+    curHist(curPairT.areas(curCvMask & curQuantMask, 1));
+
+    curFig.Color = 'white';
+    curAx.TickDir = 'out';
+    
+    curLeg = legend(curAx, { ...
+        'Overall', ...
+        'Overall in CV range', ...
+        'Larger partner of random pair', ...
+        'Larger partner'});
+    set(curLeg, 'Box', 'off');
+
+    xlabel(curAx, 'log_{10}(ASI area [µm²])');
+    ylabel(curAx, 'Probability');
+    
+    title(curAx, ...
+        {info.filename; info.git_repos{1}.hash; ...
+        sprintf('CV range from %g to %g', curCvLim)}, ...
+        'FontWeight', 'normal', 'FontSize', 10);
+end
 
 %% Synapse areas vs. degree of coupling
 clear cur*;

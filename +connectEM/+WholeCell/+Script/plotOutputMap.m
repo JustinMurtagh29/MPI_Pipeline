@@ -14,16 +14,6 @@ outputDir = '';
 info = Util.runInfo();
 Util.showRunInfo(info);
 
-%% Utility functions
-plotHist = @(ax, edges, counts, varargin) ...
-    histogram(ax, ...
-        'BinEdges', edges, ...
-        'BinCounts', counts, ...
-        'DisplayStyle', 'stairs', ...
-        'LineWidth', 2, ...
-        'FaceAlpha', 1, ...
-        varargin{:});
-
 %% Loading data
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
@@ -33,10 +23,32 @@ connFile = outputMap.info.param.connFile;
 axonData = outputMap.axonData;
 
 [conn, syn] = connectEM.Connectome.load(param, connFile);
+conn = connectEM.Connectome.prepareForSpecificityAnalysis(conn);
+synT = connectEM.Connectome.buildSynapseTable(conn, syn);
 
-%% Add NML file ID (as proxy of cell ID) to synapse tables
+%% Ad-hoc patching axon-specific data
+% * Add NML file ID (as proxy of cell ID) to synapse tables
+% * Add target class (we will later use the WholeCell and ApicalDendrite
+%   categories as proxies to find likely synapses onto L4 vs. L5 cells).
+curDendClasses = [ ...
+    categorical({'OtherDendrite'}); ...
+    conn.denMeta.targetClass];
+
 for curId = 1:numel(axonData)
     axonData(curId).synapses.nmlId(:) = curId;
+    
+    curTargetClass = axonData(curId).synapses.id;
+   [~, curTargetClass] = ismember(curTargetClass, synT.id);
+    
+    % NOTE(amotta): Synapses were picked up regardless of the postsynaptic
+    % process. A subset of these synapses are onto targets that are missing
+    % from the connectome. This subset is not in the synapse table.
+    %   For now, these synapses are treated as being onto OtherDendrite.
+    curTargetClass(curTargetClass > 0) = ...
+        synT.postAggloId(curTargetClass(curTargetClass > 0));
+    curTargetClass = curDendClasses(1 + curTargetClass);
+    
+    axonData(curId).synapses.targetClass = curTargetClass;
 end
 
 %% Ignore interneuron axons for PLASS analysis
@@ -44,6 +56,7 @@ end
 % (whole cells 17 and 22), only one has part of its axon in the EM volume.
 % But said axon is mostly myelinated and doesn't make a single synapse.
 % Still, let's remove these tracings for completeness.
+clear cur*;
 
 interNeuronGtNmlFiles = { ...
     '5a796fcd67000090172d94f1', ... % Whole cell 17. Ground truth tracing in +connectEM/+WholeCell/+Data/border-cells_axon-dendrites-split/5a796fcd67000090172d94f1.nml
@@ -85,42 +98,37 @@ axonCounts = axonCounts(1:(end - 1));
 
 %% Plot axon
 clear cur*;
-curPlotData = cat(1, axonData(:), grandAvgAxon);
-curPlotData = reshape(curPlotData, 1, []);
+curData = cat(1, axonData(:), grandAvgAxon);
+curData = reshape(curData, 1, []);
 
-curNumDigits = ceil(log10(1 + numel(curPlotData)));
+curNumDigits = ceil(log10(1 + numel(curData)));
 
-for curIdx = 1:numel(curPlotData)
-    curAxonData = curPlotData(curIdx);
+for curIdx = 1:numel(curData)
+    curAxonData = curData(curIdx);
     curSynapses = curAxonData.synapses;
     if isempty(curSynapses); continue; end
     
     curSynapses.somaDist = curSynapses.somaDist / 1E3;
     curSynapses.ontoSpine = syn.isSpineSyn(curSynapses.id);
    [~, curAxonName] = fileparts(curAxonData.nmlFile);
-
-    curData = discretize( ...
-        curSynapses.somaDist, binEdges);
-    curData = accumarray( ...
-       [curData, 1 + curSynapses.ontoSpine], ...
-        1, [numel(binEdges) - 1, 2]);
+   
+    curPlotData = @(varargin) plotData( ...
+        binEdges, curSynapses.somaDist, varargin{:});
+    curReport = curIdx == numel(curData);
 
     curFig = figure();
     curFig.Color = 'white';
-    curFig.Position(3:4) = [400, 340];
-
-    curAx = subplot(2, 1, 1);
-    curAx.TickDir = 'out';
-    hold(curAx, 'on');
-
-    curPlotHist = @(curAx, counts, varargin) ...
-        plotHist(curAx, binEdges, counts, varargin{:});
-
-    curPlotHist(curAx, curData(:, 2), 'EdgeColor', 'magenta');
-    curPlotHist(curAx, curData(:, 1), 'EdgeColor', 'black');
+    curFig.Position(3:4) = [600, 590];
+    
+    % Panel #1 - Spine vs. shaft synapses
+    curAx = subplot(3, 1, 1);
+    curPlotData( ...
+        curAx, 1 + not(curSynapses.ontoSpine), ...
+        {'Spine synapse', 'Non-spine synapse'}, ...
+        'classColors', {'magenta', 'black'}, ...
+        'report', curReport);
     
     xlabel(curAx, 'Axonal path length to soma (µm)');
-    curAx.XLim = binEdges([1, end]);
     curAx.YLim(1) = 0;
 
     title(curAx, { ...
@@ -128,15 +136,37 @@ for curIdx = 1:numel(curPlotData)
         sprintf('Axon %s', curAxonName)}, ...
         'FontWeight', 'normal', 'FontSize', 10);
     
-    curAx = subplot(2, 1, 2);
-    curPlotHist(curAx, axonCounts, 'EdgeColor', 'black');
+    % Panel #2 - L4 vs. L5 synapses. The WholeCell and ApicalDendrite
+    % target classes serve as proxies for likely L4 and L5 cells, resp.
+    curAx = subplot(3, 1, 2);
+
+   [~, curSynClasses] = ismember( ...
+       curSynapses.targetClass, ...
+       {'ProximalDendrite', 'ApicalDendrite'});
+    curPlotData( ...
+        curAx, curSynClasses, ...
+        {'Onto PD', 'Onto AD'}, ...
+        'report', curReport);
+    curAx.YLim(1) = 0;
+    
+    % Panel #3 - Number of cells contributing to bin
+    curAx = subplot(3, 1, 3);
+    plotHist(curAx, binEdges, axonCounts, 'EdgeColor', 'black');
     
     curAx.YDir = 'reverse';
     curAx.XAxisLocation = 'top';
     
     curAx.XLim = binEdges([1, end]);
+    curAx.XTickLabel = {''};
     curAx.TickDir = 'out';
     curAx.Box = 'off';
+    
+    % Make sure all axes have same length in plot
+    curAxes = findobj(curFig.Children, 'Type', 'Axes');
+    curAxesPos = cell2mat(get(curAxes, {'Position'}));
+    curAxesPos(:, 3) = min(curAxesPos(:, 3));
+    set(curAxes, {'Position'}, num2cell(curAxesPos, 2));
+    set(curAxes, 'XLim', binEdges([1, end]));
     
     if ~isempty(outputDir)
         curFigFileName = strrep(curAxonName, ' ', '-');
@@ -146,4 +176,52 @@ for curIdx = 1:numel(curPlotData)
         export_fig('-r172', strcat(curFigFileName, '.png'), curFig);
         export_fig('-r172', strcat(curFigFileName, '.eps'), curFig);
     end
+end
+
+%% Utilities
+function plotData(binEdges, synDists, ax, synClasses, classNames, varargin)
+    opt = struct;
+    opt.report = false;
+    opt.classColors = num2cell( ...
+        get(groot, 'defaultAxesColorOrder'), 2);
+    opt = Util.modifyStruct(opt, varargin{:});
+    
+    %% Reporting
+    if opt.report
+        report = table;
+        report.name = [{'Rest'}; classNames(:)];
+        report.synCount = accumarray(1 + synClasses, 1);
+        report.synFrac = report.synCount ./ sum(report.synCount);
+        report.medianDistanceToSoma = accumarray( ...
+            1 + synClasses, synDists, [], @median);
+        report = report([2:end, 1], :);
+        disp(report);
+    end
+    
+    %% Plotting
+    data = accumarray( ...
+       [discretize(synDists, binEdges), 1 + synClasses], 1, ...
+       [numel(binEdges) - 1, numel(classNames) + 1]);
+    
+    ax.TickDir = 'out';
+    hold(ax, 'on');
+    
+    for curIdx = 1:numel(classNames)
+        plotHist(ax, ...
+            binEdges, data(:, 1 + curIdx), ...
+            'EdgeColor', opt.classColors{curIdx});
+    end
+    
+    leg = legend(ax, classNames);
+    set(leg, 'Location', 'EastOutside', 'Box', 'off');
+end
+
+function plotHist(ax, edges, counts, varargin)
+    histogram(ax, ...
+        'BinEdges', edges, ...
+        'BinCounts', counts, ...
+        'DisplayStyle', 'stairs', ...
+        'LineWidth', 2, ...
+        'FaceAlpha', 1, ...
+        varargin{:});
 end

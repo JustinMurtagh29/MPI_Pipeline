@@ -119,8 +119,8 @@ function p = runPipeline(p, startStep, endStep)
     if startStep <= PipelineStep.SegmentationPyramid ...
             && endStep >= PipelineStep.SegmentationPyramid
         % Create resolution pyramid for the segmentation
-        thisBBox = [1, 1, 1; (ceil(p.bbox(:, 2) ./ 1024) .* 1024)']';
-        createResolutionPyramid(p.seg, thisBBox, [], true);
+        createResolutionPyramid( ...
+            p.seg, p.bbox, outRoot, true, p.raw.voxelSize);
     end
 
     if startStep <= PipelineStep.CompressSegmentation ...

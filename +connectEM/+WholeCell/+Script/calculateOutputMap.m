@@ -177,6 +177,7 @@ parfor curIdx = 1:numel(nmlFiles)
     curAxonData = struct;
     curAxonData.nmlFile = curNmlFile;
     curAxonData.pathLength = curPathLength;
+    curAxonData.segIds = curAxonSegIds(:);
     curAxonData.synapses = curSynT;
     axonData{curIdx} = curAxonData;
 end
