@@ -4,10 +4,8 @@ clear;
 rng(0);
 
 %% Configuration
-preN = 100;
-postN = 100;
-synN = 20 * preN;
-preClassN = 2;
+rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
+connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-linearized_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v8-classified.mat');
 
 mix = struct;
 mix(1).name = 'Blue';
@@ -30,6 +28,21 @@ info = Util.runInfo();
 Util.showRunInfo(info);
 
 %% Preparation
+[curDir, curAsiFile] = fileparts(connFile);
+curAsiFile = fullfile(curDir, sprintf('%s_asiT.mat', curAsiFile));
+
+curAsiT = load(curAsiFile);
+curAsiT = curAsiT.asiT;
+
+curAsiT = curAsiT( ...
+    curAsiT.area > 0 ...
+  & curAsiT.type == 'PrimarySpine' ...
+  & curAsiT.axonClass == 'Corticocortical', :);
+
+preN = numel(unique(curAsiT.preAggloId));
+postN = numel(unique(curAsiT.postAggloId));
+synN = height(curAsiT);
+
 % We want the connection types to be distributed according to the
 % probabilities in `mix.prob`.
 assert(height(mix) == 2);
