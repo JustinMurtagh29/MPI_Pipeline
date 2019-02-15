@@ -66,8 +66,24 @@ close(curFig);
 clear curFig;
 
 %% Show dendrogram
-figure(); dendrogram(curAxonLink, 0);
-figure(); dendrogram(curDendLink, 0);
+curPlots = struct;
+curPlots(1).type = 'Axons'; curPlots(1).link = curAxonLink;
+curPlots(2).type = 'Dendrites'; curPlots(2).link = curDendLink;
+
+for curPlot = curPlots
+    curFig = figure();
+    curFig.Color = 'white';
+    
+    curAx = axes(curFig); %#ok
+    dendrogram(curPlot.link, 0);
+    xlabel(curAx, curPlot.type);
+    xticks(curAx, []);
+    curAx.TickDir = 'out';
+    
+    title(curAx, ...
+        {info.filename; info.git_repos{1}.hash}, ...
+        'FontWeight', 'normal', 'FontSize', 10);
+end
 
 %%
 %{
