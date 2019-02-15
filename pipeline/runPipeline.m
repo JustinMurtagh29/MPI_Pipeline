@@ -43,6 +43,14 @@ function p = runPipeline(p, startStep, endStep)
             && endStep >= PipelineStep.Classification
         if strcmp(p.cnn.version,'codat')
             cnet = load('/u/bstaffle/results/SegEM/20130516T204040_08_03_paper.mat');
+            % initializing as wkwdir is necessary, otherwise Benedikts
+            % Dataset class assumes you want to have old wkcube dataset..
+            if ~exist(p.class.root,'dir')
+                mkdir(p.class.root)
+            end
+            if strcmp(p.class.backend,'wkwrap') && ~Datasets.iswkwDataset(p.class.root)
+                wkwInit('new', p.class.root, 32, 32, p.class.dtype, 1);
+            end
             job = Codat.CNN.Cluster.predictDataset( cnet.cnet, p.bbox, Datasets.WkDataset(p.raw), Datasets.WkDataset(p.class),[],Cluster.config('gpu',1,'memory',44,'time','100:00:00'));
         else
             job = bigFwdPass(p, p.bbox);
