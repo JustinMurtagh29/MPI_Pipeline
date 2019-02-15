@@ -77,7 +77,7 @@ clear cur*;
 rng(0);
 
 curN = 2;
-curConfig = plotConfigs(1);
+curConfig = plotConfigs(3);
 curBinEdges = linspace(-2, 0.5, 51);
 
 curLog10Areas = log10(asiT.area(curConfig.synIds));
@@ -88,16 +88,14 @@ curAx = axes(curFig);
 hold(curAx, 'on');
 
 % GMM components
+curLegs = cell(curN, 1);
 for curId = 1:curN
     curMean = curGmm.mu(curId);
     curStd = sqrt(curGmm.Sigma(curId));
     curP = curGmm.ComponentProportion(curId);
     
-    fprintf('GMM component %d\n', curId);
-    fprintf('* Mean: %g\n', curMean);
-    fprintf('* Standard deviation: %g\n', curStd);
-    fprintf('* Mixing coefficient: %g\n', curP);
-    fprintf('\n');
+    curLegs{curId} = sprintf( ...
+        '%.3f × logN(µ = %.3f, σ = %.3f)', curP, curMean, curStd);
     
     curY = curP .* normpdf(curBinEdges(:), curMean, curStd);
     plot(curAx, curBinEdges(:), curY, 'LineWidth', 2);
@@ -116,8 +114,11 @@ plot(curAx, ...
     curBinEdges(:), curGmm.pdf(curBinEdges(:)), ...
     'LineWidth', 2, 'LineStyle', '--', 'Color', 'black');
 
+curLeg = legend(curAx, curLegs, 'Location', 'SouthOutside');
+curLeg.Box = 'off';
+
 curFig.Color = 'white';
-curFig.Position(3:4) = [315, 225];
+curFig.Position(3:4) = [315, 300];
 curAx.TickDir = 'out';
 
 xlabel(curAx, 'log_{10}(ASI area [µm²])');
