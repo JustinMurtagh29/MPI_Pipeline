@@ -54,6 +54,8 @@ grid = reshape(grid, [], numel(curGridVars));
 clear cur*;
 rng(0);
 
+plotIds = [];
+
 fracs = nan(size(grid, 1), 3);
 pVals = nan(size(grid, 1), 1);
 
@@ -61,7 +63,10 @@ pVals = nan(size(grid, 1), 1);
 curRandn = randn(N, 2);
 curRandperm = reshape(randperm(2 * N), N, 2);
 
-for curId = 1:size(grid, 1)
+curIds = 1:size(grid, 1);
+if ~isempty(plotIds); curIds = plotIds; end
+
+for curId = curIds
     curMix = grid(curId, :);
     curMix = transpose(reshape(curMix, [], numel(mix)));
     curMix = array2table(curMix, 'VariableNames', varNames);
@@ -90,35 +95,91 @@ for curId = 1:size(grid, 1)
     fracs(curId, :) = [curA, curB, curC];
     
     %% Plotting
-    %{
-    curBinEdges = linspace(0, 1.5, 31);
-    
-    curFig = figure();
-    curAx = axes(curFig); %#ok
-    hold(curAx, 'on');
-    
-    histogram(curAx, ...
-        curSaSdT.cv, 'BinEdges', curBinEdges, ...
-        'DisplayStyle', 'stairs', 'LineWidth', 2);
-    histogram(curAx, ...
-        curCtrlT.cv, 'BinEdges', curBinEdges, ...
-        'DisplayStyle', 'stairs', 'LineWidth', 2);
-    
-    curFig.Color = 'white';
-    curFig.Position(3:4) = [280, 250];
-    
-    curAx.TickDir = 'out';
-    xlim(curAx, curBinEdges([1, end]));
-    xlabel(curAx, 'Coefficient of variation');
-    ylabel(curAx, 'Occurences');
-    
-    curTitle = sprintf( ...
-        'Parameter set #%d. %.1f %% learned', ...
-        curId, 100 * fracs(curId, 1));
-    title(curAx, { ...
-        info.filename; info.git_repos{1}.hash; curTitle}, ...
-        'FontWeight', 'normal', 'FontSize', 10);
-    %}
+    if ~isempty(plotIds)
+        %% CV histogram
+        curBinEdges = linspace(0, 1.5, 31);
+
+        curFig = figure();
+        curAx = axes(curFig); %#ok
+        hold(curAx, 'on');
+
+        histogram(curAx, ...
+            curSaSdT.cv, 'BinEdges', curBinEdges, ...
+            'DisplayStyle', 'stairs', 'LineWidth', 2);
+        histogram(curAx, ...
+            curCtrlT.cv, 'BinEdges', curBinEdges, ...
+            'DisplayStyle', 'stairs', 'LineWidth', 2);
+
+        curFig.Color = 'white';
+        curFig.Position(3:4) = [280, 250];
+
+        curAx.TickDir = 'out';
+        xlim(curAx, curBinEdges([1, end]));
+        xlabel(curAx, 'Coefficient of variation');
+        ylabel(curAx, 'Occurences');
+
+        curTitle = sprintf( ...
+            'Parameter set #%d. %.1f %% learned', ...
+            curId, 100 * fracs(curId, 1));
+        title(curAx, { ...
+            info.filename; info.git_repos{1}.hash; curTitle}, ...
+            'FontWeight', 'normal', 'FontSize', 10);
+
+        %% CV vs. log(avg. ASI size)
+        curLimX = [0, 1.5];
+        curLimY = [-1.5, 0.5];
+        curMapSize = [256, 256];
+
+        curTicksX = linspace(curLimX(1), curLimX(2), 4);
+        curTicksY = linspace(curLimY(1), curLimY(2), 5);
+
+        curKvPairs = { ...
+            'xLim', curLimX, 'yLim', curLimY, ...
+            'method', 'kde2d', 'mapSize', curMapSize};
+       [curSaSdMap, curBw] = ...
+            connectEM.Consistency.densityMap( ...
+                curSaSdT.asi, curKvPairs{:});
+        curCtrlMap = ...
+            connectEM.Consistency.densityMap( ...
+                curCtrlT.asi, curKvPairs{:}, 'bandWidth', curBw);
+        curDiffMap = curSaSdMap - curCtrlMap;
+        curDiffMax = max(abs(curDiffMap(:)));
+
+        curFig = figure();
+        curAx = axes(curFig); %#ok
+        curIm = image(curAx, curDiffMap);
+        curIm.CDataMapping = 'scaled';
+        curAx.CLim = [-1, +1] * curDiffMax;
+
+        colormap(curAx, 'jet');
+        curBar = colorbar('peer', curAx);
+
+        axis(curAx, 'square');
+        curFig.Color = 'white';
+        curAx.YDir = 'normal';
+        curAx.TickDir = 'out';
+        curAx.Box = 'off';
+
+        curAx.XLim = [1, curMapSize(2)];
+        curAx.XTick = 1 + round((curMapSize(2) - 1) * ...
+            (curTicksX - curLimX(1)) / diff(curLimX));
+        curAx.XTickLabel = arrayfun( ...
+            @num2str, curTicksX, 'UniformOutput', false);
+
+        curAx.YLim = [1, curMapSize(1)];
+        curAx.YTick = 1 + round((curMapSize(1) - 1) * ...
+            (curTicksY - curLimY(1)) / diff(curLimY));
+        curAx.YTickLabel = arrayfun( ...
+            @num2str, curTicksY, 'UniformOutput', false);
+
+        xlabel(curAx, 'Coefficient of variation');
+        ylabel(curAx, 'log_{10}(Average ASI area [µm²])');
+
+        title(curAx, { ...
+            info.filename; info.git_repos{1}.hash; ...
+            sprintf('Parameter set #%d', curId)}, ...
+            'FontWeight', 'normal', 'FontSize', 10);
+    end
 end
 
 %% Plot "best" mix
@@ -215,8 +276,9 @@ xlim(curAx, curX([1, end]));
 xlabel(curAx, 'log_{10}(ASI area [µm²]');
 ylabel(curAx, 'Probability density');
 
-title(curAx, ...
-    {info.filename; info.git_repos{1}.hash}, ...
+title(curAx, { ...
+    info.filename; info.git_repos{1}.hash; ...
+    sprintf('Parameter set #%d', curMinId)}, ...
     'FontWeight', 'normal', 'FontSize', 10);
 
 %% Utilities
