@@ -27,8 +27,8 @@ mixNames{3} = 'Corticocortical primary spine synapses';
 
 % NOTE(amotta): Mixing coefficient of the L4 connections
 mixGrid = mix;
-mixGrid(1).coeff = 10 .^ linspace(0, -6, 61);
-mixGrid(2).coeff = 10 .^ linspace(0, -6, 61);
+mixGrid(1).coeff = 10 .^ linspace(-3, 0, 61);
+mixGrid(2).coeff = 10 .^ linspace(-3, 0, 61);
 
 % Sanity check
 assert(isequal(numel(mix), numel(mixNames)));
@@ -79,24 +79,46 @@ for curId = 1:size(grid, 1)
     curSaSdT.asi = 10 .^ curSaSdT.logAsi;
     curSaSdT.cv = std(curSaSdT.asi, 0, 2) ./ mean(curSaSdT.asi, 2);
 
-    curRandT = table;
-    curRandT.asi = curSaSdT.asi(curRandperm);
-    curRandT.cv = std(curRandT.asi, 0, 2) ./ mean(curRandT.asi, 2);
-    
-    %{
-    curFig = figure();
-    curAx = axes(curFig);
-    hold(curAx, 'on');
-    
-    histogram(curAx, curSaSdT.cv, 'BinEdges', linspace(0, 1.5, 31), 'DisplayStyle', 'stairs', 'LineWidth', 2);
-    histogram(curAx, curRandT.cv, 'BinEdges', linspace(0, 1.5, 31), 'DisplayStyle', 'stairs', 'LineWidth', 2);
-    %}
+    curCtrlT = table;
+    curCtrlT.asi = curSaSdT.asi(curRandperm);
+    curCtrlT.cv = std(curCtrlT.asi, 0, 2) ./ mean(curCtrlT.asi, 2);
     
    [~, pVals(curId)] = kstest2( ...
-        curSaSdT.cv, curRandT.cv, 'tail', 'larger');
+        curSaSdT.cv, curCtrlT.cv, 'tail', 'larger');
    [curA, curB, curC] = ...
-        calculateLearnedFraction(curSaSdT.cv, curRandT.cv);
+        calculateLearnedFraction(curSaSdT.cv, curCtrlT.cv);
     fracs(curId, :) = [curA, curB, curC];
+    
+    %% Plotting
+    %{
+    curBinEdges = linspace(0, 1.5, 31);
+    
+    curFig = figure();
+    curAx = axes(curFig); %#ok
+    hold(curAx, 'on');
+    
+    histogram(curAx, ...
+        curSaSdT.cv, 'BinEdges', curBinEdges, ...
+        'DisplayStyle', 'stairs', 'LineWidth', 2);
+    histogram(curAx, ...
+        curCtrlT.cv, 'BinEdges', curBinEdges, ...
+        'DisplayStyle', 'stairs', 'LineWidth', 2);
+    
+    curFig.Color = 'white';
+    curFig.Position(3:4) = [280, 250];
+    
+    curAx.TickDir = 'out';
+    xlim(curAx, curBinEdges([1, end]));
+    xlabel(curAx, 'Coefficient of variation');
+    ylabel(curAx, 'Occurences');
+    
+    curTitle = sprintf( ...
+        'Parameter set #%d. %.1f %% learned', ...
+        curId, 100 * fracs(curId, 1));
+    title(curAx, { ...
+        info.filename; info.git_repos{1}.hash; curTitle}, ...
+        'FontWeight', 'normal', 'FontSize', 10);
+    %}
 end
 
 %% Plot "best" mix
@@ -124,15 +146,19 @@ for curPlot = curPlots
     
     xlabel(curAx, sprintf( ...
         '%s of %s', varNames{curVarIds(2)}, mixNames{curMixIds(2)}));
-    curAx.XTick = 1 + linspace(0, size(curIm, 2) - 1, 3);
-    curAx.XTickLabel = arrayfun(@(id) feval(@(v) v(id), ...
-        mixGrid(curMixIds(2)).(varNames{curVarIds(2)})), curAx.XTick);
+    curAx.XTick = 1 + linspace(0, size(curIm, 2) - 1, 4);
+    curAx.XTickLabel = arrayfun( ...
+        @(id) num2str(feval(@(v) v(id), ...
+            mixGrid(curMixIds(2)).(varNames{curVarIds(2)}))), ...
+        curAx.XTick, 'UniformOutput', false);
     
     ylabel(curAx, sprintf( ...
         '%s of %s', varNames{curVarIds(1)}, mixNames{curMixIds(1)}));
-    curAx.YTick = 1 + linspace(0, size(curIm, 1) - 1, 3);
-    curAx.YTickLabel = arrayfun(@(id) feval(@(v) v(id), ...
-        mixGrid(curMixIds(1)).(varNames{curVarIds(1)})), curAx.YTick);
+    curAx.YTick = 1 + linspace(0, size(curIm, 1) - 1, 4);
+    curAx.YTickLabel = arrayfun( ...
+        @(id) num2str(feval(@(v) v(id), ...
+            mixGrid(curMixIds(1)).(varNames{curVarIds(1)}))), ...
+        curAx.YTick, 'UniformOutput', false);
     
     axis(curAx, 'square');
     curFig.Color = 'white';
@@ -145,10 +171,13 @@ for curPlot = curPlots
         'FontWeight', 'normal', 'FontSize', 10);
 end
 
-%%
-[~, curId] = min(abs(fracs(:, 1) - learnedFracs(1)));
+%% Plot "best" mixture
+clear cur*;
 
-curMix = grid(curId, :);
+curMinId = abs(fracs(:, 1) - learnedFracs(1));
+[~, curMinId] = min(curMinId);
+
+curMix = grid(curMinId, :);
 curMix = transpose(reshape(curMix, [], numel(mix)));
 curMix = array2table(curMix, 'VariableNames', varNames);
 curMix.weight = curMix.coeff / sum(curMix.coeff);
@@ -164,8 +193,8 @@ for curId = 1:height(curMix)
     curY(curId, :) = curMix.weight(curId) * ...
         normpdf(curX, curMix.mean(curId), curMix.std(curId));
     curLegends{curId} = sprintf( ...
-        '%s (mixing coeff. %.3g)', ...
-        mixNames{curId}, curMix.coeff(curId));
+        '%s (%.1f %% of mix)', ...
+        mixNames{curId}, 100 * curMix.weight(curId));
 end
 
 curFig = figure();
@@ -182,22 +211,13 @@ curLeg = legend(curAx, curLegends);
 curLeg.Location = 'NorthWest';
 curLeg.Box = 'off';
 
-%%
-%{
-% curFig = figure;
-% imagesc(log10(reshape(ksPvals, numel(curMeanVec), numel(curCoeffGrid))))
+xlim(curAx, curX([1, end]));
+xlabel(curAx, 'log_{10}(ASI area [µm²]');
+ylabel(curAx, 'Probability density');
 
-curFig = figure();
-
-curIso = reshape(cvKsPvals, reshape(structfun(@numel, mixGrid), 1, []));
-curIso = isosurface(curIso, cvKsPvalThresh);
-
-curP = patch(curIso);
-curP.EdgeColor = 'none';
-
-view(3);
-camlight;
-%}
+title(curAx, ...
+    {info.filename; info.git_repos{1}.hash}, ...
+    'FontWeight', 'normal', 'FontSize', 10);
 
 %% Utilities
 function [learnedFrac, unlearnedFrac, cvThresh] = ...
