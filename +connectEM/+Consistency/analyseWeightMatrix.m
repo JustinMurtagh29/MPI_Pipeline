@@ -46,192 +46,108 @@ curPairT = pairT( ...
 curPairT.medLog10AsiArea = cellfun( ...
     @(ids) median(log10(asiT.area(ids))), curPairT.asiIds);
 
-curAreas = [ ...
+areaMat = [ ...
     curPairT.preAggloId, ...
     curPairT.postAggloId];
-curAreas = accumarray( ...
-    curAreas, curPairT.medLog10AsiArea, ...
+areaMat = accumarray( ...
+    areaMat, curPairT.medLog10AsiArea, ...
    [numel(curAxonIds), numel(curDendIds)], [], nan);
 
 %% Actually do the clustering
 Util.log('Clustering weight matrix');
-[curAxonLink, curAxonDist] = connectEM.Consistency.linkage(curAreas);
-[curDendLink, curDendDist] = connectEM.Consistency.linkage(curAreas');
+[axonLink, axonDist] = connectEM.Consistency.linkage(areaMat);
+[dendLink, dendDist] = connectEM.Consistency.linkage(areaMat');
 Util.log('Done!');
 
 curFig = figure;
-[~, ~, curAxonPerm] = dendrogram(curAxonLink, 0);
-[~, ~, curDendPerm] = dendrogram(curDendLink, 0);
+[~, ~, axonPerm] = dendrogram(axonLink, 0);
+[~, ~, dendPerm] = dendrogram(dendLink, 0);
 close(curFig);
 clear curFig;
 
-%% Show dendrogram
-curPlots = struct;
-curPlots(1).type = 'Axons'; curPlots(1).link = curAxonLink;
-curPlots(2).type = 'Dendrites'; curPlots(2).link = curDendLink;
+%% Plot synapse sizes
+clear cur*;
+
+curPlots(1).data = areaMat;
+curPlots(1).axonLink = [];
+curPlots(1).dendLink = [];
+
+curPlots(2).data = areaMat(axonPerm, dendPerm);
+curPlots(2).axonLink = axonLink;
+curPlots(2).dendLink = dendLink;
 
 for curPlot = curPlots
+    curData = curPlot.data;
+    
     curFig = figure();
     curFig.Color = 'white';
+    curFig.Position(3:4) = [600, 600];
     
     curAx = axes(curFig); %#ok
-    dendrogram(curPlot.link, 0);
-    xlabel(curAx, curPlot.type);
+    curIm = imagesc(curAx, curData);
+    curIm.AlphaData = 1 - isnan(curData);
+    curAx.CLim = [-1.5, 0.5];
+    curAx.Color = 'black';
+    curAx.Box = 'off';
+
+    curCbar = colorbar('peer', curAx);
+    curCbar.TickDirection = 'out';
+
+    axis(curAx, 'equal');
+    xlim(curAx, [1, size(curData, 2)]);
+    ylim(curAx, [1, size(curData, 1)]);
+
+    curAx.YDir = 'normal';
+    curAx.Box = 'off';
     xticks(curAx, []);
-    curAx.TickDir = 'out';
-    
+    yticks(curAx, []);
+
+    xlabel(curAx, 'Dendrites');
+    xticks(curAx, curAx.XLim);
+    xticklabels(curAx, arrayfun( ...
+        @num2str, xticks(curAx), 'UniformOutput', false));
+    curAx.XAxisLocation = 'top';
+
+    ylabel(curAx, 'Axons');
+    yticks(curAx, curAx.YLim);
+    yticklabels(curAx, arrayfun( ...
+        @num2str, yticks(curAx), 'UniformOutput', false));
+    curAx.YAxisLocation = 'right';
+
     title(curAx, ...
-        {info.filename; info.git_repos{1}.hash}, ...
+        {info.filename; info.git_repos{1}.hash; 'Weight matrix'}, ...
         'FontWeight', 'normal', 'FontSize', 10);
+    curAx.Position = [0.15, 0.15, 0.65, 0.65];
+
+    % Dendrite dendrogram
+    if ~isempty(curPlot.dendLink)
+        curTempFig = figure; 
+        dendrogram(curPlot.dendLink, 0, 'Orientation', 'bottom');
+        curTempFig.Children.XAxis.Visible = 'off';
+        curTempFig.Children.YAxis.Visible = 'off';
+        set(curTempFig.Children.Children, 'Color', 'black');
+
+        copyobj(curTempFig.Children, curFig);
+        close(curTempFig);
+
+        curFig.Children(1).Position = [ ...
+            curFig.Children(end).Position(1), 0, ...
+            curFig.Children(end).Position([3, 2])];
+    end
+
+    % Axon dendrogram
+    if ~isempty(curPlot.axonLink)
+        curTempFig = figure; 
+        dendrogram(curPlot.axonLink, 0, 'Orientation', 'left');
+        curTempFig.Children.XAxis.Visible = 'off';
+        curTempFig.Children.YAxis.Visible = 'off';
+        set(curTempFig.Children.Children, 'Color', 'black');
+
+        copyobj(curTempFig.Children, curFig);
+        close(curTempFig);
+
+        curFig.Children(1).Position = [ ...
+            0, curFig.Children(end).Position(2)...
+            curFig.Children(end).Position([1, 4])];
+    end
 end
-
-%%
-%{
-curDataFile = '/mnt/mpibr/data/Personal/mottaa/L4/2018-12-19-Clustering-of-Weight-Matrix/corticocortical-onto-other-dendrites.mat';
-curData = load(curDataFile);
-curAxonLink = curData.curAxonLink;
-curAxonLink = curAxonLink(not(isnan(curAxonLink(:, end))), :);
-%}
-
-%% Find threshold with a second reasonably-sized cluster
-assert(issorted(curAxonLink(:, 1:2), 2));
-
-curAxonCount = max(reshape(curAxonLink(:, 1:2), [], 1));
-curAxonCount = curAxonCount + 1 - size(curAxonLink, 1);
-
-curOut = nan(0, 3);
-
-for i = 1:500
-    curGraph = graph( ...
-        cat(1, curAxonLink(:, 1), curAxonLink(:, 2)), ...
-        repmat(transpose((1:size(curAxonLink, 1)) + curAxonCount), 2, 1));
-
-    curCompIds = conncomp(curGraph);
-    curCompSizes = accumarray(curCompIds(:), 1);
-    
-    curSecCompSize = feval( ...
-        @(s) reshape(s(1:2), 1, []), ...
-        sort([0; curCompSizes], 'descend'));
-    curOut(end + 1, :) = [size(curOut, 1), curSecCompSize]; %#ok
-    
-    curAxonLink(end, :) = [];
-end
-
-% Plot
-curFig = figure;
-curFig.Color = 'white';
-curFig.Position(3:4) = [310, 180];
-curAx = axes(curFig);
-hold(curAx, 'on');
-
-plot(curOut(:, 1), curOut(:, 2), 'LineWidth', 2);
-plot(curOut(:, 1), curOut(:, 3), 'LineWidth', 2);
-
-set(curAx, 'TickDir', 'out', 'YScale', 'log');
-
-curLeg = legend(curAx, { ...
-    'Largest cluster', 'Second largest cluster'});
-set(curLeg, 'Location', 'SouthEast', 'Box', 'off');
-
-xlabel(curAx, 'Linkage cut-off');
-ylabel(curAx, 'Cluster size');
-
-title(curAx, ...
-    {info.filename; info.git_repos{1}.hash}, ...
-    'FontWeight', 'normal', 'FontSize', 10);
-
-%% Extract the largest two clusters
-curAxonLink = curData.curAxonLink;
-curAxonLink = curAxonLink(not(isnan(curAxonLink(:, end))), :);
-assert(issorted(curAxonLink(:, 1:2), 2));
-
-curAxonCount = max(reshape(curAxonLink(:, 1:2), [], 1));
-curAxonCount = curAxonCount + 1 - size(curAxonLink, 1);
-
-% Use linkage cut-off of 200
-curAxonLink((end - 199):end, :) = [];
-
-curGraph = graph( ...
-    cat(1, curAxonLink(:, 1), curAxonLink(:, 2)), ...
-    repmat(transpose((1:size(curAxonLink, 1)) + curAxonCount), 2, 1));
-
-curCompIds = conncomp(curGraph);
-curCompSizes = accumarray(curCompIds(:), 1);
-[~, curSortIds] = sort(curCompSizes, 'descend');
-
-curAxonIdsA = find(curCompIds(1:curAxonCount) == curSortIds(1));
-curAxonIdsB = find(curCompIds(1:curAxonCount) == curSortIds(2));
-
-%% Plot synapse sizes
-curTemp = curAreas(curAxonPerm, curDendPerm);
-
-curFig = figure();
-curFig.Color = 'white';
-curAx = axes(curFig);
-curIm = imagesc(curAx, curTemp);
-curIm.AlphaData = 1 - isnan(curTemp);
-curAx.Color = 'black';
-curAx.Box = 'off';
-
-curCbar = colorbar('peer', curAx);
-curCbar.TickDirection = 'out';
-curCbar.Label.String = 'log_{10}(median axon-spine interface area [µm²])';
-
-axis(curAx, 'equal');
-xlim(curAx, [1, numel(curDendIds)]);
-ylim(curAx, [1, numel(curAxonIds)]);
-
-xlabel(curAx, 'Dendrites');
-ylabel(curAx, 'Axons (clustered)');
-
-curAx.TickDir = 'out';
-xticks(curAx, [1, numel(curDendIds)]);
-xticklabels(curAx, arrayfun( ...
-    @num2str, xticks(curAx), 'UniformOutput', false));
-yticks(curAx, [1, numel(curAxonIds)]);
-yticklabels(curAx, arrayfun( ...
-    @num2str, yticks(curAx), 'UniformOutput', false));
-
-title(curAx, ...
-    {info.filename; info.git_repos{1}.hash; 'Weight matrix'}, ...
-    'FontWeight', 'normal', 'FontSize', 10);
-
-%% Plot distance matrix
-curIds = [curAxonIdsA, curAxonIdsB];
-curTemp = curAxonDist(curIds, curIds);
-
-curFig = figure();
-curFig.Color = 'white';
-curAx = axes(curFig);
-% NOTE(amotta): For some reason MATLAB throws an error if `curAx` is passed
-% as first input argument to `imagesc` (despite this being a valid input
-% according to the documentation).
-curIm = imagesc(curTemp, [0, 1.14]); % HACK(amotta): Hard-coded limits!
-curIm.AlphaData = 1 - isnan(curTemp);
-axis(curAx, 'square');
-curAx.Color = 'black';
-curAx.Box = 'off';
-
-curCbar = colorbar('peer', curAx);
-curCbar.TickDirection = 'out';
-curCbar.Label.String = 'Squared Euclidean distance';
-
-axis(curAx, 'square');
-curAx.TickDir = 'out';
-curAx.XAxisLocation = 'top';
-
-% xlim(curAx, [1, numel(curAxonIds)]);
-xlabel(curAx, 'Axons (clustered)');
-% xticks(curAx, [1, numel(curAxonIds)]);
-xticklabels(curAx, arrayfun( ...
-    @num2str, xticks(curAx), 'UniformOutput', false));
-
-% ylim(curAx, [1, numel(curAxonIds)]);
-ylabel(curAx, 'Axons (clustered)');
-% yticks(curAx, [1, numel(curAxonIds)]);
-yticklabels(curAx, arrayfun( ...
-    @num2str, yticks(curAx), 'UniformOutput', false));
-
-title(curAx, ...
-    {info.filename; info.git_repos{1}.hash; 'Distance matrix'}, ...
-    'FontWeight', 'normal', 'FontSize', 10);
