@@ -49,14 +49,16 @@ assert(height(mix) == 2);
 classProb = (1 + sqrt(2 * mix.prob(end) - 1)) / 2;
 
 % Assign axons to axon classes
-preClasses = linspace(0, 1, preN);
-preClasses = discretize(preClasses, [0, classProb, 1]);
-preClasses = preClasses(randperm(numel(preClasses)));
+preT = table;
+preT.classId = reshape(linspace(0, 1, preN), [], 1);
+preT.classId = discretize(preT.classId, [0, classProb, 1]);
+preT.classId = preT.classId(randperm(numel(preT.classId)));
 
 % Assign dendrites to target classes
-postClasses = linspace(0, 1, postN);
-postClasses = discretize(postClasses, [0, classProb, 1]);
-postClasses = postClasses(randperm(numel(postClasses)));
+postT = table;
+postT.classId = reshape(linspace(0, 1, postN), [], 1);
+postT.classId = discretize(postT.classId, [0, classProb, 1]);
+postT.classId = postT.classId(randperm(numel(postT.classId)));
 
 flat = @(v) v(:);
 
@@ -69,8 +71,8 @@ asiT.preAggloId = flat(datasample(1:preN, synN, 'Replace', true));
 asiT.postAggloId = flat(datasample(1:postN, synN, 'Replace', true));
 
 asiT.connType = 1 + reshape( ...
-    preClasses(asiT.preAggloId) ...
- == postClasses(asiT.postAggloId), [], 1);
+    preT.classId(asiT.preAggloId) ...
+ == postT.classId(asiT.postAggloId), [], 1);
 
 asiT.log10Area = normrnd( ...
     mix.mean(asiT.connType), ...
@@ -85,6 +87,8 @@ asiT.targetClass(:) = categorical({'OtherDendrite'});
 %% Save output
 if ~isempty(outFile)
     out = struct;
+    out.preT = preT;
+    out.postT = postT;
     out.asiT = asiT;
     out.info = info;
     
