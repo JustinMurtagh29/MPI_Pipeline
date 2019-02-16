@@ -68,6 +68,7 @@ clear curFig;
 %% Plot synapse sizes
 clear cur*;
 
+curPlots = struct;
 curPlots(1).data = areaMat;
 curPlots(1).axonLink = [];
 curPlots(1).dendLink = [];
@@ -117,7 +118,9 @@ for curPlot = curPlots
     title(curAx, ...
         {info.filename; info.git_repos{1}.hash; 'Weight matrix'}, ...
         'FontWeight', 'normal', 'FontSize', 10);
-    curAx.Position = [0.15, 0.15, 0.65, 0.65];
+    
+    curAx.Position(1:2) = 0.15;
+    curAx.Position(3:4) = 0.65 .* flip(size(curData)) / max(size(curData));
 
     % Dendrite dendrogram
     if ~isempty(curPlot.dendLink)
