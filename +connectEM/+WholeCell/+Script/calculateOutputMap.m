@@ -9,7 +9,6 @@ wholeCellFile = fullfile(rootDir, 'aggloState', 'wholeCells_GTAxon_08_v4.mat');
 
 runId = datestr(now, 30);
 outDir = '/tmpscratch/amotta/l4/2018-07-26-tracing-based-output-maps';
-debugDir = fullfile(outDir, sprintf('%s_debug-skeletons', runId));
 
 nmlDirs = ...
     connectEM.WholeCell.Data.getFile({ ...
@@ -72,15 +71,6 @@ nmlFiles = cat(1, nmlFiles{:});
 %% Collect output synapses
 clear cur*;
 
-if ~isempty(debugDir)
-    mkdir(debugDir);
-    
-    synAgglos = cellfun( ...
-        @(pre, post) reshape(union(pre, post), [], 1), ...
-        syn.synapses.presynId, syn.synapses.postsynId, ...
-        'UniformOutput', false);
-end
-
 preSynAgglos = syn.synapses.presynId;
 axonData = cell(size(nmlFiles));
 
@@ -141,38 +131,6 @@ parfor curIdx = 1:numel(nmlFiles)
             sum(ismember(curNodes.segIds, segIds), 2)), ...
         preSynAgglos(curSynT.id)); %#ok
     curSynT = sortrows(curSynT, 'somaDist');
-    
-    if ~isempty(debugDir)
-        curSkel = skeleton();
-        curSkel = Skeleton.setParams4Pipeline(curSkel, param);
-        curSkel = curSkel.setDescription(sprintf( ...
-            '%s (%s)', info.filename, info.git_repos{1}.hash)); %#ok
-        
-        curSkel = curSkel.addTree('Axon', curNodes.coord, curEdges.edge);
-        
-        curSynPoints = cellfun( ...
-            @(ids) segPoints(ids, :), ...
-            synAgglos(curSynT.id), ...
-            'UniformOutput', false); %#ok
-        
-        curNumDigits = ceil(log10(1 + height(curSynT)));
-        curSynNames = arrayfun(@(idx, id) ...
-            sprintf('%0*d. Synapse %d', curNumDigits, idx, id), ...
-            reshape(1:height(curSynT), [], 1), curSynT.id, ...
-            'UniformOutput', false);
-            
-        curSkel = Skeleton.fromMST( ...
-            curSynPoints, param.raw.voxelSize, curSkel);
-        curSkel.names(2:end) = curSynNames;
-        
-       [~, curSkelFile] = fileparts(curNmlFile);
-        curNumDigits = ceil(log10(1 + numel(nmlFiles))); %#ok
-        
-        curSkelFile = fullfile(debugDir, sprintf( ...
-            '%0*d_%s.nml', curNumDigits, curIdx, curSkelFile));
-        curSkel.write(curSkelFile);
-    end
-    
     
     curAxonData = struct;
     curAxonData.nmlFile = curNmlFile;
