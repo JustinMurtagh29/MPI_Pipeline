@@ -4,7 +4,8 @@ clear;
 
 boxesWk = [ ...
     9120, 6595, 2982, 267, 267, 108; ...
-    11599, 7708, 2779, 267, 267, 108];
+    11599, 7708, 2779, 267, 267, 108;...
+    3846, 3961, 2655,267, 267, 108];
 sampleRange = [402, 600];
 
 info = Util.runInfo();
@@ -13,6 +14,7 @@ Util.showRunInfo(info);
 rootDir = '/tmpscratch/sahilloo/data/H2_3_v2_U1_SubI/pipelineRun_mr2e_wsmrnet_HC/';
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
+param.experimentName = 'H2_3_v2_U1_SubI_mr2e_wsmrnet_HC';
 
 outDir = fullfile(param.saveFolder,'tracings','connectEM');
 
