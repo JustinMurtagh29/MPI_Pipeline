@@ -207,7 +207,7 @@ l4Out = table;
 l4Out.name = categories(curAsiT.targetClass);
 l4Out.name = strcat({'L4 → '}, l4Out.name);
 
-l4Out.synCount = accumarray(double(l4SynT.targetClass), 1);
+l4Out.synCount = accumarray(double(curAsiT.targetClass), 1);
 l4Out.synFrac = l4Out.synCount ./ sum(l4Out.synCount);
 
 curAreas = accumarray( ...
