@@ -10,13 +10,14 @@ clear;
 
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
+asiFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-linearized_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v8-classified_asiT.mat');
 % NOTE(amotta): This file is identical to 20180726T190355_results.mat with
 % the exception of the additional `outputMap.axonData.segIds` field.
 outputMapFile = '/tmpscratch/amotta/l4/2018-07-26-tracing-based-output-maps/20190117T143833_results.mat';
 shFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v3_auto.mat');
 
 % NOTE(amotta): Leave empty to avoid debug skeletons
-debugDir = '/home/amotta/Desktop/l4-synapses';
+debugDir = '';
 
 asiRunId = '20190211T111321';
 
@@ -43,6 +44,12 @@ axonData = outputMap.axonData;
 % Load connectome with synapses and TC axons
 [conn, syn] = connectEM.Connectome.load(param, connFile);
 conn = connectEM.Connectome.prepareForSpecificityAnalysis(conn);
+
+asiT = load(asiFile);
+asiT = asiT.asiT;
+
+asiT = asiT(asiT.area > 0, :);
+asiT = connectEM.Consistency.Calibration.apply(asiT);
 
 %% Build synapse and axon-spine interface tables
 synT = connectEM.Connectome.buildSynapseTable(conn, syn);
@@ -165,82 +172,52 @@ if ~isempty(debugDir)
 end
 
 %% Analyse TC → L4 and TC → L5 connections
-tcOut = table;
-tcOut.name = categories(conn.denMeta.targetClass);
-tcOut.name = strcat({'TC → '}, tcOut.name);
+clear cur*;
+curConfigs = struct;
+curConfigs(1).axonClass = 'Thalamocortical'; curConfigs(1).tag = 'TC';
+curConfigs(2).axonClass = 'Corticocortical'; curConfigs(2).tag = 'CC';
 
-curIds = synT.axonClass == 'Thalamocortical';
-tcOut.synCount = accumarray(double(synT.targetClass(curIds)), 1);
-tcOut.synFrac = tcOut.synCount ./ sum(tcOut.synCount);
-disp(tcOut)
+for curConfig = curConfigs
+    curAsiT = asiT( ...
+        asiT.type == 'PrimarySpine' ...
+      & asiT.axonClass == curConfig.axonClass, :);
+
+    tcAsiT = table;
+    tcAsiT.name = categories(curAsiT.targetClass);
+    tcAsiT.name = strcat({[curConfig.tag, ' → ']}, tcAsiT.name);
+
+    tcAsiT.synCount = accumarray(double(curAsiT.targetClass), 1);
+    tcAsiT.synFrac = tcAsiT.synCount ./ sum(tcAsiT.synCount);
+
+    curAreas = accumarray( ...
+        double(curAsiT.targetClass), ...
+        curAsiT.area, [], @(areas) {areas});
+    tcAsiT.meanArea = cellfun(@mean, curAreas);
+    tcAsiT.medianArea = cellfun(@median, curAreas);
+
+    tcAsiT = tcAsiT(tcAsiT.synCount > 0, :);
+    disp(tcAsiT)
+end
 
 %% Analyse L4 → L4 and L4 → L5 connections
+clear cur*;
+curAsiT = l4AsiT(l4AsiT.type == 'PrimarySpine', :);
+    
 l4Out = table;
-l4Out.name = categories(l4Conn.denMeta.targetClass);
+l4Out.name = categories(curAsiT.targetClass);
 l4Out.name = strcat({'L4 → '}, l4Out.name);
 
 l4Out.synCount = accumarray(double(l4SynT.targetClass), 1);
 l4Out.synFrac = l4Out.synCount ./ sum(l4Out.synCount);
+
+curAreas = accumarray( ...
+    double(curAsiT.targetClass), ...
+    curAsiT.area, [], @(areas) {areas});
+l4Out.meanArea = cellfun(@mean, curAreas);
+l4Out.medianArea = cellfun(@median, curAreas);
+
+l4Out = l4Out(l4Out.synCount > 0, :);
 disp(l4Out);
-
-%% Plot ASI areas for L4→L4 and L4→L5 connections
-clear cur*;
-
-curDataT = table;
-curDataT.targetClass = { ...
-    'ProximalDendrite'; ...
-    'ApicalDendrite'};
-curDataT.areas = cellfun( ...
-    @(t) l4AsiT.area(l4AsiT.targetClass == t), ...
-    curDataT.targetClass, 'UniformOutput', false);
-curDataT.meanArea = cellfun( ...
-    @(a) mean(a, 'omitnan'), curDataT.areas);
-curDataT.medianArea = cellfun( ...
-    @(a) median(a, 'omitnan'), curDataT.areas);
-curDataT.meanLog10Area = cellfun( ...
-    @(a) mean(log10(a), 'omitnan'), curDataT.areas);
-curDataT.stdLog10Area = cellfun( ...
-    @(a) std(log10(a), 'omitnan'), curDataT.areas);
-
-fprintf('Connections originating from L4\n\n');
-disp(curDataT);
-    
-curBinEdges = linspace(-2, 0.5, 11);
-curColors = get(groot, 'defaultAxesColorOrder');
-curColors = num2cell(curColors(1:height(curDataT), :), 2);
-
-curFig = figure();
-curAx = axes(curFig);
-hold(curAx, 'on');
-
-curPlotHist = @(areas) histogram( ...
-    curAx, log10(areas), curBinEdges, ...
-	'DisplayStyle', 'stairs', ...
-	'Normalization', 'probability', ...
-    'LineWidth', 2, 'FaceAlpha', 1);
-cellfun(curPlotHist, curDataT.areas);
-
-curPlotMedian = @(median) plot(curAx, ...
-    repelem(log10(median), 1, 2), ylim(curAx), ...
-    'LineStyle', '--', 'LineWidth', 2);
-curMedianPlots = arrayfun(curPlotMedian, curDataT.medianArea);
-set(curMedianPlots, {'Color'}, curColors);
-
-curFig.Color = 'white';
-curFig.Position(3:4) = [215, 160];
-curAx.TickDir = 'out';
-curAx.XLim = curBinEdges([1, end]);
-curAx.XTick = curBinEdges(mod(curBinEdges, 1) == 0);
-
-xlabel(curAx, 'log_{10}(ASI area [µm²])');
-ylabel(curAx, 'Probability');
-
-curLeg = legend(curAx, {'L4 → PD'; 'L4 → AD'});
-set(curLeg, 'Box', 'off', 'Location', 'NorthWest');
-
-title(curAx, ...
-    {info.filename; info.git_repos{1}.hash}, ...
-    'FontWeight', 'normal', 'FontSize', 10);
 
 %% Prepare data for plotting
 binEdges = linspace(-1.5, +0.5, 21);
@@ -250,16 +227,20 @@ plotT.name = {...
     'L4 → PD'; 'L4 → AD'; ...
     'TC → PD'; 'TC → AD'};
 plotT.asiAreas = { ...
-    l4AsiT.area(l4Conn.denMeta.targetClass( ...
-        l4AsiT.postAggloId) == 'ProximalDendrite'); ...
-    l4AsiT.area(l4Conn.denMeta.targetClass( ...
-        l4AsiT.postAggloId) == 'ApicalDendrite'); ...
+    l4AsiT.area( ...
+        l4AsiT.type == 'PrimarySpine' ...
+      & l4AsiT.targetClass == 'ProximalDendrite'); ...
+    l4AsiT.area( ...
+        l4AsiT.type == 'PrimarySpine' ...
+      & l4AsiT.targetClass == 'ApicalDendrite'); ...
     asiT.area( ...
-        conn.axonMeta.axonClass(asiT.preAggloId) == 'Thalamocortical' ...
-      & conn.denMeta.targetClass(asiT.postAggloId) == 'ProximalDendrite'); ...
+        asiT.type == 'PrimarySpine' ...
+      & asiT.axonClass == 'Thalamocortical' ...
+      & asiT.targetClass == 'WholeCell'); ...
     asiT.area( ...
-        conn.axonMeta.axonClass(asiT.preAggloId) == 'Thalamocortical' ...
-      & conn.denMeta.targetClass(asiT.postAggloId) == 'ApicalDendrite')};
+        asiT.type == 'PrimarySpine' ...
+      & asiT.axonClass == 'Thalamocortical' ...
+      & asiT.targetClass == 'ApicalDendrite')};
 plotT.medianAsiArea = cellfun(@median, plotT.asiAreas);
 
 plotT.name = cellfun(@(name, areas) ...
@@ -278,22 +259,21 @@ curAx = subplot(2, 2, 3); curPlotPair(curAx, [2, 4]);
 curAx = subplot(2, 2, 4); curPlotPair(curAx, [3, 4]);
 
 % Cosmetics
-curFig.Color = 'white';
 curAxes = findobj(curFig, 'type', 'Axes');
 curYLims = cell2mat(get(curAxes, {'YLim'}));
 curYLims(:, 2) = max(curYLims(:, 2));
-set(curAxes, {'YLim'}, num2cell(curYLims, 2));
-set(curAxes, 'TickDir', 'out', 'XLim', binEdges([1, end]));
+
+set(curAxes, ...
+    {'YLim'}, num2cell(curYLims, 2), ...
+    'PlotBoxAspectRatio', [1, 1, 1], ...
+    'DataAspectRatioMode', 'auto');
 
 curAx = subplot(2, 2, 3);
 xlabel(curAx, 'log_{10}(axon-spine interface area [µm²])');
 ylabel(curAx, 'Probability');
 
-annotation(curFig, ...
-    'textbox', [0, 0.9, 1, 0.1], ...
-    'EdgeColor', 'none', ...
-    'HorizontalAlignment', 'center', ...
-    'String', {info.filename; info.git_repos{1}.hash});
+curFig.Position(3:4) = [650, 540];
+connectEM.Figure.config(curFig, info);
 
 %% Box plot of synapse sizes
 clear cur*;
@@ -306,19 +286,11 @@ curAx = axes(curFig);
 boxplot(curVals, curGroups);
 
 % Cosmetics
-curFig.Color = 'white';
 curFig.Position(3:4) = [320, 422];
-curAx.TickDir = 'out';
-curAx.Box = 'off';
-
-ylim(curAx, binEdges([1, end]));
 ylabel(curAx, 'log_{10}(axon-spine interface area [µm²])');
 xticklabels(curAx, plotT.name);
 curAx.XTickLabelRotation = 15;
-
-title(curAx, ...
-    {info.filename; info.git_repos{1}.hash}, ...
-    'FontWeight', 'normal', 'FontSize', 10);
+connectEM.Figure.config(curFig, info);
 
 %% Utilities
 function [l4Conn, l4SynT, l4AsiT] = forL4( ...
