@@ -15,6 +15,9 @@ rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 outputMapFile = '/tmpscratch/amotta/l4/2018-07-26-tracing-based-output-maps/20190117T143833_results.mat';
 shFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v3_auto.mat');
 
+% NOTE(amotta): Leave empty to avoid debug skeletons
+debugDir = '/home/amotta/Desktop/l4-synapses';
+
 asiRunId = '20190211T111321';
 
 info = Util.runInfo();
@@ -32,10 +35,6 @@ shAgglos = shAgglos.shAgglos;
 graph = Graph.load(rootDir);
 graph = graph(graph.borderIdx ~= 0, :);
 
-borderMeta = fullfile(rootDir, 'globalBorder.mat');
-borderMeta = load(borderMeta, 'borderSize', 'borderCoM');
-borderMeta = structfun(@double, borderMeta, 'UniformOutput', false);
-
 % Loading tracings and synapses of L4 cells
 outputMap = load(outputMapFile);
 connFile = outputMap.info.param.connFile;
@@ -50,25 +49,11 @@ synT = connectEM.Connectome.buildSynapseTable(conn, syn);
 synT.axonClass = conn.axonMeta.axonClass(synT.preAggloId);
 synT.targetClass = conn.denMeta.targetClass(synT.postAggloId);
 
-[l4Conn, l4SynT, l4AsiT] = ...
-    forL4(param, graph, shAgglos, conn, syn, axonData);
+[l4Conn, l4SynT, l4AsiT] = forL4( ...
+    param, graph, shAgglos, conn, syn, axonData);
 
 l4SynT.targetClass = l4Conn.denMeta.targetClass(l4SynT.postAggloId);
 l4AsiT.targetClass = conn.denMeta.targetClass(l4AsiT.postAggloId);
-
-%% Calculate ASI position
-% See also connectEM.Consistency.Script.buildAxonSpineInterfaces
-weightedMean = @(w, v) ...
-    sum((w / sum(w, 1)) .* v, 1);
-
-l4AsiT.pos = cellfun( ...
-    @(ids) weightedMean( ...
-        borderMeta.borderSize(ids), ...
-        borderMeta.borderCoM(ids, :)), ...
-    l4AsiT.borderIds, 'UniformOutput', false);
-
-l4AsiT.pos = round(cell2mat(l4AsiT.pos));
-l4AsiT.pos(cellfun(@isempty, l4AsiT.borderIds), :) = nan;
 
 %% Calculate ASI area
 clear cur*;
@@ -78,6 +63,24 @@ curAsiFile = sprintf('%s__%s_asiT.mat', curFile, asiRunId);
 curAsiFile = fullfile(curDir, curAsiFile);
 
 if ~exist(curAsiFile, 'file')
+    % Calculate position
+    curBorderMeta = fullfile(rootDir, 'globalBorder.mat');
+    curBorderMeta = load(curBorderMeta, 'borderSize', 'borderCoM');
+    curBorderMeta = structfun(@double, curBorderMeta, 'UniformOutput', false);
+
+    % See also connectEM.Consistency.Script.buildAxonSpineInterfaces
+    curWmean = @(w, v) ...
+        sum((w / sum(w, 1)) .* v, 1);
+
+    l4AsiT.pos = cellfun( ...
+        @(ids) curWmean( ...
+            curBorderMeta.borderSize(ids), ...
+            curBorderMeta.borderCoM(ids, :)), ...
+        l4AsiT.borderIds, 'UniformOutput', false);
+
+    l4AsiT.pos = round(cell2mat(l4AsiT.pos));
+    l4AsiT.pos(cellfun(@isempty, l4AsiT.borderIds), :) = nan;
+    
     % Calculate area
     curIds = find(not(any(isnan(l4AsiT.pos), 2)));
     curAxonAgglos = {axonData.segIds};
@@ -88,7 +91,7 @@ if ~exist(curAsiFile, 'file')
         
         curAreas(curIdx) = ...
             connectEM.Consistency.buildAxonSpineInterfaceAreas( ...
-                    param, curAxonAgglos, shAgglos, l4AsiT(curId, :));
+                param, curAxonAgglos, shAgglos, l4AsiT(curId, :));
     end
     
     l4AsiT.area = nan(height(l4AsiT), 1);
@@ -102,6 +105,64 @@ l4AsiT = l4AsiT.l4AsiT;
 
 l4AsiT = l4AsiT(l4AsiT.area > 0, :);
 l4AsiT = connectEM.Consistency.Calibration.apply(l4AsiT);
+
+%% Generate skeleton for debugging
+% In particular, I'm interested in L4 → apical dendrite connections. Are
+% these true positives? Are they really that small?
+clear cur*;
+
+curPoints = Seg.Global.getSegToPointMap(param);
+curMst = @(ids, skel) Skeleton.fromMST( ...
+    curPoints(ids, :), param.raw.voxelSize, skel);
+
+if ~isempty(debugDir)
+    for curAxonId = 1:numel(axonData)
+        curAxon = axonData(curAxonId);
+       [~, curNmlName] = fileparts(curAxon.nmlFile);
+        
+        curSynT = l4SynT(l4SynT.preAggloId == curAxonId, :);
+        curNumDigits = ceil(log10(1 + height(curSynT)));
+        if isempty(curSynT); continue; end
+        
+        curSynT.segIds = cellfun( ...
+            @(a, b) unique(vertcat(a, b)), ...
+            syn.synapses.presynId(curSynT.id), ...
+            syn.synapses.postsynId(curSynT.id), ...
+            'UniformOutput', false);
+        
+        curSynT.type(:) = categorical({'Shaft'});
+        curSynT.asiArea(:) = nan;
+        
+        curAsiT = l4AsiT(l4AsiT.preAggloId == curAxonId, :);
+       [~, curSynId] = ismember(curAsiT.id, curSynT.id);
+       
+        curSynT.type(curSynId) = curAsiT.type;
+        curSynT.asiArea(curSynId) = curAsiT.area;
+        
+        curSkel = skeleton(curAxon.nmlFile);
+        curSkel = Skeleton.setDescriptionFromRunInfo(curSkel, info);
+        
+        % Get rid of dendrite
+        curSkel = curSkel.deleteTreeWithName('Dendrite');
+        
+        % Add axon agglomerate
+        curSkel = curMst(curAxon.segIds, curSkel);
+        curSkel.names{end} = 'Axon Agglomerate';        
+        
+        for curSynIdx = 1:height(curSynT)
+            curSyn = curSynT(curSynIdx, :);
+            
+            curSkel = curMst(curSyn.segIds{1}, curSkel);
+            curSkel.names{end} = sprintf( ...
+                '%0*d. Synapse %d. %s onto %s. %f µm²', ...
+                curNumDigits, curSynIdx, curSyn.id, ...
+                curSyn.type, curSyn.targetClass, curSyn.asiArea);
+        end
+        
+        curOutFile = fullfile(debugDir, strcat(curNmlName, '.nml'));
+        curSkel.write(curOutFile);
+    end
+end
 
 %% Analyse TC → L4 and TC → L5 connections
 tcOut = table;
@@ -276,7 +337,7 @@ function [l4Conn, l4SynT, l4AsiT] = forL4( ...
 
     curSyn = syn.synapses;
     curSyn.id = reshape(1:height(curSyn), [], 1);
-
+    keyboard
     curSyn.preAggloId = cellfun( ...
         @(ids) setdiff(axonLUT(ids), 0), ...
         curSyn.presynId, 'UniformOutput', false);
