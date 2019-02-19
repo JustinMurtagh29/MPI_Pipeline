@@ -37,7 +37,7 @@ pairT.dendId = asiT.postAggloId(curPairs(:, 1));
 pairT.synIds = curPairs;
 
 pairT.areas = asiT.area(pairT.synIds);
-pairT.log10avgAsi = log10(mean(pairT.areas, 2));
+pairT.log10AvgAsi = log10(mean(pairT.areas, 2));
 pairT.cv = std(pairT.areas, 0, 2) ./ mean(pairT.areas, 2);
 
 axonT = table;
@@ -74,14 +74,14 @@ axis(curAx, 'square');
 xlabel(curAx, 'log_{10}(ASI area)');
 ylabel(curAx, 'Probability');
 
-curLeg = legend(curAx, { ...
-        sprintf( ...
-            'Pairs of SASD pairs (n = %d synapses)', ...
-            numel(curHistOne.Data)), ...
-        sprintf( ...
-            'All SASD pairs (n = %d synapses)', ...
-            numel(curHistTwo.Data))}, ...
-    'Location', 'SouthOutside');
+curLegend = { ...
+    sprintf( ...
+        'Pairs of SASD pairs (n = %d synapses)', ...
+        numel(curHistOne.Data)), ...
+    sprintf( ...
+        'All SASD pairs (n = %d synapses)', ...
+        numel(curHistTwo.Data))};
+legend(curAx, curLegend, 'Location', 'SouthOutside');
 
 connectEM.Figure.config(curFig, info);
 
@@ -108,30 +108,29 @@ axis(curAx, 'square');
 xlabel(curAx, 'Coefficient of variation');
 ylabel(curAx, 'Probability');
 
-legend(curAx, { ...
-        sprintf( ...
-            'Pairs of SASD pairs (n = %d SASD pairs)', ...
-            numel(curHistOne.Data)), ...
-        sprintf( ...
-            'All SASD pairs (n = %d SASD pairs)', ...
-            numel(curHistTwo.Data))}, ...
-    'Location', 'SouthOutside');
+curLegend = { ...
+    sprintf( ...
+        'Pairs of SASD pairs (n = %d SASD pairs)', ...
+        numel(curHistOne.Data)), ...
+    sprintf( ...
+        'All SASD pairs (n = %d SASD pairs)', ...
+        numel(curHistTwo.Data))};
+legend(curAx, curLegend, 'Location', 'SouthOutside');
 
 connectEM.Figure.config(curFig, info);
 
-%% Check relationship between CVs in pairs of SASD pairs
+%% Check relationship between ASIs in pairs of SASD pairs
 clear cur*;
-
-curCvs = pairT.cv(axonT.pairIds);
-curCvs = sort(curCvs, 2, 'ascend');
-
 rng(0);
 
-curRand = randperm(numel(curCvs));
-curRand = reshape(curCvs(curRand), [], 2);
-curRand = sort(curRand, 2, 'ascend');
+curLog10Asi = pairT.log10AvgAsi(axonT.pairIds);
+curLog10Asi = sort(curLog10Asi, 2, 'descend');
 
-curFit = fitlm(curCvs(:, 1), curCvs(:, 2));
+curRand = randperm(numel(curLog10Asi));
+curRand = reshape(curLog10Asi(curRand), [], 2);
+curRand = sort(curRand, 2, 'descend');
+
+curFit = fitlm(curLog10Asi(:, 1), curLog10Asi(:, 2));
 curRandFit = fitlm(curRand(:, 1), curRand(:, 2));
 
 curFig = figure();
@@ -141,7 +140,49 @@ curAx = axes(curFig);
 hold(curAx, 'on');
 axis(curAx, 'square');
 
-curScatter = scatter(curAx, curCvs(:, 1), curCvs(:, 2), '.');
+curScatter = scatter(curAx, curLog10Asi(:, 1), curLog10Asi(:, 2), '.');
+curLineOne = plot(curAx, [-1.5; 0.5], curFit.predict([-1.5; 0.5]));
+curLineTwo = plot(curAx, [-1.5; 0.5], curRandFit.predict([-1.5; 0.5]));
+set([curLineOne, curLineTwo], 'LineWidth', 2);
+
+xlim(curAx, [-1.5; 0.5]);
+ylim(curAx, [-1.5; 0.5]);
+
+xlabel(curAx, 'log_{10}(ASI of large pair)');
+ylabel(curAx, 'log_{10}(ASI of small pair)');
+
+curLegend = { ...
+    sprintf( ...
+        'Pairs of SASD pairs (n = %d)', ...
+        numel(curScatter.XData)), ...
+    'Linear fit for pairs of SASD pairs', ...
+    'Linear fit for random pairs of SASD pairs'};
+legend(curAx, curLegend);
+
+connectEM.Figure.config(curFig, info);
+
+%% Check relationship between CVs in pairs of SASD pairs
+clear cur*;
+rng(0);
+
+curLog10Asi = pairT.cv(axonT.pairIds);
+curLog10Asi = sort(curLog10Asi, 2, 'ascend');
+
+curRand = randperm(numel(curLog10Asi));
+curRand = reshape(curLog10Asi(curRand), [], 2);
+curRand = sort(curRand, 2, 'ascend');
+
+curFit = fitlm(curLog10Asi(:, 1), curLog10Asi(:, 2));
+curRandFit = fitlm(curRand(:, 1), curRand(:, 2));
+
+curFig = figure();
+curFig.Position(3:4) = [400, 390];
+curAx = axes(curFig);
+
+hold(curAx, 'on');
+axis(curAx, 'square');
+
+curScatter = scatter(curAx, curLog10Asi(:, 1), curLog10Asi(:, 2), '.');
 curLineOne = plot(curAx, [0; 1.5], curFit.predict([0; 1.5]));
 curLineTwo = plot(curAx, [0; 1.5], curRandFit.predict([0; 1.5]));
 set([curLineOne, curLineTwo], 'LineWidth', 2);
@@ -151,12 +192,15 @@ ylim(curAx, [0, 1.5]);
 
 xlabel(curAx, 'CV of low-CV pair');
 ylabel(curAx, 'CV of high-CV pair');
-curLeg = legend(curAx, { ...
+
+curLegend = { ...
     sprintf( ...
-        'Pairs of SASD pairs (n = %d pairs)', ...
+        'Pairs of SASD pairs (n = %d)', ...
         numel(curScatter.XData)), ...
     'Linear fit for pairs of SASD pairs', ...
-    'Linear fit for random pairs of SASD pairs'});
+    'Linear fit for random pairs of SASD pairs'};
+legend(curAx, curLegend);
+
 connectEM.Figure.config(curFig, info);
 
 %% Correlation of synapse size correlation with synapse size
@@ -174,9 +218,9 @@ curTicksY = linspace(curLimY(1), curLimY(2), 5);
 curSaSdConfig = connectEM.Consistency.buildPairConfigs(asiT, plotConfig);
 curSaSdConfig = curSaSdConfig(1);
 
-curCtrlConfig = struct('synIds', {}, 'title', {}, 'tag', {});
-curCtrlConfig(1).synIds = curSaSdConfig.synIdPairs(:);
-curCtrlConfig(1).title = 'SASD';
+curCtrlConfig = struct;
+curCtrlConfig.synIds = curSaSdConfig.synIdPairs(:);
+curCtrlConfig.title = 'SASD';
 
 curKvPairs = { ...
     'xLim', curLimX, 'yLim', curLimY, ...
@@ -228,7 +272,7 @@ curPairT.x = ceil( ...
     (pairT.cv - curLimX(1)) ...
     ./ diff(curLimX) * (curImSize(2) - 1));
 curPairT.y = ceil( ...
-    (pairT.log10avgAsi - curLimY(1)) ...
+    (pairT.log10AvgAsi - curLimY(1)) ...
     ./ diff(curLimY) * (curImSize(1) - 1));
 
 curAxonT = axonT;
@@ -259,7 +303,6 @@ curRegionMapsMax = max( ...
     max(curRegionTwoMap(:)));
 
 %% Figure
-
 curFig = figure();
 curFig.Color = 'white';
 curFig.Position(3:4) = [1060, 970];
