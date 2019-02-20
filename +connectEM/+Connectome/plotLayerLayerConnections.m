@@ -171,6 +171,27 @@ if ~isempty(debugDir)
     end
 end
 
+%% Select random primary L4 → L4 spine synapses
+clear cur*;
+rng(0);
+
+% Copy-paste from above
+curSynT = l4SynT;
+curSynT.type(:) = categorical({'Shaft'});
+curSynT.asiArea(:) = nan;
+
+[~, curSynId] = ismember(l4AsiT.id, curSynT.id);
+curSynT.type(curSynId) = l4AsiT.type;
+curSynT.asiArea(curSynId) = l4AsiT.area;
+
+% Restrict
+curSynT = curSynT( ...
+    curSynT.type == 'PrimarySpine' ...
+  & curSynT.targetClass == 'ProximalDendrite', :);
+curSynT = curSynT(randperm(height(curSynT)), :);
+
+disp(head(curSynT, 20));
+
 %% Analyse TC → L4 and TC → L5 connections
 clear cur*;
 curConfigs = struct;
