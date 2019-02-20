@@ -5,15 +5,16 @@ clear;
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 
-% TODO(amotta): FIX FIX FIX!
-nmlDir = '/mnt/mpibr/data/Personal/mottaa/L4/2019-02-19-Proofreading-L4-Output-Synapses';
-adNmlFile = fullfile(nmlDir, 'l4-onto-ad-spine-synapses_merger-mode_v1.nml');
-pdNmlFile = fullfile(nmlDir, 'l4-onto-pd-spine-synapses_merger-mode_v1.nml');
+curNmlDir = fullfile(fileparts(mfilename('fullpath')), 'annotations');
+adNmlFile = fullfile(curNmlDir, 'l4-ad-spine-synapses.nml');
+pdNmlFile = fullfile(curNmlDir, 'l4-pd-spine-synapses.nml');
 
 info = Util.runInfo();
 Util.showRunInfo(info);
 
 %% Loading data
+clear cur*;
+
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 
