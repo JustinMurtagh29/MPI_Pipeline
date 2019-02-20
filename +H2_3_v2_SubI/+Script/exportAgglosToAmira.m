@@ -26,7 +26,7 @@ Util.log('loading graph...')
 graph = load(fullfile(rootDir, '29Nov2018_agglomeration/graph.mat'));
 graph = graph.graph;
 
-Util.log('Build agglomerates and export skeleton')
+Util.log('Build agglomerates and export isos....')
 mergeEdges = graph.edge(graph.score > minScore, :);
 [~, agglos] = Graph.buildConnectedComponents(maxSegId, mergeEdges);
 
