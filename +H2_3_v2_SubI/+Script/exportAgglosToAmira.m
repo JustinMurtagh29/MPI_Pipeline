@@ -38,7 +38,7 @@ agglos = agglos(idxSort);
 graphS = struct;
 graphS.edges = graph.edge;
 
-Util.log('Now writing out nmls...')
+Util.log('Now writing out iso jobs...')
 outDir = fullfile(rootDir,'29Nov2018_agglomeration', ['score_', num2str(minScore) '_isos']);
 mkdir(outDir)
 
