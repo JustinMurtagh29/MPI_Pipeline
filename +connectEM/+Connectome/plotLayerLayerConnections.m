@@ -190,6 +190,7 @@ curSynT = curSynT( ...
   & curSynT.targetClass == 'ProximalDendrite', :);
 curSynT = curSynT(randperm(height(curSynT)), :);
 
+format long;
 disp(head(curSynT, 20));
 
 %% Analyse TC → L4 and TC → L5 connections
