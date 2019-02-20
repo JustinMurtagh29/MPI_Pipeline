@@ -3,11 +3,11 @@
 clear;
 
 %% Configuration
-rootDir = '/tmpscratch/sahilloo/data/H2_3_v2_U1_SubI/pipelineRun_mr2e_wsmrnet/';
+rootDir = '/tmpscratch/sahilloo/data/Mk1_F6_JS_SubI_v1 /pipelineRun_mr2e_wsmrnet/';
 
 % For export to webKnossos
 load(fullfile(rootDir,'/allParameter.mat'))
-datasetName = 'H2_3_v2_U1_SubI_mr2e_wsmrnet';
+datasetName = 'Mk1_F6_JS_SubI_v1_mr2e_wsmrnet';
 voxelSize = [11.24, 11.24, 28];
 
 % Agglomerate down to this score treshold
@@ -21,7 +21,7 @@ maxSegId = meta.maxSegId;
 points = transpose(meta.point);
 clear meta;
 Util.log('loading graph...')
-graph = load(fullfile(rootDir, '29Nov2018_agglomeration/graph.mat'));
+graph = load(fullfile(rootDir, 'agglomeration/graph.mat'));
 graph = graph.graph;
 
 Util.log('Build agglomerates and export skeleton')
@@ -42,7 +42,7 @@ agglos = agglos(idxSort);
 graphS = struct;
 graphS.edges = graph.edge;
 Util.log('Now writing out nmls...')
-outDir = fullfile(rootDir,'29Nov2018_agglomeration', ['score_', num2str(minScore)]);
+outDir = fullfile(rootDir,'agglomeration', ['score_', num2str(minScore)]);
 mkdir(outDir)
 for i=2:300
     agglosOut = agglos(i);
