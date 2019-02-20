@@ -44,4 +44,4 @@ mkdir(outDir)
 
 agglosOut = agglos(2:300);
 
-Visualization.exportAgglosToAmira(p, agglosOut, outDir, 'reduce',0.05,'smoothSizeHalf',4,'smoothWidth',8)
+Visualization.exportAggloToAmira(p, agglosOut, outDir, 'reduce',0.05,'smoothSizeHalf',4,'smoothWidth',8)
