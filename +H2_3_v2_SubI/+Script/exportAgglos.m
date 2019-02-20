@@ -44,9 +44,9 @@ graphS.edges = graph.edge;
 Util.log('Now writing out nmls...')
 outDir = fullfile(rootDir,'29Nov2018_agglomeration', ['score_', num2str(minScore)]);
 mkdir(outDir)
-for i=2:300
+for i=2:1000
     agglosOut = agglos(i);
-    outFile = fullfile(outDir, ['agglo_#' num2str(i,'%02d') '.nml']);
+    outFile = fullfile(outDir, ['agglo_' num2str(i,'%04d') '.nml']);
     
     skel = Skeleton.fromAgglo(graphS, points, agglosOut);
     skel = skel.setParams(datasetName, voxelSize, [0, 0, 0]);
