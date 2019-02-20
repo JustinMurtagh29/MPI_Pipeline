@@ -54,6 +54,7 @@ asiT.pos = round(asiT.pos);
 asiT.area = ...
     connectEM.Consistency.buildAxonSpineInterfaceAreas( ...
         param, curAxons, curSpineHeads, asiT);
+asiT = connectEM.Consistency.Calibration.apply(asiT);
 
 %% Show results
 clear cur*;
