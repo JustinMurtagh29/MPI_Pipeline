@@ -34,7 +34,6 @@ axonData = outputMap.axonData;
 
 % Load connectome with synapses and TC axons
 [conn, syn] = connectEM.Connectome.load(param, connFile);
-conn = connectEM.Connectome.prepareForSpecificityAnalysis(conn);
 
 %%
 % NOTE(amotta): Because the axons used for this analysis are different
