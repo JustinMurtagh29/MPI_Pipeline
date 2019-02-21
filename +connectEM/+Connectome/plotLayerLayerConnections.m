@@ -13,13 +13,13 @@ rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 asiFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-linearized_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v8-classified_asiT.mat');
 % NOTE(amotta): This file is identical to 20180726T190355_results.mat with
 % the exception of the additional `outputMap.axonData.segIds` field.
-outputMapFile = '/tmpscratch/amotta/l4/2018-07-26-tracing-based-output-maps/20190117T143833_results.mat';
+l4OutputMapFile = '/tmpscratch/amotta/l4/2018-07-26-tracing-based-output-maps/20190117T143833_results.mat';
 shFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v3_auto.mat');
 
 % NOTE(amotta): Leave empty to avoid debug skeletons
 debugDir = '';
 
-asiRunId = '20190211T111321';
+l4ConnRunId = '20190221T112510';
 
 info = Util.runInfo();
 Util.showRunInfo(info);
@@ -28,35 +28,32 @@ Util.showRunInfo(info);
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 
-maxSegId = Seg.Global.getMaxSegId(param);
-
-shAgglos = load(shFile, 'shAgglos');
-shAgglos = shAgglos.shAgglos;
-
-graph = Graph.load(rootDir);
-graph = graph(graph.borderIdx ~= 0, :);
-
-% Loading tracings and synapses of L4 cells
-outputMap = load(outputMapFile);
-connFile = outputMap.info.param.connFile;
-axonData = outputMap.axonData;
-
-% Load connectome with synapses and TC axons
-[conn, syn] = connectEM.Connectome.load(param, connFile);
-conn = connectEM.Connectome.prepareForSpecificityAnalysis(conn);
+curData = load(l4OutputMapFile);
+conn = load(curData.info.param.connFile);
 
 asiT = load(asiFile);
 asiT = asiT.asiT;
 
+% Loading tracings and synapses of L4 cells
+[curDir, curFile] = fileparts(l4OutputMapFile);
+curFile = sprintf('%s__%s_connectome.mat', curFile, l4ConnRunId);
+curFile = fullfile(curDir, curFile);
+
+curData = load(curFile);
+l4SynT = curData.synT;
+l4AsiT = curData.asiT;
+
+%% Prepare ASI areas
+clear cur*;
+
 asiT = asiT(asiT.area > 0, :);
 asiT = connectEM.Consistency.Calibration.apply(asiT);
 
-%% Build synapse and axon-spine interface tables
-synT = connectEM.Connectome.buildSynapseTable(conn, syn);
-synT.axonClass = conn.axonMeta.axonClass(synT.preAggloId);
-synT.targetClass = conn.denMeta.targetClass(synT.postAggloId);
+l4AsiT = l4AsiT(l4AsiT.area > 0, :);
+l4AsiT = connectEM.Consistency.Calibration.apply(l4AsiT);
 
-error('UNIMPLEMENTED: Load L4 connectome and ASI areas');
+l4AsiT.targetClass = conn.denMeta.targetClass(l4AsiT.postAggloId);
+l4SynT.targetClass = conn.denMeta.targetClass(l4SynT.postAggloId);
 
 %% Generate skeleton for debugging
 % In particular, I'm interested in L4 → apical dendrite connections. Are
@@ -132,7 +129,7 @@ curSynT.asiArea(curSynId) = l4AsiT.area;
 % Restrict
 curSynT = curSynT( ...
     curSynT.type == 'PrimarySpine' ...
-  & curSynT.targetClass == 'ProximalDendrite', :);
+  & curSynT.targetClass == 'WholeCell', :);
 curSynT = curSynT(randperm(height(curSynT)), :);
 
 format long;
@@ -196,7 +193,7 @@ plotT.name = {...
 plotT.asiAreas = { ...
     l4AsiT.area( ...
         l4AsiT.type == 'PrimarySpine' ...
-      & l4AsiT.targetClass == 'ProximalDendrite'); ...
+      & l4AsiT.targetClass == 'WholeCell'); ...
     l4AsiT.area( ...
         l4AsiT.type == 'PrimarySpine' ...
       & l4AsiT.targetClass == 'ApicalDendrite'); ...
