@@ -56,62 +56,7 @@ synT = connectEM.Connectome.buildSynapseTable(conn, syn);
 synT.axonClass = conn.axonMeta.axonClass(synT.preAggloId);
 synT.targetClass = conn.denMeta.targetClass(synT.postAggloId);
 
-[l4Conn, l4SynT, l4AsiT] = forL4( ...
-    param, graph, shAgglos, conn, syn, axonData);
-
-l4SynT.targetClass = l4Conn.denMeta.targetClass(l4SynT.postAggloId);
-l4AsiT.targetClass = conn.denMeta.targetClass(l4AsiT.postAggloId);
-
-%% Calculate ASI area
-clear cur*;
-
-[curDir, curFile] = fileparts(outputMapFile);
-curAsiFile = sprintf('%s__%s_asiT.mat', curFile, asiRunId);
-curAsiFile = fullfile(curDir, curAsiFile);
-
-if ~exist(curAsiFile, 'file')
-    % Calculate position
-    curBorderMeta = fullfile(rootDir, 'globalBorder.mat');
-    curBorderMeta = load(curBorderMeta, 'borderSize', 'borderCoM');
-    curBorderMeta = structfun(@double, curBorderMeta, 'UniformOutput', false);
-
-    % See also connectEM.Consistency.Script.buildAxonSpineInterfaces
-    curWmean = @(w, v) ...
-        sum((w / sum(w, 1)) .* v, 1);
-
-    l4AsiT.pos = cellfun( ...
-        @(ids) curWmean( ...
-            curBorderMeta.borderSize(ids), ...
-            curBorderMeta.borderCoM(ids, :)), ...
-        l4AsiT.borderIds, 'UniformOutput', false);
-
-    l4AsiT.pos = round(cell2mat(l4AsiT.pos));
-    l4AsiT.pos(cellfun(@isempty, l4AsiT.borderIds), :) = nan;
-    
-    % Calculate area
-    curIds = find(not(any(isnan(l4AsiT.pos), 2)));
-    curAxonAgglos = {axonData.segIds};
-
-    curAreas = nan(numel(curIds), 1);
-    parfor curIdx = 1:numel(curIds)
-        curId = curIds(curIdx);
-        
-        curAreas(curIdx) = ...
-            connectEM.Consistency.buildAxonSpineInterfaceAreas( ...
-                param, curAxonAgglos, shAgglos, l4AsiT(curId, :));
-    end
-    
-    l4AsiT.area = nan(height(l4AsiT), 1);
-    l4AsiT.area(curIds) = curAreas;
-    Util.save(curAsiFile, l4AsiT, info);
-    Util.protect(curAsiFile);
-end
-
-l4AsiT = load(curAsiFile);
-l4AsiT = l4AsiT.l4AsiT;
-
-l4AsiT = l4AsiT(l4AsiT.area > 0, :);
-l4AsiT = connectEM.Consistency.Calibration.apply(l4AsiT);
+error('UNIMPLEMENTED: Load L4 connectome and ASI areas');
 
 %% Generate skeleton for debugging
 % In particular, I'm interested in L4 → apical dendrite connections. Are
@@ -315,60 +260,6 @@ curAx.XTickLabelRotation = 15;
 connectEM.Figure.config(curFig, info);
 
 %% Utilities
-function [l4Conn, l4SynT, l4AsiT] = forL4( ...
-        param, graph, shAgglos, conn, syn, axonData)
-    % NOTE(amotta): Because the axons used for this analysis are different
-    % from the ones in the dense reconstruction, we have to build a fake
-    % connectome.
-    clear cur*;
-
-    axonAgglos = reshape({axonData.segIds}, [], 1);
-    axonAgglos = Agglo.removeSegmentOverlap(axonAgglos);
-
-    maxSegId = Seg.Global.getMaxSegId(param);
-    axonLUT = Agglo.buildLUT(maxSegId, axonAgglos);
-    dendLUT = Agglo.buildLUT(maxSegId, conn.dendrites);
-
-    curSyn = syn.synapses;
-    curSyn.id = reshape(1:height(curSyn), [], 1);
-
-    curSyn.preAggloId = cellfun( ...
-        @(ids) setdiff(axonLUT(ids), 0), ...
-        curSyn.presynId, 'UniformOutput', false);
-    curSyn = curSyn(cellfun( ...
-        @isscalar, curSyn.preAggloId), :);
-
-    curSyn.postAggloId = cellfun( ...
-        @(ids) setdiff(dendLUT(ids), 0), ...
-        curSyn.postsynId, 'UniformOutput', false);
-    curSyn = curSyn(cellfun( ...
-        @isscalar, curSyn.postAggloId), :);
-
-    curSyn = [ ...
-        cell2mat(curSyn.preAggloId), ...
-        cell2mat(curSyn.postAggloId), ...
-        curSyn.id];
-
-    curConnectome = table;
-   [curConnectome.edges, ~, curIds] = ...
-        unique(curSyn(:, 1:2), 'rows');
-    curConnectome.synIdx = accumarray( ...
-        curIds, curSyn(:, end), [], @(ids) {ids});
-
-    l4Conn = struct;
-    l4Conn.axons = axonAgglos;
-    l4Conn.denMeta = conn.denMeta;
-    l4Conn.dendrites = conn.dendrites;
-    l4Conn.connectome = curConnectome;
-    clearvars cur* -except curConn;
-    
-    l4SynT = ...
-        connectEM.Connectome.buildSynapseTable(l4Conn, syn);
-    l4AsiT = ...
-        connectEM.Connectome.buildAxonSpineInterfaces( ...
-            param, graph, shAgglos, l4Conn, syn, 'addBorderIdsVar', true);
-end
-
 function plotPair(binEdges, plotT, ax, plotIds)
     colors = get(groot, 'defaultAxesColorOrder');
     colors = num2cell(colors, 2);
