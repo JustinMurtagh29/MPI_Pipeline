@@ -28,12 +28,6 @@ Util.log('Build agglomerates and export skeleton')
 mergeEdges = graph.edge(graph.score > minScore, :);
 [~, agglos] = Graph.buildConnectedComponents(maxSegId, mergeEdges);
 
-%{
-% look at random 100 agglos
-idxOut = randperm(size(agglos,1),100);
-agglosOut = agglos(idxOut);
-%}
-
 len = cellfun(@(x) length(x),agglos);
 [~,idxSort] = sort(len,'descend');
 agglos = agglos(idxSort);
