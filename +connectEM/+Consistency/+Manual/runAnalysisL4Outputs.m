@@ -66,7 +66,24 @@ outT.synCount = cellfun(@numel, outT.areas);
 outT.meanArea = cellfun(@mean, outT.areas);
 outT.medianArea = cellfun(@median, outT.areas);
 
+fprintf('Summary\n\n');
 disp(outT);
+
+% Statistical tests
+statT = struct;
+statT(1).name = 'Wilcoxon rank sum test';
+statT(1).pVal = ranksum(outT.areas{:});
+
+statT(2).name = 'Kolmogorov-Smirnov test';
+[~, statT(2).pVal] = kstest2(outT.areas{:});
+
+curData = cellfun(@log10, outT.areas, 'UniformOutput', false);
+statT(3).name = 'Student''s t-test in log10';
+[~, statT(3).pVal] = ttest2(curData{:});
+
+fprintf('Statistical tests\n\n');
+statT = struct2table(statT, 'AsArray', true);
+disp(statT);
 
 %% Histograms
 clear cur*;
