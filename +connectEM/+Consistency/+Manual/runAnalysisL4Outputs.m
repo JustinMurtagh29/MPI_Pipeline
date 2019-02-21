@@ -58,38 +58,53 @@ asiT = connectEM.Consistency.Calibration.apply(asiT);
 
 %% Show results
 clear cur*;
-curBinEdges = linspace(-1.5, 0.5, 21);
 
 outT = table;
 [outT.targetClass, ~, curIds] = unique(asiT.targetClass);
-outT.synCount = accumarray(curIds, 1);
-outT.meanArea = accumarray(curIds, asiT.area, [], @mean);
-outT.medianArea = accumarray(curIds, asiT.area, [], @median);
+outT.areas = accumarray(curIds, asiT.area, [], @(areas) {areas(:)});
+outT.synCount = cellfun(@numel, outT.areas);
+outT.meanArea = cellfun(@mean, outT.areas);
+outT.medianArea = cellfun(@median, outT.areas);
 
 disp(outT);
 
-% Histograms
-curFig = figure();
-curFig.Position(3:4) = [290, 290];
-curAx = axes(curFig);
-hold(curAx, 'on');
+%% Histograms
+clear cur*;
 
-for curIdx = 1:height(outT)
-    curAreas = asiT.area(curIds == curIdx);
-    histogram(curAx, log10(curAreas), 'BinEdges', curBinEdges);
+curConfigs = struct;
+curConfigs(1).xlabel = 'log_{10}(ASI area [µm²])';
+curConfigs(1).binEdges = linspace(-1.5, 0.5, 21);
+curConfigs(1).data = cellfun(@log10, outT.areas, 'UniformOutput', false);
+
+curConfigs(2).xlabel = 'ASI area [µm²]';
+curConfigs(2).binEdges = linspace(0, 0.8, 17);
+curConfigs(2).data = outT.areas;
+
+for curConfig = curConfigs
+    curFig = figure();
+    curFig.Position(3:4) = [290, 290];
+    
+    curAx = axes(curFig); %#ok
+    hold(curAx, 'on');
+
+    cellfun( ...
+        @(values) histogram( ...
+            curAx, values, ...
+            'BinEdges', curConfig.binEdges), ...
+        curConfig.data);
+
+    xlabel(curAx, curConfig.xlabel);
+    ylabel(curAx, 'Occurences');
+
+    curLeg = legend(curAx, ...
+        arrayfun( ...
+            @(t, n) sprintf('%s (n = %d)', t, n), ...
+            outT.targetClass, outT.synCount, ...
+            'UniformOutput', false), ...
+        'Location', 'SouthOutside');
+
+    connectEM.Figure.config(curFig, info);
+
+    curHists = findobj(curFig, 'type', 'histogram');
+    set(curHists, 'DisplayStyle', 'bar', 'EdgeColor', 'none');
 end
-
-xlabel(curAx, 'log_{10}(ASI area [µm²])');
-ylabel(curAx, 'Occurences');
-
-curLeg = legend(curAx, ...
-    arrayfun( ...
-        @(t, n) sprintf('%s (n = %d)', t, n), ...
-        outT.targetClass, outT.synCount, ...
-        'UniformOutput', false), ...
-    'Location', 'SouthOutside');
-
-connectEM.Figure.config(curFig, info);
-
-curHists = findobj(curFig, 'type', 'histogram');
-set(curHists, 'DisplayStyle', 'bar', 'EdgeColor', 'none');
