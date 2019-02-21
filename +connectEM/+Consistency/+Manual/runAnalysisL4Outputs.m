@@ -71,7 +71,7 @@ disp(outT);
 
 % Statistical tests
 statT = struct;
-statT(1).name = 'Wilcoxon rank sum test';
+statT(1).name = 'Mann-Whitney-Wilcoxon rank sum test';
 statT(1).pVal = ranksum(outT.areas{:});
 
 statT(2).name = 'Kolmogorov-Smirnov test';
