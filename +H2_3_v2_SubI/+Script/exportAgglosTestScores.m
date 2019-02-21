@@ -1,7 +1,6 @@
-function exprtAgglosTestScores(minScore)
+function exportAgglosTestScores(minScore)
 % Written by
 %   Alessandro Motta <alessandro.motta@brain.mpg.de>
-clear;
 
 %% Configuration
 rootDir = '/tmpscratch/sahilloo/data/H2_3_v2_U1_SubI/pipelineRun_mr2e_wsmrnet/';
