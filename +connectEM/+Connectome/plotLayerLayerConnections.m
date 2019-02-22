@@ -55,64 +55,6 @@ l4AsiT = connectEM.Consistency.Calibration.apply(l4AsiT);
 l4AsiT.targetClass = conn.denMeta.targetClass(l4AsiT.postAggloId);
 l4SynT.targetClass = conn.denMeta.targetClass(l4SynT.postAggloId);
 
-%% Generate skeleton for debugging
-% In particular, I'm interested in L4 → apical dendrite connections. Are
-% these true positives? Are they really that small?
-clear cur*;
-
-curPoints = Seg.Global.getSegToPointMap(param);
-curMst = @(ids, skel) Skeleton.fromMST( ...
-    curPoints(ids, :), param.raw.voxelSize, skel);
-
-if ~isempty(debugDir)
-    for curAxonId = 1:numel(axonData)
-        curAxon = axonData(curAxonId);
-       [~, curNmlName] = fileparts(curAxon.nmlFile);
-        
-        curSynT = l4SynT(l4SynT.preAggloId == curAxonId, :);
-        curNumDigits = ceil(log10(1 + height(curSynT)));
-        if isempty(curSynT); continue; end
-        
-        curSynT.segIds = cellfun( ...
-            @(a, b) unique(vertcat(a, b)), ...
-            syn.synapses.presynId(curSynT.id), ...
-            syn.synapses.postsynId(curSynT.id), ...
-            'UniformOutput', false);
-        
-        curSynT.type(:) = categorical({'Shaft'});
-        curSynT.asiArea(:) = nan;
-        
-        curAsiT = l4AsiT(l4AsiT.preAggloId == curAxonId, :);
-       [~, curSynId] = ismember(curAsiT.id, curSynT.id);
-       
-        curSynT.type(curSynId) = curAsiT.type;
-        curSynT.asiArea(curSynId) = curAsiT.area;
-        
-        curSkel = skeleton(curAxon.nmlFile);
-        curSkel = Skeleton.setDescriptionFromRunInfo(curSkel, info);
-        
-        % Get rid of dendrite
-        curSkel = curSkel.deleteTreeWithName('Dendrite');
-        
-        % Add axon agglomerate
-        curSkel = curMst(curAxon.segIds, curSkel);
-        curSkel.names{end} = 'Axon Agglomerate';        
-        
-        for curSynIdx = 1:height(curSynT)
-            curSyn = curSynT(curSynIdx, :);
-            
-            curSkel = curMst(curSyn.segIds{1}, curSkel);
-            curSkel.names{end} = sprintf( ...
-                '%0*d. Synapse %d. %s onto %s. %f µm²', ...
-                curNumDigits, curSynIdx, curSyn.id, ...
-                curSyn.type, curSyn.targetClass, curSyn.asiArea);
-        end
-        
-        curOutFile = fullfile(debugDir, strcat(curNmlName, '.nml'));
-        curSkel.write(curOutFile);
-    end
-end
-
 %% Select random primary L4 → L4 spine synapses
 clear cur*;
 rng(0);
