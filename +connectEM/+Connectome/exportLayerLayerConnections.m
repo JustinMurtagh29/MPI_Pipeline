@@ -139,11 +139,13 @@ clear cur*;
 % Export synapses as
 % * mst ⇒ minimum spanning tree
 % * com ⇒ center of mass
-curSynExportType = 'com';
+curSynExportType = 'mst';
 curAxonAggloExportType = '';
+curDendAggloExportType = '';
 
 assert(ismember(curSynExportType, {'', 'mst', 'com'}));
 assert(ismember(curAxonAggloExportType, {'', 'mst'}));
+assert(ismember(curDendAggloExportType, {'', 'agglo'}));
 
 curMst = @(ids, skel) Skeleton.fromMST( ...
     segPoints(ids, :), param.raw.voxelSize, skel);
@@ -225,6 +227,8 @@ for curAxonIdx = 1:numel(curAxonIds)
     curDendNames = cat(1, curWcNames(:), curDendNames(:));
     
     for curDendIdx = 1:numel(curDendIds)
+        if isempty(curDendAggloExportType); continue; end
+        
         curDendName = curDendNames(curDendIdx);
         curDendId = curDendIds(curDendIdx);
         
