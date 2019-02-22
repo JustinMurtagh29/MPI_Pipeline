@@ -23,7 +23,8 @@ asiT = connectEM.Consistency.Calibration.apply(asiT);
 %% Prepare data
 clear cur*;
 
-plotConfigs = struct;
+plotConfigs = struct('synIds', {}, 'title', {}, 'tag', {});
+
 plotConfigs(1).synIds = find( ...
     asiT.type == 'PrimarySpine' & ismember( ...
     asiT.axonClass, {'Corticocortical', 'Thalamocortical'}));
@@ -33,19 +34,57 @@ plotConfigs(1).tag = 'exc pri sp';
 plotConfigs(2).synIds = find( ...
     asiT.type == 'PrimarySpine' ...
   & asiT.axonClass == 'Thalamocortical');
-plotConfigs(2).title = 'thalamocortical primary spine synapses';
+plotConfigs(2).title = 'TC primary spine synapses';
 plotConfigs(2).tag = 'tc pri sp';
 
 plotConfigs(3).synIds = find( ...
     asiT.type == 'PrimarySpine' ...
   & asiT.axonClass == 'Corticocortical');
-plotConfigs(3).title = 'corticocortical primary spine synapses';
+plotConfigs(3).title = 'CC primary spine synapses';
 plotConfigs(3).tag = 'cc pri sp';
 
 plotConfigs(4).synIds = find( ...
     asiT.type == 'PrimarySpine');
 plotConfigs(4).title = 'primary spine synapses';
 plotConfigs(4).tag = 'pri sp';
+
+%% Build axon-target class pairs
+clear cur*;
+
+curAxonClasses = { ...
+    'CC', 'Corticocortical'; ...
+    'TC', 'Thalamocortical'};
+curTargetClasses = { ...
+    'AD', 'ApicalDendrite'; ...
+    'OD', 'OtherDendrite'; ...
+    'WC', 'WholeCell'};
+
+for curAxonIdx = 1:size(curAxonClasses, 1)
+    curAxonClass = curAxonClasses(curAxonIdx, :);
+    
+    for curTargetIdx = 1:size(curTargetClasses, 1)
+        curTargetClass = curTargetClasses(curTargetIdx, :);
+        
+        curSynIds = find( ...
+            asiT.type == 'PrimarySpine' ...
+          & asiT.axonClass == curAxonClass{2} ...
+          & asiT.targetClass == curTargetClass{2});
+        if isempty(curSynIds); continue; end
+        
+        curTitle = sprintf( ...
+            '%s → %s primary spine synapses', ...
+            curAxonClass{1}, curTargetClass{1});
+        curTag = sprintf('%s %s pri sp', ...
+            curAxonClass{1}, curTargetClass{1});
+        
+        curPlotConfig = plotConfigs([]);
+        curPlotConfig(1).synIds = curSynIds;
+        curPlotConfig(1).title = curTitle;
+        curPlotConfig(1).tag = curTag;
+        
+        plotConfigs(end + 1) = curPlotConfig; %#ok
+    end
+end
 
 %% Report synapse sizes
 clear cur*;
@@ -151,75 +190,72 @@ connectEM.Consistency.plotCouplingHistogram( ...
 
 %% Synapse area variability
 clear cur*;
-curConfigs = struct('synT', asiT, 'plotConfigs', plotConfigs);
 
-for curConfig = curConfigs
-    for curPlotConfig = curConfig.plotConfigs(1)
-        curPairConfigs = ...
-            connectEM.Consistency.buildPairConfigs( ...
-                curConfig.synT, curPlotConfig);
-        curFig = ...
-            connectEM.Consistency.plotVariabilityHistogram( ...
-                info, curConfig.synT, curPlotConfig, curPairConfigs(:));
-        curFig.Position(3:4) = [370, 540];
+for curPlotConfig = plotConfigs
+    curPairConfigs = ...
+        connectEM.Consistency.buildPairConfigs(asiT, curPlotConfig);
+    
+    curFig = ...
+        connectEM.Consistency.plotVariabilityHistogram( ...
+            info, asiT, curPlotConfig, curPairConfigs(:));
+    curFig.Position(3:4) = [370, 540];
 
-       [curLearnedFrac, curUnlearnedFrac, curCvThresh] = ...
-            connectEM.Consistency.calculateLearnedFraction( ...
-                curConfig.synT, curPairConfigs(1), curPairConfigs(end), ...
-                'method', 'maxdifference');
-        curOpenFrac = 1 - curLearnedFrac - curUnlearnedFrac;
-        
-        % Quantitative reporting
-        fprintf('**%s**\n', curPlotConfig.title);
-        curSynIdPairs = curPairConfigs(1).synIdPairs;
-        
-        curSynT = curConfig.synT( ...
-            curSynIdPairs(:, 1), {'preAggloId', 'postAggloId'});
-        curSynT.areas = curConfig.synT.area(curSynIdPairs);
-        curSynT.cv = std(curSynT.areas, 0, 2) ./ mean(curSynT.areas, 2);
-        curSynT.low = curSynT.cv < curCvThresh;
-        
-        curAxonT = curSynT(:, {'preAggloId'});
-       [curAxonT, ~, curGroupIds] = unique(curAxonT);
-        curAxonT.allConn = accumarray(curGroupIds, 1);
-        curAxonT.lowConn = accumarray(curGroupIds, curSynT.low);
-        curAxonT = sortrows(curAxonT, 'lowConn', 'descend');
-        
-        curLowThresh = round(height(curSynT) * curLearnedFrac);
-        curAxonFracLow = find(cumsum(curAxonT.lowConn) > curLowThresh, 1);
-        curAxonFracLow = curAxonFracLow / height(curAxonT) %#ok
-        curAxonFracUp = curLowThresh / height(curAxonT) %#ok
-        
-        fprintf('CV between pairs (mean ± std)\n');
-        for curPairConfig = curPairConfigs
-            curCvs = curConfig.synT.area(curPairConfig.synIdPairs);
-            curCvs = std(curCvs, 0, 2) ./ mean(curCvs, 2);
-            
-            fprintf( ...
-                '* %s: %f ± %f\n', ...
-                curPairConfig.title, ...
-                mean(curCvs), std(curCvs));
-        end
-            
-        fprintf('\n');
-        
-        fprintf('* Learned fraction: %.1f %%\n', 100 * curLearnedFrac);
-        fprintf('* Possibly learned fraction: %.1f %%\n', 100 * curOpenFrac);
-        fprintf('* Unlearned fraction: %.1f %%\n', 100 * curUnlearnedFrac);
-        fprintf('* CV threshold: %.2f\n', curCvThresh);
-        fprintf('\n');
+   [curLearnedFrac, curUnlearnedFrac, curCvThresh] = ...
+        connectEM.Consistency.calculateLearnedFraction( ...
+            asiT, curPairConfigs(1), curPairConfigs(end), ...
+            'method', 'maxdifference');
+    curOpenFrac = 1 - curLearnedFrac - curUnlearnedFrac;
 
-        fprintf('Significance tests\n');
-        fprintf('p-values for unexpected synapse size similarity\n');
-        for curPairConfig = curPairConfigs(1:(end - 1))
-            curPValue = ...
-                connectEM.Consistency.testVariability( ...
-                    curConfig.synT, curPairConfig, curPairConfigs(end));
-            fprintf('* %s: %g\n', curPairConfig.title, curPValue);
-        end
-        
-        fprintf('\n');
+    % Quantitative reporting
+    fprintf('**%s**\n', curPlotConfig.title);
+    curSynIdPairs = curPairConfigs(1).synIdPairs;
+
+    curSynT = asiT( ...
+        curSynIdPairs(:, 1), {'preAggloId', 'postAggloId'});
+    curSynT.areas = asiT.area(curSynIdPairs);
+    curSynT.cv = std(curSynT.areas, 0, 2) ./ mean(curSynT.areas, 2);
+    curSynT.low = curSynT.cv < curCvThresh;
+
+    curAxonT = curSynT(:, {'preAggloId'});
+   [curAxonT, ~, curGroupIds] = unique(curAxonT);
+    curAxonT.allConn = accumarray(curGroupIds, 1);
+    curAxonT.lowConn = accumarray(curGroupIds, curSynT.low);
+    curAxonT = sortrows(curAxonT, 'lowConn', 'descend');
+
+    curLowThresh = round(height(curSynT) * curLearnedFrac);
+    curAxonFracLow = find(cumsum(curAxonT.lowConn) > curLowThresh, 1);
+    curAxonFracLow = curAxonFracLow / height(curAxonT) %#ok
+    curAxonFracUp = curLowThresh / height(curAxonT) %#ok
+
+    fprintf('CV between pairs (mean ± std)\n');
+    for curPairConfig = curPairConfigs
+        curCvs = asiT.area(curPairConfig.synIdPairs);
+        curCvs = std(curCvs, 0, 2) ./ mean(curCvs, 2);
+
+        fprintf( ...
+            '* %s: %f ± %f\n', ...
+            curPairConfig.title, ...
+            mean(curCvs), std(curCvs));
     end
+
+    fprintf('\n');
+
+    fprintf('* Learned fraction: %.1f %%\n', 100 * curLearnedFrac);
+    fprintf('* Possibly learned fraction: %.1f %%\n', 100 * curOpenFrac);
+    fprintf('* Unlearned fraction: %.1f %%\n', 100 * curUnlearnedFrac);
+    fprintf('* CV threshold: %.2f\n', curCvThresh);
+    fprintf('\n');
+
+    fprintf('Significance tests\n');
+    fprintf('p-values for unexpected synapse size similarity\n');
+    for curPairConfig = curPairConfigs(1:(end - 1))
+        curPValue = ...
+            connectEM.Consistency.testVariability( ...
+                asiT, curPairConfig, curPairConfigs(end));
+        fprintf('* %s: %g\n', curPairConfig.title, curPValue);
+    end
+
+    fprintf('\n');
 end
 
 %% Correlation of synapse size correlation with synapse size
@@ -240,10 +276,8 @@ for curConfig = plotConfigs
     curSaSdConfig = curSaSdConfig(1);
     
     curCtrlConfigs = struct('synIds', {}, 'title', {}, 'tag', {});
-    curCtrlConfigs(1).synIds = curConfig.synIds(:);
-    curCtrlConfigs(1).title = 'all';
-    curCtrlConfigs(2).synIds = curSaSdConfig.synIdPairs(:);
-    curCtrlConfigs(2).title = 'SASD';
+    curCtrlConfigs(1).synIds = curSaSdConfig.synIdPairs(:);
+    curCtrlConfigs(1).title = 'SASD';
     
     for curCtrlConfig = curCtrlConfigs
         curKvPairs = { ...
@@ -317,6 +351,8 @@ for curConfig = plotConfigs
         curBar.TickLabels = {'0', sprintf('%.3g', curMax)};
         
         curAx = subplot(2, 2, 3);
+        curPValAx = curAx;
+        
         imagesc(curAx, curPvalMap);
         colormap(curAx, 'jet');
         
@@ -404,6 +440,7 @@ for curConfig = plotConfigs
         fprintf('%s\n', curCtrlTitle);
         fprintf('\n');
         
+        curTitle = cell(2, numel(curRegionProps));
         for curRegionId = 1:numel(curRegionProps)
             curMask = curRegionMask == curRegionId;
             curSaSdFrac = sum(curSaSdMap(curMask));
@@ -417,6 +454,17 @@ for curConfig = plotConfigs
                 '    * Delta: %.2f %%\n'], ...
                 100 * [curSaSdFrac, curCtrlFrac, curDiffFrac]);
             fprintf('\n');
+            
+            curTitle{1, curRegionId} = ...
+                sprintf('%.2f %%', 100 * curSaSdFrac);
+            curTitle{2, curRegionId} = ...
+                sprintf('%.2f %%', 100 * curDiffFrac);
         end
+        
+        curTitle = { ...
+            'Significance regions'; ...
+            strcat(strjoin(curTitle(1, :), ', '), ' of SASD'); ...
+            strcat(strjoin(curTitle(2, :), ', '), ' versus control')};
+        title(curPValAx, curTitle, 'FontWeight', 'normal', 'FontSize', 10);
     end
 end
