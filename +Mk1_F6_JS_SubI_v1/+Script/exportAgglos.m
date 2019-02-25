@@ -8,7 +8,7 @@ rootDir = '/tmpscratch/sahilloo/data/Mk1_F6_JS_SubI_v1/pipelineRun_mr2e_wsmrnet/
 % For export to webKnossos
 load(fullfile(rootDir,'allParameter.mat'))
 datasetName = 'Mk1_F6_JS_SubI_v1_mr2e_wsmrnet';
-voxelSize = [11.24, 11.24, 28];
+voxelSize = [11.24, 11.24, 30];
 
 % Agglomerate down to this score treshold
 minScore = 0.1;
@@ -28,12 +28,6 @@ Util.log('Build agglomerates and export skeleton')
 mergeEdges = graph.edge(graph.score > minScore, :);
 [~, agglos] = Graph.buildConnectedComponents(maxSegId, mergeEdges);
 
-%{
-% look at random 100 agglos
-idxOut = randperm(size(agglos,1),100);
-agglosOut = agglos(idxOut);
-%}
-
 len = cellfun(@(x) length(x),agglos);
 [~,idxSort] = sort(len,'descend');
 agglos = agglos(idxSort);
@@ -42,11 +36,11 @@ agglos = agglos(idxSort);
 graphS = struct;
 graphS.edges = graph.edge;
 Util.log('Now writing out nmls...')
-outDir = fullfile(rootDir,'agglomeration', ['score_', num2str(minScore)]);
+outDir = fullfile(rootDir,'29Nov2018_agglomeration', ['score_', num2str(minScore)]);
 mkdir(outDir)
 for i=2:50
     agglosOut = agglos(i);
-    outFile = fullfile(outDir, ['agglo_#' num2str(i,'%02d') '.nml']);
+    outFile = fullfile(outDir, ['agglo_' num2str(i,'%04d') '.nml']);
     
     skel = Skeleton.fromAgglo(graphS, points, agglosOut);
     skel = skel.setParams(datasetName, voxelSize, [0, 0, 0]);
