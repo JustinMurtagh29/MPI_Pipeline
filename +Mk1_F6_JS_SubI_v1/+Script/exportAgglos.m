@@ -3,7 +3,7 @@
 clear;
 
 %% Configuration
-rootDir = '/tmpscratch/sahilloo/data/Mk1_F6_JS_SubI_v1 /pipelineRun_mr2e_wsmrnet/';
+rootDir = '/tmpscratch/sahilloo/data/Mk1_F6_JS_SubI_v1/pipelineRun_mr2e_wsmrnet/';
 
 % For export to webKnossos
 load(fullfile(rootDir,'allParameter.mat'))
