@@ -6,7 +6,7 @@ clear;
 rootDir = '/tmpscratch/sahilloo/data/Mk1_F6_JS_SubI_v1 /pipelineRun_mr2e_wsmrnet/';
 
 % For export to webKnossos
-load(fullfile(rootDir,'/allParameter.mat'))
+load(fullfile(rootDir,'allParameter.mat'))
 datasetName = 'Mk1_F6_JS_SubI_v1_mr2e_wsmrnet';
 voxelSize = [11.24, 11.24, 28];
 
@@ -44,7 +44,7 @@ graphS.edges = graph.edge;
 Util.log('Now writing out nmls...')
 outDir = fullfile(rootDir,'agglomeration', ['score_', num2str(minScore)]);
 mkdir(outDir)
-for i=2:300
+for i=2:50
     agglosOut = agglos(i);
     outFile = fullfile(outDir, ['agglo_#' num2str(i,'%02d') '.nml']);
     
