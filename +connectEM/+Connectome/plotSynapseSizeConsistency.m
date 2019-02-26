@@ -269,6 +269,9 @@ curLimY = [-1.5, 0.5];
 curImSize = [256, 256];
 curMethod = 'kde2d';
 
+% Show region corresponding to smallest X-th quantile.
+curSmall = [0.1, 0.5];
+
 curTicksX = linspace(curLimX(1), curLimX(2), 4);
 curTicksY = linspace(curLimY(1), curLimY(2), 5);
 
@@ -280,6 +283,15 @@ for curConfig = plotConfigs
     curCtrlConfigs = struct('synIds', {}, 'title', {}, 'tag', {});
     curCtrlConfigs(1).synIds = curSaSdConfig.synIdPairs(:);
     curCtrlConfigs(1).title = 'SASD';
+    
+    curSmallArea = asiT.area(curSaSdConfig.synIdPairs);
+    curSmallArea = quantile(curSmallArea(:), curSmall(:));
+    
+    curSmallY = linspace(curLimX(1), curLimX(2), curImSize(2));
+    curSmallY(curSmallY >= sqrt(2)) = nan;
+    
+    curSmallY = log10(curSmallArea .* sqrt(2) ./ (sqrt(2) - curSmallY));
+    curSmallY = curImSize(1) * (curSmallY - curLimY(1)) / diff(curLimY);
     
     for curCtrlConfig = curCtrlConfigs
         curKvPairs = { ...
@@ -437,6 +449,25 @@ for curConfig = plotConfigs
             'EdgeColor', 'none', 'HorizontalAlignment', 'center');
         
         %% Evaluation
+        if ~isnan(curSmall)
+            curAxes = findobj(curFig, 'type', 'axes');
+            curAxes = flip(transpose(curAxes));
+            
+            for curAx = curAxes
+                curPlot = plot( ...
+                    curAx, transpose(curSmallY), 'LineWidth', 2, ...
+                    'LineStyle', '--', 'Color', 'white');
+            end
+            
+            curTitle = arrayfun( ...
+                @(perc) sprintf('%g-th', perc), ...
+                100 * curSmall, 'UniformOutput', false);
+            curTitle = sprintf( ...
+                'Lower %s percentile lines', strjoin(curTitle, ', '));
+            title(curAx, ...
+                curTitle, 'FontWeight', 'normal', 'FontSize', 10);
+        end
+        
         fprintf('Evaluation of\n');
         fprintf('%s\n', curConfigTitle);
         fprintf('%s\n', curCtrlTitle);
