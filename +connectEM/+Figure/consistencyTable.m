@@ -32,7 +32,7 @@ data(:, 3, 4) = [ 0.66,  3.72];
 
 %% Plot
 curCaxisMax = max(data(:), [], 'omitnan');
-curCaxisMax = ceil(curCaxisMax);
+curCaxisMax = ceil(curCaxisMax / 10) * 10;
 curColors = parula(256);
 
 close all;
