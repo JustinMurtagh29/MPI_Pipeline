@@ -7,6 +7,7 @@ function config(fig, info)
     
     axes = findobj(fig, 'type', 'axes');
     set(axes, 'Box', 'off', 'TickDir', 'out');
+    set(cat(1, axes.Title), 'FontWeight', 'normal', 'FontSize', 10);
     
     rulers = findobj(fig, 'type', 'numericruler');
     set(rulers, 'Color', 'black');
