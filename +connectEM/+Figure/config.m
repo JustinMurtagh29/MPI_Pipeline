@@ -8,8 +8,17 @@ function config(fig, info)
     axes = findobj(fig, 'type', 'axes');
     set(axes, 'Box', 'off', 'TickDir', 'out');
     
+    rulers = findobj(fig, 'type', 'numericruler');
+    set(rulers, 'Color', 'black');
+    
+    cbars = findobj(fig, 'type', 'colorbar');
+    set(cbars, 'Box', 'off', 'TickDir', 'out', 'Color', 'black');
+    
     legends = findobj(fig, 'type', 'legend');
     set(legends, 'Box', 'off');
+    
+    fonts = findobj(fig, '-property', 'FontName');
+    set(fonts, 'FontName', 'Arial');
     
     histograms = findobj(fig, 'type', 'histogram');
     set(histograms, 'DisplayStyle', 'stairs', 'LineWidth', 2);
