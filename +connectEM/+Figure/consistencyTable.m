@@ -8,7 +8,8 @@ Util.showRunInfo(info);
 %% Configuration
 rowNames = {'Exc', 'CC', 'TC'};
 colNames = {'All', 'WC', 'AD', 'OD'};
-showNumbers = false;
+showNumbers = true;
+colorN = 256;
 
 % First dimension corresponds to small (1) and large (2) low-CV regions
 data = nan(2, numel(rowNames), numel(colNames));
@@ -30,10 +31,15 @@ data(:, 3, 2) = [  nan,   nan];
 data(:, 3, 3) = [  nan,   nan];
 data(:, 3, 4) = [ 0.66,  3.72];
 
+colors = reshape(linspace(0, 1, colorN), [], 1);
+colors = { ...
+    (ones(1, 3) - colors) + colors .* [0.4660, 0.6740, 0.1880]; ...
+    (ones(1, 3) - colors) + colors .* [0.8500, 0.3250, 0.0980]};
+assert(isequal(numel(colors), size(data, 1)));
+
 %% Plot
 curCaxisMax = max(data(:), [], 'omitnan');
 curCaxisMax = ceil(curCaxisMax / 10) * 10;
-curColors = parula(256);
 
 close all;
 fig = figure();
@@ -61,19 +67,18 @@ for curRow = 1:numel(rowNames)
             end
             
             curShape = polyshape(curCoord(:, 1), curCoord(:, 2));
-            curColor = linspace(0, curCaxisMax, size(curColors, 1));
-            curColor = curColors(discretize(curData, curColor), :);
+            
+            curColor = linspace(0, curCaxisMax, colorN);
+            curColor = colors{curId}(discretize(curData, curColor), :);
             
             plot(curShape, 'FaceColor', curColor, 'FaceAlpha', 1);
             
-            if showNumbers
-                text( ...
-                    ax, ...
-                    mean(curCoord(:, 1)), ...
-                    mean(curCoord(:, 2)), ...
-                    sprintf('%.0f', curData), ...
-                    'HorizontalAlignment', 'center'); %#ok
-            end
+            text( ...
+                ax, ...
+                mean(curCoord(:, 1)), ...
+                mean(curCoord(:, 2)), ...
+                sprintf('%.0f', curData), ...
+                'HorizontalAlignment', 'center');
         end
     end
 end
@@ -90,10 +95,5 @@ ylim(ax, [0, numel(rowNames)] + 0.5);
 yticks(ax, 1:numel(rowNames));
 yticklabels(ax, rowNames);
 
-colormap(ax, curColors);
-caxis(ax, [0, curCaxisMax]);
-cbar = colorbar('peer', ax);
-
 fig.Position(3:4) = [310, 250];
-
 connectEM.Figure.config(fig, info);
