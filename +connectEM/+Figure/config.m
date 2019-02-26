@@ -47,9 +47,7 @@ function config(fig, info)
             title = annotation(fig, 'textbox', [0, 0.9, 1, 0.1]);
         end
         
-        assert(isscalar(title));
-        title.EdgeColor = 'none';
-        title.HorizontalAlignment = 'center';
+        set(title, 'EdgeColor', 'none', 'HorizontalAlignment', 'center');
     end
         
     if hasInfo
