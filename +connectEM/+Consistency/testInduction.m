@@ -254,11 +254,12 @@ for i = 1:2
     curAx = axes(curFig); %#ok
     hold(curAx, 'on');
     
-    curHist = @(areas) histogram( ...
-        curAx, log10(areas), 'BinEdges', curBinEdges);
+    curHist = @(areas, varargin) histogram( ...
+        curAx, log10(areas), 'BinEdges', curBinEdges, varargin{:});
     
-    curHist(curPairT.areas);
+    curHist(curPairT.areas(not(curMask), :));
     curHist(curPairT.areas(curMask, :));
+    curHist(curPairT.areas);
     
     xlabel(curAx, 'log_{10}(ASI area [µm²])');
     ylabel(curAx, 'Occurences');
