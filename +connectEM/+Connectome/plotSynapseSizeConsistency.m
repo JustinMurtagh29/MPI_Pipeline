@@ -26,47 +26,21 @@ clear cur*;
 
 plotConfigs = struct('synIds', {}, 'title', {}, 'tag', {});
 
-plotConfigs(1).synIds = find( ...
-    asiT.type == 'PrimarySpine' & ismember( ...
-    asiT.axonClass, {'Corticocortical', 'Thalamocortical'}));
-plotConfigs(1).title = 'excitatory primary spine synapses';
-plotConfigs(1).tag = 'exc pri sp';
-
-plotConfigs(2).synIds = find( ...
-    asiT.type == 'PrimarySpine' ...
-  & asiT.axonClass == 'Thalamocortical');
-plotConfigs(2).title = 'TC primary spine synapses';
-plotConfigs(2).tag = 'tc pri sp';
-
-plotConfigs(3).synIds = find( ...
-    asiT.type == 'PrimarySpine' ...
-  & asiT.axonClass == 'Corticocortical');
-plotConfigs(3).title = 'CC primary spine synapses';
-plotConfigs(3).tag = 'cc pri sp';
-
-plotConfigs(4).synIds = find( ...
-    asiT.type == 'PrimarySpine');
-plotConfigs(4).title = 'primary spine synapses';
-plotConfigs(4).tag = 'pri sp';
-
-%% Build axon-target class pairs
-clear cur*;
-
-curAxonClasses = { ...
+axonClasses = { ...
     'Exc', {'Corticocortical', 'Thalamocortical'}; ...
     'CC',  {'Corticocortical'}; ...
     'TC',  {'Thalamocortical'}};
-curTargetClasses = { ...
+targetClasses = { ...
     'All', categories(asiT.targetClass); ...
     'PD',  'ProximalDendrite'; ...
     'AD',  'ApicalDendrite'; ...
     'OD',  'OtherDendrite'};
 
-for curAxonIdx = 1:size(curAxonClasses, 1)
-    curAxonClass = curAxonClasses(curAxonIdx, :);
+for curAxonIdx = 1:size(axonClasses, 1)
+    curAxonClass = axonClasses(curAxonIdx, :);
     
-    for curTargetIdx = 1:size(curTargetClasses, 1)
-        curTargetClass = curTargetClasses(curTargetIdx, :);
+    for curTargetIdx = 1:size(targetClasses, 1)
+        curTargetClass = targetClasses(curTargetIdx, :);
         
         curSynIds = find( ...
             asiT.type == 'PrimarySpine' ...
@@ -89,10 +63,15 @@ for curAxonIdx = 1:size(curAxonClasses, 1)
     end
 end
 
+plotConfigs = reshape( ...
+    plotConfigs, ...
+    size(targetClasses, 1), ...
+    size(axonClasses, 1));
+
 %% Report synapse sizes
 clear cur*;
 fprintf('Synapse sizes\n');
-for curConfig = plotConfigs
+for curConfig = transpose(plotConfigs(:))
     curSynT = asiT(curConfig.synIds, :);
     
     curLog10MeanAsi = log10(mean(curSynT.area));
@@ -110,16 +89,14 @@ end
 
 %% Plot distribution of synapse size
 connectEM.Consistency.plotSizeHistogram( ...
-    info, asiT, plotConfigs(1), 'scale', 'log10');
-connectEM.Consistency.plotSizeHistogram( ...
-    info, asiT, plotConfigs(2:3), 'scale', 'log10');
+    info, asiT, plotConfigs(1, :), 'scale', 'log10');
 
 %% Fit mixture of Gaussians to size distribution
 clear cur*;
 rng(0);
 
 curN = 2;
-curConfig = plotConfigs(3);
+curConfig = plotConfigs(2, 1);
 curBinEdges = linspace(-2, 0.5, 51);
 
 curLog10Areas = log10(asiT.area(curConfig.synIds));
@@ -172,7 +149,7 @@ title(curAx, ...
 
 %% Report number of occurences for degree of coupling
 clear cur*;
-curPlotConfig = plotConfigs(1);
+curPlotConfig = plotConfigs(1, 1);
 curSynT = asiT(curPlotConfig.synIds, :);
 [~, ~, curDegreeOfCoupling] = unique(curSynT( ...
     :, {'preAggloId', 'postAggloId'}), 'rows');
@@ -189,12 +166,15 @@ disp(docT)
 
 %% Plot histogram of degree of coupling
 connectEM.Consistency.plotCouplingHistogram( ...
-    info, asiT, plotConfigs(1), 'normalization', 'count');
+    info, asiT, plotConfigs(1, 1), 'normalization', 'count');
 
 %% Synapse area variability
 clear cur*;
+pValues = nan(4, numel(plotConfigs));
 
-for curPlotConfig = plotConfigs
+for curIdx = 1:numel(plotConfigs)
+    curPlotConfig = plotConfigs(curIdx);
+    
     curPairConfigs = ...
         connectEM.Consistency.buildPairConfigs(asiT, curPlotConfig);
     
@@ -240,16 +220,60 @@ for curPlotConfig = plotConfigs
 
     fprintf('Significance tests\n');
     fprintf('p-values for unexpected synapse size similarity\n');
-    for curPairConfig = curPairConfigs(1:(end - 1))
+    
+    for curPairIdx = 1:4
+        curPairConfig = curPairConfigs(curPairIdx);
+        
         curPValue = ...
             connectEM.Consistency.testVariability( ...
                 asiT, curPairConfig, curPairConfigs(end));
+        pValues(curPairIdx, curIdx) = curPValue;
+        
         fprintf('* %s: %g\n', curPairConfig.title, curPValue);
     end
 
     fprintf('\n');
     fprintf('\n');
 end
+
+pValues = reshape(pValues, [4, size(plotConfigs)]);
+
+%% Show p-values
+clear cur*;
+
+curTitles = ...
+    connectEM.Consistency.buildPairConfigs(asiT, plotConfigs(1));
+curTitles = curTitles(1:(end - 1));
+
+curTitles = cellfun( ...
+    @(n) n(1:(find(n == '(', 1) - 2)), ...
+    {curTitles.title}, 'UniformOutput', false);
+assert(isequal(numel(curTitles), size(pValues, 1)));
+
+curFig = figure();
+
+for curIdx = 1:numel(curTitles)
+    curPValues = pValues(curIdx, :, :);
+    curPValues = shiftdim(curPValues, 1);
+    curMap = -log10(curPValues);
+    
+    subplot(2, 2, curIdx);
+    imagesc(transpose(curMap));
+    title(curTitles{curIdx});
+    
+    caxis(feval(@(v) [0, v(2)], caxis()));
+    colorbar();
+end
+
+curAxes = flip(findobj(curFig, 'type', 'axes'));
+xticks(curAxes, 1:size(targetClasses, 1));
+xticklabels(curAxes, targetClasses(:, 1));
+
+yticks(curAxes, 1:size(axonClasses, 1));
+yticklabels(curAxes, axonClasses(:, 1));
+
+curFig.Position(3:4) = [1050, 700];
+connectEM.Figure.config(curFig, info);
 
 %% Correlation of synapse size correlation with synapse size
 clear cur*;
