@@ -16,46 +16,53 @@ methods = { ...
     'ltdSaturated',   'LTD. Exponentially towards non-zero.'; ...
     'ltpSaturated',   'LTP. Exponentially towards maximum.'};
 
+colors = get(groot, 'defaultAxesColorOrder');
+colors = colors(1:size(methods, 1), :);
+
 info = Util.runInfo();
 Util.showRunInfo(info);
 
 %% Plot
-rng(0);
-areas = 10 .^ normrnd(ccMeanLog, ccStdLog, [20, 2]);
+rng(4);
+areas = 10 .^ normrnd(ccMeanLog, ccStdLog, [3, 2, size(methods, 1)]);
 
 fig = figure();
-fig.Position(3:4) = [1330, 340];
+ax = axes(fig);
+hold(ax, 'on');
 
 for curMethodIdx = 1:size(methods, 1)
-    subplot(1, size(methods, 1), curMethodIdx);
-    hold('on');
+    curMethod = methods{curMethodIdx, 1};
+    curColor = colors(curMethodIdx, :);
     
     for curAreaIdx = 1:size(areas, 1)
         curAreas = ...
             connectEM.Consistency.Simulation.evolution( ...
-                areas(curAreaIdx, :), 'method', methods{curMethodIdx, 1});
+                areas(curAreaIdx, :, curMethodIdx), 'method', curMethod);
 
         curX = std(curAreas, 0, 2) ./ mean(curAreas, 2);
         curY = log10(mean(curAreas, 2));
-        plot(curX, curY);
+        
+        scatter( ...
+            ax, curX(1), curY(1), 'o', ...
+            'MarkerEdgeColor', 'none', ...
+            'MarkerFaceColor', curColor);
+        plot(ax, curX, curY, 'Color', curColor);
     end
-    
-    title(methods{curMethodIdx, 2});
-
-    xlim(limX);
-    ylim(limY);
 end
 
-lines = findobj(fig, 'type', 'line');
+xlim(ax, limX);
+ylim(ax, limY);
+
+lines = findobj(ax, 'type', 'line');
 set(lines, 'LineWidth', 2);
 
-ax = fig.Children(end);
 xlabel(ax, 'Coefficient of variation');
 ylabel(ax, 'log_{10}(Average ASI area [µm²])');
+axis(ax, 'square');
 
-set( ...
-    fig.Children, ...
-    'PlotBoxAspectRatio', [1, 1, 1], ...
-    'DataAspectRatioMode', 'auto');
+leg = flip(lines(1:size(areas, 1):end));
+leg = legend(leg, methods(:, 2), 'Location', 'SouthOutside');
+leg.Box = 'off';
 
+fig.Position(3:4) = [320, 420];
 connectEM.Figure.config(fig, info);
