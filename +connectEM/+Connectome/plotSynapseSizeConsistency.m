@@ -211,26 +211,8 @@ for curPlotConfig = plotConfigs
 
     % Quantitative reporting
     fprintf('**%s**\n', curPlotConfig.title);
-    curSynIdPairs = curPairConfigs(1).synIdPairs;
-
-    curSynT = asiT( ...
-        curSynIdPairs(:, 1), {'preAggloId', 'postAggloId'});
-    curSynT.areas = asiT.area(curSynIdPairs);
-    curSynT.cv = std(curSynT.areas, 0, 2) ./ mean(curSynT.areas, 2);
-    curSynT.low = curSynT.cv < curCvThresh;
-
-    curAxonT = curSynT(:, {'preAggloId'});
-   [curAxonT, ~, curGroupIds] = unique(curAxonT);
-    curAxonT.allConn = accumarray(curGroupIds, 1);
-    curAxonT.lowConn = accumarray(curGroupIds, curSynT.low);
-    curAxonT = sortrows(curAxonT, 'lowConn', 'descend');
-
-    curLowThresh = round(height(curSynT) * curLearnedFrac);
-    curAxonFracLow = find(cumsum(curAxonT.lowConn) > curLowThresh, 1);
-    curAxonFracLow = curAxonFracLow / height(curAxonT) %#ok
-    curAxonFracUp = curLowThresh / height(curAxonT) %#ok
-
     fprintf('CV between pairs (mean ± std)\n');
+    
     for curPairConfig = curPairConfigs
         curCvs = asiT.area(curPairConfig.synIdPairs);
         curCvs = std(curCvs, 0, 2) ./ mean(curCvs, 2);
@@ -240,9 +222,10 @@ for curPlotConfig = plotConfigs
             curPairConfig.title, ...
             mean(curCvs), std(curCvs));
     end
-
+    
     fprintf('\n');
-
+    
+    fprintf('Areas under and between curves\n');
     fprintf('* Learned fraction: %.1f %%\n', 100 * curLearnedFrac);
     fprintf('* Possibly learned fraction: %.1f %%\n', 100 * curOpenFrac);
     fprintf('* Unlearned fraction: %.1f %%\n', 100 * curUnlearnedFrac);
@@ -258,6 +241,7 @@ for curPlotConfig = plotConfigs
         fprintf('* %s: %g\n', curPairConfig.title, curPValue);
     end
 
+    fprintf('\n');
     fprintf('\n');
 end
 
