@@ -64,5 +64,5 @@ leg = flip(lines(1:size(areas, 1):end));
 leg = legend(leg, methods(:, 2), 'Location', 'SouthOutside');
 leg.Box = 'off';
 
-fig.Position(3:4) = [320, 420];
+fig.Position(3:4) = [275, 390];
 connectEM.Figure.config(fig, info);
