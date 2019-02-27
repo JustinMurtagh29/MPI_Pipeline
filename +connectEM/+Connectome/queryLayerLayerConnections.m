@@ -39,9 +39,7 @@ curData = load(fullfile(curDir, curAsiFile));
 
 l4SynT = curData.synT;
 l4AsiT = curData.asiT;
-
 l4AsiT = l4AsiT(l4AsiT.area > 0, :);
-l4AsiT = connectEM.Consistency.Calibration.apply(l4AsiT);
 
 %% Prepare synapse table
 l4SynT.targetClass = conn.denMeta.targetClass(l4SynT.postAggloId);
@@ -49,9 +47,6 @@ l4SynT.targetClass = conn.denMeta.targetClass(l4SynT.postAggloId);
 
 l4SynT.type(:) = categorical({'Shaft'});
 l4SynT.type(curIds) = l4AsiT.type;
-
-l4SynT.asiArea(:) = nan;
-l4SynT.asiArea(curIds) = l4AsiT.area;
 
 %% Select random synapses to query
 clear cur*;
@@ -70,6 +65,14 @@ curSynIds = curSynIds(randperm(numel(curSynIds)));
 curSynIds = curSynIds(1:40);
 
 querySynIds = union(querySynIds, curSynIds, 'stable');
+curSynT(ismember(curSynT.id, querySynIds), :) = [];
+
+% 27.02.2019: Select 40 L4 → OD synapses
+curSynIds = curSynT.id(curSynT.targetClass == 'OtherDendrite');
+curSynIds = curSynIds(randperm(numel(curSynIds)));
+curSynIds = curSynIds(1:40);
+
+querySynIds = curSynIds;
 curSynT(ismember(curSynT.id, querySynIds), :) = [];
 
 %% Generate table for Heiko
