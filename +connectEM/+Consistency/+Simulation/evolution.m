@@ -14,8 +14,8 @@ function synAreas = evolution(synAreas, varargin)
     % below functions. But it's the best compromise between convenience and
     % reliability that I see...
     validMethods = { ...
-        'ltdSubtractive', 'ltdDivisive', ...
-        'ltdSaturated', 'ltpSaturated'};
+        'ltpAdditive', 'ltpSaturated', ...
+        'ltdSubtractive', 'ltdDivisive', 'ltdSaturated'};
     assert(ismember({opts.method}, validMethods));
     
     method = str2func(opts.method);
@@ -51,6 +51,15 @@ function synAreas = ltdSaturated(opts, synAreas) %#ok
     
     delta = synAreas - decayTarget;
     synAreas = synAreas - delta .* (1 - 0.5 .^ (t(:) / decayRate));
+end
+
+function synAreas = ltpAdditive(opts, synAreas) %#ok
+    mps = opts.mps;
+    ns = opts.mins / mps;
+    t = (0:ns) * mps;
+    
+    subRate = 1 / 30;
+    synAreas = synAreas + t(:) * subRate;
 end
 
 function synAreas = ltpSaturated(opts, synAreas) %#ok

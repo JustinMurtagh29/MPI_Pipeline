@@ -14,7 +14,8 @@ methods = { ...
     'ltdSubtractive', 'LTD. Linearly.'; ...
     'ltdDivisive',    'LTD. Exponentially.'; ...
     'ltdSaturated',   'LTD. Exponentially towards non-zero.'; ...
-    'ltpSaturated',   'LTP. Exponentially towards maximum.'};
+    'ltpSaturated',   'LTP. Exponentially towards maximum.'; ...
+    'ltpAdditive',    'LTP. Linearly.'};
 
 colors = get(groot, 'defaultAxesColorOrder');
 colors = colors(1:size(methods, 1), :);
@@ -30,11 +31,11 @@ fig = figure();
 ax = axes(fig);
 hold(ax, 'on');
 
-for curMethodIdx = 1:size(methods, 1)
-    curMethod = methods{curMethodIdx, 1};
-    curColor = colors(curMethodIdx, :);
+for curAreaIdx = 1:size(areas, 1)
+    for curMethodIdx = 1:size(methods, 1)
+        curMethod = methods{curMethodIdx, 1};
+        curColor = colors(curMethodIdx, :);
     
-    for curAreaIdx = 1:size(areas, 1)
         curAreas = ...
             connectEM.Consistency.Simulation.evolution( ...
                 areas(curAreaIdx, :, curMethodIdx), 'method', curMethod);
