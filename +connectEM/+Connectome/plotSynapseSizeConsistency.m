@@ -4,15 +4,16 @@ clear;
 
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-shFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v3_auto.mat');
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-linearized_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v8-classified.mat');
+asiRunId = '20190227T082543';
 
 info = Util.runInfo();
 Util.showRunInfo(info);
 
 %% Load axon-spine interfaces
 [curDir, curAsiFile] = fileparts(connFile);
-curAsiFile = fullfile(curDir, sprintf('%s_asiT.mat', curAsiFile));
+curAsiFile = sprintf('%s__%s_asiT.mat', curAsiFile, asiRunId);
+curAsiFile = fullfile(curDir, curAsiFile);
 
 asiT = load(curAsiFile);
 asiT = asiT.asiT;
@@ -57,9 +58,9 @@ curAxonClasses = { ...
     'TC',  {'Thalamocortical'}};
 curTargetClasses = { ...
     'All', categories(asiT.targetClass); ...
+    'PD',  'ProximalDendrite'; ...
     'AD',  'ApicalDendrite'; ...
-    'OD',  'OtherDendrite'; ...
-    'WC',  'WholeCell'};
+    'OD',  'OtherDendrite'};
 
 for curAxonIdx = 1:size(curAxonClasses, 1)
     curAxonClass = curAxonClasses(curAxonIdx, :);
