@@ -6,6 +6,8 @@ clear;
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 shFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v3_auto.mat');
 
+runId = datestr(now, 30);
+
 info = Util.runInfo();
 Util.showRunInfo(info);
 
@@ -14,6 +16,7 @@ param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 
 [conn, syn, connFile] = connectEM.Consistency.loadConnectome(param);
+conn = connectEM.Connectome.prepareForSpecificityAnalysis(conn);
 
 % Loading spine head agglomerates
 shAgglos = load(shFile, 'shAgglos');
@@ -91,7 +94,8 @@ curOut.asiT = asiT;
 curOut.info = info;
 
 [curOutDir, curOutName] = fileparts(connFile);
-curOutFile = fullfile(curOutDir, sprintf('%s_asiT.mat', curOutName));
+curOutFile = sprintf('%s__%s_asiT.mat', curOutName, runId);
+curOutFile = fullfile(curOutDir, curOutFile);
 
 Util.saveStruct(curOutFile, curOut);
 Util.protect(curOutFile);
