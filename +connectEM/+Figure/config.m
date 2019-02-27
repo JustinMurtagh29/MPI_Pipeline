@@ -7,7 +7,7 @@ function config(fig, info)
     
     axes = findobj(fig, 'type', 'axes');
     set(axes, 'Box', 'off', 'TickDir', 'out');
-    set(cat(1, axes.Title), 'FontWeight', 'normal', 'FontSize', 10);
+    set(cat(1, axes.Title), 'FontWeight', 'normal');
     
     rulers = findobj(fig, 'type', 'numericruler');
     set(rulers, 'Color', 'black');
@@ -19,7 +19,7 @@ function config(fig, info)
     set(legends, 'Box', 'off');
     
     fonts = findobj(fig, '-property', 'FontName');
-    set(fonts, 'FontName', 'Arial');
+    set(fonts, 'FontName', 'Arial', 'FontSize', 10);
     
     histograms = findobj(fig, 'type', 'histogram');
     set(histograms, 'DisplayStyle', 'stairs', 'LineWidth', 2);
