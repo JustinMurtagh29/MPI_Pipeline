@@ -99,7 +99,7 @@ curConfigs(2).data = outT.areas;
 
 for curConfig = curConfigs
     curFig = figure();
-    curFig.Position(3:4) = [290, 290];
+    curFig.Position(3:4) = [180, 250];
     
     curAx = axes(curFig); %#ok
     hold(curAx, 'on');
