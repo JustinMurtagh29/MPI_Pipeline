@@ -48,7 +48,7 @@ function p = runPipeline(p, startStep, endStep)
             if ~exist(p.class.root,'dir')
                 mkdir(p.class.root)
             end
-            if strcmp(p.class.backend,'wkwrap') && ~Datasets.iswkwDataset(p.class.root)
+            if strcmp(p.class.backend,'wkwrap') && ~exist(fullfile(p.class.root, 'header.wkw'), 'file')
                 wkwInit('new', p.class.root, 32, 32, p.class.dtype, 1);
             end
             job = Codat.CNN.Cluster.predictDataset( cnet.cnet, p.bbox, Datasets.WkDataset(p.raw), Datasets.WkDataset(p.class),[],Cluster.config('gpu',1,'memory',44,'time','100:00:00'));
