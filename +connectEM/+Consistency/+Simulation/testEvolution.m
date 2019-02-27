@@ -61,7 +61,7 @@ xlabel(ax, 'Coefficient of variation');
 ylabel(ax, 'log_{10}(Average ASI area [µm²])');
 axis(ax, 'square');
 
-leg = flip(lines(1:size(areas, 1):end));
+leg = flip(lines(1:size(methods, 1)));
 leg = legend(leg, methods(:, 2), 'Location', 'SouthOutside');
 leg.Box = 'off';
 
