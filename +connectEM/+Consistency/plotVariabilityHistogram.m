@@ -3,7 +3,7 @@ function fig = plotVariabilityHistogram( ...
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     opt = struct;
-    opt.binEdges = linspace(0, 1.5, 21);
+    opt.binEdges = linspace(0, 1.5, 16);
     opt = Util.modifyStruct(opt, varargin{:});
     
     % Sanity check
