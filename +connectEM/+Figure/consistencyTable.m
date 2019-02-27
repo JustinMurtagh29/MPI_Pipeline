@@ -7,7 +7,7 @@ Util.showRunInfo(info);
 
 %% Configuration
 rowNames = {'Exc', 'CC', 'TC'};
-colNames = {'All', 'WC', 'AD', 'OD'};
+colNames = {'All', 'PD', 'AD', 'OD'};
 showNumbers = true;
 colorN = 256;
 
@@ -15,14 +15,14 @@ colorN = 256;
 data = nan(2, numel(rowNames), numel(colNames));
 
 % Numbers from connectEM.Connectome plotSynapseSizeConsistency
-% Commit 078e1a081c259ffb956144dfc3ddc595710e02e2
+% Commit f0fef574d62da20d7892884c70a1e2f1190e9561
 data(:, 1, 1) = [15.83, 16.23];
-data(:, 1, 2) = [13.44, 12.11];
+data(:, 1, 2) = [13.24, 11.92];
 data(:, 1, 3) = [ 5.69,  8.77];
 data(:, 1, 4) = [12.29, 13.17];
 
 data(:, 2, 1) = [15.64, 17.42];
-data(:, 2, 2) = [13.14, 11.73];
+data(:, 2, 2) = [13.22, 11.98];
 data(:, 2, 3) = [  nan,   nan];
 data(:, 2, 4) = [13.47, 11.35];
 
