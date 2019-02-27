@@ -8,7 +8,6 @@ Util.showRunInfo(info);
 %% Configuration
 rowNames = {'Exc', 'CC', 'TC'};
 colNames = {'All', 'PD', 'AD', 'OD'};
-showNumbers = true;
 colorN = 256;
 
 % First dimension corresponds to small (1) and large (2) low-CV regions
