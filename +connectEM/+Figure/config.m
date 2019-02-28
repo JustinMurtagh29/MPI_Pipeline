@@ -7,13 +7,16 @@ function config(fig, info)
     
     axes = findobj(fig, 'type', 'axes');
     set(axes, 'Box', 'off', 'TickDir', 'out');
-    set(cat(1, axes.Title), 'FontWeight', 'normal');
     
-    rulers = findobj(fig, 'type', 'numericruler');
-    set(rulers, 'Color', 'black');
+    axTitles = cat(1, axes.Title);
+    set(axTitles, 'FontWeight', 'normal');
     
     cbars = findobj(fig, 'type', 'colorbar');
-    set(cbars, 'Box', 'off', 'TickDir', 'out', 'Color', 'black');
+    set(cbars, 'Box', 'off', 'TickDir', 'out');
+    
+    % NOTE(amotta): findobj(fig, 'type', 'numericruler') doesn't work!
+    rulers = cat(1, cbars, axes.XAxis, axes.YAxis);
+    set(rulers, 'Color', 'black', 'LineWidth', 1);
     
     legends = findobj(fig, 'type', 'legend');
     set(legends, 'Box', 'off');
