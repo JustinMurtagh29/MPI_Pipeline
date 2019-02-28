@@ -8,7 +8,6 @@ outputMapFile = '/tmpscratch/amotta/l4/2018-07-26-tracing-based-output-maps/2019
 evalNmlDir = connectEM.Consistency.Manual.getDir(fullfile('annotations', 'l4-spine-synapses'));
 
 l4ConnRunId = '20190221T112510';
-outDir = '/home/amotta/Desktop';
 
 checkedSynIds = [ ...
     ... All primary spine synapses from L4 → AD (19.02.2019)
