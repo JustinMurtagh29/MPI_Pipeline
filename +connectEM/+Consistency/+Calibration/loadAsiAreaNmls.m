@@ -16,8 +16,9 @@ function calibT = loadAsiAreaNmls(param, nmlDir)
         curParts = regexpi(curNmlName, curParts, 'tokens', 'once');
         curParts = cellfun(@str2double, curParts);
         
-        curNml = slurpNml(curNmlFile);
-        curArea = calcArea(param.raw.voxelSize, curNml);
+        curTrees = slurpNml(curNmlFile);
+        curTrees = NML.buildTreeTable(curTrees);
+        curArea = calcArea(param.raw.voxelSize, curTrees);
         
         curCalib = struct;
         curCalib.asiId = curParts(1);

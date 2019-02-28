@@ -1,4 +1,4 @@
-function area = calculateAsiArea(voxelSize, nml, varargin)
+function area = calculateAsiArea(voxelSize, trees, varargin)
     % area = calculateAsiArea(voxelSize, nml, varargin)
     %   Calculates the axon-spine interface area for an NML file.
     %
@@ -7,8 +7,6 @@ function area = calculateAsiArea(voxelSize, nml, varargin)
     opts = struct;
     opts.showRendering = false;
     opts = Util.modifyStruct(opts, varargin{:});
-
-    trees = NML.buildTreeTable(nml);
 
     % Make sure each tree is confined to a single Z slice
     trees.z = cellfun( ...
