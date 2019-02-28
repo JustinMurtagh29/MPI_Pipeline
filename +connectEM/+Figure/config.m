@@ -24,8 +24,11 @@ function config(fig, info)
     fonts = findobj(fig, '-property', 'FontName');
     set(fonts, 'FontName', 'Arial', 'FontSize', 10);
     
-    histograms = findobj(fig, 'type', 'histogram');
-    set(histograms, 'DisplayStyle', 'stairs', 'LineWidth', 2);
+    set( ...
+        findobj(fig, 'type', 'histogram'), ...
+        'DisplayStyle', 'stairs', ...
+        'LineWidth', 2, ...
+        'FaceAlpha', 1);
     
     for ax = reshape(axes, 1, [])
         histograms = findobj(ax, 'type', 'histogram');
