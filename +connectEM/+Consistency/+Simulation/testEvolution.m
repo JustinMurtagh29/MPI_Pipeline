@@ -71,7 +71,7 @@ curLeg = flip(curLines(1:size(methods, 1)));
 curLeg = legend(curLeg, {methods.title}, 'Location', 'SouthOutside');
 curLeg.Box = 'off';
 
-curFig.Position(3:4) = [275, 390];
+curFig.Position(3:4) = [315, 390];
 connectEM.Figure.config(curFig, info);
 
 %% Plot synapse pair trajectories
