@@ -71,12 +71,16 @@ plotConfigs = reshape( ...
 %% Report synapse sizes
 clear cur*;
 fprintf('Synapse sizes\n');
-for curConfig = transpose(plotConfigs(:))
+
+meanAsis = nan(size(plotConfigs));
+for curConfigIdx = 1:numel(plotConfigs)
+    curConfig = plotConfigs(curConfigIdx);
     curSynT = asiT(curConfig.synIds, :);
     
     curLog10MeanAsi = log10(mean(curSynT.area));
     curMeanLog10Asi = mean(log10(curSynT.area));
     curStdLog10Asi = std(log10(curSynT.area));
+    meanAsis(curConfigIdx) = mean(curSynT.area);
     
     fprintf( ...
         '* log10(Mean %s ASI [µm²]): %f\n', ...
@@ -86,6 +90,23 @@ for curConfig = transpose(plotConfigs(:))
         curConfig.title, curMeanLog10Asi, curStdLog10Asi);
     fprintf('\n');
 end
+
+curFig = figure();
+curAx = axes(curFig);
+imagesc(curAx, transpose(meanAsis));
+axis(curAx, 'image');
+
+xticks(curAx, 1:size(targetClasses, 1));
+xticklabels(curAx, targetClasses(:, 1));
+
+yticks(curAx, 1:size(axonClasses, 1));
+yticklabels(curAx, axonClasses(:, 1));
+
+curCbar = colorbar('peer', curAx);
+curCbar.Label.String = 'Average ASI area [µm²]';
+
+curFig.Position(3:4) = [280, 180];
+connectEM.Figure.config(curFig, info);
 
 %% Plot distribution of synapse size
 connectEM.Consistency.plotSizeHistogram( ...
