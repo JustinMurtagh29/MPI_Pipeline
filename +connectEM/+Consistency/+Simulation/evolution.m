@@ -14,15 +14,16 @@ function synAreas = evolution(synAreas, varargin)
     % below functions. But it's the best compromise between convenience and
     % reliability that I see...
     validMethods = { ...
-        'ltpAdditive', 'ltpSaturated', ...
-        'ltdSubtractive', 'ltdDivisive', 'ltdSaturated'};
+        'ltpLinearInf', 'ltpExponentialFinite', ...
+        'ltdLinearZero', 'ltdLinearNonZero', ...
+        'ltdExponentialZero', 'ltdExponentialNonZero'};
     assert(ismember({opts.method}, validMethods));
     
     method = str2func(opts.method);
     synAreas = method(opts, synAreas);
 end
 
-function synAreas = ltdSubtractive(opts, synAreas) %#ok
+function synAreas = ltdLinearZero(opts, synAreas) %#ok
     mps = opts.mps;
     ns = opts.mins / mps;
     t = (0:ns) * mps;
@@ -32,7 +33,16 @@ function synAreas = ltdSubtractive(opts, synAreas) %#ok
     synAreas(synAreas < 0) = nan;
 end
 
-function synAreas = ltdDivisive(opts, synAreas) %#ok
+function synAreas = ltdLinearNonZero(opts, synAreas) %#ok
+    mps = opts.mps;
+    ns = opts.mins / mps;
+    t = linspace(0, 1, ns + 1);
+    
+    decayTarget = 10 ^ (-1.25);
+    synAreas = (1 - t(:)) .* synAreas + t(:) * decayTarget;
+end
+
+function synAreas = ltdExponentialZero(opts, synAreas) %#ok
     mps = opts.mps;
     ns = opts.mins / mps;
     t = (0:ns) * mps;
@@ -41,7 +51,7 @@ function synAreas = ltdDivisive(opts, synAreas) %#ok
     synAreas = synAreas .* (0.5 .^ (t(:) / decayRate));
 end
 
-function synAreas = ltdSaturated(opts, synAreas) %#ok
+function synAreas = ltdExponentialNonZero(opts, synAreas) %#ok
     mps = opts.mps;
     ns = opts.mins / mps;
     t = (0:ns) * mps;
@@ -53,16 +63,16 @@ function synAreas = ltdSaturated(opts, synAreas) %#ok
     synAreas = synAreas - delta .* (1 - 0.5 .^ (t(:) / decayRate));
 end
 
-function synAreas = ltpAdditive(opts, synAreas) %#ok
+function synAreas = ltpLinearInf(opts, synAreas) %#ok
     mps = opts.mps;
     ns = opts.mins / mps;
     t = (0:ns) * mps;
     
-    subRate = 1 / 30;
-    synAreas = synAreas + t(:) * subRate;
+    addRate = 1 / 30;
+    synAreas = synAreas + t(:) * addRate;
 end
 
-function synAreas = ltpSaturated(opts, synAreas) %#ok
+function synAreas = ltpExponentialFinite(opts, synAreas) %#ok
     mps = opts.mps;
     ns = opts.mins / mps;
     t = (0:ns) * mps;
