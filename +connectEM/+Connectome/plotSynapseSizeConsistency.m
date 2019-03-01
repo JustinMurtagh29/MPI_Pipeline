@@ -321,6 +321,24 @@ for curConfig = plotConfigs
     curSaSdConfig = ...
         connectEM.Consistency.buildPairConfigs(asiT, curConfig);
     curSaSdConfig = curSaSdConfig(1);
+            
+    % Connection types
+    curSaSdT = table;
+    curSaSdT.synIds = curSaSdConfig.synIdPairs;
+    curSaSdT.axonClass = asiT.axonClass(curSaSdT.synIds(:, 1));
+    curSaSdT.targetClass = asiT.targetClass(curSaSdT.synIds(:, 1));
+
+    curSaSdT.areas = asiT.area(curSaSdT.synIds);
+    curSaSdT.log10Avg = log10(mean(curSaSdT.areas, 2));
+    curSaSdT.cv = std(curSaSdT.areas, 0, 2) ./ mean(curSaSdT.areas, 2);
+
+    curSaSdT.mapIdx = [ ...
+        discretize(curSaSdT.log10Avg, linspace( ...
+            curLimY(1), curLimY(2), curImSize(1) + 1)), ...
+        discretize(curSaSdT.cv, linspace( ...
+            curLimX(1), curLimX(2), curImSize(2) + 1))];
+    curSaSdT.mapIdx = sub2ind( ...
+        curImSize, curSaSdT.mapIdx(:, 1), curSaSdT.mapIdx(:, 2));
     
     curCtrlConfigs = struct('synIds', {}, 'title', {}, 'tag', {});
     curCtrlConfigs(1).synIds = curSaSdConfig.synIdPairs(:);
@@ -342,12 +360,24 @@ for curConfig = plotConfigs
         
        [curSaSdMap, curBw] = ...
             connectEM.Consistency.densityMap( ...
-            asiT.area(curSaSdConfig.synIdPairs), curKvPairs{:});
+                asiT.area(curSaSdConfig.synIdPairs), curKvPairs{:}); %#ok
+        
+        % NOTE(amotta): Uncomment to simulate a null model in which random
+        % synapse pairs are sampled from within the same connection type
+        % (i.e., axon and target class pairs.
+       [~, ~, curIds] = unique( ...
+           curSaSdT(:, {'axonClass', 'targetClass'}), 'rows');
+        curSaSdMap = ...
+            connectEM.Consistency.nullDensityMaps( ...
+                curSaSdT.areas, 'asiGroups', repmat(curIds, 2, 1), ...
+                curKvPairs{:}, 'bandWidth', curBw, 'numMaps', 5000);
+        curSaSdMap = mean(curSaSdMap, 3);
+
         curCtrlMaps = ...
             connectEM.Consistency.nullDensityMaps( ...
-            asiT.area(curCtrlConfig.synIds), curKvPairs{:}, ...
-            'bandWidth', curBw, 'numMaps', 5000);
-        
+                asiT.area(curCtrlConfig.synIds), curKvPairs{:}, ...
+                'bandWidth', curBw, 'numMaps', 5000);
+
         %% Prepare for figure
         curCtrlMap = mean(curCtrlMaps, 3);
         
@@ -373,6 +403,7 @@ for curConfig = plotConfigs
         
         curRegionProps = curRegionProps(curKeepRegionIds);
        [~, curRegionMask] = ismember(curRegionMask, curKeepRegionIds);
+        curSaSdT.regionId = curRegionMask(curSaSdT.mapIdx);
         
         curConfigTitle = sprintf( ...
             '%s (n = %d pairs)', curConfig.title, ...
@@ -509,25 +540,6 @@ for curConfig = plotConfigs
             title(curAx, ...
                 curTitle, 'FontWeight', 'normal', 'FontSize', 10);
         end
-            
-        % Connection types
-        curSaSdT = table;
-        curSaSdT.synIds = curSaSdConfig.synIdPairs;
-        curSaSdT.axonClass = asiT.axonClass(curSaSdT.synIds(:, 1));
-        curSaSdT.targetClass = asiT.targetClass(curSaSdT.synIds(:, 1));
-
-        curSaSdT.areas = asiT.area(curSaSdT.synIds);
-        curSaSdT.log10Avg = log10(mean(curSaSdT.areas, 2));
-        curSaSdT.cv = std(curSaSdT.areas, 0, 2) ./ mean(curSaSdT.areas, 2);
-
-        curSaSdT.mapIdx = [ ...
-            discretize(curSaSdT.log10Avg, linspace( ...
-                curLimY(1), curLimY(2), curImSize(1) + 1)), ...
-            discretize(curSaSdT.cv, linspace( ...
-                curLimX(1), curLimX(2), curImSize(2) + 1))];
-        curSaSdT.mapIdx = sub2ind( ...
-            curImSize, curSaSdT.mapIdx(:, 1), curSaSdT.mapIdx(:, 2));
-        curSaSdT.regionId = curRegionMask(curSaSdT.mapIdx);
         
         fprintf('Evaluation of\n');
         fprintf('%s\n', curConfigTitle);
