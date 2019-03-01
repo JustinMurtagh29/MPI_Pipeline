@@ -2,7 +2,7 @@
 %   Alessandro Motta <alessandro.motta@brain.mpg.de>
 clear;
 
-%%
+%% Configuration
 N = 5290;
 cvKsPvalThresh = 2.11527e-31;
 learnedFracs = [0.086, 0.379, 0.5];
@@ -10,35 +10,26 @@ learnedFracs = [0.086, 0.379, 0.5];
 mix = struct('mean', {}, 'std', {}, 'coeff', {});
 mixNames = {};
 
-%{
 % L4 → proximal dendrite synapses
-% connectEM.Connectome.plotLayerLayerConnections 67e320ec88ac4369e8205118be2544f6dbc8de70
-mix(1).mean = -0.70476; mix(1).std = 0.30209; mix(1).coeff = 1;
+% connectEM.Connectome.queryLayerLayerConnections 67262f6b5b821d083b1f1ee95da02a9a66af0e7a
+mix(1).mean = -0.70476; mix(1).std = 0.2722; mix(1).coeff = 1;
 mixNames{1} = 'L4 → proximal dendrites synapses';
 
 % L4 → apical dendrite synapses
-% connectEM.Connectome.plotLayerLayerConnections 67e320ec88ac4369e8205118be2544f6dbc8de70
-mix(2).mean = -0.90493; mix(2).std = 0.30629; mix(2).coeff = 1;
+% connectEM.Connectome.queryLayerLayerConnections 67262f6b5b821d083b1f1ee95da02a9a66af0e7a
+mix(2).mean = -0.90110; mix(2).std = 0.4337; mix(2).coeff = 1;
 mixNames{2} = 'L4 → apical dendrites synapses';
 
 % corticocortical primary spine synapses
+% FIXME(amotta): The numbers for this Gaussian have a different origin!
 % connectEM.Connectome.plotSynapseSizeConsistency 9476c84415afa274ce8e80df679014bb37172a72
 mix(3).mean = -0.707029; mix(3).std = 0.298972; mix(3).coeff = 1;
 mixNames{3} = 'Corticocortical primary spine synapses';
-%}
-
-mix(1).mean = -0.484; mix(1).std = 0.215; mix(1).coeff = 0.475 / 0.525;
-mixNames{1} = 'Blue';
-
-mix(2).mean = -0.909; mix(2).std = 0.207; mix(2).coeff = 0.525 / 0.525;
-mixNames{2} = 'Red';
 
 % NOTE(amotta): Mixing coefficient of the L4 connections
 mixGrid = mix;
-%{
 mixGrid(1).coeff = 10 .^ linspace(-3, 0, 61);
 mixGrid(2).coeff = 10 .^ linspace(-3, 0, 61);
-%}
 
 % Sanity check
 assert(isequal(numel(mix), numel(mixNames)));
@@ -50,28 +41,22 @@ Util.showRunInfo(info);
 
 %% Grid search
 clear cur*;
-rng(0);
+
+plotIds = [];
 
 % Span grid
 curGridVars = struct2cell(mixGrid);
 grid = cell(1, 1, numel(curGridVars));
 [grid{:}] = ndgrid(curGridVars{:});
-
 grid = cat(1 + numel(curGridVars), grid{:});
 grid = reshape(grid, [], numel(curGridVars));
 
-%%
-clear cur*;
 rng(0);
-
-plotIds = 1;
+curRandn = randn(N, 2);
+curRandperm = reshape(randperm(2 * N), N, 2);
 
 fracs = nan(size(grid, 1), 3);
 pVals = nan(size(grid, 1), 1);
-
-% Precompute stuff
-curRandn = randn(N, 2);
-curRandperm = reshape(randperm(2 * N), N, 2);
 
 curIds = 1:size(grid, 1);
 if ~isempty(plotIds); curIds = plotIds; end
@@ -202,7 +187,7 @@ curDims = arrayfun(@(a, b) curGridVars(a, b), curVarIds, curMixIds);
 assert(numel(curDims) == 2);
 
 curPlots = struct;
-curPlots(1).title = '-log_{10}(p-value)';
+curPlots(1).title = '-log10(p-value)';
 curPlots(1).data = -log10(pVals);
 curPlots(2).title = 'Learned fraction';
 curPlots(2).data = fracs(:, 1);
@@ -268,28 +253,38 @@ for curId = 1:height(curMix)
         mixNames{curId}, 100 * curMix.weight(curId));
 end
 
-curFig = figure();
-curAx = axes(curFig);
-hold(curAx, 'on');
-plot(curAx, curX, curY, 'LineWidth', 2);
-plot(curAx, curX, sum(curY, 1), 'LineWidth', 2);
+curConfigs = struct;
+curConfigs(1).transform = @(v) v;
+curConfigs(1).xlabel = 'log10(ASI area [µm²])';
+curConfigs(1).xlim = curLimits([1, end]);
 
-curFig.Color = 'white';
-curAx.Box = 'off';
-curAx.TickDir = 'out';
+curConfigs(2).transform = @(v) 10 .^ v;
+curConfigs(2).xlabel = 'ASI area [µm²]';
+curConfigs(2).xlim = [0, 1.5];
 
-curLeg = legend(curAx, curLegends);
-curLeg.Location = 'NorthWest';
-curLeg.Box = 'off';
+for curConfig = curConfigs
+    curFig = figure();
+    curAx = axes(curFig); %#ok
+    hold(curAx, 'on');
+    
+    plot(curAx, curConfig.transform(curX), curY, 'LineWidth', 2);
+    plot(curAx, curConfig.transform(curX), sum(curY, 1), 'LineWidth', 2);
 
-xlim(curAx, curX([1, end]));
-xlabel(curAx, 'log_{10}(ASI area [µm²]');
-ylabel(curAx, 'Probability density');
+    curLeg = legend(curAx, curLegends);
+    curLeg.Location = 'EastOutside';
 
-title(curAx, { ...
-    info.filename; info.git_repos{1}.hash; ...
-    sprintf('Parameter set #%d', curMinId)}, ...
-    'FontWeight', 'normal', 'FontSize', 10);
+    xlim(curAx, curConfig.xlim);
+    xlabel(curAx, curConfig.xlabel);
+    ylabel(curAx, 'Probability density');
+
+    title(curAx, { ...
+        info.filename; info.git_repos{1}.hash; ...
+        sprintf('Parameter set #%d', curMinId)}, ...
+        'FontWeight', 'normal', 'FontSize', 10);
+    
+    curFig.Position(3:4) = [580, 205];
+    connectEM.Figure.config(curFig);
+end
 
 %% Utilities
 function [learnedFrac, unlearnedFrac, cvThresh] = ...
