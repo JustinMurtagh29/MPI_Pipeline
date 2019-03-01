@@ -206,6 +206,15 @@ assert(isequal(numel(evalAsiT.id), numel(unique(evalAsiT.id))));
 clear cur*;
 
 [curOutT, ~, curIds] = unique( ...
+    l4SynT(:, 'targetClass'), 'rows');
+curOutT.count = accumarray(curIds, 1);
+curOutT.percent = 100 * curOutT.count / sum(curOutT.count);
+curOutT = sortrows(curOutT, 'count', 'descend');
+
+fprintf('Summary\n\n');
+disp(curOutT);
+
+[curOutT, ~, curIds] = unique( ...
     l4SynT(:, {'targetClass', 'type'}), 'rows');
 curOutT.count = accumarray(curIds, 1);
 curOutT.percent = 100 * curOutT.count / sum(curOutT.count);
