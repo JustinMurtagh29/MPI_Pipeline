@@ -51,11 +51,15 @@ curData = load(fullfile(curDir, curAsiFile));
 
 l4SynT = curData.synT;
 l4AsiT = curData.asiT;
-l4AsiT = l4AsiT(l4AsiT.area > 0, :);
 
 %% Prepare synapse table
-l4SynT.targetClass = conn.denMeta.targetClass(l4SynT.postAggloId);
+% NOTE(amotta): Make sure there are no interneuron axons around here!
+inCellIds = setdiff(conn.denMeta.cellId(conn.denMeta.isInterneuron), 0);
+assert(not(any(ismember(l4SynT.preAggloId, inCellIds))));
+
+l4AsiT = l4AsiT(l4AsiT.area > 0, :);
 l4AsiT.targetClass = conn.denMeta.targetClass(l4AsiT.postAggloId);
+l4SynT.targetClass = conn.denMeta.targetClass(l4SynT.postAggloId);
 
 [~, curIds] = ismember(l4AsiT.id, l4SynT.id);
 l4SynT.type(:) = categorical({'Shaft'});
