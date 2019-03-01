@@ -111,6 +111,8 @@ connectEM.Figure.config(curFig, info);
 %% Plot distribution of synapse size
 connectEM.Consistency.plotSizeHistogram( ...
     info, asiT, plotConfigs(1, :), 'scale', 'log10');
+connectEM.Consistency.plotSizeHistogram( ...
+    info, asiT, plotConfigs(:, 1), 'scale', 'log10');
 
 %% Fit mixture of Gaussians to size distribution
 clear cur*;
