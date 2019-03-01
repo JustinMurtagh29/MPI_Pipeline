@@ -217,6 +217,8 @@ for curPlot = curPlots
         curAx.YTick, 'UniformOutput', false);
     
     axis(curAx, 'square');
+    curAx.YDir = 'normal';
+    
     curFig.Position(3:4) = [280, 220];
     connectEM.Figure.config(curFig, info);
 end
