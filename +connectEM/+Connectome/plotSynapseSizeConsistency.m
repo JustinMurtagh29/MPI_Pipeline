@@ -360,8 +360,9 @@ for curConfig = plotConfigs
         
        [curSaSdMap, curBw] = ...
             connectEM.Consistency.densityMap( ...
-                asiT.area(curSaSdConfig.synIdPairs), curKvPairs{:}); %#ok
+                asiT.area(curSaSdConfig.synIdPairs), curKvPairs{:});
         
+        %{
         % NOTE(amotta): Uncomment to simulate a null model in which random
         % synapse pairs are sampled from within the same connection type
         % (i.e., axon and target class pairs.
@@ -372,7 +373,8 @@ for curConfig = plotConfigs
                 curSaSdT.areas, 'asiGroups', repmat(curIds, 2, 1), ...
                 curKvPairs{:}, 'bandWidth', curBw, 'numMaps', 5000);
         curSaSdMap = mean(curSaSdMap, 3);
-
+        %}
+        
         curCtrlMaps = ...
             connectEM.Consistency.nullDensityMaps( ...
                 asiT.area(curCtrlConfig.synIds), curKvPairs{:}, ...
