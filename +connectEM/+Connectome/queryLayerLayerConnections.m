@@ -264,7 +264,8 @@ for curConfig = curConfigs
     hold(curAx, 'on');
 
     for curClass = reshape(curClasses, 1, [])
-        curAreas = evalAsiT.area(evalAsiT.targetClass == curClass);
+        curAreas = rmmissing(evalAsiT.area( ...
+            evalAsiT.targetClass == curClass));
         curAreas = curConfig.transform(curAreas);
         
         histogram( ...
