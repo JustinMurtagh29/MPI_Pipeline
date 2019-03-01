@@ -237,6 +237,8 @@ curAreas = accumarray(curIds, evalAsiT.area, [], @(a) {rmmissing(a(:))});
 curOutT.areasValid = cellfun(@numel, curAreas);
 curOutT.meanArea = cellfun(@mean, curAreas);
 curOutT.medianArea = cellfun(@median, curAreas);
+curOutT.meanLog10Area = cellfun(@(a) mean(log10(a)), curAreas);
+curOutT.stdLog10Area = cellfun(@(a) std(log10(a)), curAreas);
 
 fprintf('Summary\n\n');
 disp(curOutT);
