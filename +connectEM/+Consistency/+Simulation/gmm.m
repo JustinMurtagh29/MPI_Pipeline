@@ -13,18 +13,18 @@ mixNames = {};
 % L4 → proximal dendrite synapses
 % connectEM.Connectome.queryLayerLayerConnections 67262f6b5b821d083b1f1ee95da02a9a66af0e7a
 mix(1).mean = -0.70476; mix(1).std = 0.2722; mix(1).coeff = 1;
-mixNames{1} = 'L4 → proximal dendrites synapses';
+mixNames{1} = 'L4 → PD';
 
 % L4 → apical dendrite synapses
 % connectEM.Connectome.queryLayerLayerConnections 67262f6b5b821d083b1f1ee95da02a9a66af0e7a
 mix(2).mean = -0.90110; mix(2).std = 0.4337; mix(2).coeff = 1;
-mixNames{2} = 'L4 → apical dendrites synapses';
+mixNames{2} = 'L4 → AD';
 
 % corticocortical primary spine synapses
 % FIXME(amotta): The numbers for this Gaussian have a different origin!
 % connectEM.Connectome.plotSynapseSizeConsistency 9476c84415afa274ce8e80df679014bb37172a72
 mix(3).mean = -0.707029; mix(3).std = 0.298972; mix(3).coeff = 1;
-mixNames{3} = 'Corticocortical primary spine synapses';
+mixNames{3} = 'CC';
 
 % NOTE(amotta): Mixing coefficient of the L4 connections
 mixGrid = mix;
@@ -217,14 +217,8 @@ for curPlot = curPlots
         curAx.YTick, 'UniformOutput', false);
     
     axis(curAx, 'square');
-    curFig.Color = 'white';
-    curAx.TickDir = 'out';
-    curAx.YDir = 'normal';
-    curAx.Box = 'off';
-    
-    title(curAx, ...
-        {info.filename; info.git_repos{1}.hash; curPlot.title}, ...
-        'FontWeight', 'normal', 'FontSize', 10);
+    curFig.Position(3:4) = [280, 220];
+    connectEM.Figure.config(curFig, info);
 end
 
 %% Plot "best" mixture
@@ -282,7 +276,7 @@ for curConfig = curConfigs
         sprintf('Parameter set #%d', curMinId)}, ...
         'FontWeight', 'normal', 'FontSize', 10);
     
-    curFig.Position(3:4) = [580, 205];
+    curFig.Position(3:4) = [460, 220];
     connectEM.Figure.config(curFig);
 end
 
