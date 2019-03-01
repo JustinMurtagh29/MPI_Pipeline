@@ -11,11 +11,23 @@ l4ConnRunId = '20190221T112510';
 
 checkedSynIds = [ ...
     ... All primary spine synapses from L4 → AD (19.02.2019)
+    7975, 68992, 77903, 117122, 152622, 185118, 186018, 97233, 140864, ...
+    368606, 119754, 122684, 271912, 275616, 300946, 331176, 344896, ...
+    294170, 140701, 56630, 33587, 202773, ...
+    ... Randomly selected primary spine synapses from L4 → L4 (20.02.2019)
+    314698, 97662, 109112, 72299, 101803, 232751, 228602, 105666, ...
+    17999, 143022, 8303, 275717, 163160, 44870, 163175, 33945, 337940, ...
+    140668, 94428, 123717];
+
+checkedAndTpSynIds = [ ...
+    ... All primary spine synapses from L4 → AD (19.02.2019)
     7975, 68992, 77903, 185118, 186018, 97233, 119754, ...
     122684, 271912, 300946, 344896, 294170, 140701, 202773, ...
     ... Randomly selected primary spine synapses from L4 → L4 (20.02.2019)
     97662, 109112, 72299, 101803, 228602, 17999, ...
     275717, 163160, 44870, 163175, 33945, 94428];
+
+assert(all(ismember(checkedAndTpSynIds, checkedSynIds)));
 
 info = Util.runInfo();
 Util.showRunInfo(info);
@@ -43,8 +55,9 @@ l4AsiT = l4AsiT(l4AsiT.area > 0, :);
 
 %% Prepare synapse table
 l4SynT.targetClass = conn.denMeta.targetClass(l4SynT.postAggloId);
-[~, curIds] = ismember(l4AsiT.id, l4SynT.id);
+l4AsiT.targetClass = conn.denMeta.targetClass(l4AsiT.postAggloId);
 
+[~, curIds] = ismember(l4AsiT.id, l4SynT.id);
 l4SynT.type(:) = categorical({'Shaft'});
 l4SynT.type(curIds) = l4AsiT.type;
 
@@ -56,7 +69,7 @@ curSynT = l4SynT;
 curSynT = curSynT(curSynT.type == 'PrimarySpine', :);
 
 % 20.02.2019: All L4 → AD and 20 L4 → WC synapses
-querySynIds = checkedSynIds;
+querySynIds = checkedAndTpSynIds;
 curSynT(ismember(curSynT.id, querySynIds), :) = [];
 
 % 22.02.2019: Select 40 more L4 → WC synapses
@@ -99,7 +112,7 @@ evalNmlFiles = dir(fullfile(evalNmlDir, '*.nml'));
 evalNmlFiles(cat(1, evalNmlFiles.isdir)) = [];
 evalNmlFiles = fullfile(evalNmlDir, {evalNmlFiles.name});
 
-evalAsiT = [];
+evalAsiT = table;
 
 for curIdx = 1:numel(evalNmlFiles)
     curEvalNmlFile = evalNmlFiles{curIdx};
@@ -156,22 +169,61 @@ for curIdx = 1:numel(evalNmlFiles)
     evalAsiT = cat(1, evalAsiT, curAsiT);
 end
 
+% NOTE(amotta): I've checked all L4 → AD and a subset of L4 → L4 synapses
+% myself. Only the correct subset of these connections were then handed out
+% again for ASI area annotations. I still want the FP synapses to be part
+% of this list, so that it's easier to compute
+%
+%   1. the relative synapse frequency per target,
+%   2. the true positive rate per target, and therefore
+%   3. the true relative synapse frequency per target.
+%
+% Note that some of the previously identified FP still might have been
+% chosen (by chance) for ASI area annotation. Let's make sure that the
+% HiWis came to the same conclusion as I did.
+assert(not(any(evalAsiT.isCorrect(ismember( ...
+    evalAsiT.id, setdiff(checkedSynIds, checkedAndTpSynIds))))));
+
+curFpAsiT = table;
+curFpAsiT.id = reshape(setdiff( ...
+    checkedSynIds, evalAsiT.id), [], 1);
+curFpAsiT.isCorrect(:) = false;
+curFpAsiT.area(:) = nan;
+
+evalAsiT = cat(1, evalAsiT, curFpAsiT);
+
 [~, evalAsiT.targetClass] = ismember(evalAsiT.id, l4SynT.id);
 evalAsiT.targetClass = l4SynT.targetClass(evalAsiT.targetClass);
+
+% Sanity check
+assert(isequal(numel(evalAsiT.id), numel(unique(evalAsiT.id))));
 
 %% Quantitative evaluation
 clear cur*;
 
-curOutT = table;
-[curOutT.targetClass, ~, curIds] = ...
-    unique(evalAsiT.targetClass);
-curOutT.areas = accumarray( ...
-    curIds, evalAsiT.area, [], ...
-    @(areas) {rmmissing(areas(:))});
+[curOutT, ~, curIds] = unique( ...
+    l4SynT(:, {'targetClass', 'type'}), 'rows');
+curOutT.count = accumarray(curIds, 1);
+curOutT.percent = 100 * curOutT.count / sum(curOutT.count);
+curOutT = sortrows(curOutT, 'count', 'descend');
 
-curOutT.synCount = cellfun(@numel, curOutT.areas);
-curOutT.meanArea = cellfun(@mean, curOutT.areas);
-curOutT.medianArea = cellfun(@median, curOutT.areas);
+fprintf('Summary\n\n');
+disp(curOutT);
+
+curOutT = table;
+[curOutT.targetClass, ~, curIds] = unique(evalAsiT.targetClass);
+
+% NOTE(amotta): It's possible that the number of real ASI area measurements
+% is smaller than the number of correct synapses. The delta stems from true
+% spine synapses with invalid ASI area annotations. See above warning.
+curOutT.priSpinesQueried = accumarray(curIds, 1);
+curOutT.priSpinesCorrect = accumarray(curIds, evalAsiT.isCorrect);
+curOutT.truePosRate = curOutT.priSpinesCorrect ./ curOutT.priSpinesQueried;
+
+curAreas = accumarray(curIds, evalAsiT.area, [], @(a) {rmmissing(a(:))});
+curOutT.areasValid = cellfun(@numel, curAreas);
+curOutT.meanArea = cellfun(@mean, curAreas);
+curOutT.medianArea = cellfun(@median, curAreas);
 
 fprintf('Summary\n\n');
 disp(curOutT);
@@ -179,12 +231,12 @@ disp(curOutT);
 % Statistical tests
 curStatT = struct;
 curStatT(1).name = 'Mann-Whitney-Wilcoxon rank sum test';
-curStatT(1).pVal = ranksum(curOutT.areas{:});
+curStatT(1).pVal = ranksum(curAreas{:});
 
 curStatT(2).name = 'Kolmogorov-Smirnov test';
-[~, curStatT(2).pVal] = kstest2(curOutT.areas{:});
+[~, curStatT(2).pVal] = kstest2(curAreas{:});
 
-curData = cellfun(@log10, curOutT.areas, 'UniformOutput', false);
+curData = cellfun(@log10, curAreas, 'UniformOutput', false);
 curStatT(3).name = 'Student''s t-test in log10';
 [~, curStatT(3).pVal] = ttest2(curData{:});
 
@@ -234,5 +286,7 @@ for curConfig = curConfigs
     curFig.Position(3:4) = [220, 260];
     connectEM.Figure.config(curFig, info);
     
-    set(curHists, 'DisplayStyle', 'bar', 'EdgeColor', 'none');
+    set( ...
+        curHists, 'DisplayStyle', 'bar', ...
+        'FaceAlpha', 0.6, 'EdgeColor', 'none');
 end
