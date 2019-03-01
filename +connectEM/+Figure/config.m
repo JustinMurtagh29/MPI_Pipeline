@@ -22,7 +22,7 @@ function config(fig, info)
     set(legends, 'Box', 'off');
     
     fonts = findobj(fig, '-property', 'FontName');
-    set(fonts, 'FontName', 'Arial', 'FontSize', 10);
+    set(cat(1, fonts, rulers), 'FontName', 'Arial', 'FontSize', 10);
     
     set( ...
         findobj(fig, 'type', 'histogram'), ...
