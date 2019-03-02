@@ -654,5 +654,57 @@ for curConfig = plotConfigs
         
         curFig.Position(3:4) = [1280, 470];
         connectEM.Figure.config(curFig, info);
+        
+        %% Evaluate sensitivity to p-value threshold
+        curCtrlCounts = curCtrlMaps > curSaSdMap;
+        curCtrlCounts = sum(curCtrlCounts, 3);
+        
+        curRegOff = 0;
+        curRegMap = zeros(size(curCtrlCounts));
+        curRegFracs = zeros(0, size(curCtrlMaps, 3));
+        
+        for curThresh = 1:size(curCtrlMaps, 3)
+            curRegs = curCtrlCounts < curThresh;
+            curRegs = regionprops(curRegs, 'PixelIdxList');
+            curRegs = {curRegs.PixelIdxList};
+            
+            % Sort by size (for cosmetic reasons)
+           [~, curIds] = sort(cellfun(@numel, curRegs));
+            curRegs = curRegs(curIds);
+            
+            curRegIds = cellfun( ...
+                @(ids) setdiff(curRegMap(ids), 0), ...
+                curRegs, 'UniformOutput', false);
+            
+            curRegNewIds = find(cellfun(@isempty, curRegIds));
+            curRegNewIds = reshape(curRegNewIds, 1, []);
+            
+            for curRegIdx = curRegNewIds
+                curRegOff = curRegOff + 1;
+                curRegIds{curRegIdx} = curRegOff;
+                
+                curRegMap(curRegs{curRegIdx}) = curRegOff;
+                curRegFracs(curRegOff, :) = nan;
+            end
+            
+            for curRegIdx = 1:numel(curRegs)
+                curRegFrac = sum(curSaSdMap(curRegs{curRegIdx}));
+                curRegFracs(curRegIds{curRegIdx}, curThresh) = curRegFrac;
+            end
+        end
+        
+        curFig = figure();
+        curAx = axes(curFig); %#ok
+
+        curX = linspace(0, 1, size(curCtrlMaps, 3));
+        curY = transpose(flip(curRegFracs, 1));
+        plot(curAx, curX, curY, 'LineWidth', 2);
+        
+        xlim(curAx, [0, 0.05]);
+        xlabel(curAx, 'p-value threshold');
+        ylabel(curAx, 'Fraction of SASD pairs in region');
+        
+        curFig.Position(3:4) = [330, 260];
+        connectEM.Figure.config(curFig, info);
     end
 end
