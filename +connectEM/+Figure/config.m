@@ -21,9 +21,6 @@ function config(fig, info)
     legends = findobj(fig, 'type', 'legend');
     set(legends, 'Box', 'off');
     
-    fonts = findobj(fig, '-property', 'FontName');
-    set(cat(1, fonts, rulers), 'FontName', 'Arial', 'FontSize', 10);
-    
     set( ...
         findobj(fig, 'type', 'histogram'), ...
         'DisplayStyle', 'stairs', ...
@@ -47,7 +44,8 @@ function config(fig, info)
         title.FontWeight = 'normal';
         title.String;
     else
-        title = findobj(fig, 'flat', 'type', 'TextBox');
+        annotationPane = findall(fig, 'type', 'AnnotationPane');
+        title = findobj(annotationPane, 'type', 'TextBox');
         
         if isempty(title) && hasInfo
             title = annotation(fig, 'textbox', [0, 0.9, 1, 0.1]);
@@ -62,4 +60,7 @@ function config(fig, info)
             info.git_repos{1}.hash}; ...
             title.String];
     end
+    
+    fonts = findall(fig, '-property', 'FontName');
+    set(cat(1, fonts, rulers), 'FontName', 'Arial', 'FontSize', 10);
 end
