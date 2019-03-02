@@ -311,9 +311,15 @@ curLimY = [-1.5, 0.5];
 curImSize = [256, 256];
 curMethod = 'kde2d';
 
-curBoundConfigs = struct('maxArea', {}, 'minArea', {});
-curBoundConfigs(1).maxArea = 0.0918;
-curBoundConfigs(2).minArea = 0.3162;
+% NOTE(amotta): The `curMinMap` and `curMaxMap` matrices have the same size
+% as the heatmaps of the CV × log10(avg. ASI) space. They contain the ASI
+% areas of the smaller and larger synapses, respectively.
+curY = linspace(curLimY(1), curLimY(2), curImSize(1));
+curX = linspace(curLimX(1), curLimX(2), curImSize(2));
+curX(curX >= sqrt(2)) = nan;
+
+curMinMap = (10 .^ curY(:)) .* (1 - curX / sqrt(2));
+curMaxMap = (10 .^ curY(:)) .* (1 + curX / sqrt(2));
 
 curTicksX = linspace(curLimX(1), curLimX(2), 4);
 curTicksY = linspace(curLimY(1), curLimY(2), 5);
@@ -344,31 +350,6 @@ for curConfig = plotConfigs
     curCtrlConfigs = struct('synIds', {}, 'title', {}, 'tag', {});
     curCtrlConfigs(1).synIds = curSaSdConfig.synIdPairs(:);
     curCtrlConfigs(1).title = 'SASD';
-    
-    curBounds = nan(0, curImSize(2));
-    for curBoundConfig = curBoundConfigs
-        if ~isempty(curBoundConfig.maxArea)
-            curSmallY = linspace(curLimX(1), curLimX(2), curImSize(2));
-            curSmallY(curSmallY >= sqrt(2)) = nan;
-            
-            curSmallY = log10( ...
-                curBoundConfig.maxArea ...
-             .* sqrt(2) ./ (sqrt(2) - curSmallY));
-            curBounds = cat(1, curBounds, curSmallY);
-        end
-        
-        if ~isempty(curBoundConfig.minArea)
-            curLargeY = linspace(curLimX(1), curLimX(2), curImSize(2));
-            curLargeY(curLargeY >= sqrt(2)) = nan;
-            
-            curLargeY = log10( ...
-                curBoundConfig.minArea ...
-             .* sqrt(2) ./ (sqrt(2) + curLargeY));
-            curBounds = cat(1, curBounds, curLargeY);
-        end
-    end
-    
-    curBounds = (curBounds - curLimY(1)) / diff(curLimY) * curImSize(1);
     
     for curCtrlConfig = curCtrlConfigs
         curKvPairs = { ...
@@ -541,17 +522,6 @@ for curConfig = plotConfigs
             'EdgeColor', 'none', 'HorizontalAlignment', 'center');
         
         %% Evaluation
-        if ~isempty(curBoundConfigs)
-            curAxes = findobj(curFig, 'type', 'axes');
-            curAxes = flip(transpose(curAxes));
-            
-            for curAx = curAxes
-                curPlot = plot( ...
-                    curAx, transpose(curBounds), 'LineWidth', 2, ...
-                    'LineStyle', '--', 'Color', 'white');
-            end
-        end
-        
         fprintf('Evaluation of\n');
         fprintf('%s\n', curConfigTitle);
         fprintf('%s\n', curCtrlTitle);
@@ -602,5 +572,87 @@ for curConfig = plotConfigs
             strcat(strjoin(curTitle(1, :), ', '), ' of SASD'); ...
             strcat(strjoin(curTitle(2, :), ', '), ' versus control')};
         title(curPValAx, curTitle, 'FontWeight', 'normal', 'FontSize', 10);
+        
+        %% Evaluate pairs with small and large synapses
+        curFig = figure();
+       
+        subplot(1, 3, 1);
+        curAx = curFig.Children(1);
+        
+        curX = curMinMap(:);
+       [curX, curIds] = sort(curX, 'ascend', 'MissingPlacement', 'last');
+        
+        hold(curAx, 'on');
+        plot(gca, log10(curX), cumsum(curCtrlMap(curIds)));
+        plot(gca, log10(curX), cumsum(curSaSdMap(curIds)));
+        
+        ylabel(curAx, 'Fraction of synapse pairs');
+        xlabel(curAx, 'log10(Max ASI area of small synapse [µm²])');
+        xlim(curAx, curLimY);
+        
+        subplot(1, 3, 2);
+        curAx = curFig.Children(1);
+        
+        curX = curMaxMap(:);
+       [curX, curIds] = sort(curX, 'descend', 'MissingPlacement', 'last');
+       
+        hold(curAx, 'on');
+        plot(curAx, log10(curX), cumsum(curCtrlMap(curIds)));
+        plot(curAx, log10(curX), cumsum(curSaSdMap(curIds)));
+        
+        xlabel(curAx, 'log10(Min ASI area of large synapse [µm²])');
+        xlim(curAx, curLimY);
+        
+        subplot(1, 3, 3);
+        curAx = curFig.Children(1);
+        
+        curX = linspace(curLimY(1), curLimY(2), curImSize(1));
+       [curY, curX] = ndgrid(10 .^ curX, 10 .^ curX);
+       
+        curMap = arrayfun( ...
+            @(x, y) sum(curSaSdMap( ...
+                curMinMap(:) <= x ...
+              & curMaxMap(:) >= y)), ...
+            curX, curY);
+        
+        imagesc(curAx, curMap);
+        caxis(curAx, [0, 1]);
+        
+        curPos = curAx.Position;
+        curCbar = colorbar();
+        curCbar.Label.String = 'Fraction of synapse pairs';
+        curAx.Position = curPos;
+        
+        curTickIds = 1 + floor((curImSize(1) - 1) * ...
+            (curTicksY - curLimY(1)) / (curLimY(2) - curLimY(1)));
+        curTickLabels = arrayfun( ...
+            @num2str, curTicksY, 'UniformOutput', false);
+        
+        xticks(curAx, curTickIds); xticklabels(curAx, curTickLabels);
+        yticks(curAx, curTickIds); yticklabels(curAx, curTickLabels);
+        
+        xlabel(curAx, 'log10(Max ASI area of small synapse [µm²])');
+        ylabel(curAx, 'log10(Min ASI area of large synapse [µm²])');
+        
+        curLines = findobj(curFig, 'type', 'line');
+        set(curLines, 'LineWidth', 2);
+        
+        curAxes = flip(findobj(curFig, 'type', 'axes'));
+        axis(curAxes, 'xy');
+        axis(curAxes, 'square');
+        
+        curAx = curAxes(1);
+        curPos = curAx.Position;
+        curLeg = {'Random pairs', 'Same-axon same-dendrite pairs'};
+        curLeg = legend(curAx, curLeg);
+        curLeg.Location = 'SouthOutside';
+        curAx.Position = curPos;
+        
+        annotation( ...
+            curFig, 'textbox', [0, 0.9, 1, 0.1], ...
+            'String', {curConfigTitle; curCtrlTitle});
+        
+        curFig.Position(3:4) = [1280, 470];
+        connectEM.Figure.config(curFig, info);
     end
 end
