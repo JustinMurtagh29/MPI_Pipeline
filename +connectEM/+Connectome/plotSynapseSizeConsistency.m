@@ -700,9 +700,10 @@ for curConfig = plotConfigs
         curY = transpose(flip(curRegFracs, 1));
         plot(curAx, curX, curY, 'LineWidth', 2);
         
-        xlim(curAx, [0, 0.05]);
+        xlim(curAx, [0, 0.1]);
         xlabel(curAx, 'p-value threshold');
         ylabel(curAx, 'Fraction of SASD pairs in region');
+        title(curAx, curConfigTitle);
         
         curFig.Position(3:4) = [330, 260];
         connectEM.Figure.config(curFig, info);
