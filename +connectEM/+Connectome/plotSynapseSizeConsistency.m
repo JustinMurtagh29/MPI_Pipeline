@@ -576,7 +576,7 @@ for curConfig = plotConfigs
         %% Evaluate pairs with small and large synapses
         curFig = figure();
        
-        subplot(1, 3, 1);
+        subplot(2, 3, 1);
         curAx = curFig.Children(1);
         
         curX = curMinMap(:);
@@ -586,11 +586,26 @@ for curConfig = plotConfigs
         plot(gca, log10(curX), cumsum(curCtrlMap(curIds)));
         plot(gca, log10(curX), cumsum(curSaSdMap(curIds)));
         
-        ylabel(curAx, 'Fraction of synapse pairs');
         xlabel(curAx, 'log10(Max ASI area of small synapse [µm²])');
         xlim(curAx, curLimY);
         
-        subplot(1, 3, 2);
+        subplot(2, 3, 1 + 3);
+        curAx = curFig.Children(1);
+        
+        % NOTE(amotta): Reuses `curX` from above
+        curBinEdges = union(curSaSdT.areas, [-inf, +inf]);
+        curX = discretize(curX, curBinEdges);
+        curX = curX / (numel(curBinEdges) - 1);
+        
+        hold(curAx, 'on');
+        plot(gca, curX, cumsum(curCtrlMap(curIds)));
+        plot(gca, curX, cumsum(curSaSdMap(curIds)));
+        
+        ylabel(curAx, 'Fraction of synapse pairs');
+        xlabel(curAx, 'Max ASI area of small synapse [quantile]');
+        xlim(curAx, [0, 1]);
+        
+        subplot(2, 3, 2);
         curAx = curFig.Children(1);
         
         curX = curMaxMap(:);
@@ -603,7 +618,22 @@ for curConfig = plotConfigs
         xlabel(curAx, 'log10(Min ASI area of large synapse [µm²])');
         xlim(curAx, curLimY);
         
-        subplot(1, 3, 3);
+        subplot(2, 3, 2 + 3);
+        curAx = curFig.Children(1);
+        
+        % NOTE(amotta): Reuses `curX` from above
+        curBinEdges = union(curSaSdT.areas, [-inf, +inf]);
+        curX = discretize(curX, curBinEdges);
+        curX = curX / (numel(curBinEdges) - 1);
+        
+        hold(curAx, 'on');
+        plot(gca, curX, cumsum(curCtrlMap(curIds)));
+        plot(gca, curX, cumsum(curSaSdMap(curIds)));
+        
+        xlabel(curAx, 'Min ASI area of large synapse [quantile]');
+        xlim(curAx, [0, 1]);
+        
+        subplot(2, 3, 3);
         curAx = curFig.Children(1);
         
         curX = linspace(curLimY(1), curLimY(2), curImSize(1));
@@ -641,7 +671,7 @@ for curConfig = plotConfigs
         axis(curAxes, 'xy');
         axis(curAxes, 'square');
         
-        curAx = curAxes(1);
+        curAx = curAxes(2);
         curPos = curAx.Position;
         curLeg = {'Random pairs', 'Same-axon same-dendrite pairs'};
         curLeg = legend(curAx, curLeg);
@@ -652,7 +682,7 @@ for curConfig = plotConfigs
             curFig, 'textbox', [0, 0.9, 1, 0.1], ...
             'String', {curConfigTitle; curCtrlTitle});
         
-        curFig.Position(3:4) = [1280, 470];
+        curFig.Position(3:4) = [1100, 770];
         connectEM.Figure.config(curFig, info);
         
         %% Evaluate sensitivity to p-value threshold
