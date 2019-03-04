@@ -593,7 +593,7 @@ for curConfig = plotConfigs
         curAx = curFig.Children(1);
         
         % NOTE(amotta): Reuses `curX` from above
-        curBinEdges = union(curSaSdT.areas, [-inf, +inf]);
+        curBinEdges = [-inf; sort(curSaSdT.areas(:)); +inf];
         curX = discretize(curX, curBinEdges);
         curX = curX / (numel(curBinEdges) - 1);
         
@@ -622,7 +622,7 @@ for curConfig = plotConfigs
         curAx = curFig.Children(1);
         
         % NOTE(amotta): Reuses `curX` from above
-        curBinEdges = union(curSaSdT.areas, [-inf, +inf]);
+        curBinEdges = [-inf; sort(curSaSdT.areas(:)); +inf];
         curX = discretize(curX, curBinEdges);
         curX = curX / (numel(curBinEdges) - 1);
         
