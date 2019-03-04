@@ -9,8 +9,6 @@ clear;
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 outputDir = '/home/amotta/Desktop/most-distant';
-
-axonFile = fullfile(rootDir, 'aggloState', 'axons_19_a_linearized.mat');
 dendriteFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_03_v2.mat');
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-linearized_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v8-classified.mat');
 asiRunId = '20190227T082543';
@@ -25,7 +23,7 @@ param = param.p;
 
 points = Seg.Global.getSegToPointMap(param);
 
-[curConn, syn] = connectEM.Consistency.loadConnectome(param);
+[conn, syn] = connectEM.Consistency.loadConnectome(param);
 
 % Load axon-spine interfaces
 [curDir, curAsiFile] = fileparts(connFile);
@@ -38,11 +36,15 @@ asiT = asiT.asiT;
 asiT = asiT(asiT.area > 0, :);
 asiT = connectEM.Consistency.Calibration.apply(asiT);
 
-axons = load(axonFile);
-axons = axons.axons(curConn.axonMeta.parentId);
-
+% NOTE(amotta): Axons were subject to segment pick-up prior to connectome
+% inference. The super-agglomerates are thus incomplete vis-à-vis the
+% connectome.
+%   The dendrite super-agglomerates were reduced to their segment-based
+% components for the connectome. It's thus entirely valid to use their
+% skeleton representation here. Let's do this (as it avoids the painfully
+% slow minimum spanning tree calculation).
 dendrites = load(dendriteFile);
-dendrites = dendrites.dendrites(curConn.denMeta.parentId);
+dendrites = dendrites.dendrites(conn.denMeta.parentId);
 
 %% Restrict to N-fold coupled neurites
 clear cur*;
@@ -85,7 +87,7 @@ for curIdx = 1:numel(randIds)
     curDendId = pairT.postAggloId(curId);
     curSynIds = pairT.synIds(curId, :);
     
-    curAxon = axons(curAxonId);
+    curAxon = conn.axons{curAxonId};
     curDend = dendrites(curDendId);
     
     curSyns = syn.synapses(curSynIds, :);
@@ -95,10 +97,10 @@ for curIdx = 1:numel(randIds)
         'UniformOutput', false);
     
     curSkel = skel;
-    curSkel = curSkel.addTree( ...
-        sprintf('Axon %d', curAxonId), ...
-        curAxon.nodes(:, 1:3), curAxon.edges, ...
-        [1, 0, 0, 1]);
+    curSkel = Skeleton.fromMST( ...
+        points(curAxon, :), param.raw.voxelSize, curSkel);
+    curSkel.names{end} = sprintf('Axon %d', curAxonId);
+    curSkel.colors{end} = [1, 0, 0, 1];
     
     curSkel = curSkel.addTree( ...
         sprintf('Dendrite %d', curDendId), ...
