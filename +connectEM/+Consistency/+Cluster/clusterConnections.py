@@ -39,5 +39,5 @@ sm = pystan.StanModel(file=path.join(this_dir, "clusterConnections.stan"))
 
 # TODO: Bump number of iterations
 data = {'K': 3, 'N': len(log10Asi1), 'log10Asi1': log10Asi1, 'log10Asi2': log10Asi2}
-fit = sm.sampling(data=data, iter=1000, chains=4)
+fit = sm.sampling(data=data, iter=20000, chains=10)
 print(fit)
