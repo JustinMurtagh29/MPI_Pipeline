@@ -37,7 +37,6 @@ this_dir = path.dirname(path.realpath(__file__))
 sm = pystan.StanModel(file=path.join(this_dir, "clusterConnections.stan"))
 # TODO: Pickle compiled model
 
-# TODO: Bump number of iterations
 data = {'K': 3, 'N': len(log10Asi1), 'log10Asi1': log10Asi1, 'log10Asi2': log10Asi2}
-fit = sm.sampling(data=data, iter=20000, chains=10)
+fit = sm.sampling(data=data, seed=0, iter=20000, chains=10)
 print(fit)
