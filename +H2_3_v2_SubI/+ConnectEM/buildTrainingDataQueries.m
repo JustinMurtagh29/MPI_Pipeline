@@ -21,7 +21,7 @@ Util.showRunInfo(info);
 rootDir = '/tmpscratch/sahilloo/data/H2_3_v2_U1_SubI/pipelineRun_mr2e_wsmrnet/';
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
-param.experimentName = 'H2_3_v2_U1_SubI_mr2e_wsmrnet_HC';
+param.experimentName = 'H2_3_v2_U1_SubI_mr2e_wsmrnet';
 
 outDir = fullfile(param.saveFolder,'tracings','connectEM');
 
