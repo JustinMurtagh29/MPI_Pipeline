@@ -24,13 +24,12 @@
  *            * normal_pdf(log10Asi2[i] | mu[2], sigma[2])
  * + ...
  * + theta[K] * normal_pdf(log10Asi1[i] | mu[K], sigma[K])
- *            * normal_pdf(log10Asi1[i] | mu[K], sigma[K])
+ *            * normal_pdf(log10Asi2[i] | mu[K], sigma[K])
  *
- * Below we're doing this whole spiel in log-space. Because the above
- * sum becomes a problem in log-space, we have to use `log_sum_exp`
- * function. It i) converts the terms of the sum from log to linear
- * space, ii) sums up the likelihood values, and finally iii) converts
- * the total likelihood back to log-space.
+ * Stan is doing this whole spiel in log-space. The above sum becomes a problem
+ * in log-space, so have to use the `log_sum_exp` function. It i) converts the
+ * terms of the sum from log to linear space, ii) sums up the likelihood
+ * values, and finally iii) converts the total likelihood back to log-space.
  *
  * Some comments about the priors: They were chosen as normal
  * distributions because I don't know any better (clearly negative
