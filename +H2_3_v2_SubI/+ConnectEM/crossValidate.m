@@ -23,7 +23,7 @@ nmlDir = fullfile( ...
     'ex144-08x2-mrNet', 'connect-em');
 %}
 
-rootDir = '/tmpscratch/sahilloo/data/H2_3_v2_U1_SubI/pipelineRun_mr2e_wsmrnet_HC/';
+rootDir = '/tmpscratch/sahilloo/data/H2_3_v2_U1_SubI/pipelineRun_mr2e_wsmrnet/';
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 
