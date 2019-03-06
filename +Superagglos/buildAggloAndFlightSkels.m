@@ -13,7 +13,8 @@ function skels = buildAggloAndFlightSkels(sagglos, baseSkel)
    [aggloParts, flightParts] = ...
         Superagglos.splitIntoAgglosAndFlights(sagglos);
     
-	skels = repmat(baseSkel, size(sagglos));
+    skels = num2cell(size(sagglos));
+    skels = repelem(baseSkel, skels{:});
     for curIdx = 1:numel(sagglos)
         curSkel = skels(curIdx);
 
