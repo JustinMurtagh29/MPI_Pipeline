@@ -8,6 +8,8 @@ function axonClasses = buildAxonSpecificityClasses(conn, axonClasses)
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     
     %% Add specificity thresholds
+   [axonClasses.specs] = deal(struct);
+   
     % Excitatory axons
     axonClasses(1).specs = struct;
     axonClasses(1).specs.ProximalDendrite.pThresh = 0.050108;
@@ -37,7 +39,7 @@ function axonClasses = buildAxonSpecificityClasses(conn, axonClasses)
             connectEM.Specificity.calcChanceProbs( ...
                 classConn, curAxonClass.axonIds, curNullProbs, ...
                 'distribution', 'binomial');
-            
+        
         curTargetClasses = fieldnames(curSpecs);
         for curTargetClassIdx = 1:numel(curTargetClasses)
             curTargetClass = curTargetClasses{curTargetClassIdx};
