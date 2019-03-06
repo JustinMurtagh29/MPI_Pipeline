@@ -80,7 +80,7 @@ clear cur*;
 
 curBarWidth = 0.8;
 curHistWidth = 0.09;
-plotClasses = 1:numel(axonClasses);
+plotClasses = 1:2;
 
 fig = figure();
 fig.Color = 'white';
