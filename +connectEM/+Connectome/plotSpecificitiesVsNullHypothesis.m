@@ -30,6 +30,7 @@ param = param.p;
     connectEM.Connectome.load(param, connFile);
 
 %% build class connectome for shaft synapses
+% This is needed to simulate the effect of FP inhibitory synapses.
 clear cur*;
 
 curShaftConn = conn;
@@ -45,6 +46,8 @@ classConnShafts = ...
         curShaftConn, 'targetClasses', targetClasses);
     
 %% build complete class connectome
+clear cur*;
+
 [conn, axonClasses] = ...
     connectEM.Connectome.prepareForSpecificityAnalysis( ...
         conn, axonClasses, 'minSynPre', minSynPre);
@@ -82,10 +85,22 @@ for curClassId = 1:numel(axonClasses)
             curSpineConn = curConn - curShaftConn;
 
             rng(curRun);
+            
+            %{
+            % Binomial correction for false positive synapses
             curShaftConn = curShaftConn - binornd(curShaftConn, ...
                 repelem(curFpRates(1, :), size(curShaftConn, 1), 1));
             curSpineConn = curSpineConn - binornd(curSpineConn, ...
                 repelem(curFpRates(2, :), size(curSpineConn, 1), 1));
+            %}
+            
+            curShaftConn = ...
+                removeConstantFractionOfSynapses( ...
+                    curShaftConn, curFpRates(1, :));
+            curSpineConn = ...
+                removeConstantFractionOfSynapses( ...
+                    curSpineConn, curFpRates(2, :));
+            
             curConn = curShaftConn + curSpineConn;
         end
         
@@ -282,4 +297,38 @@ function plotAxonClass(info, classConn, targetClasses, axonClass)
         'String', { ...
             'Observed synapse fractions vs. null hypothesis'; ...
             axonClass.title; info.git_repos{1}.hash});
+end
+
+function classConn = ...
+        removeConstantFractionOfSynapses(classConn, removeRate)
+    assert(all(0 <= removeRate(:) & removeRate(:) <= 1));
+    classCount = size(classConn, 2);
+    
+    if isscalar(removeRate)
+        removeRate = repelem(removeRate, 1, classCount);
+    else
+        % NOTE(amotta): This will (intentionally) throw an error if the
+        % number of elements in `removeRate` does not agree with the number
+        % of target classes.
+        removeRate = reshape(removeRate, 1, classCount);
+    end
+    
+    for curIdx = 1:classCount
+        curRemoveRate = removeRate(curIdx);
+        
+        % Find non-empty entries in class connectome
+       [curIds, ~, curCounts] = find(classConn(:, curIdx));
+        curIds = repelem(curIds(:), curCounts(:));
+        
+        % Select subset of synapses to drop
+        curRemoveCount = round(curRemoveRate * numel(curIds));
+        curIds = curIds(randperm(numel(curIds), curRemoveCount));
+        
+        % Update class connectome
+       [curIds, ~, curCounts] = unique(curIds);
+        curCounts = accumarray(curCounts, 1);
+        
+        classConn(curIds, curIdx) = ...
+            classConn(curIds, curIdx) - curCounts;
+    end
 end
