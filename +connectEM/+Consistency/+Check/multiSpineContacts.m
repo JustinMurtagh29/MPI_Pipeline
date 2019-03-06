@@ -118,6 +118,13 @@ curAxonDendT = axonDendT(ismember( ...
 % Randomize order (reproducibly)
 rng(0);
 curAxonDendT = curAxonDendT(randperm(height(curAxonDendT)), :);
+
+% NOTE(amotta): Also export the axon 37846 → dendrite 561 pair. See
+% https://webknossos.brain.mpg.de/annotations/Explorational/5c7d61fc010000d40d9a5adf
+exportRange(end + 1) = find( ...
+    curAxonDendT.axonId == 37846 ...
+  & curAxonDendT.dendId == 561);
+
 curAxonDendT = curAxonDendT(exportRange, :);
 
 for curIdx = 1:numel(exportRange)
