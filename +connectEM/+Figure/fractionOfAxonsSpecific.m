@@ -30,7 +30,7 @@ param = param.p;
     connectEM.Connectome.prepareForSpecificityAnalysis( ...
         conn, axonClasses, 'minSynPre', minSynPre);
 
-%% Find specific axons
+%% Prepare data
 axonClasses = axonClasses(1:3);
 
 axonClasses(1).tag = 'Exc';
@@ -39,69 +39,13 @@ axonClasses(3).tag = 'TC';
 
 axonClasses = ...
     connectEM.Connectome.buildAxonSpecificityClasses(conn, axonClasses);
+[fracSpec, fracOfSpecOntoTarget, fracOfSpecOntoTargetBars] = ...
+    connectEM.Specificity.calcAxonFractions(axonClasses, targetClasses);
 
-%% Prepare data
-fractionSpecific = nan(size(axonClasses));
-fractionOfSpecificOntoTarget = nan( ...
-    numel(axonClasses), 1 + numel(targetClasses));
-fractionOfSpecificOntoTargetBars = nan( ...
-    numel(axonClasses), 2 * numel(targetClasses) - 1);
-
-for curId = 1:numel(axonClasses)
-    curAxonClass = axonClasses(curId);
-    curAxonIds = curAxonClass.axonIds;
-    curSpecs = curAxonClass.specs;
-    
-    curSpecClasses = fieldnames(curSpecs);
-   [~, curIds] = ismember(curSpecClasses, targetClasses);
-    assert(all(curIds));
-    
-    curSpecAxonIds = cellfun( ...
-        @(name) curSpecs.(name).axonIds, ...
-        curSpecClasses, 'UniformOutput', false);
-    
-    % Determine fraction of axons with specificity
-    curFractionSpecific = unique(cell2mat(curSpecAxonIds));
-    curFractionSpecific = numel(curFractionSpecific) / numel(curAxonIds);
-    fractionSpecific(curId) = curFractionSpecific;
-    
-    % Fraction of specific axons per target
-   [curA, curB] = ndgrid(1:numel(curIds), 1:numel(curIds));
-    curSpecMat = zeros(numel(targetClasses));
-    curSpecMat(curIds, curIds) = cellfun( ...
-        @(idsOne, idsTwo) numel(intersect(idsOne, idsTwo)), ...
-        curSpecAxonIds(curA), curSpecAxonIds(curB));
-    
-    % NOTE(amotta): These fractions may add up to more than 100 %. Reason
-    % for this is that an axon may be specific for multiple target classes.
-    curFracPerTarget = diag(curSpecMat, 0);
-    curFracPerTarget = curFracPerTarget / numel(curAxonIds);
-    curFracPerTarget = curFracPerTarget / curFractionSpecific;
-    
-    fractionOfSpecificOntoTarget(curId, 1) = curFractionSpecific;
-    fractionOfSpecificOntoTarget(curId, 2:end) = curFracPerTarget;
-    
-    % Prepare stacked bars
-    curDiag = diag(curSpecMat, 0);
-    curOff = diag(curSpecMat, 1);
-    
-    curDiag(1:(end - 1)) = curDiag(1:(end - 1)) - curOff;
-    curDiag(2:end) = curDiag(2:end) - curOff;
-    
-    curDiag = reshape(curDiag, 1, []);
-    curOff = reshape(curOff, 1, []);
-    
-    curProbs = cat(1, curDiag, cat(2, curOff, 0));
-    curProbs = curProbs(1:(end - 1));
-    curProbs = curProbs / sum(curProbs);
-    
-    fractionOfSpecificOntoTargetBars(curId, :) = curProbs;
-end
-
-fractionOfSpecificOntoTarget = array2table( ...
-    fractionOfSpecificOntoTarget, ...
+disp(array2table( ...
+    horzcat(fracSpec, fracOfSpecOntoTarget), ...
     'VariableNames', cat(1, 'Overall', targetClasses), ...
-    'RowNames', {axonClasses.tag}) %#ok
+    'RowNames', {axonClasses.tag}));
 
 %% Plot fraction of axons specific
 clear cur*;
@@ -114,7 +58,7 @@ fig.Position(3:4) = [150, 161];
 ax = axes(fig);
 bar(ax, ...
     1:numel(plotClasses), ...
-    fractionSpecific(plotClasses), ...
+    fracSpec(plotClasses), ...
     'EdgeColor', 'black', 'FaceColor', 'black');
 
 ax.XLim = [0.5, numel(plotClasses) + 0.5];
@@ -146,7 +90,7 @@ ax = axes(fig);
 hold(ax, 'on');
 ax.YAxisLocation = 'right';
 
-plotData = fractionOfSpecificOntoTargetBars(plotClasses, :);
+plotData = fracOfSpecOntoTargetBars(plotClasses, :);
 plotData = flip(plotData, 2);
 
 allBars = bar(ax, plotData, 'stacked', 'BarWidth', curBarWidth);
@@ -163,7 +107,7 @@ colors = num2cell(colors(1:(end - 1), :), 2);
 [allBars.EdgeColor] = deal('none');
 
 excSpecs = axonClasses(1).specs;
-excOff = fractionOfSpecificOntoTargetBars(1, :);
+excOff = fracOfSpecOntoTargetBars(1, :);
 excOff = 1 - cumsum(cat(1, 0, excOff(:)));
 for curClassId = 1:numel(targetClasses)
     curClassName = targetClasses{curClassId};
