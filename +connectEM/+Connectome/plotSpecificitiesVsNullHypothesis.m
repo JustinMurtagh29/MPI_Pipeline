@@ -26,8 +26,7 @@ Util.showRunInfo(info);
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 
-[conn, syn, axonClasses] = ...
-    connectEM.Connectome.load(param, connFile);
+[conn, syn, axonClasses] = connectEM.Connectome.load(param, connFile);
 [axonClasses.tag] = deal('Exc', 'Inh', 'TC', 'CC', 'Unclear');
 
 %% build class connectome for shaft synapses
