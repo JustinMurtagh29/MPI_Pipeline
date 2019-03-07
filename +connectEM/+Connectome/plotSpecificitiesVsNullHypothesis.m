@@ -100,28 +100,28 @@ for curClassId = 1:numel(axonClasses)
             rng(curRun);
             
             switch curFpMethod
-                case 'binomial'
-                    % Binomial correction for false positive synapses
-                    curShaftConn = curShaftConn - binornd(curShaftConn, ...
-                        repelem(curFpRates(1, :), size(curShaftConn, 1), 1));
-                    curSpineConn = curSpineConn - binornd(curSpineConn, ...
-                        repelem(curFpRates(2, :), size(curSpineConn, 1), 1));
+              case 'binomial'
+                % Binomial correction for false positive synapses
+                curShaftConn = curShaftConn - binornd(curShaftConn, ...
+                    repelem(curFpRates(1, :), size(curShaftConn, 1), 1));
+                curSpineConn = curSpineConn - binornd(curSpineConn, ...
+                    repelem(curFpRates(2, :), size(curSpineConn, 1), 1));
             
-                case 'constFraction'
-                    % NOTE(amotta): Correction for false positive synapses
-                    % by removal of a random subset of synapses. With the
-                    % binomial approach the number of remove synapses
-                    % changes across runs. This method here keeps the
-                    % fraction of removed synapses constant.
-                    curShaftConn = ...
-                        removeConstantFractionOfSynapses( ...
-                            curShaftConn, curFpRates(1, :));
-                    curSpineConn = ...
-                        removeConstantFractionOfSynapses( ...
-                            curSpineConn, curFpRates(2, :));
-                        
-                otherwise
-                    error('Invalid method "%s"', curFpMethod);
+              case 'constFraction'
+                % NOTE(amotta): Correction for false positive synapses
+                % by removal of a random subset of synapses. With the
+                % binomial approach the number of remove synapses
+                % changes across runs. This method here keeps the
+                % fraction of removed synapses constant.
+                curShaftConn = ...
+                    removeConstantFractionOfSynapses( ...
+                        curShaftConn, curFpRates(1, :));
+                curSpineConn = ...
+                    removeConstantFractionOfSynapses( ...
+                        curSpineConn, curFpRates(2, :));
+
+              otherwise
+                error('Invalid method "%s"', curFpMethod);
             end
             
             curConn = curShaftConn + curSpineConn;
