@@ -7,8 +7,15 @@ rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-partiallySplit-v2_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v8-classified.mat');
 
 targetClasses = { ...
-    'Somata', 'ProximalDendrite', 'ApicalDendrite', ...
-    'SmoothDendrite', 'AxonInitialSegment', 'OtherDendrite'};
+    'Somata', 'SO'; ...
+    'ProximalDendrite', 'PD'; ...
+    'ApicalDendrite', 'AD'; ...
+    'SmoothDendrite', 'SD'; ...
+    'AxonInitialSegment', 'AIS'; ...
+    'OtherDendrite', 'OD'};
+
+targetLabels = transpose(targetClasses(:, 2));
+targetClasses = transpose(targetClasses(:, 1));
 
 % NOTE(amotta): Rows correspond to shaft and spine synapses, respectively.
 % Columns correspond to the target classes listed above. All-zeros mark
@@ -70,7 +77,7 @@ clear cur*;
 
 evalT = cell(size(axonClasses));
 barFracs = cell(size(axonClasses));
-pValThreshs = [0.025, 0.05, 0.1, 0.2, 0.3];
+fdrThreshs = [0.025, 0.05, 0.1, 0.2, 0.3];
 
 for curClassId = 1:numel(axonClasses)
     curAxonClass = axonClasses(curClassId);
@@ -90,7 +97,7 @@ for curClassId = 1:numel(axonClasses)
     end
     %}
     
-    numRuns = numel(pValThreshs);
+    numRuns = numel(fdrThreshs);
     
     curEvalT = array2table( ...
         nan(numRuns, 1 + numel(targetClasses)), ...
@@ -98,7 +105,7 @@ for curClassId = 1:numel(axonClasses)
     curBarFracs = nan(numRuns, 2 * numel(targetClasses) - 1);
     
     for curRun = 1:numRuns
-        curPValThresh = pValThreshs(curRun);
+        curFdrThresh = fdrThreshs(curRun);
         curConn = classConn(curAxonClass.nullAxonIds, :);
         
         if ~isempty(curFpRates)
@@ -141,7 +148,7 @@ for curClassId = 1:numel(axonClasses)
                 curConn, 'oneVersusRestBinomial');
         curAxonClass.specs = plotAxonClass( ...
             classConn, targetClasses, curAxonClass, ...
-            'pValThresh', curPValThresh, 'showPlot', false, 'info', info);
+            'fdrThresh', curFdrThresh, 'showPlot', false, 'info', info);
         
        [curA, curB, curC] = ...
             connectEM.Specificity.calcAxonFractions( ...
@@ -162,7 +169,7 @@ for curIdx = 1:numel(axonClasses)
     curAxonClass = axonClasses(curIdx);
     
     curEvalT = evalT{curIdx};
-    curEvalT.pValThresh = pValThreshs(:);
+    curEvalT.fdrThresh = fdrThreshs(:);
     curEvalT = circshift(curEvalT, 1, 2);
     
     fprintf('%s\n\n', curAxonClass.title);
@@ -172,14 +179,14 @@ end
 %% Plot fraction of axons specific
 % Copy & paste from +connectEM/+Figure/fractionOfAxonsSpecific.m
 clear cur*;
-plotClasses = 1:2;
+curPlotClasses = 1:2;
 
 curFig = figure();
 curAx = axes(curFig);
 hold(curAx, 'on');
 
-for curIdx = 1:numel(plotClasses)
-    curId = plotClasses(curIdx);
+for curIdx = 1:numel(curPlotClasses)
+    curId = curPlotClasses(curIdx);
     curFracs = evalT{curId}.Overall;
     
     plot(curAx, repelem(curIdx, numel(curFracs)), curFracs');
@@ -188,15 +195,62 @@ end
 curLines = curAx.Children;
 set(curLines, 'Color', 'black', 'Marker', '.', 'MarkerSize', 16);
 
-curAx.XLim = [0.5, numel(plotClasses) + 0.5];
+curAx.XLim = [0.5, numel(curPlotClasses) + 0.5];
 curAx.YLim = [0, 1];
 
-curAx.XTick = 1:numel(plotClasses);
-curAx.XTickLabel = {axonClasses(plotClasses).tag};
+curAx.XTick = 1:numel(curPlotClasses);
+curAx.XTickLabel = {axonClasses(curPlotClasses).tag};
 ylabel(curAx, {'Fraction of'; 'axons specific'});
 
 connectEM.Figure.config(curFig, info);
 curFig.Position(3:4) = [125, 160];
+
+%% Plot distribution of specificities over target classes
+clear cur*;
+
+curBarWidth = 0.8;
+curHistWidth = 0.09;
+curPlotClasses = 1:2;
+
+curColors = get(groot, 'defaultAxesColorOrder');
+curColors = flip(curColors(1:numel(targetClasses), :), 1);
+
+curMixed = (curColors(1:(end - 1), :) .^ 2 + curColors(2:end, :) .^ 2) / 2;
+curMixed = cat(1, sqrt(curMixed), zeros(1, 3));
+
+curColors = cat(1, transpose(curColors), transpose(curMixed));
+curColors = transpose(reshape(curColors, 3, []));
+curColors = num2cell(curColors(1:(end - 1), :), 2);
+
+for curIdx = 1:numel(fdrThreshs)
+    curFdrThresh = fdrThreshs(curIdx);
+    
+    curFig = figure();
+    curFig.Color = 'white';
+    curFig.Position(3:4) = [280, 280];
+
+    curAx = axes(curFig); %#ok
+    hold(curAx, 'on');
+    curAx.YAxisLocation = 'right';
+
+    curPlotData = cell2mat(cellfun( ...
+        @(b) b(curIdx, :), barFracs(:), 'UniformOutput', false));
+    curPlotData = flip(curPlotData(curPlotClasses, :), 2);
+
+    curBars = bar(curAx, curPlotData, 'stacked', 'BarWidth', curBarWidth);
+    set(curBars, {'FaceColor'}, curColors, 'EdgeColor', 'none');
+
+    xlim(curAx, [0.5, numel(curPlotClasses) + 0.5]);
+    xticklabels(curAx, {axonClasses(curPlotClasses).tag});
+    xticks(curAx, 1:numel(curPlotClasses));
+
+    curLeg = legend(curAx, ...
+        flip(curBars(1:2:end)), targetLabels, ...
+        'Location', 'EastOutside');
+    title(curAx, sprintf('FDR threshold of %g', curFdrThresh));
+
+    connectEM.Figure.config(curFig, info);
+end
 
 %% plotting
 function specs = plotAxonClass( ...
@@ -204,7 +258,7 @@ function specs = plotAxonClass( ...
     opts = struct;
     opts.info = [];
     opts.showPlot = false;
-    opts.pValThresh = 0.2;
+    opts.fdrThresh = 0.2;
     opts = Util.modifyStruct(opts, varargin{:});
     
     specs = struct;
@@ -279,8 +333,8 @@ function specs = plotAxonClass( ...
         curFdrEst = curFdrEst(:) ./ curPAxonFrac(:);
         
         curThetaPVal = 1 + find( ...
-            curFdrEst(1:(end - 1)) <= opts.pValThresh ...
-          & curFdrEst(2:end) > opts.pValThresh, 1);
+            curFdrEst(1:(end - 1)) <= opts.fdrThresh ...
+          & curFdrEst(2:end) > opts.fdrThresh, 1);
       
         curThetaPVal = curPVal(curThetaPVal);
         if isempty(curThetaPVal); curThetaPVal = nan; end
