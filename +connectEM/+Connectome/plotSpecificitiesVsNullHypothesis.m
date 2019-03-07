@@ -28,6 +28,7 @@ param = param.p;
 
 [conn, syn, axonClasses] = ...
     connectEM.Connectome.load(param, connFile);
+[axonClasses.tag] = deal('Exc', 'Inh', 'TC', 'CC', 'Unclear');
 
 %% build class connectome for shaft synapses
 % This is needed to simulate the effect of FP inhibitory synapses.
@@ -159,6 +160,47 @@ for curIdx = 1:numel(axonClasses)
     fprintf('%s over %d runs\n\n', curAxonClass.title, curRuns);
     disp(curDispT); fprintf('\n');
 end
+
+%% Plot fraction of axons specific
+% Copy & paste from +connectEM/+Figure/fractionOfAxonsSpecific.m
+clear cur*;
+plotClasses = 1:2;
+
+curBars = nan(1, numel(plotClasses));
+curLims = nan(2, numel(plotClasses));
+
+for curIdx = 1:numel(plotClasses)
+    curId = plotClasses(curIdx);
+    curBars(curIdx) = mean(evalT{curId}.Overall);
+    curLims(:, curIdx) = prctile(evalT{curId}.Overall, [0; 100]);
+end
+
+fig = figure();
+ax = axes(fig);
+hold(ax, 'on');
+
+bar(ax, ...
+    1:numel(plotClasses), curBars, ...
+    'EdgeColor', 'black', 'FaceColor', 'black');
+curEbarNeg = errorbar(ax, ...
+    1:numel(plotClasses), curBars, ...
+    curBars - curLims(1, :), []);
+curEbarPos = errorbar(ax, ...
+    1:numel(plotClasses), curBars, ...
+    [], curLims(2, :) - curBars);
+
+curEbarNeg.Color = 'white'; curEbarNeg.LineStyle = 'none';
+curEbarPos.Color = 'black'; curEbarPos.LineStyle = 'none';
+
+ax.XLim = [0.5, numel(plotClasses) + 0.5];
+ax.YLim = [0, 1];
+
+ax.XTick = 1:numel(plotClasses);
+ax.XTickLabel = {axonClasses(plotClasses).tag};
+
+ylabel(ax, {'Fraction of'; 'axons specific'});
+fig.Position(3:4) = [150, 161];
+connectEM.Figure.config(fig, info);
 
 %% plotting
 function specs = plotAxonClass( ...

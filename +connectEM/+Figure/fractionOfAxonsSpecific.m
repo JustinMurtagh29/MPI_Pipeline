@@ -47,34 +47,6 @@ disp(array2table( ...
     'VariableNames', cat(1, 'Overall', targetClasses), ...
     'RowNames', {axonClasses.tag}));
 
-%% Plot fraction of axons specific
-clear cur*;
-plotClasses = 1:numel(axonClasses);
-
-fig = figure();
-fig.Color = 'white';
-fig.Position(3:4) = [150, 161];
-
-ax = axes(fig);
-bar(ax, ...
-    1:numel(plotClasses), ...
-    fracSpec(plotClasses), ...
-    'EdgeColor', 'black', 'FaceColor', 'black');
-
-ax.XLim = [0.5, numel(plotClasses) + 0.5];
-ax.YLim = [0, 1];
-
-ax.Box = 'off';
-ax.TickDir = 'out';
-ax.XTick = 1:numel(plotClasses);
-ax.XTickLabel = {axonClasses(plotClasses).tag};
-
-ylabel(ax, {'Fraction of'; 'axons specific'});
-
-title(ax, { ...
-    info.filename; info.git_repos{1}.hash}, ...
-    'FontWeight', 'normal', 'FontSize', 10);
-
 %% Plot distribution of specificities over target classes
 clear cur*;
 
