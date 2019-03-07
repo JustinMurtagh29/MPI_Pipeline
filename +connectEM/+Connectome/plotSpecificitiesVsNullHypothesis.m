@@ -64,7 +64,6 @@ classConn = ...
         conn, 'targetClasses', targetClasses);
     
 %% prepare for analysis while accounting for false positive inh. synapses
-
 [axonClasses.synFalsePosRates] = deal([]);
 [axonClasses.synFalsePosMethod] = deal([]);
 
@@ -256,6 +255,77 @@ for curIdx = 1:numel(fdrThreshs)
     connectEM.Figure.config(curFig, info);
 end
 
+%% Calculate coinnervation matrix
+clear cur*;
+curFdThresh = 0.2;
+
+for curAxonClass = axonClasses(2)
+    curConn = classConn;
+    
+    curAxonClass.nullTargetClassProbs = ...
+        connectEM.Specificity.calcFirstHitProbs( ...
+            curConn(curAxonClass.nullAxonIds, :), ...
+            'oneVersusRestBinomial');
+    curAxonClass.specs =  ...
+        connectEM.Specificity.calcForAxonClass( ...
+            curConn, targetClasses, curAxonClass, ...
+            'fdrThresh', curFdThresh, 'showPlot', false);
+	
+    if isfield(curAxonClass, 'synFalsePosRates') ...
+            && not(isempty(curAxonClass.synFalsePosRates))
+        % NOTE(amotta): If the user has specified synapse false positive
+        % rates then let's corrected for the expectation. As discussed with
+        % MH on 07.03.2019 we're using the unmodified class connectome to
+        % defined the target-specific axons.
+        curFpRates = curAxonClass.synFalsePosRates;
+        
+        curShaftConn = classConnShafts;
+        curSpineConn = curConn - curShaftConn;
+        
+        curConn = ...
+            curShaftConn .* (1 - curFpRates(1, :)) ...
+          + curSpineConn .* (1 - curFpRates(2, :));
+    end
+	
+    curSpecs = curAxonClass.specs;
+    curSpecClasses = fieldnames(curSpecs);
+    
+   [~, curSpecClasses] = ismember(curSpecClasses, targetClasses);
+    curSpecClasses = sort(curSpecClasses);
+    
+    curCoinMat = nan(numel(curSpecClasses), numel(targetClasses));
+    curSpecClassRates = nan(1, numel(curSpecClasses));
+    
+    for curSpecIdx = 1:numel(curSpecClasses)
+        curSpecClass = curSpecClasses(curSpecIdx);
+        curAxonIds = curSpecs.(targetClasses{curSpecClass}).axonIds;
+        
+        curCoinVec = curConn(curAxonIds, :);
+        curCoinVec(:, curSpecClass) = 0;
+        curCoinVec = sum(curCoinVec, 1) / sum(curCoinVec(:));
+        curCoinMat(curSpecIdx, :) = curCoinVec;
+        
+        curSpecClassRate = curConn(curAxonIds, :);
+        curSpecClassRate = ...
+            sum(curSpecClassRate(:, curSpecClass)) ...
+         ./ sum(curSpecClassRate(:));
+        curSpecClassRates(curSpecIdx) = curSpecClassRate;
+    end
+    
+    % All axons
+    curCoinVec = curConn(curAxonClass.axonIds, :);
+    curCoinVec = sum(curCoinVec, 1) / sum(curCoinVec(:));
+    curCoinMat = cat(1, curCoinMat, curCoinVec);
+    
+    curTargetLabels = targetLabels;
+    assert(isequal(curTargetLabels{end}, 'OD'));
+    curTargetLabels = curTargetLabels(1:(end - 1));
+    
+    plotIt(info, ...
+        curTargetLabels, curAxonClass, curSpecClasses, ...
+        curCoinMat, 'specClassRates', curSpecClassRates);
+end
+
 %% plotting
 function classConn = ...
         removeConstantFractionOfSynapses(classConn, removeRate)
@@ -289,4 +359,111 @@ function classConn = ...
         classConn(curIds, curIdx) = ...
             classConn(curIds, curIdx) - curCounts;
     end
+end
+
+function plotIt( ...
+        info, targetClasses, axonClass, ...
+        specClasses, coinMat, varargin)
+    opt = struct;
+    opt.maxDelta = 0.20;
+    opt.specClassRates = [];
+    opt = Util.modifyStruct(opt, varargin{:});
+    
+    specLabels = targetClasses(specClasses);
+    specLabels{end + 1} = 'All';
+    
+    % Don't show the synapses, which do not fall in one of the target
+    % classes listed in `targetClasses`.
+    coinMat(:, end) = [];
+    
+    rows = numel(specLabels);
+    cols = numel(targetClasses);
+    frac = rows / cols;
+    
+    % Sanity checks
+    assert(isequal(size(coinMat), [rows, cols]));
+    
+    diagIds = arrayfun( ...
+        @(idx, id) sub2ind(size(coinMat), idx, id), ...
+        reshape(1:numel(specClasses), size(specClasses)), specClasses);
+    
+    deltaMat = coinMat - coinMat(end, :);
+    deltaMat(diagIds) = 0;
+    
+    if ~isempty(opt.specClassRates)
+        coinMat(diagIds) = opt.specClassRates;
+    end
+    
+    fig = figure();
+    ax = axes(fig);
+    
+    imshow( ...
+        deltaMat, [-opt.maxDelta, +opt.maxDelta], ...
+        'Colormap', buildColormap(129), ...
+        'Parent', ax);
+
+    fig.Color = 'white';
+    fig.Position(3:4) = 350 .* [1, frac];
+
+    ax.Visible = 'on';
+    ax.TickDir = 'out';
+    ax.Box = 'off';
+
+    ax.XAxisLocation = 'top';
+    ax.XTick = 1:size(coinMat, 2);
+    ax.XTickLabel = targetClasses;
+    ax.XTickLabelRotation = 90;
+
+    ax.YTick = 1:size(coinMat, 1);
+    ax.YTickLabel = specLabels;
+    ax.Position = [0.1, 0.01, 0.75, 0.75];
+    
+    for curIdx = 1:numel(coinMat)
+       [curRow, curCol] = ind2sub(size(coinMat), curIdx);
+        curEdgeColor = 'none';
+        
+        if curRow <= numel(specClasses) ...
+                && specClasses(curRow) == curCol
+            if isempty(opt.specClassRates); continue; end
+            curEdgeColor = 'black';
+        end
+
+        curBoxSize = ax.Position(3:4) ./ [cols, rows];
+        curOff = [curCol, numel(specLabels) - curRow + 1];
+        curOff = ax.Position(1:2) + (curOff - 1) .* curBoxSize;
+        
+        curAnn = annotation( ...
+            fig, 'textbox', [curOff, curBoxSize], ...
+            'String', sprintf('%.2g', 100 * coinMat(curIdx)));
+        curAnn.HorizontalAlignment = 'center';
+        curAnn.VerticalAlignment = 'middle';
+        curAnn.EdgeColor = curEdgeColor;
+        curAnn.Color = 'black';
+        curAnn.FontSize = 12;
+        curAnn.LineWidth = 2;
+    end
+    
+    cbar = colorbar('peer', ax);
+    cbar.TickLabels = arrayfun( ...
+        @(f) sprintf('%+g %%', 100 * f), ...
+        cbar.Ticks, 'UniformOutput', false);
+    cbar.TickDirection = 'out';
+    cbar.Position = [0.91, 0.1, 0.02, 0.8];
+    cbar.Position([2, 4]) = ax.Position([2, 4]);
+
+    title(ax, ...
+        {info.filename; info.git_repos{1}.hash; axonClass.title}, ...
+        'FontWeight', 'normal', 'FontSize', 10);
+end
+
+function cmap = buildColormap(n)
+    c = 1 + (n - 1) / 2;
+    alpha = linspace(0, 1, c);
+    alpha = transpose(alpha);
+    
+    cmap = zeros(n, 3);
+    cmap(1:c, :) = alpha .* [1, 1, 1];
+    cmap(c:n, :) = sqrt(( ...
+        alpha .* [0.301, 0.745, 0.933] .^ 2 ...
+      + (1 - alpha) .* [1, 1, 1] .^ 2));
 end
