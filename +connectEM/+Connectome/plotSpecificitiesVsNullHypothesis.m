@@ -58,7 +58,10 @@ classConn = ...
     
 %% prepare for analysis while accounting for false positive inh. synapses
 [axonClasses.synFalsePosRates] = deal([]);
+[axonClasses.synFalsePosMethod] = deal([]);
+
 axonClasses(2).synFalsePosRates = inhFpRates;
+axonClasses(2).synFalsePosMethod = 'binomial';
 
 %% plot
 clear cur*;
@@ -66,6 +69,7 @@ clear cur*;
 for curClassId = 1:numel(axonClasses)
     curAxonClass = axonClasses(curClassId);
     curFpRates = curAxonClass.synFalsePosRates;
+    curFpMethod = curAxonClass.synFalsePosMethod;
     
     % NOTE(amotta): If empirically determined synapse false positive rates
     % have been specified, we simulate the effect of synapse removal under
@@ -90,20 +94,30 @@ for curClassId = 1:numel(axonClasses)
 
             rng(curRun);
             
-            %{
-            % Binomial correction for false positive synapses
-            curShaftConn = curShaftConn - binornd(curShaftConn, ...
-                repelem(curFpRates(1, :), size(curShaftConn, 1), 1));
-            curSpineConn = curSpineConn - binornd(curSpineConn, ...
-                repelem(curFpRates(2, :), size(curSpineConn, 1), 1));
-            %}
+            switch curFpMethod
+                case 'binomial'
+                    % Binomial correction for false positive synapses
+                    curShaftConn = curShaftConn - binornd(curShaftConn, ...
+                        repelem(curFpRates(1, :), size(curShaftConn, 1), 1));
+                    curSpineConn = curSpineConn - binornd(curSpineConn, ...
+                        repelem(curFpRates(2, :), size(curSpineConn, 1), 1));
             
-            curShaftConn = ...
-                removeConstantFractionOfSynapses( ...
-                    curShaftConn, curFpRates(1, :));
-            curSpineConn = ...
-                removeConstantFractionOfSynapses( ...
-                    curSpineConn, curFpRates(2, :));
+                case 'constFraction'
+                    % NOTE(amotta): Correction for false positive synapses
+                    % by removal of a random subset of synapses. With the
+                    % binomial approach the number of remove synapses
+                    % changes across runs. This method here keeps the
+                    % fraction of removed synapses constant.
+                    curShaftConn = ...
+                        removeConstantFractionOfSynapses( ...
+                            curShaftConn, curFpRates(1, :));
+                    curSpineConn = ...
+                        removeConstantFractionOfSynapses( ...
+                            curSpineConn, curFpRates(2, :));
+                        
+                otherwise
+                    error('Invalid method "%s"', curFpMethod);
+            end
             
             curConn = curShaftConn + curSpineConn;
         end
