@@ -76,6 +76,10 @@ for curClassId = 1:numel(axonClasses)
         case false, numRuns = 5;
     end
     
+    curEvalT = array2table( ...
+        nan(0, 1 + numel(targetClasses)), ...
+        'VariableNames', [{'Overall'}, targetClasses]);
+    
     for curRun = 1:numRuns
         curConn = classConn(curAxonClass.nullAxonIds, :);
 
@@ -104,32 +108,37 @@ for curClassId = 1:numel(axonClasses)
             curConn = curShaftConn + curSpineConn;
         end
         
-        axonClasses(curClassId).nullTargetClassProbs = ...
-            connectEM.Specificity.calcFirstHitProbs(curConn, 'multinomial');
-        plotAxonClass( ...
-            info, classConn, targetClasses, axonClasses(curClassId));
+        curAxonClass.nullTargetClassProbs = ...
+            connectEM.Specificity.calcFirstHitProbs( ...
+                curConn, 'oneVersusRestBinomial');
+        curAxonClass.specs = plotAxonClass( ...
+            info, classConn, targetClasses, curAxonClass);
+        
+       [curA, curB] = ...
+            connectEM.Specificity.calcAxonFractions( ...
+                curAxonClass, targetClasses);
+        curEvalT{curRun, :} = [curA, curB];
     end
+    
+    fprintf('%s\n\n', curAxonClass.title);
+    disp(curEvalT); fprintf('\n');
 end
 
-%% show first hit probabilities
-firstHitProbs = cat(1, axonClasses.nullTargetClassProbs);
-firstHitProbs = array2table(firstHitProbs, 'VariableNames', targetClasses);
-firstHitProbs.Properties.RowNames = {axonClasses.title};
-
-fprintf('# First-hit probabilities\n');
-disp(firstHitProbs);
-
 %% plotting
-function plotAxonClass(info, classConn, targetClasses, axonClass)
+function specs = plotAxonClass( ...
+        info, classConn, targetClasses, axonClass)
+    specs = struct;
+    
+    nullTargetClassProbs = axonClass.nullTargetClassProbs;
     axonSpecs = classConn(axonClass.axonIds, :);
     synCounts = sum(axonSpecs, 2);
     axonSpecs = axonSpecs ./ synCounts;
     
     %% preparations
-    nullTargetClassProbs = axonClass.nullTargetClassProbs;
-    axonNullProbs = connectEM.Specificity.calcChanceProbs( ...
-        classConn, axonClass.axonIds, nullTargetClassProbs, ...
-        'distribution', 'binomial');
+    axonNullProbs = ...
+        connectEM.Specificity.calcChanceProbs( ...
+            classConn, axonClass.axonIds, nullTargetClassProbs, ...
+            'distribution', 'binomial');
     
     %% plotting
     fig = figure;
@@ -139,7 +148,7 @@ function plotAxonClass(info, classConn, targetClasses, axonClass)
     binEdges = linspace(0, 1, 21);
     axes = cell(size(targetClasses));
     pValAxes = cell(size(targetClasses));
-
+    
     for classIdx = 1:numel(targetClasses)
         className = targetClasses{classIdx};
         classProb = nullTargetClassProbs(classIdx);
@@ -262,6 +271,7 @@ function plotAxonClass(info, classConn, targetClasses, axonClass)
         xlabel(ax, 'p-value');
         ylabel(ax, 'Estimated FDR');
         
+        curThetaPVal = nan;
         if ~isempty(curThetaIdx)
             curThetaPVal = curPVal(curThetaIdx);
             
@@ -271,6 +281,16 @@ function plotAxonClass(info, classConn, targetClasses, axonClass)
             title(ax, ...
                 sprintf('p = %f', curThetaPVal), ...
                 'FontWeight', 'normal', 'FontSize', 10);
+        end
+        
+        if ksProb < 0.01 ...
+                && not(isnan(curThetaPVal)) ...
+                && not(strcmpi(className, 'OtherDendrite'))
+            curSpecs = struct;
+            curSpecs.pThresh = curThetaPVal;
+            curSpecs.axonIds = axonClass.axonIds( ...
+                axonClassNullProbs < curThetaPVal);
+            specs.(className) = curSpecs;
         end
     end
     
