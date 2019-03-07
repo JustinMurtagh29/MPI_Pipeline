@@ -17,11 +17,11 @@ addpath(genpath('/gaba/u/sahilloo/repos/amotta/matlab/'))
 %% Configuration
 config = 'ex144_08x2_mrNet';
 %}
-rootDir = '/tmpscratch/sahilloo/data/H2_3_v2_U1_SubI/pipelineRun_mr2e_wsmrnet_HC/';
+rootDir = '/tmpscratch/sahilloo/data/Mk1_F6_JS_SubI_v1/pipelineRun_mr2e_wsmrnet/';
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 
-classifierFile = '/gaba/u/sahilloo/H2_3_v2_U1_SubI/connect-em/classifier.mat';
+classifierFile = '/gaba/u/sahilloo/Mk1_F6_JS_SubI_v1/connect-em/classifier.mat';
 
 areaT = 10;
 fmap = SynEM.getFeatureMap('paper');

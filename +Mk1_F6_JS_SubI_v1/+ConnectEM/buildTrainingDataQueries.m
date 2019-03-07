@@ -3,20 +3,23 @@
 clear;
 
 boxesWk = [ ...
-    9120, 6595, 2982, 267, 267, 108; ...
-    11599, 7708, 2779, 267, 267, 108;...
-    3846, 3961, 2655,267, 267, 108];
+    9787, 10869, 2530, 267, 267, 108; ...
+    10299, 12387, 2937, 267, 267, 108;...
+    6744, 8960, 1544,267, 267, 108];
 sampleRange = [402, 600];
 
 info = Util.runInfo();
 Util.showRunInfo(info);
 %% Configuration
-rootDir = '/tmpscratch/sahilloo/data/H2_3_v2_U1_SubI/pipelineRun_mr2e_wsmrnet_HC/';
+rootDir = '/tmpscratch/sahilloo/data/Mk1_F6_JS_SubI_v1/pipelineRun_mr2e_wsmrnet/';
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
-param.experimentName = 'H2_3_v2_U1_SubI_mr2e_wsmrnet_HC';
+param.experimentName = 'Mk1_F6_JS_SubI_v1_mrnet_wsmrnet';
 
 outDir = fullfile(param.saveFolder,'tracings','connectEM');
+if ~exist(outDir,'dir')
+    mkdir(outDir);
+end
 
 segPoints = Seg.Global.getSegToPointMap(param);
 
