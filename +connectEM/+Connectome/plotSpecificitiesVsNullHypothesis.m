@@ -66,6 +66,9 @@ axonClasses(2).synFalsePosMethod = 'binomial';
 %% plot
 clear cur*;
 
+evalT = cell(size(axonClasses));
+barFracs = cell(size(axonClasses));
+
 for curClassId = 1:numel(axonClasses)
     curAxonClass = axonClasses(curClassId);
     curFpRates = curAxonClass.synFalsePosRates;
@@ -77,12 +80,13 @@ for curClassId = 1:numel(axonClasses)
     % get a feeling for the variability across trials.
     switch isempty(curFpRates)
         case true, numRuns = 1;
-        case false, numRuns = 5;
+        case false, numRuns = 20;
     end
     
     curEvalT = array2table( ...
-        nan(0, 1 + numel(targetClasses)), ...
+        nan(numRuns, 1 + numel(targetClasses)), ...
         'VariableNames', [{'Overall'}, targetClasses]);
+    curBarFracs = nan(numRuns, 2 * numel(targetClasses) - 1);
     
     for curRun = 1:numRuns
         curConn = classConn(curAxonClass.nullAxonIds, :);
@@ -128,14 +132,32 @@ for curClassId = 1:numel(axonClasses)
         curAxonClass.specs = plotAxonClass( ...
             info, classConn, targetClasses, curAxonClass);
         
-       [curA, curB] = ...
+       [curA, curB, curC] = ...
             connectEM.Specificity.calcAxonFractions( ...
                 curAxonClass, targetClasses);
+        
         curEvalT{curRun, :} = [curA, curB];
+        curBarFracs(curRun, :) = curC;
     end
     
-    fprintf('%s\n\n', curAxonClass.title);
-    disp(curEvalT); fprintf('\n');
+    evalT{curClassId} = curEvalT;
+    barFracs{curClassId} = curBarFracs;
+end
+
+%% quantitative evaluation
+clear cur*;
+
+for curIdx = 1:numel(axonClasses)
+    curAxonClass = axonClasses(curIdx);
+    curEvalT = evalT{curIdx};
+    curRuns = height(curEvalT);
+    
+    curDispT = varfun(@(v) [prctile(v, [0; 50; 100]); mean(v)], curEvalT);
+    curDispT.Properties.VariableNames = curEvalT.Properties.VariableNames;
+    curDispT.Properties.RowNames = {'Min', 'Median', 'Max', 'Mean'};
+    
+    fprintf('%s over %d runs\n\n', curAxonClass.title, curRuns);
+    disp(curDispT); fprintf('\n');
 end
 
 %% plotting
