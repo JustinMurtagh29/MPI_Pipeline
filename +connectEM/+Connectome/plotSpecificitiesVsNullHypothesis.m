@@ -58,20 +58,26 @@ classConn = ...
         conn, 'targetClasses', targetClasses);
     
 %% prepare for analysis while accounting for false positive inh. synapses
+%{
 [axonClasses.synFalsePosRates] = deal([]);
 [axonClasses.synFalsePosMethod] = deal([]);
 
 axonClasses(2).synFalsePosRates = inhFpRates;
 axonClasses(2).synFalsePosMethod = 'binomial';
+%}
 
 %% plot
 clear cur*;
 
 evalT = cell(size(axonClasses));
 barFracs = cell(size(axonClasses));
+pValThreshs = [0.025, 0.05, 0.1, 0.2, 0.3];
 
 for curClassId = 1:numel(axonClasses)
     curAxonClass = axonClasses(curClassId);
+    curFpRates = [];
+    
+    %{
     curFpRates = curAxonClass.synFalsePosRates;
     curFpMethod = curAxonClass.synFalsePosMethod;
     
@@ -83,6 +89,9 @@ for curClassId = 1:numel(axonClasses)
         case true, numRuns = 1;
         case false, numRuns = 20;
     end
+    %}
+    
+    numRuns = numel(pValThreshs);
     
     curEvalT = array2table( ...
         nan(numRuns, 1 + numel(targetClasses)), ...
@@ -90,8 +99,9 @@ for curClassId = 1:numel(axonClasses)
     curBarFracs = nan(numRuns, 2 * numel(targetClasses) - 1);
     
     for curRun = 1:numRuns
+        curPValThresh = pValThreshs(curRun);
         curConn = classConn(curAxonClass.nullAxonIds, :);
-
+        
         if ~isempty(curFpRates)
             % Take into account false positive synapse rates
             curShaftConn = classConnShafts(curAxonClass.nullAxonIds, :);
@@ -132,7 +142,7 @@ for curClassId = 1:numel(axonClasses)
                 curConn, 'oneVersusRestBinomial');
         curAxonClass.specs = plotAxonClass( ...
             classConn, targetClasses, curAxonClass, ...
-            'showPlot', true, 'info', info);
+            'pValThresh', curPValThresh, 'showPlot', false, 'info', info);
         
        [curA, curB, curC] = ...
             connectEM.Specificity.calcAxonFractions( ...
@@ -151,15 +161,13 @@ clear cur*;
 
 for curIdx = 1:numel(axonClasses)
     curAxonClass = axonClasses(curIdx);
+    
     curEvalT = evalT{curIdx};
-    curRuns = height(curEvalT);
+    curEvalT.pValThresh = pValThreshs(:);
+    curEvalT = circshift(curEvalT, 1, 2);
     
-    curDispT = varfun(@(v) [prctile(v, [0; 50; 100]); mean(v)], curEvalT);
-    curDispT.Properties.VariableNames = curEvalT.Properties.VariableNames;
-    curDispT.Properties.RowNames = {'Min', 'Median', 'Max', 'Mean'};
-    
-    fprintf('%s over %d runs\n\n', curAxonClass.title, curRuns);
-    disp(curDispT); fprintf('\n');
+    fprintf('%s\n\n', curAxonClass.title);
+    disp(curEvalT); fprintf('\n');
 end
 
 %% Plot fraction of axons specific
@@ -167,41 +175,29 @@ end
 clear cur*;
 plotClasses = 1:2;
 
-curBars = nan(1, numel(plotClasses));
-curLims = nan(2, numel(plotClasses));
+curFig = figure();
+curAx = axes(curFig);
+hold(curAx, 'on');
 
 for curIdx = 1:numel(plotClasses)
     curId = plotClasses(curIdx);
-    curBars(curIdx) = mean(evalT{curId}.Overall);
-    curLims(:, curIdx) = prctile(evalT{curId}.Overall, [0; 100]);
+    curFracs = evalT{curId}.Overall;
+    
+    plot(curAx, repelem(curIdx, numel(curFracs)), curFracs');
 end
 
-fig = figure();
-ax = axes(fig);
-hold(ax, 'on');
+curLines = curAx.Children;
+set(curLines, 'Color', 'black', 'Marker', '.', 'MarkerSize', 16);
 
-bar(ax, ...
-    1:numel(plotClasses), curBars, ...
-    'EdgeColor', 'black', 'FaceColor', 'black');
-curEbarNeg = errorbar(ax, ...
-    1:numel(plotClasses), curBars, ...
-    curBars - curLims(1, :), []);
-curEbarPos = errorbar(ax, ...
-    1:numel(plotClasses), curBars, ...
-    [], curLims(2, :) - curBars);
+curAx.XLim = [0.5, numel(plotClasses) + 0.5];
+curAx.YLim = [0, 1];
 
-curEbarNeg.Color = 'white'; curEbarNeg.LineStyle = 'none';
-curEbarPos.Color = 'black'; curEbarPos.LineStyle = 'none';
+curAx.XTick = 1:numel(plotClasses);
+curAx.XTickLabel = {axonClasses(plotClasses).tag};
+ylabel(curAx, {'Fraction of'; 'axons specific'});
 
-ax.XLim = [0.5, numel(plotClasses) + 0.5];
-ax.YLim = [0, 1];
-
-ax.XTick = 1:numel(plotClasses);
-ax.XTickLabel = {axonClasses(plotClasses).tag};
-
-ylabel(ax, {'Fraction of'; 'axons specific'});
-fig.Position(3:4) = [150, 161];
-connectEM.Figure.config(fig, info);
+connectEM.Figure.config(curFig, info);
+curFig.Position(3:4) = [125, 160];
 
 %% plotting
 function specs = plotAxonClass( ...
@@ -209,6 +205,7 @@ function specs = plotAxonClass( ...
     opts = struct;
     opts.info = [];
     opts.showPlot = false;
+    opts.pValThresh = 0.2;
     opts = Util.modifyStruct(opts, varargin{:});
     
     specs = struct;
@@ -283,8 +280,8 @@ function specs = plotAxonClass( ...
         curFdrEst = curFdrEst(:) ./ curPAxonFrac(:);
         
         curThetaPVal = 1 + find( ...
-            curFdrEst(1:(end - 1)) <= 0.2 ...
-          & curFdrEst(2:end) > 0.2, 1);
+            curFdrEst(1:(end - 1)) <= opts.pValThresh ...
+          & curFdrEst(2:end) > opts.pValThresh, 1);
       
         curThetaPVal = curPVal(curThetaPVal);
         if isempty(curThetaPVal); curThetaPVal = nan; end
