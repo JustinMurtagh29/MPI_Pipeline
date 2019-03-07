@@ -16,6 +16,7 @@ targetLabels = targetClasses(:, 2);
 targetClasses = targetClasses(:, 1);
 
 minSynPre = 10;
+fdrThresh = 0.2;
 
 info = Util.runInfo();
 
@@ -29,12 +30,6 @@ param = param.p;
     connectEM.Connectome.prepareForSpecificityAnalysis( ...
         conn, axonClasses, 'minSynPre', minSynPre);
 
-%% Find specific exc. and inh. axons
-axonClasses = axonClasses(1:2);
-
-axonClasses = ...
-    connectEM.Connectome.buildAxonSpecificityClasses(conn, axonClasses);
-    
 %% Build class connectome
 [classConn, targetIds] = ...
     connectEM.Connectome.buildClassConnectome(conn);
@@ -45,7 +40,18 @@ classConn = horzcat(classConn(:, targetIds), sum(classConn, 2));
 classConn(:, end) = classConn(:, end) - sum(classConn(:, 1:(end - 1)), 2);
 
 %% Calculate coinnervation matrix
-for curAxonClass = axonClasses
+for curAxonClass = axonClasses(1:2)
+    curConn = classConn;
+    
+    curAxonClass.nullTargetClassProbs = ...
+        connectEM.Specificity.calcFirstHitProbs( ...
+            curConn(curAxonClass.nullAxonIds, :), ...
+            'oneVersusRestBinomial');
+    curAxonClass.specs =  ...
+        connectEM.Specificity.calcForAxonClass( ...
+            curConn, targetClasses, curAxonClass, ...
+            'fdrThresh', fdrThresh, 'showPlot', false);
+        
     curSpecs = curAxonClass.specs;
     curSpecClasses = fieldnames(curSpecs);
     
@@ -144,8 +150,7 @@ function plotIt( ...
         curEdgeColor = 'none';
         
         if curRow <= numel(specClasses) ...
-                && specClasses(curRow) == curCol ...
-                
+                && specClasses(curRow) == curCol
             if isempty(opt.specClassRates); continue; end
             curEdgeColor = 'black';
         end
