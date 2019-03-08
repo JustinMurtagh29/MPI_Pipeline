@@ -69,7 +69,32 @@ plotConfigs = reshape( ...
     size(axonClasses, 1));
 
 %% Set p-value thresholds for evaluation
-[plotConfigs.cvVsAsiPvalThreshs] = deal(0.01);
+% NOTE(amotta): p-value threshold at which large and small low-CV regions
+% are not yet merged. (I've only looked at range up to p = 10 %.)
+curPvalThreshs = [0.5, 1, 2, 3, 4, 5] / 100;
+
+% Excitatory axons
+plotConfigs(1, 1).cvVsAsiPvalThreshs = 0.026;
+plotConfigs(2, 1).cvVsAsiPvalThreshs = inf;
+plotConfigs(3, 1).cvVsAsiPvalThreshs = 0.015;
+plotConfigs(4, 1).cvVsAsiPvalThreshs = inf;
+
+% Corticocortical axons
+plotConfigs(1, 2).cvVsAsiPvalThreshs = 0.052;
+plotConfigs(2, 2).cvVsAsiPvalThreshs = inf;
+plotConfigs(3, 2).cvVsAsiPvalThreshs = 0.004;
+plotConfigs(4, 2).cvVsAsiPvalThreshs = inf;
+
+% Thalamocortical axons
+plotConfigs(1, 3).cvVsAsiPvalThreshs = 0.087;
+plotConfigs(2, 3).cvVsAsiPvalThreshs = inf;
+plotConfigs(3, 3).cvVsAsiPvalThreshs = inf;
+plotConfigs(4, 3).cvVsAsiPvalThreshs = inf;
+
+for curIdx = 1:numel(plotConfigs)
+    plotConfigs(curIdx).cvVsAsiPvalThreshs = curPvalThreshs( ...
+        curPvalThreshs < plotConfigs(curIdx).cvVsAsiPvalThreshs);
+end
 
 %% Report synapse sizes
 clear cur*;
@@ -557,6 +582,7 @@ for curConfig = reshape(plotConfigs, 1, [])
         curTitle = [{'Significance regions'}; curTitle]; %#ok
         title(curPValAx, curTitle, 'FontWeight', 'normal', 'FontSize', 10);
         
+        %{
         %% Evaluate pairs with small and large synapses
         curFig = figure();
        
@@ -721,5 +747,6 @@ for curConfig = reshape(plotConfigs, 1, [])
         
         curFig.Position(3:4) = [330, 260];
         connectEM.Figure.config(curFig, info);
+        %}
     end
 end
