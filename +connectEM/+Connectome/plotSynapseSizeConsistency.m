@@ -82,7 +82,7 @@ plotConfigs(4, 1).cvVsAsiPvalThreshs = inf;
 % Corticocortical axons
 plotConfigs(1, 2).cvVsAsiPvalThreshs = 0.052;
 plotConfigs(2, 2).cvVsAsiPvalThreshs = inf;
-plotConfigs(3, 2).cvVsAsiPvalThreshs = 0.004;
+plotConfigs(3, 2).cvVsAsiPvalThreshs = inf;
 plotConfigs(4, 2).cvVsAsiPvalThreshs = inf;
 
 % Thalamocortical axons
