@@ -7,7 +7,13 @@ rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 outputMapFile = '/tmpscratch/amotta/l4/2018-07-26-tracing-based-output-maps/20190117T143833_results.mat';
 evalNmlDir = connectEM.Consistency.Manual.getDir(fullfile('annotations', 'l4-spine-synapses'));
 
+asiConnFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-linearized_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v8-classified.mat');
+asiRunId = '20190227T082543';
+
 l4ConnRunId = '20190221T112510';
+
+info = Util.runInfo();
+Util.showRunInfo(info);
 
 checkedSynIds = [ ...
     ... All primary spine synapses from L4 → AD (19.02.2019)
@@ -45,6 +51,17 @@ axonData = curData.axonData;
 conn = curData.info.param.connFile;
 conn = connectEM.Connectome.load(param, conn);
 
+% Load axon-spine interfaces
+[curDir, curAsiFile] = fileparts(asiConnFile);
+curAsiFile = sprintf('%s__%s_asiT.mat', curAsiFile, asiRunId);
+curAsiFile = fullfile(curDir, curAsiFile);
+
+asiT = load(curAsiFile);
+asiT = asiT.asiT;
+
+asiT = asiT(asiT.area > 0, :);
+asiT = connectEM.Consistency.Calibration.apply(asiT);
+
 [curDir, curFile] = fileparts(outputMapFile);
 curAsiFile = sprintf('%s__%s_connectome.mat', curFile, l4ConnRunId);
 curData = load(fullfile(curDir, curAsiFile));
@@ -53,6 +70,8 @@ l4SynT = curData.synT;
 l4AsiT = curData.asiT;
 
 %% Prepare synapse table
+clear cur*;
+
 % NOTE(amotta): Make sure there are no interneuron axons around here!
 inCellIds = setdiff(conn.denMeta.cellId(conn.denMeta.isInterneuron), 0);
 assert(not(any(ismember(l4SynT.preAggloId, inCellIds))));
@@ -271,7 +290,20 @@ curConfigs(2).xlabel = 'ASI area [µm²]';
 curConfigs(2).binEdges = linspace(0, 0.8, 17);
 curConfigs(2).transform = @(id) id;
 
-curClasses = unique(evalAsiT.targetClass);
+% NOTE(amotta): For comparison, let's also show the automatically
+% determined ASI area distribution for corticocortical primary spine
+% synapses. We're slightly misusing the `targetClass` for this purpose.
+curEvalAsiT = asiT;
+curEvalAsiT = curEvalAsiT( ...
+    curEvalAsiT.type == 'PrimarySpine' ...
+  & curEvalAsiT.axonClass == 'Corticocortical', :);
+curEvalAsiT = curEvalAsiT(:, {'id', 'area', 'targetClass'});
+
+curEvalAsiT.isCorrect(:) = true;
+curEvalAsiT.targetClass(:) = categorical({'CC'});
+curEvalAsiT = [evalAsiT; curEvalAsiT];
+
+curClasses = flip(unique(curEvalAsiT.targetClass, 'stable'));
 
 for curConfig = curConfigs
     curFig = figure();
@@ -279,8 +311,8 @@ for curConfig = curConfigs
     hold(curAx, 'on');
 
     for curClass = reshape(curClasses, 1, [])
-        curAreas = rmmissing(evalAsiT.area( ...
-            evalAsiT.targetClass == curClass));
+        curAreas = rmmissing(curEvalAsiT.area( ...
+            curEvalAsiT.targetClass == curClass));
         curAreas = curConfig.transform(curAreas);
         
         histogram( ...
@@ -301,8 +333,4 @@ for curConfig = curConfigs
     
     curFig.Position(3:4) = [220, 260];
     connectEM.Figure.config(curFig, info);
-    
-    set( ...
-        curHists, 'DisplayStyle', 'bar', ...
-        'FaceAlpha', 0.6, 'EdgeColor', 'none');
 end
