@@ -339,6 +339,11 @@ curLimY = [-1.5, 0.5];
 curImSize = [256, 256];
 curMethod = 'kde2d';
 
+% Show region in which the same-axon same-dendrite primary spine synapse
+% pairs with at least one synapse in the smallest 10th percentile are
+% located.
+curMinPrctiles = 10;
+
 % NOTE(amotta): The `curMinMap` and `curMaxMap` matrices have the same size
 % as the heatmaps of the CV × log10(avg. ASI) space. They contain the ASI
 % areas of the smaller and larger synapses, respectively.
@@ -522,6 +527,17 @@ for curConfig = reshape(plotConfigs, 1, [])
 
         curAxes = reshape(flip(findobj(curFig, 'Type', 'Axes')), 1, []);
         arrayfun(@(ax) hold(ax, 'on'), curAxes);
+        
+        for curMinPrctile = curMinPrctiles
+            curAreaThresh = prctile( ...
+                curSaSdT.areas(:), curMinPrctile);
+            
+            for curAx = curAxes
+                contour(curAx, ...
+                    curMinMap > curAreaThresh, true, ...
+                    'LineStyle', '--', 'Color', 'white');
+            end
+        end
 
         curTickIdsX = 1 + floor((curImSize(2) - 1) * ...
             (curTicksX - curLimX(1)) / (curLimX(2) - curLimX(1)));
