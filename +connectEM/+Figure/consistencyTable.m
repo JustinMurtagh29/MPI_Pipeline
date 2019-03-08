@@ -82,6 +82,11 @@ for curRow = 1:numel(rowNames)
     end
 end
 
+colormap(ax, colors{2});
+caxis(ax, [0, curCaxisMax]);
+cbar = colorbar('peer', ax);
+cbar.Label.String = 'Percent consistent';
+
 axis('equal');
 ax.YDir = 'reverse';
 ax.XAxisLocation = 'top';
