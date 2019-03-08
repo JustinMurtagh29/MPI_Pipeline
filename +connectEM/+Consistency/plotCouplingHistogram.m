@@ -7,10 +7,9 @@ function fig = plotCouplingHistogram(info, synT, plotConfigs, varargin)
     
     fig = figure();
     fig.Color = 'white';
-    fig.Position(3:4) = [275, 175];
+    fig.Position(3:4) = [160, 235];
 
     ax = axes(fig);
-    axis(ax, 'square');
     hold(ax, 'on');
 
     ax.YScale = 'log';
@@ -26,9 +25,7 @@ function fig = plotCouplingHistogram(info, synT, plotConfigs, varargin)
         histogram( ...
             ax, curCoupling, ...
             'Normalization', opt.normalization, ...
-            'DisplayStyle', 'stairs', ...
-            'LineWidth', 2, ...
-            'FaceAlpha', 1);
+            'DisplayStyle', 'stairs');
     end
     
     xMax = cat(2, ax.Children.BinEdges);
@@ -53,8 +50,6 @@ function fig = plotCouplingHistogram(info, synT, plotConfigs, varargin)
     
     legend( ...
         ax, {plotConfigs.title}, ...
-        'Location', 'NorthEast', 'Box', 'off');
-    title( ...
-        ax, {info.filename; info.git_repos{1}.hash}, ...
-        'FontWeight', 'normal', 'FontSize', 10);
+        'Location', 'SouthOutside');
+    connectEM.Figure.config(fig, info);
 end

@@ -31,7 +31,7 @@ function config(fig, info)
         histograms = findobj(ax, 'type', 'histogram');
         if isempty(histograms); continue; end
         
-        binEdges = get(histograms, 'BinEdges');
+        binEdges = get(histograms, {'BinEdges'});
         binEdges = [ ...
             min(cellfun(@min, binEdges)), ...
             max(cellfun(@max, binEdges))];
