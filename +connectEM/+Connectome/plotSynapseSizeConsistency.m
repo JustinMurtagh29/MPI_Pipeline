@@ -68,6 +68,9 @@ plotConfigs = reshape( ...
     size(targetClasses, 1), ...
     size(axonClasses, 1));
 
+%% Set p-value thresholds for evaluation
+[plotConfigs.cvVsAsiPvalThreshs] = deal(0.01);
+
 %% Report synapse sizes
 clear cur*;
 fprintf('Synapse sizes\n');
@@ -324,9 +327,8 @@ curMaxMap = (10 .^ curY(:)) .* (1 + curX / sqrt(2));
 curTicksX = linspace(curLimX(1), curLimX(2), 4);
 curTicksY = linspace(curLimY(1), curLimY(2), 5);
 
-for curConfig = plotConfigs
-    curSaSdConfig = ...
-        connectEM.Consistency.buildPairConfigs(asiT, curConfig);
+for curConfig = reshape(plotConfigs, 1, [])
+    curSaSdConfig = connectEM.Consistency.buildPairConfigs(asiT, curConfig);
     curSaSdConfig = curSaSdConfig(1);
             
     % Connection types
@@ -385,21 +387,26 @@ for curConfig = plotConfigs
         curDiffMap = curSaSdMap - curCtrlMap;
         curMaxDiff = max(abs(curDiffMap(:)));
         
-        % NOTE(amotta): Division by two for Bonferroni correction.
-        curPvalMap = min( ...
+        curPvalMap = 1 - mean(curCtrlMaps < curSaSdMap, 3);
+        curPvalThreshs = sort(curConfig.cvVsAsiPvalThreshs, 'descend');
+        
+        curPvalImg = -log10(min( ...
             1 - mean(curCtrlMaps < curSaSdMap, 3), ...
-            1 - mean(curCtrlMaps > curSaSdMap, 3)) / 2;
-        curPvalMap = -log10(curPvalMap);
+            1 - mean(curCtrlMaps > curSaSdMap, 3)));
         
         % NOTE(amotta): Detect statistically significant regions. Drop tiny
-        % regions (with less than 100 pixels), which are most likely caused
-        % by outliers.
-        curRegionMask = curPvalMap > 2.5;
+        % regions (with less than 100 pixels or less than 1 % of SASD
+        % connections), which are most likely caused by outliers.
+        curRegionMask = curPvalMap < curPvalThreshs(1);
         curRegionMask = bwlabel(curRegionMask);
         
         curRegionProps = regionprops( ...
             curRegionMask, {'Area', 'Centroid'}); %#ok
         curKeepRegionIds = find([curRegionProps.Area] >= 100);
+        
+        curKeepRegionIds = curKeepRegionIds(arrayfun( ...
+            @(id) sum(curSaSdMap(curRegionMask(:) == id)), ...
+            curKeepRegionIds) > 0.01);
         
         curRegionProps = curRegionProps(curKeepRegionIds);
        [~, curRegionMask] = ismember(curRegionMask, curKeepRegionIds);
@@ -440,7 +447,7 @@ for curConfig = plotConfigs
         curAx = subplot(2, 2, 3);
         curPValAx = curAx;
         
-        imagesc(curAx, curPvalMap);
+        imagesc(curAx, curPvalImg);
         colormap(curAx, 'jet');
         
         curBar = colorbar('peer', curAx);
@@ -464,8 +471,14 @@ for curConfig = plotConfigs
         image(curAx, ...
             uint8(double(intmax('uint8')) ...
           * (1 + curDiffMap / curMaxDiff) / 2));
-        contour(curAx, curRegionMask, 'LineColor', 'black');
         colormap(curAx, jet(256));
+        
+        for curPvalThresh = curPvalThreshs
+            contour(curAx, ...
+                curRegionMask & ...
+                curPvalMap < curPvalThresh, ...
+                'LineColor', 'black');
+        end
         
         curBar = colorbar('peer', curAx);
         curBar.Ticks = [ ...
@@ -522,55 +535,26 @@ for curConfig = plotConfigs
             'EdgeColor', 'none', 'HorizontalAlignment', 'center');
         
         %% Evaluation
-        fprintf('Evaluation of\n');
-        fprintf('%s\n', curConfigTitle);
-        fprintf('%s\n', curCtrlTitle);
-        fprintf('\n');
-        
-        curTitle = cell(2, numel(curRegionProps));
+        curTitle = cell(numel(curRegionProps), 1);
         for curRegionId = 1:numel(curRegionProps)
-            curMask = curRegionMask == curRegionId;
-            curSaSdFrac = sum(curSaSdMap(curMask));
-            curCtrlFrac = sum(curCtrlMap(curMask));
-            curDiffFrac = sum(curDiffMap(curMask));
+            curFracs = nan(numel(curPvalThreshs), 2);
+            for curPvalIdx = 1:numel(curPvalThreshs)
+                curPvalThresh = curPvalThreshs(curPvalIdx);
+                
+                curMask = curRegionMask == curRegionId;
+                curMask = curMask & (curPvalMap < curPvalThresh);
+                
+                curFracs(curPvalIdx, 1) = sum(curSaSdMap(curMask));
+                curFracs(curPvalIdx, 2) = sum(curCtrlMap(curMask));
+            end
             
-            curTitle{1, curRegionId} = ...
-                sprintf('%.2f %%', 100 * curSaSdFrac);
-            curTitle{2, curRegionId} = ...
-                sprintf('%.2f %%', 100 * curDiffFrac);
-            
-            fprintf('  Region %d\n', curRegionId);
-            fprintf([ ...
-                '    * Fraction of SASD connections: %.2f %%\n', ...
-                '    * Fraction of ctrl. connections: %.2f %%\n', ...
-                '    * Delta: %.2f %%\n'], ...
-                100 * [curSaSdFrac, curCtrlFrac, curDiffFrac]);
-            fprintf('\n');
-            
-            curMask = curSaSdT.regionId == curRegionId;
-           [curOutT, ~, curIds] = unique( ...
-               curSaSdT(:, {'axonClass', 'targetClass'}), 'rows');
-            curOutT.count = accumarray(curIds, curMask);
-            
-            curOutT.percentOfRegion = ...
-                100 * curOutT.count / sum(curOutT.count);
-            curOutT.percentOfRegionPvalue = arrayfun( ...
-                @(x, p) 1 - binocdf(x, sum(curOutT.count), p), ...
-                curOutT.count - 1, accumarray(curIds, 1) / numel(curIds));
-            
-            curOutT.prePostTypePercent = ...
-                100 * accumarray(curIds, curMask, [], @mean);
-            curOutT.prePostTypePvalue = arrayfun( ...
-                @(x, n) 1 - binocdf(x, n, curSaSdFrac), ...
-                curOutT.count - 1, accumarray(curIds, 1));
-            
-            disp(curOutT)
+            curTitle{curRegionId} = sprintf( ...
+                'Region %d: %s', curRegionId, strjoin(arrayfun( ...
+                    @(v) num2str(v, '%.1f%%'), 100 * curFracs(:, 1), ...
+                    'UniformOutput', false), ', '));
         end
         
-        curTitle = { ...
-            'Significance regions'; ...
-            strcat(strjoin(curTitle(1, :), ', '), ' of SASD'); ...
-            strcat(strjoin(curTitle(2, :), ', '), ' versus control')};
+        curTitle = [{'Significance regions'}; curTitle]; %#ok
         title(curPValAx, curTitle, 'FontWeight', 'normal', 'FontSize', 10);
         
         %% Evaluate pairs with small and large synapses
