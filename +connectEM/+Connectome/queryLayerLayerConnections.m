@@ -12,9 +12,6 @@ asiRunId = '20190227T082543';
 
 l4ConnRunId = '20190221T112510';
 
-info = Util.runInfo();
-Util.showRunInfo(info);
-
 checkedSynIds = [ ...
     ... All primary spine synapses from L4 → AD (19.02.2019)
     7975, 68992, 77903, 117122, 152622, 185118, 186018, 97233, 140864, ...
