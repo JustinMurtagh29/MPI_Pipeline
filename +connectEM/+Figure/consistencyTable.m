@@ -55,8 +55,9 @@ data(:, 2, 3, 4) = [ 3.4, 16.7];
 
 colors = reshape(linspace(0, 1, colorN), [], 1);
 colors = { ...
-    (ones(1, 3) - colors) + colors .* [0.4660, 0.6740, 0.1880]; ...
-    (ones(1, 3) - colors) + colors .* [0.8500, 0.3250, 0.0980]};
+    
+    (ones(1, 3) - colors) + colors .* [0.8500, 0.3250, 0.0980]; ...
+    (ones(1, 3) - colors) + colors .* [0.4660, 0.6740, 0.1880]};
 assert(isequal(numel(colors), size(data, 1)));
 
 %% Plot
