@@ -92,8 +92,14 @@ plotConfigs(3, 3).cvVsAsiPvalThreshs = inf;
 plotConfigs(4, 3).cvVsAsiPvalThreshs = inf;
 
 for curIdx = 1:numel(plotConfigs)
-    plotConfigs(curIdx).cvVsAsiPvalThreshs = curPvalThreshs( ...
-        curPvalThreshs < plotConfigs(curIdx).cvVsAsiPvalThreshs);
+    curThreshs = plotConfigs(curIdx).cvVsAsiPvalThreshs;
+    
+    % Only consider p-value thresholds before LTP and LTD regions merger
+    curThreshs = curPvalThreshs(curPvalThreshs < curThreshs);
+    
+    % Only consider lowest and highest p-value threshold
+    curThreshs = curThreshs(unique([1, numel(curThreshs)]));
+    plotConfigs(curIdx).cvVsAsiPvalThreshs = curThreshs;
 end
 
 %% Report synapse sizes
