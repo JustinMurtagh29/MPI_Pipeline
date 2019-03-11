@@ -3,7 +3,7 @@
 % Modified by
 %   Sahil Loomba <sahil.loomba@brain.mpg.de>
 clear;
-methodUsed = 'LogitBoost';
+methodUsed = 'RUSBoost'; %'AdaBoostM1'; % 'LogitBoost';
 %% HACKHACKHACK
 % NOTE(amotta): This is a huge mess. The training data is located in my
 % repository, SynEM is from Benedikt's repository, and the SynEM classifier
