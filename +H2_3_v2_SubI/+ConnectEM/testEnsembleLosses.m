@@ -59,16 +59,24 @@ testSize = ceil(testFrac*height(gt));
 curRandIds = randperm(height(gt));
 curTestIds = curRandIds(1:testSize);
 curTrainIds = curRandIds(testSize+1:end);
-
+% test features
 gtTest = gt(curTestIds,:);
 rawFeatsTest = rawFeats(curTestIds,:);
 classFeatsTest = classFeats(curTestIds,:);
-
+% train features
 gtTrain = gt(curTrainIds,:);
 rawFeatsTrain = rawFeats(curTrainIds,:);
 classFeatsTrain = classFeats(curTrainIds,:);
 
 clear cur*
+
+% compile test data
+curTestFeats = [ ...
+   [rawFeatsTest; ...
+    fm.invertDirection(rawFeatsTest)], ...
+   [classFeatsTest; ...
+    fm.invertDirection(classFeatsTest)]];
+curTestLabels = repmat(gtTest.label, 2, 1);
 
 % train with increasing training data sizes
 trainFrac = [0.2, 0.4, 0.6, 0.8, 1];
@@ -80,7 +88,8 @@ classifiers = cell(0);
 
 curFig = figure();
 curFig.Color = 'white';
-hold('on');
+curAx = axes(curFig);
+hold(curAx,'on');
 for curTrainSize = trainSizes
         curTrainIds = curRandIds(1:curTrainSize);
         
@@ -106,7 +115,15 @@ for curTrainSize = trainSizes
         ylabel('Resubstitution Loss');
         xlabel('Number of Learning Cycles');
 end
-legend({'0.2', '0.4', '0.6', '0.8', '1'});
+curLines = flip(curAx.Children);
+curLegs = arrayfun( ...
+    @(n) sprintf('%d training edges', n), ...
+    trainSizes, 'UniformOutput', false);
+
+curLegs = legend( ...
+    curLines, curLegs, ...
+    'Location', 'EastOutside');
+curLegs.Box = 'off';
 saveas(gcf,fullfile(param.saveFolder,'connectEM','validationResubLoss.png'))
 close all
 
@@ -115,7 +132,8 @@ classifiers = cell(0);
 
 curFig = figure();
 curFig.Color = 'white';
-hold('on');
+curAx = axes(curFig);
+hold(curAx,'on');
 for curTrainSize = trainSizes
         curTrainIds = curRandIds(1:curTrainSize);
 
@@ -142,6 +160,13 @@ for curTrainSize = trainSizes
         ylabel('Generalization Error');
         xlabel('Number of Learning Cycles');
 end
-legend({'0.2', '0.4', '0.6', '0.8', '1'});
+curLines = flip(curAx.Children);
+curLegs = arrayfun( ...
+    @(n) sprintf('%d training edges', n), ...
+    trainSizes, 'UniformOutput', false);
+
+curLegs = legend( ...
+    curLines, curLegs, ...
+    'Location', 'EastOutside');
+curLegs.Box = 'off';
 saveas(gcf,fullfile(param.saveFolder,'connectEM','validationGenError.png'))
-close all
