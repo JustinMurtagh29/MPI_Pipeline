@@ -161,7 +161,7 @@ for curTrainSize = trainSizes
         classifiers{end + 1} = curClassifier; %#ok
         genError = kfoldLoss(curClassifier,'Mode','Cumulative');
         plot(genError);
-        ylabel('Generalization Error');'RUSBoost'
+        ylabel('Generalization Error');
         xlabel('Number of Learning Cycles');
 end
 curLines = flip(curAx.Children);
