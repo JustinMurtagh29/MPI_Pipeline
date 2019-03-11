@@ -123,7 +123,7 @@ hold(curAx, 'on');
 
 for curTrainSizeIdx = 1:numel(trainSizes)
     curTrainSize = trainSizes(curTrainSizeIdx);
-    curSkel.write(fullfile(outDir, sprintf('box-%d.nml', curBoxIdx)));
+    
     curLabels = results(curTrainSizeIdx, 1);
     curScores = results(curTrainSizeIdx, 2);
     
