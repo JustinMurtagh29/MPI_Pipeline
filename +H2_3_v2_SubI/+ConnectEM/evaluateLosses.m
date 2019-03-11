@@ -113,7 +113,11 @@ for curTrainSize = trainSizes
         rsLoss = resubLoss(curClassifier,'Mode','Cumulative');
         plot(rsLoss);
         ylabel('Resubstitution Loss');
+Best
+Sahil
         xlabel('Number of Learning Cycles');
+,
+Thanks for your interest in the room. If you like we can arrange a meeting for you to see the room this week. Here is my whatsapp 015163209703 if you have more questions.
 end
 curLines = flip(curAx.Children);
 curLegs = arrayfun( ...
@@ -124,7 +128,7 @@ curLegs = legend( ...
     curLines, curLegs, ...
     'Location', 'EastOutside');
 curLegs.Box = 'off';
-saveas(gcf,fullfile(param.saveFolder,'connectEM','validationResubLoss.png'))
+saveas(gcf,fullfile(param.saveFolder,'connectEM',['validationResubLoss' methodUsed '.png'))
 close all
 
 %% with holdout
