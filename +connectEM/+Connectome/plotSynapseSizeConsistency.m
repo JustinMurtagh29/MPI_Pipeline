@@ -363,6 +363,10 @@ curMaxMap = (10 .^ curY(:)) .* (1 + curX / sqrt(2));
 curTicksX = linspace(curLimX(1), curLimX(2), 4);
 curTicksY = linspace(curLimY(1), curLimY(2), 5);
 
+curFig = figure();
+curFigs = curFig([]);
+close(curFig);
+
 for curConfig = reshape(plotConfigs, 1, [])
     curSaSdConfig = connectEM.Consistency.buildPairConfigs(asiT, curConfig);
     curSaSdConfig = curSaSdConfig(1);
@@ -461,19 +465,17 @@ for curConfig = reshape(plotConfigs, 1, [])
         curFig.Position(3:4) = [1060, 970];
 
         curAx = subplot(2, 2, 1);
-        image(curAx, ...
-            uint8(double(intmax('uint8')) ...
-          * curSaSdMap / curMax));
+        imagesc(curAx, curSaSdMap);
+        caxis(curAx, [0, curMax]);
         colormap(curAx, jet(256));
-
+        
         curBar = colorbar('peer', curAx);
         curBar.Ticks = curBar.Limits;
         curBar.TickLabels = {'0', sprintf('%.3g', curMax)};
         
         curAx = subplot(2, 2, 2);
-        image(curAx, ...
-            uint8(double(intmax('uint8')) ...
-          * curCtrlMap / curMax));
+        imagesc(curAx, curCtrlMap);
+        caxis(curAx, [0, curMax]);
         colormap(curAx, jet(256));
 
         curBar = colorbar('peer', curAx);
@@ -484,7 +486,7 @@ for curConfig = reshape(plotConfigs, 1, [])
         curPValAx = curAx;
         
         imagesc(curAx, curPvalImg);
-        colormap(curAx, 'jet');
+        colormap(curAx, jet(256));
         
         curBar = colorbar('peer', curAx);
         curBar.Ticks = curBar.Limits;
@@ -504,9 +506,8 @@ for curConfig = reshape(plotConfigs, 1, [])
         curAx = subplot(2, 2, 4);
         hold(curAx, 'on');
         
-        image(curAx, ...
-            uint8(double(intmax('uint8')) ...
-          * (1 + curDiffMap / curMaxDiff) / 2));
+        imagesc(curAx, curDiffMap);
+        caxis(curAx, [-1, +1] * curMaxDiff);
         colormap(curAx, jet(256));
         
         for curPvalThresh = curPvalThreshs
@@ -580,6 +581,8 @@ for curConfig = reshape(plotConfigs, 1, [])
                 info.filename; info.git_repos{1}.hash; ...
                 curConfigTitle; curCtrlTitle}, ...
             'EdgeColor', 'none', 'HorizontalAlignment', 'center');
+        
+        curFigs(end + 1) = curFig; %#ok
         
         %% Evaluation
         curTitle = cell(numel(curRegionProps), 1);
