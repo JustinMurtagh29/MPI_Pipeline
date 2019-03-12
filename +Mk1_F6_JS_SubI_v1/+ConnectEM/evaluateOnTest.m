@@ -1,7 +1,9 @@
 % Written by
 %   Alessandro Motta <alessandro.motta@brain.mpg.de>
+% Modified by
+%   Sahil Loomba <sahil.loomba@brain.mpg.de>
 clear;
-
+methodUsed = 'LogitBoost'; %'AdaBoostM1'; % 'LogitBoost';
 %% HACKHACKHACK
 % NOTE(amotta): This is a huge mess. The training data is located in my
 % repository, SynEM is from Benedikt's repository, and the SynEM classifier
@@ -13,36 +15,18 @@ clear;
 addpath('/gaba/u/sahilloo/repos/benedikt', '-end');
 addpath(genpath('/gaba/u/sahilloo/repos/amotta/matlab/'))
 
-%{
-%% Configuration
-config = 'ex144_08x2_mrNet';
-
-nmlDir = Util.getGitReposOnPath();
-nmlDir = fullfile( ...
-    nmlDir{1}, 'data', 'tracings', ...
-    'ex144-08x2-mrNet', 'connect-em');
-%}
-
 rootDir = '/tmpscratch/sahilloo/data/Mk1_F6_JS_SubI_v1/pipelineRun_mr2e_wsmrnet/';
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 
 nmlDir = fullfile( param.saveFolder, 'tracings', 'connectEM','proofread');
 
-folds = 5;
-validSize = 200;
-trainSizes = [200, 400, 600, 800, inf];
-
 warning('Constructing FeatureMap de-novo');
 fm = SynEM.getFeatureMap('paper');
 
 info = Util.runInfo();
 Util.showRunInfo(info);
-%{
-%% Loading data
-config = loadConfig(config);
-param = config.param;
-%}
+
 %% Load ground truth
 nmlFiles = dir(fullfile(nmlDir, '*.nml'));
 nmlFiles(cat(1, nmlFiles.isdir)) = [];
@@ -68,63 +52,68 @@ assert(isequal(rawBorderIds, classBorderIds));
 [~, curRowIds] = ismember(rawBorderIds, gt.borderId);
 gt = gt(curRowIds, :);
 
-%% Run cross-validation
-clear cur*;
+%% divide into training and test set
+rng(0);
+testFrac = 0.2;
+testSize = ceil(testFrac*height(gt));
+curRandIds = randperm(height(gt));
+curTestIds = curRandIds(1:testSize);
+curTrainIds = curRandIds(testSize+1:end);
+% test features
+gtTest = gt(curTestIds,:);
+rawFeatsTest = rawFeats(curTestIds,:);
+classFeatsTest = classFeats(curTestIds,:);
+% train features
+gtTrain = gt(curTrainIds,:);
+rawFeatsTrain = rawFeats(curTrainIds,:);
+classFeatsTrain = classFeats(curTrainIds,:);
+
+clear cur*
+
+% train with increasing training data sizes
+trainFrac = [0.2, 0.4, 0.6, 0.8, 1];
+trainSizes = floor(trainFrac.*height(gtTrain));
+rng(1); % for reproducibility
+curRandIds = randperm(height(gtTrain));
 
 classifiers = cell(0);
 results = cell(0, 2);
+
+% compile test data
+curTestFeats = [ ...
+   [rawFeatsTest; ...
+    fm.invertDirection(rawFeatsTest)], ...
+   [classFeatsTest; ...
+    fm.invertDirection(classFeatsTest)]];
+curTestLabels = repmat(gtTest.label, 2, 1);
+gtTestModified = repmat(gtTest,2,1); % because of inverted features
+
 for curTrainSize = trainSizes
-    for curFold = 1:folds
-        rng(curFold);
-        
-        curRandIds = randperm(height(gt));
-        curValIds = curRandIds(1:validSize);
-        
-        curTrainIds = min(validSize + [1, curTrainSize], height(gt));
-        curTrainIds = curRandIds(curTrainIds(1):curTrainIds(2));
-        
-        % Sanity check
-        assert(isempty(intersect(curTrainIds, curValIds)));
-        
+        curTrainIds = curRandIds(1:curTrainSize);
+
         curTrainFeats = [ ...
-           [rawFeats(curTrainIds, :); ...
-            fm.invertDirection(rawFeats(curTrainIds, :))], ...
-           [classFeats(curTrainIds, :); ...
-            fm.invertDirection(classFeats(curTrainIds, :))]];
-        curTrainLabels = repmat(gt.label(curTrainIds), 2, 1);
-        
+           [rawFeatsTrain(curTrainIds, :); ...
+            fm.invertDirection(rawFeatsTrain(curTrainIds, :))], ...
+           [classFeatsTrain(curTrainIds, :); ...
+            fm.invertDirection(classFeatsTrain(curTrainIds, :))]];
+        curTrainLabels = repmat(gtTrain.label(curTrainIds), 2, 1);
+
         curClassifier = fitensemble( ...
             curTrainFeats, curTrainLabels, ...
-            'LogitBoost', 1500, 'tree', ...
+            methodUsed, 1500, 'tree', ...
             'LearnRate', 0.1, ...
             'NPrint', 100, ...
             'Prior', 'Empirical', ...
             'Type', 'Classification', ...
             'ClassNames', [+1, -1]);
-        
-        curValFeats = [ ...
-           [rawFeats(curValIds, :); ...
-            fm.invertDirection(rawFeats(curValIds, :))], ...
-           [classFeats(curValIds, :); ...
-            fm.invertDirection(classFeats(curValIds, :))]];
-        curValLabels = repmat(gt.label(curValIds), 2, 1);
-        
-       [~, curScores] = predict(curClassifier, curValFeats);
+
+       [~, curScores] = predict(curClassifier, curTestFeats);
         curScores = curScores(:, 1);
         
         classifiers{end + 1} = curClassifier; %#ok
-        results(end + 1, :) = {curValLabels, curScores}; %#ok
-    end
+        results(end + 1, :) = {curTestLabels, curScores}; %#ok
 end
-
-classifiers = reshape( ...
-    classifiers, [folds, numel(trainSizes)]);
-results = reshape( ...
-    results, [folds, numel(trainSizes), 2]);
-
 %% Plot aggregate results
-clear cur*;
-
 curFig = figure();
 curFig.Color = 'white';
 
@@ -135,23 +124,17 @@ hold(curAx, 'on');
 for curTrainSizeIdx = 1:numel(trainSizes)
     curTrainSize = trainSizes(curTrainSizeIdx);
     
-    curLabels = results(:, curTrainSizeIdx, 1);
-    curScores = results(:, curTrainSizeIdx, 2);
-    
-   [~, curIds] = cellfun( ...
-        @sort, curScores, 'UniformOutput', false);
-    curLabels = cellfun( ...
-        @(l, s) l(s), curLabels, curIds, 'UniformOutput', false);
-    curScores = cellfun( ...
-        @(s) transpose(1:numel(s)), curScores, 'UniformOutput', false);
+    curLabels = results(curTrainSizeIdx, 1);
+    curScores = results(curTrainSizeIdx, 2);
     
     curScores = cell2mat(curScores);
     curLabels = cell2mat(curLabels);
     
-    [curPrec, curRec] = ...
+    [curPrec, curRec, threshVec] = ...
         TypeEM.Classifier.buildPrecRec(curScores, curLabels);
     curLine = ...
         TypeEM.Classifier.plotPrecisionRecall(curAx, curPrec, curRec);
+    
 end
 
 curLines = flip(curAx.Children);
@@ -163,6 +146,7 @@ axis(curAx, 'square');
 curLegs = arrayfun( ...
     @(n) sprintf('%d training edges', n), ...
     trainSizes, 'UniformOutput', false);
+
 curLegs = legend( ...
     curLines, curLegs, ...
     'Location', 'EastOutside');
@@ -172,4 +156,15 @@ title(curAx, ...
     {info.filename; info.git_repos{1}.hash}, ...
     'FontWeight', 'normal', 'FontSize', 10);
 
-saveas(gcf,fullfile(param.saveFolder,'connectEM','precrec_3boxes.png'))
+saveas(gcf,fullfile(param.saveFolder,'connectEM',['precrec_test_' methodUsed '.png']))
+
+%{
+%% Inspect FPs
+param.experimentName = 'H2_3_v2_U1_SubI_mr2e_wsmrnet';
+gtTestModified = repmat(gtTest,2,1); % because of inverted features
+outDir = fullfile(param.saveFolder,'connectEM');
+
+scoreThr = -15.0287; % 75% recall, 93% precision
+skel = H2_3_v2_SubI.ConnectEM.inspectFPs(param, gtTestModified, curScores, scoreThr);
+skel.write(fullfile(outDir, sprintf('fps-%03f.nml',scoreThr)));
+%}
