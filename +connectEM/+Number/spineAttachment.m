@@ -41,7 +41,14 @@ shT = table;
 shT.agglo = shAgglos;
 shT.autoAttached = shAutoAttached ~= 0;
 shT.preAttached = cellfun(@(segIds) any(preSpineLUT(segIds)), shT.agglo);
-shT.attached = cellfun(@(segIds) any(dendLUT(segIds)), shT.agglo);
+
+shT.dendIds = cellfun( ...
+    @(segIds) setdiff(dendLUT(segIds), 0), ...
+    shT.agglo, 'UniformOutput', false);
+shT.attached = not(cellfun(@isempty, shT.dendIds));
+shT.targetClass = cellfun( ...
+    @(ids) unique(conn.denMeta.targetClass(ids)), ...
+    shT.dendIds, 'UniformOutput', false);
 
 wmean = @(w, v) sum(v .* (w / sum(w)), 1);
 shT.pos = cell2mat(cellfun(@(segIds) ...
@@ -54,7 +61,21 @@ shT.borderDist = min( ...
 shT.borderDist = shT.borderDist .* voxelSize;
 shT.borderDist = min(shT.borderDist, [], 2);
 
+%% Report spines per target class
+curTargetClasses = cellfun(@isscalar, shT.targetClass);
+curTargetClasses = cat(1, shT.targetClass{curTargetClasses});
+
+curTargetClassT = table;
+[curTargetClassT.name, ~, curCount] = unique(curTargetClasses(:));
+curTargetClassT.spineCount = accumarray(curCount, 1);
+
+format('long');
+fprintf('Per-target class evaluation\n\n');
+disp(curTargetClassT); fprintf('\n');
+format('short');
+
 %% Prepare plot
+clear cur*;
 shT = sortrows(shT, 'borderDist', 'descend');
 
 countVsDist = reshape(1:height(shT), [], 1);
