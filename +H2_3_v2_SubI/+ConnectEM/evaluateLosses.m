@@ -113,11 +113,7 @@ for curTrainSize = trainSizes
         rsLoss = resubLoss(curClassifier,'Mode','Cumulative');
         plot(rsLoss);
         ylabel('Resubstitution Loss');
-Best
-Sahil
         xlabel('Number of Learning Cycles');
-,
-Thanks for your interest in the room. If you like we can arrange a meeting for you to see the room this week. Here is my whatsapp 015163209703 if you have more questions.
 end
 curLines = flip(curAx.Children);
 curLegs = arrayfun( ...
