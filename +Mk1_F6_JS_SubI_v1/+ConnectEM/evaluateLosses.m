@@ -128,7 +128,7 @@ curLegs = legend( ...
     curLines, curLegs, ...
     'Location', 'EastOutside');
 curLegs.Box = 'off';
-saveas(gcf,fullfile(param.saveFolder,'connectEM',['validationResubLoss' methodUsed '.png'))
+saveas(gcf,fullfile(param.saveFolder,'connectEM',['validationResubLoss' methodUsed '.png']))
 close all
 
 %% with holdout
