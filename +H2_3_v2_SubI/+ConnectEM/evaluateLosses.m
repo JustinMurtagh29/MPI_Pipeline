@@ -2,7 +2,7 @@
 %   Alessandro Motta <alessandro.motta@brain.mpg.de>
 % Modified by
 %   Sahil Loomba <sahil.loomba@brain.mpg.de>
-methodUsed = 'LogitBoost';
+methodUsed = 'RUSBoost';
 %% HACKHACKHACK
 % NOTE(amotta): This is a huge mess. The training data is located in my
 % repository, SynEM is from Benedikt's repository, and the SynEM classifier
@@ -128,7 +128,7 @@ curLegs = legend( ...
     curLines, curLegs, ...
     'Location', 'EastOutside');
 curLegs.Box = 'off';
-saveas(gcf,fullfile(param.saveFolder,'connectEM',['validationResubLoss' methodUsed '.png'))
+saveas(gcf,fullfile(param.saveFolder,'connectEM',['validationResubLoss' methodUsed '.png']))
 close all
 
 %% with holdout
