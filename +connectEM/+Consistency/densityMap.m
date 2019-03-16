@@ -3,17 +3,27 @@ function [map, bw] = densityMap(asiAreaPairs, varargin)
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     opts = struct;
     opts.xLim = [0, 2];
+    opts.yScale = 'log10';
     opts.yLim = [-1.5, 0.5];
     opts.mapSize = [301, 301];
     opts.bandWidth = [];
     opts.method = 'ksdensity';
     
     opts = Util.modifyStruct(opts, varargin{:});
+    opts.yScale = lower(opts.yScale);
     opts.method = lower(opts.method);
     
-    log10AvgArea = log10(mean(asiAreaPairs, 2));
-    relDiff = abs(diff(asiAreaPairs, 1, 2)) ./ mean(asiAreaPairs, 2);
-    map = horzcat(log10AvgArea, relDiff);
+    switch opts.yScale
+        case 'linear'
+            y = mean(asiAreaPairs, 2);
+        case 'log10'
+            y = log10(mean(asiAreaPairs, 2));
+        otherwise
+            error('Invalid Y scale "%s"', opts.yScale);
+    end
+    
+    x = abs(diff(asiAreaPairs, 1, 2)) ./ mean(asiAreaPairs, 2);
+    map = horzcat(y, x);
     
     mask = ...
         opts.yLim(1) <= map(:, 1) & map(:, 1) <= opts.yLim(2) ...
