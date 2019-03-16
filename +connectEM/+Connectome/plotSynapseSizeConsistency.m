@@ -150,62 +150,6 @@ connectEM.Consistency.plotSizeHistogram( ...
 connectEM.Consistency.plotSizeHistogram( ...
     info, asiT, plotConfigs(2:end, 2:end), 'scale', 'log10');
 
-%% Fit mixture of Gaussians to size distribution
-clear cur*;
-rng(0);
-
-curN = 2;
-curConfig = plotConfigs(2, 1);
-curBinEdges = linspace(-2, 0.5, 51);
-
-curLog10Areas = log10(asiT.area(curConfig.synIds));
-curGmm = fitgmdist(curLog10Areas, curN);
-
-curFig = figure();
-curAx = axes(curFig);
-hold(curAx, 'on');
-
-% GMM components
-curLegs = cell(curN, 1);
-for curId = 1:curN
-    curMean = curGmm.mu(curId);
-    curStd = sqrt(curGmm.Sigma(curId));
-    curP = curGmm.ComponentProportion(curId);
-    
-    curLegs{curId} = sprintf( ...
-        '%.3f × logN(µ = %.3f, σ = %.3f)', curP, curMean, curStd);
-    
-    curY = curP .* normpdf(curBinEdges(:), curMean, curStd);
-    plot(curAx, curBinEdges(:), curY, 'LineWidth', 2);
-end
-
-% Histogram
-histogram(curAx, ...
-    curLog10Areas, ...
-    'BinEdges', curBinEdges, ...
-    'Normalization', 'pdf', ...
-    'DisplayStyle', 'stairs', ...
-    'LineWidth', 2);
-
-% Full GMM
-plot(curAx, ...
-    curBinEdges(:), curGmm.pdf(curBinEdges(:)), ...
-    'LineWidth', 2, 'LineStyle', '--', 'Color', 'black');
-
-curLeg = legend(curAx, curLegs, 'Location', 'SouthOutside');
-curLeg.Box = 'off';
-
-curFig.Color = 'white';
-curFig.Position(3:4) = [315, 300];
-curAx.TickDir = 'out';
-
-xlabel(curAx, 'log_{10}(ASI area [µm²])');
-ylabel(curAx, 'PDF estimate');
-
-title(curAx, ...
-    {info.filename; info.git_repos{1}.hash; curConfig.title}, ...
-    'FontWeight', 'normal', 'FontSize', 10);
-
 %% Report number of occurences for degree of coupling
 clear cur*;
 curPlotConfig = plotConfigs(1, 1);
