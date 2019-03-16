@@ -1,0 +1,171 @@
+<things>
+  <meta name="writer" content="NmlWriter.scala" />
+  <meta name="writerGitCommit" content="bd8d3743832ec0835ceaf053e342298b4989220e" />
+  <meta name="timestamp" content="1552752693352" />
+  <meta name="annotationId" content="5c8d202e010000103567ea1b" />
+  <meta name="username" content="Alessandro Motta" />
+  <parameters>
+    <experiment name="2012-09-28_ex145_07x2_ROI2017" organization="Connectomics_Department" description="connectEM.WholeCell.Script.checkPlass (f0af7fdfd73cde9ada4f931a5e3723f5bde240ad)" />
+    <scale x="11.4" y="11.4" z="28.0" />
+    <offset x="0" y="0" z="0" />
+    <time ms="1508493365794" />
+    <editPosition x="3018" y="2686" z="779" />
+    <editRotation xRot="0.0" yRot="0.0" zRot="0.0" />
+    <zoomLevel zoom="0.5793287594733681" />
+    <activeNode id="3" />
+  </parameters>
+  <thing id="1" color.r="1.0" color.g="0.0" color.b="0.0" color.a="1.0" name="Axon">
+    <nodes>
+      <node id="23" radius="120.0" x="3977" y="2758" z="864" rotX="1.507899184151E12" rotY="0.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="0" interpolation="false" time="0" />
+      <node id="28" radius="120.0" x="4175" y="2793" z="892" rotX="1.507899189039E12" rotY="0.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="0" interpolation="false" time="0" />
+      <node id="54" radius="120.0" x="5079" y="2861" z="918" rotX="1.507899271309E12" rotY="0.0" rotZ="0.0" inVp="1" inMag="1" bitDepth="0" interpolation="false" time="0" />
+      <node id="65" radius="120.0" x="5394" y="2894" z="962" rotX="1.507899287613E12" rotY="0.0" rotZ="0.0" inVp="1" inMag="1" bitDepth="0" interpolation="false" time="0" />
+      <node id="68" radius="120.0" x="5474" y="2905" z="961" rotX="1.507899292108E12" rotY="0.0" rotZ="0.0" inVp="1" inMag="1" bitDepth="0" interpolation="false" time="0" />
+      <node id="36" radius="120.0" x="4501" y="2817" z="950" rotX="1.507899204485E12" rotY="0.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="0" interpolation="false" time="0" />
+      <node id="70" radius="120.0" x="5530" y="2928" z="962" rotX="1.507899295916E12" rotY="0.0" rotZ="0.0" inVp="1" inMag="1" bitDepth="0" interpolation="false" time="0" />
+      <node id="43" radius="120.0" x="4784" y="2839" z="951" rotX="1.507899221518E12" rotY="0.0" rotZ="0.0" inVp="1" inMag="1" bitDepth="0" interpolation="false" time="0" />
+      <node id="66" radius="120.0" x="5418" y="2909" z="965" rotX="1.507899289109E12" rotY="0.0" rotZ="0.0" inVp="1" inMag="1" bitDepth="0" interpolation="false" time="0" />
+      <node id="64" radius="120.0" x="5367" y="2880" z="954" rotX="1.507899286277E12" rotY="0.0" rotZ="0.0" inVp="1" inMag="1" bitDepth="0" interpolation="false" time="0" />
+      <node id="25" radius="120.0" x="4056" y="2771" z="864" rotX="1.507899186508E12" rotY="0.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="0" interpolation="false" time="0" />
+      <node id="29" radius="120.0" x="4227" y="2800" z="893" rotX="1.507899190126E12" rotY="0.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="0" interpolation="false" time="0" />
+      <node id="19" radius="120.0" x="3825" y="2809" z="829" rotX="1.507899180691E12" rotY="0.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="0" interpolation="false" time="0" />
+      <node id="30" radius="120.0" x="4277" y="2801" z="896" rotX="1.507899191142E12" rotY="0.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="0" interpolation="false" time="0" />
+      <node id="26" radius="120.0" x="4101" y="2767" z="875" rotX="1.507899187395E12" rotY="0.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="0" interpolation="false" time="0" />
+      <node id="48" radius="120.0" x="4923" y="2843" z="935" rotX="1.507899263039E12" rotY="0.0" rotZ="0.0" inVp="1" inMag="1" bitDepth="0" interpolation="false" time="0" />
+      <node id="67" radius="120.0" x="5442" y="2909" z="963" rotX="1.507899290677E12" rotY="0.0" rotZ="0.0" inVp="1" inMag="1" bitDepth="0" interpolation="false" time="0" />
+      <node id="51" radius="120.0" x="5003" y="2887" z="928" rotX="1.507899266884E12" rotY="0.0" rotZ="0.0" inVp="1" inMag="1" bitDepth="0" interpolation="false" time="0" />
+      <node id="14" radius="120.0" x="3634" y="2851" z="821" rotX="1.507899176695E12" rotY="0.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="0" interpolation="false" time="0" />
+      <node id="11" radius="120.0" x="3520" y="2859" z="822" rotX="1.507899174306E12" rotY="0.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="0" interpolation="false" time="0" />
+      <node id="12" radius="120.0" x="3560" y="2850" z="822" rotX="1.507899175159E12" rotY="0.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="0" interpolation="false" time="0" />
+      <node id="33" radius="120.0" x="4383" y="2808" z="921" rotX="1.507899199748E12" rotY="0.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="0" interpolation="false" time="0" />
+      <node id="9" radius="120.0" x="3444" y="2816" z="815" rotX="1.507899172748E12" rotY="0.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="0" interpolation="false" time="0" />
+      <node id="20" radius="120.0" x="3861" y="2800" z="835" rotX="1.507899181428E12" rotY="0.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="0" interpolation="false" time="0" />
+      <node id="59" radius="120.0" x="5219" y="2833" z="936" rotX="1.507899279548E12" rotY="0.0" rotZ="0.0" inVp="1" inMag="1" bitDepth="0" interpolation="false" time="0" />
+      <node id="21" radius="120.0" x="3895" y="2790" z="848" rotX="1.507899182123E12" rotY="0.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="0" interpolation="false" time="0" />
+      <node id="38" radius="120.0" x="4607" y="2834" z="951" rotX="1.507899209603E12" rotY="0.0" rotZ="0.0" inVp="0" inMag="2" bitDepth="0" interpolation="false" time="0" />
+      <node id="37" radius="120.0" x="4523" y="2844" z="958" rotX="1.507899206782E12" rotY="0.0" rotZ="0.0" inVp="0" inMag="2" bitDepth="0" interpolation="false" time="0" />
+      <node id="57" radius="120.0" x="5161" y="2822" z="934" rotX="1.507899276317E12" rotY="0.0" rotZ="0.0" inVp="1" inMag="1" bitDepth="0" interpolation="false" time="0" />
+      <node id="18" radius="120.0" x="3785" y="2820" z="826" rotX="1.507899179804E12" rotY="0.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="0" interpolation="false" time="0" />
+      <node id="63" radius="120.0" x="5341" y="2867" z="946" rotX="1.50789928502E12" rotY="0.0" rotZ="0.0" inVp="1" inMag="1" bitDepth="0" interpolation="false" time="0" />
+      <node id="44" radius="120.0" x="4814" y="2846" z="945" rotX="1.507899223101E12" rotY="0.0" rotZ="0.0" inVp="1" inMag="1" bitDepth="0" interpolation="false" time="0" />
+      <node id="13" radius="120.0" x="3597" y="2847" z="821" rotX="1.507899175959E12" rotY="0.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="0" interpolation="false" time="0" />
+      <node id="52" radius="120.0" x="5026" y="2881" z="917" rotX="1.507899268212E12" rotY="0.0" rotZ="0.0" inVp="1" inMag="1" bitDepth="0" interpolation="false" time="0" />
+      <node id="40" radius="120.0" x="4701" y="2820" z="945" rotX="1.507899214031E12" rotY="0.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="0" interpolation="false" time="0" />
+      <node id="24" radius="120.0" x="4018" y="2761" z="864" rotX="1.507899185676E12" rotY="0.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="0" interpolation="false" time="0" />
+      <node id="27" radius="120.0" x="4138" y="2796" z="879" rotX="1.507899188233E12" rotY="0.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="0" interpolation="false" time="0" />
+      <node id="6" radius="120.0" x="3316" y="2791" z="805" rotX="1.507899169133E12" rotY="0.0" rotZ="0.0" inVp="0" inMag="2" bitDepth="0" interpolation="false" time="0" />
+      <node id="71" radius="120.0" x="5551" y="2930" z="976" rotX="1.507899297378E12" rotY="0.0" rotZ="0.0" inVp="1" inMag="1" bitDepth="0" interpolation="false" time="0" />
+      <node id="35" radius="120.0" x="4466" y="2802" z="931" rotX="1.507899202532E12" rotY="0.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="0" interpolation="false" time="0" />
+      <node id="50" radius="120.0" x="4975" y="2872" z="935" rotX="1.5078992657E12" rotY="0.0" rotZ="0.0" inVp="1" inMag="1" bitDepth="0" interpolation="false" time="0" />
+      <node id="15" radius="120.0" x="3668" y="2854" z="821" rotX="1.507899177399E12" rotY="0.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="0" interpolation="false" time="0" />
+      <node id="34" radius="120.0" x="4436" y="2811" z="920" rotX="1.507899201316E12" rotY="0.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="0" interpolation="false" time="0" />
+      <node id="74" radius="120.0" x="5600" y="2932" z="1016" rotX="1.50789930358E12" rotY="0.0" rotZ="0.0" inVp="0" inMag="1" bitDepth="0" interpolation="false" time="0" />
+      <node id="72" radius="120.0" x="5558" y="2939" z="988" rotX="1.507899300204E12" rotY="0.0" rotZ="0.0" inVp="0" inMag="1" bitDepth="0" interpolation="false" time="0" />
+      <node id="53" radius="120.0" x="5051" y="2863" z="913" rotX="1.507899269653E12" rotY="0.0" rotZ="0.0" inVp="1" inMag="1" bitDepth="0" interpolation="false" time="0" />
+      <node id="16" radius="120.0" x="3707" y="2846" z="823" rotX="1.507899178187E12" rotY="0.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="0" interpolation="false" time="0" />
+      <node id="32" radius="120.0" x="4344" y="2799" z="921" rotX="1.50789919782E12" rotY="0.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="0" interpolation="false" time="0" />
+      <node id="45" radius="120.0" x="4834" y="2851" z="941" rotX="1.507899257997E12" rotY="0.0" rotZ="0.0" inVp="1" inMag="1" bitDepth="0" interpolation="false" time="0" />
+      <node id="47" radius="120.0" x="4896" y="2835" z="934" rotX="1.507899261269E12" rotY="0.0" rotZ="0.0" inVp="1" inMag="1" bitDepth="0" interpolation="false" time="0" />
+      <node id="69" radius="120.0" x="5504" y="2920" z="958" rotX="1.507899293565E12" rotY="0.0" rotZ="0.0" inVp="1" inMag="1" bitDepth="0" interpolation="false" time="0" />
+      <node id="22" radius="120.0" x="3934" y="2761" z="853" rotX="1.507899182904E12" rotY="0.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="0" interpolation="false" time="0" />
+      <node id="58" radius="120.0" x="5189" y="2824" z="935" rotX="1.507899277885E12" rotY="0.0" rotZ="0.0" inVp="1" inMag="1" bitDepth="0" interpolation="false" time="0" />
+      <node id="10" radius="120.0" x="3482" y="2829" z="818" rotX="1.507899173507E12" rotY="0.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="0" interpolation="false" time="0" />
+      <node id="42" radius="120.0" x="4753" y="2832" z="949" rotX="1.507899220149E12" rotY="0.0" rotZ="0.0" inVp="1" inMag="1" bitDepth="0" interpolation="false" time="0" />
+      <node id="60" radius="120.0" x="5250" y="2848" z="935" rotX="1.507899280929E12" rotY="0.0" rotZ="0.0" inVp="1" inMag="1" bitDepth="0" interpolation="false" time="0" />
+      <node id="7" radius="120.0" x="3363" y="2811" z="813" rotX="1.507899171015E12" rotY="0.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="0" interpolation="false" time="0" />
+      <node id="3" radius="120.0" x="3018" y="2686" z="779" rotX="1.507899156506E12" rotY="0.0" rotZ="0.0" inVp="0" inMag="2" bitDepth="0" interpolation="false" time="0" />
+      <node id="4" radius="120.0" x="3112" y="2710" z="779" rotX="1.507899163693E12" rotY="0.0" rotZ="0.0" inVp="0" inMag="2" bitDepth="0" interpolation="false" time="0" />
+      <node id="39" radius="120.0" x="4672" y="2817" z="945" rotX="1.507899211812E12" rotY="0.0" rotZ="0.0" inVp="0" inMag="2" bitDepth="0" interpolation="false" time="0" />
+      <node id="61" radius="120.0" x="5280" y="2860" z="935" rotX="1.507899282357E12" rotY="0.0" rotZ="0.0" inVp="1" inMag="1" bitDepth="0" interpolation="false" time="0" />
+      <node id="41" radius="120.0" x="4723" y="2823" z="946" rotX="1.507899218693E12" rotY="0.0" rotZ="0.0" inVp="1" inMag="1" bitDepth="0" interpolation="false" time="0" />
+      <node id="5" radius="120.0" x="3192" y="2733" z="794" rotX="1.507899167525E12" rotY="0.0" rotZ="0.0" inVp="0" inMag="2" bitDepth="0" interpolation="false" time="0" />
+      <node id="31" radius="120.0" x="4314" y="2789" z="917" rotX="1.507899192044E12" rotY="0.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="0" interpolation="false" time="0" />
+      <node id="56" radius="120.0" x="5133" y="2824" z="933" rotX="1.507899274653E12" rotY="0.0" rotZ="0.0" inVp="1" inMag="1" bitDepth="0" interpolation="false" time="0" />
+      <node id="62" radius="120.0" x="5314" y="2859" z="939" rotX="1.507899283773E12" rotY="0.0" rotZ="0.0" inVp="1" inMag="1" bitDepth="0" interpolation="false" time="0" />
+      <node id="55" radius="120.0" x="5108" y="2832" z="928" rotX="1.507899272949E12" rotY="0.0" rotZ="0.0" inVp="1" inMag="1" bitDepth="0" interpolation="false" time="0" />
+      <node id="46" radius="120.0" x="4857" y="2844" z="936" rotX="1.507899259573E12" rotY="0.0" rotZ="0.0" inVp="1" inMag="1" bitDepth="0" interpolation="false" time="0" />
+      <node id="73" radius="120.0" x="5573" y="2935" z="1001" rotX="1.507899301556E12" rotY="0.0" rotZ="0.0" inVp="0" inMag="1" bitDepth="0" interpolation="false" time="0" />
+      <node id="17" radius="120.0" x="3747" y="2835" z="821" rotX="1.507899179045E12" rotY="0.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="0" interpolation="false" time="0" />
+      <node id="8" radius="120.0" x="3402" y="2815" z="811" rotX="1.507899171872E12" rotY="0.0" rotZ="0.0" inVp="1" inMag="2" bitDepth="0" interpolation="false" time="0" />
+      <node id="49" radius="120.0" x="4948" y="2850" z="936" rotX="1.507899264484E12" rotY="0.0" rotZ="0.0" inVp="1" inMag="1" bitDepth="0" interpolation="false" time="0" />
+    </nodes>
+    <edges>
+      <edge source="9" target="10" />
+      <edge source="64" target="65" />
+      <edge source="71" target="72" />
+      <edge source="6" target="7" />
+      <edge source="8" target="9" />
+      <edge source="37" target="38" />
+      <edge source="18" target="19" />
+      <edge source="45" target="46" />
+      <edge source="55" target="56" />
+      <edge source="41" target="42" />
+      <edge source="25" target="26" />
+      <edge source="3" target="4" />
+      <edge source="22" target="23" />
+      <edge source="24" target="25" />
+      <edge source="23" target="24" />
+      <edge source="65" target="66" />
+      <edge source="72" target="73" />
+      <edge source="26" target="27" />
+      <edge source="49" target="50" />
+      <edge source="7" target="8" />
+      <edge source="46" target="47" />
+      <edge source="35" target="36" />
+      <edge source="48" target="49" />
+      <edge source="34" target="35" />
+      <edge source="39" target="40" />
+      <edge source="57" target="58" />
+      <edge source="32" target="33" />
+      <edge source="29" target="30" />
+      <edge source="53" target="54" />
+      <edge source="54" target="55" />
+      <edge source="31" target="32" />
+      <edge source="73" target="74" />
+      <edge source="42" target="43" />
+      <edge source="50" target="51" />
+      <edge source="66" target="67" />
+      <edge source="27" target="28" />
+      <edge source="4" target="5" />
+      <edge source="67" target="68" />
+      <edge source="36" target="37" />
+      <edge source="60" target="61" />
+      <edge source="63" target="64" />
+      <edge source="40" target="41" />
+      <edge source="12" target="13" />
+      <edge source="61" target="62" />
+      <edge source="62" target="63" />
+      <edge source="15" target="16" />
+      <edge source="19" target="20" />
+      <edge source="21" target="22" />
+      <edge source="16" target="17" />
+      <edge source="10" target="11" />
+      <edge source="14" target="15" />
+      <edge source="20" target="21" />
+      <edge source="59" target="60" />
+      <edge source="68" target="69" />
+      <edge source="52" target="53" />
+      <edge source="30" target="31" />
+      <edge source="51" target="52" />
+      <edge source="38" target="39" />
+      <edge source="69" target="70" />
+      <edge source="70" target="71" />
+      <edge source="47" target="48" />
+      <edge source="56" target="57" />
+      <edge source="43" target="44" />
+      <edge source="58" target="59" />
+      <edge source="33" target="34" />
+      <edge source="28" target="29" />
+      <edge source="13" target="14" />
+      <edge source="17" target="18" />
+      <edge source="11" target="12" />
+      <edge source="44" target="45" />
+      <edge source="5" target="6" />
+    </edges>
+  </thing>
+  <branchpoints />
+  <comments>
+    <comment node="3" content="soma" />
+  </comments>
+  <groups />
+</things>

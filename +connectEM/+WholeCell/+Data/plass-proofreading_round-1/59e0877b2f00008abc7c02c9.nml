@@ -1,0 +1,59 @@
+<things>
+  <meta name="writer" content="NmlWriter.scala" />
+  <meta name="writerGitCommit" content="bd8d3743832ec0835ceaf053e342298b4989220e" />
+  <meta name="timestamp" content="1552752851884" />
+  <meta name="annotationId" content="5c8d20cf010000473767ea3d" />
+  <meta name="username" content="Alessandro Motta" />
+  <parameters>
+    <experiment name="2012-09-28_ex145_07x2_ROI2017" organization="Connectomics_Department" description="connectEM.WholeCell.Script.checkPlass (f0af7fdfd73cde9ada4f931a5e3723f5bde240ad)" />
+    <scale x="11.4" y="11.4" z="28.0" />
+    <offset x="0" y="0" z="0" />
+    <time ms="1508329875819" />
+    <editPosition x="2484" y="4870" z="2551" />
+    <editRotation xRot="0.0" yRot="0.0" zRot="0.0" />
+    <zoomLevel zoom="0.7697371773460568" />
+    <activeNode id="325" />
+  </parameters>
+  <thing id="2" color.r="0.0" color.g="0.0" color.b="1.0" color.a="1.0" name="Axon">
+    <nodes>
+      <node id="338" radius="120.0" x="5101" y="5984" z="2954" rotX="1.507923570992E12" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+      <node id="330" radius="120.0" x="3597" y="5361" z="2761" rotX="1.507923542233E12" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+      <node id="327" radius="120.0" x="2899" y="5108" z="2683" rotX="1.507923526694E12" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+      <node id="334" radius="120.0" x="4423" y="5525" z="2813" rotX="1.507923559118E12" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+      <node id="329" radius="120.0" x="3381" y="5288" z="2768" rotX="1.507923534867E12" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+      <node id="325" radius="120.0" x="2484" y="4870" z="2551" rotX="1.507923518058E12" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+      <node id="332" radius="120.0" x="4066" y="5464" z="2778" rotX="1.507923552418E12" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+      <node id="328" radius="120.0" x="3169" y="5227" z="2712" rotX="1.507923530767E12" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+      <node id="339" radius="120.0" x="5324" y="6068" z="2957" rotX="1.507923575216E12" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+      <node id="335" radius="120.0" x="4650" y="5645" z="2861" rotX="1.507923562723E12" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+      <node id="340" radius="120.0" x="5584" y="6034" z="2938" rotX="1.507923580829E12" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+      <node id="337" radius="120.0" x="4973" y="5863" z="2929" rotX="1.507923568543E12" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+      <node id="331" radius="120.0" x="3861" y="5398" z="2785" rotX="1.507923547571E12" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+      <node id="326" radius="120.0" x="2725" y="4960" z="2623" rotX="1.507923521664E12" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+      <node id="336" radius="120.0" x="4827" y="5757" z="2891" rotX="1.507923565614E12" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+      <node id="333" radius="120.0" x="4243" y="5475" z="2793" rotX="1.507923556858E12" rotY="0.0" rotZ="0.0" inVp="0" inMag="0" bitDepth="0" interpolation="false" time="0" />
+    </nodes>
+    <edges>
+      <edge source="337" target="338" />
+      <edge source="336" target="337" />
+      <edge source="329" target="330" />
+      <edge source="325" target="326" />
+      <edge source="326" target="327" />
+      <edge source="331" target="332" />
+      <edge source="328" target="329" />
+      <edge source="335" target="336" />
+      <edge source="338" target="339" />
+      <edge source="339" target="340" />
+      <edge source="332" target="333" />
+      <edge source="333" target="334" />
+      <edge source="327" target="328" />
+      <edge source="330" target="331" />
+      <edge source="334" target="335" />
+    </edges>
+  </thing>
+  <branchpoints />
+  <comments>
+    <comment node="325" content="soma" />
+  </comments>
+  <groups />
+</things>
