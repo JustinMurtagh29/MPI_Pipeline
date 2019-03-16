@@ -311,7 +311,7 @@ curFig = figure();
 curFigs = curFig([]);
 close(curFig);
 
-for curConfig = reshape(plotConfigs(1), 1, [])
+for curConfig = reshape(plotConfigs, 1, [])
     curSaSdConfig = connectEM.Consistency.buildPairConfigs(asiT, curConfig);
     curSaSdConfig = curSaSdConfig(1);
             
