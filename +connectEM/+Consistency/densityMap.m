@@ -2,7 +2,7 @@ function [map, bw] = densityMap(asiAreaPairs, varargin)
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     opts = struct;
-    opts.xLim = [0, 1.5];
+    opts.xLim = [0, 2];
     opts.yLim = [-1.5, 0.5];
     opts.mapSize = [301, 301];
     opts.bandWidth = [];
@@ -12,8 +12,8 @@ function [map, bw] = densityMap(asiAreaPairs, varargin)
     opts.method = lower(opts.method);
     
     log10AvgArea = log10(mean(asiAreaPairs, 2));
-    cv = std(asiAreaPairs, 0, 2) ./ mean(asiAreaPairs, 2);
-    map = horzcat(log10AvgArea, cv);
+    relDiff = abs(diff(asiAreaPairs, 1, 2)) ./ mean(asiAreaPairs, 2);
+    map = horzcat(log10AvgArea, relDiff);
     
     mask = ...
         opts.yLim(1) <= map(:, 1) & map(:, 1) <= opts.yLim(2) ...

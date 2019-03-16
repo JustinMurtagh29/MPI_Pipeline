@@ -3,7 +3,7 @@ function fig = plotVariabilityHistogram( ...
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     opt = struct;
-    opt.binEdges = linspace(0, 1.5, 16);
+    opt.binEdges = linspace(0, 2, 21);
     opt = Util.modifyStruct(opt, varargin{:});
     
     % Sanity check
@@ -32,23 +32,24 @@ function fig = plotVariabilityHistogram( ...
             curAx = curCol + (curRow - 1) * plotSize(2);
             curAx = subplot(plotSize(3), plotSize(2), curAx);
             
-            curAx.TickDir = 'out';
             axis(curAx, 'square');
             hold(curAx, 'on');
             
             for curPairConfig = reshape(curPairConfigs, 1, [])
-                curCvs = synT.area(curPairConfig.synIdPairs);
-                curCvs = std(curCvs, 0, 2) ./ mean(curCvs, 2);
+                curRelDiff = synT.area(curPairConfig.synIdPairs);
+                curRelDiff = ...
+                    abs(diff(curRelDiff, 1, 2)) ...
+                    ./ mean(curRelDiff, 2);
 
                 histogram( ...
-                    curAx, curCvs, ...
+                    curAx, curRelDiff, ...
                     'BinEdges', opt.binEdges, ...
                     'Normalization', 'probability', ...
                     'DisplayStyle', 'stairs');
             end
             
             xlim(curAx, opt.binEdges([1, end]));
-            xlabel(curAx, 'Coefficient of variation');
+            xlabel(curAx, 'Relative size difference');
             ylabel(curAx, 'Probability');
             
             legend( ...

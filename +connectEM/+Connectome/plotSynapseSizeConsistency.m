@@ -74,32 +74,32 @@ plotConfigs = reshape( ...
 curPvalThreshs = [0.5, 1, 2, 3, 4, 5] / 100;
 
 % Excitatory axons
-plotConfigs(1, 1).cvVsAsiPvalThreshs = 0.026;
-plotConfigs(2, 1).cvVsAsiPvalThreshs = inf;
-plotConfigs(3, 1).cvVsAsiPvalThreshs = 0.015;
-plotConfigs(4, 1).cvVsAsiPvalThreshs = inf;
+plotConfigs(1, 1).twoDimPValThreshs = 0.026;
+plotConfigs(2, 1).twoDimPValThreshs = inf;
+plotConfigs(3, 1).twoDimPValThreshs = 0.015;
+plotConfigs(4, 1).twoDimPValThreshs = inf;
 
 % Corticocortical axons
-plotConfigs(1, 2).cvVsAsiPvalThreshs = 0.052;
-plotConfigs(2, 2).cvVsAsiPvalThreshs = inf;
-plotConfigs(3, 2).cvVsAsiPvalThreshs = inf;
-plotConfigs(4, 2).cvVsAsiPvalThreshs = inf;
+plotConfigs(1, 2).twoDimPValThreshs = 0.052;
+plotConfigs(2, 2).twoDimPValThreshs = inf;
+plotConfigs(3, 2).twoDimPValThreshs = inf;
+plotConfigs(4, 2).twoDimPValThreshs = inf;
 
 % Thalamocortical axons
-plotConfigs(1, 3).cvVsAsiPvalThreshs = 0.087;
-plotConfigs(2, 3).cvVsAsiPvalThreshs = inf;
-plotConfigs(3, 3).cvVsAsiPvalThreshs = inf;
-plotConfigs(4, 3).cvVsAsiPvalThreshs = inf;
+plotConfigs(1, 3).twoDimPValThreshs = 0.087;
+plotConfigs(2, 3).twoDimPValThreshs = inf;
+plotConfigs(3, 3).twoDimPValThreshs = inf;
+plotConfigs(4, 3).twoDimPValThreshs = inf;
 
 for curIdx = 1:numel(plotConfigs)
-    curThreshs = plotConfigs(curIdx).cvVsAsiPvalThreshs;
+    curThreshs = plotConfigs(curIdx).twoDimPValThreshs;
     
     % Only consider p-value thresholds before LTP and LTD regions merger
     curThreshs = curPvalThreshs(curPvalThreshs < curThreshs);
     
     % Only consider lowest and highest p-value threshold
     curThreshs = curThreshs(unique([1, numel(curThreshs)]));
-    plotConfigs(curIdx).cvVsAsiPvalThreshs = curThreshs;
+    plotConfigs(curIdx).twoDimPValThreshs = curThreshs;
 end
 
 %% Report synapse sizes
@@ -193,7 +193,6 @@ for curIdx = 1:numel(plotConfigs)
         connectEM.Consistency.plotVariabilityHistogram( ...
             info, asiT, curPlotConfig, curPairConfigs(:));
     curFig.Position(3:4) = [370, 540];
-
    [curLearnedFrac, curUnlearnedFrac, curCvThresh] = ...
         connectEM.Consistency.calculateLearnedFraction( ...
             asiT, curPairConfigs(1), curPairConfigs(end), ...
@@ -202,16 +201,16 @@ for curIdx = 1:numel(plotConfigs)
 
     % Quantitative reporting
     fprintf('**%s**\n', curPlotConfig.title);
-    fprintf('CV between pairs (mean ± std)\n');
+    fprintf('Relative size difference between pairs (mean ± std)\n');
     
     for curPairConfig = curPairConfigs
-        curCvs = asiT.area(curPairConfig.synIdPairs);
-        curCvs = std(curCvs, 0, 2) ./ mean(curCvs, 2);
+        curRelDiff = asiT.area(curPairConfig.synIdPairs);
+        curRelDiff = abs(diff(curRelDiff, 1, 2)) ./ mean(curRelDiff, 2);
 
         fprintf( ...
             '* %s: %f ± %f\n', ...
             curPairConfig.title, ...
-            mean(curCvs), std(curCvs));
+            mean(curRelDiff), std(curRelDiff));
     end
     
     fprintf('\n');
@@ -220,6 +219,7 @@ for curIdx = 1:numel(plotConfigs)
     fprintf('* Learned fraction: %.1f %%\n', 100 * curLearnedFrac);
     fprintf('* Possibly learned fraction: %.1f %%\n', 100 * curOpenFrac);
     fprintf('* Unlearned fraction: %.1f %%\n', 100 * curUnlearnedFrac);
+    fprintf('* Rel. diff. threshold: %.2f\n', sqrt(2) * curCvThresh);
     fprintf('* CV threshold: %.2f\n', curCvThresh);
     fprintf('\n');
 
@@ -284,7 +284,7 @@ connectEM.Figure.config(curFig, info);
 clear cur*;
 
 % Density difference map
-curLimX = [0, 1.5];
+curLimX = [0, 2];
 curLimY = [-1.5, 0.5];
 curImSize = [256, 256];
 curMethod = 'kde2d';
@@ -297,21 +297,21 @@ curMinPrctiles = 10;
 % NOTE(amotta): The `curMinMap` and `curMaxMap` matrices have the same size
 % as the heatmaps of the CV × log10(avg. ASI) space. They contain the ASI
 % areas of the smaller and larger synapses, respectively.
-curY = linspace(curLimY(1), curLimY(2), curImSize(1));
-curX = linspace(curLimX(1), curLimX(2), curImSize(2));
-curX(curX >= sqrt(2)) = nan;
+curLog10Avg = linspace(curLimY(1), curLimY(2), curImSize(1));
+curCv = linspace(curLimX(1), curLimX(2), curImSize(2)) / sqrt(2);
+curCv(curCv >= sqrt(2)) = nan;
 
-curMinMap = (10 .^ curY(:)) .* (1 - curX / sqrt(2));
-curMaxMap = (10 .^ curY(:)) .* (1 + curX / sqrt(2));
+curMinMap = (10 .^ curLog10Avg(:)) .* (1 - curCv / sqrt(2));
+curMaxMap = (10 .^ curLog10Avg(:)) .* (1 + curCv / sqrt(2));
 
-curTicksX = linspace(curLimX(1), curLimX(2), 4);
+curTicksX = linspace(curLimX(1), curLimX(2), 5);
 curTicksY = linspace(curLimY(1), curLimY(2), 5);
 
 curFig = figure();
 curFigs = curFig([]);
 close(curFig);
 
-for curConfig = reshape(plotConfigs, 1, [])
+for curConfig = reshape(plotConfigs(1), 1, [])
     curSaSdConfig = connectEM.Consistency.buildPairConfigs(asiT, curConfig);
     curSaSdConfig = curSaSdConfig(1);
             
@@ -322,13 +322,15 @@ for curConfig = reshape(plotConfigs, 1, [])
     curSaSdT.targetClass = asiT.targetClass(curSaSdT.synIds(:, 1));
 
     curSaSdT.areas = asiT.area(curSaSdT.synIds);
-    curSaSdT.log10Avg = log10(mean(curSaSdT.areas, 2));
-    curSaSdT.cv = std(curSaSdT.areas, 0, 2) ./ mean(curSaSdT.areas, 2);
+    curSaSdT.y = log10(mean(curSaSdT.areas, 2));
+    curSaSdT.x = abs( ...
+        diff(curSaSdT.areas, 1, 2) ...
+        ./ mean(curSaSdT.areas, 2));
 
     curSaSdT.mapIdx = [ ...
-        discretize(curSaSdT.log10Avg, linspace( ...
+        discretize(curSaSdT.y, linspace( ...
             curLimY(1), curLimY(2), curImSize(1) + 1)), ...
-        discretize(curSaSdT.cv, linspace( ...
+        discretize(curSaSdT.x, linspace( ...
             curLimX(1), curLimX(2), curImSize(2) + 1))];
     curSaSdT.mapIdx = sub2ind( ...
         curImSize, curSaSdT.mapIdx(:, 1), curSaSdT.mapIdx(:, 2));
@@ -372,7 +374,7 @@ for curConfig = reshape(plotConfigs, 1, [])
         curMaxDiff = max(abs(curDiffMap(:)));
         
         curPvalMap = 1 - mean(curCtrlMaps < curSaSdMap, 3);
-        curPvalThreshs = sort(curConfig.cvVsAsiPvalThreshs, 'descend');
+        curPvalThreshs = sort(curConfig.twoDimPValThreshs, 'descend');
         
         curPvalImg = -log10(min( ...
             1 - mean(curCtrlMaps < curSaSdMap, 3), ...
@@ -437,7 +439,7 @@ for curConfig = reshape(plotConfigs, 1, [])
         curBar.TickLabels = arrayfun( ...
             @(val) sprintf('%.3g', val), ...
             curBar.Limits, 'UniformOutput', false);
-        curBar.Label.String = '-log_{10}(p-value)';
+        curBar.Label.String = '-log10(p-value)';
         
         for curRegionId = 1:numel(curRegionProps)
             curPos = curRegionProps(curRegionId).Centroid;
@@ -514,9 +516,9 @@ for curConfig = reshape(plotConfigs, 1, [])
             'DataAspectRatioMode', 'auto');
 
         arrayfun(@(ax) ylabel(ax, ...
-            'log_{10}(Average ASI area [µm²])'), curAxes);
+            'log10(Average ASI area [µm²])'), curAxes);
         arrayfun(@(ax) xlabel(ax, ...
-            'Coefficient of variation'), curAxes);
+            'Relative ASI area difference'), curAxes);
 
         annotation( ...
             curFig, ...
