@@ -12,6 +12,7 @@
 
 import sys
 import h5py
+import pickle
 import pystan
 import numpy as np
 from os import path
@@ -34,8 +35,14 @@ if len(log10Asi1) == 0:
     sys.exit(1)
 
 this_dir = path.dirname(path.realpath(__file__))
-sm = pystan.StanModel(file=path.join(this_dir, "clusterConnections.stan"))
-# TODO: Pickle compiled model
+stan_file = path.join(this_dir, 'clusterConnections.stan')
+pickle_file = path.join(this_dir, 'clusterConnections.pkl')
+
+try:
+    sm = pickle.load(open(pickle_file, 'rb'))
+except:
+    sm = pystan.StanModel(file=stan_file)
+    pickle.dump(sm, open(pickle_file, 'wb'))
 
 data = {'K': 3, 'N': len(log10Asi1), 'log10Asi1': log10Asi1, 'log10Asi2': log10Asi2}
 fit = sm.sampling(data=data, seed=0, iter=2000, chains=4)
