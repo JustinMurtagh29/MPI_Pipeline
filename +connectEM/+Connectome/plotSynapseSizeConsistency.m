@@ -205,7 +205,7 @@ for curIdx = 1%:numel(plotConfigs)
     xlabel(curAx, 'log10(Average ASI area [µm²])');
     ylabel(curAx, 'Probability');
     
-    curLeg = {curCtrlConfig.title, curSaSdConfig.title};
+    curLeg = {curSaSdConfig.title, curCtrlConfig.title};
     curLeg = legend(curAx, curLeg, 'Location', 'SouthOutside');
     
     connectEM.Figure.config(curFig, info);
