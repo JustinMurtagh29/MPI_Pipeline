@@ -56,8 +56,8 @@ parameters {
 }
 
 model {
-    mu ~ normal(-0.5, 10);
-    sigma ~ normal(0.25, 10);
+    mu ~ normal(-0.5, 2);
+    sigma ~ uniform(0, 4);
 
     for (n in 1:N) {
         real ps[K];
