@@ -171,6 +171,47 @@ disp(docT)
 connectEM.Consistency.plotCouplingHistogram( ...
     info, asiT, plotConfigs(1, 1), 'normalization', 'count');
 
+%% Average ASI area distribution
+clear cur*;
+
+curBinEdges = linspace(-1.5, 0.5, 21);
+
+for curIdx = 1%:numel(plotConfigs)
+    curPlotConfig = plotConfigs(curIdx);
+    
+    curSaSdConfig = ...
+        connectEM.Consistency.buildPairConfigs(asiT, curPlotConfig);
+    curSaSdConfig = curSaSdConfig(1);
+    
+    curCtrlConfig = struct;
+    curCtrlConfig.title = 'SASD';
+    curCtrlConfig.synIds = unique(curSaSdConfig.synIdPairs(:));
+    
+    curCtrlConfig = ...
+        connectEM.Consistency.buildPairConfigs(asiT, curCtrlConfig);
+    curCtrlConfig = curCtrlConfig(end);
+    
+    curFig = figure();
+    curAx = axes(curFig); %#ok
+    hold(curAx, 'on');
+    
+    histogram(curAx, ...
+        log10(mean(asiT.area(curSaSdConfig.synIdPairs), 2)), ...
+        'BinEdges', curBinEdges, 'Normalization', 'probability');
+    histogram(curAx, ...
+        log10(mean(asiT.area(curCtrlConfig.synIdPairs), 2)), ...
+        'BinEdges', curBinEdges, 'Normalization', 'probability');
+    
+    xlabel(curAx, 'log10(Average ASI area [µm²])');
+    ylabel(curAx, 'Probability');
+    
+    curLeg = {curCtrlConfig.title, curSaSdConfig.title};
+    curLeg = legend(curAx, curLeg, 'Location', 'SouthOutside');
+    
+    connectEM.Figure.config(curFig, info);
+    curFig.Position(3:4) = [300, 260];
+end
+
 %% Synapse area variability
 clear cur*;
 pValues = nan(4, numel(plotConfigs));
