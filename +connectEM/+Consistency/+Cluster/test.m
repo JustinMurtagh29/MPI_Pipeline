@@ -15,6 +15,7 @@ Util.showRunInfo(info);
 
 %% Generate synapse pairs
 clear cur*;
+rng(0);
 
 curClassEdges = [mix.coeff];
 curClassEdges = curClassEdges / sum(curClassEdges);
