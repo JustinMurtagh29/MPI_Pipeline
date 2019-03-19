@@ -21,10 +21,12 @@ if len(sys.argv) < 2:
     print("Data file input argument missing", file=sys.stderr)
     sys.exit(1)
 
-f = h5py.File(sys.argv[1], 'r')
-log10Asi1 = f['log10Asi1'][:].tolist()[0]
-log10Asi2 = f['log10Asi2'][:].tolist()[0]
-f.close()
+in_file = sys.argv[1]
+out_file = path.splitext(in_file)[0] + '.out.h5'
+
+with h5py.File(in_file, 'r') as f:
+    log10Asi1 = f['log10Asi1'][:].tolist()[0]
+    log10Asi2 = f['log10Asi2'][:].tolist()[0]
 
 if len(log10Asi1) != len(log10Asi2):
     print("ASI area vectors don't match up", file=sys.stderr)
@@ -45,5 +47,9 @@ except:
     pickle.dump(sm, open(pickle_file, 'wb'))
 
 data = {'K': 3, 'N': len(log10Asi1), 'log10Asi1': log10Asi1, 'log10Asi2': log10Asi2}
-fit = sm.sampling(data=data, seed=0, iter=5000, chains=10)
-print(fit)
+fit = sm.sampling(data=data, seed=0, iter=1000, chains=1)
+samples = fit.extract()
+
+with h5py.File(out_file, 'w') as f:
+    for key, data in samples.items():
+        f.create_dataset(key, data=data)
