@@ -33,16 +33,25 @@ pairT.areas = cat(1, mix(pairT.classId).mean) + pairT.areas;
 %% Run inference
 clear cur*;
 
-curH5File = strcat(tempname, '.h5');
+curName = tempname();
+curInFile = strcat(curName, '.h5');
+curOutFile = strcat(curName, '.out.h5');
+
 for curIdx = 1:2
     curDset = sprintf('/log10Asi%d', curIdx);
     curData = pairT.areas(:, curIdx);
     
-    h5create(curH5File, curDset, size(curData), 'Datatype', class(curData));
-    h5write(curH5File, curDset, curData);
+    h5create(curInFile, curDset, ...
+        size(curData), 'Datatype', class(curData));
+    h5write(curInFile, curDset, curData);
 end
 
 curCmd = fileparts(mfilename('fullpath'));
 curCmd = fullfile(curCmd, 'clusterConnections.py');
-curCmd = sprintf('%s "%s"', curCmd, curH5File);
+curCmd = sprintf('%s "%s"', curCmd, curInFile);
 [curExit, curResult] = system(curCmd, '-echo');
+
+runT = table;
+runT.means = transpose(h5read(curOutFile, '/mu'));
+runT.stds = transpose(h5read(curOutFile, '/sigma'));
+runT.coeffs = transpose(h5read(curOutFile, '/theta'));
