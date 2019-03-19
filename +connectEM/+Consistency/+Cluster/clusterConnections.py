@@ -44,6 +44,6 @@ except:
     sm = pystan.StanModel(file=stan_file)
     pickle.dump(sm, open(pickle_file, 'wb'))
 
-data = {'K': 3, 'N': len(log10Asi1), 'log10Asi1': log10Asi1, 'log10Asi2': log10Asi2}
-fit = sm.sampling(data=data, seed=0, iter=10000, chains=4)
+data = {'K': 2, 'N': len(log10Asi1), 'log10Asi1': log10Asi1, 'log10Asi2': log10Asi2}
+fit = sm.sampling(data=data, seed=0, iter=1000, chains=4)
 print(fit)
