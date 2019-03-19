@@ -47,7 +47,7 @@ except:
     pickle.dump(sm, open(pickle_file, 'wb'))
 
 data = {'K': 3, 'N': len(log10Asi1), 'log10Asi1': log10Asi1, 'log10Asi2': log10Asi2}
-fit = sm.sampling(data=data, seed=0, iter=1000, chains=1)
+fit = sm.sampling(data=data, seed=0, iter=5000, chains=4)
 samples = fit.extract()
 print(fit)
 
