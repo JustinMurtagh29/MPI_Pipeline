@@ -1,5 +1,4 @@
 asit43_long = load('~/GABA/astrocyte/synapses/asit43_long.mat');
-
 asit = asit43_long.asiT;
 asitt = struct(asit);
 %% Strings to double
@@ -16,4 +15,4 @@ end
 
 %%
 % after the python (notebook 23)
-ddict = load([savedir, 'asitdict.mat']);
+ddict = load('~/GABA/astrocyte/synapses/asit43.mat');
