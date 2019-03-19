@@ -6,7 +6,7 @@ clear;
 mix = struct('mean', {}, 'std', {}, 'coeff', {});
 % Values for overall distribution of TC spine synapses. Used as bulk
 mix(1).mean = -0.70; mix(1).std = 0.3; mix(1).coeff = 0.8;
-mix(2).mean = -0.25; mix(2).std = 0.2; mix(2).coeff = 0.2;
+mix(2).mean = -1.00; mix(2).std = 0.2; mix(2).coeff = 0.2;
 
 pairCount = 5290;
 
