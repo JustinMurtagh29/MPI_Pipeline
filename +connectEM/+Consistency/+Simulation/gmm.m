@@ -3,298 +3,210 @@
 clear;
 
 %% Configuration
-N = 5290;
-cvKsPvalThresh = 2.11527e-31;
-learnedFracs = [0.086, 0.379, 0.5];
-
 mix = struct('mean', {}, 'std', {}, 'coeff', {});
-mixNames = {};
 
-% L4 → proximal dendrite synapses
-% connectEM.Connectome.queryLayerLayerConnections 67262f6b5b821d083b1f1ee95da02a9a66af0e7a
-mix(1).mean = -0.70476; mix(1).std = 0.2722; mix(1).coeff = 1;
-mixNames{1} = 'L4 → PD';
+i = 1;
+mix(i).mean = -1.00; mix(i).std = 0.2; mix(i).coeff = 0.1; i = i + 1; %#ok
+mix(i).mean = -0.70; mix(i).std = 0.3; mix(i).coeff = 0.8; i = i + 1; %#ok
+mix(i).mean = -0.25; mix(i).std = 0.2; mix(i).coeff = 0.1; i = i + 1; %#ok
+clear i;
 
-% L4 → apical dendrite synapses
-% connectEM.Connectome.queryLayerLayerConnections 67262f6b5b821d083b1f1ee95da02a9a66af0e7a
-mix(2).mean = -0.90110; mix(2).std = 0.4337; mix(2).coeff = 1;
-mixNames{2} = 'L4 → AD';
-
-% corticocortical primary spine synapses
-% FIXME(amotta): The numbers for this Gaussian have a different origin!
-% connectEM.Connectome.plotSynapseSizeConsistency 9476c84415afa274ce8e80df679014bb37172a72
-mix(3).mean = -0.707029; mix(3).std = 0.298972; mix(3).coeff = 1;
-mixNames{3} = 'CC';
-
-% NOTE(amotta): Mixing coefficient of the L4 connections
-mixGrid = mix;
-mixGrid(1).coeff = 10 .^ linspace(-3, 0, 61);
-mixGrid(2).coeff = 10 .^ linspace(-3, 0, 61);
-
-% Sanity check
-assert(isequal(numel(mix), numel(mixNames)));
-assert(isequal(fieldnames(mix), fieldnames(mixGrid)));
-varNames = fieldnames(mix);
+pairCount = 5290;
 
 info = Util.runInfo();
 Util.showRunInfo(info);
 
-%% Grid search
+%% Generate synapse pairs
 clear cur*;
-
-plotIds = [];
-
-% Span grid
-curGridVars = struct2cell(mixGrid);
-grid = cell(1, 1, numel(curGridVars));
-[grid{:}] = ndgrid(curGridVars{:});
-grid = cat(1 + numel(curGridVars), grid{:});
-grid = reshape(grid, [], numel(curGridVars));
-
 rng(0);
-curRandn = randn(N, 2);
-curRandperm = reshape(randperm(2 * N), N, 2);
 
-fracs = nan(size(grid, 1), 3);
-pVals = nan(size(grid, 1), 1);
+pairT = table;
+[pairT.areas, pairT.classId] = ...
+    connectEM.Consistency.Simulation.sampleGmm( ...
+        mix, 'numSynapses', 2, 'numConnections', pairCount);
 
-curIds = 1:size(grid, 1);
-if ~isempty(plotIds); curIds = plotIds; end
+%% Two-dimensional analysis
+clear cur*;
 
-for curId = curIds
-    curMix = grid(curId, :);
-    curMix = transpose(reshape(curMix, [], numel(mix)));
-    curMix = array2table(curMix, 'VariableNames', varNames);
-    
-    curEdges = cumsum(curMix.coeff);
-    curEdges = [0; curEdges(:) / curEdges(end)];
-    
-    curSaSdT = table;
-    curSaSdT.gId = reshape(linspace(0, 1, N), [], 1);
-    curSaSdT.gId = discretize(curSaSdT.gId, curEdges);
+% Parameters from connectEM.Connectome.plotSynapseSizeConsistency. The
+% bandwidths are the ones returned by `connectEM.Consistency.densityMap`
+% for all excitatory connections.
+curLimX = [0, 2];
+curLimY = [-1.5, 0.5];
+curScaleY = 'log10';
+curImSize = [256, 256];
+curMethod = 'kde2d';
 
-    curSaSdT.logAsi = curRandn .* curMix.std(curSaSdT.gId);
-    curSaSdT.logAsi = curSaSdT.logAsi + curMix.mean(curSaSdT.gId);
+curPvalThreshs = [0.005]; %#ok
 
-    curSaSdT.asi = 10 .^ curSaSdT.logAsi;
-    curSaSdT.cv = std(curSaSdT.asi, 0, 2) ./ mean(curSaSdT.asi, 2);
+curSaSdT = table;
+curSaSdT.classId = pairT.classId;
+curSaSdT.areas = 10 .^ pairT.areas;
+curSaSdT.x = abs( ...
+    diff(curSaSdT.areas, 1, 2) ...
+    ./ mean(curSaSdT.areas, 2));
+curSaSdT.y = log10(mean(curSaSdT.areas, 2));
 
-    curCtrlT = table;
-    curCtrlT.asi = curSaSdT.asi(curRandperm);
-    curCtrlT.cv = std(curCtrlT.asi, 0, 2) ./ mean(curCtrlT.asi, 2);
-    
-   [~, pVals(curId)] = kstest2( ...
-        curSaSdT.cv, curCtrlT.cv, 'tail', 'larger');
-   [curA, curB, curC] = ...
-        calculateLearnedFraction(curSaSdT.cv, curCtrlT.cv);
-    fracs(curId, :) = [curA, curB, curC];
-    
-    %% Plotting
-    if ~isempty(plotIds)
-        %% CV histogram
-        curBinEdges = linspace(0, 1.5, 31);
+curSaSdT = curSaSdT( ...
+    curLimX(1) <= curSaSdT.x & curSaSdT.x <= curLimX(2) ...
+  & curLimY(1) <= curSaSdT.y & curSaSdT.y <= curLimY(2), :);
 
-        curFig = figure();
-        curAx = axes(curFig); %#ok
-        hold(curAx, 'on');
+curSaSdT.mapIds = [ ...
+    discretize(curSaSdT.y, linspace( ...
+        curLimY(1), curLimY(2), curImSize(1) + 1)), ...
+    discretize(curSaSdT.x, linspace( ...
+        curLimX(1), curLimX(2), curImSize(2) + 1))];
+curSaSdT.mapIdx = sub2ind( ...
+    curImSize, curSaSdT.mapIds(:, 1), curSaSdT.mapIds(:, 2));
 
-        histogram(curAx, ...
-            curSaSdT.cv, 'BinEdges', curBinEdges, ...
-            'DisplayStyle', 'stairs', 'LineWidth', 2);
-        histogram(curAx, ...
-            curCtrlT.cv, 'BinEdges', curBinEdges, ...
-            'DisplayStyle', 'stairs', 'LineWidth', 2);
+% Heatmaps
+curKvPairs = { ...
+    'xLim', curLimX, ...
+    'yLim', curLimY, 'yScale', curScaleY, ...
+    'mapSize', curImSize, 'method', curMethod};
 
-        curFig.Color = 'white';
-        curFig.Position(3:4) = [280, 250];
+[curTrueSaSdMap, curBandWidth] = ...
+    connectEM.Consistency.densityMap( ...
+        curSaSdT.areas, curKvPairs{:});
+curTrueRandMaps = ...
+    connectEM.Consistency.nullDensityMaps( ...
+        curSaSdT.areas, curKvPairs{:}, ...
+        'numMaps', 5000, 'bandWidth', curBandWidth);
 
-        curAx.TickDir = 'out';
-        xlim(curAx, curBinEdges([1, end]));
-        xlabel(curAx, 'Coefficient of variation');
-        ylabel(curAx, 'Occurences');
+% Plotting
+curMax = max(max(curTrueSaSdMap(:)), max(curTrueSaSdMap(:)));
 
-        curTitle = sprintf( ...
-            'Parameter set #%d. %.1f %% learned', ...
-            curId, 100 * fracs(curId, 1));
-        title(curAx, { ...
-            info.filename; info.git_repos{1}.hash; curTitle}, ...
-            'FontWeight', 'normal', 'FontSize', 10);
+curTrueRandMap = mean(curTrueRandMaps, 3);
+curTrueDiffMap = curTrueSaSdMap - curTrueRandMap;
+curMaxDiff = max(abs(curTrueDiffMap(:)));
 
-        %% CV vs. log(avg. ASI size)
-        curLimX = [0, 1.5];
-        curLimY = [-1.5, 0.5];
-        curMapSize = [256, 256];
+curPvalMap = 1 - mean(curTrueRandMaps < curTrueSaSdMap, 3);
 
-        curTicksX = linspace(curLimX(1), curLimX(2), 4);
-        curTicksY = linspace(curLimY(1), curLimY(2), 5);
+curPvalImg = -log10(min( ...
+    1 - mean(curTrueRandMaps < curTrueSaSdMap, 3), ...
+    1 - mean(curTrueRandMaps > curTrueSaSdMap, 3)));
 
-        curKvPairs = { ...
-            'xLim', curLimX, 'yLim', curLimY, ...
-            'method', 'kde2d', 'mapSize', curMapSize};
-       [curSaSdMap, curBw] = ...
-            connectEM.Consistency.densityMap( ...
-                curSaSdT.asi, curKvPairs{:});
-        curCtrlMap = ...
-            connectEM.Consistency.densityMap( ...
-                curCtrlT.asi, curKvPairs{:}, 'bandWidth', curBw);
-        curDiffMap = curSaSdMap - curCtrlMap;
-        curDiffMax = max(abs(curDiffMap(:)));
+% NOTE(amotta): Detect statistically significant regions. Drop tiny
+% regions (with less than 100 pixels or less than 1 % of SASD
+% connections), which are most likely caused by outliers.
+curRegionMask = curPvalMap < curPvalThreshs(end);
+curRegionMask = bwlabel(curRegionMask);
 
-        curFig = figure();
-        curAx = axes(curFig); %#ok
-        curIm = image(curAx, curDiffMap);
-        curIm.CDataMapping = 'scaled';
-        curAx.CLim = [-1, +1] * curDiffMax;
+curRegionProps = regionprops( ...
+    curRegionMask, {'Area', 'Centroid'}); %#ok
+curKeepRegionIds = find([curRegionProps.Area] >= 100);
 
-        colormap(curAx, 'jet');
-        curBar = colorbar('peer', curAx);
+curKeepRegionIds = curKeepRegionIds(arrayfun( ...
+    @(id) sum(curTrueSaSdMap(curRegionMask(:) == id)), ...
+    curKeepRegionIds) > 0.01);
 
-        axis(curAx, 'square');
-        curFig.Color = 'white';
-        curAx.YDir = 'normal';
-        curAx.TickDir = 'out';
-        curAx.Box = 'off';
+curRegionProps = curRegionProps(curKeepRegionIds);
+[~, curRegionMask] = ismember(curRegionMask, curKeepRegionIds);
+curSaSdT.regionId = curRegionMask(curSaSdT.mapIdx);
 
-        curAx.XLim = [1, curMapSize(2)];
-        curAx.XTick = 1 + round((curMapSize(2) - 1) * ...
-            (curTicksX - curLimX(1)) / diff(curLimX));
-        curAx.XTickLabel = arrayfun( ...
-            @num2str, curTicksX, 'UniformOutput', false);
+curFig = figure();
 
-        curAx.YLim = [1, curMapSize(1)];
-        curAx.YTick = 1 + round((curMapSize(1) - 1) * ...
-            (curTicksY - curLimY(1)) / diff(curLimY));
-        curAx.YTickLabel = arrayfun( ...
-            @num2str, curTicksY, 'UniformOutput', false);
+curAx = subplot(2, 3, 1);
+imagesc(curAx, curTrueSaSdMap);
+caxis(curAx, [0, curMax]);
+colormap(curAx, jet(256));
 
-        xlabel(curAx, 'Coefficient of variation');
-        ylabel(curAx, 'log_{10}(Average ASI area [µm²])');
+curAx = subplot(2, 3, 2);
+imagesc(curAx, curTrueRandMap);
+caxis(curAx, [0, curMax]);
+colormap(curAx, jet(256));
 
-        title(curAx, { ...
-            info.filename; info.git_repos{1}.hash; ...
-            sprintf('Parameter set #%d', curId)}, ...
-            'FontWeight', 'normal', 'FontSize', 10);
+curAx = subplot(2, 3, 4);
+imagesc(curAx, curPvalImg);
+colormap(curAx, jet(256));
+
+hold(curAx, 'on');
+for curPvalThresh = curPvalThreshs
+    contour(curAx, ...
+        curRegionMask & ...
+        curPvalMap < curPvalThresh, ...
+        true, 'LineColor', 'black');
+end
+
+for curRegionId = 1:numel(curRegionProps)
+    curPos = curRegionProps(curRegionId).Centroid;
+
+    text(curAx, ...
+        curPos(1), curPos(2), num2str(curRegionId), ...
+        'Color', 'white', 'FontWeight', 'bold');
+end
+
+curTitle = cell(numel(curRegionProps), 1);
+for curRegionId = 1:numel(curRegionProps)
+    curFracs = nan(numel(curPvalThreshs), 2);
+    for curPvalIdx = 1:numel(curPvalThreshs)
+        curPvalThresh = curPvalThreshs(curPvalIdx);
+
+        curMask = curRegionMask == curRegionId;
+        curMask = curMask & (curPvalMap < curPvalThresh);
+
+        curFracs(curPvalIdx, 1) = sum(curTrueSaSdMap(curMask));
+        curFracs(curPvalIdx, 2) = sum(curTrueRandMap(curMask));
     end
+
+    curTitle{curRegionId} = sprintf( ...
+        'Region %d: %s', curRegionId, strjoin(arrayfun( ...
+            @(v) num2str(v, '%.1f%%'), 100 * curFracs(:, 1), ...
+            'UniformOutput', false), ', '));
 end
 
-%% Plot "best" mix
-clear cur*;
-curGridVars = cellfun(@numel, struct2cell(mixGrid));
-curGridVars = reshape(curGridVars, numel(varNames), numel(mix));
+curTitle = [{'Significance regions'}; curTitle];
+title(curAx, curTitle, 'FontWeight', 'normal', 'FontSize', 10);
 
-[curVarIds, curMixIds] = find(curGridVars > 1);
-curDims = arrayfun(@(a, b) curGridVars(a, b), curVarIds, curMixIds);
-assert(numel(curDims) == 2);
+curAx = subplot(2, 3, 5);
+imagesc(curAx, curTrueSaSdMap - curTrueRandMap);
+caxis(curAx, [-1, +1] * curMaxDiff);
+colormap(curAx, jet(256));
 
-curPlots = struct;
-curPlots(1).title = '-log10(p-value)';
-curPlots(1).data = -log10(pVals);
-curPlots(2).title = 'Learned fraction';
-curPlots(2).data = fracs(:, 1);
+curAx = subplot(2, 3, 6);
+hold(curAx, 'on');
 
-for curPlot = curPlots
-    curIm = reshape(curPlot.data, curDims(1), curDims(2));
-
-    curFig = figure();
-    curAx = axes(curFig); %#ok
-    imagesc(curAx, curIm);
-    colorbar('peer', curAx);
-    
-    xlabel(curAx, sprintf( ...
-        '%s of %s', varNames{curVarIds(2)}, mixNames{curMixIds(2)}));
-    curAx.XTick = 1 + linspace(0, size(curIm, 2) - 1, 4);
-    curAx.XTickLabel = arrayfun( ...
-        @(id) num2str(feval(@(v) v(id), ...
-            mixGrid(curMixIds(2)).(varNames{curVarIds(2)}))), ...
-        curAx.XTick, 'UniformOutput', false);
-    
-    ylabel(curAx, sprintf( ...
-        '%s of %s', varNames{curVarIds(1)}, mixNames{curMixIds(1)}));
-    curAx.YTick = 1 + linspace(0, size(curIm, 1) - 1, 4);
-    curAx.YTickLabel = arrayfun( ...
-        @(id) num2str(feval(@(v) v(id), ...
-            mixGrid(curMixIds(1)).(varNames{curVarIds(1)}))), ...
-        curAx.YTick, 'UniformOutput', false);
-    
-    axis(curAx, 'square');
-    curAx.YDir = 'normal';
-    
-    curFig.Position(3:4) = [280, 220];
-    connectEM.Figure.config(curFig, info);
+for curPvalThresh = curPvalThreshs
+    contour(curAx, ...
+        curRegionMask & ...
+        curPvalMap < curPvalThresh, ...
+        true, 'LineColor', 'black');
 end
 
-%% Plot "best" mixture
-clear cur*;
+for curRegionId = 1:numel(curRegionProps)
+    curPos = curRegionProps(curRegionId).Centroid;
 
-curMinId = abs(fracs(:, 1) - learnedFracs(1));
-[~, curMinId] = min(curMinId);
-
-curMix = grid(curMinId, :);
-curMix = transpose(reshape(curMix, [], numel(mix)));
-curMix = array2table(curMix, 'VariableNames', varNames);
-curMix.weight = curMix.coeff / sum(curMix.coeff);
-
-curLimits = [-2, 0.5];
-curX = linspace(curLimits(1), curLimits(2), 101);
-curY = nan(height(curMix), numel(curX));
-
-curLegends = cell(1 + numel(mix), 1);
-curLegends{end} = 'Mixture of Gaussians';
-
-for curId = 1:height(curMix)
-    curY(curId, :) = curMix.weight(curId) * ...
-        normpdf(curX, curMix.mean(curId), curMix.std(curId));
-    curLegends{curId} = sprintf( ...
-        '%s (%.1f %% of mix)', ...
-        mixNames{curId}, 100 * curMix.weight(curId));
+    text(curAx, ...
+        curPos(1), curPos(2), num2str(curRegionId), ...
+        'Color', 'white', 'FontWeight', 'bold');
 end
 
-curConfigs = struct;
-curConfigs(1).transform = @(v) v;
-curConfigs(1).xlabel = 'log10(ASI area [µm²])';
-curConfigs(1).xlim = curLimits([1, end]);
+[~, curMinGaussIds] = sort([mix.coeff], 'ascend');
+curMinGaussIds = curMinGaussIds(1:(end - 1));
 
-curConfigs(2).transform = @(v) 10 .^ v;
-curConfigs(2).xlabel = 'ASI area [µm²]';
-curConfigs(2).xlim = [0, 1.5];
-
-for curConfig = curConfigs
-    curFig = figure();
-    curAx = axes(curFig); %#ok
-    hold(curAx, 'on');
+for curIdx = 1:numel(curMinGaussIds)
+    curColor = get(groot, 'defaultAxesColorOrder');
+    curColor = curColor(curIdx, :);
     
-    plot(curAx, curConfig.transform(curX), curY, 'LineWidth', 2);
-    plot(curAx, curConfig.transform(curX), sum(curY, 1), 'LineWidth', 2);
-
-    curLeg = legend(curAx, curLegends);
-    curLeg.Location = 'EastOutside';
-
-    xlim(curAx, curConfig.xlim);
-    xlabel(curAx, curConfig.xlabel);
-    ylabel(curAx, 'Probability density');
-
-    title(curAx, { ...
-        info.filename; info.git_repos{1}.hash; ...
-        sprintf('Parameter set #%d', curMinId)}, ...
-        'FontWeight', 'normal', 'FontSize', 10);
+    curGaussId = curMinGaussIds(curIdx);
+    curMask = curSaSdT.classId == curGaussId;
     
-    curFig.Position(3:4) = [460, 220];
-    connectEM.Figure.config(curFig);
+    scatter(curAx, ...
+        curSaSdT.mapIds(curMask, 2), ...
+        curSaSdT.mapIds(curMask, 1), ...
+        '.', 'MarkerEdgeColor', curColor);
 end
 
-%% Utilities
-function [learnedFrac, unlearnedFrac, cvThresh] = ...
-        calculateLearnedFraction(pairCvs, ctrlCvs)
-    t = table;
-    t.cv = [pairCvs; ctrlCvs];
-    t.pdf = [ ...
-        +repelem(1 / numel(pairCvs), numel(pairCvs), 1); ...
-        -repelem(1 / numel(ctrlCvs), numel(ctrlCvs), 1)];
-    t = sortrows(t, 'cv', 'ascend');
-    t.cdf = cumsum(t.pdf);
-    
-   [~, cvThreshIdx] = max(t.cdf);
-    cvThresh = t.cv(cvThreshIdx);
-    unlearnedFrac = mean(pairCvs > cvThresh);
-    learnedFrac = t.cdf(cvThreshIdx);
-end
+curAxes = findobj(curFig, 'Type', 'Axes');
+
+set(curAxes, ...
+    'Box', 'off', ...
+    'TickDir', 'out', ...
+    'YDir', 'normal', ...
+    'YLim', [1, curImSize(2)], ...
+    'XLim', [1, curImSize(1)], ...
+    'PlotBoxAspectRatio', [1, 1, 1], ...
+    'DataAspectRatioMode', 'auto');
+
+connectEM.Figure.config(curFig, info);
+curFig.Position(3:4) = [1350, 850];
