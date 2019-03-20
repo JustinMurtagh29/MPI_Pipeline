@@ -1,6 +1,9 @@
 # Matlab Autosaves Windows
 *.asv
 
+# Python pickle files
+*.pkl
+
 # Vim swap and undo files
 *.swp
 *.un
