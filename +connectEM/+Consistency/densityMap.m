@@ -2,27 +2,42 @@ function [map, bw] = densityMap(asiAreaPairs, varargin)
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     opts = struct;
-    opts.xLim = [0, 2];
+    opts.xAxis = 'cv';
+    opts.xLim = [];
     opts.yScale = 'log10';
-    opts.yLim = [-1.5, 0.5];
+    opts.yLim = [];
     opts.mapSize = [301, 301];
     opts.bandWidth = [];
     opts.method = 'ksdensity';
     
     opts = Util.modifyStruct(opts, varargin{:});
+    
+    opts.xAxis = lower(opts.xAxis);
     opts.yScale = lower(opts.yScale);
     opts.method = lower(opts.method);
+    
+    switch opts.xAxis
+        case 'cv'
+            x = std(asiAreaPairs, 0, 2) ./ mean(asiAreaPairs, 2);
+            if isempty(opts.xLim); opts.xLim = [0, 1.5]; end
+        case 'reldiff'
+            x = abs(diff(asiAreaPairs, 1, 2)) ./ mean(asiAreaPairs, 2);
+            if isempty(opts.xLim); opts.xLim = [0, 2]; end
+        otherwise
+            error('Invalid X axis "%s"', opts.xAxis);
+    end
     
     switch opts.yScale
         case 'linear'
             y = mean(asiAreaPairs, 2);
+            if isempty(opts.yLim); opts.yLim = [0, 1]; end
         case 'log10'
             y = log10(mean(asiAreaPairs, 2));
+            if isempty(opts.yLim); opts.yLim = [-1.5, 0.5]; end
         otherwise
             error('Invalid Y scale "%s"', opts.yScale);
     end
     
-    x = abs(diff(asiAreaPairs, 1, 2)) ./ mean(asiAreaPairs, 2);
     map = horzcat(y, x);
     
     mask = ...

@@ -176,7 +176,7 @@ clear cur*;
 
 curBinEdges = linspace(-1.5, 0.5, 21);
 
-for curIdx = 1%:numel(plotConfigs)
+for curIdx = 1:numel(plotConfigs)
     curPlotConfig = plotConfigs(curIdx);
     
     curSaSdConfig = ...
@@ -242,16 +242,16 @@ for curIdx = 1:numel(plotConfigs)
 
     % Quantitative reporting
     fprintf('**%s**\n', curPlotConfig.title);
-    fprintf('Relative size difference between pairs (mean ± std)\n');
+    fprintf('CV between pairs (mean ± std)\n');
     
     for curPairConfig = curPairConfigs
-        curRelDiff = asiT.area(curPairConfig.synIdPairs);
-        curRelDiff = abs(diff(curRelDiff, 1, 2)) ./ mean(curRelDiff, 2);
+        curCvs = asiT.area(curPairConfig.synIdPairs);
+        curCvs = std(curCvs, 0, 2) ./ mean(curCvs, 2);
 
         fprintf( ...
             '* %s: %f ± %f\n', ...
             curPairConfig.title, ...
-            mean(curRelDiff), std(curRelDiff));
+            mean(curCvs), std(curCvs));
     end
     
     fprintf('\n');
@@ -260,7 +260,6 @@ for curIdx = 1:numel(plotConfigs)
     fprintf('* Learned fraction: %.1f %%\n', 100 * curLearnedFrac);
     fprintf('* Possibly learned fraction: %.1f %%\n', 100 * curOpenFrac);
     fprintf('* Unlearned fraction: %.1f %%\n', 100 * curUnlearnedFrac);
-    fprintf('* Rel. diff. threshold: %.2f\n', sqrt(2) * curCvThresh);
     fprintf('* CV threshold: %.2f\n', curCvThresh);
     fprintf('\n');
 
@@ -325,7 +324,8 @@ connectEM.Figure.config(curFig, info);
 clear cur*;
 
 % Density difference map
-curScaleY = 'linear';
+curAxisX = 'cv';
+curScaleY = 'log10';
 curImSize = [256, 256];
 curMethod = 'kde2d';
 
@@ -334,29 +334,43 @@ curMethod = 'kde2d';
 % located.
 curMinPrctiles = 10;
 
+switch lower(curAxisX)
+    case 'cv'
+        curLimX = [0, 1.5];
+        curTicksX = linspace(0, 1.5, 4);
+        curFuncX = @(a) std(a, 0, 2) ./ mean(a, 2);
+        curLabelX = 'Coefficient of variation';
+    case 'reldiff'
+        curLimX = [0, 2];
+        curTicksX = linspace(0, 2, 5);
+        curFuncX = @(a) abs(diff(a, 1, 2)) ./ mean(a, 2);
+        curLabelX = 'Relative difference';
+    otherwise
+        error('Invalid X axis "%s"', curAxisX);
+end
+
 switch lower(curScaleY)
     case 'linear'
         curLimY = [0, 1];
+        curTicksY = linspace(0, 1, 5);
         curFuncY = @(areas) mean(areas, 2);
         curLabelY = 'Average ASI area [µm²]';
     case 'log10'
         curLimY = [-1.5, 0.5];
+        curTicksY = linspace(-1.5, 0.5, 5);
         curFuncY = @(areas) log10(mean(areas, 2));
         curLabelY = 'log10(Average ASI area [µm²])';
     otherwise
         error('Invalid Y scale "%s"', curScaleY);
 end
 
-curLimX = [0, 2];
-curTicksX = linspace(curLimX(1), curLimX(2), 5);
-curTicksY = linspace(curLimY(1), curLimY(2), 5);
-
 % NOTE(amotta): The `curMinMap` and `curMaxMap` matrices have the same size
 % as the heatmaps of the CV × log10(avg. ASI) space. They contain the ASI
 % areas of the smaller and larger synapses, respectively.
 curLog10Avg = linspace(curLimY(1), curLimY(2), curImSize(1));
 if strcmpi(curScaleY, 'linear'); curLog10Avg = log10(curLog10Avg); end
-curCv = linspace(curLimX(1), curLimX(2), curImSize(2)) / sqrt(2);
+curCv = linspace(curLimX(1), curLimX(2), curImSize(2));
+if strcmpi(curAxisX, 'reldiff'); curCv = curCv / sqrt(2); end
 curCv(curCv >= sqrt(2)) = nan;
 
 curMinMap = (10 .^ curLog10Avg(:)) .* (1 - curCv / sqrt(2));
@@ -377,9 +391,7 @@ for curConfig = reshape(plotConfigs, 1, [])
     curSaSdT.targetClass = asiT.targetClass(curSaSdT.synIds(:, 1));
 
     curSaSdT.areas = asiT.area(curSaSdT.synIds);
-    curSaSdT.x = abs( ...
-        diff(curSaSdT.areas, 1, 2) ...
-        ./ mean(curSaSdT.areas, 2));
+    curSaSdT.x = curFuncX(curSaSdT.areas);
     curSaSdT.y = curFuncY(curSaSdT.areas);
     
     curSaSdT = curSaSdT( ...
@@ -400,7 +412,7 @@ for curConfig = reshape(plotConfigs, 1, [])
     
     for curCtrlConfig = curCtrlConfigs
         curKvPairs = { ...
-            'xLim', curLimX, ...
+            'xLim', curLimX, 'xAxis', curAxisX, ...
             'yLim', curLimY, 'yScale', curScaleY, ...
             'mapSize', curImSize, 'method', curMethod};
         
@@ -575,8 +587,7 @@ for curConfig = reshape(plotConfigs, 1, [])
             'PlotBoxAspectRatio', [1, 1, 1], ...
             'DataAspectRatioMode', 'auto');
         
-        arrayfun(@(ax) xlabel(ax, ...
-            'Relative ASI area difference'), curAxes);
+        arrayfun(@(ax) xlabel(ax, curLabelX), curAxes);
         arrayfun(@(ax) ylabel(ax, curLabelY), curAxes);
 
         annotation( ...
