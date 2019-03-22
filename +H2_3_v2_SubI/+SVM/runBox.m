@@ -1,4 +1,4 @@
-function runBox(p, bbox,saveFolder, border, options, cnn17, cnn17_2, cnn17_4})
+function runBox(p, bbox,saveFolder, border, options, cnn17, cnn17_2, cnn17_4)
 % make svm predictions
 %
 % Author: Sahil Loomba <sahil.loomba@brain.mpg.de>
