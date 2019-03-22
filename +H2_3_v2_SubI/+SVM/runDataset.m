@@ -9,6 +9,7 @@ assert(isequal(margin, [256; 256; 128]));
 info = Util.runInfo();
 Util.showRunInfo(info);
 
+Util.log('Loading CNNs...')
 % predictions using these trained CNNs
 m = load('/gaba/u/bstaffle/data/SyConn/cnn17_enn.mat');
 cnn17 = m.cnet;
