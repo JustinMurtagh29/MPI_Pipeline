@@ -3,7 +3,7 @@ rootDir = '/tmpscratch/sahilloo/data/H2_3_v2_U1_SubI/pipelineRun_mr2e_wsmrnet/';
 load(fullfile(rootDir, 'allParameter.mat'));
 
 % init wkw dataset, if needed
-segSVM.root = '/tmpscratch/sahilloo/data/H2_3_v2_U1_SubI/pipelineRun_mr2e_wsmrnet/SVMpredictions/1/';
+segSVM.root = '/tmpscratch/sahilloo/data/H2_3_v2_U1_SubI/pipelineRun_mr2e_wsmrnet/SVMpredictionsWkw/1/';
 segSVM.backend = 'wkwrap';
 if ~exist(segSVM.root,'dir')
     mkdir(segSVM.root);

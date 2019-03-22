@@ -38,4 +38,13 @@ end
 Util.log('make avi file')
 Visualization.movieMakerSeg(raw,seg,fullfile(rootDir,'seg_svm.avi'))
 
+% write to WKW
+segSVM.root = fullfile(rootDir,'SVMPredictionsWkwTest/1/');
+segSVM.backend = 'wkwrap';
+if ~exist(segSVM.root,'dir')
+    mkdir(segSVM.root);
+end
+
+wkwInit('new',segSVM.root,32, 32, 'uint32', 1);
+saveSegDataGlobal(segSVM, double(bbox(:,1)'), seg); 
 
