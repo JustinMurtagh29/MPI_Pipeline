@@ -21,9 +21,18 @@ raw = Seg.IO.loadRaw(p, bbox);
 
 % obtain seg
 t = 0.5;
-minSize = 3000;
+minArea = 3000;
 nhood = [5,5,3];
-seg = SVM.getSVMSegmentation(predOut, t, minSize, nhood);
+seg = SVM.getSVMSegmentation(predOut, t, minArea, nhood);
+
+% further delete small components
+for i = 1:3
+    tmp = seg == i;
+    tmp = regionprops(tmp > 0, 'Area', 'PixelIdxList');
+    tmp([tmp.Area] >= minArea) = [];
+    idx = cell2mat({tmp.PixelIdxList}');
+    seg(idx) = 0;
+end
 
 % make avi file
 Visualization.movieMakerSeg(raw,seg,fullfile(rootDir,'seg_svm.avi'))
