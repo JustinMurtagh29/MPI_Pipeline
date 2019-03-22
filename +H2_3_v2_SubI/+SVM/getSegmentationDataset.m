@@ -1,4 +1,4 @@
-% generate segmentaiton from SVM predictions on the whole dataset
+% generate segmentation from SVM predictions on the whole dataset
 rootDir = '/tmpscratch/sahilloo/data/H2_3_v2_U1_SubI/pipelineRun_mr2e_wsmrnet/';
 load(fullfile(rootDir, 'allParameter.mat'));
 
