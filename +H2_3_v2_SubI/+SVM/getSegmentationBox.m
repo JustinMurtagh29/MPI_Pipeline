@@ -11,8 +11,8 @@ m2 = m.pred17_4; % use for vesicles
 bbox_wk = Util.convertMatlabToWKBbox(bbox); 
 
 pred = zeros([bbox_wk(4:end), 3]);
-pred(:,:,:,2) = m2.pred{i}(:,:,:,3);
-pred(:,:,:,3) = m1.pred{i}(:,:,:,4);
+pred(:,:,:,2) = m2.pred(:,:,:,3);
+pred(:,:,:,3) = m1.pred(:,:,:,4);
 minArea = 3000;
 [seg, synCom, vcCom, miCom] = ...
     Paper.SynEM.MethComp.preprocessSVMForAnnotation(pred, 0.75, minArea, ...
