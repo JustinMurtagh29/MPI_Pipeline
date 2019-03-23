@@ -4,18 +4,19 @@ function [seg, synCom, vcCom, miCom] = getSegmentationBox(p,segSVM, i,j,k)
 %       : Sahil Loomba <sahil.loomba@brain.mpg.de>
 
 m = load(fullfile(p.local(i,j,k).saveFolder, 'svmPredictions.mat'),...
-             pred17, pred17_2, pred17_4, bbox);
-m1 = m.pred17_2; % use for mitos
-m2 = m.pred17_4; % use for vesicles
+             'pred17', 'pred17_2', 'pred17_4', 'bbox');
+bbox = m.bbox;
+m1_pred = m.pred17_2; % use for mitos
+m2_pred = m.pred17_4; % use for vesicles
 
 bbox_wk = Util.convertMatlabToWKBbox(bbox); 
 
-pred = zeros([bbox_wk(4:end), 3]);
-pred(:,:,:,2) = m2.pred(:,:,:,3);
-pred(:,:,:,3) = m1.pred(:,:,:,4);
+predOut = zeros([bbox_wk(4:end), 3]);
+predOut(:,:,:,2) = m2_pred(:,:,:,3);
+predOut(:,:,:,3) = m1_pred(:,:,:,4);
 minArea = 3000;
 [seg, synCom, vcCom, miCom] = ...
-    Paper.SynEM.MethComp.preprocessSVMForAnnotation(pred, 0.75, minArea, ...
+    Paper.SynEM.MethComp.preprocessSVMForAnnotation(predOut, 0.75, minArea, ...
     [5, 5, 3]);
 
 % further delete small components
