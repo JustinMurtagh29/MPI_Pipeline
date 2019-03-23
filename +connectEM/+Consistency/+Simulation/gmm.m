@@ -6,12 +6,18 @@ clear;
 mix = struct('mean', {}, 'std', {}, 'coeff', {});
 
 i = 1;
-mix(i).mean = -1.00; mix(i).std = 0.2; mix(i).coeff = 0.2; i = i + 1; %#ok
+mix(i).mean = -1.00; mix(i).std = 0.2; mix(i).coeff = 0.1; i = i + 1; %#ok
 mix(i).mean = -0.70; mix(i).std = 0.3; mix(i).coeff = 0.8; i = i + 1; %#ok
 mix(i).mean = -0.25; mix(i).std = 0.2; mix(i).coeff = 0.1; i = i + 1; %#ok
 clear i;
 
 pairCount = 5290;
+
+mixTitle = arrayfun( ...
+    @(m) sprintf( ...
+        '%g×N(%g, %g)', m.coeff, m.mean, m.std), ...
+    mix, 'UniformOutput', false);
+mixTitle = strjoin(mixTitle, ' + ');
 
 info = Util.runInfo();
 Util.showRunInfo(info);
@@ -65,8 +71,12 @@ set(curAxes, ...
 xlabel(curAxes(1), 'log10(ASI area [µm²])');
 ylabel(curAxes(1), 'log10(ASI area of joint partner [µm²]');
 
+annotation( ...
+    curFig, 'textbox', [0, 0.9, 1, 0.1], 'String', mixTitle, ...
+    'EdgeColor', 'none', 'HorizontalAlignment', 'center');
+
 connectEM.Figure.config(curFig, info);
-curFig.Position(3:4) = [740, 370];
+curFig.Position(3:4) = [740, 410];
 
 %% Generate synapse pairs
 clear cur*;
@@ -261,14 +271,8 @@ set(curAxes, ...
     'PlotBoxAspectRatio', [1, 1, 1], ...
     'DataAspectRatioMode', 'auto');
 
-curTitle = arrayfun( ...
-    @(m) sprintf( ...
-        '%g×N(%g, %g)', m.coeff, m.mean, m.std), ...
-    mix, 'UniformOutput', false);
-curTitle = strjoin(curTitle, ' + ');
-
 curTitle = annotation( ...
-    curFig, 'textbox', [0, 0.9, 1, 0.1], 'String', curTitle, ...
+    curFig, 'textbox', [0, 0.9, 1, 0.1], 'String', mixTitle, ...
     'EdgeColor', 'none', 'HorizontalAlignment', 'center');
 connectEM.Figure.config(curFig, info);
 curFig.Position(3:4) = [1350, 850];
