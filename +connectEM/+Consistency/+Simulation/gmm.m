@@ -6,7 +6,7 @@ clear;
 mix = struct('mean', {}, 'std', {}, 'coeff', {});
 
 i = 1;
-mix(i).mean = -1.00; mix(i).std = 0.2; mix(i).coeff = 0.1; i = i + 1; %#ok
+mix(i).mean = -1.00; mix(i).std = 0.2; mix(i).coeff = 0.2; i = i + 1; %#ok
 mix(i).mean = -0.70; mix(i).std = 0.3; mix(i).coeff = 0.8; i = i + 1; %#ok
 mix(i).mean = -0.25; mix(i).std = 0.2; mix(i).coeff = 0.1; i = i + 1; %#ok
 clear i;
@@ -15,6 +15,53 @@ pairCount = 5290;
 
 info = Util.runInfo();
 Util.showRunInfo(info);
+
+%% Analysis of conditional size distribution
+curXVec = linspace(-1.5, 0.5, 101);
+curTickIds = 1:25:numel(curXVec);
+
+[curCondMap, ~, curSizeDist] = ...
+    connectEM.Consistency.Simulation.gmmConditional(mix, 'xVec', curXVec);
+
+curCondMapRel = curCondMap ./ sum(curCondMap, 1);
+curCondMapRelDiff = curCondMapRel - (curSizeDist(:) / sum(curSizeDist(:)));
+
+curFig = figure();
+curAx = subplot(1, 2, 1);
+hold(curAx, 'on');
+
+imagesc(curAx, curCondMap);
+caxis(curAx, [0, max(curCondMap(:))]);
+
+plot(curAx, ...
+   [1, size(curCondMap, 2)], [1, size(curCondMap, 1)], ...
+    '--', 'Color', 'white', 'LineWidth', 2);
+title(curAx, 'Conditional size distribution');
+
+curAx = subplot(1, 2, 2);
+imagesc(curAx, curCondMapRelDiff);
+caxis(curAx, [-1, + 1] * max(abs(curCondMapRelDiff(:))));
+title(curAx, 'Difference to independent size distribution');
+
+curAxes = flip(findobj(curFig, 'Type', 'Axes'));
+arrayfun(@(ax) axis(ax, 'square'), curAxes);
+set(curAxes, 'YDir', 'normal');
+
+set(curAxes, ...
+    'XLim', [1, size(curCondMap, 2)], ...
+    'XTick', curTickIds, 'XTickLabel', arrayfun( ...
+    @num2str, curXVec(curTickIds), 'UniformOutput', false));
+
+set(curAxes, ...
+    'YLim', [1, size(curCondMap, 1)], ...
+    {'YTick'}, get(curAxes, {'XTick'}), ...
+    {'YTickLabel'}, get(curAxes, {'XTickLabel'}));
+
+xlabel(curAxes(1), 'log10(ASI area [µm²])');
+ylabel(curAxes(1), 'log10(ASI area of joint partner [µm²]');
+
+connectEM.Figure.config(curFig, info);
+curFig.Position(3:4) = [740, 370];
 
 %% Generate synapse pairs
 clear cur*;
