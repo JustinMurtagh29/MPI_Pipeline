@@ -32,10 +32,6 @@ hold(curAx, 'on');
 
 imagesc(curAx, curCondMap);
 caxis(curAx, [0, max(curCondMap(:))]);
-
-plot(curAx, ...
-   [1, size(curCondMap, 2)], [1, size(curCondMap, 1)], ...
-    '--', 'Color', 'white', 'LineWidth', 2);
 title(curAx, 'Conditional size distribution');
 
 curAx = subplot(1, 2, 2);
@@ -44,6 +40,15 @@ caxis(curAx, [-1, + 1] * max(abs(curCondMapRelDiff(:))));
 title(curAx, 'Difference to independent size distribution');
 
 curAxes = flip(findobj(curFig, 'Type', 'Axes'));
+    
+for curAx = reshape(curAxes, 1, [])
+    hold(curAx, 'on');
+    plot(curAx, ...
+        [1, size(curCondMap, 2)], ...
+        [1, size(curCondMap, 1)], ...
+        '--', 'Color', 'white', 'LineWidth', 2);
+end
+
 arrayfun(@(ax) axis(ax, 'square'), curAxes);
 set(curAxes, 'YDir', 'normal');
 
