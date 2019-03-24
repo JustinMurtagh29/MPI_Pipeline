@@ -54,7 +54,9 @@ assert(isequal(rawBorderIds, classBorderIds));
 [~, curRowIds] = ismember(rawBorderIds, gt.borderId);
 gt = gt(curRowIds, :);
 gtHuman = gt;
-clear gt
+rawFeatsHuman = rawFeats;
+classFeatsHuman = classFeats;
+clear gt rawFeats classFeats
 
 %% load data from macaque dataset
 rootDir = '/tmpscratch/sahilloo/data/Mk1_F6_JS_SubI_v1/pipelineRun_mr2e_wsmrnet/';
@@ -93,11 +95,17 @@ assert(isequal(rawBorderIds, classBorderIds));
 
 [~, curRowIds] = ismember(rawBorderIds, gt.borderId);
 gt = gt(curRowIds, :);
-gtMk = gt;
-clear gt
+gtMk = gt; 
+rawFeatsMk = rawFeats;
+classFeatsMk = classFeats;
+clear gt rawFeats classFeats
 
 %% combine ground truth from human and macaque
 gt = cat(1, gtHuman, gtMk);
+rawFeats = cat(1, rawFeatsHuman, rawFeatsMk);
+classFeats = cat(1,classFeatsHuman, classFeatsMk);
+assert(isequal(size(gt,1), size(rawFeats,1)))
+assert(isequal(size(gt,1), size(classFeats,1)))
 
 %% divide into training and test set
 rng(0);
