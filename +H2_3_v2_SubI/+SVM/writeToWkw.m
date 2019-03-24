@@ -18,8 +18,8 @@ wkwInit('new',segSVM.root,32, 32, 'uint32', 1);
 
 Util.log('load matlab svm predictions')
 idxDebug = [22    44    66    88   110   132   154   176   198   220];
-for i=1:numel(idxDebug)
-    m = load(fullfile(p.local(idxDebug(i)).saveFolder, 'svmPredictions.mat'),...
+for index=1:numel(idxDebug)
+    m = load(fullfile(p.local(idxDebug(index)).saveFolder, 'svmPredictions.mat'),...
                  'pred17', 'pred17_2', 'pred17_4', 'bbox');
     bbox = m.bbox;
     m1_pred = m.pred17_2; % use for mitos
@@ -50,7 +50,7 @@ for i=1:numel(idxDebug)
     end
     
     %Util.log('make avi file')
-    Visualization.movieMakerSeg(raw,seg,fullfile(rootDir,['seg_svm_cnn17_' num2str(i) '.avi']))
+    Visualization.movieMakerSeg(raw,seg,fullfile(rootDir,['seg_svm_cnn17_' num2str(index) '.avi']))
     
     saveSegDataGlobal(segSVM, double(bbox(:,1)'), seg); 
 end
