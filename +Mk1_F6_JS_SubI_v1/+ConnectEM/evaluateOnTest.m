@@ -3,7 +3,7 @@
 % Modified by
 %   Sahil Loomba <sahil.loomba@brain.mpg.de>
 clear;
-methodUsed = 'LogitBoost'; %'AdaBoostM1'; % 'LogitBoost';
+methodUsed ='RUSBoost'; %'AdaBoostM1'; % 'LogitBoost';
 %% HACKHACKHACK
 % NOTE(amotta): This is a huge mess. The training data is located in my
 % repository, SynEM is from Benedikt's repository, and the SynEM classifier
@@ -155,7 +155,7 @@ curLegs.Box = 'off';
 title(curAx, ...
     {info.filename; info.git_repos{1}.hash}, ...
     'FontWeight', 'normal', 'FontSize', 10);
-
+savefig(fullfile(param.saveFolder,'connectEM',['precrec_test_' methodUsed '.fig']))
 saveas(gcf,fullfile(param.saveFolder,'connectEM',['precrec_test_' methodUsed '.png']))
 
 %{

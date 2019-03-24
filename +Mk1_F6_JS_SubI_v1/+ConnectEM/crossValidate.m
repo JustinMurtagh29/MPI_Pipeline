@@ -171,5 +171,5 @@ curLegs.Box = 'off';
 title(curAx, ...
     {info.filename; info.git_repos{1}.hash}, ...
     'FontWeight', 'normal', 'FontSize', 10);
-
+savefig(fullfile(param.saveFolder,'connectEM','precrec_3boxes.fig'))
 saveas(gcf,fullfile(param.saveFolder,'connectEM','precrec_3boxes.png'))
