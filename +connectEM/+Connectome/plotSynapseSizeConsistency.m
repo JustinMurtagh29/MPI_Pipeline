@@ -332,66 +332,74 @@ curTickIds = linspace(curLog10Lims(1), curLog10Lims(2), curImSize);
     curTickIds(:), curTickLabels(:), ...
     'seuclidean', 'Smallest', 1);
 
-for curConfig = reshape(plotConfigs(1), 1, [])
-    curPairConfig = connectEM.Consistency.buildPairConfigs(asiT, curConfig);
-    curPairConfig = curPairConfig(1);
+for curConfig = plotConfigs(1, :)
+    curPairConfigs = ...
+        connectEM.Consistency.buildPairConfigs(asiT, curConfig);
     
-    curPairAreas = asiT.area(curPairConfig.synIdPairs);
-    curPairAreas = cat(1, curPairAreas, flip(curPairAreas, 2));
-    
-    curLog10PairAreas = log10(curPairAreas);
-    curLog10PairAreas = curLog10PairAreas(all( ...
-        curLog10Lims(1) < curLog10PairAreas ...
-      & curLog10PairAreas < curLog10Lims(2), 2), :);
-    
-   [~, curCondMap] = connectEM.Libs.kde2d( ...
-        curLog10PairAreas, curImSize, ...
-        repelem(curLog10Lims(1), 2), ...
-        repelem(curLog10Lims(2), 2));
-    
-    curMargDist = sum(curCondMap, 1);
-    curCondMap = curCondMap ./ curMargDist;
-    curCondDiffMap = curCondMap - (curMargDist(:) / sum(curMargDist(:)));
-    
-    curFig = figure();
-    curAx = subplot(1, 2, 1);
-    
-    imagesc(curAx, curCondMap);
-    caxis(curAx, [0, 0.01]);
-    title(curAx, 'Conditional size distribution');
-    
-    curAx = subplot(1, 2, 2);
-    imagesc(curAx, curCondDiffMap);
-    caxis(curAx, [-1, +1] * 0.0025);
-    title(curAx, 'Difference to independent size distribution');
-    
-    curAxes = flip(findobj(curFig, 'Type', 'Axes'));
-    
-    for curAx = reshape(curAxes, 1, [])
-        hold(curAx, 'on');
-        plot(curAx, ...
-            [1, curImSize], [1, curImSize], ...
-            '--', 'Color', 'white', 'LineWidth', 2);
+    for curPairConfig = curPairConfigs
+        curPairAreas = asiT.area(curPairConfig.synIdPairs);
+        curPairAreas = cat(1, curPairAreas, flip(curPairAreas, 2));
+
+        curLog10PairAreas = log10(curPairAreas);
+        curLog10PairAreas = curLog10PairAreas(all( ...
+            curLog10Lims(1) < curLog10PairAreas ...
+          & curLog10PairAreas < curLog10Lims(2), 2), :);
+
+       [~, curCondMap] = connectEM.Libs.kde2d( ...
+            curLog10PairAreas, curImSize, ...
+            repelem(curLog10Lims(1), 2), ...
+            repelem(curLog10Lims(2), 2));
+
+        curMargDist = sum(curCondMap, 1);
+        curCondMap = curCondMap ./ curMargDist;
+        curCondDiffMap = curCondMap ...
+            - (curMargDist(:) / sum(curMargDist(:)));
+
+        curFig = figure();
+        curAx = subplot(1, 2, 1);
+
+        imagesc(curAx, curCondMap);
+        caxis(curAx, [0, 0.01]);
+        title(curAx, 'Conditional size distribution');
+
+        curAx = subplot(1, 2, 2);
+        imagesc(curAx, curCondDiffMap);
+        caxis(curAx, [-1, +1] * 0.0025);
+        title(curAx, 'Difference to independent size distribution');
+
+        curAxes = flip(findobj(curFig, 'Type', 'Axes'));
+
+        for curAx = reshape(curAxes, 1, [])
+            hold(curAx, 'on');
+            plot(curAx, ...
+                [1, curImSize], [1, curImSize], ...
+                '--', 'Color', 'white', 'LineWidth', 2);
+        end
+
+        arrayfun(@(ax) axis(ax, 'square'), curAxes);
+        set(curAxes, 'YDir', 'normal');
+
+        set(curAxes, ...
+            'XLim', [1, size(curCondMap, 2)], ...
+            'XTick', curTickIds, 'XTickLabel', arrayfun( ...
+            @num2str, curTickLabels, 'UniformOutput', false));
+
+        set(curAxes, ...
+            'YLim', [1, size(curCondMap, 1)], ...
+            {'YTick'}, get(curAxes, {'XTick'}), ...
+            {'YTickLabel'}, get(curAxes, {'XTickLabel'}));
+
+        xlabel(curAxes(1), 'log10(ASI area [µm²])');
+        ylabel(curAxes(1), 'log10(ASI area of joint partner [µm²]');
+        
+        annotation( ...
+            curFig, 'textbox', [0, 0.9, 1, 0.1], ...
+            'String', {curConfig.title; curPairConfig.title}, ...
+            'EdgeColor', 'none', 'HorizontalAlignment', 'center');
+        
+        connectEM.Figure.config(curFig, info);
+        curFig.Position(3:4) = [740, 450];
     end
-    
-    arrayfun(@(ax) axis(ax, 'square'), curAxes);
-    set(curAxes, 'YDir', 'normal');
-
-    set(curAxes, ...
-        'XLim', [1, size(curCondMap, 2)], ...
-        'XTick', curTickIds, 'XTickLabel', arrayfun( ...
-        @num2str, curTickLabels, 'UniformOutput', false));
-
-    set(curAxes, ...
-        'YLim', [1, size(curCondMap, 1)], ...
-        {'YTick'}, get(curAxes, {'XTick'}), ...
-        {'YTickLabel'}, get(curAxes, {'XTickLabel'}));
-
-    xlabel(curAxes(1), 'log10(ASI area [µm²])');
-    ylabel(curAxes(1), 'log10(ASI area of joint partner [µm²]');
-
-    connectEM.Figure.config(curFig, info);
-    curFig.Position(3:4) = [740, 370];
 end
 
 %% Correlation of synapse size correlation with synapse size
