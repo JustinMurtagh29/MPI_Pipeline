@@ -6,9 +6,9 @@ clear;
 mix = struct('mean', {}, 'std', {}, 'coeff', {});
 
 i = 1;
-mix(i).mean = -1.00; mix(i).std = 0.2; mix(i).coeff = 0.1; i = i + 1; %#ok
+% mix(i).mean = -1.00; mix(i).std = 0.2; mix(i).coeff = 0.1; i = i + 1; %#ok
 mix(i).mean = -0.70; mix(i).std = 0.3; mix(i).coeff = 0.8; i = i + 1; %#ok
-mix(i).mean = -0.25; mix(i).std = 0.2; mix(i).coeff = 0.1; i = i + 1; %#ok
+mix(i).mean = -0.25; mix(i).std = 0.2; mix(i).coeff = 0.2; i = i + 1; %#ok
 clear i;
 
 pairCount = 5290;
