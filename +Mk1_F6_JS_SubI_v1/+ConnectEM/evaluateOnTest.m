@@ -1,9 +1,12 @@
+function [gt, gtTrain, gtTest, classifiers] = evaluateOnTest(methodUsed, boxesUsed)
+
 % Written by
 %   Alessandro Motta <alessandro.motta@brain.mpg.de>
 % Modified by
 %   Sahil Loomba <sahil.loomba@brain.mpg.de>
-clear;
-methodUsed ='RUSBoost'; %'AdaBoostM1'; % 'LogitBoost';
+%clear;
+%methodUsed ='RUSBoost'; %'AdaBoostM1'; % 'LogitBoost';
+%boxesUsed = 'all';
 %% HACKHACKHACK
 % NOTE(amotta): This is a huge mess. The training data is located in my
 % repository, SynEM is from Benedikt's repository, and the SynEM classifier
@@ -19,7 +22,7 @@ rootDir = '/tmpscratch/sahilloo/data/Mk1_F6_JS_SubI_v1/pipelineRun_mr2e_wsmrnet/
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 
-nmlDir = fullfile( param.saveFolder, 'tracings', 'connectEM','proofread');
+nmlDir = fullfile( param.saveFolder, 'tracings', 'connectEM','proofread', boxesUsed);
 
 warning('Constructing FeatureMap de-novo');
 fm = SynEM.getFeatureMap('paper');
@@ -139,8 +142,8 @@ end
 
 curLines = flip(curAx.Children);
 
-xlim(curAx, [50, 100]);
-ylim(curAx, [50, 100]);
+%xlim(curAx, [50, 100]);
+%ylim(curAx, [50, 100]);
 axis(curAx, 'square');
 
 curLegs = arrayfun( ...
@@ -153,10 +156,10 @@ curLegs = legend( ...
 curLegs.Box = 'off';
 
 title(curAx, ...
-    {info.filename; info.git_repos{1}.hash}, ...
+    {info.filename; [methodUsed '_' boxesUsed]}, ...
     'FontWeight', 'normal', 'FontSize', 10);
-savefig(fullfile(param.saveFolder,'connectEM',['precrec_test_' methodUsed '.fig']))
-saveas(gcf,fullfile(param.saveFolder,'connectEM',['precrec_test_' methodUsed '.png']))
+savefig(fullfile(param.saveFolder,'connectEM','new',['precrec_test_' methodUsed '_' boxesUsed '.fig']))
+saveas(gcf,fullfile(param.saveFolder,'connectEM','new',['precrec_test_' methodUsed '_' boxesUsed '.png']))
 
 %{
 %% Inspect FPs
@@ -168,3 +171,4 @@ scoreThr = -15.0287; % 75% recall, 93% precision
 skel = H2_3_v2_SubI.ConnectEM.inspectFPs(param, gtTestModified, curScores, scoreThr);
 skel.write(fullfile(outDir, sprintf('fps-%03f.nml',scoreThr)));
 %}
+end
