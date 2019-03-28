@@ -336,8 +336,10 @@ for curConfig = plotConfigs(1, :)
     curPairConfigs = ...
         connectEM.Consistency.buildPairConfigs(asiT, curConfig);
     
-    for curPairConfig = curPairConfigs
-        curPairAreas = asiT.area(curPairConfig.synIdPairs);
+    for curPairConfig = curPairConfigs(1)
+        curSynIdPairs = curPairConfig.synIdPairs;
+        
+        curPairAreas = asiT.area(curSynIdPairs);
         curPairAreas = cat(1, curPairAreas, flip(curPairAreas, 2));
 
         curLog10PairAreas = log10(curPairAreas);
@@ -345,52 +347,151 @@ for curConfig = plotConfigs(1, :)
             curLog10Lims(1) < curLog10PairAreas ...
           & curLog10PairAreas < curLog10Lims(2), 2), :);
 
-       [~, curCondMap] = connectEM.Libs.kde2d( ...
+       [curBw, curFullCondMap] = connectEM.Libs.kde2d( ...
             curLog10PairAreas, curImSize, ...
             repelem(curLog10Lims(1), 2), ...
             repelem(curLog10Lims(2), 2));
+        
+        %{
+        curNullCondMap = nan([curImSize, curImSize, 1000]);
+        for curRndIdx = 1:size(curNullCondMap, 3)
+            rng(curRndIdx);
+            
+            curRandPairs = randperm( ...
+                2 * floor(numel(curSynIdPairs) / 2));
+            curRandPairs = curSynIdPairs(curRandPairs);
+            curRandPairs = reshape(curRandPairs, [], 2);
 
+            curRandAreas = asiT.area(curRandPairs);
+            curRandAreas = cat(1, curRandAreas, flip(curRandAreas, 2));
+            
+            % NOTE(amotta): A lot of duplicate code (see above). Make sure
+            % it stays in sync or, better yet, factor out into function.
+            curLog10RandAreas = log10(curRandAreas);
+            curLog10RandAreas = curLog10RandAreas(all( ...
+                curLog10Lims(1) < curLog10RandAreas ...
+              & curLog10RandAreas < curLog10Lims(2), 2), :);
+            
+           [~, curNullCondMap(:, :, curRndIdx)] = ...
+                connectEM.Libs.kde2d( ...
+                    curLog10RandAreas, curImSize, ...
+                    repelem(curLog10Lims(1), 2), ...
+                    repelem(curLog10Lims(2), 2));
+        end
+        %}
+        
+        curCondMap = curFullCondMap;
+        curCondMap = curCondMap / sum(curCondMap(:));
         curMargDist = sum(curCondMap, 1);
-        curCondMap = curCondMap ./ curMargDist;
-        curCondDiffMap = curCondMap ...
+        
+        curMask = sum(curCondMap, 1) * size(curLog10PairAreas, 1) >= 10;
+        curCondMap(:, not(curMask)) = nan;
+        
+        curNormCondMap = curCondMap ./ curMargDist;
+        
+        curCondDiffMap = curNormCondMap ...
             - (curMargDist(:) / sum(curMargDist(:)));
+        
+        curRegMask = curCondDiffMap > inf;
+        curRegs = regionprops(curRegMask, {'Centroid', 'PixelIdxList'});
 
         curFig = figure();
-        curAx = subplot(1, 2, 1);
-
+        curAx = subplot(2, 3, 1);
+        scatter(curAx, ...
+            curLog10PairAreas(:, 1), ...
+            curLog10PairAreas(:, 2), '.');
+        xlim(curAx, curLog10Lims);
+        ylim(curAx, curLog10Lims);
+        
+        curAx = subplot(2, 3, 2);
+        curAx.Box = 'off';
+        plot(curAx, curMargDist * size(curLog10PairAreas, 1));
+        
+        curAx = subplot(2, 3, 4);
         imagesc(curAx, curCondMap);
-        caxis(curAx, [0, 0.01]);
+        
+        curAx = subplot(2, 3, 5);
+        imagesc(curAx, curNormCondMap);
         title(curAx, 'Conditional size distribution');
 
-        curAx = subplot(1, 2, 2);
+        curAx = subplot(2, 3, 6);
+        hold(curAx, 'on');
         imagesc(curAx, curCondDiffMap);
-        caxis(curAx, [-1, +1] * 0.0025);
+        caxis(curAx, [-1, +1] * max(abs(curCondDiffMap(:))));
         title(curAx, 'Difference to independent size distribution');
-
-        curAxes = flip(findobj(curFig, 'Type', 'Axes'));
-
-        for curAx = reshape(curAxes, 1, [])
-            hold(curAx, 'on');
-            plot(curAx, ...
-                [1, curImSize], [1, curImSize], ...
-                '--', 'Color', 'white', 'LineWidth', 2);
+        
+        contour(curAx, curRegMask, 1);
+        for curRegIdx = 1:numel(curRegs)
+            curReg = curRegs(curRegIdx);
+            curRegPos = round(curReg.Centroid);
+            
+            text(curAx, ...
+                curRegPos(1), curRegPos(2), ...
+                sprintf('%d', curRegIdx), 'Color', 'white');
         end
+        
+        %{
+        % Work in progress
+        for curRegIdx = 1:numel(curRegs)
+            curReg = curRegs(curRegIdx);
+            
+            curRegPixelIds = curReg.PixelIdxList;
+           [curRegRows, curRegCols] = ind2sub( ...
+                repelem(curImSize, 2), curRegPixelIds);
+            
+            curRegProbs = ...
+                reshape(curMargDist(curRegCols), [], 1) ...
+             .* reshape(curCondDiffMap(curRegPixelIds), [], 1);
+         
+            curRegSurplusFrac = sum(curRegProbs);
+            curRegSurplus = curRegSurplusFrac * size(curLog10PairAreas, 1);
+            curRegUpperBound = sum(curCondMap(curRegPixelIds));
+            
+            curRegPixelIds = sub2ind( ...
+                repelem(curImSize, 2), ...
+               [curRegRows(:), curRegCols(:); ...
+                curRegCols(:), curRegRows(:)]);
+            curRegProbs = repmat(curRegProbs(:), 2, 1);
+            
+            curShadowCondMap = curFullCondMap;
+            curShadowCondMap(curRegPixelIds) = ...
+                curShadowCondMap(curRegPixelIds) - curRegProbs;
+        end
+        %}
+        
+        curScatterAx = subplot(2, 3, 1);
+        curMargAx = subplot(2, 3, 2);
+        curAllAxes = flip(findobj(curFig, 'Type', 'Axes'));
+        
+        arrayfun(@(ax) axis(ax, 'square'), curAllAxes);
+        arrayfun(@(ax) colormap(ax, 'jet'), curAllAxes);
+        set(curAllAxes, 'YDir', 'normal');
 
-        arrayfun(@(ax) axis(ax, 'square'), curAxes);
-        set(curAxes, 'YDir', 'normal');
-
+        curAxes = setdiff( ...
+            curAllAxes, curScatterAx);
         set(curAxes, ...
             'XLim', [1, size(curCondMap, 2)], ...
             'XTick', curTickIds, 'XTickLabel', arrayfun( ...
             @num2str, curTickLabels, 'UniformOutput', false));
-
+        
+        curAxes = setdiff(...
+            curAllAxes, [curScatterAx, curMargAx]);
         set(curAxes, ...
             'YLim', [1, size(curCondMap, 1)], ...
             {'YTick'}, get(curAxes, {'XTick'}), ...
             {'YTickLabel'}, get(curAxes, {'XTickLabel'}));
 
-        xlabel(curAxes(1), 'log10(ASI area [µm²])');
-        ylabel(curAxes(1), 'log10(ASI area of joint partner [µm²]');
+        curAxes = setdiff(curAllAxes, curMargAx);
+        for curAx = reshape(curAxes, 1, [])
+            hold(curAx, 'on');
+            plot(curAx, ...
+                curAx.XLim, curAx.YLim, ...
+                '--', 'Color', 'black', 'LineWidth', 2);
+        end
+
+        curAx = subplot(2, 3, 4);
+        xlabel(curAx, 'log10(ASI area [µm²])');
+        ylabel(curAx, 'log10(ASI area of joint partner [µm²]');
         
         annotation( ...
             curFig, 'textbox', [0, 0.9, 1, 0.1], ...
@@ -398,7 +499,7 @@ for curConfig = plotConfigs(1, :)
             'EdgeColor', 'none', 'HorizontalAlignment', 'center');
         
         connectEM.Figure.config(curFig, info);
-        curFig.Position(3:4) = [740, 450];
+        curFig.Position(3:4) = [1200, 850];
     end
 end
 
