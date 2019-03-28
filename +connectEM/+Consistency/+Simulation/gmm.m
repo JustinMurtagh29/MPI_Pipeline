@@ -6,9 +6,15 @@ clear;
 mix = struct('mean', {}, 'std', {}, 'coeff', {});
 
 i = 1;
-mix(i).mean = -1.00; mix(i).std = 0.2; mix(i).coeff = 0.1; i = i + 1; %#ok
-mix(i).mean = -0.70; mix(i).std = 0.3; mix(i).coeff = 0.8; i = i + 1; %#ok
-mix(i).mean = -0.25; mix(i).std = 0.2; mix(i).coeff = 0.1; i = i + 1; %#ok
+% mix(i).mean = -1.00; mix(i).std = 0.2; mix(i).coeff = 0.1; i = i + 1; %#ok
+% mix(i).mean = -0.70; mix(i).std = 0.3; mix(i).coeff = 0.8; i = i + 1; %#ok
+% mix(i).mean = -0.25; mix(i).std = 0.2; mix(i).coeff = 0.1; i = i + 1; %#ok
+
+% From Stan fit for all corticocortical synapses
+mix(i).mean = -0.72; mix(i).std = 0.28; mix(i).coeff = 0.78; i = i + 1; %#ok
+mix(i).mean = -0.44; mix(i).std = 0.19; mix(i).coeff = 0.19; i = i + 1; %#ok
+mix(i).mean = -0.23; mix(i).std = 0.10; mix(i).coeff = 0.04; i = i + 1; %#ok
+
 clear i;
 
 pairCount = 5290;
@@ -23,8 +29,8 @@ info = Util.runInfo();
 Util.showRunInfo(info);
 
 %% Analysis of conditional size distribution
-curXVec = linspace(-1.5, 0.5, 101);
-curTickIds = 1:25:numel(curXVec);
+curXVec = linspace(-1.5, 0.5, 201);
+curTickIds = 1:50:numel(curXVec);
 
 [curCondMap, ~, curSizeDist] = ...
     connectEM.Consistency.Simulation.gmmConditional(mix, 'xVec', curXVec);
@@ -32,21 +38,31 @@ curTickIds = 1:25:numel(curXVec);
 curCondMapRel = curCondMap ./ sum(curCondMap, 1);
 curCondMapRelDiff = curCondMapRel - (curSizeDist(:) / sum(curSizeDist(:)));
 
-curFig = figure();
-curAx = subplot(1, 2, 1);
-hold(curAx, 'on');
+curDensMap = curSizeDist / sum(curSizeDist(:));
+curDensMap = curCondMapRel .* reshape(curDensMap, 1, []);
 
+curFig = figure();
+curAx = subplot(1, 4, 1);
+plot(curAx, curSizeDist, 'Color', 'black');
+
+curAx = subplot(1, 4, 2);
+imagesc(curAx, curDensMap);
+
+curAx = subplot(1, 4, 3);
 imagesc(curAx, curCondMap);
 caxis(curAx, [0, max(curCondMap(:))]);
 title(curAx, 'Conditional size distribution');
 
-curAx = subplot(1, 2, 2);
+curAx = subplot(1, 4, 4);
 imagesc(curAx, curCondMapRelDiff);
 caxis(curAx, [-1, + 1] * max(abs(curCondMapRelDiff(:))));
 title(curAx, 'Difference to independent size distribution');
 
-curAxes = flip(findobj(curFig, 'Type', 'Axes'));
-    
+curAllAxes = flip(findobj(curFig, 'Type', 'Axes'));
+
+curHistAx = subplot(1, 4, 1);
+curAxes = setdiff(curAllAxes, curHistAx);
+
 for curAx = reshape(curAxes, 1, [])
     hold(curAx, 'on');
     plot(curAx, ...
@@ -55,10 +71,11 @@ for curAx = reshape(curAxes, 1, [])
         '--', 'Color', 'white', 'LineWidth', 2);
 end
 
-arrayfun(@(ax) axis(ax, 'square'), curAxes);
-set(curAxes, 'YDir', 'normal');
+arrayfun(@(ax) axis(ax, 'square'), curAllAxes);
+arrayfun(@(ax) colormap(ax, 'jet'), curAllAxes);
+set(curAllAxes, 'YDir', 'normal');
 
-set(curAxes, ...
+set(curAllAxes, ...
     'XLim', [1, size(curCondMap, 2)], ...
     'XTick', curTickIds, 'XTickLabel', arrayfun( ...
     @num2str, curXVec(curTickIds), 'UniformOutput', false));
@@ -68,15 +85,21 @@ set(curAxes, ...
     {'YTick'}, get(curAxes, {'XTick'}), ...
     {'YTickLabel'}, get(curAxes, {'XTickLabel'}));
 
-xlabel(curAxes(1), 'log10(ASI area [µm²])');
-ylabel(curAxes(1), 'log10(ASI area of joint partner [µm²]');
+xlabel(curAllAxes(1), 'log10(ASI area [µm²])');
+ylabel(curAllAxes(1), 'Probability density');
+
+xlabel(curAllAxes(2), 'log10(ASI area [µm²])');
+ylabel(curAllAxes(2), 'log10(ASI area [µm²])');
+
+xlabel(curAllAxes(3), 'log10(ASI area 1 [µm²])');
+ylabel(curAllAxes(3), 'log10(ASI area 2 | ASI area 1 [µm²])');
 
 annotation( ...
     curFig, 'textbox', [0, 0.9, 1, 0.1], 'String', mixTitle, ...
     'EdgeColor', 'none', 'HorizontalAlignment', 'center');
 
 connectEM.Figure.config(curFig, info);
-curFig.Position(3:4) = [740, 410];
+curFig.Position(3:4) = [1620, 410];
 
 %% Generate synapse pairs
 clear cur*;
