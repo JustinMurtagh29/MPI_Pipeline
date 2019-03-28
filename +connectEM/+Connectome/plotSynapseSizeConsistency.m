@@ -332,7 +332,7 @@ curTickIds = linspace(curLog10Lims(1), curLog10Lims(2), curImSize);
     curTickIds(:), curTickLabels(:), ...
     'seuclidean', 'Smallest', 1);
 
-for curConfig = plotConfigs(1, :)
+for curConfig = plotConfigs(1, 2)
     curPairConfigs = ...
         connectEM.Consistency.buildPairConfigs(asiT, curConfig);
     
@@ -352,39 +352,12 @@ for curConfig = plotConfigs(1, :)
             repelem(curLog10Lims(1), 2), ...
             repelem(curLog10Lims(2), 2));
         
-        %{
-        curNullCondMap = nan([curImSize, curImSize, 1000]);
-        for curRndIdx = 1:size(curNullCondMap, 3)
-            rng(curRndIdx);
-            
-            curRandPairs = randperm( ...
-                2 * floor(numel(curSynIdPairs) / 2));
-            curRandPairs = curSynIdPairs(curRandPairs);
-            curRandPairs = reshape(curRandPairs, [], 2);
-
-            curRandAreas = asiT.area(curRandPairs);
-            curRandAreas = cat(1, curRandAreas, flip(curRandAreas, 2));
-            
-            % NOTE(amotta): A lot of duplicate code (see above). Make sure
-            % it stays in sync or, better yet, factor out into function.
-            curLog10RandAreas = log10(curRandAreas);
-            curLog10RandAreas = curLog10RandAreas(all( ...
-                curLog10Lims(1) < curLog10RandAreas ...
-              & curLog10RandAreas < curLog10Lims(2), 2), :);
-            
-           [~, curNullCondMap(:, :, curRndIdx)] = ...
-                connectEM.Libs.kde2d( ...
-                    curLog10RandAreas, curImSize, ...
-                    repelem(curLog10Lims(1), 2), ...
-                    repelem(curLog10Lims(2), 2));
-        end
-        %}
+        curFullCondMap = curFullCondMap / sum(curFullCondMap(:));
         
         curCondMap = curFullCondMap;
-        curCondMap = curCondMap / sum(curCondMap(:));
         curMargDist = sum(curCondMap, 1);
         
-        curMask = sum(curCondMap, 1) * size(curLog10PairAreas, 1) >= 10;
+        curMask = sum(curCondMap, 1) * size(curLog10PairAreas, 1) >= 5;
         curCondMap(:, not(curMask)) = nan;
         
         curNormCondMap = curCondMap ./ curMargDist;
@@ -392,29 +365,29 @@ for curConfig = plotConfigs(1, :)
         curCondDiffMap = curNormCondMap ...
             - (curMargDist(:) / sum(curMargDist(:)));
         
-        curRegMask = curCondDiffMap > inf;
+        curRegMask = curCondDiffMap > 0.001;
         curRegs = regionprops(curRegMask, {'Centroid', 'PixelIdxList'});
 
         curFig = figure();
-        curAx = subplot(2, 3, 1);
+        curAx = subplot(3, 4, 1);
         scatter(curAx, ...
             curLog10PairAreas(:, 1), ...
             curLog10PairAreas(:, 2), '.');
         xlim(curAx, curLog10Lims);
         ylim(curAx, curLog10Lims);
         
-        curAx = subplot(2, 3, 2);
+        curAx = subplot(3, 4, 2);
         curAx.Box = 'off';
         plot(curAx, curMargDist * size(curLog10PairAreas, 1));
         
-        curAx = subplot(2, 3, 4);
+        curAx = subplot(3, 4, 6);
         imagesc(curAx, curCondMap);
         
-        curAx = subplot(2, 3, 5);
+        curAx = subplot(3, 4, 7);
         imagesc(curAx, curNormCondMap);
         title(curAx, 'Conditional size distribution');
 
-        curAx = subplot(2, 3, 6);
+        curAx = subplot(3, 4, 8);
         hold(curAx, 'on');
         imagesc(curAx, curCondDiffMap);
         caxis(curAx, [-1, +1] * max(abs(curCondDiffMap(:))));
@@ -430,9 +403,7 @@ for curConfig = plotConfigs(1, :)
                 sprintf('%d', curRegIdx), 'Color', 'white');
         end
         
-        %{
-        % Work in progress
-        for curRegIdx = 1:numel(curRegs)
+        for curRegIdx = 2%1:numel(curRegs)
             curReg = curRegs(curRegIdx);
             
             curRegPixelIds = curReg.PixelIdxList;
@@ -441,26 +412,63 @@ for curConfig = plotConfigs(1, :)
             
             curRegProbs = ...
                 reshape(curMargDist(curRegCols), [], 1) ...
-             .* reshape(curCondDiffMap(curRegPixelIds), [], 1);
+             .* reshape(curNormCondMap(curRegPixelIds), [], 1);
          
+            %{
+            curRegProbs = ...
+                reshape(curMargDist(curRegCols), [], 1) ...
+             .* reshape(curCondDiffMap(curRegPixelIds), [], 1);
+            %}
+             
             curRegSurplusFrac = sum(curRegProbs);
             curRegSurplus = curRegSurplusFrac * size(curLog10PairAreas, 1);
             curRegUpperBound = sum(curCondMap(curRegPixelIds));
             
             curRegPixelIds = sub2ind( ...
                 repelem(curImSize, 2), ...
-               [curRegRows(:), curRegCols(:); ...
-                curRegCols(:), curRegRows(:)]);
+               [curRegRows(:); curRegCols(:)], ...
+               [curRegCols(:); curRegRows(:)]);
             curRegProbs = repmat(curRegProbs(:), 2, 1);
             
-            curShadowCondMap = curFullCondMap;
-            curShadowCondMap(curRegPixelIds) = ...
-                curShadowCondMap(curRegPixelIds) - curRegProbs;
+            curShadowDiffMap = zeros(curImSize);
+            curShadowDiffMap(curRegPixelIds) = curRegProbs;
+            
+            curShadowCondMap = curFullCondMap - curShadowDiffMap;
+            curShadowCondMap = curShadowCondMap / sum(curShadowCondMap(:));
+            
+            curShadowMarg = sum(curShadowCondMap, 1);
+            curShadowNormCondMap = curShadowCondMap ./ sum(curShadowCondMap, 1);
+            curShadowNormCondMap(isnan(curNormCondMap)) = nan;
+            
+            curShadowNormCondDiffMap = curShadowNormCondMap - curShadowMarg(:);
+            
+            curAx = subplot(3, 4, 9);
+            hold(curAx, 'on');
+            plot(curAx, curMargDist);
+            plot(curAx, sum(curShadowDiffMap, 1));
+            plot(curAx, curShadowMarg);
+            
+            curClim = subplot(3, 4, 10 - 4);
+            curClim = curClim.CLim;
+            curAx = subplot(3, 4, 10);
+            imagesc(curAx, curFullCondMap - curShadowDiffMap);
+            caxis(curAx, curClim);
+            
+            curClim = subplot(3, 4, 11 - 4);
+            curClim = curClim.CLim;
+            curAx = subplot(3, 4, 11);
+            imagesc(curAx, curShadowNormCondMap);
+            caxis(curAx, curClim);
+            
+            curClim = subplot(3, 4, 12 - 4);
+            curClim = curClim.CLim;
+            curAx = subplot(3, 4, 12);
+            imagesc(curAx, curShadowNormCondDiffMap);
+            caxis(curAx, curClim);
         end
-        %}
         
-        curScatterAx = subplot(2, 3, 1);
-        curMargAx = subplot(2, 3, 2);
+        curScatterAx = subplot(3, 4, 1);
+        curMargAx = [subplot(3, 4, 2), subplot(3, 4, 9)];
         curAllAxes = flip(findobj(curFig, 'Type', 'Axes'));
         
         arrayfun(@(ax) axis(ax, 'square'), curAllAxes);
@@ -489,7 +497,7 @@ for curConfig = plotConfigs(1, :)
                 '--', 'Color', 'black', 'LineWidth', 2);
         end
 
-        curAx = subplot(2, 3, 4);
+        curAx = subplot(3, 4, 6);
         xlabel(curAx, 'log10(ASI area [µm²])');
         ylabel(curAx, 'log10(ASI area of joint partner [µm²]');
         
