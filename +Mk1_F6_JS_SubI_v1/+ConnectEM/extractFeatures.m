@@ -1,4 +1,4 @@
-function [allFeats, allLabels, allGt] = extractFeatures(boxesUsed)
+function [rawFeats, classFeats, gt] = extractFeatures(boxesUsed)
 
 % Written by
 %   Alessandro Motta <alessandro.motta@brain.mpg.de>
@@ -52,14 +52,5 @@ assert(isequal(rawBorderIds, classBorderIds));
 [~, curRowIds] = ismember(rawBorderIds, gt.borderId);
 gt = gt(curRowIds, :);
 
-% augment data
-allFeats = [ ...
-   [rawFeats; ...
-    fm.invertDirection(rawFeats)], ...
-   [classFeats; ...
-    fm.invertDirection(classFeats)]];
-allLabels = repmat(gt.label, 2, 1);
-allGt = repmat(gt,2,1); % because of inverted features
-
-Util.save(fullfile(param.saveFolder,'connectEM',['features_' boxesUsed '.mat']), allLabels, allFeats, allGt)
+Util.save(fullfile(param.saveFolder,'connectEM',['features_' boxesUsed '.mat']), rawFeats, classFeats, gt, fm)
 end
