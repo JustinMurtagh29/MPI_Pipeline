@@ -56,6 +56,8 @@ end
 
 %% network training
 net.trainFcn = 'trainb';
+net.trainParam.epochs = 1000;
+
 net.performFcn = 'mse';
 
 [net,tr,Y,E]= train(net,curTrainFeats',curTrainLabels');
@@ -84,5 +86,6 @@ title(curAx, ...
     'FontWeight', 'normal', 'FontSize', 10);
 savefig(fullfile(param.saveFolder,'connectEM',['precrec_test_FFN.fig']))
 saveas(gcf,fullfile(param.saveFolder,'connectEM',['precrec_test_FFN.png']))
+Util.save(fullfile(param.saveFolder,'connectEM','evaluateWithFFn.mat'),net)
 
 
