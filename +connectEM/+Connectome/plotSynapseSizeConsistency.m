@@ -332,7 +332,7 @@ curTickIds = linspace(curLog10Lims(1), curLog10Lims(2), curImSize);
     curTickIds(:), curTickLabels(:), ...
     'seuclidean', 'Smallest', 1);
 
-for curConfig = plotConfigs(1, 2)
+for curConfig = plotConfigs(1, 3)
     curPairConfigs = ...
         connectEM.Consistency.buildPairConfigs(asiT, curConfig);
     
@@ -357,7 +357,7 @@ for curConfig = plotConfigs(1, 2)
         curCondMap = curFullCondMap;
         curMargDist = sum(curCondMap, 1);
         
-        curMask = sum(curCondMap, 1) * size(curLog10PairAreas, 1) >= 5;
+        curMask = sum(curCondMap, 1) * size(curLog10PairAreas, 1) >= 2;
         curCondMap(:, not(curMask)) = nan;
         
         curNormCondMap = curCondMap ./ curMargDist;
@@ -365,7 +365,7 @@ for curConfig = plotConfigs(1, 2)
         curCondDiffMap = curNormCondMap ...
             - (curMargDist(:) / sum(curMargDist(:)));
         
-        curRegMask = curCondDiffMap > 0.001;
+        curRegMask = curCondDiffMap > 0.0007;
         curRegs = regionprops(curRegMask, {'Centroid', 'PixelIdxList'});
 
         curFig = figure();
@@ -403,7 +403,7 @@ for curConfig = plotConfigs(1, 2)
                 sprintf('%d', curRegIdx), 'Color', 'white');
         end
         
-        for curRegIdx = 2%1:numel(curRegs)
+        for curRegIdx = 3%1:numel(curRegs)
             curReg = curRegs(curRegIdx);
             
             curRegPixelIds = curReg.PixelIdxList;
@@ -414,11 +414,11 @@ for curConfig = plotConfigs(1, 2)
                 reshape(curMargDist(curRegCols), [], 1) ...
              .* reshape(curNormCondMap(curRegPixelIds), [], 1);
          
-            %{
+            
             curRegProbs = ...
                 reshape(curMargDist(curRegCols), [], 1) ...
              .* reshape(curCondDiffMap(curRegPixelIds), [], 1);
-            %}
+            
              
             curRegSurplusFrac = sum(curRegProbs);
             curRegSurplus = curRegSurplusFrac * size(curLog10PairAreas, 1);
