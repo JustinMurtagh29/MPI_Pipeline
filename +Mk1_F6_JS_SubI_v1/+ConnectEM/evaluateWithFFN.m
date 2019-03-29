@@ -1,3 +1,5 @@
+clear all
+
 rootDir = '/tmpscratch/sahilloo/data/Mk1_F6_JS_SubI_v1/pipelineRun_mr2e_wsmrnet/';
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
@@ -48,6 +50,13 @@ curRandIds = randperm(height(gtTrain));
 
 classifiers = cell(0);
 results = cell(0, 2);
+%% Plot aggregate results
+curFig = figure();
+curFig.Color = 'white';
+
+curAx = axes(curFig);
+curAx.TickDir = 'out';
+hold(curAx, 'on');
 
 for curTrainSize = trainSizes
        curTrainIds = curRandIds(1:curTrainSize);
@@ -58,61 +67,18 @@ for curTrainSize = trainSizes
            [classFeatsTrain(curTrainIds, :); ...
             fm.invertDirection(classFeatsTrain(curTrainIds, :))]];
         curTrainLabels = repmat(gtTrain.label(curTrainIds), 2, 1);
+        % train and predict with FFN
+        [curScores, net] = trainFFN(curTrainFeats, curTrainLabels, curTestFeats);
 
-        display(['train '])
-        curTrainSize
-        size(curTrainFeats)
-        size(curTrainLabels)
-
+        [curPrec, curRec, threshVec] = ...
+            TypeEM.Classifier.buildPrecRec(curScores, curTestLabels);
+        curLine = ...
+            TypeEM.Classifier.plotPrecisionRecall(curAx, curPrec, curRec);  
         
-        
-        Util.log(' create a neural network')
-        net = feedforwardnet(6);
-        % set early stopping parameters
-        %net.divideParam.trainRatio = 0.85; % training set [%]
-        %net.divideParam.valRatio = 0.15; % validation set [%]
-        % net.divideParam.testRatio = 0.15; % test set [%]
-        % number of hidden layer neurons
-        for i=1:net.numLayers-1
-            % hidden layer transfer function
-            net.layers{i}.transferFcn = 'logsig';
-        end
-        % network training
-        net.trainFcn = 'trainb';
-        net.trainParam.epochs = 1000;
-        net.performFcn = 'mse';
-        
-        [net,tr,Y,E]= train(net,curTrainFeats',curTrainLabels');
-
-        curScores = net(curTestFeats');
-        
-        classifiers{end + 1} = net;
+        classifiers{end + 1} = net;        
         results(end + 1, :) = {curTestLabels, curScores}; %#ok
-        clear net
 end
 
-%% Plot aggregate results
-curFig = figure();
-curFig.Color = 'white';
-
-curAx = axes(curFig);
-curAx.TickDir = 'out';
-hold(curAx, 'on');
-for curTrainSizeIdx = 1:numel(trainSizes)
-    curTrainSize = trainSizes(curTrainSizeIdx);
-    
-    curLabels = results(curTrainSizeIdx, 1);
-    curScores = results(curTrainSizeIdx, 2);
-
-    curScores = cell2mat(curScores);
-    curLabels = cell2mat(curLabels);
-    
-    [curPrec, curRec, threshVec] = ...
-        TypeEM.Classifier.buildPrecRec(curScores, curLabels);
-    curLine = ...
-        TypeEM.Classifier.plotPrecisionRecall(curAx, curPrec, curRec);
-end
- 
 curLines = flip(curAx.Children);
 axis(curAx, 'square');
 
@@ -128,8 +94,27 @@ curLegs.Box = 'off';
 title(curAx, ...
     {info.filename; info.git_repos{1}.hash}, ...
     'FontWeight', 'normal', 'FontSize', 10);
-%savefig(fullfile(param.saveFolder,'connectEM',['precrec_test_FFN.fig']))
+savefig(fullfile(param.saveFolder,'connectEM',['precrec_test_FFN.fig']))
 saveas(gcf,fullfile(param.saveFolder,'connectEM',['precrec_test_FFN.png']))
-%Util.save(fullfile(param.saveFolder,'connectEM','evaluateWithFFn.mat'),classifiers,info)
+Util.save(fullfile(param.saveFolder,'connectEM','evaluateWithFFn.mat'),classifiers,info)
 
-
+function [curScores,net] = trainFFN(curTrainFeats, curTrainLabels, curTestFeats)
+    net = feedforwardnet([6],'trainb');
+    % set early stopping parameters
+    net.divideParam.trainRatio = 1; % training set [%]
+    net.divideParam.valRatio = 0; % validation set [%]
+    net.divideParam.testRatio = 0; % test set [%]
+    % number of hidden layer neurons
+    for i=1:net.numLayers-1
+        net.layers{i}.transferFcn = 'logsig';
+    end
+    % network training
+    %net.trainFcn = 'traingdx'; % 'trainb';
+    net.trainParam.epochs = 1000;
+    net.performFcn = 'mse';
+    
+    net = configure(net,curTrainFeats', curTrainLabels');
+    %net = init(net);
+    [net1,tr,Y,E]= train(net,curTrainFeats',curTrainLabels');
+    curScores = net1(curTestFeats');
+end
