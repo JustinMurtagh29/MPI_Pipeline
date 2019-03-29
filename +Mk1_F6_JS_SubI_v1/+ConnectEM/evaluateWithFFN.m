@@ -9,7 +9,7 @@ info = Util.runInfo();
 Util.showRunInfo(info);
 
 layers = [6]
-trainFunc = 'trainb'
+trainFunc = 'traingdm'
 epochs = 2000
 
 %% data
