@@ -105,6 +105,30 @@ saveas(gcf,fullfile(param.saveFolder,'connectEM',['precrec_' trainFunc '_'...
                      num2str(layers) '_' num2str(epochs) '.png']))
 Util.save(fullfile(param.saveFolder,'connectEM',['data_' trainFunc '_'...
                      num2str(layers) '_' num2str(epochs) '.mat']),classifiers,info)
+close all
+
+%% performance on training set
+figure;
+subplot(1,2,1)
+hold on
+for i=1:length(classifiers)
+   tr = classifiers{i}{2};
+   plot(tr.perf);   
+end
+% legend({'1','2','3','4','5'})
+title('Perf on tr set')
+% gradient
+subplot(1,2,2)
+hold on
+for i=1:length(classifiers)
+   tr = classifiers{i}{2};
+   plot(tr.gradient);   
+end
+legend({'1','2','3','4','5'})
+title('Gradient')
+saveas(gcf,fullfile(param.saveFolder,'connectEM',['perf_' trainFunc '_'...
+                     num2str(layers) '_' num2str(epochs) '.png']))
+
 
 function [curScores,net, tr] = trainFFN(curTrainFeats, curTrainLabels, curTestFeats,...
                                          layers, trainFunc, epochs)
