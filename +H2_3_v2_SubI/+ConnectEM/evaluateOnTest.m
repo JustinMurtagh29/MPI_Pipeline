@@ -158,6 +158,17 @@ title(curAx, ...
 
 saveas(gcf,fullfile(param.saveFolder,'connectEM',['precrec_test_' methodUsed '.png']))
 
+%% Building output
+Util.log('Building output');
+clear cur*;
+
+classifier = struct;
+classifier.gt = gt;
+classifier.classifier = classifiers{1}; %choose trained on first set of edges
+classifier.info = info;
+
+Util.save(['/u/sahilloo/H2_3_v2_U1_SubI/connect-em/edgeClassifier/' datestr(clock,30) '.mat'],classifier);
+
 %{
 %% Inspect FPs
 param.experimentName = 'H2_3_v2_U1_SubI_mr2e_wsmrnet';
