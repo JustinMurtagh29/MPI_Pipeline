@@ -75,31 +75,82 @@ curFig.Position(3:4) = [315, 390];
 connectEM.Figure.config(curFig, info);
 
 %% Plot synapse pair trajectories
+clear cur*;
+
+curLimX = [1, 125];
+curLimY = [0, 1];
+
 curFig = figure();
 
 for curAreaIdx = 1:size(areas, 1)
     for curMethodIdx = 1:numel(methods)
         curAreas = areas{curAreaIdx, curMethodIdx};
         
-        curPlotIdx = curMethodIdx + (curAreaIdx - 1) * numel(methods);
+        curPlotIdx = ...
+            curMethodIdx + ...
+            numel(methods) * (curAreaIdx - 1);
+        
         subplot(size(areas, 1), numel(methods), curPlotIdx);
         plot(curAreas);
-        
-        if curAreaIdx == 1
-            title(methods(curMethodIdx).title);
-        end
     end
 end
 
-curFig.Position(3:4) = [1900, 815];
 
 curAxes = curFig.Children;
-axis(curAxes, 'square');
+set(curAxes, ...
+    'XLim', curLimX, 'XTick', [], ...
+    'YLim', curLimY, 'YTick', []);
 
 curAx = curAxes(numel(methods));
 xlabel(curAx, 'Time');
-ylabel(curAx, 'ASI areas [µm²]');
+ylabel(curAx, 'Areas');
 
-set(cat(1, curAxes.Children), 'LineWidth', 2);
+curLines = findobj(curFig, 'Type', 'Line');
+set(curLines, 'LineWidth', 2);
 
-connectEM.Figure.config(curFig, info);
+connectEM.Figure.config(curFig);
+curFig.Position(3:4) = [800, 160];
+
+%% Plot average size and relative difference trajectory
+clear cur*;
+
+curLimX = [1, 125];
+curLimLeftY = [0, 1];
+curLimRightY = [0, 2];
+
+curFig = figure();
+
+for curAreaIdx = 1:size(areas, 1)
+    for curMethodIdx = 1:numel(methods)
+        curAreas = areas{curAreaIdx, curMethodIdx};
+        
+        curAvgArea = mean(curAreas, 2);
+        curRelDiff = abs(diff(curAreas, 1, 2)) ./ curAvgArea;
+        
+        curPlotIdx = ...
+            curMethodIdx + ...
+            numel(methods) * (curAreaIdx - 1);
+        
+        curAx = subplot(size(areas, 1), numel(methods), curPlotIdx);
+        yyaxis(curAx, 'left'); plot(curAvgArea);
+        yyaxis(curAx, 'right'); plot(curRelDiff, 'k');
+    end
+end
+
+
+curAxes = curFig.Children;
+set(curAxes, 'XLim', curLimX, 'XTick', []);
+arrayfun(@(ax) yyaxis(ax, 'right'), curAxes);
+set(curAxes, 'YLim', curLimRightY, 'YTick', []);
+arrayfun(@(ax) yyaxis(ax, 'left'), curAxes);
+set(curAxes, 'YLim', curLimLeftY, 'YTick', []);
+
+curAx = curAxes(numel(methods));
+xlabel(curAx, 'Time');
+ylabel(curAx, 'A / RD');
+
+curLines = findobj(curFig, 'Type', 'Line');
+set(curLines, 'LineWidth', 2);
+
+connectEM.Figure.config(curFig);
+curFig.Position(3:4) = [800, 160];
