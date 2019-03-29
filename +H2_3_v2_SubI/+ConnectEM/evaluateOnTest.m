@@ -162,12 +162,9 @@ saveas(gcf,fullfile(param.saveFolder,'connectEM',['precrec_test_' methodUsed '.p
 Util.log('Building output');
 clear cur*;
 
-classifier = struct;
-classifier.gt = gt;
-classifier.classifier = classifiers{1}; %choose trained on first set of edges
-classifier.info = info;
+classifier = classifiers{1}; %choose trained on first set of edges
 
-Util.save(['/u/sahilloo/H2_3_v2_U1_SubI/connect-em/edgeClassifier/' datestr(clock,30) '.mat'],classifier);
+Util.save(['/u/sahilloo/H2_3_v2_U1_SubI/connect-em/edgeClassifier/' datestr(clock,30) '.mat'],classifier,gt,info);
 
 %{
 %% Inspect FPs
