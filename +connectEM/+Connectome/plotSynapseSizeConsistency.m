@@ -515,7 +515,7 @@ end
 clear cur*;
 
 % Density difference map
-curAxisX = 'cv';
+curAxisX = 'relDiff';
 curScaleY = 'log10';
 curImSize = [256, 256];
 curMethod = 'kde2d';
