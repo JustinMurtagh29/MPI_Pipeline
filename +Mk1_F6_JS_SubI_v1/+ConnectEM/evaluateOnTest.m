@@ -1,12 +1,12 @@
-function [gt, gtTrain, gtTest, classifiers] = evaluateOnTest(methodUsed, boxesUsed)
+%function [gt, gtTrain, gtTest, classifiers] = evaluateOnTest(methodUsed, boxesUsed)
 
 % Written by
 %   Alessandro Motta <alessandro.motta@brain.mpg.de>
 % Modified by
 %   Sahil Loomba <sahil.loomba@brain.mpg.de>
 %clear;
-%methodUsed ='RUSBoost'; %'AdaBoostM1'; % 'LogitBoost';
-%boxesUsed = 'all';
+methodUsed ='LogitBoost'; %'AdaBoostM1'; % 'LogitBoost';
+boxesUsed = 'all';
 %% HACKHACKHACK
 % NOTE(amotta): This is a huge mess. The training data is located in my
 % repository, SynEM is from Benedikt's repository, and the SynEM classifier
@@ -161,6 +161,14 @@ title(curAx, ...
 savefig(fullfile(param.saveFolder,'connectEM','new',['precrec_test_' methodUsed '_' boxesUsed '.fig']))
 saveas(gcf,fullfile(param.saveFolder,'connectEM','new',['precrec_test_' methodUsed '_' boxesUsed '.png']))
 
+%% Building output
+Util.log('Building output');
+clear cur*;
+
+classifier = classifiers{2}; %choose trained on second set of edges
+
+Util.save(['/u/sahilloo/Mk1_F6_JS_SubI_v1/connect-em/edgeClassifier/' datestr(clock,30) '.mat'],classifier,gt,info);
+
 %{
 %% Inspect FPs
 param.experimentName = 'H2_3_v2_U1_SubI_mr2e_wsmrnet';
@@ -171,4 +179,4 @@ scoreThr = -15.0287; % 75% recall, 93% precision
 skel = H2_3_v2_SubI.ConnectEM.inspectFPs(param, gtTestModified, curScores, scoreThr);
 skel.write(fullfile(outDir, sprintf('fps-%03f.nml',scoreThr)));
 %}
-end
+%end
