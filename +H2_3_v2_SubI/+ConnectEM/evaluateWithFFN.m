@@ -81,7 +81,7 @@ for curTrainSize = trainSizes
         curLine = ...
             TypeEM.Classifier.plotPrecisionRecall(curAx, curPrec, curRec);  
 
-        classifiers{end + 1,:} = {net, tr};        
+        classifiers(end + 1,:) = {net, tr};        
         results(end + 1, :) = {curTestLabels, curScores}; %#ok
 end
 
