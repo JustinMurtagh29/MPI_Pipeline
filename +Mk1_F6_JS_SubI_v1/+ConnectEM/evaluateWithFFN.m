@@ -1,4 +1,5 @@
 clear all
+addpath(genpath('/gaba/u/sahilloo/repos/amotta/'));
 
 rootDir = '/tmpscratch/sahilloo/data/Mk1_F6_JS_SubI_v1/pipelineRun_mr2e_wsmrnet/';
 param = load(fullfile(rootDir, 'allParameter.mat'));
@@ -6,6 +7,10 @@ param = param.p;
 load(fullfile(param.saveFolder,'connectEM','features_all.mat'))
 info = Util.runInfo();
 Util.showRunInfo(info);
+
+layers = [6]
+trainFunc = 'trainb'
+epochs = 2000
 
 %% data
 Util.log('divide into training and test set')
@@ -48,7 +53,7 @@ trainSizes = floor(trainFrac.*height(gtTrain));
 rng(1); % for reproducibility
 curRandIds = randperm(height(gtTrain));
 
-classifiers = cell(0);
+classifiers = cell(0,2);
 results = cell(0, 2);
 %% Plot aggregate results
 curFig = figure();
@@ -68,14 +73,15 @@ for curTrainSize = trainSizes
             fm.invertDirection(classFeatsTrain(curTrainIds, :))]];
         curTrainLabels = repmat(gtTrain.label(curTrainIds), 2, 1);
         % train and predict with FFN
-        [curScores, net] = trainFFN(curTrainFeats, curTrainLabels, curTestFeats);
+        [curScores, net, tr] = trainFFN(curTrainFeats, curTrainLabels, curTestFeats,...
+                             layers, trainFunc, epochs);
 
         [curPrec, curRec, threshVec] = ...
             TypeEM.Classifier.buildPrecRec(curScores, curTestLabels);
         curLine = ...
             TypeEM.Classifier.plotPrecisionRecall(curAx, curPrec, curRec);  
-        
-        classifiers{end + 1} = net;        
+
+        classifiers{end + 1} = {net, tr};        
         results(end + 1, :) = {curTestLabels, curScores}; %#ok
 end
 
@@ -94,12 +100,15 @@ curLegs.Box = 'off';
 title(curAx, ...
     {info.filename; info.git_repos{1}.hash}, ...
     'FontWeight', 'normal', 'FontSize', 10);
-savefig(fullfile(param.saveFolder,'connectEM',['precrec_test_FFN.fig']))
-saveas(gcf,fullfile(param.saveFolder,'connectEM',['precrec_test_FFN.png']))
-Util.save(fullfile(param.saveFolder,'connectEM','evaluateWithFFn.mat'),classifiers,info)
+%savefig(fullfile(param.saveFolder,'connectEM',['precrec_FFN.fig']))
+saveas(gcf,fullfile(param.saveFolder,'connectEM',['precrec_' trainFunc '_'...
+                     num2str(layers) '_' num2str(epochs) '.png']))
+Util.save(fullfile(param.saveFolder,'connectEM',['data_' trainFunc '_'...
+                     num2str(layers) '_' num2str(epochs) '.mat']),classifiers,info)
 
-function [curScores,net] = trainFFN(curTrainFeats, curTrainLabels, curTestFeats)
-    net = feedforwardnet([6],'trainb');
+function [curScores,net, tr] = trainFFN(curTrainFeats, curTrainLabels, curTestFeats,...
+                                         layers, trainFunc, epochs)
+    net = feedforwardnet(layers,trainFunc);
     % set early stopping parameters
     net.divideParam.trainRatio = 1; % training set [%]
     net.divideParam.valRatio = 0; % validation set [%]
@@ -110,7 +119,7 @@ function [curScores,net] = trainFFN(curTrainFeats, curTrainLabels, curTestFeats)
     end
     % network training
     %net.trainFcn = 'traingdx'; % 'trainb';
-    net.trainParam.epochs = 1000;
+    net.trainParam.epochs = epochs;
     net.performFcn = 'mse';
     
     net = configure(net,curTrainFeats', curTrainLabels');
