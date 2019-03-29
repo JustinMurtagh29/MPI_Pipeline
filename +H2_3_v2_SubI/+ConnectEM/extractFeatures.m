@@ -52,5 +52,5 @@ assert(isequal(rawBorderIds, classBorderIds));
 [~, curRowIds] = ismember(rawBorderIds, gt.borderId);
 gt = gt(curRowIds, :);
 
-Util.save(fullfile(param.saveFolder,'connectEM',['features_' boxesUsed '.mat']), rawFeats,classFeats, gt)
+Util.save(fullfile(param.saveFolder,'connectEM',['features_' boxesUsed '.mat']), rawFeats, classFeats, gt, fm)
 end
