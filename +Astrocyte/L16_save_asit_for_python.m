@@ -16,3 +16,16 @@ end
 %%
 % after the python (notebook 23)
 ddict = load('~/GABA/astrocyte/synapses/asit43.mat');
+
+%% save syn for python
+syn = load('~/GABA/astrocyte/synapses/syn.mat');
+%syn = syn.syn;
+table = syn.syn.synapses;
+table.type = double(table.type);
+tablet = struct(table);
+
+savedir = '~/GABA/astrocyte/synapses/syn/';
+for i = 1:4
+    var = tablet.data{i};
+    save([savedir, table.Properties.VariableNames{i}, '.mat'], 'var');
+end
