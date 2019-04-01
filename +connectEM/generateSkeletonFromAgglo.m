@@ -26,11 +26,11 @@ function generateSkeletonFromAgglo(edges, com, cc, treeNames, outputFolder, maxS
             skel{1}.nodesNumDataAll(:,3:5) = theseCoM;
             skel{1}.edges = theseEdgesNodes;
             clear theseCoM theseEdgesNodes;
-            writeNmlSilent([outputFolder treeNames{tr} '.nml'], skel, 1);
+            writeNmlSilent(fullfile(outputFolder,[ treeNames{tr} '.nml']), skel, 1);
             clear skel;
         end
     end
-    mappingFile = [outputFolder treeNames{1} '.txt'];
+    mappingFile = fullfile(outputFolder,[treeNames{1} '.txt']);
     script = WK.makeMappingScript(maxSegId, cc, false);
     fileHandle = fopen(mappingFile, 'w');
     fwrite(fileHandle, script);
@@ -43,7 +43,7 @@ function skel = initializeSkeleton(parameters)
 	skel{1}.parameters = parameters;
     else
     % Set parameters
-    skel{1}.parameters.experiment.name='2012-09-28_ex145_07x2_ROI2017';
+    skel{1}.parameters.experiment.name='H2_3_v2_U1_SubI';
     skel{1}.parameters.scale.x = '11.24';
     skel{1}.parameters.scale.y = '11.24';
     skel{1}.parameters.scale.z = '28';
