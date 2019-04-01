@@ -17,6 +17,8 @@ function generateSkeletonFromAgglo(edges, com, cc, treeNames, outputFolder, maxS
             theseCoM = com(cc{tr},:);
             idx = all(ismember(edges,cc{tr}),2);
             theseEdgesSegId = edges(idx,:);
+            % remove duplicate edges
+            theseEdgesSegId = unique(theseEdgesSegId, 'rows');
             theseEdgesNodes = changem(double(theseEdgesSegId), 1:size(theseCoM,1), cc{tr});
             clear idx theseEdgesSegId;
            % Write to structure for writeNml
