@@ -47,7 +47,7 @@ display('Writing skeletons for debugging the process:');
 
 parameters.experiment.name= p.experimentName;
 parameters.scale.x = num2str(p.raw.voxelSize(1));
-parameters.scale.y = num2str(p.raw.voxelSize(1tr(p.raw.voxelSize(1)));
+parameters.scale.y = num2str(p.raw.voxelSize(2));
 parameters.scale.z = num2str(p.raw.voxelSize(3));
 parameters.offset.x = '0';
 parameters.offset.y = '0';
