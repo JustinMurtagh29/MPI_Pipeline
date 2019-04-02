@@ -28,7 +28,7 @@ function synAreas = ltdLinearZero(opts, synAreas) %#ok
     ns = opts.mins / mps;
     t = (0:ns) * mps;
     
-    subRate = 1 / 30;
+    subRate = 0.5 / opts.mins;
     synAreas = synAreas - t(:) * subRate;
     synAreas(synAreas < 0) = nan;
 end
@@ -47,7 +47,7 @@ function synAreas = ltdExponentialZero(opts, synAreas) %#ok
     ns = opts.mins / mps;
     t = (0:ns) * mps;
     
-    decayRate = 5;
+    decayRate = log(0.5) * opts.mins / log(0.01);
     synAreas = synAreas .* (0.5 .^ (t(:) / decayRate));
 end
 
@@ -56,8 +56,8 @@ function synAreas = ltdExponentialNonZero(opts, synAreas) %#ok
     ns = opts.mins / mps;
     t = (0:ns) * mps;
     
-    decayRate = 5;
     decayTarget = 10 ^ (-1.25);
+    decayRate = log(0.5) * opts.mins / log(0.05);
     
     delta = synAreas - decayTarget;
     synAreas = synAreas - delta .* (1 - 0.5 .^ (t(:) / decayRate));
@@ -68,7 +68,7 @@ function synAreas = ltpLinearInf(opts, synAreas) %#ok
     ns = opts.mins / mps;
     t = (0:ns) * mps;
     
-    addRate = 1 / 30;
+    addRate = 0.5 / opts.mins;
     synAreas = synAreas + t(:) * addRate;
 end
 
@@ -77,8 +77,8 @@ function synAreas = ltpExponentialFinite(opts, synAreas) %#ok
     ns = opts.mins / mps;
     t = (0:ns) * mps;
     
-    approachRate = 5;
     approachTarget = 10 ^ (-0.1);
+    approachRate = log(0.5) * opts.mins / log(0.25);
     
     delta = approachTarget - synAreas;
     synAreas = synAreas + delta .* (1 - 0.5 .^ (t(:) / approachRate));
