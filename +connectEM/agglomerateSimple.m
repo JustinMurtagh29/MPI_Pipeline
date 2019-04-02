@@ -57,7 +57,7 @@ toc;
 [agglosSizeSorted,idxSort] = sort(agglosSize,'descend');
 agglosSorted= agglos(idxSort);
 
-agglosOut = agglosSorted(1:100);
+agglosOut = agglosSorted(1:500);
 display('Writing skeletons for debugging the process:');
 
 parameters.experiment.name= p.experimentName;
