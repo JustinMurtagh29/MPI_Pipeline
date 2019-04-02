@@ -515,7 +515,7 @@ end
 clear cur*;
 
 % Density difference map
-curAxisX = 'relDiff';
+curAxisX = 'cv';
 curScaleY = 'log10';
 curImSize = [256, 256];
 curMethod = 'kde2d';
@@ -566,11 +566,6 @@ curCv(curCv >= sqrt(2)) = nan;
 
 curMinMap = (10 .^ curLog10Avg(:)) .* (1 - curCv / sqrt(2));
 curMaxMap = (10 .^ curLog10Avg(:)) .* (1 + curCv / sqrt(2));
-
-curFig = figure();
-curFigs = curFig([]);
-close(curFig);
-
 for curConfig = reshape(plotConfigs, 1, [])
     curSaSdConfig = connectEM.Consistency.buildPairConfigs(asiT, curConfig);
     curSaSdConfig = curSaSdConfig(1);
@@ -601,6 +596,25 @@ for curConfig = reshape(plotConfigs, 1, [])
     curCtrlConfigs(1).synIds = curSaSdConfig.synIdPairs(:);
     curCtrlConfigs(1).title = 'SASD';
     
+    %% Scatter plot
+    curFig = figure();
+    curAx = axes(curFig); %#ok
+    
+    scatter(curAx, curSaSdT.x, curSaSdT.y, 1, '.');
+    
+    xlim(curAx, curLimX);
+    xticks(curAx, curTicksX);
+    xlabel(curAx, curLabelX);
+    
+    ylim(curAx, curLimY);
+    yticks(curAx, curTicksY);
+    ylabel(curAx, curLabelY);
+    
+    axis(curAx, 'square');
+    connectEM.Figure.config(curFig, info);
+    curFig.Position(3:4) = 160;
+    
+    %% Heat map
     for curCtrlConfig = curCtrlConfigs
         curKvPairs = { ...
             'xLim', curLimX, 'xAxis', curAxisX, ...
