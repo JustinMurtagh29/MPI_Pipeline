@@ -77,8 +77,10 @@ connectEM.Figure.config(curFig, info);
 %% Plot synapse pair trajectories
 clear cur*;
 
-curLimX = [1, 125];
+curLimX = [0, 125];
+curTicksX = 0:25:125;
 curLimY = [0, 1];
+curTicksY = [0, 1];
 
 curFig = figure();
 
@@ -98,59 +100,19 @@ end
 
 curAxes = curFig.Children;
 set(curAxes, ...
-    'XLim', curLimX, 'XTick', [], ...
-    'YLim', curLimY, 'YTick', []);
+    'XLim', curLimX, 'XTick', curTicksX, ...
+    'YLim', curLimY, 'YTick', curTicksY);
+
+curTickLabels = xticklabels(curAxes(1));
+curTickLabels(2:(end - 1)) = {''};
+xticklabels(curAxes, curTickLabels);
 
 curAx = curAxes(numel(methods));
-xlabel(curAx, 'Time');
-ylabel(curAx, 'Areas');
+xlabel(curAx, 'Time step');
+ylabel(curAx, 'Area [µm²]');
 
 curLines = findobj(curFig, 'Type', 'Line');
 set(curLines, 'LineWidth', 2);
 
 connectEM.Figure.config(curFig);
-curFig.Position(3:4) = [800, 160];
-
-%% Plot average size and relative difference trajectory
-clear cur*;
-
-curLimX = [1, 125];
-curLimLeftY = [0, 1];
-curLimRightY = [0, 2];
-
-curFig = figure();
-
-for curAreaIdx = 1:size(areas, 1)
-    for curMethodIdx = 1:numel(methods)
-        curAreas = areas{curAreaIdx, curMethodIdx};
-        
-        curAvgArea = mean(curAreas, 2);
-        curRelDiff = abs(diff(curAreas, 1, 2)) ./ curAvgArea;
-        
-        curPlotIdx = ...
-            curMethodIdx + ...
-            numel(methods) * (curAreaIdx - 1);
-        
-        curAx = subplot(size(areas, 1), numel(methods), curPlotIdx);
-        yyaxis(curAx, 'left'); plot(curAvgArea);
-        yyaxis(curAx, 'right'); plot(curRelDiff, 'k');
-    end
-end
-
-
-curAxes = curFig.Children;
-set(curAxes, 'XLim', curLimX, 'XTick', []);
-arrayfun(@(ax) yyaxis(ax, 'right'), curAxes);
-set(curAxes, 'YLim', curLimRightY, 'YTick', []);
-arrayfun(@(ax) yyaxis(ax, 'left'), curAxes);
-set(curAxes, 'YLim', curLimLeftY, 'YTick', []);
-
-curAx = curAxes(numel(methods));
-xlabel(curAx, 'Time');
-ylabel(curAx, 'A / RD');
-
-curLines = findobj(curFig, 'Type', 'Line');
-set(curLines, 'LineWidth', 2);
-
-connectEM.Figure.config(curFig);
-curFig.Position(3:4) = [800, 160];
+curFig.Position(3:4) = [315, 215];
