@@ -25,12 +25,25 @@ methods = cell2struct(methods, {'name', 'title', 'color'}, 2);
 info = Util.runInfo();
 Util.showRunInfo(info);
 
-%% Plot
+% Run simulations
 rng(4);
 
 areas = [1, 2, 3, numel(methods)];
 areas = 10 .^ normrnd(ccMeanLog, ccStdLog, areas);
 areas = reshape(num2cell(areas, 2), [], numel(methods));
+
+for curAreaIdx = 1:size(areas, 1)
+    for curMethodIdx = 1:numel(methods)
+        curMethod = methods(curMethodIdx).name;
+    
+        areas{curAreaIdx, curMethodIdx} = ...
+            connectEM.Consistency.Simulation.evolution( ...
+                areas{curAreaIdx, curMethodIdx}, 'method', curMethod);
+    end
+end
+
+%% Plot
+rng(4);
 
 curFig = figure();
 curAx = axes(curFig);
@@ -40,11 +53,7 @@ for curAreaIdx = 1:size(areas, 1)
     for curMethodIdx = 1:numel(methods)
         curMethod = methods(curMethodIdx).name;
         curColor = methods(curMethodIdx).color;
-    
-        curAreas = ...
-            connectEM.Consistency.Simulation.evolution( ...
-                areas{curAreaIdx, curMethodIdx}, 'method', curMethod);
-        areas{curAreaIdx, curMethodIdx} = curAreas;
+        curAreas = areas{curAreaIdx, curMethodIdx};
 
         curX = std(curAreas, 0, 2) ./ mean(curAreas, 2);
         curY = log10(mean(curAreas, 2));
@@ -77,9 +86,9 @@ connectEM.Figure.config(curFig, info);
 %% Plot synapse pair trajectories
 clear cur*;
 
-curLimX = [0, 125];
-curTicksX = 0:25:125;
-curLimY = [0, 1];
+curLimX = [0, 240];
+curTicksX = linspace(curLimX(1), curLimX(2), 4);
+curLimY = [0, 1.5];
 curTicksY = [0, 1];
 
 curFig = figure();
@@ -96,7 +105,6 @@ for curAreaIdx = 1:size(areas, 1)
         plot(curAreas);
     end
 end
-
 
 curAxes = curFig.Children;
 set(curAxes, ...
@@ -116,3 +124,48 @@ set(curLines, 'LineWidth', 2);
 
 connectEM.Figure.config(curFig);
 curFig.Position(3:4) = [315, 215];
+
+%% Movie
+clear cur*;
+
+curSteps = size(areas{1}, 1);
+curFrames = struct('cdata', {}, 'colormap', {});
+
+curFig = figure();
+curAx = axes(curFig);
+hold(curAx, 'on');
+
+xlim(curAx, [0, 2]);
+ylim(curAx, limY);
+
+axis(curAx, 'square');
+xticklabels(curAx, {});
+yticklabels(curAx, {});
+
+curFig.Position(3:4) = 200;
+connectEM.Figure.config(curFig);
+
+for curT = 1:size(areas{1}, 1)
+    delete(curAx.Children);
+    
+    for curAreaIdx = 1:size(areas, 1)
+        for curMethodIdx = 1:numel(methods)
+            curColor = methods(curMethodIdx).color;
+            curAreas = areas{curAreaIdx, curMethodIdx};
+
+            curX = abs(diff(curAreas, 1, 2)) ./ mean(curAreas, 2);
+            curY = log10(mean(curAreas, 2));
+
+            scatter( ...
+                curAx, curX(1), curY(1), 'o', ...
+                'MarkerEdgeColor', 'none', ...
+                'MarkerFaceColor', curColor);
+            plot(curAx, ...
+                curX(1:curT), curY(1:curT), ...
+                'Color', curColor, ...
+                'LineWidth', 2);
+        end
+    end
+    
+    curFrames(curT) = getframe(curFig);
+end
