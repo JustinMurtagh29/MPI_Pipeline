@@ -1,4 +1,4 @@
-function agglomerate(p);
+%function agglomerate(p);
 % This script was used for testing automated agglomeration & connectome generation
 % Author: 
 %           Manuel Berning <manuel.berning@brain.mpg.de>
@@ -29,16 +29,31 @@ synScore = load([p.saveFolder 'globalSynapseScores.mat']);
 synScore.isSynapse = connectEM.synScoresToSynEdges(graph, synScore);
 toc;
 
-graphCut = connectEM.cutGraphSimple(p, graph, segmentMeta, borderMeta, 100, 1000);
+borderSizeThr = 50;
+segmentSizeThr = 100;
+display(['Cut graph at border size:' num2str(borderSizeThr), 'segment size:' num2str(segmentSizeThr)]);
+graphCut = connectEM.cutGraphSimple(p, graph, segmentMeta, borderMeta, borderSizeThr, segmentSizeThr);
 
 % Lets stick with 99% for now as we have 'large enough' components
-probThreshold = 0.99;
+probThreshold = 0.96;
 sizeThreshold = 1e6;
-display(['Performing agglomeration on graph with thr prob:' num2str(probThreshold), ' size:' num2str(sizeThreshold)]);
+display(['Performing agglomeration on graph with thr prob:' num2str(probThreshold), 'agglo size:' num2str(sizeThreshold)]);
 tic;
-[agglos, agglosSize, agglosEdges] = connectEM.partitionSortAndKeepOnlyLarge(graphCut, segmentMeta, probThreshold, sizeThreshold);
+%{
+partitionEdges = graphCut.edges(graphCut.prob>probThreshold,:);
+partition = Graph.findConnectedComponents(partitionEdges, false, true);
+% Sort agglomerates by voxel size
+partitionSize = cellfun(@(x)sum(segmentMeta.voxelCount(x)), partition);
+[partitionSize, idx] = sort(partitionSize, 'descend');
+partition = partition(idx);
+% Keep only agglomerates that have at least sizeThreshold million voxels
+idx = partitionSize > sizeThreshold;
+partition = partition(idx);
+partitionSize = partitionSize(idx);
+clear idx;
 toc;
-
+%}
+[agglos, agglosSize, agglosEdges] = connectEM.partitionSortAndKeepOnlyLarge(graphCut, segmentMeta, probThreshold, sizeThreshold);
 [agglosSizeSorted,idxSort] = sort(agglosSize,'descend');
 agglosSorted= agglos(idxSort);
 
@@ -136,4 +151,4 @@ bbox = Util.convertWebknossosToMatlabBbox(bbox_wk);
 idx = all(bsxfun(@minus, spinePosition, bbox(:,1)') > 0,2) & all(bsxfun(@minus, spinePosition, bbox(:,2)') < 0,2);
 connectEM.generateSkeletonFromNodes([outputFolder 'spinesBbox.nml'], spinePosition(idx), strseq('spines', 1:sum(idx), {}, true));
 %}
-end
+%end
