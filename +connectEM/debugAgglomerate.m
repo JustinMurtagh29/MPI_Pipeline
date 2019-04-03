@@ -1,6 +1,7 @@
 % find out why the agglomeration stopped while growing
 
-segId = 17059232;
+%segId = 17059232;
+segId = 30107106
 edges= graph.edges;
 prob = graph.prob;
 
@@ -29,7 +30,7 @@ theseEdgesNodes = changem(double(theseEdgesSegId), 1:size(theseCoM,1), outEdges(
 for i=1:size(theseEdgesNodes,1)
 curEdges = theseEdgesNodes(i,:);
 curNodes = theseCoM(curEdges,:);
-skel = skel.addTree(['tree_' num2str(curEdges(1)) '-' num2str(curEdges(2)) '_' num2str(theseProb(i),'%03f') ], curNodes)
+skel = skel.addTree(['tree_' num2str(curEdges(1)) '-' num2str(curEdges(2)) '_' num2str(theseProb(i),'%03f') ], curNodes);
 
 end
 
