@@ -1,4 +1,4 @@
-function aggloGridSeachSimple(p)
+function job = aggloGridSeachSimple(p)
 % use Manuel's grid search routine with simpler version
 % not using heuristics, typeEM information
 info = Util.runInfo();
@@ -24,13 +24,13 @@ segmentSize = [25 50 100 300 500 700 1000]; % segment below ...
 probThreshold = [0.94 0.95 0.96 0.97 0.98 0.99]; % threshold on neurite continuity probability for CC
 sizeThreshold = 100; % threshold on final agglomerate size in voxels (single segments not collected!)
 
-% create job input parameters
+Util.log('create job input parameters')
 inputArguments = inputArgumentsFromParameterSets(borderSize, segmentSize, probThreshold, sizeThreshold);
 inputArgumentFilename = arrayfun(@(x) fullfile(outputFolder, num2str(x,'%.5i'),'.mat'), 1:size(inputArguments,1),'uni',0)';
 inputArguments = mat2cell(inputArguments, ones(size(inputArguments,1),1), size(inputArguments,2));
 inputArguments = cellfun(@(x,y)[num2cell(x) y], inputArguments, inputArgumentFilename, 'uni', 0);
 
-
+Util.log('Submitting jobs...')
 job = Cluster.startJob( ...
     @doAgglomeration, inputArguments, ...
     'sharedInputs', {graph, segmentMeta, borderMeta, info}, ...
