@@ -26,7 +26,7 @@ sizeThreshold = 100; % threshold on final agglomerate size in voxels (single seg
 
 Util.log('create job input parameters')
 inputArguments = inputArgumentsFromParameterSets(borderSize, segmentSize, probThreshold, sizeThreshold);
-inputArgumentFilename = arrayfun(@(x) fullfile(outputFolder, num2str(x,'%.5i'),'.mat'), 1:size(inputArguments,1),'uni',0)';
+inputArgumentFilename = arrayfun(@(x) fullfile(outputFolder, [num2str(x,'%.5i'),'.mat']), 1:size(inputArguments,1),'uni',0)';
 inputArguments = mat2cell(inputArguments, ones(size(inputArguments,1),1), size(inputArguments,2));
 inputArguments = cellfun(@(x,y)[num2cell(x) y], inputArguments, inputArgumentFilename, 'uni', 0);
 
