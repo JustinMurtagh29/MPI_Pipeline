@@ -55,10 +55,10 @@ function [agglos, agglosSize, agglosEdges] = doAgglomeration(...
     toc;
 end
 
-function inputArguments = inputArgumentsFromParameterSets(a, b, c, d, e)
+function inputArguments = inputArgumentsFromParameterSets(a, b, c, d)
 
-    [aG, bG, cG, dG, eG] = ndgrid(a, b, c, d, e);
-    inputArguments = cat(2, aG(:), bG(:), cG(:), dG(:), eG(:)); 
+    [aG, bG, cG, dG ] = ndgrid(a, b, c, d);
+    inputArguments = cat(2, aG(:), bG(:), cG(:), dG(:)); 
 
 end
 
