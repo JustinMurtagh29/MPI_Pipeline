@@ -1,5 +1,6 @@
 function aggloGridSeachSimple(p)
-
+% use Manuel's grid search routine with simpler version
+% not using heuristics, typeEM information
 info = Util.runInfo();
 
 outputFolder = [p.saveFolder datestr(clock,30) 'gridSearchAgglomeration/'];
