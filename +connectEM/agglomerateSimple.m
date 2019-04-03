@@ -35,7 +35,7 @@ display(['Cut graph at border size:' num2str(borderSizeThr), 'segment size:' num
 graphCut = connectEM.cutGraphSimple(p, graph, segmentMeta, borderMeta, borderSizeThr, segmentSizeThr);
 
 % Lets stick with 99% for now as we have 'large enough' components
-probThreshold = 0.96;
+probThreshold = 0.99;
 sizeThreshold = 1e6;
 display(['Performing agglomeration on graph with thr prob:' num2str(probThreshold), 'agglo size:' num2str(sizeThreshold)]);
 tic;
