@@ -6,7 +6,7 @@
 %           Sahil Loomba <sahil.loomba@brain.mpg.de>
 % See +connectEM for additional functions used here
 
-outputFolder = [p.saveFolder datestr(clock,30) '_agglomeration/'];                                                                                                           
+outputFolder = [p.saveFolder datestr(clock,30) '_agglomeration_compare/'];
 if ~exist(outputFolder, 'dir')
     mkdir(outputFolder);
 end
@@ -29,37 +29,33 @@ synScore = load([p.saveFolder 'globalSynapseScores.mat']);
 synScore.isSynapse = connectEM.synScoresToSynEdges(graph, synScore);
 toc;
 
+maxSegId = Seg.Global.getMaxSegId(p);
 borderSizeThr = 50;
 segmentSizeThr = 100;
 display(['Cut graph at border size:' num2str(borderSizeThr), 'segment size:' num2str(segmentSizeThr)]);
 graphCut = connectEM.cutGraphSimple(p, graph, segmentMeta, borderMeta, borderSizeThr, segmentSizeThr);
-
-% Lets stick with 99% for now as we have 'large enough' components
 probThreshold = 0.99;
 sizeThreshold = 1e6;
 display(['Performing agglomeration on graph with thr prob:' num2str(probThreshold), 'agglo size:' num2str(sizeThreshold)]);
-tic;
+[agglos, agglosSize, agglosEdges] = connectEM.partitionSortAndKeepOnlyLarge(graphCut, segmentMeta, probThreshold, sizeThreshold);
 %{
-partitionEdges = graphCut.edges(graphCut.prob>probThreshold,:);
-partition = Graph.findConnectedComponents(partitionEdges, false, true);
-% Sort agglomerates by voxel size
+agglosEdges = graphCut.edges(graphCut.prob > probThreshold,:);
+[~, partition] = Graph.buildConnectedComponents(maxSegId, agglosEdges);
 partitionSize = cellfun(@(x)sum(segmentMeta.voxelCount(x)), partition);
 [partitionSize, idx] = sort(partitionSize, 'descend');
 partition = partition(idx);
-% Keep only agglomerates that have at least sizeThreshold million voxels
 idx = partitionSize > sizeThreshold;
 partition = partition(idx);
 partitionSize = partitionSize(idx);
 clear idx;
-toc;
+agglos = partition;
+agglosSize = partitionSize;
 %}
-[agglos, agglosSize, agglosEdges] = connectEM.partitionSortAndKeepOnlyLarge(graphCut, segmentMeta, probThreshold, sizeThreshold);
 [agglosSizeSorted,idxSort] = sort(agglosSize,'descend');
 agglosSorted= agglos(idxSort);
 
-agglosOut = agglosSorted(1:500);
+agglosOut = agglosSorted(1:100);
 display('Writing skeletons for debugging the process:');
-
 parameters.experiment.name= p.experimentName;
 parameters.scale.x = num2str(p.raw.voxelSize(1));
 parameters.scale.y = num2str(p.raw.voxelSize(2));
@@ -67,14 +63,12 @@ parameters.scale.z = num2str(p.raw.voxelSize(3));
 parameters.offset.x = '0';
 parameters.offset.y = '0';
 parameters.offset.z = '0';
-
 outputFolderSub = fullfile(outputFolder,['prob_' num2str(probThreshold) '_size' num2str(sizeThreshold)]);
 mkdir(outputFolderSub)
 tic;
 Superagglos.skeletonFromAgglo(graph.edges, segmentMeta, ...
     agglosOut, 'agglos', outputFolderSub, parameters);
 toc;
-
 Util.save(fullfile(outputFolderSub,'agglos.mat'),agglos, agglosSize)
 
 %{
