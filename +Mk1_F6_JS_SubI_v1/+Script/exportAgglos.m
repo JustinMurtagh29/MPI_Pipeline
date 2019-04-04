@@ -42,10 +42,10 @@ if ~exist(outDir,'dir')
 end
 
 % store data
-Util.save(fullfile(outDir,'agglos.mat'), agglos, graph, mergedEdges, info);
+Util.save(fullfile(outDir,'agglos.mat'), agglos, graph, mergeEdges, info);
 
 % write WK mapping
-WK.makeWKMapping(agglos, ['HC_score:' num2str(minScore) ...
+WK.makeWKMapping(agglos, ['HC_score:' num2str(minScore)], ...
                             outDir);
 
 % write nmls
