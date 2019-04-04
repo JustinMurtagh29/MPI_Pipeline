@@ -6,7 +6,9 @@
 %           Sahil Loomba <sahil.loomba@brain.mpg.de>
 % See +connectEM for additional functions used here
 
-outputFolder = [p.saveFolder datestr(clock,30) '_agglomeration_compare/'];
+info = Util.runInfo();
+
+outputFolder = [p.saveFolder datestr(clock,30) '_agglomeration/'];
 if ~exist(outputFolder, 'dir')
     mkdir(outputFolder);
 end
@@ -63,13 +65,23 @@ parameters.scale.z = num2str(p.raw.voxelSize(3));
 parameters.offset.x = '0';
 parameters.offset.y = '0';
 parameters.offset.z = '0';
-outputFolderSub = fullfile(outputFolder,['prob_' num2str(probThreshold) '_size' num2str(sizeThreshold)]);
+outputFolderSub = fullfile(outputFolder,['border:' num2str(borderSizeThr) ...
+                            'seg:' num2str(segmentSizeThr) ...
+                            'prob:' num2str(probThreshold) ...
+                            'size:' num2str(sizeThreshold)]);
 mkdir(outputFolderSub)
 tic;
 Superagglos.skeletonFromAgglo(graph.edges, segmentMeta, ...
     agglosOut, 'agglos', outputFolderSub, parameters);
 toc;
-Util.save(fullfile(outputFolderSub,'agglos.mat'),agglos, agglosSize)
+Util.save(fullfile(outputFolderSub,'agglos.mat'),agglos, agglosSize, info)
+
+display('Writing WK mapping:')
+WK.makeWKMapping(agglos, ['border:' num2str(borderSizeThr) ...
+                            'seg:' num2str(segmentSizeThr) ...
+                            'prob:' num2str(probThreshold) ...
+                            'size:' num2str(sizeThreshold)], ...
+                         outputFolderSub);
 
 %{
 display('Display collected volume, save everything (except graph, which will be ignored due to size):');
