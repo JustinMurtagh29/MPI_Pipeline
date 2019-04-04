@@ -35,18 +35,29 @@ agglos = agglos(idxSort);
 % HACK(amotta): Convert graph table into historical graph table;
 graphS = struct;
 graphS.edges = graph.edge;
-Util.log('Now writing out nmls...')
-outDir = fullfile(rootDir,'agglomeration', ['score_', num2str(minScore)]);
-mkdir(outDir)
-for i=100:200
+
+outDir = fullfile(rootDir,'agglomeration', ['score_new_', num2str(minScore)]);
+if ~exist(outDir,'dir')
+    mkdir(outDir)
+end
+
+% store data
+Util.save(fullfile(outDir,'agglos.mat'), agglos, graph, mergedEdges, info);
+
+% write WK mapping
+WK.makeWKMapping(agglos, ['HC_score:' num2str(minScore) ...
+                            outDir);
+
+% write nmls
+for i=2:100
     agglosOut = agglos(i);
     outFile = fullfile(outDir, ['agglo_' num2str(i,'%04d') '.nml']);
-    
+
     skel = Skeleton.fromAgglo(graphS, points, agglosOut);
     skel = skel.setParams(datasetName, voxelSize, [0, 0, 0]);
-    
+
     description = sprintf('%s (%s)', info.filename, info.git_repos{1}.hash);
     skel = skel.setDescription(description);
-    
+
     skel.write(outFile);
 end
