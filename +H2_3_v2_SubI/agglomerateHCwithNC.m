@@ -41,9 +41,10 @@ agglosHCEdges = graphHC.edge(graphHC.score > minScore, :);
 % NOTE (hack): very primitive,
 % add (i) directionality, (ii) distance-threshold (iii)typeEM information later
 maxSegId = Seg.Global.getMaxSegId(p);
-mergeEdges  = 
+mergeEdges  = cat(1, agglosNCEdges, agglosHCEdges); % simply catenate edges for CC later
+mergeEdges = unique(mergeEdges, 'rows'); % get rid of duplicate edges
 [~, agglos] = Graph.buildConnectedComponents(maxSegId, mergeEdges);
-agglosSize = cellfun(@(x)s um(segmentMeta.voxelCount(x)), agglos);
+agglosSize = cellfun(@(x) sum(segmentMeta.voxelCount(x)), agglos);
 [agglosSize, idx] = sort(agglosSize, 'descend');
 agglos = agglos(idx);
 %{% Keep only agglomerates that have at least sizeThreshold million voxels
@@ -51,7 +52,7 @@ idx = agglosSize > sizeThreshold;
 agglos = agglos(idx);
 agglosSize = agglosSize(idx); %}
 clear idx;
-
+keyboard
 Util.log('save new agglomeration state')
 Util.save(fullfile(outputFolder,'agglos.mat'),agglos, agglosSize, borderSizeThr,...
                     segmentSizeThr, probThreshold, sizeThreshold, minScore, info)
