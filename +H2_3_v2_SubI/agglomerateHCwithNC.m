@@ -11,7 +11,7 @@ info = Util.runInfo();
 % Load parameter
 rootDir = '/tmpscratch/sahilloo/data/H2_3_v2_U1_SubI/pipelineRun_mr2e_wsmrnet/';
 load(fullfile(rootDir,'allParameter.mat'))
-% load data
+Util.log('load data:')
 segmentMeta = load([p.saveFolder 'segmentMeta.mat'], 'voxelCount', 'point', 'maxSegId');
 segmentMeta.point = segmentMeta.point';
 borderMeta = load([p.saveFolder 'globalBorder.mat'], 'borderSize', 'borderCoM');
@@ -24,7 +24,7 @@ if ~exist(outputFolder, 'dir')
     mkdir(outputFolder);
 end
 
-% cut and restrict graph based on NC thresholds
+Util.log('cut and restrict graph based on NC thresholds')
 borderSizeThr = 50;
 segmentSizeThr = 100;
 probThreshold = 0.99;
@@ -32,16 +32,17 @@ sizeThreshold = 1e6;
 graphCut = connectEM.cutGraphSimple(p, graph, segmentMeta, borderMeta, borderSizeThr, segmentSizeThr);
 agglosNCEdges = graphCut.edges(graphCut.prob > probThreshold,:);
 
-% load HC graph
+Util.log('load HC graph')
 minScore = 0;
 graphHC = load(fullfile(rootDir, '29Nov2018_agglomeration/graph.mat'));
 graphHC = graphHC.graph;
 agglosHCEdges = graphHC.edge(graphHC.score > minScore, :);
 
+Util.log('catenate edges from two graphs')
 % NOTE (hack): very primitive,
 % add (i) directionality, (ii) distance-threshold (iii)typeEM information later
 maxSegId = Seg.Global.getMaxSegId(p);
-mergeEdges  = cat(1, agglosNCEdges, agglosHCEdges); % simply catenate edges for CC later
+mergeEdges  = cat(1, agglosNCEdges, agglosHCEdges);
 mergeEdges = unique(mergeEdges, 'rows'); % get rid of duplicate edges
 [~, agglos] = Graph.buildConnectedComponents(maxSegId, mergeEdges);
 agglosSize = cellfun(@(x) sum(segmentMeta.voxelCount(x)), agglos);
