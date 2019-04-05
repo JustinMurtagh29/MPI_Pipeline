@@ -7,6 +7,11 @@
 % state
 
 info = Util.runInfo();
+borderSizeThr = 50;
+segmentSizeThr = 100;
+probThreshold = 0.99;
+sizeThreshold = 1e6;
+minScore = 0;
 
 % Load parameter
 rootDir = '/tmpscratch/sahilloo/data/H2_3_v2_U1_SubI/pipelineRun_mr2e_wsmrnet/';
@@ -18,13 +23,6 @@ borderMeta = load([p.saveFolder 'globalBorder.mat'], 'borderSize', 'borderCoM');
 graph = load([p.saveFolder 'graph.mat']);
 maxSegId = Seg.Global.getMaxSegId(p);
 
-% output folder for saving new agglomeration state
-folderName =  datestr(clock,30);
-outputFolder = [p.saveFolder folderName '_agglomeration_NCHC/'];
-if ~exist(outputFolder, 'dir')
-    mkdir(outputFolder);
-end
-
 % for skeletons
 parameters.experiment.name= p.experimentName;
 parameters.scale.x = num2str(p.raw.voxelSize(1));
@@ -34,11 +32,14 @@ parameters.offset.x = '0';
 parameters.offset.y = '0';
 parameters.offset.z = '0';
 
+% output folder for saving new agglomeration state
+folderName =  datestr(clock,30);
+outputFolder = [p.saveFolder folderName '_agglomeration_NCHC/'];
+if ~exist(outputFolder, 'dir')
+    mkdir(outputFolder);
+end
+
 Util.log('cut and restrict graph based on NC thresholds')
-borderSizeThr = 50;
-segmentSizeThr = 100;
-probThreshold = 0.99;
-sizeThreshold = 1e6;
 graphCut = connectEM.cutGraphSimple(p, graph, segmentMeta, borderMeta, borderSizeThr, segmentSizeThr);
 agglosNCEdges = graphCut.edges(graphCut.prob > probThreshold,:);
 [~, agglosNC] = Graph.buildConnectedComponents(maxSegId, agglosNCEdges);
@@ -46,7 +47,6 @@ agglosNCEdges = graphCut.edges(graphCut.prob > probThreshold,:);
             graph.edges, segmentMeta, parameters, 100, true);
 
 Util.log('do for HC graph')
-minScore = 0;
 graphHC = load(fullfile(rootDir, '29Nov2018_agglomeration/graph.mat'));
 graphHC = graphHC.graph;
 agglosHCEdges = graphHC.edges(graphHC.scores > minScore, :);
