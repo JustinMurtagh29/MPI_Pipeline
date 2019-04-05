@@ -58,7 +58,7 @@ Util.save(fullfile(outputFolder,'agglos.mat'),agglos, agglosSize, borderSizeThr,
                     segmentSizeThr, probThreshold, sizeThreshold, minScore, info)
 
 Util.log('create mapping for new agglomeration state')
-WK.makeWKMapping(agglos, ['NCHC:' folderName)], outDir);
+WK.makeWKMapping(agglos, ['NCHC:' folderName], outDir);
 
 Util.log('write skeletons for new agglomeration state')
 agglosOut = agglos(1:100);
