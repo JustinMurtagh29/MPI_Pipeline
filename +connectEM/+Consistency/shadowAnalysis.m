@@ -181,10 +181,6 @@ for curConfig = reshape(plotConfigs(1, :), 1, [])
         'xLim', curLimX, 'xAxis', curAxisX, ...
         'yLim', curLimY, 'yScale', curScaleY, ...
         'mapSize', curImSize, 'method', curMethod};
-
-   [curSaSdMap, curBw] = ...
-        connectEM.Consistency.densityMap( ...
-            asiT.area(curSaSdConfig.synIdPairs), curKvPairs{:});
     
     curFig = figure();
     curFigs = curFig([]);
@@ -193,7 +189,15 @@ for curConfig = reshape(plotConfigs(1, :), 1, [])
     curCtrlConfigIdx = 0;
     while curCtrlConfigIdx < numel(curCtrlConfigs)
         curCtrlConfigIdx = curCtrlConfigIdx + 1;
-    	curCtrlConfig = curCtrlConfigs(curCtrlConfigIdx);
+        curCtrlConfig = curCtrlConfigs(curCtrlConfigIdx);
+        
+        curSaSdSynIdPairs = all(ismember( ...
+            curSaSdConfig.synIdPairs, curCtrlConfig.synIds), 2);
+        curSaSdSynIdPairs = curSaSdConfig.synIdPairs(curSaSdSynIdPairs, :);
+        
+       [curSaSdMap, curBw] = ...
+            connectEM.Consistency.densityMap( ...
+                asiT.area(curSaSdSynIdPairs), curKvPairs{:});
         
         curCtrlMaps = ...
             connectEM.Consistency.nullDensityMaps( ...
@@ -232,16 +236,15 @@ for curConfig = reshape(plotConfigs(1, :), 1, [])
        [~, curRegionMask] = ismember(curRegionMask, curKeepRegionIds);
         curSaSdT.regionId = curRegionMask(curSaSdT.mapIdx);
         
-        curConfigTitle = sprintf( ...
-            '%s (n = %d pairs)', curConfig.title, ...
-            size(curSaSdConfig.synIdPairs, 1));
+        curConfigTitle = sprintf('%s (n = %d pairs)', ...
+            curConfig.title, size(curSaSdSynIdPairs, 1));
         curCtrlTitle = sprintf( ...
             'vs. random pairs of %s (n = %d)', ...
             curCtrlConfig.title, floor(numel(curCtrlConfig.synIds) / 2));
         
         %% Figure
         curFig = figure();
-        curFigs(end + 1) = curFig;
+        curFigs(end + 1) = curFig; %#ok
         
         curFig.Color = 'white';
         curFig.Position(3:4) = [1060, 970];
