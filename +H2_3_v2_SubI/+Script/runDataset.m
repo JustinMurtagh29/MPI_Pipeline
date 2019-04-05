@@ -42,14 +42,36 @@ clear cur*;
 scores = repelem(scores, curCount, 1);
 edges = cat(1, edges{:});
 
-graph = table;
-graph.edge = edges;
-graph.score = scores;
-clear edges scores;
+% add correspondence scores
+corrFile = fullfile(param.saveFolder, 'mapping.mat');
+corr = load(corrFile, 'correspondences');
+corr = corr.correspondences;
 
-graph = sortrows(graph, 'score', 'descend');
-[~, curUni] = unique(graph.edge, 'rows', 'stable');
+borderIdx = [
+        reshape(1:size(edges, 1), [], 1); % for border-based edges
+        nan(size(corr, 1), 1)];           % for correspondences
+    
+edges = [edges; corr];
+scores = [scores; ones(size(corr, 1), 1)];
+
+% sort edges and probabilities
+[edges, rows] = sortrows(edges);
+scores = scores(rows);
+borderIdx = borderIdx(rows);
+
+% build output
+graph = table;
+graph.edges = edges;
+graph.scores = scores;
+graph.borderIdx = borderIdx;
+
+% save output
+graph = sortrows(graph, 'scores', 'descend');
+[~, curUni] = unique(graph.edges, 'rows', 'stable');
 graph = graph(curUni, :);
 
-Util.save(graphFile, graph);
+Util.save(graphFile, graph, info)
+
+
+
 
