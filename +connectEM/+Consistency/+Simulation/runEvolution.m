@@ -33,12 +33,12 @@ areas = 10 .^ normrnd(ccMeanLog, ccStdLog, areas);
 areas = reshape(num2cell(areas, 2), [], numel(methods));
 
 for curAreaIdx = 1:size(areas, 1)
-    for curMethodIdx = 1:numel(methods)
-        curMethod = methods(curMethodIdx).name;
+    for curMethodId = 1:numel(methods)
+        curMethod = methods(curMethodId).name;
     
-        areas{curAreaIdx, curMethodIdx} = ...
+        areas{curAreaIdx, curMethodId} = ...
             connectEM.Consistency.Simulation.evolution( ...
-                areas{curAreaIdx, curMethodIdx}, 'method', curMethod);
+                areas{curAreaIdx, curMethodId}, 'method', curMethod);
     end
 end
 
@@ -50,10 +50,10 @@ curAx = axes(curFig);
 hold(curAx, 'on');
 
 for curAreaIdx = 1:size(areas, 1)
-    for curMethodIdx = 1:numel(methods)
-        curMethod = methods(curMethodIdx).name;
-        curColor = methods(curMethodIdx).color;
-        curAreas = areas{curAreaIdx, curMethodIdx};
+    for curMethodId = 1:numel(methods)
+        curMethod = methods(curMethodId).name;
+        curColor = methods(curMethodId).color;
+        curAreas = areas{curAreaIdx, curMethodId};
 
         curX = std(curAreas, 0, 2) ./ mean(curAreas, 2);
         curY = log10(mean(curAreas, 2));
@@ -94,11 +94,11 @@ curTicksY = [0, 1];
 curFig = figure();
 
 for curAreaIdx = 1:size(areas, 1)
-    for curMethodIdx = 1:numel(methods)
-        curAreas = areas{curAreaIdx, curMethodIdx};
+    for curMethodId = 1:numel(methods)
+        curAreas = areas{curAreaIdx, curMethodId};
         
         curPlotIdx = ...
-            curMethodIdx + ...
+            curMethodId + ...
             numel(methods) * (curAreaIdx - 1);
         
         subplot(size(areas, 1), numel(methods), curPlotIdx);
@@ -128,12 +128,12 @@ curFig.Position(3:4) = [315, 215];
 %% Movie of synapse pair trajectories
 clear cur*;
 
-curOutFile = '/home/amotta/Desktop/synapse-pair-movie-%d';
+curOutFile = '/home/amotta/Desktop/size-vs-time_movie-%d';
 
 curPairConfigs = @(r, c) sub2ind(size(areas), r, c);
 curPairConfigs = { ...
     [curPairConfigs(2, 5), curPairConfigs(3, 6)], ...
-    [curPairConfigs(1, 3), curPairConfigs(1, 2)]};
+    [curPairConfigs(1, 4), curPairConfigs(1, 2)]};
 
 for curPairConfigIdx = 1:numel(curPairConfigs)
     curPairIds = curPairConfigs{curPairConfigIdx};
@@ -162,16 +162,20 @@ for curPairConfigIdx = 1:numel(curPairConfigs)
             xlim(curAx, [0, size(areas{1}, 1)]);
             ylim(curAx, [0, 1]);
             
-            xlabel(curAx, []); xticks(curAx, []);
-            ylabel(curAx, []); yticks(curAx, []);
+            xlabel(curAx, []);
+            xticks(curAx, []);
+            
+            ylabel(curAx, []);
+            yticks(curAx, [0, 1]);
+            yticklabels(curAx, {});
         end
         
         connectEM.Figure.config(curFig);
-        curFrames(end + 1) = getframe(curFig);
+        curFrames(end + 1) = getframe(curFig); %#ok
     end
     
     curWriter = sprintf(curOutFile, curPairConfigIdx);
-    curWriter = VideoWriter(curWriter, 'Uncompressed AVI');
+    curWriter = VideoWriter(curWriter, 'Uncompressed AVI'); %#ok
     curWriter.open();
     curWriter.writeVideo(curFrames);
     curWriter.close();
@@ -181,89 +185,57 @@ end
 %% Movie
 clear cur*;
 
-curSteps = size(areas{1}, 1);
-curFrames = struct('cdata', {}, 'colormap', {});
+curOutFile = '/home/amotta/Desktop/cv-vs-log10-avg-size_movie-%d';
+curMethodConfigs = {[5, 6], [2, 4]};
 
-curFig = figure();
-curAx = axes(curFig);
-hold(curAx, 'on');
+for curMethodConfigIdx = 1:numel(curMethodConfigs)
+    curMethodIds = curMethodConfigs{curMethodConfigIdx};
+    curFrames = struct('cdata', {}, 'colormap', {});
 
-xlim(curAx, [0, 2]);
-ylim(curAx, limY);
+    curFig = figure();
+    curAx = axes(curFig);
+    hold(curAx, 'on');
 
-axis(curAx, 'square');
-xticklabels(curAx, {});
-yticklabels(curAx, {});
+    xlim(curAx, [0, 2]);
+    ylim(curAx, limY);
 
-curFig.Position(3:4) = 200;
-connectEM.Figure.config(curFig);
+    axis(curAx, 'square');
+    xticklabels(curAx, {});
+    yticklabels(curAx, {});
 
-for curT = 1:size(areas{1}, 1)
-    delete(curAx.Children);
-    
-    for curAreaIdx = 1:size(areas, 1)
-        for curMethodIdx = 1:numel(methods)
-            curColor = methods(curMethodIdx).color;
-            curAreas = areas{curAreaIdx, curMethodIdx};
+    curFig.Position(3:4) = 200;
+    connectEM.Figure.config(curFig);
 
-            curX = abs(diff(curAreas, 1, 2)) ./ mean(curAreas, 2);
-            curY = log10(mean(curAreas, 2));
+    for curT = 1:size(areas{1}, 1)
+        delete(curAx.Children);
 
-            scatter( ...
-                curAx, curX(1), curY(1), 'o', ...
-                'MarkerEdgeColor', 'none', ...
-                'MarkerFaceColor', curColor);
-            plot(curAx, ...
-                curX(1:curT), curY(1:curT), ...
-                'Color', curColor, ...
-                'LineWidth', 2);
+        for curAreaIdx = 1:size(areas, 1)
+            for curMethodId = curMethodIds
+                curColor = methods(curMethodId).color;
+                curAreas = areas{curAreaIdx, curMethodId};
+
+                curX = abs(diff(curAreas, 1, 2)) ./ mean(curAreas, 2);
+                curY = log10(mean(curAreas, 2));
+
+                scatter( ...
+                    curAx, curX(1), curY(1), 'o', ...
+                    'MarkerEdgeColor', 'none', ...
+                    'MarkerFaceColor', curColor);
+                plot(curAx, ...
+                    curX(1:curT), curY(1:curT), ...
+                    'Color', curColor, ...
+                    'LineWidth', 2);
+            end
         end
+
+        curFrames(curT) = getframe(curFig);
     end
     
-    curFrames(curT) = getframe(curFig);
-end
-clear cur*;
-
-curSteps = size(areas{1}, 1);
-curFrames = struct('cdata', {}, 'colormap', {});
-
-curFig = figure();
-curAx = axes(curFig);
-hold(curAx, 'on');
-
-xlim(curAx, [0, 2]);
-ylim(curAx, limY);
-
-axis(curAx, 'square');
-xticklabels(curAx, {});
-yticklabels(curAx, {});
-
-curFig.Position(3:4) = 200;
-connectEM.Figure.config(curFig);
-
-for curT = 1:curSteps
-    delete(curAx.Children);
-    
-    for curAreaIdx = 1:size(areas, 1)
-        for curMethodIdx = 1:numel(methods)
-            curColor = methods(curMethodIdx).color;
-            curAreas = areas{curAreaIdx, curMethodIdx};
-
-            curX = abs(diff(curAreas, 1, 2)) ./ mean(curAreas, 2);
-            curY = log10(mean(curAreas, 2));
-
-            scatter( ...
-                curAx, curX(1), curY(1), 'o', ...
-                'MarkerEdgeColor', 'none', ...
-                'MarkerFaceColor', curColor);
-            plot(curAx, ...
-                curX(1:curT), curY(1:curT), ...
-                'Color', curColor, ...
-                'LineWidth', 2);
-        end
-    end
-    
-    curFrames(curT) = getframe(curFig);
+    curWriter = sprintf(curOutFile, curMethodConfigIdx);
+    curWriter = VideoWriter(curWriter, 'Uncompressed AVI'); %#ok
+    curWriter.open();
+    curWriter.writeVideo(curFrames);
+    curWriter.close();
 end
 
 %% Movie
@@ -290,9 +262,9 @@ for curT = 1:curSteps
     delete(curAx.Children);
     
     for curAreaIdx = 1:size(areas, 1)
-        for curMethodIdx = 1:numel(methods)
-            curColor = methods(curMethodIdx).color;
-            curAreas = areas{curAreaIdx, curMethodIdx};
+        for curMethodId = 1:numel(methods)
+            curColor = methods(curMethodId).color;
+            curAreas = areas{curAreaIdx, curMethodId};
 
             curX = abs(diff(curAreas, 1, 2)) ./ mean(curAreas, 2);
             curY = log10(mean(curAreas, 2));
@@ -333,9 +305,9 @@ for curT = 1:size(areas{1}, 1)
     delete(curAx.Children);
     
     for curAreaIdx = 1:size(areas, 1)
-        for curMethodIdx = 1:numel(methods)
-            curColor = methods(curMethodIdx).color;
-            curAreas = areas{curAreaIdx, curMethodIdx};
+        for curMethodId = 1:numel(methods)
+            curColor = methods(curMethodId).color;
+            curAreas = areas{curAreaIdx, curMethodId};
 
             curX = abs(diff(curAreas, 1, 2)) ./ mean(curAreas, 2);
             curY = log10(mean(curAreas, 2));
