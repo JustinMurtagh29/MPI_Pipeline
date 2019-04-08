@@ -14,7 +14,11 @@ sizeThreshold = 1e6;
 rootDir = '/tmpscratch/sahilloo/data/Mk1_F6_JS_SubI_v1/pipelineRun_mr2e_wsmrnet/';
 load(fullfile(rootDir,'allParameter.mat'))
 maxSegId = Seg.Global.getMaxSegId(p);
-
+segmentMeta = load([p.saveFolder 'segmentMeta.mat'], 'voxelCount', 'point', 'maxSegId');
+segmentMeta.point = segmentMeta.point';
+graph = load([p.saveFolder 'graph.mat']);
+edges = graph.edges;
+Util.log('Loading NC:')
 m = load(fullfile(rootDir,'20190405T151728_agglomeration_NCHC', 'NC','NC_20190405T151728_agglos.mat'));
 agglosNC = m.agglos;
 agglosNCSizes = m.agglosSize;
@@ -25,11 +29,11 @@ idx = agglosNCSizes > sizeThreshold;
 agglosNC = agglosNC(idx);
 agglosNCSizes = agglosNCSizes(idx); 
 clear idx
-
+Util.log('Loading HC:')
 m = load(fullfile(rootDir,'20190405T151728_agglomeration_NCHC', 'HC','HC_20190405T151728_agglos.mat'));
 agglosHC = m.agglos;
 agglosHC = agglosHC(2:end);
-
+Util.log('Combining without individual mega mergers:')
 % do the thing
 lut = Agglo.buildLUT(maxSegId, agglosHC);
 edgesBetweenAgglos = [];
