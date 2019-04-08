@@ -95,9 +95,18 @@ clear idx
 outputFolder = '/tmpscratch/sahilloo/data/Mk1_F6_JS_SubI_v1/pipelineRun_mr2e_wsmrnet/20190405T151728_agglomeration_NCHC/simpleMerge/';
 mkdir(outputFolder)
 agglosOut = agglos(1:100);
+display('Writing skeletons for debugging the process:');
+parameters.experiment.name= p.experimentName;
+parameters.scale.x = num2str(p.raw.voxelSize(1));
+parameters.scale.y = num2str(p.raw.voxelSize(2));
+parameters.scale.z = num2str(p.raw.voxelSize(3));
+parameters.offset.x = '0';
+parameters.offset.y = '0';
+parameters.offset.z = '0';
+tic;
 Superagglos.skeletonFromAgglo(edges, segmentMeta, ...
     agglosOut, 'agglos', outputFolder, parameters);
-
+toc;
 
 
 
