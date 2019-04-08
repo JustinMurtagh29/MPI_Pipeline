@@ -125,7 +125,191 @@ set(curLines, 'LineWidth', 2);
 connectEM.Figure.config(curFig);
 curFig.Position(3:4) = [315, 215];
 
+%% Movie of synapse pair trajectories
+clear cur*;
+
+curOutFile = '/home/amotta/Desktop/synapse-pair-movie-%d';
+
+curPairConfigs = @(r, c) sub2ind(size(areas), r, c);
+curPairConfigs = { ...
+    [curPairConfigs(2, 5), curPairConfigs(3, 6)], ...
+    [curPairConfigs(1, 3), curPairConfigs(1, 2)]};
+
+for curPairConfigIdx = 1:numel(curPairConfigs)
+    curPairIds = curPairConfigs{curPairConfigIdx};
+    curFrames = struct('cdata', {}, 'colormap', {});
+    
+    curFig = figure();
+    curFig.Position(3:4) = [430, 240];
+    
+    for curT = 1:size(areas{1}, 1)
+        delete(curFig.Children);
+        
+        for curPairIdx = 1:numel(curPairIds)
+            curPairId = curPairIds(curPairIdx);
+            curAreas = areas{curPairId};
+            
+            curAx = subplot(1, numel(curPairIds), curPairIdx);
+            hold(curAx, 'on');
+            
+            plot(curAx, ...
+                1:curT, transpose(curAreas(1:curT, 1)), ...
+                'Color', 'black', 'LineWidth', 2);
+            plot(curAx, ...
+                1:curT, transpose(curAreas(1:curT, 2)), ...
+                'Color', 'black', 'LineWidth', 2);
+            
+            xlim(curAx, [0, size(areas{1}, 1)]);
+            ylim(curAx, [0, 1]);
+            
+            xlabel(curAx, []); xticks(curAx, []);
+            ylabel(curAx, []); yticks(curAx, []);
+        end
+        
+        connectEM.Figure.config(curFig);
+        curFrames(end + 1) = getframe(curFig);
+    end
+    
+    curWriter = sprintf(curOutFile, curPairConfigIdx);
+    curWriter = VideoWriter(curWriter, 'Uncompressed AVI');
+    curWriter.open();
+    curWriter.writeVideo(curFrames);
+    curWriter.close();
+end
+
+
 %% Movie
+clear cur*;
+
+curSteps = size(areas{1}, 1);
+curFrames = struct('cdata', {}, 'colormap', {});
+
+curFig = figure();
+curAx = axes(curFig);
+hold(curAx, 'on');
+
+xlim(curAx, [0, 2]);
+ylim(curAx, limY);
+
+axis(curAx, 'square');
+xticklabels(curAx, {});
+yticklabels(curAx, {});
+
+curFig.Position(3:4) = 200;
+connectEM.Figure.config(curFig);
+
+for curT = 1:size(areas{1}, 1)
+    delete(curAx.Children);
+    
+    for curAreaIdx = 1:size(areas, 1)
+        for curMethodIdx = 1:numel(methods)
+            curColor = methods(curMethodIdx).color;
+            curAreas = areas{curAreaIdx, curMethodIdx};
+
+            curX = abs(diff(curAreas, 1, 2)) ./ mean(curAreas, 2);
+            curY = log10(mean(curAreas, 2));
+
+            scatter( ...
+                curAx, curX(1), curY(1), 'o', ...
+                'MarkerEdgeColor', 'none', ...
+                'MarkerFaceColor', curColor);
+            plot(curAx, ...
+                curX(1:curT), curY(1:curT), ...
+                'Color', curColor, ...
+                'LineWidth', 2);
+        end
+    end
+    
+    curFrames(curT) = getframe(curFig);
+end
+clear cur*;
+
+curSteps = size(areas{1}, 1);
+curFrames = struct('cdata', {}, 'colormap', {});
+
+curFig = figure();
+curAx = axes(curFig);
+hold(curAx, 'on');
+
+xlim(curAx, [0, 2]);
+ylim(curAx, limY);
+
+axis(curAx, 'square');
+xticklabels(curAx, {});
+yticklabels(curAx, {});
+
+curFig.Position(3:4) = 200;
+connectEM.Figure.config(curFig);
+
+for curT = 1:curSteps
+    delete(curAx.Children);
+    
+    for curAreaIdx = 1:size(areas, 1)
+        for curMethodIdx = 1:numel(methods)
+            curColor = methods(curMethodIdx).color;
+            curAreas = areas{curAreaIdx, curMethodIdx};
+
+            curX = abs(diff(curAreas, 1, 2)) ./ mean(curAreas, 2);
+            curY = log10(mean(curAreas, 2));
+
+            scatter( ...
+                curAx, curX(1), curY(1), 'o', ...
+                'MarkerEdgeColor', 'none', ...
+                'MarkerFaceColor', curColor);
+            plot(curAx, ...
+                curX(1:curT), curY(1:curT), ...
+                'Color', curColor, ...
+                'LineWidth', 2);
+        end
+    end
+    
+    curFrames(curT) = getframe(curFig);
+end
+
+%% Movie
+clear cur*;
+
+curSteps = size(areas{1}, 1);
+curFrames = struct('cdata', {}, 'colormap', {});
+
+curFig = figure();
+curAx = axes(curFig);
+hold(curAx, 'on');
+
+xlim(curAx, [0, 2]);
+ylim(curAx, limY);
+
+axis(curAx, 'square');
+xticklabels(curAx, {});
+yticklabels(curAx, {});
+
+curFig.Position(3:4) = 200;
+connectEM.Figure.config(curFig);
+
+for curT = 1:curSteps
+    delete(curAx.Children);
+    
+    for curAreaIdx = 1:size(areas, 1)
+        for curMethodIdx = 1:numel(methods)
+            curColor = methods(curMethodIdx).color;
+            curAreas = areas{curAreaIdx, curMethodIdx};
+
+            curX = abs(diff(curAreas, 1, 2)) ./ mean(curAreas, 2);
+            curY = log10(mean(curAreas, 2));
+
+            scatter( ...
+                curAx, curX(1), curY(1), 'o', ...
+                'MarkerEdgeColor', 'none', ...
+                'MarkerFaceColor', curColor);
+            plot(curAx, ...
+                curX(1:curT), curY(1:curT), ...
+                'Color', curColor, ...
+                'LineWidth', 2);
+        end
+    end
+    
+    curFrames(curT) = getframe(curFig);
+end
 clear cur*;
 
 curSteps = size(areas{1}, 1);
