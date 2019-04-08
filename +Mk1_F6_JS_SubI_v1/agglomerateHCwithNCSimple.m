@@ -65,7 +65,7 @@ for i=1:size(cc,1)
     toAdd{i} = unique(nonzeros(lutOut(curCC)));
 end
 toAdd = toAdd';
-agglosNewAppened = cellfun(@(x,y) cat(1, x, cat(1, outClass{y})),agglosNew, toAdd, 'uni',0); %#2
+agglosNewAppened = cellfun(@(x,y) unique(cat(1, x, cat(1, outClass{y}))), agglosNew, toAdd, 'uni',0); %#2
 
 % add single HC found by NC but not contained in CC
 idxOut = cellfun(@(x) numel(x)==1 & any(x~=0), idxClass);
@@ -76,7 +76,7 @@ notFound = ~ismember(outClass, cat(1,cc{:}));
 outClass = outClass(notFound);
 outAgglos = outAgglos(notFound);
 
-agglosToAdd = arrayfun(@(x, y) cat(1, outAgglos{x}, agglosHC{y} ), [1:numel(outAgglos)]', outClass, 'uni', 0); %#3
+agglosToAdd = arrayfun(@(x, y) unique(cat(1, outAgglos{x}, agglosHC{y})), [1:numel(outAgglos)]', outClass, 'uni', 0); %#3
 
 % remaining NC
 idxOut = cellfun(@(x) numel(x) ==1 & all(x==0), idxClass);
@@ -86,12 +86,14 @@ moreAgglos = agglosNC(idxOut); %#4
 idx = setdiff(1:size(agglosHC,1), cat(1,idxClass{:}));
 moreMoreAgglos = agglosHC(idx); %#5
 
+% merging all to one
 agglosFinal = cat(1, agglosNewAppened, agglosToAdd, moreAgglos, moreMoreAgglos);
 agglos = agglosFinal;
 agglosSize = cellfun(@(x) sum(segmentMeta.voxelCount(x)), agglos);
 [agglosSize, idx] = sort(agglosSize, 'descend');
 agglos = agglos(idx);
 clear idx
+
 outputFolder = '/tmpscratch/sahilloo/data/Mk1_F6_JS_SubI_v1/pipelineRun_mr2e_wsmrnet/20190405T151728_agglomeration_NCHC/simpleMerge/';
 mkdir(outputFolder)
 agglosOut = agglos(1:100);
