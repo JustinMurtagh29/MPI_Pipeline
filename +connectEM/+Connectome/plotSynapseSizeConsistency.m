@@ -364,6 +364,15 @@ switch lower(curScaleY)
         error('Invalid Y scale "%s"', curScaleY);
 end
 
+% Region 1: Low CV and small. Red.
+% Region 2: Low CV and large. Green.
+curReds = autumn(2 + 2);
+curGreens = summer(2 + 2);
+
+curRegionColors = cell(1, 2);
+curRegionColors{1} = curReds([1, end - 1], :);
+curRegionColors{2} = curGreens([1, end - 1], :);
+
 % NOTE(amotta): The `curMinMap` and `curMaxMap` matrices have the same size
 % as the heatmaps of the CV × log10(avg. ASI) space. They contain the ASI
 % areas of the smaller and larger synapses, respectively.
@@ -404,24 +413,6 @@ for curConfig = reshape(plotConfigs, 1, [])
     curCtrlConfigs = struct('synIds', {}, 'title', {}, 'tag', {});
     curCtrlConfigs(1).synIds = curSaSdConfig.synIdPairs(:);
     curCtrlConfigs(1).title = 'SASD';
-    
-    %% Scatter plot
-    curFig = figure();
-    curAx = axes(curFig); %#ok
-    
-    scatter(curAx, curSaSdT.x, curSaSdT.y, 1, '.');
-    
-    xlim(curAx, curLimX);
-    xticks(curAx, curTicksX);
-    xlabel(curAx, curLabelX);
-    
-    ylim(curAx, curLimY);
-    yticks(curAx, curTicksY);
-    ylabel(curAx, curLabelY);
-    
-    axis(curAx, 'square');
-    connectEM.Figure.config(curFig, info);
-    curFig.Position(3:4) = 160;
     
     %% Heat map
     for curCtrlConfig = curCtrlConfigs
@@ -612,8 +603,6 @@ for curConfig = reshape(plotConfigs, 1, [])
                 curConfigTitle; curCtrlTitle}, ...
             'EdgeColor', 'none', 'HorizontalAlignment', 'center');
         
-        curFigs(end + 1) = curFig; %#ok
-        
         %% Evaluation
         curTitle = cell(numel(curRegionProps), 1);
         for curRegionId = 1:numel(curRegionProps)
@@ -803,5 +792,40 @@ for curConfig = reshape(plotConfigs, 1, [])
         curFig.Position(3:4) = [330, 260];
         connectEM.Figure.config(curFig, info);
         %}
+        
+        %% Scatter plot
+        curFig = figure();
+        curAx = axes(curFig); %#ok
+        
+        curData = curSaSdT;
+        curData.pVal = curPvalMap(curData.mapIdx);
+        curData = sortrows(curData, 'pVal', 'descend');
+        
+        curPValEdges = [0, sort(curPvalThreshs), 1];
+        curData.pValInt = discretize(curData.pVal, curPValEdges);
+        
+        curData.colorIdx = sub2ind( ...
+           [numel(curPValEdges) - 1, 1 + numel(curRegionColors)], ...
+            curData.pValInt, 1 + curData.regionId);
+        
+        curColors = cellfun( ...
+            @(colors) cat(1, colors, zeros(1, 3)), ...
+            curRegionColors, 'UniformOutput', false);
+        curColors = cat(1, zeros(1 + numel(curColors), 3), curColors{:});
+        curColors = curColors(curData.colorIdx, :);
+        
+        scatter(curAx, curData.x, curData.y, 1, curColors, '.');
+
+        xlim(curAx, curLimX);
+        xticks(curAx, curTicksX);
+        xlabel(curAx, curLabelX);
+
+        ylim(curAx, curLimY);
+        yticks(curAx, curTicksY);
+        ylabel(curAx, curLabelY);
+
+        axis(curAx, 'square');
+        connectEM.Figure.config(curFig, info);
+        curFig.Position(3:4) = 160;
     end
 end
