@@ -14,12 +14,12 @@ curReds = autumn(2 + 1);
 curGreens = summer(4 + 1);
 
 methods = { ...
-    'ltdLinearZero', 'LTD. Linearly towards zero.', curGreens(1, :); ...
-    'ltdLinearNonZero', 'LTD. Linearly towards non-zero.', curGreens(2, :);
-    'ltdExponentialZero', 'LTD. Exponential decay to zero.', curGreens(3, :); ...
-    'ltdExponentialNonZero', 'LTD. Exponential decay to non-zero.', curGreens(4, :); ...
-    'ltpExponentialFinite', 'LTP. Exponential grows to maximum.', curReds(1, :); ...
-    'ltpLinearInf', 'LTP. Linearly towards inf.', curReds(2, :)};
+    'ltdLinearZero', 'LTD. Linearly towards zero.', nan(1, 3); ...
+    'ltdLinearNonZero', 'LTD. Linearly towards non-zero.', curReds(1, :);
+    'ltdExponentialZero', 'LTD. Exponential decay to zero.', nan(1, 3); ...
+    'ltdExponentialNonZero', 'LTD. Exponential decay to non-zero.', curReds(2, :); ...
+    'ltpExponentialFinite', 'LTP. Exponential grows to maximum.', curGreens(2, :); ...
+    'ltpLinearInf', 'LTP. Linearly towards inf.', curGreens(4, :)};
 methods = cell2struct(methods, {'name', 'title', 'color'}, 2);
 
 info = Util.runInfo();
@@ -181,7 +181,6 @@ for curPairConfigIdx = 1:numel(curPairConfigs)
     curWriter.close();
 end
 
-
 %% Movie
 clear cur*;
 
@@ -193,17 +192,17 @@ for curMethodConfigIdx = 1:numel(curMethodConfigs)
     curFrames = struct('cdata', {}, 'colormap', {});
 
     curFig = figure();
-    curAx = axes(curFig);
+    curAx = axes(curFig); %#ok
     hold(curAx, 'on');
 
-    xlim(curAx, [0, 2]);
+    xlim(curAx, [0, 1.5]);
     ylim(curAx, limY);
 
     axis(curAx, 'square');
     xticklabels(curAx, {});
     yticklabels(curAx, {});
 
-    curFig.Position(3:4) = 200;
+    curFig.Position(3:4) = 600;
     connectEM.Figure.config(curFig);
 
     for curT = 1:size(areas{1}, 1)
@@ -213,20 +212,25 @@ for curMethodConfigIdx = 1:numel(curMethodConfigs)
             for curMethodId = curMethodIds
                 curColor = methods(curMethodId).color;
                 curAreas = areas{curAreaIdx, curMethodId};
-
-                curX = abs(diff(curAreas, 1, 2)) ./ mean(curAreas, 2);
+                
+                curX = std(curAreas, 0, 2) ./ mean(curAreas, 2);
                 curY = log10(mean(curAreas, 2));
 
                 scatter( ...
-                    curAx, curX(1), curY(1), 'o', ...
+                    curAx, curX(1), curY(1), 96, 'o', ...
                     'MarkerEdgeColor', 'none', ...
                     'MarkerFaceColor', curColor);
                 plot(curAx, ...
                     curX(1:curT), curY(1:curT), ...
                     'Color', curColor, ...
-                    'LineWidth', 2);
+                    'LineWidth', 3);
             end
         end
+    
+        curAx.XAxis.TickLength(1) = 0.02;
+        curAx.XAxis.LineWidth = 2;
+        curAx.YAxis.TickLength(1) = 0.02;
+        curAx.YAxis.LineWidth = 2;
 
         curFrames(curT) = getframe(curFig);
     end
@@ -236,92 +240,4 @@ for curMethodConfigIdx = 1:numel(curMethodConfigs)
     curWriter.open();
     curWriter.writeVideo(curFrames);
     curWriter.close();
-end
-
-%% Movie
-clear cur*;
-
-curSteps = size(areas{1}, 1);
-curFrames = struct('cdata', {}, 'colormap', {});
-
-curFig = figure();
-curAx = axes(curFig);
-hold(curAx, 'on');
-
-xlim(curAx, [0, 2]);
-ylim(curAx, limY);
-
-axis(curAx, 'square');
-xticklabels(curAx, {});
-yticklabels(curAx, {});
-
-curFig.Position(3:4) = 200;
-connectEM.Figure.config(curFig);
-
-for curT = 1:curSteps
-    delete(curAx.Children);
-    
-    for curAreaIdx = 1:size(areas, 1)
-        for curMethodId = 1:numel(methods)
-            curColor = methods(curMethodId).color;
-            curAreas = areas{curAreaIdx, curMethodId};
-
-            curX = abs(diff(curAreas, 1, 2)) ./ mean(curAreas, 2);
-            curY = log10(mean(curAreas, 2));
-
-            scatter( ...
-                curAx, curX(1), curY(1), 'o', ...
-                'MarkerEdgeColor', 'none', ...
-                'MarkerFaceColor', curColor);
-            plot(curAx, ...
-                curX(1:curT), curY(1:curT), ...
-                'Color', curColor, ...
-                'LineWidth', 2);
-        end
-    end
-    
-    curFrames(curT) = getframe(curFig);
-end
-clear cur*;
-
-curSteps = size(areas{1}, 1);
-curFrames = struct('cdata', {}, 'colormap', {});
-
-curFig = figure();
-curAx = axes(curFig);
-hold(curAx, 'on');
-
-xlim(curAx, [0, 2]);
-ylim(curAx, limY);
-
-axis(curAx, 'square');
-xticklabels(curAx, {});
-yticklabels(curAx, {});
-
-curFig.Position(3:4) = 200;
-connectEM.Figure.config(curFig);
-
-for curT = 1:size(areas{1}, 1)
-    delete(curAx.Children);
-    
-    for curAreaIdx = 1:size(areas, 1)
-        for curMethodId = 1:numel(methods)
-            curColor = methods(curMethodId).color;
-            curAreas = areas{curAreaIdx, curMethodId};
-
-            curX = abs(diff(curAreas, 1, 2)) ./ mean(curAreas, 2);
-            curY = log10(mean(curAreas, 2));
-
-            scatter( ...
-                curAx, curX(1), curY(1), 'o', ...
-                'MarkerEdgeColor', 'none', ...
-                'MarkerFaceColor', curColor);
-            plot(curAx, ...
-                curX(1:curT), curY(1:curT), ...
-                'Color', curColor, ...
-                'LineWidth', 2);
-        end
-    end
-    
-    curFrames(curT) = getframe(curFig);
 end
