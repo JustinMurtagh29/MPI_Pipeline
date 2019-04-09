@@ -5,7 +5,7 @@
 % Both are run here conservatively and the agglomerations from both 
 % methods are here combined to get a larger, error-free agglomeration
 % state
-%{
+
 info = Util.runInfo();
 borderSizeThr = 50;
 segmentSizeThr = 100;
@@ -46,14 +46,15 @@ agglosNCEdges = graphCut.edges(graphCut.prob > probThreshold,:);
 [~, agglosNC] = Graph.buildConnectedComponents(maxSegId, agglosNCEdges);
 [agglosNC,agglosNCSizes] = doForAgglos(agglosNC, ['NC_' folderName], fullfile(outputFolder,'NC'),...
             graph.edges, segmentMeta, parameters, 100, true);
-%}
+
 Util.log('do for HC graph')
 graphHC = load(fullfile(rootDir, 'agglomeration/graph.mat'));
 graphHC = graphHC.graph;
+edges = unique(cat(1,graphHC.edges, graph.edges),'rows','stable');
 agglosHCEdges = graphHC.edges(graphHC.scores > minScore, :);
 [~, agglosHC] = Graph.buildConnectedComponents(maxSegId, agglosHCEdges);
 [agglosHC, agglosHCSizes] = doForAgglos(agglosHC, ['HC_' folderName], fullfile(outputFolder,'HC'),...
-            graph.edges, segmentMeta, parameters, 100, true);
+            edges, segmentMeta, parameters, 100, true);
 
 % NOTE (hack):
 % very primitive,
@@ -61,7 +62,7 @@ agglosHCEdges = graphHC.edges(graphHC.scores > minScore, :);
 mergeEdges  = cat(1, agglosNCEdges, agglosHCEdges);
 mergeEdges = unique(mergeEdges, 'rows','stable'); % get rid of duplicate edges
 [~, agglos] = Graph.buildConnectedComponents(maxSegId, mergeEdges);
-[agglos, agglosSize] = doForAgglos(agglos, ['NCHC_' folderName], outputFolder, graph.edges, segmentMeta, parameters, 100, false);
+[agglos, agglosSize] = doForAgglos(agglos, ['NCHC_' folderName], outputFolder, edges, segmentMeta, parameters, 100, false);
 
 % Keep only agglomerates that have at least sizeThreshold million voxels
 idx = agglosSize > sizeThreshold;
