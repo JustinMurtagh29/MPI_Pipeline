@@ -49,10 +49,11 @@ agglosNCEdges = graphCut.edges(graphCut.prob > probThreshold,:);
 Util.log('do for HC graph')
 graphHC = load(fullfile(rootDir, '29Nov2018_agglomeration/graph.mat'));
 graphHC = graphHC.graph;
+edges = unique(cat(1,graphHC.edges, graph.edges),'rows','stable');
 agglosHCEdges = graphHC.edges(graphHC.scores > minScore, :);
 [~, agglosHC] = Graph.buildConnectedComponents(maxSegId, agglosHCEdges);
 [agglosHC, agglosHCSizes] = doForAgglos(agglosHC, ['HC_' folderName], fullfile(outputFolder,'HC'),...
-            graph.edges, segmentMeta, parameters, 100, true);
+            edges, segmentMeta, parameters, 100, true);
 
 % NOTE (hack):
 % very primitive,
@@ -60,7 +61,7 @@ agglosHCEdges = graphHC.edges(graphHC.scores > minScore, :);
 mergeEdges  = cat(1, agglosNCEdges, agglosHCEdges);
 mergeEdges = unique(mergeEdges, 'rows','stable'); % get rid of duplicate edges
 [~, agglos] = Graph.buildConnectedComponents(maxSegId, mergeEdges);
-[agglos, agglosSize] = doForAgglos(agglos, ['NCHC_' folderName], outputFolder, graph.edges, segmentMeta, parameters, 100, false);
+[agglos, agglosSize] = doForAgglos(agglos, ['NCHC_' folderName], outputFolder, edges, segmentMeta, parameters, 100, false);
 
 % Keep only agglomerates that have at least sizeThreshold million voxels
 idx = agglosSize > sizeThreshold;
