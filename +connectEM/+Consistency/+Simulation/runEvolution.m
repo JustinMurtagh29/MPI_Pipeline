@@ -185,7 +185,7 @@ end
 clear cur*;
 
 curOutFile = '/home/amotta/Desktop/cv-vs-log10-avg-size_movie-%d';
-curMethodConfigs = {[5, 6], [2, 4]};
+curMethodConfigs = {[5, 6], [5, 6, 2, 4]};
 
 for curMethodConfigIdx = 1:numel(curMethodConfigs)
     curMethodIds = curMethodConfigs{curMethodConfigIdx};
