@@ -10,7 +10,7 @@ info = Util.runInfo();
 
 sizeThreshold = 1e6;
 datasetName = 'H2_3_v2_U1_SubI';
-timeStamp = '';
+timeStamp = '20190409T110006';
 % Load parameter
 rootDir = ['/tmpscratch/sahilloo/data/' datasetName '/pipelineRun_mr2e_wsmrnet/'];
 load(fullfile(rootDir,'allParameter.mat'))
@@ -20,7 +20,7 @@ segmentMeta.point = segmentMeta.point';
 graph = load([p.saveFolder 'graph.mat']);
 edges = graph.edges;
 Util.log('Loading NC:')
-m = load(fullfile(rootDir,[timeStamp, 'agglomeration_NCHC'], 'NC',['NC_' timeStamp '_agglos.mat']));
+m = load(fullfile(rootDir,[timeStamp, '_agglomeration_NCHC'], 'NC',['NC_' timeStamp '_agglos.mat']));
 agglosNC = m.agglos;
 agglosNCSizes = m.agglosSize;
 agglosNC = agglosNC(2:end);
@@ -116,6 +116,8 @@ parameters.scale.z = num2str(p.raw.voxelSize(3));
 parameters.offset.x = '0';
 parameters.offset.y = '0';
 parameters.offset.z = '0';
+
+edges = unique(cat(1,graphHC.edges, graph.edges),'rows','stable');
 tic;
 Superagglos.skeletonFromAgglo(edges, segmentMeta, ...
     agglosOut, 'agglos', outputFolder, parameters);

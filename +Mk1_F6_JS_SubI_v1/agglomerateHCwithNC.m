@@ -5,7 +5,7 @@
 % Both are run here conservatively and the agglomerations from both 
 % methods are here combined to get a larger, error-free agglomeration
 % state
-
+%{
 info = Util.runInfo();
 borderSizeThr = 50;
 segmentSizeThr = 100;
@@ -46,11 +46,11 @@ agglosNCEdges = graphCut.edges(graphCut.prob > probThreshold,:);
 [~, agglosNC] = Graph.buildConnectedComponents(maxSegId, agglosNCEdges);
 [agglosNC,agglosNCSizes] = doForAgglos(agglosNC, ['NC_' folderName], fullfile(outputFolder,'NC'),...
             graph.edges, segmentMeta, parameters, 100, true);
-
+%}
 Util.log('do for HC graph')
 graphHC = load(fullfile(rootDir, 'agglomeration/graph.mat'));
 graphHC = graphHC.graph;
-agglosHCEdges = graphHC.edge(graphHC.score > minScore, :);
+agglosHCEdges = graphHC.edges(graphHC.scores > minScore, :);
 [~, agglosHC] = Graph.buildConnectedComponents(maxSegId, agglosHCEdges);
 [agglosHC, agglosHCSizes] = doForAgglos(agglosHC, ['HC_' folderName], fullfile(outputFolder,'HC'),...
             graph.edges, segmentMeta, parameters, 100, true);
