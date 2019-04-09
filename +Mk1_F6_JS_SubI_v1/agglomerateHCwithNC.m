@@ -5,7 +5,7 @@
 % Both are run here conservatively and the agglomerations from both 
 % methods are here combined to get a larger, error-free agglomeration
 % state
-%{
+
 info = Util.runInfo();
 borderSizeThr = 50;
 segmentSizeThr = 100;
@@ -13,8 +13,9 @@ probThreshold = 0.99;
 sizeThreshold = 1e6;
 minScore = 0;
 
+datasetName = 'Mk1_F6_JS_SubI_v1';
 % Load parameter
-rootDir = '/tmpscratch/sahilloo/data/Mk1_F6_JS_SubI_v1/pipelineRun_mr2e_wsmrnet/';
+rootDir = ['/tmpscratch/sahilloo/data/' datasetName '/pipelineRun_mr2e_wsmrnet/'];
 load(fullfile(rootDir,'allParameter.mat'))
 Util.log('load data:')
 segmentMeta = load([p.saveFolder 'segmentMeta.mat'], 'voxelCount', 'point', 'maxSegId');
@@ -45,7 +46,7 @@ agglosNCEdges = graphCut.edges(graphCut.prob > probThreshold,:);
 [~, agglosNC] = Graph.buildConnectedComponents(maxSegId, agglosNCEdges);
 [agglosNC,agglosNCSizes] = doForAgglos(agglosNC, ['NC_' folderName], fullfile(outputFolder,'NC'),...
             graph.edges, segmentMeta, parameters, 100, true);
-%}
+
 Util.log('do for HC graph')
 graphHC = load(fullfile(rootDir, 'agglomeration/graph.mat'));
 graphHC = graphHC.graph;

@@ -12,9 +12,9 @@ segmentSizeThr = 100;
 probThreshold = 0.99;
 sizeThreshold = 1e6;
 minScore = 0;
-
+datasetName = 'H2_3_v2_U1_SubI';
 % Load parameter
-rootDir = '/tmpscratch/sahilloo/data/H2_3_v2_U1_SubI/pipelineRun_mr2e_wsmrnet/';
+rootDir = ['/tmpscratch/sahilloo/data/' datasetName '/pipelineRun_mr2e_wsmrnet/'];
 load(fullfile(rootDir,'allParameter.mat'))
 Util.log('load data:')
 segmentMeta = load([p.saveFolder 'segmentMeta.mat'], 'voxelCount', 'point', 'maxSegId');
