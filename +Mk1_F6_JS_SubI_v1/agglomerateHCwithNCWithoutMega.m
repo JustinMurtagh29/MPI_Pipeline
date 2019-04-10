@@ -57,6 +57,7 @@ agglosHCEdges = graphHC.edges(graphHC.scores > minScore, :);
 [agglosHC, agglosHCSizes] = doForAgglos(agglosHC, ['HC_' folderName], fullfile(outputFolder,'HC'),...
             edges, segmentMeta, parameters, 20, true);
 
+Util.log('Combining HC with NC:')
 % NOTE (hack):
 % very primitive,
 % add: directionality,distance-threshold, typeEM information later
@@ -65,7 +66,7 @@ mergeEdges = unique(mergeEdges, 'rows','stable'); % get rid of duplicate edges
 % remove mega merger segIDs from the mergeEdges before doing CC
 megaMerger = unique(cat(1,agglosNC{1},agglosHC{1})); % mega is always the highest volume agglo
 toDel = ismember(mergeEdges, megaMerger);
-mergeEdges(toDel(:,1)|toDel(:,2)) = [];
+mergeEdges(toDel(:,1)|toDel(:,2),:) = [];
 [~, agglos] = Graph.buildConnectedComponents(maxSegId, mergeEdges);
 [agglos, agglosSize] = doForAgglos(agglos, ['NCHCWithoutMega_' folderName], outputFolder, edges, segmentMeta, parameters, 100, false);
 

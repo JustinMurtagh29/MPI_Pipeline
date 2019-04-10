@@ -18,7 +18,10 @@ maxSegId = Seg.Global.getMaxSegId(p);
 segmentMeta = load([p.saveFolder 'segmentMeta.mat'], 'voxelCount', 'point', 'maxSegId');
 segmentMeta.point = segmentMeta.point';
 graph = load([p.saveFolder 'graph.mat']);
-edges = graph.edges;
+graphHC = load(fullfile(rootDir, 'agglomeration/graph.mat'));
+graphHC = graphHC.graph;
+edges = unique(cat(1,graphHC.edges, graph.edges),'rows','stable');
+
 Util.log('Loading NC:')
 m = load(fullfile(rootDir,[timeStamp, '_agglomeration_NCHC'], 'NC',['NC_' timeStamp '_agglos.mat']));
 agglosNC = m.agglos;
@@ -87,7 +90,8 @@ Util.log('add single HC found by NC but not contained in CC')
 notFound = ~ismember(outClass, cat(1,cc{:}));
 outClassNotFound = outClass(notFound);
 agglosOutNotFound = agglosOut(notFound);
-agglosToAdd1 = arrayfun(@(x, y) unique(cat(1, agglosOutNotFound{x}, agglosHC{y})), [1:numel(agglosOutNotFound)], outClassNotFound, 'uni', 0); %#3
+outClassNotFoundUnique = unique(outClassNotFound);
+agglosToAdd1 = arrayfun(@(x) unique(cat(1, agglosHC{x}, agglosOutNotFound{outClassNotFound==x} )),outClassNotFoundUnique, 'uni', 0); %#3
 
 % remaining NC
 idxOut = cellfun(@(x) numel(x) ==1 & all(x==0), idxClass);
