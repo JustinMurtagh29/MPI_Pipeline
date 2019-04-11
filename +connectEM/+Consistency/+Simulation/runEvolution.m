@@ -205,7 +205,7 @@ for curMethodConfigIdx = 1:numel(curMethodConfigs)
     curFig.Position(3:4) = 600;
     connectEM.Figure.config(curFig);
 
-    for curT = 1:size(areas{1}, 1)
+    for curT = 1:2:size(areas{1}, 1)
         delete(curAx.Children);
 
         for curAreaIdx = 1:size(areas, 1)
@@ -232,7 +232,7 @@ for curMethodConfigIdx = 1:numel(curMethodConfigs)
         curAx.YAxis.TickLength(1) = 0.02;
         curAx.YAxis.LineWidth = 2;
 
-        curFrames(curT) = getframe(curFig);
+        curFrames(end + 1) = getframe(curFig);
     end
     
     curWriter = sprintf(curOutFile, curMethodConfigIdx);
