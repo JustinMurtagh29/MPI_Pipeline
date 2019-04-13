@@ -8,8 +8,18 @@ outDir = '/home/amotta/Desktop';
 
 % Configurations
 confs = struct;
+
 confs(1).pos = [1320, 2308, 2530] + 1;
 confs(1).edge = [10854011, 10853975];
+
+confs(2).pos = [3098, 5408, 2504] + 1;
+confs(2).edge = [11292388, 11291548];
+
+confs(3).pos = [3080, 4469, 1719] + 1;
+confs(3).edge = [7555095, 7554763];
+
+confs(4).pos = [2910, 4877, 2363] + 1;
+confs(4).edge = [10032399, 10032148];
 
 % For more candidate locations, see
 % 2019-04-12-ConnectEM-Illustration-for-Supplements/notes.md
@@ -148,7 +158,7 @@ for curConfIdx = 1:numel(confs)
     curAx = axes(curFig); %#ok
     hold(curAx, 'on');
     
-    imshow(curFix(curRaw), 'Parent', curAx);
+    imshow(curFix(curClass), 'Parent', curAx);
     himage1 = imshow(im1, 'Parent', curAx);
     set(himage1,'Alphadata',0.7.*(l1 > 0));
     himage2 = image(im2, 'Parent', curAx);
