@@ -6,9 +6,10 @@ clear;
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-partiallySplit-v2_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v8-classified.mat');
 
-maxSamples = 100;
-bandWidth = 5;
+imSize = 128;
+bandWidth = 10;
 marginUm = 3;
+dimIds = [2, 3];
 
 info = Util.runInfo();
 Util.showRunInfo(info);
@@ -39,95 +40,67 @@ limits = limits .* param.raw.voxelSize(:) / 1E3;
 limits = limits - marginUm;
 limits = [-1, +1] .* limits;
 
-%% Calculate TC synapse density volume
-clear cur;
-gridSize = max(limits(:, 2));
-gridSize = round(maxSamples .* limits(:, 2) ./ gridSize);
-
-grid = cell(1, 1, 1, 3);
-[grid{:}] = ndgrid( ...
-    linspace(limits(1, 1), limits(1, 2), gridSize(1)), ...
-    linspace(limits(2, 1), limits(2, 2), gridSize(2)), ...
-    linspace(limits(3, 1), limits(3, 2), gridSize(3)));
-grid = reshape(cell2mat(grid), [], 3);
+%% Tangential view
+clear cur*;
 
 curSynT = synT;
 curSynT = curSynT( ...
     all(curSynT.pos > limits(:, 1)', 2) ...
   & all(curSynT.pos < limits(:, 2)', 2), :);
 
-tic;
-densVol = mvksdensity( ...
-    curSynT.pos, grid, ...
-    'Support', transpose(limits), ...
-    'BoundaryCorrection', 'reflection', ...
-    'BandWidth', bandWidth);
-toc;
-densVol = reshape(densVol, gridSize(:)');
+[~, curImData] = connectEM.Libs.kde2d( ...
+    curSynT.pos(:, dimIds), imSize, ...
+    limits(dimIds, 1)', limits(dimIds, 2)', ...
+    repelem(bandWidth, 1, 2));
 
-%% Try isosurface visualization
-clear cur*;
+% NOTE(amotta): Let's convert the density estimate into an estimate of the
+% spatial synapse density. I assume that there exists an elegant analytical
+% way to calculate this. Instead, let's just make sure that the mean value
+% is right (and zero is zero).
+curImData = ...
+    curImData / mean(curImData(:)) ...
+  * size(curSynT, 1) / prod(diff(limits, 1, 2));
 
-curAxisIds = [2, 3, 1];
-curQuantVec = [0.5, 0.85];
-curColors = jet();
+curImData = transpose(curImData);
+curImMax = max(curImData(:));
 
-for curQuant = curQuantVec
-    fig = figure;
-    ax = axes(fig); %#ok
-    hold(ax, 'on');
-    
-    curThresh = quantile(densVol(:), curQuant);
-    curIso = isosurface(densVol, curThresh);
-    curIso.vertices = curIso.vertices(:, [2, 1, 3]);
-    curIso.vertices = curIso.vertices(:, curAxisIds);
-    
-    curPatch = patch(curIso);
-    curPatch.EdgeColor = 'none';
-    
-    curColor = curQuant / max(curQuantVec);
-    curColor = ceil(curColor * size(curColors, 1));
-    curPatch.FaceColor = curColors(curColor, :);
-    curPatch.FaceAlpha = curQuant / 2;
-
-    axis(ax, 'equal');
-    xlim(ax, [1, size(densVol, curAxisIds(1))]);
-    set(ax.XAxis, 'Visible', 'off');
-    ylim(ax, [1, size(densVol, curAxisIds(2))]);
-    set(ax.YAxis, 'Visible', 'off', 'Direction', 'reverse');
-    zlim(ax, [1, size(densVol, curAxisIds(3))]);
-    set(ax.ZAxis, 'Visible', 'off', 'Direction', 'reverse');
-    set(ax, 'Box', 'on', 'BoxStyle', 'full');
-
-    view(ax, 3);
-    camlight(ax);
-
-    title(ax, { ...
-        info.filename; info.git_repos{1}.hash; ...
-        sprintf('Isosurface threshold: %g %%', 100 * curQuant)}, ...
-        'FontWeight', 'normal', 'FontSize', 10);
-end
-
-%% Tangential view
-clear cur*;
 fig = figure();
 fig.Color = 'white';
 
-curImData = shiftdim(sum(densVol, 1), 1);
-curImData = uint8(double(intmax('uint8')) * curImData / max(curImData(:)));
-curImRatio = size(curImData, 1) / size(curImData, 2);
-
 ax = axes(fig);
-curIm = image(ax, curImData);
+hold(ax, 'on');
+
+curIm = imagesc(ax, curImData);
+ax.CLim = [0, curImMax];
+
+curIm.XData = limits(dimIds(1), :);
+curIm.YData = limits(dimIds(2), :);
+
 colormap(ax, jet(256));
+colorbar('peer', ax);
+
+curCont = linspace(0, curImMax, 5);
+curCont = curCont(2:(end - 1));
+
+[~, curCont] = contour(ax, ...
+    double(curImData), curCont, ...
+    'LineColor', 'black');
+
+curCont.XData = ...
+    limits(dimIds(1), 1) ...
+  + diff(limits(dimIds(1), :)) ...
+  * (curCont.XData - 1) / (imSize - 1);
+curCont.YData = ...
+    limits(dimIds(2), 1) ...
+  + diff(limits(dimIds(2), :)) ...
+  * (curCont.YData - 1) / (imSize - 1);
+
 axis(ax, 'image');
 
 ax.XAxis.Visible = 'off';
 ax.YAxis.Visible = 'off';
-xlim(ax, [1, size(curImData, 2)]);
-ylim(ax, [1, size(curImData, 1)]);
+xlim(ax, limits(dimIds(1), :));
+ylim(ax, limits(dimIds(2), :));
 
-title(ax, { ...
-    info.filename; info.git_repos{1}.hash; ...
-    'Tangential projections of TC synapse density'}, ...
-    'FontWeight', 'normal', 'FontSize', 10);
+connectEM.Figure.config(fig, info);
+fig.Position(3:4) = [250, 180];
