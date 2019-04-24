@@ -473,7 +473,7 @@ for curConfig = reshape(plotConfigs(1, :), 1, [])
         curRegionMask = bwlabel(curRegionMask);
         
         curRegionProps = regionprops( ...
-            curRegionMask, {'Area', 'Centroid'}); %#ok
+            curRegionMask, {'Area', 'Centroid', 'BoundingBox'}); %#ok
         curKeepRegionIds = find([curRegionProps.Area] >= 100);
         
         curKeepRegionIds = curKeepRegionIds(arrayfun( ...
@@ -615,6 +615,14 @@ for curConfig = reshape(plotConfigs(1, :), 1, [])
         %% Evaluation
         curTitle = cell(numel(curRegionProps), 1);
         for curRegionId = 1:numel(curRegionProps)
+            curAreaRange = curRegionProps(curRegionId).BoundingBox;
+            curAreaRange = curAreaRange(2) + [0, curAreaRange(4)];
+            
+            curAreaRange = ...
+                curLimY(1) + diff(curLimY) ...
+             .* curAreaRange / curImSize(1);
+            curAreaRange = 10 .^ curAreaRange;
+            
             curFracs = nan(numel(curPvalThreshs), 2);
             for curPvalIdx = 1:numel(curPvalThreshs)
                 curPvalThresh = curPvalThreshs(curPvalIdx);
@@ -625,6 +633,12 @@ for curConfig = reshape(plotConfigs(1, :), 1, [])
                 curFracs(curPvalIdx, 1) = sum(curSaSdMap(curMask));
                 curFracs(curPvalIdx, 2) = sum(curCtrlMap(curMask));
             end
+            
+            fprintf('Region %d\n', curRegionId);
+            fprintf('* Average area: %.2f - %.2f µm²\n', curAreaRange);
+            fprintf('* Upper bound: %.1f %%\n', 100 * curFracs(1, 1));
+            fprintf('* Surplus: %.1f %%\n', 100 * diff(flip(curFracs(1, :))));
+            fprintf('\n');
             
             curTitle{curRegionId} = sprintf( ...
                 'Region %d: %s', curRegionId, strjoin(arrayfun( ...
