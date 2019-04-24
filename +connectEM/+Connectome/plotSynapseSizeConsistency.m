@@ -364,6 +364,10 @@ switch lower(curScaleY)
         error('Invalid Y scale "%s"', curScaleY);
 end
 
+%{
+% NOTE(amotta): The following color scheme was use for the scatter plot
+% shown in presentation at the Connectomics Conference 2019 in Berlin.
+%
 % Region 1: Low CV and small. Red.
 % Region 2: Low CV and large. Green.
 curReds = autumn(2 + 2);
@@ -372,6 +376,10 @@ curGreens = summer(2 + 2);
 curRegionColors = cell(1, 2);
 curRegionColors{1} = curReds([1, end - 1], :);
 curRegionColors{2} = curGreens([1, end - 1], :);
+%}
+
+curRegionColors = [];
+curRegionContourProps = {'LineColor', 'black'};
 
 % NOTE(amotta): The `curMinMap` and `curMaxMap` matrices have the same size
 % as the heatmaps of the CV × log10(avg. ASI) space. They contain the ASI
@@ -384,7 +392,8 @@ curCv(curCv >= sqrt(2)) = nan;
 
 curMinMap = (10 .^ curLog10Avg(:)) .* (1 - curCv / sqrt(2));
 curMaxMap = (10 .^ curLog10Avg(:)) .* (1 + curCv / sqrt(2));
-for curConfig = reshape(plotConfigs, 1, [])
+
+for curConfig = reshape(plotConfigs(1, :), 1, [])
     curSaSdConfig = connectEM.Consistency.buildPairConfigs(asiT, curConfig);
     curSaSdConfig = curSaSdConfig(1);
             
@@ -796,25 +805,50 @@ for curConfig = reshape(plotConfigs, 1, [])
         %% Scatter plot
         curFig = figure();
         curAx = axes(curFig); %#ok
+        hold(curAx, 'on');
         
         curData = curSaSdT;
         curData.pVal = curPvalMap(curData.mapIdx);
         curData = sortrows(curData, 'pVal', 'descend');
         
-        curPValEdges = [0, sort(curPvalThreshs), 1];
-        curData.pValInt = discretize(curData.pVal, curPValEdges);
-        
-        curData.colorIdx = sub2ind( ...
-           [numel(curPValEdges) - 1, 1 + numel(curRegionColors)], ...
-            curData.pValInt, 1 + curData.regionId);
-        
-        curColors = cellfun( ...
-            @(colors) cat(1, colors, zeros(1, 3)), ...
-            curRegionColors, 'UniformOutput', false);
-        curColors = cat(1, zeros(1 + numel(curColors), 3), curColors{:});
-        curColors = curColors(curData.colorIdx, :);
+        if isempty(curRegionColors)
+            curColors = get(groot, 'defaultAxesColorOrder');
+            curColors = curColors(1, :);
+        else
+            curPValEdges = [0, sort(curPvalThreshs), 1];
+            
+            curData.colorIdx = discretize(curData.pVal, curPValEdges);
+            curData.colorIdx = sub2ind( ...
+               [numel(curPValEdges) - 1, 1 + numel(curRegionColors)], ...
+                curData.colorIdx, 1 + curData.regionId);
+            
+            curColors = cellfun( ...
+                @(colors) cat(1, colors, zeros(1, 3)), ...
+                curRegionColors, 'UniformOutput', false);
+            curColors = vertcat( ...
+                zeros(1 + numel(curColors), 3), curColors{:});
+            curColors = curColors(curData.colorIdx, :);
+        end
         
         scatter(curAx, curData.x, curData.y, 1, curColors, '.');
+        
+        if ~isempty(curRegionContourProps)
+            for curPvalThresh = curPvalThreshs
+               [~, curCont] = contour(curAx, ...
+                    curRegionMask & (curPvalMap < curPvalThresh), ...
+                    true, curRegionContourProps{:});
+                
+                % NOTE(amotta): The X and Y coordinates of the contour are
+                % in pixels relative to the p-value map. Let's convert this
+                % to the `curLimX` and `curLimY` coordinate system.
+                curCont.XData = ...
+                    curLimX(1) + diff(curLimX) * ...
+                    (curCont.XData - 1) / (curImSize(2) - 1);
+                curCont.YData = ...
+                    curLimY(1) + diff(curLimY) * ...
+                    (curCont.YData - 1) / (curImSize(1) - 1);
+            end
+        end
 
         xlim(curAx, curLimX);
         xticks(curAx, curTicksX);
