@@ -636,8 +636,8 @@ for curConfig = reshape(plotConfigs(1, :), 1, [])
             
             fprintf('Region %d\n', curRegionId);
             fprintf('* Average area: %.2f - %.2f µm²\n', curAreaRange);
-            fprintf('* Upper bound: %.1f %%\n', 100 * curFracs(1, 1));
-            fprintf('* Surplus: %.1f %%\n', 100 * diff(flip(curFracs(1, :))));
+            fprintf('* Upper bound: %.1f - %.1f %%\n', 100 * curFracs(:, 1));
+            fprintf('* Surplus: %.1f - %.1f %%\n', 100 * diff(flip(curFracs(:, :))));
             fprintf('\n');
             
             curTitle{curRegionId} = sprintf( ...
