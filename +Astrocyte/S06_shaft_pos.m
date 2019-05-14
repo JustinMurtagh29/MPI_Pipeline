@@ -7,16 +7,22 @@ borderMeta = fullfile(rootDir, 'globalBorder.mat');
 borderMeta = load(borderMeta, 'borderSize', 'borderCoM');
 borderMeta = structfun(@double, borderMeta, 'UniformOutput', false);
 
-borderIds = syn.synapses.edgeIdx(syn.synapses.type == 'Shaft');
+load('/u/yyener/astrocyte/synapses/syn.mat');
+
+edgeIds = syn.synapses.edgeIdx(syn.synapses.type == 'Shaft');
+
+graphFile = fullfile(rootDir, 'graph.mat');
+graph = load(graphFile, 'edges', 'borderIdx');
+
 
 weightedMean = @(w, v) ...
     sum((w / sum(w, 1)) .* v, 1);
 
 pos = cellfun( ...
     @(ids) weightedMean( ...
-        borderMeta.borderSize(ids), ...
-        borderMeta.borderCoM(ids, :)), ...
-	borderIds, 'UniformOutput', false);
+        borderMeta.borderSize(graph.borderIdx(ids)), ...
+        borderMeta.borderCoM(graph.borderIdx(ids), :)), ...
+	edgeIds, 'UniformOutput', false);
 pos = round(cell2mat(pos));
 
-pos(cellfun(@isempty, borderIds), :) = nan;
+%pos(cellfun(@isempty, borderIds), :) = nan;
