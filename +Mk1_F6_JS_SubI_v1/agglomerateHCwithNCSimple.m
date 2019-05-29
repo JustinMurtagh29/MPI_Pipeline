@@ -121,7 +121,6 @@ parameters.offset.x = '0';
 parameters.offset.y = '0';
 parameters.offset.z = '0';
 
-edges = unique(cat(1,graphHC.edges, graph.edges),'rows','stable');
 tic;
 Superagglos.skeletonFromAgglo(edges, segmentMeta, ...
     agglosOut, 'agglos', outputFolder, parameters);
