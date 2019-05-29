@@ -15,7 +15,7 @@ for i=1:prod(size(p.local))
     end
 end
 toc;
-util.log(['Found ' num2str(numel(idxError)) ' tasks failed.'])
+Util.log(['Found ' num2str(numel(idxError)) ' tasks failed.'])
 
 cluster = Cluster.config('memory', 48, 'time', '24:00:00', 'priority',100);
 job = jobHuman; % saved in matlab session
