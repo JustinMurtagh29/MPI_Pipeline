@@ -19,9 +19,6 @@ fileName = 'segmentAgglomerateFeatures.mat';
 info = Util.runInfo();
 Util.showRunInfo(info);
 
-config = loadConfig(config);
-param = config.param;
-
 %% Calculate features
 job = TypeEM.Pipeline.buildFeatures(param, classEmParam, fileName);
 Cluster.waitForJob(job);
