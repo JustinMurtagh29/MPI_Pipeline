@@ -6,18 +6,16 @@ load('/tmpscratch/sahilloo/data/H2_3_v2_U1_SubI/pipelineRun_mr2e_wsmrnet/allPara
 cubeSize = size(p.local);
 % check if all raw files exist
 tic;
-mainDir = fullfile(p.saveFolder, 'local');
-xFiles = dir(fullfile(mainDir,'x*'));
 idxError = [];
-for i=1:numel(xFiles)
-    thisXDir = fullfile(mainDir,xFiles(i).name);
-    thisFile = fullfile(thisXDir,'segmentAgglomerateFeatures.mat');
+for i=1:prod(size(p.local))
+    thisDir = p.local(i).saveFolder;
+    thisFile = fullfile(thisDir,'segmentAgglomerateFeatures.mat');
     if ~exist(thisFile,'file')
        idxError = cat(1, idxError,i);
     end
 end
 toc;
-Util.log(['Found ' num2str(numel(idxError)) ' tasks failed.'])
+util.log(['Found ' num2str(numel(idxError)) ' tasks failed.'])
 
 cluster = Cluster.config('memory', 48, 'time', '24:00:00', 'priority',100);
 job = jobHuman; % saved in matlab session
