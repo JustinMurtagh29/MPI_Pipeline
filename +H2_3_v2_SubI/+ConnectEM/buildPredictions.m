@@ -17,7 +17,7 @@ addpath(genpath('/gaba/u/sahilloo/repos/amotta/matlab/'))
 %% Configuration
 config = 'ex144_08x2_mrNet';
 %}
-rootDir = '/tmpscratch/sahilloo/data/H2_3_v2_U1_SubI/pipelineRun_mr2e_wsmrnet_HC/';
+rootDir = '/tmpscratch/sahilloo/data/H2_3_v2_U1_SubI/pipelineRun_mr2e_wsmrnet/';
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 
