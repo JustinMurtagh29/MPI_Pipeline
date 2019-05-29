@@ -1,36 +1,42 @@
+function agglomerate(p);
 % This script was used for testing automated agglomeration & connectome generation
-% Author: Manuel Berning <manuel.berning@brain.mpg.de>
+% Author: 
+%           Manuel Berning <manuel.berning@brain.mpg.de>
+% Modified by:
+%           Sahil Loomba <sahil.loomba@brain.mpg.de>
 % See +connectEM for additional functions used here
 
-clearvars -except graph borderMeta segmentMeta synScore graphCut excClasses excNames excSize;
-%% Start by loading parameter file
-% Load parameter from newest pipeline run
-load('/gaba/u/mberning/results/pipeline/20170217_ROI/allParameterWithSynapses.mat');
-% To keep workspace clean here (and we are gonna have a bunch of stuff anyway) remove parameter for training (pT)
-clear pT;
-%% Define where to store results
-outputFolder = ['/gaba/scratch/mberning/' datestr(clock,30) '_agglomeration/'];
+outputFolder = [p.saveFolder datestr(clock,30) '_agglomeration/'];                                                                                                           
 if ~exist(outputFolder, 'dir')
     mkdir(outputFolder);
 end
 
-%{
-display('Loading data:');
+display('loading dependent variables...');
 tic;
-% Load global graph representation
-graph = load([p.saveFolder 'graph.mat'], 'prob', 'edges', 'neighbours', 'neighProb');
-% Load information about edges
-borderMeta = load([p.saveFolder 'globalBorder.mat'], 'borderSize', 'borderCoM');
-% Load meta information of segments
+m = load([p.saveFolder 'allParameterWithSynapses.mat']);
+p = m.p;
+
+graph = load([p.saveFolder 'graph.mat']);
+
 segmentMeta = load([p.saveFolder 'segmentMeta.mat'], 'voxelCount', 'point', 'maxSegId');
 segmentMeta.point = segmentMeta.point';
-% Load and preprocess segment class predictions on single segments from Alessandro
 segmentMeta = connectEM.addSegmentClassInformation(p, segmentMeta);
-% Load synapse scores from SynEM
-synScore = load([p.saveFolder 'globalSynScores.mat']);
+
+borderMeta = load([p.saveFolder 'globalBorder.mat'], 'borderSize', 'borderCoM');
+
+synScore = load([p.saveFolder 'globalSynapseScores.mat'])
 synScore.isSynapse = connectEM.synScoresToSynEdges(graph, synScore);
 toc;
 
+forceKeepEdges = []; 
+% added by SL temp fix
+segmentMeta.cubeIdx = [];
+m = load([p.saveFolder 'heuristicResult.mat']);
+heuristics.mapping = m.segIds;
+
+graphCut = connectEM.cutGraph(p, graph, segmentMeta, borderMeta, heuristics, 100, 1000,forceKeepEdges);
+
+%{
 display('Removing segments detected by heuristics & small & disconnected segments:');
 tic;
 [graphCut, excClasses, excNames, excSize] = connectEM.cutGraph(p, graph, segmentMeta, borderMeta, 100, 1000);
@@ -44,7 +50,6 @@ Superagglos.skeletonFromAgglo(graph.edges, segmentMeta, ...
     excClasses(7:8), 'smallAndDisconnected', outputFolder);
 toc;
 %}
-
 display('Generating subgraphs for axon and dendrite agglomeration:');
 tic;
 % Dendrites first
@@ -175,4 +180,5 @@ spinePosition = segmentMeta.point(spineSegments,:);
 bbox_wk = [2800, 4267, 1712, 445, 445, 179];
 bbox = Util.convertWebknossosToMatlabBbox(bbox_wk);
 idx = all(bsxfun(@minus, spinePosition, bbox(:,1)') > 0,2) & all(bsxfun(@minus, spinePosition, bbox(:,2)') < 0,2);
-connectEM.generateSkeletonFromNodes([outputFolder 'spinesBbox.nml'], spinePosition(idx), strseq('spines', 1:sum(idx), {}, true);
+connectEM.generateSkeletonFromNodes([outputFolder 'spinesBbox.nml'], spinePosition(idx), strseq('spines', 1:sum(idx), {}, true));
+end

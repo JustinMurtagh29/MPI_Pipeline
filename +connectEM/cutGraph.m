@@ -5,7 +5,7 @@ function graphCut = cutGraph(p, graph, segmentMeta, borderMeta, heuristics, ...
     % Still hacky, but keep for now: Exclude all ER components and all cube containing catastrphic merger
     [er, cm] = connectEM.getERcomponents();
     heuristics.mapping = cat(2, heuristics.mapping, {cat(1, er{:})});
-    heuristicIdx(cat(1, er{:})) = true;
+    heuristics.heuristicIdx(cat(1, er{:})) = true;
     excludedCubeIdx = unique(cellfun(@(x)mode(segmentMeta.cubeIdx(x)), cm));
     excludedSegmentIdx = ismember(segmentMeta.cubeIdx, excludedCubeIdx);
 

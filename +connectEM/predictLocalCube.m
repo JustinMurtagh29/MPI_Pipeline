@@ -1,6 +1,6 @@
 function predictLocalCube(saveFolder, classifierFile, outputFilenameInLocalFolder)
     if ~exist('classifierFile', 'var') || isempty(classifierFile)
-        classifierFile = '/gaba/u/sahilloo/H2_3_v2_U1_SubI/connect-em/edgeClassifier/20190329T145240.mat';
+        classifierFile = '/gaba/u/sahilloo/Mk1_F6_JS_SubI_v1/connect-em/edgeClassifier/20190329T183128.mat';
     end
     
     if ~exist('outputFilenameInLocalFolder', 'var') ...
