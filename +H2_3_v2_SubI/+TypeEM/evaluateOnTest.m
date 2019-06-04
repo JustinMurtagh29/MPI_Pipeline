@@ -59,7 +59,8 @@ for curTrainSize = trainSizes
     curClassifier.featureSetName = featureSetName;
 
     [precRec, fig] = TypeEM.Classifier.evaluate(param, curClassifier, gtTest);
-    saveas(gcf,fullfile(param.saveFolder,'typeEM',['precrec_test_' methodUsed '_ts_' num2str(curTrainSize) '.png']))
+    title([methodUsed ' with trainSize:' num2str(curTrainSize)])
+    saveas(gcf,fullfile(param.saveFolder,'typeEM',['precrec_test_' methodUsed '_tsize_' num2str(curTrainSize) '.png']))
     close all
 
     classifiers{end + 1} = curClassifier;
