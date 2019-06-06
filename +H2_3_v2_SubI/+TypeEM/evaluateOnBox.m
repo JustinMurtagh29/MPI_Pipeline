@@ -6,11 +6,11 @@ clear;
 methodUsed = 'LogitBoost'; %'AdaBoostM1'; % 'LogitBoost';
 addpath(genpath('/gaba/u/sahilloo/repos/amotta/matlab/'))
 
-rootDir = '/tmpscratch/sahilloo/data/Mk1_F6_JS_SubI_v1/pipelineRun_mr2e_wsmrnet/';
+rootDir = '/tmpscratch/sahilloo/data/H2_3_v2_U1_SubI/pipelineRun_mr2e_wsmrnet/';
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
-param.experimentName = 'Mk1_F6_JS_SubI_v1_mrnet_wsmrnet';
-import Mk1_F6_JS_SubI_v1.TypeEM.*
+param.experimentName = 'H2_3_v2_U1_SubI_mr2e_wsmrnet';
+import H2_3_v2_U1_SubI.TypeEM.*
 
 info = Util.runInfo();
 
@@ -75,7 +75,7 @@ for curTrainSize = trainSizes
         'b', num2cell(bVec));
     % convert to probs
     curClassifier.plattParams = platt;
-    probs = TypeEM.Classifier.applyPlatt(curClassifier, curGtTest.scores);
+    probs = Classifier.applyPlatt(curClassifier, curGtTest.scores);
     curGtTest.probs = probs;
 
     classifiers{end + 1} = curClassifier;

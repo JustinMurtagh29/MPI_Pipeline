@@ -3,7 +3,7 @@
 % Modified by
 %   Sahil Loomba <sahil.loomba@brain.mpg.de>
 clear;
-methodUsed = 'RUSBoost'; %'AdaBoostM1'; % 'LogitBoost';
+methodUsed = 'AdaBoostM1'; %'AdaBoostM1'; % 'LogitBoost';
 addpath(genpath('/gaba/u/sahilloo/repos/amotta/matlab/'))
 
 rootDir = '/tmpscratch/sahilloo/data/H2_3_v2_U1_SubI/pipelineRun_mr2e_wsmrnet/';
@@ -66,14 +66,10 @@ for curTrainSize = trainSizes
     classifiers{end + 1} = curClassifier;
     results(end + 1, :) = {precRec, fig};
 end
-
 %{
 %% Building output
 Util.log('Building output');
-clear cur*;
-
-classifier = classifiers{1}; %choose trained on first set of edges
-
+classifier = classifiers{end}; %choose trained on all data
 Util.save(['/u/sahilloo/H2_3_v2_U1_SubI/type-em/typeClassifier/' datestr(clock,30) '.mat'],classifier,gt,info);
 %}
 %{

@@ -3,43 +3,42 @@
 % Modified by
 %   Sahil Loomba <sahil.loomba@brain.mpg.de>
 clear;
-methodUsed = 'LogitBoost'; %'AdaBoostM1'; % 'LogitBoost';
+methodUsed = 'AdaBoostM1'; %'AdaBoostM1'; % 'LogitBoost';
 addpath(genpath('/gaba/u/sahilloo/repos/amotta/matlab/'))
 
 rootDir = '/tmpscratch/sahilloo/data/Mk1_F6_JS_SubI_v1/pipelineRun_mr2e_wsmrnet/';
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
-param.experimentName = 'Mk1_F6_JS_SubI_v1_mrnet_wsmrnet';
-import Mk1_F6_JS_SubI_v1.TypeEM.*
 
-info = Util.runInfo();
-
-% load training data
+% load training and test data
 featureSetName = 'segmentAgglomerate';
 nmlDir = fullfile(param.saveFolder, ...
      'tracings', 'typeEM');
 nmlFiles = fullfile(nmlDir, 'proofread', ...
-     {'box-1.nml','box-2.nml', 'box-3.nml', ...
+     {'box-1.nml', 'box-2.nml', 'box-3.nml', ...
      'box-4.nml','box-5.nml','box-6.nml',...
-     'box-7.nml','box-8.nml','box-9.nml'});
-
-rng(0);
-idxTrain = [1,2,3,4,5,6,7,8];
-idxTest = 9;
+     'box-7.nml', 'box-8.nml', 'box-9.nml'});
 % load features
 gt = TypeEM.GroundTruth.loadSet( ...
-        param, featureSetName, nmlFiles(idxTrain));
+        param, featureSetName, nmlFiles);
 gt = TypeEM.GroundTruth.loadFeatures(param, featureSetName, gt);
-% load test set
-gtTest = TypeEM.GroundTruth.loadSet( ...
-        param, featureSetName, nmlFiles(idxTest));
 
+%% divide into training and test set
+rng(0);
+testFrac = 0.2;
+testSize = ceil(testFrac*size(gt.label,1));
 curRandIds = randperm(size(gt.label,1));
-trainIds = curRandIds;
+testIds = curRandIds(1:testSize);
+trainIds = curRandIds(testSize+1:end);
+gtTest = gt;
+gtTest.segId = gt.segId(testIds,:);
+gtTest.label = gt.label(testIds,:);
+gtTest.featMat = gt.featMat(testIds,:);
 
 % train with increasing training data sizes
 trainFrac = [0.2, 0.4, 0.6, 0.8, 1];
 trainSizes = floor(trainFrac.*length(trainIds));
+rng(1); % for reproducibility
 curRandIds = randperm(length(trainIds));
 
 classifiers = cell(0);
@@ -59,48 +58,30 @@ for curTrainSize = trainSizes
         gtTrain.class, 'UniformOutput', false);
     curClassifier.featureSetName = featureSetName;
 
-    % apply classifier to test data
-    [precRec, fig, curGtTest] = TypeEM.Classifier.evaluate(param, curClassifier, gtTest);
+    [precRec, fig] = TypeEM.Classifier.evaluate(param, curClassifier, gtTest);
     title([methodUsed ' with trainSize:' num2str(curTrainSize)])
-    saveas(gcf,fullfile(param.saveFolder,'typeEM',['precrec_box_' methodUsed '_tsize_' num2str(curTrainSize) '.png']))
+    saveas(gcf,fullfile(param.saveFolder,'typeEM',['precrec_test_' methodUsed '_tsize_' num2str(curTrainSize) '.png']))
     close all
 
-    % build platt parameters
-    trainPlattFunc = @(curIdx) trainPlattForClass(curGtTest, curIdx);
-    [aVec, bVec] = arrayfun(trainPlattFunc, 1:numel(curClassifier.classes));
-
-    % build output
-    platt = struct( ...
-        'a', num2cell(aVec), ...
-        'b', num2cell(bVec));
-    % convert to probs
-    curClassifier.plattParams = platt;
-    probs = TypeEM.Classifier.applyPlatt(curClassifier, curGtTest.scores);
-    curGtTest.probs = probs;
-
     classifiers{end + 1} = curClassifier;
-    results(end + 1, :) = {precRec, probs};
+    results(end + 1, :) = {precRec, fig};
 end 
 
-% Look at false positives
-curCount = 40;
-className = 'glia';
-skels = Debug.inspectFPs(param, curCount, className, curGtTest);
-skels.write(fullfile(param.saveFolder,'typeEM', sprintf('fps-%s.nml',className)));
-className = 'axon';
-skels = Debug.inspectFPs(param, curCount, className, curGtTest);
-skels.write(fullfile(param.saveFolder,'typeEM', sprintf('fps-%s.nml',className)));
-className = 'dendrite';
-skels = Debug.inspectFPs(param, curCount, className, curGtTest);
-skels.write(fullfile(param.saveFolder,'typeEM', sprintf('fps-%s.nml',className)));
 
-
-
-%{
 %% Building output
 Util.log('Building output');
 classifier = classifiers{end}; %choose trained on all data
 Util.save(['/u/sahilloo/Mk1_F6_JS_SubI_v1/type-em/typeClassifier/' datestr(clock,30) '.mat'],classifier,gt,info);
+
+%{
+%% Inspect FPs
+param.experimentName = 'H2_3_v2_U1_SubI_mr2e_wsmrnet';
+gtTestModified = repmat(gtTest,2,1); % because of inverted features
+outDir = fullfile(param.saveFolder,'connectEM');
+
+scoreThr = -15.0287; % 75% recall, 93% precision
+skel = H2_3_v2_SubI.ConnectEM.inspectFPs(param, gtTestModified, curScores, scoreThr);
+skel.write(fullfile(outDir, sprintf('fps-%03f.nml',scoreThr)));
 %}
 
 function classifier = buildForClass(gt, class, methodUsed)
@@ -123,14 +104,5 @@ function classifier = buildForClass(gt, class, methodUsed)
         'Prior', 'Empirical', ...
         'Type', 'Classification', ...
         'ClassNames', [true, false]);
-end
-
-function [a, b] = trainPlattForClass(gt, classIdx)
-    mask = gt.label(:, classIdx) ~= 0;
-    scores = gt.scores(mask, classIdx);
-    labels = double(gt.label(mask, classIdx) > 0);
-
-    % optimize Platt parameter
-    [a, b] = TypeEM.Classifier.learnPlattParams(scores, labels);
 end
 

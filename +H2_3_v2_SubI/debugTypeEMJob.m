@@ -17,7 +17,7 @@ end
 toc;
 Util.log(['Found ' num2str(numel(idxError)) ' tasks failed.'])
 
-cluster = Cluster.config('memory', 48, 'time', '24:00:00', 'priority',100);
+cluster = Cluster.config('memory', 96, 'time', '24:00:00', 'priority',100);
 job = jobHuman; % saved in matlab session
 % restart failed tasks
 inputCell = {job.Tasks(idxError).InputArguments};

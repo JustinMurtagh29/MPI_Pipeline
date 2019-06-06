@@ -9,7 +9,7 @@ addpath(genpath('/gaba/u/sahilloo/repos/amotta/matlab/'))
 rootDir = '/tmpscratch/sahilloo/data/Mk1_F6_JS_SubI_v1/pipelineRun_mr2e_wsmrnet/';
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
-param.experimentName = 'Mk1_F6_JS_SubI_v1_mrnet_wsmrnet';
+param.experimentName = 'Mk1_F6_JS_SubI_v1_mr2e_wsmrnet';
 import Mk1_F6_JS_SubI_v1.TypeEM.*
 
 info = Util.runInfo();
@@ -59,40 +59,26 @@ for curTrainSize = trainSizes
         gtTrain.class, 'UniformOutput', false);
     curClassifier.featureSetName = featureSetName;
 
-    % apply classifier to test data
     [precRec, fig, curGtTest] = TypeEM.Classifier.evaluate(param, curClassifier, gtTest);
     title([methodUsed ' with trainSize:' num2str(curTrainSize)])
     saveas(gcf,fullfile(param.saveFolder,'typeEM',['precrec_box_' methodUsed '_tsize_' num2str(curTrainSize) '.png']))
     close all
 
-    % build platt parameters
-    trainPlattFunc = @(curIdx) trainPlattForClass(curGtTest, curIdx);
-    [aVec, bVec] = arrayfun(trainPlattFunc, 1:numel(curClassifier.classes));
-
-    % build output
-    platt = struct( ...
-        'a', num2cell(aVec), ...
-        'b', num2cell(bVec));
-    % convert to probs
-    curClassifier.plattParams = platt;
-    probs = TypeEM.Classifier.applyPlatt(curClassifier, curGtTest.scores);
-    curGtTest.probs = probs;
-
     classifiers{end + 1} = curClassifier;
-    results(end + 1, :) = {precRec, probs};
+    results(end + 1, :) = {precRec, fig};
 end 
 
 % Look at false positives
-curCount = 40;
+curCount = 50;
 className = 'glia';
 skels = Debug.inspectFPs(param, curCount, className, curGtTest);
-skels.write(fullfile(param.saveFolder,'typeEM', sprintf('fps-%s.nml',className)));
+skel.write(fullfile(param.saveFolder,'typeEM', sprintf('fps-%s-%03f.nml',className,scoreThr)));
 className = 'axon';
 skels = Debug.inspectFPs(param, curCount, className, curGtTest);
-skels.write(fullfile(param.saveFolder,'typeEM', sprintf('fps-%s.nml',className)));
+skel.write(fullfile(param.saveFolder,'typeEM', sprintf('fps-%s-%03f.nml',className,scoreThr)));
 className = 'dendrite';
 skels = Debug.inspectFPs(param, curCount, className, curGtTest);
-skels.write(fullfile(param.saveFolder,'typeEM', sprintf('fps-%s.nml',className)));
+skel.write(fullfile(param.saveFolder,'typeEM', sprintf('fps-%s-%03f.nml',className,scoreThr)));
 
 
 
@@ -123,14 +109,5 @@ function classifier = buildForClass(gt, class, methodUsed)
         'Prior', 'Empirical', ...
         'Type', 'Classification', ...
         'ClassNames', [true, false]);
-end
-
-function [a, b] = trainPlattForClass(gt, classIdx)
-    mask = gt.label(:, classIdx) ~= 0;
-    scores = gt.scores(mask, classIdx);
-    labels = double(gt.label(mask, classIdx) > 0);
-
-    % optimize Platt parameter
-    [a, b] = TypeEM.Classifier.learnPlattParams(scores, labels);
 end
 
