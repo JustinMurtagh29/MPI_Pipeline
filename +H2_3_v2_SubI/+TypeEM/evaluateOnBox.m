@@ -10,7 +10,7 @@ rootDir = '/tmpscratch/sahilloo/data/H2_3_v2_U1_SubI/pipelineRun_mr2e_wsmrnet/';
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 param.experimentName = 'H2_3_v2_U1_SubI_mr2e_wsmrnet';
-import H2_3_v2_U1_SubI.TypeEM.*
+import H2_3_v2_SubI.TypeEM.*
 
 info = Util.runInfo();
 

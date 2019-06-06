@@ -1,25 +1,21 @@
 function skel = inspectFPs(param, curCount, className, gt)
 
-className = 'glia';
-clear cur*;
-curCount = 50;
 curDigits = ceil(log10(1 + curCount));
 curPoints = Seg.Global.getSegToPointMap(param);
 
-curMask = curGtTest.class == className;
+curMask = gt.class == className;
 
 fp = table;
 fp.segId = gt.segId;
 fp.label = gt.label(:, curMask);
 fp.score = gt.scores(:, curMask);
+fp.probs = gt.probs(:,curMask);
 
 fp = fp(fp.label < 0, :);
-fp = sortrows(fp, 'score', 'descend');
+fp = sortrows(fp, 'probs', 'descend');
 
 skel = skeleton();
-skel = Skeleton.setParams4Pipeline(skel, param);
-skel = Skeleton.setDescriptionFromRunInfo(skel, info);
-
+skel = skel.setParams(param.experimentName,param.raw.voxelSize,[1 1 1]);
 curSegIds = fp.segId(1:curCount);
 curScores = fp.score(1:curCount);
 
