@@ -9,7 +9,7 @@ fp = table;
 fp.segId = gt.segId;
 fp.label = gt.label(:, curMask);
 fp.score = gt.scores(:, curMask);
-fp.probs = gt.probs(:,curMas);
+fp.probs = gt.probs(:,curMask);
 
 fp = fp(fp.label < 0, :);
 fp = sortrows(fp, 'probs', 'descend');
