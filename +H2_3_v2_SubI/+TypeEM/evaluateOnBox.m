@@ -75,7 +75,7 @@ for curTrainSize = trainSizes
         'b', num2cell(bVec));
     % convert to probs
     curClassifier.plattParams = platt;
-    probs = Classifier.applyPlatt(curClassifier, curGtTest.scores);
+    probs = TypeEM.Classifier.applyPlatt(curClassifier, curGtTest.scores);
     curGtTest.probs = probs;
 
     classifiers{end + 1} = curClassifier;
