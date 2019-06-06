@@ -1,4 +1,4 @@
-function skel = inspectFPs(param, curCount, className, gt)
+function skel = inspectTPs(param, curCount, className, gt)
 
 curPoints = Seg.Global.getSegToPointMap(param);
 
@@ -10,10 +10,10 @@ fp.label = gt.label(:, curMask);
 fp.score = gt.scores(:, curMask);
 fp.probs = gt.probs(:,curMask);
 
-fp = fp(fp.label < 0, :);
+fp = fp(fp.label > 0, :);
 fp = sortrows(fp, 'probs', 'descend');
 
-curCount = min(curCount,fp.label < 0);
+curCount = min(curCount,sum(fp.label>0));
 curDigits = ceil(log10(1 + curCount));
 
 skel = skeleton();
