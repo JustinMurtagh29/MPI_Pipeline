@@ -94,6 +94,18 @@ className = 'dendrite';
 skels = Debug.inspectFPs(param, curCount, className, curGtTest);
 skels.write(fullfile(param.saveFolder,'typeEM', sprintf('fps-%s.nml',className)));
 
+% Look at true positives
+curCount = 100;
+className = 'glia';
+skels = Debug.inspectTPs(param, curCount, className, curGtTest);
+skels.write(fullfile(param.saveFolder,'typeEM', sprintf('tps-%s.nml',className)));
+className = 'axon';
+skels = Debug.inspectTPs(param, curCount, className, curGtTest);
+skels.write(fullfile(param.saveFolder,'typeEM', sprintf('tps-%s.nml',className)));
+className = 'dendrite';
+skels = Debug.inspectTPs(param, curCount, className, curGtTest);
+skels.write(fullfile(param.saveFolder,'typeEM', sprintf('tps-%s.nml',className)));
+
 
 
 %{
