@@ -24,8 +24,8 @@ nmlFiles = fullfile(nmlDir, 'proofread', ...
      'box-7.nml','box-8.nml','box-9.nml'});
 
 rng(0);
-idxTrain = [1,2,3,4,5,6,7,8];
-idxTest = 9;
+idxTrain = [1,2,4,5,6,7,8];
+idxTest = 3;
 % load features
 gt = TypeEM.GroundTruth.loadSet( ...
         param, featureSetName, nmlFiles(idxTrain));
@@ -106,7 +106,7 @@ className = 'dendrite';
 skels = Debug.inspectTPs(param, curCount, className, curGtTest);
 skels.write(fullfile(param.saveFolder,'typeEM', sprintf('tps-%s.nml',className)));
 
-
+Debug.labelDistributions
 %{
 %% Building output
 Util.log('Building output');

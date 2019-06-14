@@ -3,7 +3,7 @@
 % Modified by
 %   Sahil Loomba <sahil.loomba@brain.mpg.de>
 clear;
-methodUsed = 'AdaBoostM1'; %'AdaBoostM1'; % 'LogitBoost';
+methodUsed = 'LogitBoost'; %'AdaBoostM1'; % 'LogitBoost';
 addpath(genpath('/gaba/u/sahilloo/repos/amotta/matlab/'))
 
 rootDir = '/tmpscratch/sahilloo/data/H2_3_v2_U1_SubI/pipelineRun_mr2e_wsmrnet/';
