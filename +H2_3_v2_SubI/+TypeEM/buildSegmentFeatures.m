@@ -3,7 +3,10 @@
 clear;
 
 %% Configuration
-config = 'ex144_08x2_mrNet';
+rootDir = '/tmpscratch/sahilloo/data/H2_3_v2_U1_SubI/pipelineRun_mr2e_wsmrnet/';
+param = load(fullfile(rootDir, 'allParameter.mat'));
+param = param.p;
+param.experimentName = 'H2_3_v2_U1_SubI_mr2e_wsmrnet';
 
 classEmParam = struct;
 classEmParam.agglo = struct;
@@ -14,9 +17,6 @@ fileName = 'segmentFeatures.mat';
 
 info = Util.runInfo();
 Util.showRunInfo(info);
-
-config = loadConfig(config);
-param = config.param;
 
 %% Calculate features
 job = TypeEM.Pipeline.buildFeatures(param, classEmParam, fileName);
