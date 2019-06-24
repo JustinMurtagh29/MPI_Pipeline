@@ -51,6 +51,7 @@ function [segIds, neighbours, filenames, nodes, startNode, comments, errors] = l
                 comments{i} = skel{1}.commentsString;
             end
             % Extract needed information from skeletons
+			disp (['processing file: ' num2str(filenames{i})])
             nodes{i} = skel{1}.nodesNumDataAll(:,3:5);
             time = skel{1}.nodesNumDataAll(:,8);
             [~, idxT] = sort(time);
