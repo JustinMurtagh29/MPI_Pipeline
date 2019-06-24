@@ -6,11 +6,11 @@ clear;
 methodUsed = 'LogitBoost'; %'AdaBoostM1'; % 'LogitBoost';
 addpath(genpath('/gaba/u/sahilloo/repos/amotta/matlab/'))
 
-rootDir = '/tmpscratch/sahilloo/data/Mk1_F6_JS_SubI_v1/pipelineRun_mr2e_wsmrnet/';
+rootDir = '/tmpscratch/sahilloo/data/H2_3_v2_U1_SubI/pipelineRun_mr2e_wsmrnet/';
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
-param.experimentName = 'Mk1_F6_JS_SubI_v1_mrnet_wsmrnet';
-import Mk1_F6_JS_SubI_v1.TypeEM.*
+param.experimentName = 'H2_3_v2_U1_SubI_mr2e_wsmrnet';
+import H2_3_v2_SubI.TypeEM.*
 
 info = Util.runInfo();
 
@@ -21,9 +21,7 @@ nmlDir = fullfile(param.saveFolder, ...
 nmlFiles = fullfile(nmlDir, 'proofread', ...
      {'box-1.nml','box-2.nml', 'box-3.nml', ...
      'box-4.nml','box-5.nml','box-6.nml',...
-     'box-7.nml','box-8.nml','box-9.nml',...
-     'box-10.nml','box-11.nml','box-12.nml',...
-     'box-13.nml'});
+     'box-7.nml','box-8.nml','box-9.nml'});
 
 % do cross validation
 classifiers = cell(0);
@@ -85,7 +83,7 @@ for i=1:numel(classifiers)
     thisA = classifiers{i}.classifiers{2};
     thisD = classifiers{i}.classifiers{3};
 
-    numGlia = vertcat(numGlia, sum(thisG.Y)); 
+    numGlia = vertcat(numGlia, sum(thisG.Y));
     numGliaN = vertcat(numGliaN, sum(~thisG.Y));
     numAxon = vertcat(numAxon, sum(thisA.Y));
     numAxonN = vertcat(numAxonN, sum(~thisA.Y));

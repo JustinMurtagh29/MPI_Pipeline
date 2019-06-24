@@ -22,11 +22,12 @@ nmlFiles = fullfile(nmlDir, 'proofread', ...
      {'box-1.nml','box-2.nml', 'box-3.nml', ...
      'box-4.nml','box-5.nml','box-6.nml',...
      'box-7.nml','box-8.nml','box-9.nml',...
-     'box-10.nml','box-11.nml','box-12.nml'});
+     'box-10.nml','box-11.nml','box-12.nml',...
+     'box-13.nml'});
 
 rng(0);
-idxTrain = [1,2,3,4,5,6,7,8,10,11,12];
-idxTest = 9;
+idxTrain = [1,2,3,5,6,7,8,9,10,11,12,13];
+idxTest = 4;
 % load features
 gt = TypeEM.GroundTruth.loadSet( ...
         param, featureSetName, nmlFiles(idxTrain));
@@ -82,7 +83,7 @@ for curTrainSize = trainSizes
     classifiers{end + 1} = curClassifier;
     results(end + 1, :) = {precRec, probs};
 end 
-
+%{
 % Look at false positives
 curCount = 40;
 className = 'glia';
@@ -110,6 +111,8 @@ skels.write(fullfile(param.saveFolder,'typeEM', sprintf('tps-%s.nml',className))
 % label statistics
 Debug.labelDistributions
 
+Util.save(['/u/sahilloo/Mk1_F6_JS_SubI_v1/type-em/typeClassifier/' datestr(clock,30) '.mat'],classifiers,gt,info);
+%}
 %{
 %% Building output
 Util.log('Building output');
