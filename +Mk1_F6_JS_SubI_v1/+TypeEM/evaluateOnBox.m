@@ -26,8 +26,8 @@ nmlFiles = fullfile(nmlDir, 'proofread', ...
      'box-13.nml'});
 
 rng(0);
-idxTrain = [1,2,3,5,6,7,8,9,10,11,12,13];
-idxTest = 4;
+idxTrain = [1,2,3,4,5,6,7,8,9,10,12,13];
+idxTest = 11;
 % load features
 gt = TypeEM.GroundTruth.loadSet( ...
         param, featureSetName, nmlFiles(idxTrain));
@@ -113,12 +113,12 @@ Debug.labelDistributions
 
 Util.save(['/u/sahilloo/Mk1_F6_JS_SubI_v1/type-em/typeClassifier/' datestr(clock,30) '.mat'],classifiers,gt,info);
 %}
-%{
+
 %% Building output
 Util.log('Building output');
 classifier = classifiers{end}; %choose trained on all data
 Util.save(['/u/sahilloo/Mk1_F6_JS_SubI_v1/type-em/typeClassifier/' datestr(clock,30) '.mat'],classifier,gt,info);
-%}
+
 
 function classifier = buildForClass(gt, class, methodUsed)
     % classifier = buildForClass(data, className)
