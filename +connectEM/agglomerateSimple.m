@@ -1,4 +1,4 @@
-function agglomerate(p);
+%function agglomerate(p);
 % This script was used for testing automated agglomeration & connectome generation
 % Author: 
 %           Manuel Berning <manuel.berning@brain.mpg.de>
@@ -34,7 +34,8 @@ display(['Cut graph at border size:' num2str(borderSizeThr), 'segment size:' num
 graphCut = connectEM.cutGraphSimple(p, graph, segmentMeta, borderMeta, borderSizeThr, segmentSizeThr);
 
 Util.log('Setting type prob thresholds for classes:')
-segmentMeta.isDendrite = segmentMeta.dendriteProb >= 0.90;
+segmentMeta.isDendrite = segmentMeta.dendriteProb > 0.85 & ...
+                         segmentMeta.axonProb < 0.50;
 segmentMeta.isAxon = segmentMeta.axonProb >= 0.90;
 
 Util.log('Generating subgraphs for axon and dendrite agglomeration:');
@@ -193,4 +194,4 @@ bbox = Util.convertWebknossosToMatlabBbox(bbox_wk);
 idx = all(bsxfun(@minus, spinePosition, bbox(:,1)') > 0,2) & all(bsxfun(@minus, spinePosition, bbox(:,2)') < 0,2);
 connectEM.generateSkeletonFromNodes([outputFolder 'spinesBbox.nml'], spinePosition(idx), strseq('spines', 1:sum(idx), {}, true));
 %}
-end
+%end

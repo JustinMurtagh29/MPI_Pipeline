@@ -1,7 +1,6 @@
 % find out why the agglomeration stopped while growing
 
-%segId = 17059232;
-segId = 55128332
+segId = 17841320
 edges= graph.edges;
 prob = graph.prob;
 
