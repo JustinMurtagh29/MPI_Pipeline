@@ -4,7 +4,7 @@ function segmentMeta = addSegmentClassInformation(p, segmentMeta)
     % Convenience funtion
 
     % Use agglomerate based statistics for everything else
-    segmentPredictions = load([p.saveFolder 'segmentAggloPredictions.mat.20170523'], '-mat');
+    segmentPredictions = load([p.saveFolder 'segmentAggloPredictions.mat'], '-mat');
     % ... glia
     segmentMeta.gliaProb = zeros(segmentMeta.maxSegId, 1);
     idx = ~isnan(segmentPredictions.probsMulti(:,1));
@@ -18,10 +18,11 @@ function segmentMeta = addSegmentClassInformation(p, segmentMeta)
     idx = ~isnan(segmentPredictions.probsMulti(:,3));
     segmentMeta.dendriteProb(segmentPredictions.segId(idx)) = segmentPredictions.probsMulti(idx,3);
     % ... spine head (not multi-class)
+%{
     segmentPredictions = load([p.saveFolder 'segmentPredictions.mat']);
     segmentMeta.spineProb = zeros(segmentMeta.maxSegId, 1);
     idx = ~isnan(segmentPredictions.probs(:,4));
     segmentMeta.spineProb(segmentPredictions.segId(idx)) = segmentPredictions.probs(idx,4);
-
+%}
 end
 

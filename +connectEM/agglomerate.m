@@ -23,9 +23,10 @@ segmentMeta.point = segmentMeta.point';
 segmentMeta = connectEM.addSegmentClassInformation(p, segmentMeta);
 
 borderMeta = load([p.saveFolder 'globalBorder.mat'], 'borderSize', 'borderCoM');
-
+%{
 synScore = load([p.saveFolder 'globalSynapseScores.mat'])
 synScore.isSynapse = connectEM.synScoresToSynEdges(graph, synScore);
+%}
 toc;
 
 forceKeepEdges = []; 

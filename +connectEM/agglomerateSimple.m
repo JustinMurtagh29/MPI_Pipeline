@@ -1,4 +1,4 @@
-%function agglomerate(p);
+function agglomerate(p);
 % This script was used for testing automated agglomeration & connectome generation
 % Author: 
 %           Manuel Berning <manuel.berning@brain.mpg.de>
@@ -14,7 +14,6 @@ if ~exist(outputFolder, 'dir')
 end
 
 display('loading dependent variables...');
-tic;
 m = load([p.saveFolder 'allParameterWithSynapses.mat']);
 p = m.p;
 
@@ -23,40 +22,48 @@ graph = load([p.saveFolder 'graph.mat']);
 segmentMeta = load([p.saveFolder 'segmentMeta.mat'], 'voxelCount', 'point', 'maxSegId');
 segmentMeta.point = segmentMeta.point';
 % typeEM information ignorenum2str(p.raw.voxelSize(1))
-%segmentMeta = connectEM.addSegmentClassInformation(p, segmentMeta);
-
+segmentMeta = connectEM.addSegmentClassInformation(p, segmentMeta); % SL: spine not added yet
 borderMeta = load([p.saveFolder 'globalBorder.mat'], 'borderSize', 'borderCoM');
-
-synScore = load([p.saveFolder 'globalSynapseScores.mat']);
-synScore.isSynapse = connectEM.synScoresToSynEdges(graph, synScore);
-toc;
+%synScore = load([p.saveFolder 'globalSynapseScores.mat']);
+%synScore.isSynapse = connectEM.synScoresToSynEdges(graph, synScore);
 
 maxSegId = Seg.Global.getMaxSegId(p);
 borderSizeThr = 50;
 segmentSizeThr = 100;
 display(['Cut graph at border size:' num2str(borderSizeThr), 'segment size:' num2str(segmentSizeThr)]);
 graphCut = connectEM.cutGraphSimple(p, graph, segmentMeta, borderMeta, borderSizeThr, segmentSizeThr);
-probThreshold = 0.99;
-sizeThreshold = 1e6;
-display(['Performing agglomeration on graph with thr prob:' num2str(probThreshold), 'agglo size:' num2str(sizeThreshold)]);
-[agglos, agglosSize, agglosEdges] = connectEM.partitionSortAndKeepOnlyLarge(graphCut, segmentMeta, probThreshold, sizeThreshold);
-%{
-agglosEdges = graphCut.edges(graphCut.prob > probThreshold,:);
-[~, partition] = Graph.buildConnectedComponents(maxSegId, agglosEdges);
-partitionSize = cellfun(@(x)sum(segmentMeta.voxelCount(x)), partition);
-[partitionSize, idx] = sort(partitionSize, 'descend');
-partition = partition(idx);
-idx = partitionSize > sizeThreshold;
-partition = partition(idx);
-partitionSize = partitionSize(idx);
-clear idx;
-agglos = partition;
-agglosSize = partitionSize;
-%}
-[agglosSizeSorted,idxSort] = sort(agglosSize,'descend');
-agglosSorted= agglos(idxSort);
 
-agglosOut = agglosSorted(1:100);
+Util.log('Setting type prob thresholds for classes:')
+segmentMeta.isDendrite = segmentMeta.dendriteProb >= 0.90;
+segmentMeta.isAxon = segmentMeta.axonProb >= 0.90;
+
+Util.log('Generating subgraphs for axon and dendrite agglomeration:');
+tic;
+% Dendrites first
+idx = all(ismember(graphCut.edges, find(segmentMeta.isDendrite)), 2);
+graphCutDendrites.edges = graphCut.edges(idx,:);
+graphCutDendrites.prob = graphCut.prob(idx);
+% Then axon
+idx = all(ismember(graphCut.edges, find(segmentMeta.isAxon)), 2);
+graphCutAxons.edges = graphCut.edges(idx,:);
+graphCutAxons.prob = graphCut.prob(idx);
+clear idx;
+toc;
+
+%% Lets stick with 99% for now as we have 'large enough' components
+probThresholdDend = 0.99;
+sizeThresholdDend = 1e6;
+Util.log(['Performing agglomeration on dendrite subgraph with thr prob:' num2str(probThresholdDend), 'agglo size:' num2str(sizeThresholdDend)]);
+[dendrites, dendriteSize, dendriteEdges] = connectEM.partitionSortAndKeepOnlyLarge(graphCutDendrites, segmentMeta,...
+                                                         probThresholdDend, sizeThresholdDend);
+[dendriteSizeSorted,idxSort] = sort(dendriteSize,'descend');
+dendritesSorted = dendrites(idxSort);
+outputFolderSub = fullfile(outputFolder,['dendrites_border_' num2str(borderSizeThr) ...
+                            'seg_' num2str(segmentSizeThr) ...
+                            'prob_' num2str(probThresholdDend) ...
+                            'size_' num2str(sizeThresholdDend)]);
+mkdir(outputFolderSub);
+agglosOut = dendritesSorted(1:100);
 display('Writing skeletons for debugging the process:');
 parameters.experiment.name= p.experimentName;
 parameters.scale.x = num2str(p.raw.voxelSize(1));
@@ -65,22 +72,52 @@ parameters.scale.z = num2str(p.raw.voxelSize(3));
 parameters.offset.x = '0';
 parameters.offset.y = '0';
 parameters.offset.z = '0';
-outputFolderSub = fullfile(outputFolder,['border:' num2str(borderSizeThr) ...
-                            'seg:' num2str(segmentSizeThr) ...
-                            'prob:' num2str(probThreshold) ...
-                            'size:' num2str(sizeThreshold)]);
-mkdir(outputFolderSub)
+Superagglos.skeletonFromAgglo(graphCutDendrites.edges, segmentMeta, ...
+    agglosOut, 'dendrites', outputFolderSub, parameters);
+Util.save(fullfile(outputFolderSub,'dendrites.mat'),dendritesSorted, dendriteSizeSorted, info)
+WK.makeWKMapping(agglosOut, ['dendrites_border_' num2str(borderSizeThr) ...
+                            'seg_' num2str(segmentSizeThr) ...
+                            'prob_' num2str(probThresholdDend) ...
+                            'size_' num2str(sizeThresholdDend)], ...
+                            outputFolderSub);
 
-Util.save(fullfile(outputFolderSub,'agglos.mat'),agglos, agglosSize, info)
-WK.makeWKMapping(agglos, ['border:' num2str(borderSizeThr) ...
-                            'seg:' num2str(segmentSizeThr) ...
-                            'prob:' num2str(probThreshold) ...
-                            'size:' num2str(sizeThreshold)], ...
-                         outputFolderSub);
+%% repeat for axons
+probThresholdAxon = 0.99;
+sizeThresholdAxon = 1e6;
+Util.log(['Performing agglomeration on axon subgraph with thr prob:' num2str(probThresholdAxon), 'agglo size:' num2str(sizeThresholdAxon)]);
+[axons, axonSize, axonEdges] = connectEM.partitionSortAndKeepOnlyLarge(graphCutAxons, segmentMeta,...
+                                                         probThresholdAxon, sizeThresholdAxon);
+[axonSizeSorted,idxSort] = sort(axonSize,'descend');
+axonsSorted = axons(idxSort);
+outputFolderSub = fullfile(outputFolder,['axons_border_' num2str(borderSizeThr) ...
+                            'seg_' num2str(segmentSizeThr) ...
+                            'prob_' num2str(probThresholdDend) ...
+                            'size_' num2str(sizeThresholdDend)]);
+mkdir(outputFolderSub);
+agglosOut = axonsSorted(1:100);
+display('Writing skeletons for debugging the process:');
+parameters.experiment.name= p.experimentName;
+parameters.scale.x = num2str(p.raw.voxelSize(1));
+parameters.scale.y = num2str(p.raw.voxelSize(2));
+parameters.scale.z = num2str(p.raw.voxelSize(3));
+parameters.offset.x = '0';
+parameters.offset.y = '0';
+parameters.offset.z = '0';
+Superagglos.skeletonFromAgglo(graphCutAxons.edges, segmentMeta, ...
+    agglosOut, 'axons', outputFolderSub, parameters);
+Util.save(fullfile(outputFolderSub,'axons.mat'),axonsSorted, axonSizeSorted, info)
+WK.makeWKMapping(agglosOut, ['axons_border_' num2str(borderSizeThr) ...
+                            'seg_' num2str(segmentSizeThr) ...
+                            'prob_' num2str(probThresholdAxon) ...
+                            'size_' num2str(sizeThresholdAxon)], ...
+                            outputFolderSub);
+
+%{
+display('Garbage collection');
 tic;
-Superagglos.skeletonFromAgglo(graph.edges, segmentMeta, ...
-    agglosOut, 'agglos', outputFolderSub, parameters);
+[axonsFinal, dendritesFinal] = connectEM.garbageCollection(graph, segmentMeta, axonsAfterEr, dendritesAfterEr, excClasses(1:6));
 toc;
+%}
 
 %{
 display('Display collected volume, save everything (except graph, which will be ignored due to size):');
@@ -156,4 +193,4 @@ bbox = Util.convertWebknossosToMatlabBbox(bbox_wk);
 idx = all(bsxfun(@minus, spinePosition, bbox(:,1)') > 0,2) & all(bsxfun(@minus, spinePosition, bbox(:,2)') < 0,2);
 connectEM.generateSkeletonFromNodes([outputFolder 'spinesBbox.nml'], spinePosition(idx), strseq('spines', 1:sum(idx), {}, true));
 %}
-%end
+end
