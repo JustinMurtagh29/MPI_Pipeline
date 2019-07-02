@@ -24,8 +24,8 @@ nmlFiles = fullfile(nmlDir, 'proofread', ...
      'box-7.nml','box-8.nml','box-9.nml'});
 
 rng(0);
-idxTrain = [1,2,4,5,6,7,8];
-idxTest = 3;
+idxTrain = [1,2,3,5,6,7,8,9];
+idxTest = 4;
 % load features
 gt = TypeEM.GroundTruth.loadSet( ...
         param, featureSetName, nmlFiles(idxTrain));
@@ -81,7 +81,7 @@ for curTrainSize = trainSizes
     classifiers{end + 1} = curClassifier;
     results(end + 1, :) = {precRec, probs};
 end 
-
+%{
 % Look at false positives
 curCount = 40;
 className = 'glia';
@@ -107,12 +107,13 @@ skels = Debug.inspectTPs(param, curCount, className, curGtTest);
 skels.write(fullfile(param.saveFolder,'typeEM', sprintf('tps-%s.nml',className)));
 
 Debug.labelDistributions
-%{
+%}
+
 %% Building output
 Util.log('Building output');
 classifier = classifiers{end}; %choose trained on all data
-Util.save(['/u/sahilloo/Mk1_F6_JS_SubI_v1/type-em/typeClassifier/' datestr(clock,30) '.mat'],classifier,gt,info);
-%}
+Util.save(['/u/sahilloo/H2_3_v2_U1_SubI/type-em/typeClassifier/' datestr(clock,30) '.mat'],classifier,gt,info);
+
 
 function classifier = buildForClass(gt, class, methodUsed)
     % classifier = buildForClass(data, className)
