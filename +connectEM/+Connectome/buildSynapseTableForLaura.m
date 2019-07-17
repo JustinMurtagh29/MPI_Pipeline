@@ -24,8 +24,9 @@ synT = connectEM.Connectome.buildSynapseTable(conn, syn);
 synT(:, 'isSpine') = [];
 synT.type = syn.synapses.type(synT.id);
 
-% Axon class
+% Axon and target classes
 synT.axonClass = conn.axonMeta.axonClass(synT.preAggloId);
+synT.targetClass = conn.denMeta.targetClass(synT.postAggloId);
 
 % Position
 calculatePositions = @(n) feval(@(p) p(synT.id, :), ...
