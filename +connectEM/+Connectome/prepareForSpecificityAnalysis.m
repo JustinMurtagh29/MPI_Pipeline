@@ -68,7 +68,7 @@ function [conn, axonClasses] = ...
         conn.denMeta.targetClass, targetClassOrder);
     
     %% Update axon classes, if desired
-    if ~exist('axonClasses', 'var'); return; end
+    if ~exist('axonClasses', 'var') || isempty(axonClasses); return; end
     
     validAxonIds = conn.axonMeta.synCount >= opt.minSynPre;
     validAxonIds = conn.axonMeta.id(validAxonIds);
