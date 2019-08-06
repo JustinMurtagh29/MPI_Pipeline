@@ -11,9 +11,9 @@ minSynPre = 10;
 maxRadius = 50;
 maxAvail = 0.7;
 
-% Set to radius (in µm) to run forward model to generate fake connectome
-% and calibrate the geometric predictability analysis.
-fakeRadius = [];
+% Set to radius (in µm) to run forward model on synthetic connectome to
+% calibrate the geometric predictability analysis.
+synthRadius = [];
 
 targetClasses = { ...
     'Somata', 'SO';
@@ -133,25 +133,25 @@ end
 
 plotAxonClasses = 1:numel(allAxonClasses);
 
-%% Build fake connectome for testing
-if ~isempty(fakeRadius)
-    fakeRadiusId = find(avail.dists == 1E3 * fakeRadius);
-    fakeConn = availabilities(:, fakeRadiusId, :);
-    fakeConn = transpose(squeeze(fakeConn));
+%% Build synthetic connectome for testing
+if ~isempty(synthRadius)
+    synthRadiusId = find(avail.dists == 1E3 * synthRadius);
+    synthConn = availabilities(:, synthRadiusId, :);
+    synthConn = transpose(squeeze(synthConn));
     
-    % Build fake connectome by multinomial sampling
+    % Build synth connectome by multinomial sampling
     rng(0);
-    fakeConn = cell2mat(cellfun( ...
+    synthConn = cell2mat(cellfun( ...
         @(n, probs) mnrnd(n, probs), ...
         num2cell(sum(classConn, 2)), ...
-        num2cell(fakeConn, 2), ...
+        num2cell(synthConn, 2), ...
         'UniformOutput', false));
-    classConn = fakeConn;
+    classConn = synthConn;
     
-    fakeAxonClassTitles = strcat( ...
-        {'fake '}, {allAxonClasses.title}, ...
-        sprintf(' (r_{fake} = %d µm)', fakeRadius));
-   [allAxonClasses.title] = deal(fakeAxonClassTitles{:});
+    synthAxonClassTitles = strcat( ...
+        {'synth '}, {allAxonClasses.title}, ...
+        sprintf(' (r_{synth} = %d µm)', synthRadius));
+   [allAxonClasses.title] = deal(synthAxonClassTitles{:});
 end
 
 %% Plot mean availabilities / specificities
