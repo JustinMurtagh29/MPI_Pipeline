@@ -40,6 +40,8 @@ synTypes = unique(conn.axonMeta.axonClass);
 wcData = load(wcFile);
 somaData = load(somaFile);
 
+colors = get(groot, 'defaultAxesColorOrder');
+
 %% NML files for splitting whole cells into individual dendrites
 splitNmlT = connectEM.WholeCell.loadSplitNmls(splitNmlDir);
 splitNmlT.cellId = wcData.idxWholeCells(splitNmlT.aggloId);
@@ -556,6 +558,79 @@ tcCcCellNormalizedWmPiaRatio = ...
 curFit = fitlm(dendT.dir(:, 1), dendT.tcExcRatio);
 tcCcWmPiaRatio = ...
     curFit.predict(+1) / curFit.predict(-1) %#ok
+
+
+
+%% Correlate input ratios
+clear cur*;
+curWcMinSyn = 100;
+curDendMinSyn = 50;
+
+curLims = [0, 1];
+curVarNames = {'ieRatio'};
+
+curWcT = wcT(sum(wcT.classConn, 2) >= curWcMinSyn, :);
+curDendT = dendT(sum(dendT.classConn, 2) >= curDendMinSyn, :);
+
+curData = {curWcT, curDendT};
+for curDataIdx = 1:numel(curData)
+    curT = curData{curDataIdx};
+    
+    curT.tcRatio = ...
+        curT.classConn(:, 2) ...
+     ./ sum(curT.classConn(:, 1:2), 2);
+
+    curT.ieRatio = ...
+        curT.classConn(:, 3) ...
+     ./ sum(curT.classConn(:, 1:3), 2);
+    
+    curData{curDataIdx} = curT;
+end
+
+curFig = figure();
+for curDataIdx = 1:numel(curData)
+    curT = curData{curDataIdx};
+    curX = curT.tcRatio;
+    
+    for curVarIdx = 1:numel(curVarNames)
+        curVarName = curVarNames{curVarIdx};
+        curY = curT.(curVarName);
+        
+        curFit = fit(curX, curY, 'poly1');
+        curFitY = curFit(curLims);
+
+        curFitIntX = curLims(1):0.01:curLims(2);
+        curFitIntY = predint(curFit, curFitIntX);
+        
+        curAx = numel(curVarNames) * (curDataIdx - 1) + curVarIdx;
+        curAx = subplot(numel(curData), numel(curVarNames), curAx);
+        hold(curAx, 'on');
+
+        curScatter = scatter(curAx, curX, curY, 20, 'o');
+        curScatter.MarkerEdgeColor = 'none';
+        curScatter.MarkerFaceColor = colors(1, :);
+
+        plot( ...
+            curAx, curLims, curFitY, ...
+            'Color', 'black', 'LineWidth', 2);
+        plot( ...
+            curAx, curFitIntX, curFitIntY', ...
+            'Color', 'black', 'LineStyle', '--');
+
+        axis(curAx, 'equal');
+        xlim(curAx, curLims);
+        ylim(curAx, curLims);
+        
+        curAx.XTick = intersect(curAx.XTick, curAx.YTick);
+        curAx.YTick = intersect(curAx.XTick, curAx.YTick);
+    end
+end
+
+curLowerAxes = flip(curFig.Children(1:numel(curVarNames)));
+set(get(curLowerAxes, 'XLabel'), 'String', 'tcRatio');
+set(get(curLowerAxes, 'YLabel'), 'String', curVarNames);
+
+connectEM.Figure.config(curFig);
 
 %% Try to find border cells
 clear cur*;
