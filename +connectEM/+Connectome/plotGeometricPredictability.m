@@ -13,7 +13,14 @@ maxAvail = 0.7;
 
 % Set to radius (in µm) to run forward model on synthetic connectome to
 % calibrate the geometric predictability analysis.
-synthRadius = [];
+synth = struct;
+
+% Synthesize connectome assuming independence axon and target classes
+% synth.method = 'independentPrePost';
+
+% Synthesize connectome using availability as synapse probability
+% synth.method = 'availIsSynProb';
+% synth.radius = 10;
 
 targetClasses = { ...
     'Somata', 'SO';
@@ -134,24 +141,59 @@ end
 plotAxonClasses = 1:numel(allAxonClasses);
 
 %% Build synthetic connectome for testing
-if ~isempty(synthRadius)
-    synthRadiusId = find(avail.dists == 1E3 * synthRadius);
-    synthConn = availabilities(:, synthRadiusId, :);
-    synthConn = transpose(squeeze(synthConn));
-    
-    % Build synth connectome by multinomial sampling
-    rng(0);
-    synthConn = cell2mat(cellfun( ...
-        @(n, probs) mnrnd(n, probs), ...
-        num2cell(sum(classConn, 2)), ...
-        num2cell(synthConn, 2), ...
-        'UniformOutput', false));
-    classConn = synthConn;
-    
-    synthAxonClassTitles = strcat( ...
-        {'synth '}, {allAxonClasses.title}, ...
-        sprintf(' (r_{synth} = %d µm)', synthRadius));
-   [allAxonClasses.title] = deal(synthAxonClassTitles{:});
+clear cur*;
+rng(0);
+
+curMethod = '';
+if isfield(synth, 'method')
+    curMethod = synth.method;
+end
+
+switch curMethod
+    case 'availIsSynProb'
+        curRadius = synth.radius;
+        curRadiusId = find(avail.dists == 1E3 * curRadius);
+        assert(isscalar(curRadiusId));
+        
+        synthConn = availabilities(:, curRadiusId, :);
+        synthConn = transpose(squeeze(synthConn));
+
+        % Build synth connectome by multinomial sampling
+        synthConn = cell2mat(cellfun( ...
+            @(n, probs) mnrnd(n, probs), ...
+            num2cell(sum(classConn, 2)), ...
+            num2cell(synthConn, 2), ...
+            'UniformOutput', false));
+        classConn = synthConn;
+
+        curAxonClassTitles = strcat( ...
+            {'synth '}, {allAxonClasses.title}, ...
+            sprintf(' (r_{synth} = %d µm)', curRadius));
+       [allAxonClasses.title] = deal(curAxonClassTitles{:});
+       
+    case 'independentPrePost'
+        synthConn = nan(size(classConn));
+        for curAxonClassIdx = 1:numel(axonClasses)
+            curAxonClass = axonClasses(curAxonClassIdx);
+            curAxonIds = curAxonClass.axonIds;
+            
+            curClassConn = classConn(curAxonIds, :);
+            curSynCounts = sum(curClassConn, 2);
+            
+            curTargetProbs = sum(curClassConn, 1);
+            curTargetProbs = curTargetProbs / sum(curTargetProbs);
+            
+            curSynthConn = mnrnd(curSynCounts, curTargetProbs);
+            synthConn(curAxonIds, :) = curSynthConn;
+        end
+        
+        classConn = synthConn;
+        curAxonClassTitles = strcat( ...
+            {'synth '}, {allAxonClasses.title});
+       [allAxonClasses.title] = deal(curAxonClassTitles{:});
+        
+    otherwise
+        error('Invalid method "%s"', curMethod);
 end
 
 %% Plot mean availabilities / specificities
@@ -496,7 +538,7 @@ curRadius = 10;
 curPad = 0.05;
 curMinRange = 0.1;
 
-curAxonIds = conn.axonMeta.synCount >= curSynCount;
+curAxonIds = sum(classConn, 2) >= curSynCount;
 curRadiusId = find(avail.dists == 1E3 * curRadius);
 
 curFig = figure();
