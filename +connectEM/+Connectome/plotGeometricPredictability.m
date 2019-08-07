@@ -22,6 +22,9 @@ synth = struct;
 % synth.method = 'availIsSynProb';
 % synth.radius = 10;
 
+% Set of axon classes to analyse.
+axonClassNames = {'excitatory', 'inhibitory'};
+
 targetClasses = { ...
     'Somata', 'SO';
     'ProximalDendrite', 'PD'; ...
@@ -44,7 +47,13 @@ param = param.p;
 [conn, axonClasses] = ...
     connectEM.Connectome.prepareForSpecificityAnalysis( ...
         conn, axonClasses, 'minSynPre', minSynPre);
-axonClasses = axonClasses(1:2);
+
+first = @(vals) vals(1);
+curClassIds = arrayfun(@(a) first(strsplit(a.title)), axonClasses);
+[~, curClassIds] = ismember(axonClassNames, curClassIds);
+
+assert(all(curClassIds));
+axonClasses = axonClasses(curClassIds);
 
 avail = load(availFile);
 
@@ -89,10 +98,16 @@ allAxonClasses = axonClasses;
 
 % NOTE(amotta): As discussed with MH on 08.08.2018, let's not predict
 % targets that are not innervated by excitatory axons.
-allAxonClasses(1).title = sprintf( ...
-    '%s (without SOM and AIS)', allAxonClasses(1).title);
-allAxonClasses(1).predictClasses = setdiff( ...
-    targetClasses, {'Somata', 'AxonInitialSegment'});
+curExcNames = {'excitatory', 'corticocortical', 'thalamocortical'};
+curExcIds = arrayfun(@(a) first(strsplit(a.title)), allAxonClasses);
+curExcIds = find(ismember(curExcIds, curExcNames));
+
+for curId = reshape(curExcIds, 1, [])
+    allAxonClasses(curId).title = sprintf( ...
+        '%s (without SOM and AIS)', allAxonClasses(curId).title);
+    allAxonClasses(curId).predictClasses = setdiff( ...
+        targetClasses, {'Somata', 'AxonInitialSegment'});
+end
 
 % Do same thing with linear regression
 curNewAxonClasses = allAxonClasses(1:numel(axonClasses));
