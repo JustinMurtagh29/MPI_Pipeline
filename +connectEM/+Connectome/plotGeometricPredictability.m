@@ -150,6 +150,9 @@ if isfield(synth, 'method')
 end
 
 switch curMethod
+    case ''
+        % nothing to do
+        
     case 'availIsSynProb'
         curRadius = synth.radius;
         curRadiusId = find(avail.dists == 1E3 * curRadius);
@@ -170,8 +173,13 @@ switch curMethod
             {'synth '}, {allAxonClasses.title}, ...
             sprintf(' (r_{synth} = %d µm)', curRadius));
        [allAxonClasses.title] = deal(curAxonClassTitles{:});
-       
+        
     case 'independentPrePost'
+        % NOTE(amotta): Make sure that axon classes are mutually exclusive.
+        % This is necessary for the connectome synthesis to work properly.
+        curAxonIds = cell2mat(reshape({axonClasses.axonIds}, [], 1));
+        assert(isequal(sort(curAxonIds), unique(curAxonIds)));
+        
         synthConn = nan(size(classConn));
         for curAxonClassIdx = 1:numel(axonClasses)
             curAxonClass = axonClasses(curAxonClassIdx);
