@@ -56,8 +56,9 @@ specAxonClasses = ...
         specConn, specAxonClasses);
 
 % Reset classes in axon meta data. The values are filled in below.
-specConn.axonMeta.axonClass = repelem( ...
-    {'Ignore'}, numel(specConn.axons), 1);
+specSynTypes = {};
+specConn.axonMeta.axonClass = ...
+    repelem({[]}, numel(specConn.axons), 1);
 
 % Modified from
 % +connectEM/+Consistency/loadConnectome.m
@@ -100,12 +101,16 @@ for curIdx = 1:numel(specAxonClasses)
     
     % Update axon meta data
     curNames = strcat(curPrefix, curNames);
+    specSynTypes = cat(1, specSynTypes(:), curNames(:));
     specConn.axonMeta.axonClass(cell2mat(curAxonIds)) = ...
         repelem(curNames, cellfun(@numel, curAxonIds), 1);
 end
 
-specConn.axonMeta.axonClass = ...
-    categorical(specConn.axonMeta.axonClass);
+specSynTypes{end + 1} = 'Other';
+specConn.axonMeta.axonClass(cellfun( ...
+    @isempty, specConn.axonMeta.axonClass)) = {'Other'};
+specConn.axonMeta.axonClass = categorical( ...
+    specConn.axonMeta.axonClass, specSynTypes, 'Ordinal', true);
 
 %% NML files for splitting whole cells into individual dendrites
 splitNmlT = connectEM.WholeCell.loadSplitNmls(splitNmlDir);
@@ -191,6 +196,7 @@ clear cur*;
 
 wcT.synapses = cell(size(wcT.id));
 wcT.classConn = nan(height(wcT), numel(synTypes));
+wcT.specClassConn = nan(height(wcT), numel(specSynTypes));
 
 for curIdx = 1:size(wcT, 1)
     curAgglo = wcT.agglo(curIdx);
@@ -226,12 +232,17 @@ for curIdx = 1:size(wcT, 1)
     curSynT.axonId = repelem( ...
         curConnRows.edges(:, 1), ...
         cellfun(@numel, curConnRows.synIdx));
+    
     curClassConn = accumarray( ...
         double(conn.axonMeta.axonClass(curSynT.axonId)), ...
         1, [numel(synTypes), 1]);
+    curSpecClassConn = accumarray( ...
+        double(specConn.axonMeta.axonClass(curSynT.axonId)), ...
+        1, [numel(specSynTypes), 1]);
     
     wcT.synapses{curIdx} = curSynT;
     wcT.classConn(curIdx, :) = curClassConn;
+    wcT.specClassConn(curIdx, :) = curSpecClassConn;
 end
 
 %% Debugging
@@ -292,11 +303,19 @@ for curIdx = 1:height(wcT)
     curSynapses(curDropMask, :) = [];
     
     % Update class connectome
-    curClassConn = double(conn.axonMeta.axonClass(curSynapses.axonId));
-    curClassConn = accumarray(curClassConn, 1, [numel(synTypes), 1]);
+    curClassConn = ...
+        conn.axonMeta.axonClass(curSynapses.axonId);
+    curClassConn = accumarray( ...
+        double(curClassConn), 1, [numel(synTypes), 1]);
+    
+    curSpecClassConn = ...
+        specConn.axonMeta.axonClass(curSynapses.axonId);
+    curSpecClassConn = accumarray( ...
+        double(curSpecClassConn), 1, [numel(specSynTypes), 1]);
     
     wcT.synapses{curIdx} = curSynapses;
     wcT.classConn(curIdx, :) = curClassConn;
+    wcT.specClassConn(curIdx, :) = curSpecClassConn;
 end
 
 %% Render isosurface
@@ -493,11 +512,12 @@ dendT(~dendT.cellRow, :) = [];
 
 dendT.dir = nan(size(dendT.somaPos));
 dendT.classConn = nan(height(dendT), numel(synTypes));
+dendT.specClassConn = nan(height(dendT), numel(specSynTypes));
 dendT.tcExcRatio = nan(size(dendT.id));
 dendT.wcRelTcExcRatio = nan(size(dendT.id));
 
 for curIdx = 1:size(dendT, 1)
-    curSyns = dendT.synapses{curIdx};
+    curSynapses = dendT.synapses{curIdx};
     curCell = curWcT(dendT.cellRow(curIdx), :);
     
     % Calculate dendrite orientation
@@ -516,15 +536,22 @@ for curIdx = 1:size(dendT, 1)
     curDendDir = sum(curSegMass .* curDendDir, 1);
     curDendDir = curDendDir / sqrt(sum(curDendDir .^ 2));
     
-    curSynData = accumarray( ...
-        double(conn.axonMeta.axonClass(curSyns.axonId)), ...
-        1, [numel(synTypes), 1], @sum, 0);
+    curClassConn = ...
+        conn.axonMeta.axonClass(curSynapses.axonId);
+    curClassConn = accumarray( ...
+        double(curClassConn), 1, [numel(synTypes), 1]);
+    
+    curSpecClassConn = ...
+        specConn.axonMeta.axonClass(curSynapses.axonId);
+    curSpecClassConn = accumarray( ...
+        double(curSpecClassConn), 1, [numel(specSynTypes), 1]);
     
     dendT.dir(curIdx, :) = curDendDir;
-    dendT.classConn(curIdx, :) = curSynData;
+    dendT.classConn(curIdx, :) = curClassConn;
+    dendT.specClassConn(curIdx, :) = curSpecClassConn;
     
     dendT.tcExcRatio(curIdx) = ...
-        curSynData(2) / sum(curSynData(1:2));
+        curClassConn(2) / sum(curClassConn(1:2));
     dendT.wcRelTcExcRatio(curIdx) = ...
         dendT.tcExcRatio(curIdx) / curCell.tcRatio;
 end
@@ -624,48 +651,89 @@ curFit = fitlm(dendT.dir(:, 1), dendT.tcExcRatio);
 tcCcWmPiaRatio = ...
     curFit.predict(+1) / curFit.predict(-1) %#ok
 
-
-
 %% Correlate input ratios
 clear cur*;
 curWcMinSyn = 100;
 curDendMinSyn = 50;
 
 curLims = [0, 1];
-curVarNames = {'ieRatio'};
+curTicks = 0:0.1:1;
 
 curWcT = wcT(sum(wcT.classConn, 2) >= curWcMinSyn, :);
 curDendT = dendT(sum(dendT.classConn, 2) >= curDendMinSyn, :);
 
 curData = {curWcT, curDendT};
-for curDataIdx = 1:numel(curData)
-    curT = curData{curDataIdx};
-    
-    curT.tcRatio = ...
-        curT.classConn(:, 2) ...
-     ./ sum(curT.classConn(:, 1:2), 2);
+curSummaries = cell(size(curData));
+curSummaryVars = {'name', 'fit', 'slope', 'relSlope', 'pValue'};
 
-    curT.ieRatio = ...
-        curT.classConn(:, 3) ...
-     ./ sum(curT.classConn(:, 1:3), 2);
-    
-    curData{curDataIdx} = curT;
-end
+curDataNames = {'neurons', 'dendrites'};
+curVarNames = cat(1, {'ieRatio'}, strcat('frac', specSynTypes(:)));
 
-curFig = figure();
 for curDataIdx = 1:numel(curData)
-    curT = curData{curDataIdx};
-    curX = curT.tcRatio;
+    curDataName = curDataNames{curDataIdx};
+    curDataT = curData{curDataIdx};
+    
+    curDataT.tcRatio = ...
+        curDataT.classConn(:, 2) ...
+     ./ sum(curDataT.classConn(:, 1:2), 2);
+
+    curDataT.ieRatio = ...
+        curDataT.classConn(:, 3) ...
+     ./ sum(curDataT.classConn(:, 1:3), 2);
+    
+    for curTypeIdx = 1:numel(specSynTypes)
+        curType = specSynTypes{curTypeIdx};
+        curVarName = sprintf('frac%s', curType);
+        
+        curDataT.(curVarName) = ...
+            curDataT.specClassConn(:, curTypeIdx) ...
+         ./ sum(curDataT.specClassConn, 2);
+    end
+    
+    curSummaryT = cell( ...
+        numel(curVarNames), ...
+        numel(curSummaryVars));
     
     for curVarIdx = 1:numel(curVarNames)
         curVarName = curVarNames{curVarIdx};
-        curY = curT.(curVarName);
         
-        curFit = fit(curX, curY, 'poly1');
-        curFitY = curFit(curLims);
+        curX = curDataT.tcRatio;
+        curY = curDataT.(curVarName);
+        
+        curFit = fitlm(curX, curY);
+        curSlope = curFit.Coefficients.Estimate(2);
+        curRelSlope = curSlope / mean(curY);
+        curPvalue = curFit.Coefficients.pValue(2);
+        
+        curSummaryT(curVarIdx, :) = { ...
+            curVarName, curFit, curSlope, curRelSlope, curPvalue};
+    end
+    
+    curSummaryT = cell2table( ...
+        curSummaryT, 'VariableNames', curSummaryVars);
+    
+    fprintf('Results for %s\n', curDataName);
+    curShowT = setdiff(curSummaryVars, {'fit'}, 'stable');
+    disp(sortrows(curSummaryT(:, curShowT), 'relSlope', 'ascend'));
+    
+    curData{curDataIdx} = curDataT;
+    curSummaries{curDataIdx} = curSummaryT;
+end
 
-        curFitIntX = curLims(1):0.01:curLims(2);
-        curFitIntY = predint(curFit, curFitIntX);
+% Plot
+curFig = figure();
+for curDataIdx = 1:numel(curData)
+    curDataName = curDataNames{curDataIdx};
+    curSummaryT = curSummaries{curDataIdx};
+    curDataT = curData{curDataIdx};
+    curX = curDataT.tcRatio;
+    
+    for curVarIdx = 1:numel(curVarNames)
+        curVarName = curVarNames{curVarIdx};
+        curY = curDataT.(curVarName);
+        
+        curFit = curSummaryT.fit{curVarIdx};
+        curFitY = curFit.predict(curLims(:))';
         
         curAx = numel(curVarNames) * (curDataIdx - 1) + curVarIdx;
         curAx = subplot(numel(curData), numel(curVarNames), curAx);
@@ -675,27 +743,28 @@ for curDataIdx = 1:numel(curData)
         curScatter.MarkerEdgeColor = 'none';
         curScatter.MarkerFaceColor = colors(1, :);
 
-        plot( ...
+        curFitPlot = plot( ...
             curAx, curLims, curFitY, ...
             'Color', 'black', 'LineWidth', 2);
-        plot( ...
-            curAx, curFitIntX, curFitIntY', ...
-            'Color', 'black', 'LineStyle', '--');
 
         axis(curAx, 'equal');
-        xlim(curAx, curLims);
-        ylim(curAx, curLims);
+        xlim(curAx, curLims); xticks(curAx, curTicks);
+        ylim(curAx, curLims); yticks(curAx, curTicks);
         
-        curAx.XTick = intersect(curAx.XTick, curAx.YTick);
-        curAx.YTick = intersect(curAx.XTick, curAx.YTick);
+        xlabel(curAx, sprintf('%s (%s)', 'tcRatio', curDataName));
+        ylabel(curAx, sprintf('%s (%s)', curVarName, curDataName));
+        
+        curLeg = sprintf( ...
+            'y = %.2f %+.2fx (p_{slope} = %.2f)', ...
+            curFit.Coefficients.Estimate, ...
+            curFit.Coefficients.pValue(end));
+        curLeg = legend(curFitPlot, curLeg);
+        curLeg.Location = 'north';
     end
 end
 
-curLowerAxes = flip(curFig.Children(1:numel(curVarNames)));
-set(get(curLowerAxes, 'XLabel'), 'String', 'tcRatio');
-set(get(curLowerAxes, 'YLabel'), 'String', curVarNames);
-
-connectEM.Figure.config(curFig);
+curFig.Position(3:4) = [6600, 1000];
+connectEM.Figure.config(curFig, info);
 
 %% Try to find border cells
 clear cur*;
