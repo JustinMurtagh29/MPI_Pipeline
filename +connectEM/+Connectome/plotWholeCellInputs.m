@@ -42,6 +42,70 @@ somaData = load(somaFile);
 
 colors = get(groot, 'defaultAxesColorOrder');
 
+%% Find axon subpopulations with target specificities
+clear cur*;
+specConn = conn;
+specAxonClasses = axonClasses(1:2);
+
+[specConn, specAxonClasses] = ...
+    connectEM.Connectome.prepareForSpecificityAnalysis( ...
+        specConn, specAxonClasses, 'minSynPre', 10);
+specAxonClasses = ...
+    connectEM.Connectome.buildAxonSpecificityClasses( ...
+        specConn, specAxonClasses);
+
+% Reset classes in axon meta data. The values are filled in below.
+specConn.axonMeta.axonClass = repelem( ...
+    {'Ignore'}, numel(specConn.axons), 1);
+
+% Modified from
+% +connectEM/+Consistency/loadConnectome.m
+% commit a23788a05313f61dfef152443cde5d7ff59d7622
+for curIdx = 1:numel(specAxonClasses)
+    curAxonClass = specAxonClasses(curIdx);
+    curSpecs = curAxonClass.specs;
+    
+    curPrefix = strsplit(curAxonClass.title);
+    curPrefix = curPrefix{1};
+    curPrefix(1) = upper(curPrefix(1));
+    
+    curNames = fieldnames(curSpecs);
+    curAxonIds = cellfun( ...
+        @(n) curSpecs.(n).axonIds, ...
+        curNames, 'UniformOutput', false);
+
+    % Find axons with no and multiple specificities
+   [curSpecAxonIds, ~, curDupAxonIds] = unique(cell2mat(curAxonIds));
+    curDupAxonIds = curSpecAxonIds(accumarray(curDupAxonIds, 1) > 1);
+    curNonSpecAxonIds = setdiff(curAxonClass.axonIds, curSpecAxonIds);
+
+    curAxonIds = cellfun( ...
+        @(ids) setdiff(ids, curDupAxonIds), ...
+        curAxonIds, 'UniformOutput', false);
+    
+    curNames{end + 1} = 'MultiSpec'; %#ok
+    curAxonIds{end + 1} = curDupAxonIds(:); %#ok
+    
+    curNames{end + 1} = 'NoSpec'; %#ok
+    curAxonIds{end + 1} = curNonSpecAxonIds(:); %#ok
+    
+    for curNameIdx = 1:numel(curNames)
+        curName = curNames{curNameIdx};
+        curSpecs.(curName).axonIds = curAxonIds{curNameIdx};
+    end
+    
+    % Update specificity classes
+    specAxonClasses(curIdx).specs = curSpecs;
+    
+    % Update axon meta data
+    curNames = strcat(curPrefix, curNames);
+    specConn.axonMeta.axonClass(cell2mat(curAxonIds)) = ...
+        repelem(curNames, cellfun(@numel, curAxonIds), 1);
+end
+
+specConn.axonMeta.axonClass = ...
+    categorical(specConn.axonMeta.axonClass);
+
 %% NML files for splitting whole cells into individual dendrites
 splitNmlT = connectEM.WholeCell.loadSplitNmls(splitNmlDir);
 splitNmlT.cellId = wcData.idxWholeCells(splitNmlT.aggloId);
