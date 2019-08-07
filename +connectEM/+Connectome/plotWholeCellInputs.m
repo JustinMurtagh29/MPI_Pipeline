@@ -4,6 +4,7 @@ clear;
 
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
+isoDir = '/tmpscratch/amotta/l4/2018-05-10-whole-cell-isosurfaces-spine-evolution/full/mat/';
 
 % Set output directory to write figures to disk instead of displaying them.
 plotDir = '';
@@ -299,19 +300,18 @@ for curIdx = 1:height(wcT)
 end
 
 %% Render isosurface
+%{
 % Since Mr. Amira is on vacation.
 clear cur*;
 
 % Configuration
-curIsoDir = '/tmpscratch/amotta/l4/2018-05-10-whole-cell-isosurfaces-spine-evolution/full/mat/';
-
 curCellId = 21;
 curCamPos = [44683, 16045, -15604];
 curCamTarget = [2852.5, 4320.0, 1965.4];
 curCamUpVector = [-0.0178, -0.0785, -0.0153];
 curCamViewAngle = 10.4142;
 
-curIso = load(fullfile(curIsoDir, sprintf('iso-%d.mat', curCellId)));
+curIso = load(fullfile(isoDir, sprintf('iso-%d.mat', curCellId)));
 curIso = curIso.isoSurf;
 
 curSyn = wcT.synapses{wcT.id == curCellId};
@@ -394,6 +394,7 @@ annotation( ...
     curFig, 'textbox', [0, 0.9, 1, 0.1], ...
     'String', {info.filename; info.git_repos{1}.hash}, ...
     'EdgeColor', 'none', 'HorizontalAlignment', 'center');
+%}
 
 %% Plot soma position versus input ratios
 clear cur*;
