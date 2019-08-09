@@ -38,6 +38,12 @@ segPoint = Seg.Global.getSegToPointMap(param);
 synPos = connectEM.Synapse.calculatePositions(param, syn);
 synTypes = unique(conn.axonMeta.axonClass);
 
+synTypeFracs = connectEM.Connectome.buildSynapseTable(conn, syn);
+synTypeFracs = conn.axonMeta.axonClass(synTypeFracs.preAggloId);
+[~, synTypeFracs] = ismember(synTypeFracs, synTypes);
+synTypeFracs = accumarray(synTypeFracs, 1);
+synTypeFracs = synTypeFracs / sum(synTypeFracs);
+
 wcData = load(wcFile);
 somaData = load(somaFile);
 
@@ -109,8 +115,16 @@ end
 specSynTypes{end + 1} = 'Other';
 specConn.axonMeta.axonClass(cellfun( ...
     @isempty, specConn.axonMeta.axonClass)) = {'Other'};
-specConn.axonMeta.axonClass = categorical( ...
-    specConn.axonMeta.axonClass, specSynTypes, 'Ordinal', true);
+
+specSynTypes = categorical(specSynTypes, 'Ordinal', true);
+[~, curIds] = ismember(specConn.axonMeta.axonClass, specSynTypes);
+specConn.axonMeta.axonClass = specSynTypes(curIds);
+
+specSynTypeFracs = connectEM.Connectome.buildSynapseTable(specConn, syn);
+specSynTypeFracs = specConn.axonMeta.axonClass(specSynTypeFracs.preAggloId);
+[~, specSynTypeFracs] = ismember(specSynTypeFracs, specSynTypes);
+specSynTypeFracs = accumarray(specSynTypeFracs, 1);
+specSynTypeFracs = specSynTypeFracs / sum(specSynTypeFracs);
 
 %% NML files for splitting whole cells into individual dendrites
 splitNmlT = connectEM.WholeCell.loadSplitNmls(splitNmlDir);
@@ -665,10 +679,13 @@ curDendT = dendT(sum(dendT.classConn, 2) >= curDendMinSyn, :);
 
 curData = {curWcT, curDendT};
 curSummaries = cell(size(curData));
-curSummaryVars = {'name', 'fit', 'slope', 'relSlope', 'pValue'};
+curSummaryVars = { ...
+    'name', 'fit', 'nullModel', ....
+    'slope', 'relSlope', 'pValue'};
 
 curDataNames = {'neurons', 'dendrites'};
-curVarNames = cat(1, {'ieRatio'}, strcat('frac', specSynTypes(:)));
+curVarNames = strcat('frac', categories(specSynTypes));
+curVarNames = cat(1, {'ieRatio'}, curVarNames);
 
 for curDataIdx = 1:numel(curData)
     curDataName = curDataNames{curDataIdx};
@@ -682,9 +699,10 @@ for curDataIdx = 1:numel(curData)
         curDataT.classConn(:, 3) ...
      ./ sum(curDataT.classConn(:, 1:3), 2);
     
+    curSpecSynTypeFracs = nan(size(specSynTypeFracs));
     for curTypeIdx = 1:numel(specSynTypes)
-        curType = specSynTypes{curTypeIdx};
-        curVarName = sprintf('frac%s', curType);
+        curTypeName = char(specSynTypes(curTypeIdx));
+        curVarName = sprintf('frac%s', curTypeName);
         
         % NOTE(amotta): Exploit that inhibitory specificity classes are
         % completely independent of the TC / (TC + CC), and that we can
@@ -694,17 +712,22 @@ for curDataIdx = 1:numel(curData)
         % within the excitatory and inhibitory synapse populations,
         % respectively.
         curRenormIdx = find(cellfun( ...
-            @(p) startsWith(curType, p), curRenormNames));
+            @(p) startsWith(curTypeName, p), curRenormNames));
         
         if isempty(curRenormIdx)
+            curSpecRenorm = 1;
             curRenorm = sum(curDataT.specClassConn, 2);
         else
             assert(isscalar(curRenormIdx));
             curRenorm = curRenormNames{curRenormIdx};
-            curRenorm = startsWith(specSynTypes, curRenorm);
+            curRenorm = startsWith(categories(specSynTypes), curRenorm);
+            
+            curSpecRenorm = sum(specSynTypeFracs(curRenorm));
             curRenorm = sum(curDataT.specClassConn(:, curRenorm), 2);
         end
         
+        curSpecSynTypeFracs(curTypeIdx) = ...
+            specSynTypeFracs(curTypeIdx) ./ curSpecRenorm;
         curDataT.(curVarName) = ...
             curDataT.specClassConn(:, curTypeIdx) ./ curRenorm;
     end
@@ -724,15 +747,40 @@ for curDataIdx = 1:numel(curData)
         curRelSlope = curSlope / mean(curY);
         curPvalue = curFit.Coefficients.pValue(2);
         
+        switch curVarName
+            case 'ieRatio'
+                curNullModel = @(x) ones(size(x)) ...
+                 .* synTypeFracs(synTypes == 'Inhibitory') ...
+                 ./ sum(synTypeFracs(synTypes ~= 'Other'));
+             
+            case 'fracOther'
+                curNullModel = @(x) ones(size(x)) ...
+                 .* synTypeFracs(synTypes == 'Other');
+             
+            case curVarNames(startsWith(curVarNames, 'fracExcitatory'))
+                warning('TODO');
+                curNullModel = @(x) nan(size(x));
+                
+            case curVarNames(startsWith(curVarNames, 'fracInhibitory'))
+                curFrac = curVarName(5:end);
+                curFrac = specSynTypes == curFrac;
+                curFrac = curSpecSynTypeFracs(curFrac);
+                curNullModel = @(x) ones(size(x)) .* curFrac;
+                
+            otherwise
+                error('No null model for variable "%s"', curVarName);
+        end
+        
         curSummaryT(curVarIdx, :) = { ...
-            curVarName, curFit, curSlope, curRelSlope, curPvalue};
+            curVarName, curFit, curNullModel, ...
+            curSlope, curRelSlope, curPvalue};
     end
     
     curSummaryT = cell2table( ...
         curSummaryT, 'VariableNames', curSummaryVars);
     
     fprintf('Results for %s\n', curDataName);
-    curShowT = setdiff(curSummaryVars, {'fit'}, 'stable');
+    curShowT = setdiff(curSummaryVars, {'fit', 'nullModel'}, 'stable');
     disp(sortrows(curSummaryT(:, curShowT), 'relSlope', 'ascend'));
     
     curData{curDataIdx} = curDataT;
@@ -754,6 +802,9 @@ for curDataIdx = 1:numel(curData)
         curFit = curSummaryT.fit{curVarIdx};
         curFitY = curFit.predict(curLims(:))';
         
+        curNull = curSummaryT.nullModel{curVarIdx};
+        curNullY = curNull(curLims);
+        
         curAx = numel(curVarNames) * (curDataIdx - 1) + curVarIdx;
         curAx = subplot(numel(curData), numel(curVarNames), curAx);
         hold(curAx, 'on');
@@ -765,6 +816,9 @@ for curDataIdx = 1:numel(curData)
         curFitPlot = plot( ...
             curAx, curLims, curFitY, ...
             'Color', 'black', 'LineWidth', 2);
+        curNullPlot = plot( ...
+            curAx, curLims, curNullY, ...
+            'Color', 'black', 'LineStyle', '--');
 
         axis(curAx, 'equal');
         xlim(curAx, curLims); xticks(curAx, curTicks);
@@ -773,11 +827,13 @@ for curDataIdx = 1:numel(curData)
         xlabel(curAx, sprintf('%s (%s)', 'tcRatio', curDataName));
         ylabel(curAx, sprintf('%s (%s)', curVarName, curDataName));
         
-        curLeg = sprintf( ...
-            'y = %.2f %+.2fx (p_{slope} = %.2f)', ...
-            curFit.Coefficients.Estimate, ...
-            curFit.Coefficients.pValue(end));
-        curLeg = legend(curFitPlot, curLeg);
+        curLeg = { ...
+            sprintf( ...
+                'y = %.2f %+.2fx (p_{slope} = %.2f)', ...
+                curFit.Coefficients.Estimate, ...
+                curFit.Coefficients.pValue(end)), ...
+            'Null model'};
+        curLeg = legend([curFitPlot, curNullPlot], curLeg);
         curLeg.Location = 'north';
     end
 end
