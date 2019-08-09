@@ -655,6 +655,7 @@ tcCcWmPiaRatio = ...
 clear cur*;
 curWcMinSyn = 100;
 curDendMinSyn = 50;
+curRenormNames = {'Excitatory', 'Inhibitory'};
 
 curLims = [0, 1];
 curTicks = 0:0.1:1;
@@ -685,9 +686,27 @@ for curDataIdx = 1:numel(curData)
         curType = specSynTypes{curTypeIdx};
         curVarName = sprintf('frac%s', curType);
         
+        % NOTE(amotta): Exploit that inhibitory specificity classes are
+        % completely independent of the TC / (TC + CC), and that we can
+        % derive the expected composition of excitatory specificity classes
+        % under the null hypothesis.
+        %   In preparation for that, let's renormalize the compositions
+        % within the excitatory and inhibitory synapse populations,
+        % respectively.
+        curRenormIdx = find(cellfun( ...
+            @(p) startsWith(curType, p), curRenormNames));
+        
+        if isempty(curRenormIdx)
+            curRenorm = sum(curDataT.specClassConn, 2);
+        else
+            assert(isscalar(curRenormIdx));
+            curRenorm = curRenormNames{curRenormIdx};
+            curRenorm = startsWith(specSynTypes, curRenorm);
+            curRenorm = sum(curDataT.specClassConn(:, curRenorm), 2);
+        end
+        
         curDataT.(curVarName) = ...
-            curDataT.specClassConn(:, curTypeIdx) ...
-         ./ sum(curDataT.specClassConn, 2);
+            curDataT.specClassConn(:, curTypeIdx) ./ curRenorm;
     end
     
     curSummaryT = cell( ...
@@ -763,8 +782,8 @@ for curDataIdx = 1:numel(curData)
     end
 end
 
-curFig.Position(3:4) = [6600, 1000];
 connectEM.Figure.config(curFig, info);
+curFig.Position(3:4) = [6600, 1000];
 
 %% Try to find border cells
 clear cur*;
