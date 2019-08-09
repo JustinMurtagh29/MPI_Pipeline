@@ -116,15 +116,18 @@ specSynTypes{end + 1} = 'Other';
 specConn.axonMeta.axonClass(cellfun( ...
     @isempty, specConn.axonMeta.axonClass)) = {'Other'};
 
-specSynTypes = categorical(specSynTypes, 'Ordinal', true);
+specSynTypes = categorical(specSynTypes, specSynTypes, 'Ordinal', true);
 [~, curIds] = ismember(specConn.axonMeta.axonClass, specSynTypes);
 specConn.axonMeta.axonClass = specSynTypes(curIds);
 
-specSynTypeFracs = connectEM.Connectome.buildSynapseTable(specConn, syn);
-specSynTypeFracs = specConn.axonMeta.axonClass(specSynTypeFracs.preAggloId);
-[~, specSynTypeFracs] = ismember(specSynTypeFracs, specSynTypes);
-specSynTypeFracs = accumarray(specSynTypeFracs, 1);
-specSynTypeFracs = specSynTypeFracs / sum(specSynTypeFracs);
+curSynT = connectEM.Connectome.buildSynapseTable(specConn, syn);
+curAxonIds = conn.axonMeta.axonClass(curSynT.preAggloId);
+[~, curAxonIds] = ismember(curAxonIds, synTypes);
+curSpecIds = specConn.axonMeta.axonClass(curSynT.preAggloId);
+[~, curSpecIds] = ismember(curSpecIds, specSynTypes);
+
+specAxonTypeFracs = accumarray([curAxonIds, curSpecIds], 1);
+specAxonTypeFracs = specAxonTypeFracs / sum(specAxonTypeFracs(:));
 
 %% NML files for splitting whole cells into individual dendrites
 splitNmlT = connectEM.WholeCell.loadSplitNmls(splitNmlDir);
@@ -699,7 +702,6 @@ for curDataIdx = 1:numel(curData)
         curDataT.classConn(:, 3) ...
      ./ sum(curDataT.classConn(:, 1:3), 2);
     
-    curSpecSynTypeFracs = nan(size(specSynTypeFracs));
     for curTypeIdx = 1:numel(specSynTypes)
         curTypeName = char(specSynTypes(curTypeIdx));
         curVarName = sprintf('frac%s', curTypeName);
@@ -715,19 +717,14 @@ for curDataIdx = 1:numel(curData)
             @(p) startsWith(curTypeName, p), curRenormNames));
         
         if isempty(curRenormIdx)
-            curSpecRenorm = 1;
             curRenorm = sum(curDataT.specClassConn, 2);
         else
             assert(isscalar(curRenormIdx));
             curRenorm = curRenormNames{curRenormIdx};
             curRenorm = startsWith(categories(specSynTypes), curRenorm);
-            
-            curSpecRenorm = sum(specSynTypeFracs(curRenorm));
             curRenorm = sum(curDataT.specClassConn(:, curRenorm), 2);
         end
         
-        curSpecSynTypeFracs(curTypeIdx) = ...
-            specSynTypeFracs(curTypeIdx) ./ curSpecRenorm;
         curDataT.(curVarName) = ...
             curDataT.specClassConn(:, curTypeIdx) ./ curRenorm;
     end
@@ -758,13 +755,30 @@ for curDataIdx = 1:numel(curData)
                  .* synTypeFracs(synTypes == 'Other');
              
             case curVarNames(startsWith(curVarNames, 'fracExcitatory'))
-                warning('TODO');
-                curNullModel = @(x) nan(size(x));
+                curExc = 'Excitatory';
+                curCcTc = {'Corticocortical', 'Thalamocortical'};
+                
+                curVar = specSynTypes == curVarName(5:end);
+                curRenorm = startsWith(categories(specSynTypes), curExc);
+               [~, curIds] = ismember(curCcTc, synTypes);
+                curFracs = specAxonTypeFracs(curIds, :);
+                
+                curNullModel = @(x) feval( ...
+                    @(m) ...
+                        sum(m(:, curVar, :), 1) ...
+                     ./ sum(sum(m(:, curRenorm, :), 1), 2), ...
+                    curFracs .* ([1; 0] + [-1; +1] .* x));
+                curNullModel = @(x) reshape( ...
+                    curNullModel(reshape(x, 1, 1, [])), size(x));
                 
             case curVarNames(startsWith(curVarNames, 'fracInhibitory'))
-                curFrac = curVarName(5:end);
-                curFrac = specSynTypes == curFrac;
-                curFrac = curSpecSynTypeFracs(curFrac);
+                curInh = 'Inhibitory';
+                curVar = specSynTypes == curVarName(5:end);
+                curRenorm = startsWith(categories(specSynTypes), curInh);
+                
+                curFrac = specAxonTypeFracs(synTypes == curInh, :);
+                curFrac = curFrac(curVar) / sum(curFrac(curRenorm));
+                
                 curNullModel = @(x) ones(size(x)) .* curFrac;
                 
             otherwise
