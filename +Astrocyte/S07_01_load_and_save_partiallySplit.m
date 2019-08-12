@@ -15,7 +15,7 @@ connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-partially
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 
-maxSegId = Seg.Global.getMaxSegId(param);
+%maxSegId = Seg.Global.getMaxSegId(param);
 conn = load(connFile); %axons, dendrites, connectome
 syn = load(conn.info.param.synFile); % synapses (segment IDs)
 
