@@ -94,7 +94,7 @@ postSynLengthFracs = renorm(postSynLengths);
 %% Run analysis
 clear cur*;
 
-for curSynIdx = 1%:numel(synTypes)
+for curSynIdx = 1:numel(synTypes)
     curSynType = synTypes{curSynIdx};
     curSynLut = syn.synapses.type == curSynType;
     if strcmpi(curSynType, 'all'); curSynLut(:) = true; end
