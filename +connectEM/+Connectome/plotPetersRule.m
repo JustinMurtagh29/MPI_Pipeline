@@ -36,17 +36,15 @@ synTypes = { ...
     'Soma'};
 
 axonClasses = { ...
-    'Corticocortical', 'CC';
-    'Thalamocortical', 'TC';
-    'Inhibitory', 'Inh';
-    'Other', 'Other'};
+    'Corticocortical', 'CC'; ...
+    'Thalamocortical', 'TC'; ...
+    'Other', 'Other'; ...
+    'Inhibitory', 'Inh'};
 
 targetClasses = { ...
-    'Somata', 'SO';
     'ProximalDendrite', 'PD'; ...
     'SmoothDendrite', 'SD'; ...
     'ApicalDendrite', 'AD'; ...
-    'AxonInitialSegment', 'AIS'; ...
     'OtherDendrite', 'Other'};
 
 axonTags = axonClasses(:, 2);
@@ -72,6 +70,19 @@ conn = ...
 
 lengths = load(lengthFile);
 areas = load(areaFile);
+
+%% Ignore axons with too few synapses
+clear cur*;
+
+curLastCat = categories(conn.axonMeta.axonClass);
+curLastCat = curLastCat{end};
+
+conn.axonMeta.axonClass = addcats( ...
+    conn.axonMeta.axonClass, {'Ignore'}, ...
+    'After', curLastCat);
+
+curMask = conn.axonMeta.synCount < minSynPre;
+conn.axonMeta.axonClass(curMask) = 'Ignore';
 
 %% Prepare availabilities
 clear cur*;
@@ -182,7 +193,6 @@ function plotIt( ...
     colorMat = log10(corrCoeffs);
     colorMap = connectEM.Figure.redBlue(129);
     colorLim = 1;
-    % colorLim = ceil(max(abs(colorMat(isfinite(colorMat)))));
 
     fig = figure();
     ax = axes(fig);
