@@ -12,28 +12,17 @@ clear;
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-partiallySplit-v2_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v8-classified.mat');
-% From +connectEM/calibrateNeuritePathLength.m (4397537e608a53268ab940e500551b3ad7cc33f2)
-lengthFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites-wholeCells-03-v2-classified_spine-syn-clust.mat');
-% From +connectEM/+Connectome/plotGeometricPredictability.m (1deca56c06f09ee8947e5cb9163dca09a124a4c1)
-areaFile = '/tmpscratch/amotta/l4/2018-07-18-surface-availability-for-connectome-v7-partially-split/axon-availability_v2.mat';
 
-[~, lengthFile] = fileparts(lengthFile);
+[~, lengthFile] = fileparts(connFile);
 lengthFile = sprintf('%s_pathLengths.mat', lengthFile);
 lengthFile = fullfile(fileparts(connFile), lengthFile);
-
-% NOTE(amotta): See
-% connectEM.calibrateNeuritePathLength
-% 107ae8f7e3819ae6920a8c7b19b4895868bbe476
-dendCorrCoeff = 0.454;
 
 minSynPre = 10;
 
 synTypes = { ...
     'All', ...
     'PrimarySpine', ...
-    'SecondarySpine', ...
-    'Shaft', ...
-    'Soma'};
+    'Shaft'};
 
 axonClasses = { ...
     'Corticocortical', 'CC'; ...
@@ -69,7 +58,6 @@ conn = ...
         conn, [], 'minSynPre', minSynPre);
 
 lengths = load(lengthFile);
-areas = load(areaFile);
 
 %% Ignore axons with too few synapses
 clear cur*;
@@ -87,14 +75,15 @@ conn.axonMeta.axonClass(curMask) = 'Ignore';
 %% Prepare availabilities
 clear cur*;
 
-[~, curIds] = ismember(targetClasses, areas.targetClasses);
-postSynAreaFracs = areas.axonAvail(curIds, end, 1);
-postSynAreaFracs = renorm(postSynAreaFracs(:));
-
 % NOTE(amotta): The path lengths of soma-seeded agglomerates reported in
 % the paper were derived from the ground truth skeleton tracings. Here,
 % we're using the automatically calculated values (with calibration).
 assert(isequal(numel(conn.dendrites), numel(lengths.dendritePathLengths)));
+
+preSynLengths = lengths.axonPathLengths;
+[curMask, curIds] = ismember(conn.axonMeta.axonClass, axonClasses);
+preSynLengths = accumarray(curIds(curMask), preSynLengths(curMask));
+preSynLengthFracs = renorm(preSynLengths);
 
 postSynLengths = lengths.dendritePathLengths;
 [curMask, curIds] = ismember(conn.denMeta.targetClass, targetClasses);
@@ -105,7 +94,7 @@ postSynLengthFracs = renorm(postSynLengths);
 %% Run analysis
 clear cur*;
 
-for curSynIdx = 1:numel(synTypes)
+for curSynIdx = 1%:numel(synTypes)
     curSynType = synTypes{curSynIdx};
     curSynLut = syn.synapses.type == curSynType;
     if strcmpi(curSynType, 'all'); curSynLut(:) = true; end
@@ -143,14 +132,15 @@ for curSynIdx = 1:numel(synTypes)
         targetTags, curTargetFracs, ...
         curRelClassConn, curExpClassConn, curCorrCoeffs);
     
-    %% Membrane frequencies
-    curTitle = strcat(curTitleStem, ' versus membrane contributions');
+    %% Path length frequencies
+    curTitle = strcat(curTitleStem, ' versus', ...
+        ' product of path length contributions');
     
-    curAxonFracs = renorm(sum(curClassConn, 2));
-    curTargetFracs = reshape(postSynAreaFracs, 1, []);
+    curAxonFracs = reshape(preSynLengthFracs, [], 1);
+    curTargetFracs = reshape(postSynLengthFracs, 1, []);
     
-    curRelClassConn = curClassConn ./ sum(curClassConn, 2);
-    curExpClassConn = repmat(curTargetFracs, size(curClassConn, 1), 1);
+    curRelClassConn = curClassConn ./ sum(curClassConn(:));
+    curExpClassConn = curAxonFracs .* curTargetFracs;
     
     curCorrCoeffs = curRelClassConn ./ curExpClassConn;
     curCorrCoeffs(curRelClassConn == 0 & curExpClassConn == 0) = 1;
