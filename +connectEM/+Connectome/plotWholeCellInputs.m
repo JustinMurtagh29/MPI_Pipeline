@@ -670,6 +670,7 @@ tcCcWmPiaRatio = ...
 
 %% Correlate input ratios
 clear cur*;
+
 curWcMinSyn = 100;
 curDendMinSyn = 50;
 curRenormNames = {'Excitatory', 'Inhibitory'};
@@ -801,7 +802,52 @@ for curDataIdx = 1:numel(curData)
     curSummaries{curDataIdx} = curSummaryT;
 end
 
-% Plot
+% Plot correlation of dendrite length with TC input fraction
+curDataT = strcmpi(curDataNames, 'dendrites');
+curDataT = curData{curDataT};
+
+curX = cellfun(@max, curDataT.nodeDists) / 1E3;
+curY = curDataT.tcRatio;
+
+curDistLims = [0, ceil(max(curX) / 10) * 10];
+curDistTicks = curDistLims(1):50:curDistLims(end);
+
+curFit = fitlm(curX, curY);
+curFitY = curFit.predict(curDistLims(:))';
+
+curFig = figure();
+curAx = axes(curFig);
+hold(curAx, 'on');
+
+curScatter = scatter(curAx, curX, curY, 20, 'o');
+curScatter.MarkerEdgeColor = 'none';
+curScatter.MarkerFaceColor = colors(1, :);
+
+curFitPlot = plot( ...
+    curAx, curDistLims, curFitY, ...
+    'Color', 'black', 'LineWidth', 2);
+
+axis(curAx, 'square');
+xlim(curAx, curDistLims);
+xticks(curAx, curDistTicks);
+ylim(curAx, [0, 1]);
+
+xlabel(curAx, 'Dendrite length [µm]');
+ylabel(curAx, 'tcRatio');
+
+curLeg = { ...
+    sprintf( ...
+        'Dendrites (n = %d)', height(curDataT)), ...
+    sprintf( ...
+        'y = %.2f %+.2fx (p_{slope} = %.2f)', ...
+        curFit.Coefficients.Estimate, ...
+        curFit.Coefficients.pValue(end))};
+curLeg = legend(curLeg);
+
+connectEM.Figure.config(curFig, info);
+curFig.Position(3:4) = [360, 360];
+
+% Plot correlates of TC input fraction
 curFig = figure();
 for curDataIdx = 1:numel(curData)
     curDataName = curDataNames{curDataIdx};
