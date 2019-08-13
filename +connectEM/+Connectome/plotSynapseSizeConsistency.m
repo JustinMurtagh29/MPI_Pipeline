@@ -11,6 +11,9 @@ info = Util.runInfo();
 Util.showRunInfo(info);
 
 %% Load axon-spine interfaces
+param = load(fullfile(rootDir, 'allParameter.mat'));
+param = param.p;
+
 [curDir, curAsiFile] = fileparts(connFile);
 curAsiFile = sprintf('%s__%s_asiT.mat', curAsiFile, asiRunId);
 curAsiFile = fullfile(curDir, curAsiFile);
@@ -875,5 +878,83 @@ for curConfig = reshape(plotConfigs(1, :), 1, [])
         axis(curAx, 'square');
         connectEM.Figure.config(curFig, info);
         curFig.Position(3:4) = 160;
+        
+        %% Spatial distribution
+        curVxSize = param.raw.voxelSize;
+        
+        curRegionNames = { ...
+            'Non-significant pairs', ...
+            'Small low-CV pairs', ...
+            'Large low-CV pairs'};
+        
+        % TODO(amotta): Add legend
+        error('TODO: Add legend');
+        
+        curColors = get(groot, 'defaultAxesColorOrder');
+        curColors = cat(1, zeros(1, 3), curColors(1:2, :));
+        
+        curFig = figure();
+        
+        for curDimId = 1:3
+            curDimName = char(int8('X') + (curDimId - 1));
+            
+            curLims = param.bbox .* curVxSize(:);
+            curLims = curLims(curDimId, :) / 10E3;
+            curLims = [floor(curLims(1)), ceil(curLims(2))] * 10;
+            
+            % Position
+            curSynPos = asiT.pos(curSaSdT.synIds(:), curDimId);
+            curSynPos = curSynPos .* curVxSize(curDimId) / 1E3;
+            curSynPos = reshape(curSynPos, size(curSaSdT.synIds));
+            
+            % Distance
+            curSynDist = diff(curSynPos, 1, 2);
+            curSynDist = sqrt(curSynDist .* curSynDist);
+            
+            % Statistics
+            for curRegionId = 1:2
+                curCtrlMask = curSaSdT.regionId == 0;
+                curThisMask = curSaSdT.regionId == curRegionId;
+                
+               [~, curPval] = kstest2( ...
+                   curSynDist(curThisMask), ...
+                   curSynDist(curCtrlMask));
+            end
+            
+            % Plotting
+            for curRegionId = 0:2
+                curColor = curColors(curRegionId + 1, :);
+                curSaSdMask = curSaSdT.regionId == curRegionId;
+                
+                % Position
+                curAx = subplot(2, 3, curDimId);
+                hold(curAx, 'on');
+                
+                histogram( ...
+                    curAx, curSynPos(curSaSdMask, :), ...
+                    'Normalization', 'probability', ...
+                    'BinEdges', curLims(1):10:curLims(2), ...
+                    'DisplayStyle', 'stairs', ...
+                    'EdgeColor', curColor);
+                
+                xlabel(curAx, sprintf('%s position [µm]', curDimName));
+                ylabel(curAx, 'Probability');
+                
+                % Distance
+                curAx = subplot(2, 3, 3 + curDimId);
+                hold(curAx, 'on');
+                
+                histogram( ...
+                    curAx, curSynDist(curSaSdMask), ...
+                    'Normalization', 'probability', ...
+                    'BinEdges', 0:1:30, 'DisplayStyle', 'stairs', ...
+                    'EdgeColor', curColor);
+                
+                xlabel(curAx, sprintf('%s distance [µm]', curDimName));
+                ylabel(curAx, 'Probability');
+            end
+        end
+        
+        connectEM.Figure.config(curFig, info);
     end
 end
