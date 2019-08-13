@@ -684,8 +684,9 @@ curDendT = dendT(sum(dendT.classConn, 2) >= curDendMinSyn, :);
 curData = {curWcT, curDendT};
 curSummaries = cell(size(curData));
 curSummaryVars = { ...
-    'name', 'fit', 'nullModel', ....
-    'slope', 'relSlope', 'pValue'};
+    'name', ...
+    'fit', 'slope', 'relSlope', 'pValue', ...
+    'nullModel', 'nullCorrFit', 'nullCorrPValue'};
 
 curDataNames = {'neurons', 'dendrites'};
 curVarNames = strcat('frac', categories(specSynTypes));
@@ -740,11 +741,6 @@ for curDataIdx = 1:numel(curData)
         curX = curDataT.tcRatio;
         curY = curDataT.(curVarName);
         
-        curFit = fitlm(curX, curY);
-        curSlope = curFit.Coefficients.Estimate(2);
-        curRelSlope = curSlope / mean(curY);
-        curPvalue = curFit.Coefficients.pValue(2);
-        
         switch curVarName
             case 'ieRatio'
                 curNullModel = @(x) ones(size(x)) ...
@@ -786,16 +782,28 @@ for curDataIdx = 1:numel(curData)
                 error('No null model for variable "%s"', curVarName);
         end
         
+        curFit = fitlm(curX, curY);
+        curSlope = curFit.Coefficients.Estimate(2);
+        curRelSlope = curSlope / mean(curY);
+        curPvalue = curFit.Coefficients.pValue(2);
+        
+        % p value against our custom null model
+        curNullCorrY = curY - curNullModel(curX);
+        curNullCorrFit = fitlm(curX, curNullCorrY);
+        curNullCorrPvalue = curNullCorrFit.Coefficients.pValue(2);
+        
         curSummaryT(curVarIdx, :) = { ...
-            curVarName, curFit, curNullModel, ...
-            curSlope, curRelSlope, curPvalue};
+            curVarName, ...
+            curFit, curSlope, curRelSlope, curPvalue, ...
+            curNullModel, curNullCorrFit, curNullCorrPvalue};
     end
     
     curSummaryT = cell2table( ...
         curSummaryT, 'VariableNames', curSummaryVars);
     
     fprintf('Results for %s\n', curDataName);
-    curShowT = setdiff(curSummaryVars, {'fit', 'nullModel'}, 'stable');
+    curShowT = {'fit', 'nullModel', 'nullCorrFit'};
+    curShowT = setdiff(curSummaryVars, curShowT, 'stable');
     disp(sortrows(curSummaryT(:, curShowT), 'relSlope', 'ascend'));
     
     curData{curDataIdx} = curDataT;
@@ -865,6 +873,8 @@ for curDataIdx = 1:numel(curData)
         curNull = curSummaryT.nullModel{curVarIdx};
         curNullY = curNull(curLims);
         
+        curNullCorrFit = curSummaryT.nullCorrFit{curVarIdx};
+        
         curAx = numel(curVarNames) * (curDataIdx - 1) + curVarIdx;
         curAx = subplot(numel(curData), numel(curVarNames), curAx);
         hold(curAx, 'on');
@@ -892,7 +902,9 @@ for curDataIdx = 1:numel(curData)
                 'y = %.2f %+.2fx (p_{slope} = %.2f)', ...
                 curFit.Coefficients.Estimate, ...
                 curFit.Coefficients.pValue(end)), ...
-            'Null model'};
+            sprintf( ...
+                'Null model (p_{slope vs. null} = %.2f)', ...
+                curNullCorrFit.Coefficients.pValue(end))};
         curLeg = legend([curFitPlot, curNullPlot], curLeg);
         curLeg.Location = 'north';
     end
