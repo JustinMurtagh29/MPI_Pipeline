@@ -17,6 +17,8 @@ adsT = [ ...
     12236,  5946, 258240; % https://webknossos.brain.mpg.de/annotations/Explorational/5bedb18501000028208a2b33
     52083,  3774,  31809; % https://webknossos.brain.mpg.de/annotations/Explorational/5bedb2fd01000035218a2b84
     48188, 11119, 264330; % https://webknossos.brain.mpg.de/annotations/Explorational/5bedb4c8010000f0228a2bdd
+    21002,  3873, 339464; % https://webknossos.brain.mpg.de/annotations/Explorational/5bedb88c010000ef238a2cad
+    37683,   846,  72632; % https://webknossos.brain.mpg.de/annotations/Explorational/5bedb93a010000ea248a2ccd
 ];
 
 adsT = array2table( ...
