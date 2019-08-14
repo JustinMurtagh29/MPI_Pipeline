@@ -22,6 +22,11 @@ synth = struct;
 % synth.method = 'availIsSynProb';
 % synth.radius = 10;
 
+% Synthesize connectome using availability as fractional synapses. This
+% methods avoids the variance introduced by multinomial sampling.
+% synth.method = 'availIsSynFrac';
+% synth.radius = 10;
+
 % Set of axon classes to analyse.
 axonClassNames = {'excitatory', 'inhibitory'};
 
@@ -168,7 +173,7 @@ switch curMethod
     case ''
         % nothing to do
         
-    case 'availIsSynProb'
+    case {'availIsSynFrac', 'availIsSynProb'}
         curRadius = synth.radius;
         curRadiusId = find(avail.dists == 1E3 * curRadius);
         assert(isscalar(curRadiusId));
@@ -177,13 +182,15 @@ switch curMethod
         synthConn = transpose(squeeze(synthConn));
 
         % Build synth connectome by multinomial sampling
-        synthConn = cell2mat(cellfun( ...
-            @(n, probs) mnrnd(n, probs), ...
-            num2cell(sum(classConn, 2)), ...
-            num2cell(synthConn, 2), ...
-            'UniformOutput', false));
+        if strcmp(curMethod, 'availIsSynProb')
+            synthConn = cell2mat(cellfun( ...
+                @(n, probs) mnrnd(n, probs), ...
+                    num2cell(sum(classConn, 2)), ...
+                    num2cell(synthConn, 2), ...
+                'UniformOutput', false));
+        end
+        
         classConn = synthConn;
-
         curAxonClassTitles = strcat( ...
             {'synth '}, {allAxonClasses.title}, ...
             sprintf(' (r_{synth} = %d µm)', curRadius));
