@@ -93,11 +93,13 @@ curNewAxonClasses = allAxonClasses(1:numel(axonClasses));
     'predictUsingLinearRegressionOnAllTargetClassAvailabilities');
 allAxonClasses = cat(1, allAxonClasses(:), curNewAxonClasses(:));
 
+%{
 % Do same thing with logistic regression
 curNewAxonClasses = allAxonClasses(1:numel(axonClasses));
 [curNewAxonClasses.predictionMethod] = deal( ...
     'predictUsingMultivariateMultinomialLogisticRegression');
 allAxonClasses = cat(1, allAxonClasses(:), curNewAxonClasses(:));
+%}
 
 % Do everything with binomial variance correction
 curNewAxonClasses = allAxonClasses;
