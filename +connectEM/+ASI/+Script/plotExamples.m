@@ -40,6 +40,7 @@ adsT.emFovUm(:) = 2;
 % See https://gitlab.mpcdf.mpg.de/connectomics/amotta/blob/b3d6b7be4f876c54e4261026d5ab47d4edd49d89/matlab/+L4/+Figure/highResEmSamples.m
 % Range from Benedikt, used for SynEM paper.
 emRange = [60, 180];
+emRelSlicesNm = (-200):100:(+200);
 
 info = Util.runInfo();
 Util.showRunInfo(info);
@@ -79,6 +80,7 @@ adsT.pos(curMask) = curShPos(curMask);
 %% Illustrate axon-spine interface
 clear cur*;
 curVxSize = param.raw.voxelSize;
+curEmRelSlices = round(emRelSlicesNm ./ curVxSize(3));
 
 for curIdx = 1:height(adsT)
     curAds = adsT(curIdx, :);
@@ -187,11 +189,12 @@ for curIdx = 1:height(adsT)
     curRaw = reshape(curRaw, [curRawSize, 3]);
     curEmBox = 1E3 * curAds.emFovUm ./ curVxSize;
     curEmBox = round(curBorderPos(:) + [-1, +1] / 2 .* curEmBox(:));
+    curEmSlices = round(curBorderPos(3)) + curEmRelSlices;
     
     curRaw = curRaw( ...
         curEmBox(1, 1):curEmBox(1, 2), ...
         curEmBox(2, 1):curEmBox(2, 2), ...
-        curEmBox(3, 1):curEmBox(3, 2), :);
+        curEmSlices, :);
     curRaw = permute(curRaw, [1, 2, 4, 3]);
     implay(curRaw);
 end
