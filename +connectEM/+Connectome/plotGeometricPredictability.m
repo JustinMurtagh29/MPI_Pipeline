@@ -483,27 +483,22 @@ for curAxonClassId = 1:numel(allAxonClasses)
         
         curPred = curPredFunc( ...
             curConn, curAvails, curSynCounts, curPredictClassIds);
+        curSqRes = (curPred - curConn) .^ 2;
         
+        % Binomial variance correction
         curBinoVar = curAvails(:, curPredictClassIds);
         curBinoVar = curBinoVar .* (1 - curBinoVar) ./ curSynCounts;
         curBinoVar = curCorrect * curBinoVar;
         
-        % Per axon and target class
-        curVarLeft = (curPred - curConn) .^ 2;
-        curVarLeft = max(curVarLeft - curBinoVar, 0);
+        curVarCorr = curVar - curBinoVar;
+        curSqResCorr = curSqRes - curBinoVar;
         
-        curVarExplained = sum(curVar - curVarLeft, 1);
-        curVarFracExplained = curVarExplained ./ sum(curVar, 1);
+        curRsq = 1 - sum(curSqResCorr, 1) ./ sum(curVarCorr, 1);
+        axonTargetClassExplainability( ...
+            curPredictClassIds, curDistId, curAxonClassId) = curRsq;
         
-        axonTargetClassExplainability(curPredictClassIds, ...
-            curDistId, curAxonClassId) = curVarFracExplained;
-        
-        % Per axon class
-        curVarExplained = sum(curVar(:) - curVarLeft(:));
-        curVarFracExplained = curVarExplained / sum(curVar(:));
-        
-        axonClassExplainability( ...
-            curDistId, curAxonClassId) = curVarFracExplained;
+        curRsq = 1 - sum(curSqResCorr(:)) / sum(curVarCorr(:));
+        axonClassExplainability(curDistId, curAxonClassId) = curRsq;
     end
 end
 
