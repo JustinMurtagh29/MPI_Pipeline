@@ -15,10 +15,10 @@ shFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v3_auto.mat');
 %   The name `adsT` stands for `axon dendrite spine-head table`.
 adsT = [ ...
     12236,  5946, 258240; % https://webknossos.brain.mpg.de/annotations/Explorational/5bedb18501000028208a2b33
-    52083,  3774,  31809; % https://webknossos.brain.mpg.de/annotations/Explorational/5bedb2fd01000035218a2b84
-    48188, 11119, 264330; % https://webknossos.brain.mpg.de/annotations/Explorational/5bedb4c8010000f0228a2bdd
-    21002,  3873, 339464; % https://webknossos.brain.mpg.de/annotations/Explorational/5bedb88c010000ef238a2cad
-    37683,   846,  72632; % https://webknossos.brain.mpg.de/annotations/Explorational/5bedb93a010000ea248a2ccd
+%   52083,  3774,  31809; % https://webknossos.brain.mpg.de/annotations/Explorational/5bedb2fd01000035218a2b84
+%   48188, 11119, 264330; % https://webknossos.brain.mpg.de/annotations/Explorational/5bedb4c8010000f0228a2bdd
+%   21002,  3873, 339464; % https://webknossos.brain.mpg.de/annotations/Explorational/5bedb88c010000ef238a2cad
+%   37683,   846,  72632; % https://webknossos.brain.mpg.de/annotations/Explorational/5bedb93a010000ea248a2ccd
 ];
 
 adsT = array2table( ...
@@ -34,13 +34,19 @@ asiAlpha = 0.9;
 % NOTE(amotta): If set to non-NaN values, the user-specified position will
 % be used instead of the automatically computed ones.
 adsT.pos = nan(height(adsT), 3);
-adsT.isoFovUm = 5 * ones(height(adsT), 3);
+adsT.isoFovUm = 2.5 * ones(height(adsT), 3);
+% NOTE(amotta): Azimuth and elevation of -37.5 and 30 degrees,
+% respectively, are MATLAB's default parameters for a 3D view.
+adsT.isoView = repmat([-37.5, +30.0], height(adsT), 1);
 adsT.emFovUm(:) = 2;
 
 % See https://gitlab.mpcdf.mpg.de/connectomics/amotta/blob/b3d6b7be4f876c54e4261026d5ab47d4edd49d89/matlab/+L4/+Figure/highResEmSamples.m
 % Range from Benedikt, used for SynEM paper.
 emRange = [60, 180];
-emRelSlicesNm = (-200):100:(+200);
+emRelSlicesNm = (-250):125:(+250);
+
+% Customizations
+adsT.isoView(1, :) = [42.5, 30];
 
 info = Util.runInfo();
 Util.showRunInfo(info);
@@ -84,64 +90,9 @@ curEmRelSlices = round(emRelSlicesNm ./ curVxSize(3));
 
 for curIdx = 1:height(adsT)
     curAds = adsT(curIdx, :);
-    
-    %% Plot isosurface
-    curAgglos = { ...
-        conn.axons{curAds.axonId}; ...
-        conn.dendrites{curAds.dendId}};
-    
-    curConfSegIds = sort(cell2mat(curAgglos(:)));
-    curConfSegIds = curConfSegIds(diff(curConfSegIds) == 0);
-    assert(isempty(curConfSegIds));
-    
-    curLUT = Agglo.buildLUT(maxSegId, curAgglos);
         
     curBox = 1E3 * curAds.isoFovUm ./ curVxSize;
     curBox = round(curAds.pos(:) + [-1, +1] / 2 .* curBox(:));
-    
-    curSeg = loadSegDataGlobal(param.seg, curBox);
-    curSeg(curSeg ~= 0) = curLUT(curSeg(curSeg ~= 0));
-    
-    curIsos = cell(size(curAgglos));
-    for curAggloIdx = 1:numel(curAgglos)
-        curIso = curSeg == curAggloIdx;
-        
-        % See +connectEM/+Consistency/buildAxonSpineInterfaceAreas.m
-        curIso = imclose(curIso, strel('cube', 3));
-        curIso = isosurface(curIso, 0.5);
-        
-        curIso.vertices = curIso.vertices .* curVxSize;
-        curIsos{curAggloIdx} = curIso;
-    end
-    
-    curFig = figure();
-    curAx = axes(curFig); %#ok
-    hold(curAx, 'on');
-    
-    curPatches = cellfun( ...
-        @(iso) patch(curAx, iso), curIsos);
-    set(curPatches, ...
-        'EdgeColor', 'none', ...
-       {'FaceColor'}, num2cell(colors, 2));
-    material(curPatches, 'dull');
-    
-    axis(curAx, 'equal');
-    
-    xlim(curAx, [0, diff(curBox(1, :)) * curVxSize(1)]);
-    ylim(curAx, [0, diff(curBox(2, :)) * curVxSize(2)]);
-    zlim(curAx, [0, diff(curBox(3, :)) * curVxSize(3)]);
-    
-    view(curAx, 3);
-    camlight(curAx);
-    
-    curAx.XAxis.Visible = 'off';
-    curAx.YAxis.Visible = 'off';
-    curAx.ZAxis.Visible = 'off';
-    
-    curAx.BoxStyle = 'full';    
-    curAx.Box = 'on';
-    
-    connectEM.Figure.config(curFig, info);
     
     %% Plot EM stack
     % See +connectEM/+Consistency/buildAxonSpineInterfaceAreas.m
@@ -149,9 +100,6 @@ for curIdx = 1:height(adsT)
         conn.axons{curAds.axonId}; ...
         shAgglos{curAds.shId}};
     curLUT = Agglo.buildLUT(maxSegId, curAgglos);
-        
-    curBox = 1E3 * curAds.isoFovUm ./ curVxSize;
-    curBox = round(curAds.pos(:) + [-1, +1] / 2 .* curBox(:));
     
     curSeg = loadSegDataGlobal(param.seg, curBox);
     curSeg(curSeg ~= 0) = curLUT(curSeg(curSeg ~= 0));
@@ -197,4 +145,70 @@ for curIdx = 1:height(adsT)
         curEmSlices, :);
     curRaw = permute(curRaw, [1, 2, 4, 3]);
     implay(curRaw);
+    
+    %% Plot isosurface
+    curAgglos = { ...
+        conn.axons{curAds.axonId}; ...
+        conn.dendrites{curAds.dendId}};
+    
+    curConfSegIds = sort(cell2mat(curAgglos(:)));
+    curConfSegIds = curConfSegIds(diff(curConfSegIds) == 0);
+    assert(isempty(curConfSegIds));
+    
+    curLUT = Agglo.buildLUT(maxSegId, curAgglos);
+    
+    curSeg = loadSegDataGlobal(param.seg, curBox);
+    curSeg(curSeg ~= 0) = curLUT(curSeg(curSeg ~= 0));
+    
+    curIsos = cell(size(curAgglos));
+    for curAggloIdx = 1:numel(curAgglos)
+        curIso = curSeg == curAggloIdx;
+        
+        % See +connectEM/+Consistency/buildAxonSpineInterfaceAreas.m
+        curIso = imclose(curIso, strel('cube', 3));
+        curIso = isosurface(curIso, 0.5);
+        
+        curIso.vertices = curIso.vertices .* curVxSize;
+        curIsos{curAggloIdx} = curIso;
+    end
+    
+    curFig = figure();
+    curAx = axes(curFig); %#ok
+    hold(curAx, 'on');
+    
+    for curZ = curEmSlices
+        curX = curEmBox(1, [1, 2, 2, 1, 1]);
+        curY = curEmBox(2, [1, 1, 2, 2, 1]);
+        
+        plot3( ...
+            curVxSize(1) * curX, ...
+            curVxSize(2) * curY, ...
+            curVxSize(3) * repelem(curZ, 5), ...
+            'Color', 'black');
+    end
+    
+    curPatches = cellfun( ...
+        @(iso) patch(curAx, iso), curIsos);
+    set(curPatches, ...
+        'EdgeColor', 'none', ...
+       {'FaceColor'}, num2cell(colors, 2));
+    material(curPatches, 'dull');
+    
+    axis(curAx, 'equal');
+    
+    xlim(curAx, [0, diff(curBox(1, :)) * curVxSize(1)]);
+    ylim(curAx, [0, diff(curBox(2, :)) * curVxSize(2)]);
+    zlim(curAx, [0, diff(curBox(3, :)) * curVxSize(3)]);
+    
+    view(curAx, curAds.isoView);
+    camlight(curAx);
+    
+    curAx.XAxis.Visible = 'off';
+    curAx.YAxis.Visible = 'off';
+    curAx.ZAxis.Visible = 'off';
+    
+    curAx.BoxStyle = 'full';    
+    curAx.Box = 'on';
+    
+    connectEM.Figure.config(curFig, info);
 end
