@@ -18,11 +18,7 @@ lengthFile = sprintf('%s_pathLengths.mat', lengthFile);
 lengthFile = fullfile(fileparts(connFile), lengthFile);
 
 minSynPre = 10;
-
-synTypes = { ...
-    'All', ...
-    'PrimarySpine', ...
-    'Shaft'};
+synTypes = {'All'};
 
 % NOTE(amotta): Precision and recall values of automated synapse detection
 % for correction of synapse frequencies / densities. To disable this
@@ -33,11 +29,11 @@ synTypes = { ...
 synPrecRecs = [ ...
     0.94, 0.89;  % spine
     0.92, 0.69]; % shaft
+synPrecRecs = [];
 
 axonClasses = { ...
-    'Corticocortical', 'CC'; ...
     'Thalamocortical', 'TC'; ...
-    'Other', 'Other'; ...
+    'Corticocortical', 'CC'; ...
     'Inhibitory', 'Inh'};
 
 targetClasses = { ...
@@ -67,20 +63,36 @@ conn = ...
     connectEM.Connectome.prepareForSpecificityAnalysis( ...
         conn, [], 'minSynPre', minSynPre);
 
+conn.denMeta.synCount = accumarray( ...
+    conn.connectome.edges(:, 2), ...
+    cellfun(@numel, conn.connectome.synIdx), ...
+   [numel(conn.dendrites), 1], [], 0);
+
 lengths = load(lengthFile);
 
-%% Ignore axons with too few synapses
+%% Ignore axons and dendrites with too few synapses
 clear cur*;
 
-curLastCat = categories(conn.axonMeta.axonClass);
-curLastCat = curLastCat{end};
+curKeys = cell(0, 1);
+curKeys{1} = {'axonMeta', 'axonClass'};
+% curKeys{2} = {'denMeta', 'targetClass'};
 
-conn.axonMeta.axonClass = addcats( ...
-    conn.axonMeta.axonClass, {'Ignore'}, ...
-    'After', curLastCat);
+for curIdx = 1:numel(curKeys)
+    curMeta = conn.(curKeys{curIdx}{1});
+    curCats = curMeta.(curKeys{curIdx}{2});
+    
+    curLastCat = categories(curCats);
+    curLastCat = curLastCat{end};
 
-curMask = conn.axonMeta.synCount < minSynPre;
-conn.axonMeta.axonClass(curMask) = 'Ignore';
+    % NOTE(amotta): Add a new category called "Ignore" to the end of the
+    % list of all categories and mark all neurites with less than `minSyn`
+    % synapses as such.
+    curCats = addcats(curCats, {'Ignore'}, 'After', curLastCat);
+    curCats(curMeta.synCount < minSynPre) = 'Ignore';
+    
+    curMeta.(curKeys{curIdx}{2}) = curCats;
+    conn.(curKeys{curIdx}{1}) = curMeta;
+end
 
 %% Prepare availabilities
 clear cur*;
@@ -90,16 +102,17 @@ clear cur*;
 % we're using the automatically calculated values (with calibration).
 assert(isequal(numel(conn.dendrites), numel(lengths.dendritePathLengths)));
 
-preSynLengths = lengths.axonPathLengths;
+curLens = lengths.axonPathLengths;
+curLens(conn.axonMeta.axonClass == 'Ignore') = 0;
 [curMask, curIds] = ismember(conn.axonMeta.axonClass, axonClasses);
-preSynLengths = accumarray(curIds(curMask), preSynLengths(curMask));
-preSynLengthFracs = renorm(preSynLengths);
+curFracs = accumarray(curIds(curMask), curLens(curMask));
+preSynLengthFracs = curFracs / sum(curLens);
 
-postSynLengths = lengths.dendritePathLengths;
+curLens = lengths.dendritePathLengths;
+curLens(ismember(conn.denMeta.targetClass, {'Somata', 'Ignore'})) = 0;
 [curMask, curIds] = ismember(conn.denMeta.targetClass, targetClasses);
-postSynLengths = accumarray(curIds(curMask), postSynLengths(curMask));
-postSynLengths(strcmpi(targetClasses, 'Somata')) = 0;
-postSynLengthFracs = renorm(postSynLengths);
+curLens = accumarray(curIds(curMask), curLens(curMask));
+postSynLengthFracs = curLens / sum(curLens);
 
 %% Run analysis
 clear cur*;
@@ -108,6 +121,10 @@ curPrecRecCorr = ~isempty(synPrecRecs);
 if curPrecRecCorr; assert(isequal(size(synPrecRecs), [2, 2])); end
 curPrecRecCorrName = {''; '; precision / recall corrected'};
 curPrecRecCorrName = curPrecRecCorrName{1 + curPrecRecCorr};
+
+withoutIgnore = @(c) setdiff(c, {'Ignore'}, 'stable');
+curAllAxonClasses = withoutIgnore(categories(conn.axonMeta.axonClass));
+curAllTargetClasses = withoutIgnore(categories(conn.denMeta.targetClass));
 
 for curSynIdx = 1:numel(synTypes)
     curSynType = synTypes{curSynIdx};
@@ -141,8 +158,8 @@ for curSynIdx = 1:numel(synTypes)
     curClassConns = cellfun(@(curConn) ...
         connectEM.Connectome.buildClassConnectome( ...
             curConn, ...
-            'axonClasses', axonClasses, ...
-            'targetClasses', targetClasses), ...
+            'axonClasses', curAllAxonClasses, ...
+            'targetClasses', curAllTargetClasses), ...
         {curSpineConn; curShaftConn}, ...
         'UniformOutput', false);
     
@@ -158,9 +175,16 @@ for curSynIdx = 1:numel(synTypes)
     curClassConn = round(curClassConn);
         
     curSynCount = sum(curClassConn(:));
+    curClassConn = curClassConn / curSynCount;
+    
     curTitleStem = sprintf('%s (n = %d%s)', ...
         curSynType, curSynCount, curPrecRecCorrName);
-        
+    
+    % Restrict to selected axon and target classes
+   [~, curAxonClassIds] = ismember(axonClasses, curAllAxonClasses);
+   [~, curTargetClassIds] = ismember(targetClasses, curAllTargetClasses);
+    curClassConn = curClassConn(curAxonClassIds, curTargetClassIds);
+    
     %% Synapse frequencies
     curTitle = strcat(curTitleStem, ' versus synapse type frequencies');
     
