@@ -107,7 +107,7 @@ postSynLengthFracs = curLens / sum(curLens);
 %% Run analysis
 clear cur*;
 
-curPrecRecCorr = exists('synPrecRecs', 'var') && ~isempty(synPrecRecs);
+curPrecRecCorr = exist('synPrecRecs', 'var') && ~isempty(synPrecRecs);
 if curPrecRecCorr; assert(isequal(size(synPrecRecs), [2, 2])); end
 curPrecRecCorrName = {''; '; precision / recall corrected'};
 curPrecRecCorrName = curPrecRecCorrName{1 + curPrecRecCorr};
