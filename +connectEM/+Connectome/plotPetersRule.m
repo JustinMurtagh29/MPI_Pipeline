@@ -296,49 +296,53 @@ function plotMatrix( ...
 end
 
 function plotScatter(info, titleStr, relClassConn, expClassConn)
-    assert(isequal(size(relClassConn), size(expClassConn)));
-    curColors = get(groot, 'defaultAxesColorOrder');
-
-    curFig = figure();
-    curAx = axes(curFig);
-    hold(curAx, 'on');
+    lims = [1e-3, 1e0];
+    ticks = 10 .^ (-3:0);
     
-    curSizes = [36, 26];
-    for curRow = 1:size(relClassConn, 1)
-        for curCol = 1:size(relClassConn, 2)
-            for curSizeIdx = 1:numel(curSizes)
-                curSize = curSizes(curSizeIdx);
+    assert(isequal(size(relClassConn), size(expClassConn)));
+    colors = get(groot, 'defaultAxesColorOrder');
+
+    fig = figure();
+    ax = axes(fig);
+    hold(ax, 'on');
+    
+    plot(ax, lims, lims, 'Color', 'black', 'LineStyle', '--');
+    
+    sizes = 2 * [72, 24];
+    for curAxIdx = 1:size(relClassConn, 1)
+        for curDendIdx = 1:size(relClassConn, 2)
+            for curSizeIdx = 1:numel(sizes)
+                % NOTE(amotta): Axon and dendrite classes are color-coded
+                % by ring and core colors, respectively.
+                curSize = sizes(curSizeIdx);
                 
-                curColor = [curRow, curCol];
+                curColor = [curAxIdx, curDendIdx];
                 curColor = curColor(curSizeIdx);
-                curColor = curColors(curColor, :);
+                curColor = colors(curColor, :);
                 
-                scatter(curAx, ...
-                    100 * expClassConn(curRow, curCol), ...
-                    100 * relClassConn(curRow, curCol), ...
-                    curSize, 'MarkerFaceColor', curColor);
+                scatter(ax, ...
+                    expClassConn(curAxIdx, curDendIdx), ...
+                    relClassConn(curAxIdx, curDendIdx), curSize, ...
+                    'MarkerFaceColor', curColor, ...
+                    'MarkerEdgeColor', 'none');
             end
         end
     end
     
-    plot( ...
-        curAx, [0, 100], [0, 100], ...
-        'Color', 'black', 'LineStyle', '--');
-    
-    xlabel(curAx, { ...
+    xlabel(ax, { ...
         'Path length-based prediction'; ...
-        'of synapse fraction [%]'});
-    ylabel(curAx, 'Measured synapse fraction [%]');
+        'of synapse fraction'});
+    ylabel(ax, 'Measured synapse fraction');
     
-    set(curAx, ...
-        'XLim', [0, 100], 'XTick', 0:20:100, ...
-        'YLim', [0, 100], 'YTick', 0:20:100);
-    axis(curAx, 'square');
+    set(ax, ...
+        'XScale', 'log', 'XLim', lims, 'XTick', ticks, ...
+        'YScale', 'log', 'YLim', lims, 'YTick', ticks);
+    axis(ax, 'square');
     
-    connectEM.Figure.config(curFig, info);
-    curFig.Position(3:4) = [270, 290];
+    connectEM.Figure.config(fig, info);
+    fig.Position(3:4) = [270, 290];
 
-    title(curAx, ...
+    title(ax, ...
         {info.filename; info.git_repos{1}.hash; titleStr}, ...
         'FontWeight', 'normal', 'FontSize', 10);
 end
