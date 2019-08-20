@@ -21,15 +21,14 @@ minSynPre = 10;
 synTypes = {'All'};
 
 % NOTE(amotta): Precision and recall values of automated synapse detection
-% for correction of synapse frequencies / densities. To disable this
-% correction, set `synPrecRecs` to an empty matrix.
+% for correction of synapse frequencies / densities.
 %   The precision and recall values for spine and shaft synapses were
 % extracted from Supplementary Table 2. The overall precision / recall is
 % used for spine synapses.
-synPrecRecs = [ ...
-    0.94, 0.89;  % spine
-    0.92, 0.69]; % shaft
-synPrecRecs = [];
+%   To disable this correction, unset `synPrecRecs`.
+% synPrecRecs = [ ...
+%     0.94, 0.89;  % spine
+%     0.92, 0.69]; % shaft
 
 axonClasses = { ...
     'Thalamocortical', 'TC'; ...
@@ -71,28 +70,19 @@ conn.denMeta.synCount = accumarray( ...
 lengths = load(lengthFile);
 
 %% Ignore axons and dendrites with too few synapses
+% TODO(amotta): Should we also ignore postsynaptic targets?
 clear cur*;
 
-curKeys = cell(0, 1);
-curKeys{1} = {'axonMeta', 'axonClass'};
-% curKeys{2} = {'denMeta', 'targetClass'};
+curAxonClasses = conn.axonMeta.axonClass;
+curLastCat = categories(curAxonClasses);
+curLastCat = curLastCat{end};
 
-for curIdx = 1:numel(curKeys)
-    curMeta = conn.(curKeys{curIdx}{1});
-    curCats = curMeta.(curKeys{curIdx}{2});
-    
-    curLastCat = categories(curCats);
-    curLastCat = curLastCat{end};
-
-    % NOTE(amotta): Add a new category called "Ignore" to the end of the
-    % list of all categories and mark all neurites with less than `minSyn`
-    % synapses as such.
-    curCats = addcats(curCats, {'Ignore'}, 'After', curLastCat);
-    curCats(curMeta.synCount < minSynPre) = 'Ignore';
-    
-    curMeta.(curKeys{curIdx}{2}) = curCats;
-    conn.(curKeys{curIdx}{1}) = curMeta;
-end
+% NOTE(amotta): Add a new category called "Ignore" to the end of the
+% list of all categories and mark all neurites with less than `minSyn`
+% synapses as such.
+curAxonClasses = addcats(curAxonClasses, {'Ignore'}, 'After', curLastCat);
+curAxonClasses(conn.axonMeta.synCount < minSynPre) = 'Ignore';
+conn.axonMeta.axonClass = curAxonClasses;
 
 %% Prepare availabilities
 clear cur*;
@@ -117,7 +107,7 @@ postSynLengthFracs = curLens / sum(curLens);
 %% Run analysis
 clear cur*;
 
-curPrecRecCorr = ~isempty(synPrecRecs);
+curPrecRecCorr = exists('synPrecRecs', 'var') && ~isempty(synPrecRecs);
 if curPrecRecCorr; assert(isequal(size(synPrecRecs), [2, 2])); end
 curPrecRecCorrName = {''; '; precision / recall corrected'};
 curPrecRecCorrName = curPrecRecCorrName{1 + curPrecRecCorr};
