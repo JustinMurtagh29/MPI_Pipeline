@@ -296,14 +296,30 @@ function plotMatrix( ...
 end
 
 function plotScatter(info, titleStr, relClassConn, expClassConn)
+    assert(isequal(size(relClassConn), size(expClassConn)));
+    curColors = get(groot, 'defaultAxesColorOrder');
+
     curFig = figure();
     curAx = axes(curFig);
     hold(curAx, 'on');
     
-    scatter(curAx, ...
-        100 * expClassConn(:), ...
-        100 * relClassConn(:), ...
-        8 * 36, '.');
+    curSizes = [36, 26];
+    for curRow = 1:size(relClassConn, 1)
+        for curCol = 1:size(relClassConn, 2)
+            for curSizeIdx = 1:numel(curSizes)
+                curSize = curSizes(curSizeIdx);
+                
+                curColor = [curRow, curCol];
+                curColor = curColor(curSizeIdx);
+                curColor = curColors(curColor, :);
+                
+                scatter(curAx, ...
+                    100 * expClassConn(curRow, curCol), ...
+                    100 * relClassConn(curRow, curCol), ...
+                    curSize, 'MarkerFaceColor', curColor);
+            end
+        end
+    end
     
     plot( ...
         curAx, [0, 100], [0, 100], ...
