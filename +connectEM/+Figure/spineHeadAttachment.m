@@ -76,8 +76,12 @@ curSh = shT(shT.id == shId, :);
 curShs = shT(shT.dendId == curSh.dendId & shT.autoAttached, :);
 curDendSegIds = double(conn.dendrites{curSh.dendId});
 
+curLin = @(neck) nonzeros(reshape(transpose(neck), [], 1));
+curSkipHead = @(head, neck) setdiff(neck, head, 'stable');
+curSkipTrunk = @(neck) neck(1:(end - 1));
+
 curShs.neckSegIds = cellfun( ...
-    @(head, neck) setdiff(neck, [0; head], 'stable'), ...
+    @(head, neck) curSkipHead(head, curSkipTrunk(curLin(neck))), ...
     curShs.agglo, curShs.edges, 'UniformOutput', false);
 
 curSpineSegIds = cell2mat([curShs.agglo; curShs.neckSegIds]);
