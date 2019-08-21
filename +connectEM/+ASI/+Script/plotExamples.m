@@ -14,13 +14,16 @@ shFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v3_auto.mat');
 % dramatic alignment issues.
 %   The name `adsT` stands for `axon dendrite spine-head table`.
 adsT = [ ...
-    12236,  5946, 258240; % https://webknossos.brain.mpg.de/annotations/Explorational/5bedb18501000028208a2b33
+%   12236,  5946, 258240; % https://webknossos.brain.mpg.de/annotations/Explorational/5bedb18501000028208a2b33
 %   52083,  3774,  31809; % https://webknossos.brain.mpg.de/annotations/Explorational/5bedb2fd01000035218a2b84
 %   48188, 11119, 264330; % https://webknossos.brain.mpg.de/annotations/Explorational/5bedb4c8010000f0228a2bdd
 %   21002,  3873, 339464; % https://webknossos.brain.mpg.de/annotations/Explorational/5bedb88c010000ef238a2cad
 %   37683,   846,  72632; % https://webknossos.brain.mpg.de/annotations/Explorational/5bedb93a010000ea248a2ccd
-    66288,   627, 231421; % https://webknossos.brain.mpg.de/annotations/Explorational/5c62dadc0100009301fd438d
-    66288,   627, 233268; % https://webknossos.brain.mpg.de/annotations/Explorational/5c62dadc0100009301fd438d
+%   66288,   627, 231421; % https://webknossos.brain.mpg.de/annotations/Explorational/5c62dadc0100009301fd438d
+%   66288,   627, 233268; % https://webknossos.brain.mpg.de/annotations/Explorational/5c62dadc0100009301fd438d
+    55853,  7337,  52650; % Email from HW on 20.08.2019 10h59. Axon and
+                          % dendrites IDs had to be looked up manually. The
+                          % IDs from HW's email didn't work.
 ];
 
 adsT = array2table( ...
@@ -45,8 +48,11 @@ emRange = [60, 180];
 emRelSlicesNm = (-500):250:(+500);
 
 % Customizations
-adsT.pos(end - 1, :) = [2956, 7203, 1522] + 1; adsT.emDir(end - 1) = 1;
-adsT.pos(end    , :) = [2711, 7348, 1527] + 1; adsT.emDir(end    ) = 2;
+% For https://webknossos.brain.mpg.de/annotations/Explorational/5c62dadc0100009301fd438d
+% adsT.pos(end - 1, :) = [2956, 7203, 1522] + 1; adsT.emDir(end - 1) = 1;
+% For https://webknossos.brain.mpg.de/annotations/Explorational/5c62dadc0100009301fd438d
+% adsT.pos(end    , :) = [2711, 7348, 1527] + 1; adsT.emDir(end    ) = 2;
+adsT.pos(end, :) = [4875, 5325, 2932] + 1;
 
 info = Util.runInfo();
 Util.showRunInfo(info);
@@ -86,7 +92,6 @@ adsT.pos(curMask) = curShPos(curMask);
 %% Illustrate axon-spine interface
 clear cur*;
 curVxSize = param.raw.voxelSize;
-curEmRelSlices = round(emRelSlicesNm ./ curVxSize(3));
 
 for curIdx = 1:height(adsT)
     curAds = adsT(curIdx, :);
@@ -134,11 +139,22 @@ for curIdx = 1:height(adsT)
     end
     
     curDir = curAds.emDir;
+    curDirChar = char(double('X') - 1 + curDir);
     curEmSlices = round(emRelSlicesNm / curVxSize(curDir));
-    curEmSlices = curAds.pos(curDir) + curEmSlices- curBox(curDir, 1) + 1;
+    curEmSlicesAbs = curAds.pos(curDir) + curEmSlices;
+    curEmSlices = curEmSlicesAbs - curBox(curDir, 1) + 1;
+    
+    curShow = strjoin(arrayfun(@num2str, ...
+        curEmSlicesAbs, 'UniformOutput', false), ', ');
+    fprintf([ ...
+        '\n', ...
+        'ASI %d\n', ...
+        '  Slices along %s: %s\n'], ...
+        curIdx, curDirChar, curShow);
     
     curRaw = reshape(curRaw, [curRawSize, 3]);
     curRaw = permute(curRaw, [setdiff(1:3, curDir), 4, curDir]);
+    curRaw = permute(curRaw, [2, 1, 3, 4]); % Undo MATLAB convention
     curRaw = curRaw(:, :, :, curEmSlices);
     
     curRaw = mat2cell( ...
