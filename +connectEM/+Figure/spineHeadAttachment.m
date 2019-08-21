@@ -127,6 +127,8 @@ for curIdx = 1:numel(curIsos)
     curIso.vertices = curIso.vertices .* voxelSize / 1E3;
     
     curPatch = patch(curIso);
+    material(curPatch, 'dull');
+    
     curPatch.FaceColor = curColors(curIdx, :);
     curPatch.EdgeAlpha = 0;
 end
