@@ -11,7 +11,7 @@ rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites-wholeCells-03-v2-classified_spine-syn-clust.mat');
 autoFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v3_auto.mat');
 
-shId = 6;
+shId = 14;
 cam = struct;
 cam.CameraPosition  = [26.6944, 30.3816, -1.4454];
 cam.CameraTarget    = [2.9505, 2.0485, 8.2460];
@@ -50,8 +50,7 @@ dendLUT = Agglo.buildLUT(maxSegId, conn.dendrites);
 
 shT = table;
 shT.id = reshape(1:numel(shAgglos), [], 1);
-
-shT.agglo = shAgglos;
+shT.agglo = cellfun(@double, shAgglos, 'UniformOutput', false);
 shT.edges = shEdges;
 
 shT.autoAttached = shAutoAttached ~= 0;
@@ -65,7 +64,6 @@ shT.attached = not(cellfun(@isempty, shT.dendIds));
 
 shT = shT( ...
     shT.autoAttached ...
-  & not(shT.preAttached) ...
   & cellfun(@isscalar, shT.dendIds), :);
 shT.dendId = cell2mat(shT.dendIds);
 shT.dendIds = [];
@@ -73,7 +71,7 @@ shT.dendIds = [];
 %% Prototyping
 clear cur*;
 
-curSh = shT(shId, :);
+curSh = shT(shT.id == shId, :);
 curShSegIds = double(curSh.agglo{1});
 curDendSegIds = double(conn.dendrites{curSh.dendId});
 
@@ -91,7 +89,13 @@ curBox = max(1, curBox - [+256, -256]);
 
 curSeg = loadSegDataGlobal(param.seg, curBox);
 curSeg(curSeg ~= 0) = curLUT(curSeg(curSeg ~= 0));
-curIsos = arrayfun(@(i) isosurface(curSeg == i, 0.5), 1:numel(curAgglos));
+
+curIsos = cell(0, 1);
+for curIdx = 1:numel(curAgglos)
+    curMask = curSeg == curIdx;
+    curMask = imclose(curMask, strel('cube', 2));
+    curIsos{curIdx} = isosurface(curMask, 0.5);
+end
 
 curFig = figure();
 curAx = axes(curFig);
@@ -101,10 +105,9 @@ curColors = prism(numel(curIsos));
 curColors = flip(curColors, 1);
 
 for curIdx = 1:numel(curIsos)
-    curIso = curIsos(curIdx);
-    curIso.vertices = ...
-        curIso.vertices ...
-     .* voxelSize / 1E3;
+    curIso = curIsos{curIdx};
+    curIso.vertices = reshape(curIso.vertices, [], 3);
+    curIso.vertices = curIso.vertices .* voxelSize / 1E3;
     
     curPatch = patch(curIso);
     curPatch.EdgeAlpha = 0;
