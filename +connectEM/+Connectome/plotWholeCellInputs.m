@@ -356,20 +356,22 @@ curSynConfigs(1).rads = 1E3 * [1, 1, 1, 0.5];
 % NOTE(amotta): Second variant in which we show
 % * synapses from CC axons in blue,
 % * synapses from TC axons in red,
-% * synapses from inh. axons in yellow,
 % * synapses from AD-specific inh. axons in violet,
 % * synapses from soma-specific inh. axons in green,
-% * other synapses in small and black.
+% * synapses from other inh. axons in yellow,
+% * synapses from other axons with >= 10 synapses in bright blue,
+% * remaining synapses (from axons with < 10 synapses) in small and black.
 curSpecTypes = specConn.axonMeta.axonClass;
-curTypes = repelem(categorical({'Other'}), numel(conn.axons), 1);
+curTypes = repelem(categorical({'FewSyn'}), numel(conn.axons), 1);
+curTypes(conn.axonMeta.synCount >= 10) = 'Other';
 curTypes(conn.axonMeta.axonClass == 'Corticocortical') = 'CC';
 curTypes(conn.axonMeta.axonClass == 'Thalamocortical') = 'TC';
 curTypes(conn.axonMeta.axonClass == 'Inhibitory') = 'Inh';
 curTypes(curSpecTypes == 'InhibitoryApicalDendrite') = 'InhAD';
 curTypes(curSpecTypes == 'InhibitorySomata') = 'InhSOM';
 
-curColors = cat(1, [0, 0, 0], curDefColors(1:5, :));
-curRads = 1E3 * cat(2, 0.5, repelem(1, 5));
+curColors = cat(1, [0, 0, 0], curDefColors(6, :), curDefColors(1:5, :));
+curRads = 1E3 * cat(2, 0.5, 1, repelem(1, 5));
 
 curSynConfigs(2).types = curTypes;
 curSynConfigs(2).colors = curColors;
