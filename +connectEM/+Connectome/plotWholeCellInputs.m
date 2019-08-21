@@ -336,9 +336,10 @@ for curIdx = 1:height(wcT)
 end
 
 %% Render isosurface
-%{
 % Since Mr. Amira is on vacation.
 clear cur*;
+
+curDefColors = get(groot, 'defaultAxesColorOrder');
 
 % Configuration
 curCellId = 21;
@@ -347,90 +348,95 @@ curCamTarget = [2852.5, 4320.0, 1965.4];
 curCamUpVector = [-0.0178, -0.0785, -0.0153];
 curCamViewAngle = 10.4142;
 
+curSynConfigs = struct;
+curSynConfigs(1).types = conn.axonMeta.axonClass;
+curSynConfigs(1).colors = cat(1, curDefColors(1:3, :), [0, 0, 0]);
+curSynConfigs(1).rads = [1, 1, 1, 0.5] .* 1E3;
+
 curIso = load(fullfile(isoDir, sprintf('iso-%d.mat', curCellId)));
 curIso = curIso.isoSurf;
 
-curSyn = wcT.synapses{wcT.id == curCellId};
-curSyn.type = conn.axonMeta.axonClass(curSyn.axonId);
+for curSynConfig = curSynConfigs
+    curSyn = wcT.synapses{wcT.id == curCellId};
+    curSyn.type = curSynConfig.types(curSyn.axonId);
 
-curSynPos = connectEM.Synapse.calculatePositions(param, syn, 'pre');
-curSynPos = curSynPos(curSyn.id, :);
+    curSynPos = connectEM.Synapse.calculatePositions(param, syn, 'pre');
+    curSynPos = curSynPos(curSyn.id, :);
 
-curFig = figure;
-curFig.Color = 'none';
+    curFig = figure;
+    curFig.Color = 'none';
 
-curAx = axes(curFig);
-curAx.Visible = 'off';
+    curAx = axes(curFig); %#ok
+    curAx.Visible = 'off';
 
-curColors = curAx.ColorOrder;
-curColors = cat(1, curColors(1:3, :), [0, 0, 0]);
-curRads = [1, 1, 1, 0.5] .* 1E3;
+    curColors = curSynConfig.colors;
+    curRads = curSynConfig.rads;
 
-hold(curAx, 'on');
-daspect(curAx, 1 ./ param.raw.voxelSize);
+    hold(curAx, 'on');
+    daspect(curAx, 1 ./ param.raw.voxelSize);
 
-curP = patch(curAx, curIso);
-curP.EdgeColor = 'none';
-curP.FaceColor = repelem(0.85, 3);
-material(curP, 'dull');
+    curP = patch(curAx, curIso);
+    curP.EdgeColor = 'none';
+    curP.FaceColor = repelem(0.85, 3);
+    material(curP, 'dull');
 
-[curX, curY, curZ] = sphere();
-curX = curX / param.raw.voxelSize(1);
-curY = curY / param.raw.voxelSize(2);
-curZ = curZ / param.raw.voxelSize(3);
+    [curX, curY, curZ] = sphere();
+    curX = curX / param.raw.voxelSize(1);
+    curY = curY / param.raw.voxelSize(2);
+    curZ = curZ / param.raw.voxelSize(3);
 
-for curId = 1:height(curSyn)
-    curTypeId = double(curSyn.type(curId));
-    curColor = curColors(curTypeId, :);
-    curPos = curSynPos(curId, :);
-    curRad = curRads(curTypeId);
-    
-    curSurf = surf(curAx, ...
-        curRad * curX + curPos(1), ...
-        curRad * curY + curPos(2), ...
-        curRad * curZ + curPos(3));
-    curSurf.FaceColor = curColor;
-    curSurf.EdgeColor = 'none';
-    material(curSurf, 'dull');
+    for curId = 1:height(curSyn)
+        curTypeId = double(curSyn.type(curId));
+        curColor = curColors(curTypeId, :);
+        curPos = curSynPos(curId, :);
+        curRad = curRads(curTypeId);
+
+        curSurf = surf(curAx, ...
+            curRad * curX + curPos(1), ...
+            curRad * curY + curPos(2), ...
+            curRad * curZ + curPos(3));
+        curSurf.FaceColor = curColor;
+        curSurf.EdgeColor = 'none';
+        material(curSurf, 'dull');
+    end
+
+    curAx.CameraPosition = curCamPos;
+    curAx.CameraTarget = curCamTarget;
+    curAx.CameraUpVector = curCamUpVector;
+    curAx.CameraViewAngle = curCamViewAngle;
+
+    camlight(curAx);
+
+    curScaleBar = 10E3;
+    curScaleBar = curScaleBar ./ param.raw.voxelSize;
+
+    curOrig = [ ...
+        param.bbox(1, 1), ...
+        param.bbox(2, 2) - 1E3, ...
+        param.bbox(3, 1) + 3E3];
+    curDirs = [+1, -1, +1];
+
+    plot3(curAx, ...
+        curOrig(1) + curDirs(1) .* [0, curScaleBar(1)], ...
+        repelem(curOrig(2), 2), ...
+        repelem(curOrig(3), 2));
+    plot3(curAx, ...
+        repelem(curOrig(1), 2), ...
+        curOrig(2) + curDirs(2) .* [0, curScaleBar(2)], ...
+        repelem(curOrig(3), 2), 'Color', 'black');
+    plot3(curAx, ...
+        repelem(curOrig(1), 2), ...
+        repelem(curOrig(2), 2), ...
+        curOrig(3) + curDirs(3) .* [0, curScaleBar(3)]);
+
+    curPlots = findobj(curAx, 'Type', 'Line');
+    set(curPlots, 'Color', 'black', 'LineWidth', 2);
+
+    annotation( ...
+        curFig, 'textbox', [0, 0.9, 1, 0.1], ...
+        'String', {info.filename; info.git_repos{1}.hash}, ...
+        'EdgeColor', 'none', 'HorizontalAlignment', 'center');
 end
-
-curAx.CameraPosition = curCamPos;
-curAx.CameraTarget = curCamTarget;
-curAx.CameraUpVector = curCamUpVector;
-curAx.CameraViewAngle = curCamViewAngle;
-
-camlight(curAx);
-
-curScaleBar = 10E3;
-curScaleBar = curScaleBar ./ param.raw.voxelSize;
-
-curOrig = [ ...
-    param.bbox(1, 1), ...
-    param.bbox(2, 2) - 1E3, ...
-    param.bbox(3, 1) + 3E3];
-curDirs = [+1, -1, +1];
-
-plot3(curAx, ...
-    curOrig(1) + curDirs(1) .* [0, curScaleBar(1)], ...
-    repelem(curOrig(2), 2), ...
-    repelem(curOrig(3), 2));
-plot3(curAx, ...
-    repelem(curOrig(1), 2), ...
-    curOrig(2) + curDirs(2) .* [0, curScaleBar(2)], ...
-    repelem(curOrig(3), 2), 'Color', 'black');
-plot3(curAx, ...
-    repelem(curOrig(1), 2), ...
-    repelem(curOrig(2), 2), ...
-    curOrig(3) + curDirs(3) .* [0, curScaleBar(3)]);
-
-curPlots = findobj(curAx, 'Type', 'Line');
-set(curPlots, 'Color', 'black', 'LineWidth', 2);
-
-annotation( ...
-    curFig, 'textbox', [0, 0.9, 1, 0.1], ...
-    'String', {info.filename; info.git_repos{1}.hash}, ...
-    'EdgeColor', 'none', 'HorizontalAlignment', 'center');
-%}
 
 %% Plot soma position versus input ratios
 clear cur*;
