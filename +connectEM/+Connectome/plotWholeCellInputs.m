@@ -351,7 +351,29 @@ curCamViewAngle = 10.4142;
 curSynConfigs = struct;
 curSynConfigs(1).types = conn.axonMeta.axonClass;
 curSynConfigs(1).colors = cat(1, curDefColors(1:3, :), [0, 0, 0]);
-curSynConfigs(1).rads = [1, 1, 1, 0.5] .* 1E3;
+curSynConfigs(1).rads = 1E3 * [1, 1, 1, 0.5];
+
+% NOTE(amotta): Second variant in which we show
+% * synapses from CC axons in blue,
+% * synapses from TC axons in red,
+% * synapses from inh. axons in yellow,
+% * synapses from AD-specific inh. axons in violet,
+% * synapses from soma-specific inh. axons in green,
+% * other synapses in small and black.
+curSpecTypes = specConn.axonMeta.axonClass;
+curTypes = repelem(categorical({'Other'}), numel(conn.axons), 1);
+curTypes(conn.axonMeta.axonClass == 'Corticocortical') = 'CC';
+curTypes(conn.axonMeta.axonClass == 'Thalamocortical') = 'TC';
+curTypes(conn.axonMeta.axonClass == 'Inhibitory') = 'Inh';
+curTypes(curSpecTypes == 'InhibitoryApicalDendrite') = 'InhAD';
+curTypes(curSpecTypes == 'InhibitorySomata') = 'InhSOM';
+
+curColors = cat(1, [0, 0, 0], curDefColors(1:5, :));
+curRads = 1E3 * cat(2, 0.5, repelem(1, 5));
+
+curSynConfigs(2).types = curTypes;
+curSynConfigs(2).colors = curColors;
+curSynConfigs(2).rads = curRads;
 
 curIso = load(fullfile(isoDir, sprintf('iso-%d.mat', curCellId)));
 curIso = curIso.isoSurf;
