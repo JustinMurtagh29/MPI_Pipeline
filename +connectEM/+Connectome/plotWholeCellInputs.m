@@ -358,6 +358,7 @@ curSynConfigs(1).rads = 1E3 * [1, 1, 1, 0.5];
 % * synapses from TC axons in red,
 % * synapses from AD-specific inh. axons in violet,
 % * synapses from soma-specific inh. axons in green,
+% * synapses from PD-specific inh. axons in burgundy,
 % * synapses from other inh. axons in yellow,
 % * synapses from other axons with >= 10 synapses in bright blue,
 % * remaining synapses (from axons with < 10 synapses) in small and black.
@@ -369,9 +370,12 @@ curTypes(conn.axonMeta.axonClass == 'Thalamocortical') = 'TC';
 curTypes(conn.axonMeta.axonClass == 'Inhibitory') = 'Inh';
 curTypes(curSpecTypes == 'InhibitoryApicalDendrite') = 'InhAD';
 curTypes(curSpecTypes == 'InhibitorySomata') = 'InhSOM';
+curTypes(curSpecTypes == 'InhibitoryProximalDendrite') = 'InhPD';
 
-curColors = cat(1, [0, 0, 0], curDefColors(6, :), curDefColors(1:5, :));
-curRads = 1E3 * cat(2, 0.5, 1, repelem(1, 5));
+curColors = cat(1, ...
+    zeros(1, 3), curDefColors(6, :), ...
+    curDefColors(1:5, :), curDefColors(7, :));
+curRads = 1E3 * cat(2, 0.5, repelem(1, 7));
 
 curSynConfigs(2).types = curTypes;
 curSynConfigs(2).colors = curColors;
