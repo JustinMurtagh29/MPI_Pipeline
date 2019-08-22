@@ -61,9 +61,28 @@ specAxonClasses = ...
     connectEM.Connectome.buildAxonSpecificityClasses( ...
         specConn, specAxonClasses);
 
+% HACKHACK(amotta): Introduce separate "Perisoma" category for inhibitory
+% axons that both soma- and proximal dendrite-specific.
+curInhSpecs = specAxonClasses(2).specs;
+
+curPerisomaAxonIds = intersect( ...
+    curInhSpecs.Somata.axonIds, ...
+    curInhSpecs.ProximalDendrite.axonIds);
+
+curInhSpecs.Somata.axonIds = setdiff( ...
+    curInhSpecs.Somata.axonIds, curPerisomaAxonIds);
+curInhSpecs.ProximalDendrite.axonIds = setdiff( ...
+    curInhSpecs.ProximalDendrite.axonIds, curPerisomaAxonIds);
+
+curInhSpecs.Perisoma = struct;
+curInhSpecs.Perisoma.axonIds = curPerisomaAxonIds(:);
+
+specAxonClasses(2).specs = curInhSpecs;
+clear curInhSpecs;
+
 % Reset classes in axon meta data. The values are filled in below.
 specSynTypes = {};
-specConn.axonMeta.axonClass = ...
+specConn.axonMeta.axonClass = ...q
     repelem({[]}, numel(specConn.axons), 1);
 
 % Modified from
@@ -357,19 +376,21 @@ curSynConfigs(1).rads = 1E3 * [1, 1, 1, 0.5];
 % * synapses from CC axons in blue,
 % * synapses from TC axons in red,
 % * synapses from AD-specific inh. axons in violet,
-% * synapses from soma-specific inh. axons in green,
+% * synapses from soma or perisoma-specific inh. axons in green,
 % * synapses from PD-specific inh. axons in burgundy,
 % * synapses from other inh. axons in yellow,
 % * synapses from other axons with >= 10 synapses in bright blue,
 % * remaining synapses (from axons with < 10 synapses) in small and black.
 curSpecTypes = specConn.axonMeta.axonClass;
+curInhPerisomaTypes = {'InhibitorySomata', 'InhibitoryPerisoma'};
+
 curTypes = repelem(categorical({'FewSyn'}), numel(conn.axons), 1);
 curTypes(conn.axonMeta.synCount >= 10) = 'Other';
 curTypes(conn.axonMeta.axonClass == 'Corticocortical') = 'CC';
 curTypes(conn.axonMeta.axonClass == 'Thalamocortical') = 'TC';
 curTypes(conn.axonMeta.axonClass == 'Inhibitory') = 'Inh';
 curTypes(curSpecTypes == 'InhibitoryApicalDendrite') = 'InhAD';
-curTypes(curSpecTypes == 'InhibitorySomata') = 'InhSOM';
+curTypes(ismember(curSpecTypes, curInhPerisomaTypes)) = 'InhSOM';
 curTypes(curSpecTypes == 'InhibitoryProximalDendrite') = 'InhPD';
 
 curColors = cat(1, ...
