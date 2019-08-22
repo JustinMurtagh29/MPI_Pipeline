@@ -11,13 +11,8 @@ rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites-wholeCells-03-v2-classified_spine-syn-clust.mat');
 autoFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v3_auto.mat');
 
-shId = 14;
-
-cams = struct;
-cams(1).CameraPosition  = [-79.0698, 2.9561, -19.2050];
-cams(1).CameraTarget    = [3.1753, 2.9561, 7.5180];
-cams(1).CameraUpVector  = [0, 0, 1];
-cams(1).CameraViewAngle = 10.9061;
+% Dendrite to export
+dendId = 7;
 
 info = Util.runInfo();
 Util.showRunInfo(info);
@@ -69,12 +64,11 @@ shT = shT( ...
 shT.dendId = cell2mat(shT.dendIds);
 shT.dendIds = [];
 
-%% Rendering
+%% Build NML for Heiko
 clear cur*;
 
-curSh = shT(shT.id == shId, :);
-curShs = shT(shT.dendId == curSh.dendId & shT.autoAttached, :);
-curDendSegIds = double(conn.dendrites{curSh.dendId});
+curShs = shT(shT.dendId == dendId & shT.autoAttached, :);
+curDendSegIds = double(conn.dendrites{dendId});
 
 curLin = @(neck) nonzeros(reshape(transpose(neck), [], 1));
 curSkipHead = @(head, neck) setdiff(neck, head, 'stable');
@@ -91,71 +85,26 @@ curAgglos = cellfun( ...
     @(head, neck) [{head}; num2cell(neck(:))], ...
     curShs.agglo, curShs.neckSegIds, 'UniformOutput', false);
 
-curCmap = jet(120);
-curCmap = curCmap((size(curCmap, 1) - 100) / 2 + (1:100), :);
+curSkel = skeleton();
+curSkel = Skeleton.setParams4Pipeline(curSkel, param);
+curSkel = Skeleton.setDescriptionFromRunInfo(curSkel, info);
 
-curColors = cellfun( ...
-    @(a) feval(@(cols) cols(1:(end - 1), :), curCmap( ...
-        ceil(linspace(1, size(curCmap, 1), 1 + numel(a))), :)), ...
-    curAgglos, 'UniformOutput', false);
+curMst = @(skel, segIds) ...
+    Skeleton.fromMST(segPos(segIds, :), voxelSize, skel);
+curNumDigits = ceil(log10(1 + (numel(curAgglos) + 1)));
 
-curAgglos = cat(1, curAgglos{:}, {curDendSegIds});
-curColors = cat(1, curColors{:}, curCmap(end, :));
-curLUT = Agglo.buildLUT(maxSegId, curAgglos);
-
-curBox = segPos(curShs.neckSegIds{curShs.id == shId}, :);
-curBox = transpose(cat(1, min(curBox, [], 1), max(curBox, [], 1)));
-curBox = max(1, curBox - [+256, -256]);
-
-curSeg = loadSegDataGlobal(param.seg, curBox);
-curSeg(curSeg ~= 0) = curLUT(curSeg(curSeg ~= 0));
-
-curIsos = cell(0, 1);
-for curIdx = 1:numel(curAgglos)
-    curMask = curSeg == curIdx;
-    curMask = imclose(curMask, strel('cube', 2));
-    curIsos{curIdx} = isosurface(curMask, 0.5);
-end
-
-curFig = figure();
-curAx = axes(curFig);
-hold(curAx, 'on');
-
-for curIdx = 1:numel(curIsos)
-    curIso = curIsos{curIdx};
-    curIso.vertices = reshape(curIso.vertices, [], 3);
-    curIso.vertices = curIso.vertices .* voxelSize / 1E3;
+for curShIdx = 1:numel(curAgglos)
+    curShId = curShs.id(curShIdx);
+    curShAgglos = curAgglos{curShIdx};
     
-    curPatch = patch(curIso);
-    material(curPatch, 'dull');
-    
-    curPatch.FaceColor = curColors(curIdx, :);
-    curPatch.EdgeAlpha = 0;
+    for curNeckIdx = 1:numel(curShAgglos)
+        curName = sprintf( ...
+            'spine-head-%d_step-%d', ...
+            curShId, curNeckIdx - 1);
+        curSkel = curMst(curSkel, curShAgglos{curNeckIdx});
+        curSkel.names{end} = curName;
+    end
 end
 
-axis(curAx, 'equal');
-
-curKeys = fieldnames(cams);
-for curIdx = 1:numel(curKeys)
-    curKey = curKeys{curIdx};
-    curAx.(curKey) = cams.(curKey);
-end
-
-camlight(curAx);
-
-for curDimIdx = 1:3
-    curDim = char(double('X') - 1 + curDimIdx);
-    curLims = [1, diff(curBox(curDimIdx, :))];
-    curLims = curLims * voxelSize(curDimIdx) / 1E3;
-    
-    curAxis = sprintf('%sAxis', curDim);
-    curAxis = curAx.(curAxis);
-    curAxis.Visible = 'off';
-    curAxis.Limits = curLims;
-end
-
-annotation( ...
-    curFig, 'textbox', [0, 0.9, 1, 0.1], ...
-    'String', {info.filename; info.git_repos{1}.hash}, ...
-    'EdgeColor', 'none', 'HorizontalAlignment', 'center');
-connectEM.Figure.config(curFig);
+curSkel = curMst(curSkel, curDendSegIds);
+curSkel.names{end} = sprintf('dendrite-%d', dendId);
