@@ -123,6 +123,8 @@ for curConfIdx = 1:numel(confs)
     curClass = loadClassData(param.class, curFovBox);
     curClass = ((curClass / 1.7159) + 1) / 2;
     
+    curSeg = loadSegDataGlobal(param.seg, curFovBox);
+    
     %% Show figures
     % Adapted from +Paper/+SynEM/+Figures/figure1.m
     % of https://gitlab.mpcdf.mpg.de/connectomics/Benedikt
@@ -141,7 +143,7 @@ for curConfIdx = 1:numel(confs)
     curAx = axes(curFig); %#ok
     hold(curAx, 'on');
     
-    imshow(curFix(curClass), 'Parent', curAx');
+    imshow(curFix(curClass), 'Parent', curAx);
     export_fig(strcat(curOutFile, 'cnn.png'), curFig);
     
     
@@ -158,4 +160,22 @@ for curConfIdx = 1:numel(confs)
     set(himage3,'Alphadata',0.7.*(l3  > 0));
     
     export_fig(strcat(curOutFile, 'subvol.png'), curFig);
+    
+    
+    curFig = figure;
+    curAx = axes(curFig); %#ok
+    hold(curAx, 'on');
+    
+    curSize = size(curSeg);
+   [curUniSegIds, ~, curUniSeg] = unique(curSeg);
+    assert(curUniSegIds(1) == 0);
+    
+    curColors = distinguishable_colors(numel(curUniSegIds) - 1, [0, 0, 0]);
+    curColors = vertcat([0, 0, 0], curColors); %#ok
+    
+    curSeg = curColors(curUniSeg, :);
+    curSeg = reshape(curSeg, [curSize, 3]);
+    
+    imshow(permute(curSeg, [2, 1, 3]), 'Parent', curAx);
+    export_fig(strcat(curOutFile, 'seg.png'), curFig);
 end
