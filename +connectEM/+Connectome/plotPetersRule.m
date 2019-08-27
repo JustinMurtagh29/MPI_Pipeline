@@ -215,7 +215,7 @@ for curSynIdx = 1:numel(synTypes)
     curTitle = strcat(curTitleStem, ' versus', ...
         ' postsynaptic path length contributions');
     
-    curAxonFracs = renorm(sum(curClassConn, 2));
+    curAxonFracs = reshape(preSynLengthFracs, [], 1);
     curTargetFracs = reshape(postSynLengthFracs, 1, []);
     
     curRelClassConn = curClassConn ./ sum(curClassConn, 2);
