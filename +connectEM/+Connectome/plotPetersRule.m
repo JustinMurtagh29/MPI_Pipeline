@@ -69,6 +69,24 @@ conn.denMeta.synCount = accumarray( ...
 
 lengths = load(lengthFile);
 
+trunks = load(lengths.info.param.trunkFile);
+trunks = trunks.dendrites(trunks.indBigDends);
+trunks = Agglo.fromSuperAgglo(trunks);
+
+maxSegId = Seg.Global.getMaxSegId(param);
+
+%% Find trunk length for dendrite in connectome
+clear cur*;
+
+curLUT = Agglo.buildLUT(maxSegId, trunks);
+conn.denMeta.trunkId = cellfun(@(ids) ...
+    mode(nonzeros(curLUT(ids))), conn.dendrites);
+
+curLens = lengths.trunkPathLengths;
+curMask = ~isnan(conn.denMeta.trunkId);
+conn.denMeta.trunkLength = nan(height(conn.denMeta), 1);
+conn.denMeta.trunkLength(curMask) = curLens(conn.denMeta.trunkId(curMask));
+
 %% Ignore axons and dendrites with too few synapses
 % TODO(amotta): Should we also ignore postsynaptic targets?
 clear cur*;
@@ -84,13 +102,11 @@ curAxonClasses = addcats(curAxonClasses, {'Ignore'}, 'After', curLastCat);
 curAxonClasses(conn.axonMeta.synCount < minSynPre) = 'Ignore';
 conn.axonMeta.axonClass = curAxonClasses;
 
-%% Prepare availabilities
-clear cur*;
-
+%% Prepare geometric data
 % NOTE(amotta): The path lengths of soma-seeded agglomerates reported in
 % the paper were derived from the ground truth skeleton tracings. Here,
-% we're using the automatically calculated values (with calibration).
-assert(isequal(numel(conn.dendrites), numel(lengths.dendritePathLengths)));
+% we're using the automatically calculated values.
+clear cur*;
 
 curLens = lengths.axonPathLengths;
 curLens(conn.axonMeta.axonClass == 'Ignore') = 0;
@@ -98,7 +114,7 @@ curLens(conn.axonMeta.axonClass == 'Ignore') = 0;
 curFracs = accumarray(curIds(curMask), curLens(curMask));
 preSynLengthFracs = curFracs / sum(curLens);
 
-curLens = lengths.dendritePathLengths;
+curLens = conn.denMeta.trunkLength;
 curLens(ismember(conn.denMeta.targetClass, {'Somata', 'Ignore'})) = 0;
 [curMask, curIds] = ismember(conn.denMeta.targetClass, targetClasses);
 curLens = accumarray(curIds(curMask), curLens(curMask));
