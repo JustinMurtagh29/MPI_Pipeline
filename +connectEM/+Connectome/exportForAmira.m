@@ -16,7 +16,12 @@ postIsoDir = '/tmpscratch/amotta/l4/2018-01-26-postsyn-for-amira';
 connFile = fullfile( ...
     rootDir, 'connectomeState', 'connectome_axons_18_a.mat');
 
-% HACKHACKHACK(amotta):
+% HACKHACKHACK(amotta): The above connectome was generated based on axons
+% 18a. There was, however, a bug in the routine for merging super-agglos
+% on overlap which introduced bogus edges. This bug was later fixed,
+% resulting in axons 18b. The two super-agglo states 18a and 18b are
+% (almost) identical in terms of segment equivalence classes. We need
+% proper edges here. So, let's use axons 18b.
 axonFile = fullfile(rootDir, 'aggloState', 'axons_18_b.mat');
 
 minSynCount = 10;
