@@ -359,6 +359,7 @@ end
 clear cur*;
 
 curDefColors = get(groot, 'defaultAxesColorOrder');
+curTurquoise = [64, 224, 208] / 255;
 
 % Configuration
 curCellId = 21;
@@ -377,15 +378,13 @@ curSynConfigs(1).rads = 1E3 * [1, 1, 1, 0.5];
 % * synapses from TC axons in red,
 % * synapses from AD-specific inh. axons in violet,
 % * synapses from soma or perisoma-specific inh. axons in green,
-% * synapses from PD-specific inh. axons in burgundy,
+% * synapses from PD-specific inh. axons in turquoise,
 % * synapses from other inh. axons in yellow,
-% * synapses from other axons with >= 10 synapses in bright blue,
-% * remaining synapses (from axons with < 10 synapses) in small and black.
+% * remaining synapses in small and black.
 curSpecTypes = specConn.axonMeta.axonClass;
 curInhPerisomaTypes = {'InhibitorySomata', 'InhibitoryPerisoma'};
 
-curTypes = repelem(categorical({'FewSyn'}), numel(conn.axons), 1);
-curTypes(conn.axonMeta.synCount >= 10) = 'Other';
+curTypes = repelem(categorical({'Other'}), numel(conn.axons), 1);
 curTypes(conn.axonMeta.axonClass == 'Corticocortical') = 'CC';
 curTypes(conn.axonMeta.axonClass == 'Thalamocortical') = 'TC';
 curTypes(conn.axonMeta.axonClass == 'Inhibitory') = 'Inh';
@@ -393,9 +392,7 @@ curTypes(curSpecTypes == 'InhibitoryApicalDendrite') = 'InhAD';
 curTypes(ismember(curSpecTypes, curInhPerisomaTypes)) = 'InhSOM';
 curTypes(curSpecTypes == 'InhibitoryProximalDendrite') = 'InhPD';
 
-curColors = cat(1, ...
-    zeros(1, 3), curDefColors(6, :), ...
-    curDefColors(1:5, :), curDefColors(7, :));
+curColors = cat(1, zeros(1, 3), curDefColors(1:5, :), curTurquoise);
 curRads = 1E3 * cat(2, 0.5, repelem(1, 7));
 
 curSynConfigs(2).types = curTypes;
