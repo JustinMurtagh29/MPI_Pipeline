@@ -748,7 +748,9 @@ curVarNames = cat(1, {'ieRatio'}, curVarNames); %#ok
 
 % NOTE(amotta): Only use the following variables in production
 curVarNames = strcat('Inhibitory', {'ApicalDendrite', 'Somata'});
-curVarNames = [strcat('frac', curVarNames), strcat('num', curVarNames)];
+curVarNames = cat(2, ...
+    strcat('frac', curVarNames), ...
+    strcat('num', cat(2, {'Inhibitory'}, curVarNames)));
 
 for curDataIdx = 1:numel(curData)
     curDataName = curDataNames{curDataIdx};
@@ -760,6 +762,8 @@ for curDataIdx = 1:numel(curData)
         curDataT.classConn(:, 2) ...
      ./ sum(curDataT.classConn(:, 1:2), 2);
 
+    curDataT.numInhibitory = ...
+        curDataT.classConn(:, 3);
     curDataT.ieRatio = ...
         curDataT.classConn(:, 3) ...
      ./ sum(curDataT.classConn(:, 1:3), 2);
