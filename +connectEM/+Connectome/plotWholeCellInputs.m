@@ -738,9 +738,8 @@ curData = {curWcT, curDendT};
 curSummaries = cell(size(curData));
 curSummaryVars = { ...
     'name', ...
-    'fit', 'slope', 'relSlope', 'pValue', ...
+    'fit', 'slope', 'relSlope', 'pValue', 'rankPValue', ...
     'nullModel', 'nullCorrFit', 'nullCorrPValue'};
-
 
 curDataNames = {'neurons', 'dendrites'};
 curVarNames = strcat('frac', categories(specSynTypes));
@@ -862,6 +861,9 @@ for curDataIdx = 1:numel(curData)
         curRelSlope = curSlope / mean(curY);
         curPvalue = curFit.Coefficients.pValue(2);
         
+        % p-value based on rank correlation
+       [~, curRankPvalue] = corr(curX, curY, 'Type', 'Spearman');
+        
         % p value against our custom null model
         curNullCorrY = curY - curNullModel(curX);
         curNullCorrFit = fitlm(curX, curNullCorrY);
@@ -869,7 +871,7 @@ for curDataIdx = 1:numel(curData)
         
         curSummaryT(curVarIdx, :) = { ...
             curVarName, ...
-            curFit, curSlope, curRelSlope, curPvalue, ...
+            curFit, curSlope, curRelSlope, curPvalue, curRankPvalue, ...
             curNullModel, curNullCorrFit, curNullCorrPvalue};
     end
     
