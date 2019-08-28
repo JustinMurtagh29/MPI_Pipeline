@@ -747,12 +747,15 @@ curVarNames = strcat('frac', categories(specSynTypes));
 curVarNames = cat(1, {'ieRatio'}, curVarNames); %#ok
 
 % NOTE(amotta): Only use the following variables in production
-curVarNames = strcat('fracInhibitory', {'ApicalDendrite', 'Somata'});
+curVarNames = strcat('Inhibitory', {'ApicalDendrite', 'Somata'});
+curVarNames = [strcat('frac', curVarNames), strcat('num', curVarNames)];
 
 for curDataIdx = 1:numel(curData)
     curDataName = curDataNames{curDataIdx};
     curDataT = curData{curDataIdx};
     
+    curDataT.tcCount = ...
+        curDataT.classConn(:, 2);
     curDataT.tcRatio = ...
         curDataT.classConn(:, 2) ...
      ./ sum(curDataT.classConn(:, 1:2), 2);
@@ -763,7 +766,6 @@ for curDataIdx = 1:numel(curData)
     
     for curTypeIdx = 1:numel(specSynTypes)
         curTypeName = char(specSynTypes(curTypeIdx));
-        curVarName = sprintf('frac%s', curTypeName);
         
         % NOTE(amotta): Exploit that inhibitory specificity classes are
         % completely independent of the TC / (TC + CC), and that we can
@@ -784,7 +786,9 @@ for curDataIdx = 1:numel(curData)
             curRenorm = sum(curDataT.specClassConn(:, curRenorm), 2);
         end
         
-        curDataT.(curVarName) = ...
+        curDataT.(sprintf('num%s', curTypeName)) = ...
+            curDataT.specClassConn(:, curTypeIdx);
+        curDataT.(sprintf('frac%s', curTypeName)) = ...
             curDataT.specClassConn(:, curTypeIdx) ./ curRenorm;
     end
     
@@ -794,9 +798,16 @@ for curDataIdx = 1:numel(curData)
     
     for curVarIdx = 1:numel(curVarNames)
         curVarName = curVarNames{curVarIdx};
-        
-        curX = curDataT.tcRatio;
         curY = curDataT.(curVarName);
+        
+        switch curVarName
+            case curVarNames(startsWith(curVarNames, 'frac'))
+                curX = curDataT.tcRatio;
+            case curVarNames(startsWith(curVarNames, 'num'))
+                curX = curDataT.tcCount;
+            otherwise
+                error('Error for variable "%s"', curVarName)
+        end
         
         switch curVarName
             case 'ieRatio'
@@ -834,6 +845,9 @@ for curDataIdx = 1:numel(curData)
                 curFrac = curFrac(curVar) / sum(curFrac(curRenorm));
                 
                 curNullModel = @(x) ones(size(x)) .* curFrac;
+                
+            case curVarNames(startsWith(curVarNames, 'num'))
+                curNullModel = @(x) zeros(size(x));
                 
             otherwise
                 error('No null model for variable "%s"', curVarName);
@@ -915,64 +929,86 @@ connectEM.Figure.config(curFig, info);
 curFig.Position(3:4) = [360, 360];
 
 % Plot correlates of TC input fraction
-curFig = figure();
-for curDataIdx = 1:numel(curData)
-    curDataName = curDataNames{curDataIdx};
-    curSummaryT = curSummaries{curDataIdx};
-    curDataT = curData{curDataIdx};
-    curX = curDataT.tcRatio;
+curConfigs = struct;
+curConfigs(1).xName = 'tcRatio';
+curConfigs(1).varIds = find(startsWith(curVarNames, 'frac'));
+curConfigs(1).xLims = [0, 1]; curConfigs(1).xTicks = 0:0.2:1;
+curConfigs(1).yLims = [0, 1]; curConfigs(1).yTicks = 0:0.2:1;
+
+curConfigs(2).xName = 'tcCount';
+curConfigs(2).varIds = find(startsWith(curVarNames, 'num'));
+curConfigs(2).xLims = [0, 100]; curConfigs(2).xTicks = 0:50:100;
+
+for curConfig = curConfigs
+    curXName = curConfig.xName;
+    curVarIds = curConfig.varIds;
+    curLims = curConfig.xLims;    
     
-    for curVarIdx = 1:numel(curVarNames)
-        curVarName = curVarNames{curVarIdx};
-        curY = curDataT.(curVarName);
-        
-        curFit = curSummaryT.fit{curVarIdx};
-        curFitY = curFit.predict(curLims(:))';
-        
-        curNull = curSummaryT.nullModel{curVarIdx};
-        curNullY = curNull(curLims);
-        
-        curNullCorrFit = curSummaryT.nullCorrFit{curVarIdx};
-        
-        curAx = numel(curVarNames) * (curDataIdx - 1) + curVarIdx;
-        curAx = subplot(numel(curData), numel(curVarNames), curAx);
-        hold(curAx, 'on');
+    curFig = figure();
+    for curDataIdx = 1:numel(curData)
+        curDataName = curDataNames{curDataIdx};
+        curSummaryT = curSummaries{curDataIdx};
+        curDataT = curData{curDataIdx};
+        curX = curDataT.(curXName);
 
-        curScatter = scatter(curAx, curX, curY, 20, 'o');
-        curScatter.MarkerEdgeColor = 'none';
-        curScatter.MarkerFaceColor = colors(1, :);
+        for curVarIdx = 1:numel(curVarIds)
+            curVarId = curVarIds(curVarIdx);
+            curVarName = curVarNames{curVarId};
+            curY = curDataT.(curVarName);
 
-        curFitPlot = plot( ...
-            curAx, curLims, curFitY, ...
-            'Color', 'black', 'LineWidth', 2);
-        curNullPlot = plot( ...
-            curAx, curLims, curNullY, ...
-            'Color', 'black', 'LineStyle', '--');
+            curFit = curSummaryT.fit{curVarId};
+            curFitY = curFit.predict(curLims(:))';
 
-        axis(curAx, 'equal');
-        xlim(curAx, curLims); xticks(curAx, curTicks);
-        ylim(curAx, curLims); yticks(curAx, curTicks);
-        
-        xlabel(curAx, sprintf('%s (%s)', 'tcRatio', curDataName));
-        ylabel(curAx, sprintf('%s (%s)', curVarName, curDataName));
-        
-        if curShowLegend
-            curLeg = { ...
-                sprintf( ...
-                    'y = %.2f %+.2fx (p_{slope} = %.2f)', ...
-                    curFit.Coefficients.Estimate, ...
-                    curFit.Coefficients.pValue(end)), ...
-                sprintf( ...
-                    'Null model (p_{slope vs. null} = %.2f)', ...
-                    curNullCorrFit.Coefficients.pValue(end))};
-            curLeg = legend([curFitPlot, curNullPlot], curLeg);
-            curLeg.Location = 'north';
+            curNull = curSummaryT.nullModel{curVarId};
+            curNullY = curNull(curLims);
+
+            curNullCorrFit = curSummaryT.nullCorrFit{curVarId};
+
+            curAx = numel(curVarIds) * (curDataIdx - 1) + curVarIdx;
+            curAx = subplot(numel(curData), numel(curVarIds), curAx);
+            hold(curAx, 'on');
+
+            curScatter = scatter(curAx, curX, curY, 20, 'o');
+            curScatter.MarkerEdgeColor = 'none';
+            curScatter.MarkerFaceColor = colors(1, :);
+            
+            curFitPlot = plot( ...
+                curAx, curLims, curFitY, ...
+                'Color', 'black', 'LineWidth', 2);
+            curNullPlot = plot( ...
+                curAx, curLims, curNullY, ...
+                'Color', 'black', 'LineStyle', '--');
+
+            axis(curAx, 'square');
+            curAx.XLim(1) = 0;
+            curAx.YLim(1) = 0;
+            
+            if ~isempty(curConfig.xLims); xlim(curAx, curConfig.xLims); end
+            if ~isempty(curConfig.xTicks); xticks(curAx, curConfig.xTicks); end
+            if ~isempty(curConfig.yLims); ylim(curAx, curConfig.yLims); end
+            if ~isempty(curConfig.yTicks); yticks(curAx, curConfig.yTicks); end
+
+            xlabel(curAx, sprintf('%s (%s)', curXName, curDataName));
+            ylabel(curAx, sprintf('%s (%s)', curVarName, curDataName));
+
+            if curShowLegend
+                curLeg = { ...
+                    sprintf( ...
+                        'y = %.2f %+.2fx (p_{slope} = %.2f)', ...
+                        curFit.Coefficients.Estimate, ...
+                        curFit.Coefficients.pValue(end)), ...
+                    sprintf( ...
+                        'Null model (p_{slope vs. null} = %.2f)', ...
+                        curNullCorrFit.Coefficients.pValue(end))};
+                curLeg = legend([curFitPlot, curNullPlot], curLeg);
+                curLeg.Location = 'north';
+            end
         end
     end
-end
 
-connectEM.Figure.config(curFig, info);
-curFig.Position(3:4) = [560, 580];
+    connectEM.Figure.config(curFig, info);
+    curFig.Position(3:4) = [560, 580];
+end
 
 %% Try to find border cells
 clear cur*;
