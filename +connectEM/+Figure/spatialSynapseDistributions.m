@@ -227,23 +227,38 @@ for curTypeIdx = 1:height(typeT)
     curFig = figure();
     curFig.Color = 'white';
     curFig.Position(3:4) = [600, 320];
-    curFigRatio = curFig.Position(4) / curFig.Position(3);
 
     curIm = typeDensities{curTypeIdx};
     curIm = uint8(double(intmax('uint8')) * curIm / max(curIm(:)));
-    curImRatio = size(curIm, 1) / size(curIm, 2);
+    curImSize = size(curIm);
 
     curImAx = axes(curFig); %#ok
     curIm = image(curImAx, curIm);
     colormap(curImAx, jet(256));
     axis(curImAx, 'image');
 
-    curImAx.XTick = [];
-    curImAx.YTick = curImAx.YTick([1, end]);
-    curImAx.YTickLabel = {'Pia', 'WM'};
+    curImAx.TickDir = 'out';
     
-    curImAx.Position(3:4) = 0.6 * [1, curImRatio / curFigRatio];
-    curImAx.Position(1:2) = (1 - curImAx.Position(3:4)) / 2;
+    curCortDim = find(dimIds == 1);
+    curCortDim = char(double('X') - 1 + curCortDim);
+    
+    if isempty(curCortDim)
+        curImAx.XTick = [];
+        curImAx.YTick = [];
+    else
+        curImAx.([curCortDim, 'Tick']) = feval( ...
+            @(v) v([1, end]), curImAx.([curCortDim, 'Tick']));
+        curImAx.([setdiff('XY', curCortDim), 'Tick']) = [];
+        curImAx.([curCortDim, 'TickLabel']) = {'Pia', 'WM'};
+    end
+    
+    curSizeY = 0.6;
+    curSizeX = curSizeY * curFig.Position(4) / curFig.Position(3);
+    curSizeX = curSizeX * curImSize(2) / curImSize(1);
+    curSize = [curSizeX, curSizeY];
+    
+    curImAx.Position(1:2) = (1 - curSize) / 2;
+    curImAx.Position(3:4) = curSize;
     
     % Linear regression
     curLinFit = (typeBinEdges(1:(end - 1)) + typeBinEdges(2:end)) / 2;
@@ -260,7 +275,9 @@ for curTypeIdx = 1:height(typeT)
     curHistFit = plot(curHistAx, ...
         curLinFit(typeBinEdges([1, end])), typeBinEdges([1, end]), ...
         'Color', 'black', 'LineWidth', 2);
+    
     curHistAx.YDir = 'reverse';
+    curHistAx.YAxis.Visible = 'off';
 
     curHistAx.Box = 'off';
     curHistAx.TickDir = 'out';
@@ -268,10 +285,9 @@ for curTypeIdx = 1:height(typeT)
     curHistAx.YLim = typeBinEdges([1, end]);
     
     curPos = curImAx.Position;
-    curHistAx.Position([2, 4]) = curPos([2, 4]);
     curHistAx.Position(1) = curPos(1) + curPos(3);
     curHistAx.Position(3) = 0.95 - curHistAx.Position(1);
-    curHistAx.Position(4) = curPos(4);
+    curHistAx.Position([2, 4]) = curPos([2, 4]);
 
     annotation( ...
         curFig, ...
