@@ -730,6 +730,7 @@ curRenormNames = {'Excitatory', 'Inhibitory'};
 curLims = [0, 1];
 curTicks = 0:0.2:1;
 curShowLegend = false;
+curDropZeros = false;
 
 curWcT = wcT(sum(wcT.classConn, 2) >= curWcMinSyn, :);
 curDendT = dendT(sum(dendT.classConn, 2) >= curDendMinSyn, :);
@@ -810,6 +811,11 @@ for curDataIdx = 1:numel(curData)
                 curX = curDataT.tcCount;
             otherwise
                 error('Error for variable "%s"', curVarName)
+        end
+        
+        if curDropZeros
+            curX = curX(curY ~= 0);
+            curY = curY(curY ~= 0);
         end
         
         switch curVarName
@@ -955,12 +961,18 @@ for curConfig = curConfigs
         curDataName = curDataNames{curDataIdx};
         curSummaryT = curSummaries{curDataIdx};
         curDataT = curData{curDataIdx};
-        curX = curDataT.(curXName);
 
         for curVarIdx = 1:numel(curVarIds)
             curVarId = curVarIds(curVarIdx);
             curVarName = curVarNames{curVarId};
+            
+            curX = curDataT.(curXName);
             curY = curDataT.(curVarName);
+            
+            if curDropZeros
+                curX = curX(curY ~= 0);
+                curY = curY(curY ~= 0);
+            end
 
             curFit = curSummaryT.fit{curVarId};
             curFitY = curFit.predict(curLims(:))';
