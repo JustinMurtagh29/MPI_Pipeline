@@ -1116,6 +1116,7 @@ for curIdx = 1:numel(wcGroups)
     curQueenWcT.nodeParentIds = {cat(1, curWcT.nodeParentIds{:})};
     curQueenWcT.synapses = {curLumpedSynapses};
     curQueenWcT.classConn = sum(curWcT.classConn, 1);
+    curQueenWcT.specClassConn = sum(curWcT.specClassConn, 1);
 
     extWcT = cat(1, extWcT, curQueenWcT);
 end
