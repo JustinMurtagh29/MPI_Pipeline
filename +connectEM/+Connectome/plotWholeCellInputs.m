@@ -269,6 +269,18 @@ for curIdx = 1:size(wcT, 1)
         curConnRows.edges(:, 1), ...
         cellfun(@numel, curConnRows.synIdx));
     
+    %{
+    % HACKHACKHACK(amotta): Ignore synapses in the "bottom right" corner of
+    % the YZ viewport because we have a hot spot of apical dendrite-
+    % specific inhibitory synapses there. This is a control. See
+    % https://webknossos.brain.mpg.de/annotations/Explorational/5d68eba201000090262d3a7a#3246,5313,2426,0,17.909,124656
+    curSynT.pos = curAgglo.nodes(curSynT.nodeId, 1:3);
+    
+    curSynT( ...
+        curSynT.pos(:, 2) >= 5313 ...
+      & curSynT.pos(:, 3) >= 2426, :) = [];
+    %}
+    
     curClassConn = accumarray( ...
         double(conn.axonMeta.axonClass(curSynT.axonId)), ...
         1, [numel(synTypes), 1]);
