@@ -228,6 +228,25 @@ for curSynIdx = 1:numel(synTypes)
         axonTags, curAxonFracs, ...
         targetTags, curTargetFracs, ...
         curRelClassConn, curExpClassConn, curCorrCoeffs);
+    
+    %% Predicted synapse fraction is presyn. marginal path length freqs.
+    curTitle = strcat(curTitleStem, ' versus', ...
+        ' presynaptic path length contributions');
+    
+    curAxonFracs = reshape(preSynLengthFracs, [], 1);
+    curTargetFracs = reshape(postSynLengthFracs, 1, []);
+    
+    curRelClassConn = curClassConn ./ sum(curClassConn, 1);
+    curExpClassConn = repmat(curAxonFracs, 1, size(curClassConn, 2));
+    
+    curCorrCoeffs = curRelClassConn ./ curExpClassConn;
+    curCorrCoeffs(curRelClassConn == 0 & curExpClassConn == 0) = 1;
+    
+    plotMatrix( ...
+        info, curTitle, ...
+        axonTags, curAxonFracs, ...
+        targetTags, curTargetFracs, ...
+        curRelClassConn, curExpClassConn, curCorrCoeffs);
 end
 
 %% Plotting
