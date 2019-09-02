@@ -255,13 +255,19 @@ function plotMatrix( ...
         axonTags, axonFracs, ...
         targetTags, targetFracs, ...
         relClassConn, expClassConn, corrCoeffs)
+    % Configuration
+    minObsExpRatio = log10(1.2);
+    colorLim = log10(5);
+    
     rows = numel(axonTags);
     cols = numel(targetTags);
     frac = rows / cols;
-
+    
     colorMat = log10(corrCoeffs);
     colorMap = connectEM.Figure.redBlue(129);
-    colorLim = log10(5);
+    
+    curVals = linspace(-colorLim, +colorLim, size(colorMap, 1));
+    colorMap(abs(curVals) < minObsExpRatio, :) = 1;
 
     fig = figure();
     ax = axes(fig);
@@ -302,7 +308,7 @@ function plotMatrix( ...
         curAnn = annotation(fig, ...
             'textbox', [curOff, curBoxSize], ...
             'String', { ...
-                sprintf('%.2g', corrCoeffs(curIdx)); ...
+                ratio2str(corrCoeffs(curIdx), 3); ...
                 sprintf('(%.2g vs. %.2g)', ...
                     100 * relClassConn(curIdx), ...
                     100 * expClassConn(curIdx))});
@@ -317,9 +323,10 @@ function plotMatrix( ...
 
     cbar = colorbar('peer', ax);
     cbar.Label.String = '"Affinity" (measured / expected)';
-    cbar.Ticks = [-colorLim, 0, colorLim];
+    cbar.Ticks = [0, minObsExpRatio, colorLim];
+    cbar.Ticks = unique(cat(2, -cbar.Ticks, +cbar.Ticks));
     cbar.TickLabels = arrayfun( ...
-        @(f) sprintf('%g', 10 ^ f), ...
+        @(f) ratio2str(10 ^ f), ...
         cbar.Ticks, 'UniformOutput', false);
     cbar.TickDirection = 'out';
     cbar.Position = [0.86, 0.1, 0.02, 0.8];
@@ -330,3 +337,14 @@ function plotMatrix( ...
         'FontWeight', 'normal', 'FontSize', 10);
 end
 
+function str = ratio2str(frac, prec)
+    fmt = '%s%g';
+    if exist('prec', 'var') && ~isempty(prec)
+        fmt = ['%s%.', num2str(prec, '%d'), 'g'];
+    end
+    
+    str = {'/', '', '×'};
+    str = str{2 + sign(log(frac))};
+    if frac < 1; frac = 1 / frac; end
+    str = sprintf(fmt, str, frac);
+end
