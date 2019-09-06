@@ -290,7 +290,7 @@ function plotMatrix( ...
         targetTags, targetFracs, ...
         relClassConn, expClassConn, corrCoeffs)
     % Configuration
-    minObsExpRatio = log10(1.2);
+    minObsExpRatio = log10(1.25);
     colorLim = log10(5);
     
     rows = numel(axonTags);
