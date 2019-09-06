@@ -102,6 +102,25 @@ curAxonClasses = addcats(curAxonClasses, {'Ignore'}, 'After', curLastCat);
 curAxonClasses(conn.axonMeta.synCount < minSynPre) = 'Ignore';
 conn.axonMeta.axonClass = curAxonClasses;
 
+withoutIgnore = @(c) setdiff(c, {'Ignore'}, 'stable');
+allAxonClasses = withoutIgnore(categories(conn.axonMeta.axonClass));
+allTargetClasses = withoutIgnore(categories(conn.denMeta.targetClass));
+
+%% Prepare synapse fractions
+clear cur*;
+
+curClassConn = ...
+    connectEM.Connectome.buildClassConnectome( ...
+        conn, 'axonClasses', allAxonClasses, ...
+        'targetClasses', allTargetClasses);
+
+[~, curAxonClassIds] = ismember(axonClasses, allAxonClasses);
+[~, curTargetClassIds] = ismember(targetClasses, allTargetClasses);
+curClassConn = curClassConn(curAxonClassIds, curTargetClassIds);
+
+preSynSynFracs = reshape(renorm(sum(curClassConn, 2)), [], 1);
+postSynSynFracs = reshape(renorm(sum(curClassConn, 1)), [], 1);
+
 %% Prepare geometric data
 % NOTE(amotta): The path lengths of soma-seeded agglomerates reported in
 % the paper were derived from the ground truth skeleton tracings. Here,
@@ -127,10 +146,6 @@ curPrecRecCorr = exist('synPrecRecs', 'var') && ~isempty(synPrecRecs);
 if curPrecRecCorr; assert(isequal(size(synPrecRecs), [2, 2])); end
 curPrecRecCorrName = {''; '; precision / recall corrected'};
 curPrecRecCorrName = curPrecRecCorrName{1 + curPrecRecCorr};
-
-withoutIgnore = @(c) setdiff(c, {'Ignore'}, 'stable');
-curAllAxonClasses = withoutIgnore(categories(conn.axonMeta.axonClass));
-curAllTargetClasses = withoutIgnore(categories(conn.denMeta.targetClass));
 
 for curSynIdx = 1:numel(synTypes)
     curSynType = synTypes{curSynIdx};
@@ -164,8 +179,8 @@ for curSynIdx = 1:numel(synTypes)
     curClassConns = cellfun(@(curConn) ...
         connectEM.Connectome.buildClassConnectome( ...
             curConn, ...
-            'axonClasses', curAllAxonClasses, ...
-            'targetClasses', curAllTargetClasses), ...
+            'axonClasses', allAxonClasses, ...
+            'targetClasses', allTargetClasses), ...
         {curSpineConn; curShaftConn}, ...
         'UniformOutput', false);
     
@@ -187,9 +202,28 @@ for curSynIdx = 1:numel(synTypes)
         curSynType, curSynCount, curPrecRecCorrName);
     
     % Restrict to selected axon and target classes
-   [~, curAxonClassIds] = ismember(axonClasses, curAllAxonClasses);
-   [~, curTargetClassIds] = ismember(targetClasses, curAllTargetClasses);
+   [~, curAxonClassIds] = ismember(axonClasses, allAxonClasses);
+   [~, curTargetClassIds] = ismember(targetClasses, allTargetClasses);
     curClassConn = curClassConn(curAxonClassIds, curTargetClassIds);
+    
+    %% Predicted synapse fraction is product of marginal synapse freqs.
+    curTitle = strcat(curTitleStem, ' versus', ...
+        ' product of synapse contributions');
+    
+    curAxonFracs = reshape(preSynSynFracs, [], 1);
+    curTargetFracs = reshape(postSynSynFracs, 1, []);
+    
+    curRelClassConn = curClassConn ./ sum(curClassConn(:));
+    curExpClassConn = curAxonFracs .* curTargetFracs;
+    
+    curCorrCoeffs = curRelClassConn ./ curExpClassConn;
+    curCorrCoeffs(curRelClassConn == 0 & curExpClassConn == 0) = 1;
+    
+    plotMatrix( ...
+        info, curTitle, ...
+        axonTags, curAxonFracs, ...
+        targetTags, curTargetFracs, ...
+        curRelClassConn, curExpClassConn, curCorrCoeffs);
     
     %% Predicted synapse fraction is product of marginal path length freqs.
     curTitle = strcat(curTitleStem, ' versus', ...
