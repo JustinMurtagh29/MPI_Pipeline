@@ -73,7 +73,7 @@ hold(curAx, 'on');
 
 plot(curAx, mishLims, mishLims, 'k--');
 scatter(curAx, mishData(:, 1), mishData(:, 2), 'ko');
-curFitPlot = plot(curAx, mishLims(:), curFit.predict(mishLims(:)), 'k');
+curFitPlot = plot(curAx, curFit.predict(mishLims(:)), mishLims(:), 'k');
 
 xlim(curAx, mishLims); ylim(curAx, mishLims);
 xlabel(curAx, 'Actual density of synapses (µm^{-1})');
@@ -111,7 +111,7 @@ hold(curAx, 'on');
 
 plot(curAx, mishLims, mishLims, 'k--');
 scatter(curAx, synDensity, mishData(:, 2), 'ko');
-curFitPlot = plot(curAx, mishLims(:), curFit.predict(mishLims(:)), 'k');
+curFitPlot = plot(curAx, curFit.predict(mishLims(:)), mishLims(:), 'k');
 
 % xlim(curAx, mishLims); ylim(curAx, mishLims);
 xlabel(curAx, 'Synthetic density of synapses (µm^{-1})');
