@@ -21,7 +21,7 @@ Util.showRunInfo(info);
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 
-[conn, ~, ~, connFile] = connectEM.Consistency.loadConnectome(param);
+[conn, ~, connFile] = connectEM.Consistency.loadConnectome(param);
 
 shAgglos = load(shFile, 'shAgglos');
 shAgglos = shAgglos.shAgglos;
