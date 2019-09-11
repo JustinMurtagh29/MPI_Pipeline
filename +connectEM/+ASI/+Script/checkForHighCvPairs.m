@@ -77,7 +77,7 @@ skel = skeleton();
 skel = Skeleton.setParams4Pipeline(skel, param);
 skel = Skeleton.setDescriptionFromRunInfo(skel, info);
 
-for curSasdIdx = 1:numel(randSasdIds)
+for curSasdIdx = 1:numel(curSasdIds)
     curSasdId = curSasdIds(curSasdIdx);
     curSasdT = sasdT(curSasdId, :);
     
