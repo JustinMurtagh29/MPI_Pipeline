@@ -32,6 +32,12 @@ shAgglos = shAgglos.shAgglos;
 
 segPoints = Seg.Global.getSegToPointMap(param);
 
+%% Fraction of spine heads having multiple segments
+clear cur*;
+
+curMultiFrac = cellfun(@numel, shAgglos);
+curMultiFrac = mean(curMultiFrac > 1) %#ok
+
 %% Export single- and multi-segment spine head examples
 clear cur*;
 rng(0);
