@@ -413,14 +413,28 @@ for curConfig = reshape(plotConfigs(1, :), 1, [])
     curSaSdT = curSaSdT( ...
         curLimX(1) <= curSaSdT.x & curSaSdT.x <= curLimX(2) ...
       & curLimY(1) <= curSaSdT.y & curSaSdT.y <= curLimY(2), :);
-
-    curSaSdT.mapIdx = [ ...
-        discretize(curSaSdT.y, linspace( ...
-            curLimY(1), curLimY(2), curImSize(1) + 1)), ...
+    
+    curSaSdT.mapIds = [ ...
         discretize(curSaSdT.x, linspace( ...
-            curLimX(1), curLimX(2), curImSize(2) + 1))];
+            curLimX(1), curLimX(2), curImSize(2) + 1)), ...
+        discretize(curSaSdT.y, linspace( ...
+            curLimY(1), curLimY(2), curImSize(1) + 1))];
     curSaSdT.mapIdx = sub2ind( ...
-        curImSize, curSaSdT.mapIdx(:, 1), curSaSdT.mapIdx(:, 2));
+        curImSize, curSaSdT.mapIds(:, 2), curSaSdT.mapIds(:, 1));
+    
+    % Restrict analysis to convex hull around point cloud
+    curRoiMask = convhull(curSaSdT.mapIds(:, 1), curSaSdT.mapIds(:, 2));
+    curRoiMask = curSaSdT.mapIds(curRoiMask, :);
+    
+    curRoiMask = poly2mask( ...
+        curRoiMask(:, 1), curRoiMask(:, 2), ...
+        curImSize(1), curImSize(2));
+    
+    % HACKHACKHACK(amotta): Generating the convex hull for a set of points
+    % using `convhull` and then converting this hull to a mask using
+    % `poly2mask` does not actually produce a mask that contains all of the
+    % points from which it was derived. MATLAB is unbelievable...
+    curRoiMask(curSaSdT.mapIdx) = true;
     
     curCtrlConfigs = struct('synIds', {}, 'title', {}, 'tag', {});
     curCtrlConfigs(1).synIds = curSaSdConfig.synIdPairs(:);
@@ -473,6 +487,7 @@ for curConfig = reshape(plotConfigs(1, :), 1, [])
         % regions (with less than 100 pixels or less than 1 % of SASD
         % connections), which are most likely caused by outliers.
         curRegionMask = curPvalMap < curPvalThreshs(1);
+        curRegionMask = curRegionMask & curRoiMask;
         curRegionMask = bwlabel(curRegionMask);
         
         curRegionProps = regionprops( ...
@@ -617,6 +632,10 @@ for curConfig = reshape(plotConfigs(1, :), 1, [])
         
         %% Evaluation
         curTitle = cell(numel(curRegionProps), 1);
+        curFracsToPercsStr = @(f) strjoin(arrayfun( ...
+            @(v) num2str(v, '%.1f%%'), 100 * f, ...
+            'UniformOutput', false), ', ');
+        
         for curRegionId = 1:numel(curRegionProps)
             curAreaRange = curRegionProps(curRegionId).BoundingBox;
             curAreaRange = curAreaRange(2) + [0, curAreaRange(4)];
@@ -626,7 +645,7 @@ for curConfig = reshape(plotConfigs(1, :), 1, [])
              .* curAreaRange / curImSize(1);
             curAreaRange = 10 .^ curAreaRange;
             
-            curFracs = nan(numel(curPvalThreshs), 2);
+            curFracs = nan(numel(curPvalThreshs), 3);
             for curPvalIdx = 1:numel(curPvalThreshs)
                 curPvalThresh = curPvalThreshs(curPvalIdx);
                 
@@ -635,18 +654,20 @@ for curConfig = reshape(plotConfigs(1, :), 1, [])
                 
                 curFracs(curPvalIdx, 1) = sum(curSaSdMap(curMask));
                 curFracs(curPvalIdx, 2) = sum(curCtrlMap(curMask));
+                curFracs(curPvalIdx, 3) = mean(curMask(curSaSdT.mapIdx));
             end
             
             fprintf('Region %d\n', curRegionId);
             fprintf('* Average area: %.2f - %.2f µm²\n', curAreaRange);
-            fprintf('* Upper bound: %.1f - %.1f %%\n', 100 * curFracs(:, 1));
-            fprintf('* Surplus: %.1f - %.1f %%\n', 100 * diff(flip(curFracs(:, :))));
+            fprintf('* Upper bound (kde): %.1f - %.1f %%\n', 100 * curFracs(:, 1));
+            fprintf('* Surplus (kde): %.1f - %.1f %%\n', 100 * diff(flip(curFracs(:, 1:2))));
+            fprintf('* Upper bound (points): %.1f - %.1f %%\n', 100 * curFracs(:, 3));
             fprintf('\n');
             
             curTitle{curRegionId} = sprintf( ...
-                'Region %d: %s', curRegionId, strjoin(arrayfun( ...
-                    @(v) num2str(v, '%.1f%%'), 100 * curFracs(:, 1), ...
-                    'UniformOutput', false), ', '));
+                'Region %d: %s (%s)', curRegionId, ...
+                curFracsToPercsStr(curFracs(:, 1)), ...
+                curFracsToPercsStr(curFracs(:, 3)));
         end
         
         curTitle = [{'Significance regions'}; curTitle]; %#ok
