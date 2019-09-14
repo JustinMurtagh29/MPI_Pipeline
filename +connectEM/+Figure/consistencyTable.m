@@ -15,43 +15,43 @@ colorN = 256;
 data = nan(2, 2, numel(rowNames), numel(colNames));
 
 % Numbers from connectEM.Connectome plotSynapseSizeConsistency
-% Commit 2574326f1e904c8c68a080a60dfc43b567e9b9e1
+% Commit 25b3a8f663b86656cf9b149b63fd50e84d68fa81
 
 % Excitatory synapses onto all targets
-data(:, 1, 1, 1) = [15.2, 18.6];
-data(:, 2, 1, 1) = [15.8, 19.7];
+data(:, 1, 1, 1) = [15.4, 18.7];
+data(:, 2, 1, 1) = [15.9, 19.7];
 % Excitatory synapses onto proximal dendrites
-data(:, 1, 1, 2) = [12.8, 17.9];
-data(:, 2, 1, 2) = [11.4, 17.9];
+data(:, 1, 1, 2) = [13.4, 18.8];
+data(:, 2, 1, 2) = [11.0, 17.2];
 % Excitatory synapses onto apical dendrites
-data(:, 1, 1, 3) = [ 5.1,  7.4];
-data(:, 2, 1, 3) = [ 8.2,  9.7];
+data(:, 1, 1, 3) = [ 4.7,  8.3];
+data(:, 2, 1, 3) = [ 9.1,  9.7];
 % Excitatory synapses onto other dendrites
-data(:, 1, 1, 4) = [11.5, 17.9];
-data(:, 2, 1, 4) = [12.6, 19.9];
+data(:, 1, 1, 4) = [11.6, 17.8];
+data(:, 2, 1, 4) = [12.8, 20.1];
 
 % Corticocortical synapses onto all targets
-data(:, 1, 2, 1) = [15.2, 20.7];
-data(:, 2, 2, 1) = [16.9, 22.0];
+data(:, 1, 2, 1) = [15.2, 20.9];
+data(:, 2, 2, 1) = [17.0, 22.4];
 % Corticocortical synapses onto proximal dendrites
-data(:, 1, 2, 2) = [12.7, 17.6];
-data(:, 2, 2, 2) = [11.5, 17.5];
+data(:, 1, 2, 2) = [12.9, 18.8];
+data(:, 2, 2, 2) = [11.3, 16.9];
 % Corticocortical synapses onto apical dendrites
 data(:, :, 2, 3) = nan;
 % Corticocortical synapses onto other dendrites
-data(:, 1, 2, 4) = [12.8, 18.5];
-data(:, 2, 2, 4) = [10.5, 19.7];
+data(:, 1, 2, 4) = [13.1, 18.6];
+data(:, 2, 2, 4) = [10.4, 20.0];
 
 % Thalamocortical synapses onto all targets
-data(:, 1, 3, 1) = [ 1.7,  6.7];
-data(:, 2, 3, 1) = [ 6.2, 15.4];
+data(:, 1, 3, 1) = [ 2.5,  6.8];
+data(:, 2, 3, 1) = [ 7.0, 16.3];
 % Thalamocortical synapses onto proximal dendrites
 data(:, :, 3, 2) = nan;
 % Thalamocortical synapses onto apical dendrites
 data(:, :, 3, 3) = nan;
 % Thalamocortical synapses onto other dendrites
-data(:, 1, 3, 4) = [ 0.3,  5.8];
-data(:, 2, 3, 4) = [ 3.4, 16.7];
+data(:, 1, 3, 4) = [ 0.5,  5.3];
+data(:, 2, 3, 4) = [ 4.9, 19.0];
 
 colors = reshape(linspace(0, 1, colorN), [], 1);
 colors = { ...
