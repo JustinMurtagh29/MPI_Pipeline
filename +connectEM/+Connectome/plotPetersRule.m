@@ -147,7 +147,14 @@ if curPrecRecCorr; assert(isequal(size(synPrecRecs), [2, 2])); end
 curPrecRecCorrName = {''; '; precision / recall corrected'};
 curPrecRecCorrName = curPrecRecCorrName{1 + curPrecRecCorr};
 
-for curSynIdx = 1:numel(synTypes)
+curLogFac = @(ns) ...
+    arrayfun(@(n) sum(log(1:n)), ns);
+curMnLogLik = @(ns, ps) ...
+    curLogFac(sum(ns, 1)) ...
+  - sum(arrayfun(curLogFac, ns), 1) ...
+  + sum(ns .* log(ps), 1);
+
+for curSynIdx = 1%:numel(synTypes)
     curSynType = synTypes{curSynIdx};
     curSynLut = syn.synapses.type == curSynType;
     if strcmpi(curSynType, 'all'); curSynLut(:) = true; end
@@ -195,6 +202,7 @@ for curSynIdx = 1:numel(synTypes)
     curClassConn = sum(curClassConn, 3);
     curClassConn = round(curClassConn);
         
+    curClassConnAbs = curClassConn;
     curSynCount = sum(curClassConn(:));
     curClassConn = curClassConn / curSynCount;
     
@@ -204,6 +212,7 @@ for curSynIdx = 1:numel(synTypes)
     % Restrict to selected axon and target classes
    [~, curAxonClassIds] = ismember(axonClasses, allAxonClasses);
    [~, curTargetClassIds] = ismember(targetClasses, allTargetClasses);
+    curClassConnAbs = curClassConnAbs(curAxonClassIds, curTargetClassIds);
     curClassConn = curClassConn(curAxonClassIds, curTargetClassIds);
     
     %% Predicted synapse fraction is product of marginal synapse freqs.
@@ -215,6 +224,9 @@ for curSynIdx = 1:numel(synTypes)
     
     curRelClassConn = curClassConn ./ sum(curClassConn(:));
     curExpClassConn = curAxonFracs .* curTargetFracs;
+    
+    curLogLik = curMnLogLik(curClassConnAbs(:), curExpClassConn(:));
+    fprintf('Log-likelihood for %s: %f\n', curTitle, curLogLik);
     
     curCorrCoeffs = curRelClassConn ./ curExpClassConn;
     curCorrCoeffs(curRelClassConn == 0 & curExpClassConn == 0) = 1;
@@ -235,6 +247,9 @@ for curSynIdx = 1:numel(synTypes)
     curRelClassConn = curClassConn ./ sum(curClassConn(:));
     curExpClassConn = curAxonFracs .* curTargetFracs;
     
+    curLogLik = curMnLogLik(curClassConnAbs(:), curExpClassConn(:));
+    fprintf('Log-likelihood for %s: %f\n', curTitle, curLogLik);
+    
     curCorrCoeffs = curRelClassConn ./ curExpClassConn;
     curCorrCoeffs(curRelClassConn == 0 & curExpClassConn == 0) = 1;
     
@@ -254,6 +269,9 @@ for curSynIdx = 1:numel(synTypes)
     curRelClassConn = curClassConn ./ sum(curClassConn, 2);
     curExpClassConn = repmat(curTargetFracs, size(curClassConn, 1), 1);
     
+    curLogLik = sum(curMnLogLik(curClassConnAbs', curTargetFracs(:)));
+    fprintf('Log-likelihood for %s: %f\n', curTitle, curLogLik);
+    
     curCorrCoeffs = curRelClassConn ./ curExpClassConn;
     curCorrCoeffs(curRelClassConn == 0 & curExpClassConn == 0) = 1;
     
@@ -272,6 +290,9 @@ for curSynIdx = 1:numel(synTypes)
     
     curRelClassConn = curClassConn ./ sum(curClassConn, 1);
     curExpClassConn = repmat(curAxonFracs, 1, size(curClassConn, 2));
+    
+    curLogLik = sum(curMnLogLik(curClassConnAbs, curAxonFracs(:)));
+    fprintf('Log-likelihood for %s: %f\n', curTitle, curLogLik);
     
     curCorrCoeffs = curRelClassConn ./ curExpClassConn;
     curCorrCoeffs(curRelClassConn == 0 & curExpClassConn == 0) = 1;
