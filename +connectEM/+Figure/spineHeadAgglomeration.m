@@ -27,16 +27,37 @@ Util.showRunInfo(info);
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 
+graphT = Graph.load(param.saveFolder);
+
 shAgglos = load(shAggloFile);
 shAgglos = shAgglos.shAgglos;
 
+maxSegId = Seg.Global.getMaxSegId(param);
 segPoints = Seg.Global.getSegToPointMap(param);
 
-%% Fraction of spine heads having multiple segments
+%% Quantitative evaluation
 clear cur*;
 
+% Fraction of spine head with multiple segments
 curMultiFrac = cellfun(@numel, shAgglos);
 curMultiFrac = mean(curMultiFrac > 1) %#ok
+
+% Approx. fraction of spine heads that were split by cube boundaries
+% NOTE(amotta): This is only an approximation - albeit a very good one -
+% because we are also counting low-probability edges that might not have
+% been used during spine head agglomeration.
+%   A quick check showed that more than 99.7 % of edges collected this have
+% actually been used during agglomeration.
+curShLUT = Agglo.buildLUT(maxSegId, shAgglos);
+graphT.edges = curShLUT(graphT.edges);
+
+graphT = graphT(all(graphT.edges, 2), :);
+graphT = graphT(graphT.edges(:, 1) == graphT.edges(:, 2), :);
+
+curIntraCubeSplitMask = accumarray( ...
+    graphT.edges(:, 1), graphT.borderIdx, ...
+   [numel(shAgglos), 1], @any, false);
+curIntraCubeSplitFrac = mean(curIntraCubeSplitMask) %#ok
 
 %% Export single- and multi-segment spine head examples
 clear cur*;
