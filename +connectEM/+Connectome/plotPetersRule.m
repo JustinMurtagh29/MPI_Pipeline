@@ -216,6 +216,37 @@ for curSynIdx = 1%:numel(synTypes)
     curClassConnAbs = curClassConnAbs(curAxonClassIds, curTargetClassIds);
     curClassConn = curClassConn(curAxonClassIds, curTargetClassIds);
     
+    %% Statistical tests
+    curMaxLogLik = @(pre, post) maxLogLikelihood( ...
+        curClassConnAbs, preSynLengthFracs, postSynLengthFracs, pre, post);
+   [curNullLogLik, curNullDof] = curMaxLogLik(false, false);
+   
+    fprintf('Statistical evaluation of Peters'' models\n');
+    fprintf( ...
+       ['* No synapse density correction: ', ...
+        'log-likelihood of %g\n'], curNullLogLik);
+       
+    for curPreCorr = [false, true]
+        for curPostCorr = [false, true]
+            if ~curPreCorr && ~curPostCorr; continue; end
+           [curLogLik, curDof] = curMaxLogLik(curPreCorr, curPostCorr);
+           
+            curChiDof = curDof - curNullDof;
+            curLogLikRatio = -2 * (curNullLogLik - curLogLik);
+            curPval = chi2cdf(curLogLikRatio, curChiDof, 'upper');
+            
+            curTitle = {'presynaptic', 'postsynaptic'};
+            curTitle = curTitle([curPreCorr, curPostCorr]);
+            curTitle = strjoin(curTitle, ' and ');
+            curTitle(1) = upper(curTitle(1));
+            
+            fprintf( ...
+               ['* %s density correction: ', ...
+                'log-likelihood of %g, p-value of %g\n'], ...
+                curTitle, curLogLik, curPval);
+        end
+    end
+    
     %% Predicted synapse fraction is product of marginal synapse freqs.
     curTitle = strcat(curTitleStem, ' versus', ...
         ' product of synapse contributions');
@@ -303,6 +334,62 @@ for curSynIdx = 1%:numel(synTypes)
         axonTags, curAxonFracs, ...
         targetTags, curTargetFracs, ...
         curRelClassConn, curExpClassConn, curCorrCoeffs);
+end
+
+%% Statistical tests
+function [maxLogLik, numDof] = maxLogLikelihood( ...
+        classConn, preNullFracs, postNullFracs, corrPre, corrPost)
+    renorm = @(v) v / sum(v(:));
+    
+    preN = size(classConn, 1);
+    postN = size(classConn, 2);
+    
+    preVars = corrPre * preN;
+    postVars = corrPost * postN;
+    
+    % NOTE(amotta): Check if we can omit calculation of the first two terms
+    % in `curMnLogLik`. They seem to be independent of the probabilities.
+    logFac = @(ns) ...
+        arrayfun(@(n) sum(log(1:n)), ns);
+    mnLogLik = @(ns, ps) ...
+        logFac(sum(ns, 1)) ...
+      - sum(arrayfun(logFac, ns), 1) ...
+      + sum(ns .* log(ps), 1);
+    
+    ps = @(x) renorm(reshape( ...
+        (preNullFracs(:) .* [ ...
+            x(1:preVars); ones(preN - preVars, 1)]) ...
+     .* (postNullFracs(:) .* [ ...
+            x((preVars + 1):end); ...
+            ones(postN - postVars, 1)])', ...
+        [], 1));
+    
+    if corrPre || corrPost
+        x0 = [ ...
+            renorm(ones(preVars, 1)); ...
+            renorm(ones(postVars, 1))];
+
+        Aeq = [ ...
+            ones(corrPre, preVars), zeros(corrPre, postVars);
+            zeros(corrPost, preVars), ones(corrPost, postVars)];
+        beq = ones(corrPre + corrPost, 1);
+
+        lb = zeros(preVars + postVars, 1);
+        ub = ones(preVars + postVars, 1);
+        
+        opts = optimoptions('fmincon', 'Display', 'notify');
+
+       [~, minNegLogLik] = fmincon( ...
+            @(x) -mnLogLik(classConn(:), ps(x)), ...
+            x0, [], [], Aeq, beq, lb, ub, [], opts);
+        maxLogLik = -minNegLogLik;
+    else
+        maxLogLik = mnLogLik(classConn(:), ps([]));
+    end
+    
+    numDof = ...
+        corrPre * (preN - 1) ...
+      + corrPost * (postN - 1);
 end
 
 %% Plotting
