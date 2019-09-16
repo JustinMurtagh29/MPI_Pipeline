@@ -720,6 +720,26 @@ annotation(curFig, ...
     'EdgeColor', 'none', ...
     'HorizontalAlignment', 'center', ...
     'String', {info.filename; info.git_repos{1}.hash});
+
+%% Quantitative evaluation
+clear cur*;
+curRadiiUm = [0, 5];
+curDistMask = avail.dists / 1E3;
+
+curDistMask = ...
+    curRadiiUm(1) <= curDistMask ...
+  & curDistMask <= curRadiiUm(2);
+
+fprintf('\n');
+fprintf('Predictability in range from %g to %g µm\n', curRadiiUm);
+
+for curAxonClassId = plotAxonClasses
+    curTitle = allAxonClasses(curAxonClassId).title;
+    curData = axonClassExplainability(curDistMask, curAxonClassId);
+    curRange = [min(curData), max(curData)];
+    
+    fprintf('* %s: %.2f - %.f %%\n', curTitle, 100 * curRange);
+end
     
 %% Geometric prediction models
 function preds = predictTargetClassAvailability(~, avails, ~, predictClassIds) %#ok
