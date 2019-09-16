@@ -132,7 +132,7 @@ curLens = lengths.axonPathLengths;
 curLens(conn.axonMeta.axonClass == 'Ignore') = 0;
 [curMask, curIds] = ismember(conn.axonMeta.axonClass, axonClasses);
 curFracs = accumarray(curIds(curMask), curLens(curMask));
-preSynLengthFracs = curFracs / sum(curLens);
+preSynLengthFracs = curFracs / sum(curFracs);
 
 curLens = conn.denMeta.trunkLength;
 curLens(ismember(conn.denMeta.targetClass, {'Somata', 'Ignore'})) = 0;
