@@ -898,7 +898,7 @@ for curDataIdx = 1:numel(curData)
     curSummaryT = cell2table( ...
         curSummaryT, 'VariableNames', curSummaryVars);
     
-    fprintf('Results for %s\n', curDataName);
+    fprintf('Results for %s (n = %d)\n', curDataName, size(curDataT, 1));
     curShowT = {'fit', 'nullModel', 'nullCorrFit'};
     curShowT = setdiff(curSummaryVars, curShowT, 'stable');
     disp(sortrows(curSummaryT(:, curShowT), 'relSlope', 'ascend'));
