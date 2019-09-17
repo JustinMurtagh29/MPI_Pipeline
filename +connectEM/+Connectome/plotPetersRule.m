@@ -229,8 +229,8 @@ for curSynIdx = 1%:numel(synTypes)
                 curMaxLogLikEst(curPreCorr, curPostCorr);
            
             curChiDof = curMaxDof - curNullDof;
-            curLogLikRatio = -2 * (curNullLogLik - curMaxLogLik);
-            curPval = chi2cdf(curLogLikRatio, curChiDof, 'upper');
+            curLogLikRatio = curNullLogLik - curMaxLogLik;
+            curPval = chi2cdf(-2 * curLogLikRatio, curChiDof, 'upper');
             
             curTitle = {'presynaptic', 'postsynaptic'};
             curTitle = curTitle([curPreCorr, curPostCorr]);
@@ -241,7 +241,7 @@ for curSynIdx = 1%:numel(synTypes)
             fprintf( ...
                ['* %s density correction: ', ...
                 'log-likelihood of %g, ', ...
-                'log-likelihood ratio of %g, ', ...
+                'log-likelihood-ratio of %g, ', ...
                 'p-value of %g\n'], ...
                 curTitle, curNullLogLik, curLogLikRatio, curPval);
         end
