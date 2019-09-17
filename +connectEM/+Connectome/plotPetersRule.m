@@ -217,26 +217,24 @@ for curSynIdx = 1%:numel(synTypes)
     curClassConn = curClassConn(curAxonClassIds, curTargetClassIds);
     
     %% Statistical tests
-    curMaxLogLik = @(pre, post) maxLogLikelihood( ...
-        curClassConnAbs, preSynLengthFracs, postSynLengthFracs, pre, post);
-   [curNullLogLik, curNullDof] = curMaxLogLik(false, false);
-   
     fprintf('Statistical evaluation of Peters'' models\n');
-    fprintf( ...
-       ['* No synapse density correction: ', ...
-        'log-likelihood of %g\n'], curNullLogLik);
-       
+    
+    curMaxLogLikEst = @(pre, post) maxLogLikelihood( ...
+        curClassConnAbs, preSynLengthFracs, postSynLengthFracs, pre, post);
+   [curMaxLogLik, curMaxDof] = curMaxLogLikEst(true, true);
+    
     for curPreCorr = [false, true]
         for curPostCorr = [false, true]
-            if ~curPreCorr && ~curPostCorr; continue; end
-           [curLogLik, curDof] = curMaxLogLik(curPreCorr, curPostCorr);
+           [curNullLogLik, curNullDof] = ...
+                curMaxLogLikEst(curPreCorr, curPostCorr);
            
-            curChiDof = curDof - curNullDof;
-            curLogLikRatio = -2 * (curNullLogLik - curLogLik);
+            curChiDof = curMaxDof - curNullDof;
+            curLogLikRatio = -2 * (curNullLogLik - curMaxLogLik);
             curPval = chi2cdf(curLogLikRatio, curChiDof, 'upper');
             
             curTitle = {'presynaptic', 'postsynaptic'};
             curTitle = curTitle([curPreCorr, curPostCorr]);
+            if isempty(curTitle); curTitle = {'no'}; end
             curTitle = strjoin(curTitle, ' and ');
             curTitle(1) = upper(curTitle(1));
             
@@ -245,7 +243,7 @@ for curSynIdx = 1%:numel(synTypes)
                 'log-likelihood of %g, ', ...
                 'log-likelihood ratio of %g, ', ...
                 'p-value of %g\n'], ...
-                curTitle, curLogLik, curLogLikRatio, curPval);
+                curTitle, curNullLogLik, curLogLikRatio, curPval);
         end
     end
     
