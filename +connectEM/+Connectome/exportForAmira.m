@@ -1,128 +1,66 @@
-% We have isosurfaces for all "large" axons and for dendrites with at least
-% `N` synapses. This script generates a MAT file which lists the PLY 
-% files of all pre- and postsynaptic entities, respectively.
-%
 % Written by
 %   Alessandro Motta <alessandro.motta@brain.mpg.de>
 clear;
 
-%% configuration
+%% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-outputDir = '/home/amotta/Desktop';
+connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-partiallySplit-v2_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v8-classified.mat');
+outputDir = '/tmpscratch/amotta/l4/2019-09-27-connectome-isosurfaces';
 
-preIsoDir = '/tmpscratch/amotta/l4/2018-01-24-axons-18a-isosurfaces';
-postIsoDir = '/tmpscratch/amotta/l4/2018-01-26-postsyn-for-amira';
+isoParams = { ...
+    'reduce', 0.05, ...
+    'smoothSizeHalf', 4, ...
+    'smoothWidth', 8};
 
-connFile = fullfile( ...
-    rootDir, 'connectomeState', 'connectome_axons_18_a.mat');
-
-% HACKHACKHACK(amotta): The above connectome was generated based on axons
-% 18a. There was, however, a bug in the routine for merging super-agglos
-% on overlap which introduced bogus edges. This bug was later fixed,
-% resulting in axons 18b. The two super-agglo states 18a and 18b are
-% (almost) identical in terms of segment equivalence classes. We need
-% proper edges here. So, let's use axons 18b.
-axonFile = fullfile(rootDir, 'aggloState', 'axons_18_b.mat');
-
-minSynCount = 10;
+segParam = struct;
+segParam.root = '/tmpscratch/amotta/l4/2012-09-28_ex145_07x2_ROI2017/segmentation/1';
+segParam.backend = 'wkwrap';
 
 info = Util.runInfo();
+Util.showRunInfo(info);
 
-%% loading data
+%% Loading data
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
+param.seg = segParam;
 
-conn = load(connFile);
-[~, connName] = fileparts(connFile);
-
-axons = load(axonFile);
-axons = axons.axons(axons.indBigAxons);
-
-% HACKHACKHACK(amotta): Early versions of the connectome generator did not
-% keep track of the mapping from super-agglomerates to segment equivalence
-% classes as they are stored in the connectome. Now we have to pull some
-% dirty hacks to work around that.
 maxSegId = Seg.Global.getMaxSegId(param);
-curLUT = Agglo.fromSuperAgglo(axons, true);
-curLUT = Agglo.buildLUT(maxSegId, curLUT);
+conn = connectEM.Connectome.load(param, connFile);
 
-curParentIds = cellfun( ...
-    @(segIds) setdiff(curLUT(segIds), 0), ...
+%% Generate isosurfaces of axons
+% See also +connectEM/+Axon/+Script/calculateIsosurfaces.m
+clear cur*;
+
+% Remove soma segments from axons
+curSomaMask = conn.dendrites(conn.denMeta.targetClass == 'Somata');
+curSomaMask = logical(Agglo.buildLUT(maxSegId, curSomaMask));
+
+curAxons = cellfun( ...
+    @(segIds) segIds(~curSomaMask(segIds)), ...
     conn.axons, 'UniformOutput', false);
 
-% HACKHACKHACK(amotta): It's possible that a super-agglomerate consisting
-% of nothing more than a long flight path reaches the 5 µm size threshold.
-% If this super-agglomerate only gets assigned segments during pick-up in
-% the connectome generation, there is no way to reconstruct the parent ID
-% here. Let's just set the parent ID to zero here and deal with it below.
-curParentIds(cellfun(@isempty, curParentIds)) = {0};
-curParentIds = cell2mat(curParentIds);
+curOutDir = fullfile(outputDir, 'axons');
+assert(not(exist(curOutDir, 'dir')));
+assert(mkdir(curOutDir));
 
-conn.axonMeta.parentId = curParentIds(:);
+Visualization.exportAggloToAmira( ...
+    param, curAxons, curOutDir, isoParams{:});
 
-%% filtering agglomerates
+curInfoFile = fullfile(curOutDir, 'info.mat');
+Util.save(curInfoFile, info);
+Util.protect(curOutDir);
+
+%% Generate isosurfaces of dendrites
 clear cur*;
 
-% axons
-axonSynCount = conn.axonMeta.synCount;
-axonIds = find(axonSynCount >= minSynCount);
+curOutDir = fullfile(outputDir, 'dendrites');
+assert(not(exist(curOutDir, 'dir')));
+assert(mkdir(curOutDir));
 
-% filter postsynaptic targets
-postSynCount = accumarray( ...
-    conn.connectome.edges(:, 2), ...
-    cellfun(@numel, conn.connectome.synIdx)', ...
-   [numel(conn.dendrites), 1]);
+curDendrites = conn.dendrites;
+Visualization.exportAggloToAmira( ...
+    param, curDendrites, curOutDir, isoParams{:});
 
-postIds = find(postSynCount >= minSynCount);
-
-%% build skeletons
-clear cur*;
-
-curEmtpySkel = skeleton();
-curEmptySkel = Skeleton.setDescriptionFromRunInfo(curEmtpySkel, info);
-curEmptySkel = Skeleton.setParams4Pipeline(curEmptySkel, param);
-
-curOutDir = fullfile(preIsoDir, 'nml');
-if ~exist(curOutDir, 'dir'); mkdir(curOutDir); end
-
-for curAxonId = 1:height(conn.axonMeta)
-    curParentId = conn.axonMeta.parentId(curAxonId);
-    if ~curParentId; continue; end
-    
-    curSkel = axons(curParentId);
-    curSkel = Superagglos.buildAggloAndFlightSkels(curSkel, curEmptySkel);
-    
-    curDesc = sprintf('Axon %d', curAxonId);
-    curSkel = curSkel.setDescription(curDesc, 'append', true);
-    
-    curOutFile = sprintf('axon-%d.nml', curAxonId);
-    curOutFile = fullfile(curOutDir, curOutFile);
-    curSkel.write(curOutFile);
-end
-
-Util.protect(curOutDir, true);
-
-%% build tables
-preSyn = table;
-preSyn.id = axonIfds;
-preSyn.plyFile = arrayfun( ...
-    @(i) sprintf('iso-%d.ply', i), ...
-    axonIds, 'UniformOutput', false);
-preSyn.plyFile = fullfile( ...
-    preIsoDir, 'ply', preSyn.plyFile);
-all(cellfun(@(n) exist(n, 'file'), preSyn.plyFile));
-
-postSyn = table;
-postSyn.id = postIds;
-postSyn.targetClass = ...
-    conn.denMeta.targetClass(postIds);
-postSyn.plyFile = arrayfun( ...
-    @(i) sprintf('iso-%d.ply', i), ...
-    reshape(1:numel(postIds), [], 1), ...
-    'UniformOutput', false);
-postSyn.plyFile = fullfile( ...
-    postIsoDir, 'ply', postSyn.plyFile);
-
-%% write output
-outputFile = fullfile(outputDir, sprintf('%s_plys.mat', connName));
-Util.save(outputFile, info, preSyn, postSyn);
+curInfoFile = fullfile(curOutDir, 'info.mat');
+Util.save(curInfoFile, info);
+Util.protect(curOutDir);
