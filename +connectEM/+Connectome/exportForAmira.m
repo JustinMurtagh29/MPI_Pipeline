@@ -25,7 +25,13 @@ param = param.p;
 param.seg = segParam;
 
 maxSegId = Seg.Global.getMaxSegId(param);
-conn = connectEM.Connectome.load(param, connFile);
+% conn = connectEM.Connectome.load(param, connFile);
+
+% Connectome that was used for consistency analysis
+% See commit 34dee843596df4ad59a68bb2b8cf0d03edf11038
+% of +connectEM/+Consistency/+Script/buildAxonSpineInterfaces.m
+linConn = connectEM.Consistency.loadConnectome(param);
+linConn = connectEM.Connectome.prepareForSpecificityAnalysis(linConn);
 
 %% Generate isosurfaces of axons
 % See also +connectEM/+Axon/+Script/calculateIsosurfaces.m
@@ -60,6 +66,32 @@ assert(mkdir(curOutDir));
 curDendrites = conn.dendrites;
 Visualization.exportAggloToAmira( ...
     param, curDendrites, curOutDir, isoParams{:});
+
+curInfoFile = fullfile(curOutDir, 'info.mat');
+Util.save(curInfoFile, info);
+Util.protect(curOutDir);
+
+%% Generate isosurfaces of linearized axons used for consistency analysis
+% See +connectEM/+Connectome/plotSynapseSizeConsistency.m
+% commit 25b3a8f663b86656cf9b149b63fd50e84d68fa81, and
+% +connectEM/+Consistency/+Script/buildAxonSpineInterfaces.m
+% commit 34dee843596df4ad59a68bb2b8cf0d03edf11038
+clear cur*;
+
+% Remove soma segments from axons
+curSomaMask = linConn.dendrites(linConn.denMeta.targetClass == 'Somata');
+curSomaMask = logical(Agglo.buildLUT(maxSegId, curSomaMask));
+
+curAxons = cellfun( ...
+    @(segIds) segIds(~curSomaMask(segIds)), ...
+    linConn.axons, 'UniformOutput', false);
+
+curOutDir = fullfile(outputDir, 'axons-linear');
+assert(not(exist(curOutDir, 'dir')));
+assert(mkdir(curOutDir));
+
+Visualization.exportAggloToAmira( ...
+    param, curAxons, curOutDir, isoParams{:});
 
 curInfoFile = fullfile(curOutDir, 'info.mat');
 Util.save(curInfoFile, info);
