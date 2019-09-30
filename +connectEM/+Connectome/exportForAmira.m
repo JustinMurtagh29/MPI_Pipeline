@@ -25,7 +25,7 @@ param = param.p;
 param.seg = segParam;
 
 maxSegId = Seg.Global.getMaxSegId(param);
-% conn = connectEM.Connectome.load(param, connFile);
+conn = connectEM.Connectome.load(param, connFile);
 
 % Connectome that was used for consistency analysis
 % See commit 34dee843596df4ad59a68bb2b8cf0d03edf11038
