@@ -140,7 +140,7 @@ function cellToHdf5(file, group, cellArray)
     assert(isvector(cellArray));
     for curIdx = 1:numel(cellArray)
         curData = cellArray{curIdx};
-        curDset = fullfile(group, num2cell(curIdx));
+        curDset = fullfile(group, num2str(curIdx));
         numericToHdf5(file, curDset, curData);
     end
 end
@@ -152,7 +152,7 @@ function structToHdf5(file, group, struct, forceArray)
     
     if ~isscalar(struct) || forceArray
         for curIdx = 1:numel(struct)
-            curGroup = fullfile(group, num2cell(curIdx));
+            curGroup = fullfile(group, num2str(curIdx));
             structToHdf5(file, curGroup, struct(curIdx));
         end
     else
