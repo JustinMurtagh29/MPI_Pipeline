@@ -1,7 +1,7 @@
 % TODO(amotta):
 % [ ] Should we only export axons with ≥ 10 synapses? What about dendrites?
 % [ ] All synapses or only the ones collected by agglomerates?
-% [ ] Synapse positions
+% [ ] Segment positions
 %
 % Written by
 %   Alessandro Motta <alessandro.motta@brain.mpg.de>
@@ -104,28 +104,32 @@ curSynT = connectEM.Connectome.buildSynapseTable(conn, syn);
 curLinSynT = connectEM.Connectome.buildSynapseTable(linConn, linSyn);
 curShLUT = Agglo.buildLUT(maxSegId, shAgglos);
 
-fullSynT = table;
-fullSynT.type = syn.synapses.type;
-fullSynT.preSegIds = syn.synapses.presynId;
-fullSynT.postSegIds = syn.synapses.postsynId;
+curOut = table;
+curOut.type = syn.synapses.type;
+curOut.preSegIds = syn.synapses.presynId;
+curOut.postSegIds = syn.synapses.postsynId;
 
-fullSynT.preAxonId(:) = uint32(0);
-fullSynT.preAxonId(curSynT.id) = curSynT.preAggloId;
+curOut.preAxonId(:) = uint32(0);
+curOut.preAxonId(curSynT.id) = curSynT.preAggloId;
 
-fullSynT.preSplitAxonId(:) = uint32(0);
-fullSynT.preSplitAxonId(curLinSynT.id) = curLinSynT.preAggloId;
+curOut.preSplitAxonId(:) = uint32(0);
+curOut.preSplitAxonId(curLinSynT.id) = curLinSynT.preAggloId;
 
-fullSynT.postDendId(:) = uint32(0);
-fullSynT.postDendId(curSynT.id) = curSynT.postAggloId;
+curOut.postDendId(:) = uint32(0);
+curOut.postDendId(curSynT.id) = curSynT.postAggloId;
 
-fullSynT.postSpineHeadId = uint32(cellfun( ...
+curOut.postSpineHeadId = uint32(cellfun( ...
     @(segIds) max(curShLUT(segIds)), ...
-    fullSynT.postSegIds));
+    curOut.postSegIds));
 
-fullSynT.asiArea(:) = nan;
-fullSynT.asiArea(asiT.id) = asiT.area;
+curOut.asiArea(:) = nan;
+curOut.asiArea(asiT.id) = asiT.area;
 
-fullSynT.pos = zeros(height(fullSynT), 3, 'uint32');
+curOutFile = fullfile(outDir, 'synapses.hdf5');
+curOut = table2struct(curOut, 'ToScalar', true);
+structToHdf5(curOutFile, '/synapses', curOut);
+h5writeatt(curOutFile, '/', 'info', infoStr);
+Util.protect(curOutFile);
 
 %% Utilities
 function superAgglosToHdf5(outFile, group, agglos)
@@ -147,6 +151,14 @@ function superAgglosToHdf5(outFile, group, agglos)
             sort(agglos(curIdx).edges, 2), 'rows');
         agglos(curIdx).edges = reshape( ...
             agglos(curIdx).edges - 1, [], 2);
+        
+        if isempty(agglos(curIdx).edges)
+            % HACKHACKHACK(amotta): Due to some weird behaviour of MATLAB
+            % or HDF5 it's not possible to store an empty edge list. Let's
+            % insert a self-connection so that there's at least that...
+            assert(not(isempty(agglos(curIdx).nodes)));
+            agglos(curIdx).edges = [1, 1];
+        end
     end
     
     structToHdf5(outFile, group, agglos, true);
@@ -162,16 +174,33 @@ function agglosToHdf5(outFile, group, agglos)
     cellToHdf5(outFile, group, agglos);
 end
 
+function arrayToHdf5(file, dsetOrGroup, array)
+    if isnumeric(array)
+        numericToHdf5(file, dsetOrGroup, array);
+    elseif iscell(array)
+        cellToHdf5(file, dsetOrGroup, array);
+    elseif iscategorical(array)
+        categoricalToHdf5(file, dsetOrGroup, array)
+    elseif isstruct(array)
+        structToHdf5(file, dsetOrGroup, array);
+    else
+        error('Unhandled class "%s"', class(array));
+    end
+end
+
 function cellToHdf5(file, group, cellArray)
+    assert(iscell(cellArray));
     assert(isvector(cellArray));
+    
     for curIdx = 1:numel(cellArray)
-        curData = cellArray{curIdx};
         curDset = fullfile(group, num2str(curIdx));
-        numericToHdf5(file, curDset, curData);
+        arrayToHdf5(file, curDset, cellArray{curIdx});
     end
 end
 
 function structToHdf5(file, group, struct, forceArray)
+    assert(isstruct(struct));
+    
     if ~exist('forceArray', 'var') || isempty(forceArray)
         forceArray = false;
     end
@@ -188,7 +217,7 @@ function structToHdf5(file, group, struct, forceArray)
 
         for curIdx = 1:numel(names)
             curDset = fullfile(group, names{curIdx});
-            numericToHdf5(file, curDset, values{curIdx});
+            arrayToHdf5(file, curDset, values{curIdx});
         end
     end
 end
