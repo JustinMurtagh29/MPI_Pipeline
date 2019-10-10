@@ -2,7 +2,6 @@
 % [ ] Should we only export axons with ≥ 10 synapses? What about dendrites?
 % [ ] All synapses or only the ones collected by agglomerates?
 % [ ] Synapse positions
-% [ ] Axon spine interfaces
 %
 % Written by
 %   Alessandro Motta <alessandro.motta@brain.mpg.de>
@@ -11,8 +10,9 @@ clear;
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-partiallySplit-v2_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v8-classified.mat');
-asiFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-partiallySplit-v2_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v8-classified__20190308T100942_asiT.mat');
+asiFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-linearized_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v8-classified__20190227T082543_asiT.mat');
 shFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v3_auto.mat');
+
 outDir = '/tmpscratch/amotta/l4/2019-10-09-axons-dendrites-connectome-in-hdf5';
 
 info = Util.runInfo();
@@ -22,7 +22,12 @@ Util.showRunInfo(info);
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 
-[conn, syn, axonClasses] = connectEM.Connectome.load(param, connFile);
+maxSegId = Seg.Global.getMaxSegId(param);
+
+[conn, syn, axonClasses] = ...
+    connectEM.Connectome.load(param, connFile);
+[linConn, linSyn, linConnFile] = ...
+    connectEM.Consistency.loadConnectome(param);
 
 axons = load(conn.info.param.axonFile);
 dendrites = load(conn.info.param.dendriteFile);
@@ -48,6 +53,9 @@ conn.denMeta.targetClass(curWcMask & ~curInMask) = 'ProximalDendrite';
 
 axons = axons.axons(conn.axonMeta.parentId);
 dendrites = dendrites.dendrites(conn.denMeta.parentId);
+
+asiT = asiT(asiT.area > 0, :);
+asiT = connectEM.Consistency.Calibration.apply(asiT);
 
 %% Build info string
 clear cur*;
@@ -91,38 +99,54 @@ Util.protect(curOutFile);
 
 %% Export connectome
 clear cur*;
-%{
-curSyn = syn.synapses(:, {'presynId', 'postsynId'});
-curSyn.Properties.VariableNames = {'preSegIds', 'postSegIds'};
-curSyn = table2struct(curSyn, 'ToScalar', false);
 
-curRepIds = cellfun(@numel, conn.connectome.synIdx);
-curRepIds = repelem(reshape(1:numel(curRepIds), [], 1), curRepIds(:));
+curSynT = connectEM.Connectome.buildSynapseTable(conn, syn);
+curLinSynT = connectEM.Connectome.buildSynapseTable(linConn, linSyn);
+curShLUT = Agglo.buildLUT(maxSegId, shAgglos);
 
-curConn = table;
-curConn.synId = cell2mat(conn.connectome.synIdx);
-curConn.preAxonId = conn.connectome.edges(curRepIds, 1);
-curConn.postDendId = conn.connectome.edges(curRepIds, 2);
-curConn = table2struct(curConn, 'ToScalar', true);
+fullSynT = table;
+fullSynT.type = syn.synapses.type;
+fullSynT.preSegIds = syn.synapses.presynId;
+fullSynT.postSegIds = syn.synapses.postsynId;
 
-curOutFile = fullfile(outDir, 'connectome.hdf5');
+fullSynT.preAxonId(:) = uint32(0);
+fullSynT.preAxonId(curSynT.id) = curSynT.preAggloId;
 
-categoricalToHdf5(curOutFile, '/synapseTypes', syn.synapses.type);
-structToHdf5(curOutFile, '/synapses', curSyn);
-%}
+fullSynT.preSplitAxonId(:) = uint32(0);
+fullSynT.preSplitAxonId(curLinSynT.id) = curLinSynT.preAggloId;
+
+fullSynT.postDendId(:) = uint32(0);
+fullSynT.postDendId(curSynT.id) = curSynT.postAggloId;
+
+fullSynT.postSpineHeadId = uint32(cellfun( ...
+    @(segIds) max(curShLUT(segIds)), ...
+    fullSynT.postSegIds));
+
+fullSynT.asiArea(:) = nan;
+fullSynT.asiArea(asiT.id) = asiT.area;
+
+fullSynT.pos = zeros(height(fullSynT), 3, 'uint32');
 
 %% Utilities
 function superAgglosToHdf5(outFile, group, agglos)
+    % Sanity checks
+    assert(not(any(arrayfun(@(a) any(a.nodes(:, 4) <= 0), agglos))));
+    assert(all(arrayfun(@(a) all(all(a.nodes(:, 1:3) >= 1)), agglos)));
+    assert(all(arrayfun(@(a) all(all(a.edges > 0)), agglos)));
+    
     agglos = rmfield(agglos, setdiff( ...
         fieldnames(agglos), {'nodes', 'edges'}));
     
     for curIdx = 1:numel(agglos)
         agglos(curIdx).segIds = reshape( ...
-            agglos(curIdx).nodes(:, 4), [], 1);
+            uint32(agglos(curIdx).nodes(:, 4)), [], 1);
         agglos(curIdx).nodes = reshape( ...
-            agglos(curIdx).nodes(:, 1:3), [], 3);
-        agglos(curIdx).edges = reshape(unique( ...
-            sort(agglos(curIdx).edges, 2), 'rows'), [], 2);
+            uint32(agglos(curIdx).nodes(:, 1:3) - 1), [], 3);
+        
+        agglos(curIdx).edges = unique( ...
+            sort(agglos(curIdx).edges, 2), 'rows');
+        agglos(curIdx).edges = reshape( ...
+            agglos(curIdx).edges - 1, [], 2);
     end
     
     structToHdf5(outFile, group, agglos, true);
