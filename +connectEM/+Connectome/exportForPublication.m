@@ -145,19 +145,16 @@ function superAgglosToHdf5(outFile, group, agglos)
         agglos(curIdx).segIds = reshape( ...
             uint32(agglos(curIdx).nodes(:, 4)), [], 1);
         agglos(curIdx).nodes = reshape( ...
-            uint32(agglos(curIdx).nodes(:, 1:3) - 1), [], 3);
-        
-        agglos(curIdx).edges = unique( ...
-            sort(agglos(curIdx).edges, 2), 'rows');
-        agglos(curIdx).edges = reshape( ...
-            agglos(curIdx).edges - 1, [], 2);
+            uint32(agglos(curIdx).nodes(:, 1:3)), [], 3);
+        agglos(curIdx).edges = reshape(unique(sort( ...
+            uint32(agglos(curIdx).edges), 2), 'rows'), [], 2);
         
         if isempty(agglos(curIdx).edges)
             % HACKHACKHACK(amotta): Due to some weird behaviour of MATLAB
             % or HDF5 it's not possible to store an empty edge list. Let's
             % insert a self-connection so that there's at least that...
             assert(not(isempty(agglos(curIdx).nodes)));
-            agglos(curIdx).edges = [1, 1];
+            agglos(curIdx).edges = ones(1, 2, 'uint32');
         end
     end
     
@@ -242,10 +239,8 @@ function numericToHdf5(file, dset, data)
     % NOTE(amotta): Remove trailing singleton dimension
     if numel(sz) == 2 && sz(2) == 1; sz = sz(1); end
     
-    h5create( ...
-        file, dset, sz, ...
-        'Datatype', class(data), ...
-        'Chunksize', sz, ...
-        'Deflate', 9);
+    % NOTE(amotta): Compression is counter-productive in this particular case.
+    % Storage usage reported by h5ls is around 30 % to 50 % with deflate (9).
+    h5create(file, dset, sz, 'Datatype', class(data));
     h5write(file, dset, data);
 end
