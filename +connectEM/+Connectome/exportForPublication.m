@@ -108,6 +108,8 @@ curOut = table;
 curOut.type = syn.synapses.type;
 curOut.preSegIds = syn.synapses.presynId;
 curOut.postSegIds = syn.synapses.postsynId;
+curOut.position = connectEM.Synapse.calculatePositions(param, syn);
+curOut.position = uint32(round(curOut.position));
 
 curOut.preAxonId(:) = uint32(0);
 curOut.preAxonId(curSynT.id) = curSynT.preAggloId;
@@ -115,8 +117,8 @@ curOut.preAxonId(curSynT.id) = curSynT.preAggloId;
 curOut.preSplitAxonId(:) = uint32(0);
 curOut.preSplitAxonId(curLinSynT.id) = curLinSynT.preAggloId;
 
-curOut.postDendId(:) = uint32(0);
-curOut.postDendId(curSynT.id) = curSynT.postAggloId;
+curOut.postDendriteId(:) = uint32(0);
+curOut.postDendriteId(curSynT.id) = curSynT.postAggloId;
 
 curOut.postSpineHeadId = uint32(cellfun( ...
     @(segIds) max(curShLUT(segIds)), ...
