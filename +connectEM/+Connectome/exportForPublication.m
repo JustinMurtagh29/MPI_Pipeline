@@ -23,6 +23,8 @@ param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 
 maxSegId = Seg.Global.getMaxSegId(param);
+segPoints = Seg.Global.getSegToPointMap(param);
+segSizes = Seg.Global.getSegToSizeMap(param);
 
 [conn, syn, axonClasses] = ...
     connectEM.Connectome.load(param, connFile);
@@ -130,6 +132,15 @@ curOut.asiArea(asiT.id) = asiT.area;
 curOutFile = fullfile(outDir, 'synapses.hdf5');
 curOut = table2struct(curOut, 'ToScalar', true);
 structToHdf5(curOutFile, '/synapses', curOut);
+h5writeatt(curOutFile, '/', 'info', infoStr);
+Util.protect(curOutFile);
+
+%% Export segment positions
+clear cur*;
+
+curOutFile = fullfile(outDir, 'segments.hdf5');
+numericToHdf5(curOutFile, '/segments/position', uint32(segPoints));
+numericToHdf5(curOutFile, '/segments/voxelCount', uint32(segSizes));
 h5writeatt(curOutFile, '/', 'info', infoStr);
 Util.protect(curOutFile);
 
