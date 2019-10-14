@@ -82,18 +82,18 @@ clear cur*;
 
 % Axons
 curOutFile = fullfile(outDir, 'axons.hdf5');
-categoricalToHdf5(curOutFile, '/axonClasses', conn.axonMeta.axonClass);
-agglosToHdf5(curOutFile, '/axonAgglomerates', conn.axons);
-superAgglosToHdf5(curOutFile, '/axonSkeletons', axons);
+categoricalToHdf5(curOutFile, '/axons/class', conn.axonMeta.axonClass);
+agglosToHdf5(curOutFile, '/axons/agglomerate', conn.axons);
+superAgglosToHdf5(curOutFile, '/axons/skeleton', axons);
 h5writeatt(curOutFile, '/', 'info', infoStr);
 Util.protect(curOutFile);
 
 % Dendrites
 curOutFile = fullfile(outDir, 'dendrites.hdf5');
-categoricalToHdf5(curOutFile, '/targetClasses', conn.denMeta.targetClass);
-agglosToHdf5(curOutFile, '/dendriteAgglomerates', conn.dendrites);
-superAgglosToHdf5(curOutFile, '/dendriteSkeletons', dendrites);
-agglosToHdf5(curOutFile, '/spineHeadAgglomerates', shAgglos);
+categoricalToHdf5(curOutFile, '/dendrites/class', conn.denMeta.targetClass);
+agglosToHdf5(curOutFile, '/dendrites/agglomerate', conn.dendrites);
+superAgglosToHdf5(curOutFile, '/dendrites/skeleton', dendrites);
+agglosToHdf5(curOutFile, '/spineHeads/agglomerate', shAgglos);
 h5writeatt(curOutFile, '/', 'info', infoStr);
 Util.protect(curOutFile);
 
