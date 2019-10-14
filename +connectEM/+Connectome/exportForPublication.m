@@ -1,8 +1,3 @@
-% TODO(amotta):
-% [ ] Should we only export axons with ≥ 10 synapses? What about dendrites?
-% [ ] All synapses or only the ones collected by agglomerates?
-% [ ] Segment positions
-%
 % Written by
 %   Alessandro Motta <alessandro.motta@brain.mpg.de>
 clear;
