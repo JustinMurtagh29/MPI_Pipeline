@@ -1,5 +1,5 @@
-function [borders, seg] = buildAxonSpineInterface( ...
-        param, pos, boxSize, axonSegIds, shSegIds)
+function [borders, seg, box] = ...
+        buildAxonSpineInterface(param, pos, boxSize, axonSegIds, shSegIds)
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     invalidSegIds = intersect(axonSegIds, shSegIds);
