@@ -29,7 +29,7 @@ maxSegId = Seg.Global.getMaxSegId(param);
 conn = connectEM.Connectome.load(param, connFile);
 
 dendrites = load(conn.info.param.dendriteFile);
-dendrites = dendrites.dendrites(dendrites.indBigDends);
+dendrites = dendrites.dendrites;
 
 shAgglos = load(shFile, 'shAgglos');
 shAgglos = shAgglos.shAgglos;
@@ -108,9 +108,19 @@ Util.protect(curOutDir);
 clear cur*;
 
 curShLUT = Agglo.buildLUT(maxSegId, shAgglos);
-[~, curSkels] = Superagglos.splitIntoAgglosAndFlights(dendrites);
 
-curSkels = curSkels(not(cellfun(@isempty, curSkels)));
+curSkels = dendrites(conn.denMeta.parentId);
+curDendIds = reshape(1:numel(curSkels), [], 1);
+[~, curSkels] = Superagglos.splitIntoAgglosAndFlights(curSkels);
+
+curMask = not(cellfun(@isempty, curSkels));
+curDendIds = curDendIds(curMask);
+curSkels = curSkels(curMask);
+
+curCounts = repelem( ...
+    1:numel(curSkels), ...
+    cellfun(@numel, curSkels));
+curDendIds = curDendIds(curCounts);
 curSkels = reshape(cat(2, curSkels{:}), [], 1);
 
 curShIds = arrayfun( ...
@@ -123,16 +133,13 @@ curShIds = cellfun( ...
 curCounts = repelem( ...
     1:numel(curShIds), ...
     cellfun(@numel, curShIds));
+
+curDendIds = curDendIds(curCounts);
 curSkels = curSkels(curCounts);
 curShIds = cat(1, curShIds{:});
 
-curSkel = skeleton();
-curSkel = Skeleton.setParams4Pipeline(curSkel, param);
-curSkel = Skeleton.setDescriptionFromRunInfo(curSkel, info);
-
-for curIdx = 1:numel(curSkels)
-    curSkel = curSkel.addTree( ...
-        sprintf('Spine head %d', curShIds(curIdx)), ...
-        curSkels(curIdx).nodes(:, 1:3), ...
-        curSkels(curIdx).edges);
-end
+out = struct;
+out.info = info;
+out.skels = curSkels(:);
+out.shIds = curShIds(:);
+out.dendIds = curDendIds(:);
