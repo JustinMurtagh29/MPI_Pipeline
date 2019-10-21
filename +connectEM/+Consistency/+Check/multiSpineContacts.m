@@ -7,7 +7,8 @@ clear;
 
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-linearized_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v8-classified.mat');
+% connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-linearized_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v8-classified.mat');
+sasdFile = '/tmpscratch/amotta/l4/2019-07-29-same-axon-same-dendrite-pair-table/20190729T143522_sasd-pair-table.mat';
 shFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v3_auto.mat');
 
 outputDir = '';
@@ -25,8 +26,10 @@ param = param.p;
 maxSegId = Seg.Global.getMaxSegId(param);
 points = Seg.Global.getSegToPointMap(param);
 
-[conn, syn, axonClasses] = ...
-    connectEM.Connectome.load(param, connFile);
+[conn, syn, connLinFile] = connectEM.Consistency.loadConnectome(param);
+
+% [conn, syn, axonClasses] = ...
+%     connectEM.Connectome.load(param, connFile);
 
 dendrites = load(conn.info.param.dendriteFile);
 dendrites = dendrites.dendrites(conn.denMeta.parentId);
@@ -35,6 +38,13 @@ dendrites = dendrites.dendrites(conn.denMeta.parentId);
 shAgglos = load(shFile, 'shAgglos');
 shAgglos = shAgglos.shAgglos;
 
+shT = table;
+shT.id = reshape(1:numel(shAgglos), [], 1);
+shT.agglo = reshape(shAgglos, [], 1);
+
+load(sasdFile, 'asiT', 'sasdT');
+
+%{
 % Loading augmented graph
 graph = Graph.load(rootDir);
 graph(~graph.borderIdx, :) = [];
@@ -46,8 +56,10 @@ borderAreas = borderAreas.borderArea2;
 
 graph.borderArea = borderAreas(graph.borderIdx);
 clear borderAreas;
+%}
 
 %% Assign spine heads to dendrites
+%{
 shT = table;
 shT.id = reshape(1:numel(shAgglos), [], 1);
 shT.agglo = shAgglos;
@@ -74,10 +86,12 @@ shT.dendId = cellfun( ...
 % Only consider spine heads that intersect with exactly one dendrite
 shT = shT(cellfun(@isscalar, shT.dendId), :);
 shT.dendId = cell2mat(shT.dendId);
+%}
 
 %% Find spine heads touched by each axon
 clear cur*;
 
+%{
 curShLUT = Agglo.buildLUT(maxSegId, shT.agglo);
 graph.shIdx = curShLUT(graph.edges);
 graph = graph(xor(graph.shIdx(:, 1), graph.shIdx(:, 2)), :);
@@ -89,9 +103,12 @@ curAxonLUT = Agglo.buildLUT(maxSegId, conn.axons);
 % spine heads in question do not overlap with axons.
 graph.axonId = max(curAxonLUT(graph.edges), [], 2);
 graph = graph(graph.axonId > 0, :);
+%}
 
 %% Find multi-spine contacts
 clear cur*;
+
+%{
 [axonShT, ~, graph.axonShId] = unique( ...
     graph(:, {'shIdx', 'axonId'}), 'rows');
 axonShT.dendId = shT.dendId(axonShT.shIdx);
@@ -102,18 +119,24 @@ axonShT.area = accumarray(graph.axonShId, graph.borderArea);
 axonDendT.shInd = accumarray( ...
     curShIndices, axonShT.shIdx, [], @(ids) {ids});
 axonDendT = axonDendT(cellfun(@numel, axonDendT.shInd) > 1, :);
+%}
 
 %% Export random examples to webKnossos
 % Note that this section is essentialy skipped if `outputDir` is not set
 clear cur*;
-exportRange = [9, 54, 56];
+curAxonDendT = sasdT(sasdT.regionId == 2, :); % "LTP" region only
+curAxonDendT.axonId = asiT.preAggloId(curAxonDendT.synIds(:, 1));
+curAxonDendT.dendId = asiT.postAggloId(curAxonDendT.synIds(:, 1));
+curAxonDendT.shInd = num2cell(asiT.shId(curAxonDendT.synIds), 2);
+
+exportRange = 1:5;
 
 % HACK(amotta): Only run exports if output directory was set
 if isempty(outputDir); exportRange = []; end
 
 % NOTE(amotta): Only look at spine synapses from excitatory axons
-curAxonDendT = axonDendT(ismember( ...
-    axonDendT.axonId, axonClasses(1).axonIds), :);
+% curAxonDendT = axonDendT(ismember( ...
+%     axonDendT.axonId, axonClasses(1).axonIds), :);
 
 % Randomize order (reproducibly)
 rng(0);
@@ -121,9 +144,9 @@ curAxonDendT = curAxonDendT(randperm(height(curAxonDendT)), :);
 
 % NOTE(amotta): Also export the axon 37846 → dendrite 561 pair. See
 % https://webknossos.brain.mpg.de/annotations/Explorational/5c7d61fc010000d40d9a5adf
-exportRange(end + 1) = find( ...
-    curAxonDendT.axonId == 37846 ...
-  & curAxonDendT.dendId == 561);
+% exportRange(end + 1) = find( ...
+%     curAxonDendT.axonId == 37846 ...
+%   & curAxonDendT.dendId == 561);
 
 curAxonDendT = curAxonDendT(exportRange, :);
 
