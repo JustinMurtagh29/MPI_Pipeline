@@ -5,7 +5,7 @@ clear;
 %% Configuration
 % See https://gitlab.mpcdf.mpg.de/connectomics/Benedikt/blob/b9b51fc9ef4261543f43e648a1b36661c1741923/+SynEM/+Training/+runConfigShaft/cnn17_2_synem_trShaft.m
 inDir = '/gaba/u/bstaffle/data/SynEM/SynapseDetectionTrainingData_2_typeLabels';
-outDir = '/home/amotta/Desktop';
+outDir = '/tmpscratch/amotta/l4/2019-10-22-synem-training-and-test-data-as-hdf5';
 
 info = Util.runInfo();
 Util.showRunInfo(info);
@@ -17,8 +17,7 @@ matFiles = dir(fullfile(inDir, '*.mat'));
 matFiles(cat(1, matFiles.isdir)) = [];
 matFiles = {matFiles.name};
 
-%%
-for curIdx = 1%:numel(matFiles)
+parfor curIdx = 1:numel(matFiles)
     curMatFile = matFiles{curIdx};
     
     curInFilePath = fullfile(inDir, curMatFile);
