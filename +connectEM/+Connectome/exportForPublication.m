@@ -54,26 +54,6 @@ dendrites = dendrites.dendrites(conn.denMeta.parentId);
 asiT = asiT(asiT.area > 0, :);
 asiT = connectEM.Consistency.Calibration.apply(asiT);
 
-%% Build info string
-clear cur*;
-curIsDirtyStrs = {'', ' (dirty)'};
-
-infoStr = cell(0, 1);
-infoStr{end + 1} = sprintf('%s', info.filename);
-
-for curRepoId = 1:numel(info.git_repos)
-    curRepo = info.git_repos{curRepoId};
-    infoStr{end + 1} = sprintf( ...
-        '%s %s%s', curRepo.remote, curRepo.hash, ...
-        curIsDirtyStrs{2 - isempty(curRepo.diff)}); %#ok
-end
-
-infoStr{end + 1} = sprintf( ...
-    '%s@%s. MATLAB %s. %s', ...
-    info.user, info.hostname, ...
-    info.matlab_version, info.time);
-infoStr = strjoin(infoStr, newline);
-
 %% Export axon and dendrite reconstructions
 clear cur*;
 
@@ -82,7 +62,7 @@ curOutFile = fullfile(outDir, 'axons.hdf5');
 categoricalToHdf5(curOutFile, '/axons/class', conn.axonMeta.axonClass);
 agglosToHdf5(curOutFile, '/axons/agglomerate', conn.axons);
 superAgglosToHdf5(curOutFile, '/axons/skeleton', axons);
-h5writeatt(curOutFile, '/', 'info', infoStr);
+infoToHdf5(curOutFile, info);
 Util.protect(curOutFile);
 
 % Dendrites
@@ -91,7 +71,7 @@ categoricalToHdf5(curOutFile, '/dendrites/class', conn.denMeta.targetClass);
 agglosToHdf5(curOutFile, '/dendrites/agglomerate', conn.dendrites);
 superAgglosToHdf5(curOutFile, '/dendrites/skeleton', dendrites);
 agglosToHdf5(curOutFile, '/spineHeads/agglomerate', shAgglos);
-h5writeatt(curOutFile, '/', 'info', infoStr);
+infoToHdf5(curOutFile, info);
 Util.protect(curOutFile);
 
 %% Export connectome
@@ -127,7 +107,7 @@ curOut.asiArea(asiT.id) = asiT.area;
 curOutFile = fullfile(outDir, 'synapses.hdf5');
 curOut = table2struct(curOut, 'ToScalar', true);
 structToHdf5(curOutFile, '/synapses', curOut);
-h5writeatt(curOutFile, '/', 'info', infoStr);
+infoToHdf5(curOutFile, info);
 Util.protect(curOutFile);
 
 %% Export segment positions
@@ -136,7 +116,7 @@ clear cur*;
 curOutFile = fullfile(outDir, 'segments.hdf5');
 numericToHdf5(curOutFile, '/segments/position', uint32(segPoints));
 numericToHdf5(curOutFile, '/segments/voxelCount', uint32(segSizes));
-h5writeatt(curOutFile, '/', 'info', infoStr);
+infoToHdf5(curOutFile, info);
 Util.protect(curOutFile);
 
 %% Utilities
@@ -177,79 +157,4 @@ function agglosToHdf5(outFile, group, agglos)
         @(ids) uint32(ids(:)), ...
         agglos(:), 'UniformOutput', false);
     cellToHdf5(outFile, group, agglos);
-end
-
-function arrayToHdf5(file, dsetOrGroup, array)
-    if isnumeric(array)
-        numericToHdf5(file, dsetOrGroup, array);
-    elseif iscell(array)
-        cellToHdf5(file, dsetOrGroup, array);
-    elseif iscategorical(array)
-        categoricalToHdf5(file, dsetOrGroup, array)
-    elseif isstruct(array)
-        structToHdf5(file, dsetOrGroup, array);
-    else
-        error('Unhandled class "%s"', class(array));
-    end
-end
-
-function cellToHdf5(file, group, cellArray)
-    assert(iscell(cellArray));
-    assert(isvector(cellArray));
-    
-    for curIdx = 1:numel(cellArray)
-        curDset = fullfile(group, num2str(curIdx));
-        arrayToHdf5(file, curDset, cellArray{curIdx});
-    end
-end
-
-function structToHdf5(file, group, struct, forceArray)
-    assert(isstruct(struct));
-    
-    if ~exist('forceArray', 'var') || isempty(forceArray)
-        forceArray = false;
-    end
-    
-    if ~isscalar(struct) || forceArray
-        for curIdx = 1:numel(struct)
-            curGroup = fullfile(group, num2str(curIdx));
-            structToHdf5(file, curGroup, struct(curIdx));
-        end
-    else
-        names = fieldnames(struct);
-        values = struct2cell(struct);
-        assert(isequal(numel(names), numel(values)));
-
-        for curIdx = 1:numel(names)
-            curDset = fullfile(group, names{curIdx});
-            arrayToHdf5(file, curDset, values{curIdx});
-        end
-    end
-end
-
-function categoricalToHdf5(outFile, dset, cats)
-    assert(iscategorical(cats));
-    catNames = categories(cats);
-    
-    assert(numel(catNames) <= intmax('uint8'));
-    numericToHdf5(outFile, dset, uint8(cats));
-    
-    for curIdx = 1:numel(catNames)
-        curName = lower(catNames{curIdx});
-        h5writeatt(outFile, dset, curName, uint8(curIdx));
-    end
-end
-
-function numericToHdf5(file, dset, data)
-    assert(isnumeric(data));
-    sz = size(data);
-    
-    % NOTE(amotta): Remove trailing singleton dimension
-    if numel(sz) == 2 && sz(2) == 1; sz = sz(1); end
-    
-    % NOTE(amotta): Compression is counter-productive in this particular
-    % case. Storage usage reported by h5ls is around 30 % to 50 % with
-    % deflate (9).
-    h5create(file, dset, sz, 'Datatype', class(data));
-    h5write(file, dset, data);
 end
