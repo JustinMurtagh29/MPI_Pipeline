@@ -76,12 +76,32 @@ parameters.offset.z = '0';
 Superagglos.skeletonFromAgglo(graphCutDendrites.edges, segmentMeta, ...
     agglosOut, 'dendrites', outputFolderSub, parameters);
 Util.save(fullfile(outputFolderSub,'dendrites.mat'),dendritesSorted, dendriteSizeSorted, info)
-WK.makeWKMapping(agglosOut, ['dendrites_border_' num2str(borderSizeThr) ...
+
+% Write new segmentation based on agglos
+segOut = struct;
+segOut.root = fullfile(p.saveFolder, 'aggloState', ...
+    [datestr(clock,30) '_segForDendAgglos'], '1');
+mkdir(segOut.root)
+dataType = 'uint32';
+wkwInit('new',segOut.root,32, 32, dataType, 1);
+segOut.backend = 'wkwrap';
+%segOut.prefix = p.seg.prefix;
+agglosSorted = dendritesSorted;
+mapping = connectEM.createLookup(segmentMeta, agglosSorted);
+Seg.Global.applyMappingToSegmentation(p, mapping, segOut);
+thisBBox = [1, 1, 1; (ceil(p.bbox(:, 2) ./ 1024) .* 1024)']';
+createResolutionPyramid(segOut, thisBBox, [], true);
+
+%{
+%NOTE: too big to write to json
+segsToZero = setdiff((0:maxSegId)',vertcat(agglosOut{:}));
+components = cat(1,{segsToZero},agglosOut);
+WK.makeWKMapping(components, ['dendrites_border_' num2str(borderSizeThr) ...
                             'seg_' num2str(segmentSizeThr) ...
                             'prob_' num2str(probThresholdDend) ...
                             'size_' num2str(sizeThresholdDend)], ...
                             outputFolderSub);
-
+%}
 %% repeat for axons
 probThresholdAxon = 0.99;
 sizeThresholdAxon = 1e6;
@@ -92,8 +112,8 @@ Util.log(['Performing agglomeration on axon subgraph with thr prob:' num2str(pro
 axonsSorted = axons(idxSort);
 outputFolderSub = fullfile(outputFolder,['axons_border_' num2str(borderSizeThr) ...
                             'seg_' num2str(segmentSizeThr) ...
-                            'prob_' num2str(probThresholdDend) ...
-                            'size_' num2str(sizeThresholdDend)]);
+                            'prob_' num2str(probThresholdAxon) ...
+                            'size_' num2str(sizeThresholdAxon)]);
 mkdir(outputFolderSub);
 agglosOut = axonsSorted(1:100);
 display('Writing skeletons for debugging the process:');
@@ -107,12 +127,31 @@ parameters.offset.z = '0';
 Superagglos.skeletonFromAgglo(graphCutAxons.edges, segmentMeta, ...
     agglosOut, 'axons', outputFolderSub, parameters);
 Util.save(fullfile(outputFolderSub,'axons.mat'),axonsSorted, axonSizeSorted, info)
+
+% Write new segmentation based on agglos
+segOut = struct;
+segOut.root = fullfile(p.saveFolder, 'aggloState', ...
+    [datestr(clock,30) '_segForAxonAgglos'], '1');
+mkdir(segOut.root)
+dataType = 'uint32';
+wkwInit('new',segOut.root,32, 32, dataType, 1);
+segOut.backend = 'wkwrap';
+%segOut.prefix = p.seg.prefix;
+agglosSorted = axonsSorted;
+mapping = connectEM.createLookup(segmentMeta, agglosSorted);
+Seg.Global.applyMappingToSegmentation(p, mapping, segOut);
+thisBBox = [1, 1, 1; (ceil(p.bbox(:, 2) ./ 1024) .* 1024)']';
+createResolutionPyramid(segOut, thisBBox, [], true);
+
+%{
+segsToZero = setdiff((0:maxSegId)',vertcat(agglosOut{:}));
+components = cat(1,{segsToZero},agglosOut);
 WK.makeWKMapping(agglosOut, ['axons_border_' num2str(borderSizeThr) ...
                             'seg_' num2str(segmentSizeThr) ...
                             'prob_' num2str(probThresholdAxon) ...
                             'size_' num2str(sizeThresholdAxon)], ...
                             outputFolderSub);
-
+%}
 %{
 display('Garbage collection');
 tic;
