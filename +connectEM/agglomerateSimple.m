@@ -53,17 +53,19 @@ toc;
 
 %% Lets stick with 99% for now as we have 'large enough' components
 probThresholdDend = 0.99;
-sizeThresholdDend = 1e6;
+sizeThresholdDend = 1e3;
 Util.log(['Performing agglomeration on dendrite subgraph with thr prob:' num2str(probThresholdDend), 'agglo size:' num2str(sizeThresholdDend)]);
 [dendrites, dendriteSize, dendriteEdges] = connectEM.partitionSortAndKeepOnlyLarge(graphCutDendrites, segmentMeta,...
                                                          probThresholdDend, sizeThresholdDend);
 [dendriteSizeSorted,idxSort] = sort(dendriteSize,'descend');
 dendritesSorted = dendrites(idxSort);
+
 outputFolderSub = fullfile(outputFolder,['dendrites_border_' num2str(borderSizeThr) ...
                             'seg_' num2str(segmentSizeThr) ...
                             'prob_' num2str(probThresholdDend) ...
                             'size_' num2str(sizeThresholdDend)]);
 mkdir(outputFolderSub);
+%{
 agglosOut = dendritesSorted(1:100);
 display('Writing skeletons for debugging the process:');
 parameters.experiment.name= p.experimentName;
@@ -75,6 +77,7 @@ parameters.offset.y = '0';
 parameters.offset.z = '0';
 Superagglos.skeletonFromAgglo(graphCutDendrites.edges, segmentMeta, ...
     agglosOut, 'dendrites', outputFolderSub, parameters);
+%}
 Util.save(fullfile(outputFolderSub,'dendrites.mat'),dendritesSorted, dendriteSizeSorted, info)
 
 % Write new segmentation based on agglos
@@ -104,7 +107,7 @@ WK.makeWKMapping(components, ['dendrites_border_' num2str(borderSizeThr) ...
 %}
 %% repeat for axons
 probThresholdAxon = 0.99;
-sizeThresholdAxon = 1e6;
+sizeThresholdAxon = 1e3;
 Util.log(['Performing agglomeration on axon subgraph with thr prob:' num2str(probThresholdAxon), 'agglo size:' num2str(sizeThresholdAxon)]);
 [axons, axonSize, axonEdges] = connectEM.partitionSortAndKeepOnlyLarge(graphCutAxons, segmentMeta,...
                                                          probThresholdAxon, sizeThresholdAxon);
@@ -115,6 +118,7 @@ outputFolderSub = fullfile(outputFolder,['axons_border_' num2str(borderSizeThr) 
                             'prob_' num2str(probThresholdAxon) ...
                             'size_' num2str(sizeThresholdAxon)]);
 mkdir(outputFolderSub);
+%{
 agglosOut = axonsSorted(1:100);
 display('Writing skeletons for debugging the process:');
 parameters.experiment.name= p.experimentName;
@@ -126,6 +130,7 @@ parameters.offset.y = '0';
 parameters.offset.z = '0';
 Superagglos.skeletonFromAgglo(graphCutAxons.edges, segmentMeta, ...
     agglosOut, 'axons', outputFolderSub, parameters);
+%}
 Util.save(fullfile(outputFolderSub,'axons.mat'),axonsSorted, axonSizeSorted, info)
 
 % Write new segmentation based on agglos
