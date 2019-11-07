@@ -1,4 +1,4 @@
-function graphCut = cutGraphSimple(p, graph, segmentMeta, borderMeta, ...
+function [graphCut, proxyFilter] = cutGraphSimple(p, graph, segmentMeta, borderMeta, ...
         borderSizeThreshold, segmentSizeThreshold)
     % Restrict graph based on heuristics results and border and segment size threshold
     % Keep only edges above borderSizeThreshold (and correspondences)
@@ -7,12 +7,13 @@ function graphCut = cutGraphSimple(p, graph, segmentMeta, borderMeta, ...
     edgeIdx(corrIdx) = true;
     borderSizes = borderMeta.borderSize(graph.borderIdx(~corrIdx));
     edgeIdx(~corrIdx) =  borderSizes > borderSizeThreshold;
+    forceKeepEdges = corrIdx;% SL temp hack
     %edgeIdx(forceKeepEdges) = true;
     remainingEdges = graph.edges(edgeIdx, :);
     remainingProb = graph.prob(edgeIdx);
-    %proxyFilter = false(size(graph.prob));
-    %proxyFilter(forceKeepEdges) = true;
-    %proxyFilter = proxyFilter(edgeIdx);
+    proxyFilter = false(size(graph.prob));
+    proxyFilter(forceKeepEdges) = true;
+    proxyFilter = proxyFilter(edgeIdx);
 
     % Calculate maximum probability remaining for each segment and exclude based on both thresholds
     maxProb = accumarray(cat(1,remainingEdges(:,1),remainingEdges(:,2)), cat(1,remainingProb, remainingProb),[segmentMeta.maxSegId 1], @max);
@@ -27,7 +28,7 @@ function graphCut = cutGraphSimple(p, graph, segmentMeta, borderMeta, ...
     %removedIds = cat(1, heuristics.mapping{:}, find(excludedSegmentIdx));
     %keptIds = setdiff(1:double(segmentMeta.maxSegId), removedIds);
     %keepEdgeIdx2 = all(ismember(remainingEdges, keptIds), 2);
-    graphCut.edges = remainingEdges(keepEdgeIdx1,:);
-    graphCut.prob = remainingProb(keepEdgeIdx1);
+    graphCut.edges = remainingEdges(keepEdgeIdx1 | proxyFilter,:);
+    graphCut.prob = remainingProb(keepEdgeIdx1 | proxyFilter);
 
 end

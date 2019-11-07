@@ -31,21 +31,29 @@ maxSegId = Seg.Global.getMaxSegId(p);
 borderSizeThr = 50;
 segmentSizeThr = 100;
 display(['Cut graph at border size:' num2str(borderSizeThr), 'segment size:' num2str(segmentSizeThr)]);
-graphCut = connectEM.cutGraphSimple(p, graph, segmentMeta, borderMeta, borderSizeThr, segmentSizeThr);
+[graphCut, forceKeepEdges] = connectEM.cutGraphSimple(p, graph, segmentMeta, borderMeta, borderSizeThr, segmentSizeThr);
 
 Util.log('Setting type prob thresholds for classes:')
-segmentMeta.isDendrite = segmentMeta.dendriteProb > 0.85 & ...
-                         segmentMeta.axonProb < 0.50;
+segmentMeta.isDendrite = segmentMeta.dendriteProb > 0.85 & segmentMeta.axonProb < 0.50;
 segmentMeta.isAxon = segmentMeta.axonProb >= 0.90;
 
 Util.log('Generating subgraphs for axon and dendrite agglomeration:');
+% NOTE: Do not overwrite on correspondence edges
 tic;
-% Dendrites first
-idx = all(ismember(graphCut.edges, find(segmentMeta.isDendrite)), 2);
+% Dendrites first: both edge seg belong to dend
+tempClass = ismember(graphCut.edges, find(segmentMeta.isDendrite));
+idxDend = all(tempClass, 2);
+forceKeepEdgesDend = false(size(forceKeepEdges,1),1);
+forceKeepEdgesDend(forceKeepEdges) = tempClass(forceKeepEdges,1) | tempClass(forceKeepEdges,2); % keep those corr edges which has either seg as dendrite
+idx = idxDend | forceKeepEdgesDend;
 graphCutDendrites.edges = graphCut.edges(idx,:);
 graphCutDendrites.prob = graphCut.prob(idx);
 % Then axon
-idx = all(ismember(graphCut.edges, find(segmentMeta.isAxon)), 2);
+tempClass = ismember(graphCut.edges, find(segmentMeta.isAxon));
+idxAxon = all(tempClass, 2);
+forceKeepEdgesAxon = false(size(forceKeepEdges,1),1);
+forceKeepEdgesAxon(forceKeepEdges) = tempClass(forceKeepEdges,1) | tempClass(forceKeepEdges,2); % keep those corr edges which has either seg as axon
+idx = idxAxon | forceKeepEdgesAxon;
 graphCutAxons.edges = graphCut.edges(idx,:);
 graphCutAxons.prob = graphCut.prob(idx);
 clear idx;
