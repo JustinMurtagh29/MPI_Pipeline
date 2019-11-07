@@ -2,7 +2,7 @@
 % outputFolder = ''/tmpscratch/sahilloo/data/Mk1_F6_JS_SubI_v1/pipelineRun_mr2e_wsmrnet/20191105T153335_agglomeration/';
 % load p, graph
 
-segId = 53000556
+segId = 53000293
 edges= graph.edges;
 prob = graph.prob;
 borderIdx = graph.borderIdx;
@@ -33,7 +33,6 @@ theseProb = outProb(idxU);
 theseEdgesNodes = changem(double(theseEdgesSegIds), 1:size(theseCoM,1), outEdges(:));
 theseBorderIdx = outBorderIdx(idxU);
 
-
 for i=1:size(theseEdgesNodes,1)
     curEdges = theseEdgesNodes(i,:);
     curNodes = theseCoM(curEdges,:);
@@ -44,7 +43,7 @@ for i=1:size(theseEdgesNodes,1)
     dendProb = segmentMeta.dendriteProb(curSegId);
     axonProb = segmentMeta.axonProb(curSegId);
     segSize = segmentMeta.voxelCount(curSegId);
-    curBorderSize = theseBorderIdx(i);
+    curBorderSize = borderMeta.borderSize(theseBorderIdx(i));
 
     skel = skel.addTree(['tree_conn:' num2str(curProb,'%.3f') '_dend:' num2str(dendProb,'%.3f') '_axon:' num2str(axonProb,'%.3f') '_vx:' num2str(segSize)  '_border:' num2str(curBorderSize)], curNodes);
 end
