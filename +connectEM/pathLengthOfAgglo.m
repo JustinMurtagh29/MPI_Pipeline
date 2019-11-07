@@ -1,7 +1,9 @@
-function pL = pathLengthOfAgglo(segmentMeta, agglo);
-
+function pL = pathLengthOfAgglo(segmentMeta, agglo, voxelSize);
+    if ~exist('voxelSize','var') || isempty(voxelSize)
+        voxelSize = [11.24, 11.24, 28];
+    end
     pos = segmentMeta.point(agglo,:);
-    pos = bsxfun(@times, pos, [11.24 11.24 28]);
+    pos = bsxfun(@times, pos, voxelSize);
     adj = squareform(pdist(pos));
     adj(adj > 5000) = 0;
     tree = graphminspantree(sparse(adj), 'Method', 'Kruskal');

@@ -59,7 +59,9 @@ Util.log(['Performing agglomeration on dendrite subgraph with thr prob:' num2str
                                                          probThresholdDend, sizeThresholdDend);
 [dendriteSizeSorted,idxSort] = sort(dendriteSize,'descend');
 dendritesSorted = dendrites(idxSort);
-
+Util.log('Calculating dendrite path lengths...')
+dendritePathLengths = cellfun(@(x) connectEM.pathLengthOfAgglo(segmentMeta, x, [11.24, 11.24, 30]), dendritesSorted,'uni',0); % um
+dendritePathLengths = cell2mat(dendritePathLengths);
 outputFolderSub = fullfile(outputFolder,['dendrites_border_' num2str(borderSizeThr) ...
                             'seg_' num2str(segmentSizeThr) ...
                             'prob_' num2str(probThresholdDend) ...
@@ -78,7 +80,7 @@ parameters.offset.z = '0';
 Superagglos.skeletonFromAgglo(graphCutDendrites.edges, segmentMeta, ...
     agglosOut, 'dendrites', outputFolderSub, parameters);
 %}
-Util.save(fullfile(outputFolderSub,'dendrites.mat'),dendritesSorted, dendriteSizeSorted, info)
+Util.save(fullfile(outputFolderSub,'dendrites.mat'),dendritesSorted, dendriteSizeSorted, dendritePathLengths, info)
 
 % Write new segmentation based on agglos
 segOut = struct;
@@ -105,6 +107,7 @@ WK.makeWKMapping(components, ['dendrites_border_' num2str(borderSizeThr) ...
                             'size_' num2str(sizeThresholdDend)], ...
                             outputFolderSub);
 %}
+
 %% repeat for axons
 probThresholdAxon = 0.99;
 sizeThresholdAxon = 1e3;
@@ -113,6 +116,8 @@ Util.log(['Performing agglomeration on axon subgraph with thr prob:' num2str(pro
                                                          probThresholdAxon, sizeThresholdAxon);
 [axonSizeSorted,idxSort] = sort(axonSize,'descend');
 axonsSorted = axons(idxSort);
+axonPathLengths = cellfun(@(x) connectEM.pathLengthOfAgglo(segmentMeta, x, [11.24, 11.24, 30]), axonsSorted,'uni',0);% um
+axonPathLengths = cell2mat(axonPathLengths);
 outputFolderSub = fullfile(outputFolder,['axons_border_' num2str(borderSizeThr) ...
                             'seg_' num2str(segmentSizeThr) ...
                             'prob_' num2str(probThresholdAxon) ...
@@ -131,7 +136,7 @@ parameters.offset.z = '0';
 Superagglos.skeletonFromAgglo(graphCutAxons.edges, segmentMeta, ...
     agglosOut, 'axons', outputFolderSub, parameters);
 %}
-Util.save(fullfile(outputFolderSub,'axons.mat'),axonsSorted, axonSizeSorted, info)
+Util.save(fullfile(outputFolderSub,'axons.mat'),axonsSorted, axonSizeSorted, axonPathLengths, info)
 
 % Write new segmentation based on agglos
 segOut = struct;
@@ -157,6 +162,33 @@ WK.makeWKMapping(agglosOut, ['axons_border_' num2str(borderSizeThr) ...
                             'size_' num2str(sizeThresholdAxon)], ...
                             outputFolderSub);
 %}
+
+%% plot agglo length statistics
+Util.log('Now plotting path lengths...')
+fig = figure;
+fig.Color = 'white';
+subplot(1,2,1)
+[n, xout] = hist(dendritePathLengths,100);
+bar(xout, n, 'barwidth', 1, 'basevalue', 1);
+set(gca,'YScale','log')
+ylim([0, 1e7]);
+Util.setPlotDefault(gca,0,0);
+title('dendrites')
+xlabel('Path length (\mum)');
+ylabel('Frequency (log)')
+subplot(1,2,2)
+[n, xout] = hist(axonPathLengths,100);
+bar(xout, n, 'barwidth', 1, 'basevalue', 1);
+set(gca,'YScale','log')
+ylim([0, 1e7]);
+Util.setPlotDefault(gca,0,0);
+title('axons')
+xlabel('Path length (\mum)');
+ylabel('Frequency (log)')
+saveas(gcf,fullfile(outputFolder,'agglo_path_lengths.png'))
+close all
+
+
 %{
 display('Garbage collection');
 tic;
