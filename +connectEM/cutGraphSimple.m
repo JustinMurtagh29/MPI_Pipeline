@@ -31,4 +31,5 @@ function [graphCut, proxyFilter] = cutGraphSimple(p, graph, segmentMeta, borderM
     graphCut.edges = remainingEdges(keepEdgeIdx1 | proxyFilter,:);
     graphCut.prob = remainingProb(keepEdgeIdx1 | proxyFilter);
     proxyFilter = proxyFilter(keepEdgeIdx1 | proxyFilter);% those that came from the forced edges
+    assert(size(graphCut.prob,1) == size(proxyFilter,1))
 end
