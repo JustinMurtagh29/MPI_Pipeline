@@ -7,8 +7,9 @@
 % See +connectEM for additional functions used here
 
 info = Util.runInfo();
+timeStamp = [datestr(clock,30) '_corr_typeEM_conn_force'];
+outputFolder = fullfile(p.saveFolder, 'aggloMat', [timeStamp '_agglomeration']);
 
-outputFolder = [p.saveFolder datestr(clock,30) '_agglomeration/'];
 if ~exist(outputFolder, 'dir')
     mkdir(outputFolder);
 end
@@ -92,7 +93,7 @@ Util.save(fullfile(outputFolderSub,'dendrites.mat'),dendritesSorted, dendriteSiz
 Util.log('Write new segmentation based on agglos')
 segOut = struct;
 segOut.root = fullfile(p.saveFolder, 'aggloState', ...
-    [datestr(clock,30) '_segForDendAgglos'], '1');
+    [timeStamp '_segForDendAgglos'], '1');
 mkdir(segOut.root)
 dataType = 'uint32';
 wkwInit('new',segOut.root,32, 32, dataType, 1);
@@ -140,7 +141,7 @@ Util.save(fullfile(outputFolderSub,'axons.mat'),axonsSorted, axonSizeSorted, axo
 Util.log('Write new segmentation based on agglos')
 segOut = struct;
 segOut.root = fullfile(p.saveFolder, 'aggloState', ...
-    [datestr(clock,30) '_segForAxonAgglos'], '1');
+    [timeStamp '_segForAxonAgglos'], '1');
 mkdir(segOut.root)
 dataType = 'uint32';
 wkwInit('new',segOut.root,32, 32, dataType, 1);
