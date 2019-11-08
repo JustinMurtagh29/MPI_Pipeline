@@ -47,21 +47,24 @@ segmentMeta.isDendrite = segmentMeta.dendriteProb > 0.85 & segmentMeta.axonProb 
 segmentMeta.isAxon = segmentMeta.axonProb >= 0.90;
 
 Util.log('Generating subgraphs for axon and dendrite agglomeration:');
+probThreshold = 0.99;% to preserve high conn edges during graph cut to dend and axons
 % Dendrites first: both edge seg belong to dend
-tempClass = ismember(graphCut.edges, find(segmentMeta.isDendrite));
-idxDend = all(tempClass, 2);
-forceKeepEdgesDend = false(size(forceKeepEdges,1),1);
-forceKeepEdgesDend(forceKeepEdges) = tempClass(forceKeepEdges,1) | tempClass(forceKeepEdges,2); % keep those corr edges which has either seg as dendrite
-idx = idxDend | forceKeepEdgesDend;
+segClass = ismember(graphCut.edges, find(segmentMeta.isDendrite));
+idxDend = all(segClass, 2);
+forceKeepEdgesDend = false(size(forceKeepEdges,1),1); % for example: corr edges 
+forceKeepEdgesDend(forceKeepEdges) = any(segClass(forceKeepEdges,:),2); % keep those corr edges which has either seg as dendrite
+idxConnTypeEM = graphCut.prob>probThreshold & any(segClass,2);% edge with high conn prob AND at least one partner as dendrite
+idx = idxDend | forceKeepEdgesDend | idxConnTypeEM;
 graphCutDendrites.edges = graphCut.edges(idx,:);
 graphCutDendrites.prob = graphCut.prob(idx);
 
 % Then axon
-tempClass = ismember(graphCut.edges, find(segmentMeta.isAxon));
-idxAxon = all(tempClass, 2);
+segClass = ismember(graphCut.edges, find(segmentMeta.isAxon));
+idxAxon = all(segClass, 2);
 forceKeepEdgesAxon = false(size(forceKeepEdges,1),1);
-forceKeepEdgesAxon(forceKeepEdges) = tempClass(forceKeepEdges,1) | tempClass(forceKeepEdges,2); % keep those corr edges which has either seg as axon
-idx = idxAxon | forceKeepEdgesAxon;
+forceKeepEdgesAxon(forceKeepEdges) = any(segClass(forceKeepEdges,:),2); % keep those corr edges which has either seg as axon
+idxConnTypeEM = graphCut.prob>probThreshold & any(segClass,2);% edge with high conn prob AND at least one partner as axon
+idx = idxAxon | forceKeepEdgesAxon | idxConnTypeEM;
 graphCutAxons.edges = graphCut.edges(idx,:);
 graphCutAxons.prob = graphCut.prob(idx);
 clear idx;
