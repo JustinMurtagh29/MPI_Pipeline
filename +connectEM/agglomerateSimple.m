@@ -84,7 +84,7 @@ outputFolderSub = fullfile(outputFolder,['dendrites_border_' num2str(borderSizeT
 mkdir(outputFolderSub);
 Util.save(fullfile(outputFolderSub,'dendrites.mat'),dendritesSorted, dendriteSizeSorted, dendritePathLengths, info)
 
-% Write new segmentation based on agglos
+Util.log('Write new segmentation based on agglos')
 segOut = struct;
 segOut.root = fullfile(p.saveFolder, 'aggloState', ...
     [datestr(clock,30) '_segForDendAgglos'], '1');
@@ -122,6 +122,7 @@ Util.log(['Performing agglomeration on axon subgraph with thr prob:' num2str(pro
                                                          probThresholdAxon, sizeThresholdAxon);
 [axonSizeSorted,idxSort] = sort(axonSize,'descend');
 axonsSorted = axons(idxSort);
+Util.log('Calculating axon path lengths...')
 axonPathLengths = cellfun(@(x) connectEM.pathLengthOfAgglo(segmentMeta, x, [11.24, 11.24, 30]), axonsSorted,'uni',0);% um
 axonPathLengths = cell2mat(axonPathLengths);
 outputFolderSub = fullfile(outputFolder,['axons_border_' num2str(borderSizeThr) ...
@@ -131,7 +132,7 @@ outputFolderSub = fullfile(outputFolder,['axons_border_' num2str(borderSizeThr) 
 mkdir(outputFolderSub);
 Util.save(fullfile(outputFolderSub,'axons.mat'),axonsSorted, axonSizeSorted, axonPathLengths, info)
 
-% Write new segmentation based on agglos
+Util.log('Write new segmentation based on agglos')
 segOut = struct;
 segOut.root = fullfile(p.saveFolder, 'aggloState', ...
     [datestr(clock,30) '_segForAxonAgglos'], '1');
