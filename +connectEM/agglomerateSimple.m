@@ -33,13 +33,20 @@ segmentSizeThr = 100;
 display(['Cut graph at border size:' num2str(borderSizeThr), 'segment size:' num2str(segmentSizeThr)]);
 [graphCut, forceKeepEdges] = connectEM.cutGraphSimple(p, graph, segmentMeta, borderMeta, borderSizeThr, segmentSizeThr);
 
+Util.log('Update segment type prob for corr edges to the max of the edge:')
+corrIdx = find(isnan(graph.borderIdx));
+for i=1:size(corrIdx,1)
+    curEdges = graph.edges(corrIdx(i),:);
+    segmentMeta.dendriteProb(curEdges) = max(segmentMeta.dendriteProb(curEdges));
+    segmentMeta.axonProb(curEdges) = max(segmentMeta.axonProb(curEdges));
+    segmentMeta.gliaProb(curEdges) = max(segmentMeta.gliaProb(curEdges));
+end
+
 Util.log('Setting type prob thresholds for classes:')
 segmentMeta.isDendrite = segmentMeta.dendriteProb > 0.85 & segmentMeta.axonProb < 0.50;
 segmentMeta.isAxon = segmentMeta.axonProb >= 0.90;
 
 Util.log('Generating subgraphs for axon and dendrite agglomeration:');
-% NOTE: Do not overwrite on correspondence edges
-tic;
 % Dendrites first: both edge seg belong to dend
 tempClass = ismember(graphCut.edges, find(segmentMeta.isDendrite));
 idxDend = all(tempClass, 2);
@@ -48,6 +55,7 @@ forceKeepEdgesDend(forceKeepEdges) = tempClass(forceKeepEdges,1) | tempClass(for
 idx = idxDend | forceKeepEdgesDend;
 graphCutDendrites.edges = graphCut.edges(idx,:);
 graphCutDendrites.prob = graphCut.prob(idx);
+
 % Then axon
 tempClass = ismember(graphCut.edges, find(segmentMeta.isAxon));
 idxAxon = all(tempClass, 2);
@@ -57,7 +65,6 @@ idx = idxAxon | forceKeepEdgesAxon;
 graphCutAxons.edges = graphCut.edges(idx,:);
 graphCutAxons.prob = graphCut.prob(idx);
 clear idx;
-toc;
 
 %% Lets stick with 99% for now as we have 'large enough' components
 probThresholdDend = 0.99;
@@ -75,19 +82,6 @@ outputFolderSub = fullfile(outputFolder,['dendrites_border_' num2str(borderSizeT
                             'prob_' num2str(probThresholdDend) ...
                             'size_' num2str(sizeThresholdDend)]);
 mkdir(outputFolderSub);
-%{
-agglosOut = dendritesSorted(1:100);
-display('Writing skeletons for debugging the process:');
-parameters.experiment.name= p.experimentName;
-parameters.scale.x = num2str(p.raw.voxelSize(1));
-parameters.scale.y = num2str(p.raw.voxelSize(2));
-parameters.scale.z = num2str(p.raw.voxelSize(3));
-parameters.offset.x = '0';
-parameters.offset.y = '0';
-parameters.offset.z = '0';
-Superagglos.skeletonFromAgglo(graphCutDendrites.edges, segmentMeta, ...
-    agglosOut, 'dendrites', outputFolderSub, parameters);
-%}
 Util.save(fullfile(outputFolderSub,'dendrites.mat'),dendritesSorted, dendriteSizeSorted, dendritePathLengths, info)
 
 % Write new segmentation based on agglos
@@ -106,14 +100,18 @@ thisBBox = [1, 1, 1; (ceil(p.bbox(:, 2) ./ 1024) .* 1024)']';
 createResolutionPyramid(segOut, thisBBox, [], true);
 
 %{
-%NOTE: too big to write to json
-segsToZero = setdiff((0:maxSegId)',vertcat(agglosOut{:}));
-components = cat(1,{segsToZero},agglosOut);
-WK.makeWKMapping(components, ['dendrites_border_' num2str(borderSizeThr) ...
-                            'seg_' num2str(segmentSizeThr) ...
-                            'prob_' num2str(probThresholdDend) ...
-                            'size_' num2str(sizeThresholdDend)], ...
-                            outputFolderSub);
+% Export skeletons
+agglosOut = dendritesSorted(1:100);
+display('Writing skeletons for debugging the process:');
+parameters.experiment.name= p.experimentName;
+parameters.scale.x = num2str(p.raw.voxelSize(1));
+parameters.scale.y = num2str(p.raw.voxelSize(2));
+parameters.scale.z = num2str(p.raw.voxelSize(3));
+parameters.offset.x = '0';
+parameters.offset.y = '0';
+parameters.offset.z = '0';
+Superagglos.skeletonFromAgglo(graphCutDendrites.edges, segmentMeta, ...
+    agglosOut, 'dendrites', outputFolderSub, parameters);
 %}
 
 %% repeat for axons
@@ -131,19 +129,6 @@ outputFolderSub = fullfile(outputFolder,['axons_border_' num2str(borderSizeThr) 
                             'prob_' num2str(probThresholdAxon) ...
                             'size_' num2str(sizeThresholdAxon)]);
 mkdir(outputFolderSub);
-%{
-agglosOut = axonsSorted(1:100);
-display('Writing skeletons for debugging the process:');
-parameters.experiment.name= p.experimentName;
-parameters.scale.x = num2str(p.raw.voxelSize(1));
-parameters.scale.y = num2str(p.raw.voxelSize(2));
-parameters.scale.z = num2str(p.raw.voxelSize(3));
-parameters.offset.x = '0';
-parameters.offset.y = '0';
-parameters.offset.z = '0';
-Superagglos.skeletonFromAgglo(graphCutAxons.edges, segmentMeta, ...
-    agglosOut, 'axons', outputFolderSub, parameters);
-%}
 Util.save(fullfile(outputFolderSub,'axons.mat'),axonsSorted, axonSizeSorted, axonPathLengths, info)
 
 % Write new segmentation based on agglos
@@ -161,16 +146,22 @@ Seg.Global.applyMappingToSegmentation(p, mapping, segOut);
 thisBBox = [1, 1, 1; (ceil(p.bbox(:, 2) ./ 1024) .* 1024)']';
 createResolutionPyramid(segOut, thisBBox, [], true);
 
-%{
-segsToZero = setdiff((0:maxSegId)',vertcat(agglosOut{:}));
-components = cat(1,{segsToZero},agglosOut);
-WK.makeWKMapping(agglosOut, ['axons_border_' num2str(borderSizeThr) ...
-                            'seg_' num2str(segmentSizeThr) ...
-                            'prob_' num2str(probThresholdAxon) ...
-                            'size_' num2str(sizeThresholdAxon)], ...
-                            outputFolderSub);
-%}
 
+%{
+% Export skeletons
+agglosOut = axonsSorted(1:100);
+display('Writing skeletons for debugging the process:');
+parameters.experiment.name= p.experimentName;
+parameters.scale.x = num2str(p.raw.voxelSize(1));
+parameters.scale.y = num2str(p.raw.voxelSize(2));
+parameters.scale.z = num2str(p.raw.voxelSize(3));
+parameters.offset.x = '0';
+parameters.offset.y = '0';
+parameters.offset.z = '0';
+Superagglos.skeletonFromAgglo(graphCutAxons.edges, segmentMeta, ...
+%}
+   
+%{
 %% plot agglo length statistics
 Util.log('Now plotting path lengths...')
 fig = figure;
@@ -195,7 +186,7 @@ xlabel('Path length (\mum)');
 ylabel('Frequency (log)')
 saveas(gcf,fullfile(outputFolder,'agglo_path_lengths.png'))
 close all
-
+%}
 
 %{
 display('Garbage collection');
