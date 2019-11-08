@@ -35,6 +35,7 @@ display(['Cut graph at border size:' num2str(borderSizeThr), 'segment size:' num
 
 Util.log('Update segment type prob for corr edges to the max of the edge:')
 corrIdx = find(isnan(graph.borderIdx));
+corrEdges = graph.edges(isnan(graph.borderIdx),:);
 for i=1:size(corrIdx,1)
     curEdges = graph.edges(corrIdx(i),:);
     segmentMeta.dendriteProb(curEdges) = max(segmentMeta.dendriteProb(curEdges));
@@ -73,9 +74,9 @@ clear idx;
 probThresholdDend = 0.99;
 sizeThresholdDend = 1e3;
 Util.log(['Performing agglomeration on dendrite subgraph with thr prob:' num2str(probThresholdDend), 'agglo size:' num2str(sizeThresholdDend)]);
-[dendrites, dendriteSize, dendriteEdges] = connectEM.partitionSortAndKeepOnlyLarge(graphCutDendrites, segmentMeta,...
-                                                         probThresholdDend, sizeThresholdDend);
-[dendriteSizeSorted,idxSort] = sort(dendriteSize,'descend');
+[dendrites, dendriteSize] = connectEM.partitionSortAndKeepOnlyLarge(graphCutDendrites, segmentMeta,...
+                                                         probThresholdDend, sizeThresholdDend, corrEdges, maxSegId);
+[dendriteSizeSorted, idxSort] = sort(dendriteSize,'descend');
 dendritesSorted = dendrites(idxSort);
 Util.log('Calculating dendrite path lengths...')
 dendritePathLengths = cellfun(@(x) connectEM.pathLengthOfAgglo(segmentMeta, x, [11.24, 11.24, 30]), dendritesSorted,'uni',0); % um
@@ -86,6 +87,7 @@ outputFolderSub = fullfile(outputFolder,['dendrites_border_' num2str(borderSizeT
                             'size_' num2str(sizeThresholdDend)]);
 mkdir(outputFolderSub);
 Util.save(fullfile(outputFolderSub,'dendrites.mat'),dendritesSorted, dendriteSizeSorted, dendritePathLengths, info)
+
 
 Util.log('Write new segmentation based on agglos')
 segOut = struct;
@@ -121,9 +123,9 @@ Superagglos.skeletonFromAgglo(graphCutDendrites.edges, segmentMeta, ...
 probThresholdAxon = 0.99;
 sizeThresholdAxon = 1e3;
 Util.log(['Performing agglomeration on axon subgraph with thr prob:' num2str(probThresholdAxon), 'agglo size:' num2str(sizeThresholdAxon)]);
-[axons, axonSize, axonEdges] = connectEM.partitionSortAndKeepOnlyLarge(graphCutAxons, segmentMeta,...
-                                                         probThresholdAxon, sizeThresholdAxon);
-[axonSizeSorted,idxSort] = sort(axonSize,'descend');
+[axons, axonSize] = connectEM.partitionSortAndKeepOnlyLarge(graphCutAxons, segmentMeta,...
+                                                         probThresholdAxon, sizeThresholdAxon, corrEdges, maxSegId);
+[axonSizeSorted, idxSort] = sort(axonSize,'descend');
 axonsSorted = axons(idxSort);
 Util.log('Calculating axon path lengths...')
 axonPathLengths = cellfun(@(x) connectEM.pathLengthOfAgglo(segmentMeta, x, [11.24, 11.24, 30]), axonsSorted,'uni',0);% um
@@ -164,8 +166,8 @@ parameters.offset.y = '0';
 parameters.offset.z = '0';
 Superagglos.skeletonFromAgglo(graphCutAxons.edges, segmentMeta, ...
 %}
-   
-%{
+  
+
 %% plot agglo length statistics
 Util.log('Now plotting path lengths...')
 fig = figure;
@@ -190,7 +192,7 @@ xlabel('Path length (\mum)');
 ylabel('Frequency (log)')
 saveas(gcf,fullfile(outputFolder,'agglo_path_lengths.png'))
 close all
-%}
+
 
 %{
 display('Garbage collection');
