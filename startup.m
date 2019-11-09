@@ -16,3 +16,5 @@ SynEM.setup();
 global PIPELINE_READY;
 PIPELINE_READY = true;
 clear;
+
+addpath(genpath('/u/sahilloo/repos/loombas/barrel/'))
