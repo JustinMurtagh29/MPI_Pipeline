@@ -7,8 +7,16 @@
 % See +connectEM for additional functions used here
 
 info = Util.runInfo();
-timeStamp = [datestr(clock,30) '_corr_typeEM_conn_force'];
+datasetNameAppend = '_corr_typeEM_conn_force'; 
+timeStamp = [datestr(clock,30) datasetNameAppend];
 outputFolder = fullfile(p.saveFolder, 'aggloMat', [timeStamp '_agglomeration']);
+
+parameters.scale.x = num2str(p.raw.voxelSize(1));
+parameters.scale.y = num2str(p.raw.voxelSize(2));
+parameters.scale.z = num2str(p.raw.voxelSize(3));
+parameters.offset.x = '0';
+parameters.offset.y = '0';
+parameters.offset.z = '0';
 
 if ~exist(outputFolder, 'dir')
     mkdir(outputFolder);
@@ -82,10 +90,12 @@ dendritesSorted = dendrites(idxSort);
 Util.log('Calculating dendrite path lengths...')
 dendritePathLengths = cellfun(@(x) connectEM.pathLengthOfAgglo(segmentMeta, x, [11.24, 11.24, 30]), dendritesSorted,'uni',0); % um
 dendritePathLengths = cell2mat(dendritePathLengths);
+
 outputFolderSub = fullfile(outputFolder,['dendrites_border_' num2str(borderSizeThr) ...
                             'seg_' num2str(segmentSizeThr) ...
                             'prob_' num2str(probThresholdDend) ...
                             'size_' num2str(sizeThresholdDend)]);
+
 mkdir(outputFolderSub);
 Util.save(fullfile(outputFolderSub,'dendrites.mat'),dendritesSorted, dendriteSizeSorted, dendritePathLengths, info)
 
@@ -107,14 +117,8 @@ createResolutionPyramid(segOut, thisBBox, [], true);
 Util.log('Export skeletons:')
 agglosOut = dendritesSorted(1:100);
 display('Writing skeletons for debugging the process:');
-parameters.experiment.name= p.experimentName;
-parameters.scale.x = num2str(p.raw.voxelSize(1));
-parameters.scale.y = num2str(p.raw.voxelSize(2));
-parameters.scale.z = num2str(p.raw.voxelSize(3));
-parameters.offset.x = '0';
-parameters.offset.y = '0';
-parameters.offset.z = '0';
-Superagglos.skeletonFromAgglo(graphCutDendrites.edges, segmentMeta, ...
+parameters.experiment.name = ['Mk1_F6_JS_SubI_v1_mrnet_wsmrnet' '_dend' datasetNameAppend];
+Superagglos.skeletonFromAgglo(graphCut.edges, segmentMeta, ...
     agglosOut, 'dendrites', outputFolderSub, parameters);
 
 %% repeat for axons
@@ -133,6 +137,7 @@ outputFolderSub = fullfile(outputFolder,['axons_border_' num2str(borderSizeThr) 
                             'seg_' num2str(segmentSizeThr) ...
                             'prob_' num2str(probThresholdAxon) ...
                             'size_' num2str(sizeThresholdAxon)]);
+
 mkdir(outputFolderSub);
 Util.save(fullfile(outputFolderSub,'axons.mat'),axonsSorted, axonSizeSorted, axonPathLengths, info)
 
@@ -154,16 +159,9 @@ createResolutionPyramid(segOut, thisBBox, [], true);
 Util.log('Export skeletons')
 agglosOut = axonsSorted(1:100);
 display('Writing skeletons for debugging the process:');
-parameters.experiment.name= p.experimentName;
-parameters.scale.x = num2str(p.raw.voxelSize(1));
-parameters.scale.y = num2str(p.raw.voxelSize(2));
-parameters.scale.z = num2str(p.raw.voxelSize(3));
-parameters.offset.x = '0';
-parameters.offset.y = '0';
-parameters.offset.z = '0';
-Superagglos.skeletonFromAgglo(graphCutAxons.edges, segmentMeta, ...
-    agglosOut, 'axons', outputFolderSub, parameters);
-
+parameters.experiment.name = ['Mk1_F6_JS_SubI_v1_mrnet_wsmrnet' '_axon' datasetNameAppend];
+Superagglos.skeletonFromAgglo(graphCut.edges, segmentMeta, ...
+    agglosOut, 'axons', outputFolderSub, parameters);{
 %% plot agglo length statistics
 Util.log('Now plotting path lengths...')
 fig = figure;
