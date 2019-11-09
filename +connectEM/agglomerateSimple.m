@@ -89,7 +89,6 @@ outputFolderSub = fullfile(outputFolder,['dendrites_border_' num2str(borderSizeT
 mkdir(outputFolderSub);
 Util.save(fullfile(outputFolderSub,'dendrites.mat'),dendritesSorted, dendriteSizeSorted, dendritePathLengths, info)
 
-
 Util.log('Write new segmentation based on agglos')
 segOut = struct;
 segOut.root = fullfile(p.saveFolder, 'aggloState', ...
@@ -105,8 +104,7 @@ Seg.Global.applyMappingToSegmentation(p, mapping, segOut);
 thisBBox = [1, 1, 1; (ceil(p.bbox(:, 2) ./ 1024) .* 1024)']';
 createResolutionPyramid(segOut, thisBBox, [], true);
 
-%{
-% Export skeletons
+Util.log('Export skeletons:')
 agglosOut = dendritesSorted(1:100);
 display('Writing skeletons for debugging the process:');
 parameters.experiment.name= p.experimentName;
@@ -118,7 +116,6 @@ parameters.offset.y = '0';
 parameters.offset.z = '0';
 Superagglos.skeletonFromAgglo(graphCutDendrites.edges, segmentMeta, ...
     agglosOut, 'dendrites', outputFolderSub, parameters);
-%}
 
 %% repeat for axons
 probThresholdAxon = 0.99;
@@ -131,6 +128,7 @@ axonsSorted = axons(idxSort);
 Util.log('Calculating axon path lengths...')
 axonPathLengths = cellfun(@(x) connectEM.pathLengthOfAgglo(segmentMeta, x, [11.24, 11.24, 30]), axonsSorted,'uni',0);% um
 axonPathLengths = cell2mat(axonPathLengths);
+
 outputFolderSub = fullfile(outputFolder,['axons_border_' num2str(borderSizeThr) ...
                             'seg_' num2str(segmentSizeThr) ...
                             'prob_' num2str(probThresholdAxon) ...
@@ -153,9 +151,7 @@ Seg.Global.applyMappingToSegmentation(p, mapping, segOut);
 thisBBox = [1, 1, 1; (ceil(p.bbox(:, 2) ./ 1024) .* 1024)']';
 createResolutionPyramid(segOut, thisBBox, [], true);
 
-
-%{
-% Export skeletons
+Util.log('Export skeletons')
 agglosOut = axonsSorted(1:100);
 display('Writing skeletons for debugging the process:');
 parameters.experiment.name= p.experimentName;
@@ -166,8 +162,7 @@ parameters.offset.x = '0';
 parameters.offset.y = '0';
 parameters.offset.z = '0';
 Superagglos.skeletonFromAgglo(graphCutAxons.edges, segmentMeta, ...
-%}
-  
+    agglosOut, 'axons', outputFolderSub, parameters);
 
 %% plot agglo length statistics
 Util.log('Now plotting path lengths...')
@@ -193,7 +188,6 @@ xlabel('Path length (\mum)');
 ylabel('Frequency (log)')
 saveas(gcf,fullfile(outputFolder,'agglo_path_lengths.png'))
 close all
-
 
 %{
 display('Garbage collection');
