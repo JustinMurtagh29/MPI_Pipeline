@@ -1,8 +1,10 @@
 % find out why the agglomeration stopped while growing
-% outputFolder = ''/tmpscratch/sahilloo/data/Mk1_F6_JS_SubI_v1/pipelineRun_mr2e_wsmrnet/20191105T153335_agglomeration/';
 % load p, graph
 
-segId = 53000293
+outputFolder = '/tmpscratch/sahilloo/data/Mk1_F6_JS_SubI_v1/pipelineRun_mr2e_wsmrnet/20191107T162813_agglomeration/dendrites_border_50seg_100prob_0.99size_1000/'
+
+segId = 16879787
+
 edges= graph.edges;
 prob = graph.prob;
 borderIdx = graph.borderIdx;
@@ -43,7 +45,11 @@ for i=1:size(theseEdgesNodes,1)
     dendProb = segmentMeta.dendriteProb(curSegId);
     axonProb = segmentMeta.axonProb(curSegId);
     segSize = segmentMeta.voxelCount(curSegId);
-    curBorderSize = borderMeta.borderSize(theseBorderIdx(i));
+    if isnan(theseBorderIdx(i))
+        curBorderSize = NaN;
+    else
+        curBorderSize = borderMeta.borderSize(theseBorderIdx(i));
+    end
 
     skel = skel.addTree(['tree_conn:' num2str(curProb,'%.3f') '_dend:' num2str(dendProb,'%.3f') '_axon:' num2str(axonProb,'%.3f') '_vx:' num2str(segSize)  '_border:' num2str(curBorderSize)], curNodes);
 end
