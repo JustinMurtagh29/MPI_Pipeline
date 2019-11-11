@@ -7,7 +7,7 @@
 % See +connectEM for additional functions used here
 
 info = Util.runInfo();
-datasetNameAppend = '_corr_typeEM_conn_force'; 
+datasetNameAppend = '_corr_typeEM_conn_force_iter'; 
 timeStamp = [datestr(clock,30) datasetNameAppend];
 outputFolder = fullfile(p.saveFolder, 'aggloMat', [timeStamp '_agglomeration']);
 
@@ -126,9 +126,10 @@ Util.log(['Performing agglomeration on dendrite subgraph with thr prob:' num2str
                                                          probThresholdDend, sizeThresholdDend, corrEdges, maxSegId);
 [dendriteSizeSorted, idxSort] = sort(dendriteSize,'descend');
 dendritesSorted = dendrites(idxSort);
-Util.log('Calculating dendrite path lengths...')
-dendritePathLengths = cellfun(@(x) connectEM.pathLengthOfAgglo(segmentMeta, x, [11.24, 11.24, 30]), dendritesSorted,'uni',0); % um
-dendritePathLengths = cell2mat(dendritePathLengths);
+
+%Util.log('Calculating dendrite path lengths...')
+%dendritePathLengths = cellfun(@(x) connectEM.pathLengthOfAgglo(segmentMeta, x, [11.24, 11.24, 30]), dendritesSorted,'uni',0); % um
+%dendritePathLengths = cell2mat(dendritePathLengths);
 
 outputFolderSub = fullfile(outputFolder,['dendrites_border_' num2str(borderSizeThr) ...
                             'seg_' num2str(segmentSizeThr) ...
@@ -136,7 +137,7 @@ outputFolderSub = fullfile(outputFolder,['dendrites_border_' num2str(borderSizeT
                             'size_' num2str(sizeThresholdDend)]);
 
 mkdir(outputFolderSub);
-Util.save(fullfile(outputFolderSub,'dendrites.mat'),dendritesSorted, dendriteSizeSorted, dendritePathLengths, info)
+Util.save(fullfile(outputFolderSub,'dendrites.mat'),dendritesSorted, dendriteSizeSorted, info)
 
 Util.log('Write new segmentation based on agglos')
 segOut = struct;
@@ -154,7 +155,7 @@ thisBBox = [1, 1, 1; (ceil(p.bbox(:, 2) ./ 1024) .* 1024)']';
 createResolutionPyramid(segOut, thisBBox, [], true);
 
 Util.log('Export skeletons:')
-agglosOut = dendritesSorted(1:100);
+agglosOut = dendritesSorted(2:100); % inspect MegaMerger???
 display('Writing skeletons for debugging the process:');
 parameters.experiment.name = ['Mk1_F6_JS_SubI_v1_mrnet_wsmrnet' '_dend' datasetNameAppend];
 Superagglos.skeletonFromAgglo(graphCut.edges, segmentMeta, ...
@@ -169,8 +170,8 @@ Util.log(['Performing agglomeration on axon subgraph with thr prob:' num2str(pro
 [axonSizeSorted, idxSort] = sort(axonSize,'descend');
 axonsSorted = axons(idxSort);
 Util.log('Calculating axon path lengths...')
-axonPathLengths = cellfun(@(x) connectEM.pathLengthOfAgglo(segmentMeta, x, [11.24, 11.24, 30]), axonsSorted,'uni',0);% um
-axonPathLengths = cell2mat(axonPathLengths);
+%axonPathLengths = cellfun(@(x) connectEM.pathLengthOfAgglo(segmentMeta, x, [11.24, 11.24, 30]), axonsSorted,'uni',0);% um
+%axonPathLengths = cell2mat(axonPathLengths);
 
 outputFolderSub = fullfile(outputFolder,['axons_border_' num2str(borderSizeThr) ...
                             'seg_' num2str(segmentSizeThr) ...
@@ -178,7 +179,7 @@ outputFolderSub = fullfile(outputFolder,['axons_border_' num2str(borderSizeThr) 
                             'size_' num2str(sizeThresholdAxon)]);
 
 mkdir(outputFolderSub);
-Util.save(fullfile(outputFolderSub,'axons.mat'),axonsSorted, axonSizeSorted, axonPathLengths, info)
+Util.save(fullfile(outputFolderSub,'axons.mat'),axonsSorted, axonSizeSorted, info)
 
 Util.log('Write new segmentation based on agglos')
 segOut = struct;
@@ -201,7 +202,7 @@ display('Writing skeletons for debugging the process:');
 parameters.experiment.name = ['Mk1_F6_JS_SubI_v1_mrnet_wsmrnet' '_axon' datasetNameAppend];
 Superagglos.skeletonFromAgglo(graphCut.edges, segmentMeta, ...
     agglosOut, 'axons', outputFolderSub, parameters);
-
+%{
 %% plot agglo length statistics
 Util.log('Now plotting path lengths...')
 fig = figure;
@@ -226,7 +227,7 @@ xlabel('Path length (\mum)');
 ylabel('Frequency (log)')
 saveas(gcf,fullfile(outputFolder,'agglo_path_lengths.png'))
 close all
-
+%}
 %{
 display('Garbage collection');
 tic;
