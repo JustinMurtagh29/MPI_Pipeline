@@ -161,7 +161,8 @@ agglosOut = axonsSorted(1:100);
 display('Writing skeletons for debugging the process:');
 parameters.experiment.name = ['Mk1_F6_JS_SubI_v1_mrnet_wsmrnet' '_axon' datasetNameAppend];
 Superagglos.skeletonFromAgglo(graphCut.edges, segmentMeta, ...
-    agglosOut, 'axons', outputFolderSub, parameters);{
+    agglosOut, 'axons', outputFolderSub, parameters);
+
 %% plot agglo length statistics
 Util.log('Now plotting path lengths...')
 fig = figure;
