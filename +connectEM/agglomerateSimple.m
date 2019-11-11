@@ -78,7 +78,7 @@ while ~isequal(idxConnTypeEMBefore,idxConnTypeEM)
     % update class prob to max of neighbour
     segmentMetaTemp.dendriteProb(curEdges) = repmat(max(segmentMetaTemp.dendriteProb(curEdges),[],2),1,2);
     segmentMetaTemp.axonProb(curEdges) = repmat(max(segmentMetaTemp.axonProb(curEdges),[],2),1,2);
-    segmentMetaTemp.isDendrite = segmentMetaTemp.dendProb > dendProbThr & segmentMetaTemp.axonProb < 0.50;
+    segmentMetaTemp.isDendrite = segmentMetaTemp.dendriteProb > dendProbThr & segmentMetaTemp.axonProb < 0.50;
     % updated class flags
     segClass = ismember(graphCut.edges, find(segmentMetaTemp.isDendrite));
     idxConnTypeEM = graphCut.prob>probThreshold & any(segClass,2);% edge with high conn prob AND at least one partner in class
