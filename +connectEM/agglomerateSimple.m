@@ -53,8 +53,10 @@ for i=1:size(corrIdx,1)
 end
 
 Util.log('Setting type prob thresholds for classes:')
-segmentMeta.isDendrite = segmentMeta.dendriteProb > 0.85 & segmentMeta.axonProb < 0.50;
-segmentMeta.isAxon = segmentMeta.axonProb >= 0.90;
+dendProbThr = 0.85;
+axonProbThr = 0.50;
+segmentMeta.isDendrite = segmentMeta.dendriteProb > dendProbThr & segmentMeta.axonProb < 0.50;
+segmentMeta.isAxon = segmentMeta.axonProb >= axonProbThr;
 
 Util.log('Generating subgraphs for axon and dendrite agglomeration:');
 probThreshold = 0.99;% to preserve high conn edges during graph cut to dend and axons
@@ -63,7 +65,24 @@ segClass = ismember(graphCut.edges, find(segmentMeta.isDendrite));
 idxDend = all(segClass, 2);
 forceKeepEdgesDend = false(size(forceKeepEdges,1),1); % for example: corr edges 
 forceKeepEdgesDend(forceKeepEdges) = any(segClass(forceKeepEdges,:),2); % keep those corr edges which has either seg as dendrite
-idxConnTypeEM = graphCut.prob>probThreshold & any(segClass,2);% edge with high conn prob AND at least one partner as dendrite
+
+% iteratively preserve edges if neighbour with high conn prob is within class
+segmentMetaTemp = segmentMeta;
+idxConnTypeEM = graphCut.prob>probThreshold & any(segClass,2);% edge with high conn prob AND at least one partner in class
+idxConnTypeEMBefore = [];
+Util.log('Running iterative edge preservation...')
+while ~isequal(idxConnTypeEMBefore,idxConnTypeEM)
+    idxConnTypeEMBefore = idxConnTypeEM; % store old state
+    curEdges = graphCut.edges(idxConnTypeEM,:);
+    % update class prob to max of neighbour
+    segmentMetaTemp.dendriteProb(curEdges) = repmat(max(segmentMetaTemp.dendriteProb(curEdges),[],2),1,2);
+    segmentMetaTemp.axonProb(curEdges) = repmat(max(segmentMetaTemp.axonProb(curEdges),[],2),1,2);
+    segmentMetaTemp.isDendrite = segmentMetaTemp.dendProb > dendProbThr & segmentMetaTemp.axonProb < 0.50;
+    % updated class flags
+    segClass = ismember(graphCut.edges, find(segmentMetaTemp.isDendrite));
+    idxConnTypeEM = graphCut.prob>probThreshold & any(segClass,2);% edge with high conn prob AND at least one partner in class
+end
+
 idx = idxDend | forceKeepEdgesDend | idxConnTypeEM;
 graphCutDendrites.edges = graphCut.edges(idx,:);
 graphCutDendrites.prob = graphCut.prob(idx);
@@ -73,7 +92,23 @@ segClass = ismember(graphCut.edges, find(segmentMeta.isAxon));
 idxAxon = all(segClass, 2);
 forceKeepEdgesAxon = false(size(forceKeepEdges,1),1);
 forceKeepEdgesAxon(forceKeepEdges) = any(segClass(forceKeepEdges,:),2); % keep those corr edges which has either seg as axon
-idxConnTypeEM = graphCut.prob>probThreshold & any(segClass,2);% edge with high conn prob AND at least one partner as axon
+
+% iteratively preserve edges if neighbour with high conn prob is within class
+segmentMetaTemp = segmentMeta;
+idxConnTypeEM = graphCut.prob>probThreshold & any(segClass,2);% edge with high conn prob AND at least one partner in class
+idxConnTypeEMBefore = [];
+Util.log('Running iterative edge preservation...')
+while ~isequal(idxConnTypeEMBefore,idxConnTypeEM)
+    idxConnTypeEMBefore = idxConnTypeEM; % store old state
+    curEdges = graphCut.edges(idxConnTypeEM,:);
+    % update class prob to max of neighbour
+    segmentMetaTemp.dendriteProb(curEdges) = repmat(max(segmentMetaTemp.dendriteProb(curEdges),[],2),1,2);
+    segmentMetaTemp.axonProb(curEdges) = repmat(max(segmentMetaTemp.axonProb(curEdges),[],2),1,2);
+    segmentMetaTemp.isAxon = segmentMetaTemp.axonProb >= axonProbThr;
+    % updated class flags
+    segClass = ismember(graphCut.edges, find(segmentMetaTemp.isAxon));
+    idxConnTypeEM = graphCut.prob>probThreshold & any(segClass,2);% edge with high conn prob AND at least one partner in class
+end
 idx = idxAxon | forceKeepEdgesAxon | idxConnTypeEM;
 graphCutAxons.edges = graphCut.edges(idx,:);
 graphCutAxons.prob = graphCut.prob(idx);
