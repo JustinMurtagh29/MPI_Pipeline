@@ -71,6 +71,7 @@ segmentMetaTemp = segmentMeta;
 idxConnTypeEM = graphCut.prob>probThreshold & any(segClass,2);% edge with high conn prob AND at least one partner in class
 idxConnTypeEMBefore = [];
 Util.log('Running iterative edge preservation...')
+tic;
 while ~isequal(idxConnTypeEMBefore,idxConnTypeEM)
     idxConnTypeEMBefore = idxConnTypeEM; % store old state
     curEdges = graphCut.edges(idxConnTypeEM,:);
@@ -82,7 +83,7 @@ while ~isequal(idxConnTypeEMBefore,idxConnTypeEM)
     segClass = ismember(graphCut.edges, find(segmentMetaTemp.isDendrite));
     idxConnTypeEM = graphCut.prob>probThreshold & any(segClass,2);% edge with high conn prob AND at least one partner in class
 end
-
+toc;
 idx = idxDend | forceKeepEdgesDend | idxConnTypeEM;
 graphCutDendrites.edges = graphCut.edges(idx,:);
 graphCutDendrites.prob = graphCut.prob(idx);
@@ -98,6 +99,7 @@ segmentMetaTemp = segmentMeta;
 idxConnTypeEM = graphCut.prob>probThreshold & any(segClass,2);% edge with high conn prob AND at least one partner in class
 idxConnTypeEMBefore = [];
 Util.log('Running iterative edge preservation...')
+tic;
 while ~isequal(idxConnTypeEMBefore,idxConnTypeEM)
     idxConnTypeEMBefore = idxConnTypeEM; % store old state
     curEdges = graphCut.edges(idxConnTypeEM,:);
@@ -109,6 +111,8 @@ while ~isequal(idxConnTypeEMBefore,idxConnTypeEM)
     segClass = ismember(graphCut.edges, find(segmentMetaTemp.isAxon));
     idxConnTypeEM = graphCut.prob>probThreshold & any(segClass,2);% edge with high conn prob AND at least one partner in class
 end
+Util.log('Running iterative edge preservation...')
+toc;
 idx = idxAxon | forceKeepEdgesAxon | idxConnTypeEM;
 graphCutAxons.edges = graphCut.edges(idx,:);
 graphCutAxons.prob = graphCut.prob(idx);
