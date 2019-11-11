@@ -5,6 +5,7 @@
 addpath(genpath('/u/sahilloo/repos/Benedikt/'));
 datasetName = 'Mk1_F6_JS_SubI_v1';
 svmPredNetwork = 'mr_2e_cont4';
+boxId = 1;
 
 rootDir = fullfile('/tmpscratch/sahilloo/data/', datasetName, 'pipelineRun_mr2e_wsmrnet/');
 m = load(fullfile(rootDir, 'allParameter.mat'));
@@ -17,7 +18,7 @@ outputDir = fullfile('/tmpscratch/sahilloo/data/', datasetName, ['svm_' svmPredN
 mkdir(outputDir)
 
 Util.log('load python svm predictions')
-m = load(fullfile('/tmpscratch/sahilloo/data/', datasetName, ['svm_' svmPredNetwork '_slurm'], '1.mat'));
+m = load(fullfile('/tmpscratch/sahilloo/data/', datasetName, ['svm_' svmPredNetwork '_slurm'], [num2str(boxId) '.mat']));
 pred = m.pred;
 bbox_wk = [m.offset, m.shape];
 bbox = Util.convertWebknossosToMatlabBbox(bbox_wk);
@@ -45,7 +46,7 @@ for i = 1:3
 end
 
 Util.log('make avi file')
-Visualization.movieMakerSeg(raw,seg,fullfile(outputDir,'seg_svm.avi'))
+Visualization.movieMakerSeg(raw,seg,fullfile(outputDir,['seg_svm_' num2str(boxId,'%05d') '.avi']))
 
 % write to WKW
 segSVM.root = fullfile(outputDirWkw,'1');
