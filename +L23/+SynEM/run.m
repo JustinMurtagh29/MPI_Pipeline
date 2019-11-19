@@ -26,7 +26,6 @@ paramFile = fullfile(rootDir, paramFile);
 curData = load(classifierFile, 'classifier', 'fm');
 classifier = curData.classifier;
 fm = curData.fm;
-keyboard
 
 %% Run synapse detection
 clear cur*;
@@ -35,7 +34,7 @@ cluster = Cluster.config( ...
     'memory', 24, 'time', '100:00:00');
 [synParam, job] = SynEM.Seg.predictDataset( ...
     param, fm, classifier, scoreFile, cluster, ...
-    [], true, true, true, false, false);
+    [], true, true, true, [], false);
 wait(job);
 
 %% Save synapse parameters
