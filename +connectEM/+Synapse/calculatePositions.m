@@ -26,6 +26,20 @@ function pos = calculatePositions(param, syn, where)
                 syn.synapses.presynId, ...
                 syn.synapses.postsynId, ...
                 'UniformOutput', false);
+        case 'border'
+            edgeToBorder = fullfile(param.saveFolder, 'graph.mat');
+            edgeToBorder = Util.load(edgeToBorder, 'borderIdx');
+            
+            segIds = cellfun( ...
+                @(edgeIds) edgeToBorder(edgeIds), ...
+                syn.synapses.edgeIdx, 'UniformOutput', false);
+            
+            coms = fullfile(param.saveFolder, 'globalBorder.mat');
+           [coms, weights] = Util.load(coms, 'borderCoM', 'borderSize');
+           
+            coms = double(coms);
+            weights = double(weights);
+            points = coms;
         otherwise
             error('Invalid input argument');
     end
