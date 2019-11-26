@@ -81,12 +81,17 @@ curSynT = connectEM.Connectome.buildSynapseTable(conn, syn);
 curLinSynT = connectEM.Connectome.buildSynapseTable(linConn, linSyn);
 curShLUT = Agglo.buildLUT(maxSegId, shAgglos);
 
+curCalcPos = @(type) uint32(round( ...
+    connectEM.Synapse.calculatePositions(param, syn, type)));
+
 curOut = table;
 curOut.type = syn.synapses.type;
 curOut.preSegIds = syn.synapses.presynId;
 curOut.postSegIds = syn.synapses.postsynId;
-curOut.position = connectEM.Synapse.calculatePositions(param, syn);
-curOut.position = uint32(round(curOut.position));
+
+curOut.prePosition = curCalcPos('preRecenter');
+curOut.synPosition = curCalcPos('border');
+curOut.postPosition = curCalcPos('postRecenter');
 
 curOut.preAxonId(:) = uint32(0);
 curOut.preAxonId(curSynT.id) = curSynT.preAggloId;
@@ -104,7 +109,7 @@ curOut.postSpineHeadId = uint32(cellfun( ...
 curOut.asiArea(:) = nan;
 curOut.asiArea(asiT.id) = asiT.area;
 
-curOutFile = fullfile(outDir, 'synapses.hdf5');
+curOutFile = fullfile(outDir, 'synapses_v2.hdf5');
 curOut = table2struct(curOut, 'ToScalar', true);
 structToHdf5(curOutFile, '/synapses', curOut);
 infoToHdf5(curOutFile, info);
