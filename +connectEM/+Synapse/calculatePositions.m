@@ -11,8 +11,9 @@ function pos = calculatePositions(param, syn, where)
     doRecenter = endsWith(where, 'Recenter');
     wmean = @(w, d) sum((w ./ sum(w)) .* d, 1);
     
-    points = Seg.Global.getSegToCentroidMap(param);
+    coms = Seg.Global.getSegToCentroidMap(param);
     weights = Seg.Global.getSegToSizeMap(param);
+    points = Seg.Global.getSegToPointMap(param);
     
     switch where
         case {'pre', 'preRecenter'}
@@ -29,26 +30,23 @@ function pos = calculatePositions(param, syn, where)
             error('Invalid input argument');
     end
     
-    pos = cellfun( ...
-        @(ids) wmean(weights(ids), points(ids, :)), ...
-        segIds, 'UniformOutput', false);
-    
-    if doRecenter
-        pos = cellfun( ...
-            @(candPos, segIds) recenter( ...
-                param, candPos, points(segIds, :)), ...
-            pos, segIds, 'UniformOutput', false);
+    pos = nan(numel(segIds), 3);
+    for curIdx = 1:numel(segIds)
+        curSegIds = segIds{curIdx};
+        curPos = wmean(weights(curSegIds), coms(curSegIds, :));
+        
+        if doRecenter
+            % Move from center of mass to closest segment position
+            curPos = recenter(param, curPos, points(curSegIds, :));
+        end
+        
+        pos(curIdx, :) = curPos;
     end
-    
-    pos = cell2mat(pos);
 end
 
-function pos = recenter(param, candPos, segPos)
-   [~, idx] = pdist2( ...
-        segPos .* param.raw.voxelSize, ...
-        candPos .* param.raw.voxelSize, ...
-        'squaredeuclidean', 'Smallest', 1);
-    
-    assert(isscalar(idx));
-    pos = segPos(idx, :);
+function pos = recenter(param, pos, segPos)
+    if isequal(pos, segPos); return; end
+    pos = (segPos - pos) .* param.raw.voxelSize;
+   [~, pos] = min(sum(pos .* pos, 2));
+    pos = segPos(pos, :);
 end
