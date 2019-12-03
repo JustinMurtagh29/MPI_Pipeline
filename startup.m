@@ -18,3 +18,4 @@ PIPELINE_READY = true;
 clear;
 
 addpath(genpath('/u/sahilloo/repos/loombas/barrel/'))
+addpath(genpath('/u/sahilloo/repos/amottaNew/matlab/'))
