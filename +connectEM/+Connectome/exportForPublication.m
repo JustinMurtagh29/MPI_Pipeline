@@ -17,6 +17,7 @@ Util.showRunInfo(info);
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 
+voxelSize = param.raw.voxelSize;
 maxSegId = Seg.Global.getMaxSegId(param);
 segPoints = Seg.Global.getSegToPointMap(param);
 segSizes = Seg.Global.getSegToSizeMap(param);
@@ -66,11 +67,16 @@ infoToHdf5(curOutFile, info);
 Util.protect(curOutFile);
 
 % Dendrites
+curShVols = cellfun(@(ids) sum(segSizes(ids)), shAgglos);
+curShVols = single(curShVols * prod(voxelSize / 1E3));
+
 curOutFile = fullfile(outDir, 'dendrites.hdf5');
+arrayToHdf5(curOutFile, '/dendrites/neuronId', uint32(conn.denMeta.cellId));
 categoricalToHdf5(curOutFile, '/dendrites/class', conn.denMeta.targetClass);
 agglosToHdf5(curOutFile, '/dendrites/agglomerate', conn.dendrites);
 superAgglosToHdf5(curOutFile, '/dendrites/skeleton', dendrites);
 agglosToHdf5(curOutFile, '/spineHeads/agglomerate', shAgglos);
+arrayToHdf5(curOutFile, '/spineHeads/volume', curShVols);
 infoToHdf5(curOutFile, info);
 Util.protect(curOutFile);
 
