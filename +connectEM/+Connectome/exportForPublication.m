@@ -70,7 +70,7 @@ Util.protect(curOutFile);
 curShVols = cellfun(@(ids) sum(segSizes(ids)), shAgglos);
 curShVols = single(curShVols * prod(voxelSize / 1E3));
 
-curOutFile = fullfile(outDir, 'dendrites.hdf5');
+curOutFile = fullfile(outDir, 'dendrites_v2.hdf5');
 arrayToHdf5(curOutFile, '/dendrites/neuronId', uint32(conn.denMeta.cellId));
 categoricalToHdf5(curOutFile, '/dendrites/class', conn.denMeta.targetClass);
 agglosToHdf5(curOutFile, '/dendrites/agglomerate', conn.dendrites);
