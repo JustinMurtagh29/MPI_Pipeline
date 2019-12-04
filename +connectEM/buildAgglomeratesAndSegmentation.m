@@ -102,7 +102,7 @@ segGraph = rmfield(segGraph, setdiff( ...
 Util.log('Doing graph cut...')
 clear cur*;
 
-assert(issorted(segGraph.edges, 2));
+axonssert(issorted(segGraph.edges, 2));
 assert(issortedrows(segGraph.edges));
 
 [~, curSortIds] = sort( ...

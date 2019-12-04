@@ -48,7 +48,8 @@ axonEvalParam.nrQueriesPerMerger = 2;
 
 % NOTE(amotta): To first approximation, the tracing of a merge query is
 % twice as long as the inner radius used for merge error detection.
-axonEvalParam.tracingLenPerMergeQuery = 2000;
+axonEvalParam.tracingLenPerMergeQuery = 5*2000;
+
 
 % Dendrite evaluation
 dendEvalParam = struct;
@@ -66,7 +67,7 @@ dendEvalParam.tracingLenPerSplitQuery = 2000;
 dendEvalParam.nrExitsPerMerger = 2;
 
 dendEvalParam.nrQueriesPerMerger = 2;
-dendEvalParam.tracingLenPerMergeQuery = 10000;
+dendEvalParam.tracingLenPerMergeQuery = 5*10000;
 
 evalParam = struct;
 evalParam.axon = axonEvalParam;
@@ -75,8 +76,8 @@ evalParam.dend = dendEvalParam;
 % NOTE(amotta): The ground truth contains 6 / 69 axons and 2 / 17
 % dendrites. So, let's use this info to weigh the two error classes
 % accordingly.
-evalParam.axonFactor = 69 / 6;
-evalParam.dendFactor = 9 / 4;
+evalParam.axonFactor = 33 / 11;
+evalParam.dendFactor = 6 / 4;
 
 parallelParam = struct;
 parallelParam.batchCount = 100;
@@ -253,6 +254,8 @@ curOptions = optimoptions( ...
 [curParams, curMinCost, curExitFlags, curPop, curScores] = ga( ...
     curFitnessFun, curNumParams, [], [], [], [], ...
     curLb, curUb, [], [], curOptions);
+
+save(fullfile(p.saveFolder,'aggloGA',[datestr(clock,30) 'optimParams.mat']),'curParams','curMinCost','curExitFlags','curPop','curScores');
 
 %% Utility
 function cost = fitnessParallel(parallelParam, inputs)
