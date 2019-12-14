@@ -22,6 +22,15 @@ dendrites = Util.load(conn.info.param.dendriteFile, 'dendrites');
 
 segSizes = Seg.Global.getSegToSizeMap(param);
 
+%% Convert axon format
+for curIdx = 1:numel(axons)
+    curSegIds = double(axons(curIdx).segIds);
+    curNodes = cat(2, axons(curIdx).nodes, curSegIds(:));
+    axons(curIdx).nodes = curNodes;
+end
+
+axons = rmfield(axons, 'segIds');
+
 %% Calculate axonal intersynapse distances
 clear cur*;
 
