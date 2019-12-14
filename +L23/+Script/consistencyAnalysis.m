@@ -10,6 +10,9 @@ rootDir = '/tmpscratch/amotta/l23/2018-10-09-mrnet-pipeline-run';
 connFile = fullfile(rootDir, 'connectome', 'Connectome_20191203T021242-results_20191203T021242-results-auto-spines-v2_SynapseAgglomerates--20191203T021242-results--20191203T021242-results-auto-spines-v2--v1.mat');
 asiRunId = '20191213T143516';
 
+% NOTE(amotta): Set this path to generate a debug NML file
+debugNmlDir = '/home/amotta/Desktop/';
+
 info = Util.runInfo();
 Util.showRunInfo(info);
 
@@ -18,9 +21,6 @@ param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 
 conn = load(connFile);
-
-axons = conn.info.param.axonFile;
-axons = Util.load(axons, 'axons');
 
 synFile = conn.info.param.synFile;
 syn = load(synFile);
@@ -132,6 +132,76 @@ for curIdx = 1:numel(plotConfigs)
     % Only consider lowest and highest p-value threshold
     curThreshs = curThreshs(unique([1, numel(curThreshs)]));
     plotConfigs(curIdx).twoDimPValThreshs = curThreshs;
+end
+
+%% Export random examples to webKnossos
+clear cur*;
+rng(0);
+
+curPairCount = 50;
+curMaxNodeCount = 50000;
+
+if ~isempty(debugNmlDir)
+    if ~exist('axons', 'var')
+        axons = conn.info.param.axonFile;
+        axons = Util.load(axons, 'axons');
+    end
+    
+    if ~exist('dendrites', 'var')
+        dendrites = conn.info.param.dendriteFile;
+        dendrites = Util.load(dendrites, 'dendrites');
+    end
+    
+    curPlotConfig = plotConfigs(1);
+    curPairs = connectEM.Consistency.buildPairConfigs(asiT, curPlotConfig);
+    
+    curPairT = table;
+    curPairT.synIds = curPairs(1).synIdPairs;
+    curPairT.axonId = asiT.preAggloId(curPairT.synIds(:, 1));
+    curPairT.dendId = asiT.postAggloId(curPairT.synIds(:, 1));
+    
+    curPairCount = min(curPairCount, height(curPairT));
+    curRandIds = randperm(height(curPairT), curPairCount);
+    curNumDigits = ceil(log10(1 + curPairCount));
+    
+    for curIdx = 1:curPairCount
+        curId = curRandIds(curIdx);
+        curAxonId = curPairT.axonId(curId);
+        curDendId = curPairT.dendId(curId);
+        
+        curAsiIds = curPairT.synIds(curId, :);
+        curAsiPos = asiT.pos(curAsiIds, :);
+        
+        curAxon = axons(curAxonId);
+        curDend = dendrites(curDendId);
+        
+        if size(curAxon.nodes, 1) > curMaxNodeCount ...
+                || size(curDend.nodes, 1) > curMaxNodeCount
+            warning('Pair %d skipped due to agglomerate size', curIdx);
+            continue;
+        end
+        
+        curSkel = skeleton();
+        curSkel = Skeleton.setParams4Pipeline(curSkel, param);
+        curSkel = Skeleton.setDescriptionFromRunInfo(curSkel, info);
+        
+        curSkel = curSkel.addTree( ...
+            sprintf('Axon %d', curAxonId), ...
+            curAxon.nodes(:, 1:3), curAxon.edges);
+        curSkel = curSkel.addTree( ...
+            sprintf('Dendrite %d', curDendId), ...
+            curDend.nodes(:, 1:3), curDend.edges);
+        
+        for curAsiIdx = 1:numel(curAsiIds)
+            curSkel = curSkel.addTree( ...
+                sprintf('ASI %d', curAsiIds(curAsiIdx)), ...
+                curAsiPos(curAsiIdx, :));
+        end
+        
+        curNmlFile = fullfile(debugNmlDir, sprintf( ...
+            '%0*d_sasd-pair-%d.nml', curNumDigits, curIdx, curId));
+        curSkel.write(curNmlFile);
+    end
 end
 
 %% Synapse sizes
