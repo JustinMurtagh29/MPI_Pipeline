@@ -59,7 +59,7 @@ curMask = axonMeta.synCount >= 10;
 curLeg{end + 1} = '≥ 10 synapses';
 histogram(axonMeta.priSpineSynFrac(curMask), curBinEdges);
 
-curMask = axonMeta.synCount >= 10 & axonMeta.synCount <= 50;
+curMask = axonMeta.synCount >= 10 & axonMeta.synCount <= 25;
 curLeg{end + 1} = '10 - 25 synapses';
 histogram(axonMeta.priSpineSynFrac(curMask), curBinEdges);
 
