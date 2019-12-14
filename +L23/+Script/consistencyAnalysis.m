@@ -10,8 +10,12 @@ rootDir = '/tmpscratch/amotta/l23/2018-10-09-mrnet-pipeline-run';
 connFile = fullfile(rootDir, 'connectome', 'Connectome_20191203T021242-results_20191203T021242-results-auto-spines-v2_SynapseAgglomerates--20191203T021242-results--20191203T021242-results-auto-spines-v2--v1.mat');
 asiRunId = '20191213T143516';
 
+minAxonSyns = 10;
+maxAxonSyns = 25;
+maxDendriteNodes = inf;
+
 % NOTE(amotta): Set this path to generate a debug NML file
-debugNmlDir = '/home/amotta/Desktop/';
+debugNmlDir = '';
 
 info = Util.runInfo();
 Util.showRunInfo(info);
@@ -21,6 +25,9 @@ param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 
 conn = load(connFile);
+
+dendrites = conn.info.param.dendriteFile;
+dendrites = Util.load(dendrites, 'dendrites');
 
 synFile = conn.info.param.synFile;
 syn = load(synFile);
@@ -58,9 +65,9 @@ curMeta.priSpineSynCount = accumarray( ...
 curMeta.priSpineSynFrac = curMeta.priSpineSynCount ./ curMeta.synCount;
 
 curMeta.class(:) = categorical({'Unknown'});
-curSpeckle = curMeta.synCount < 10;
+curSpeckle = curMeta.synCount < minAxonSyns;
 curMeta.class(curSpeckle) = 'Speckle';
-curMergerMask = curMeta.synCount > 25;
+curMergerMask = curMeta.synCount > maxAxonSyns;
 curMeta.class(curMergerMask) = 'Merger';
 curOkayMask = not(curSpeckle | curMergerMask);
 curMeta.class(curOkayMask & curMeta.priSpineSynFrac > 0.5) = 'Excitatory';
@@ -68,12 +75,23 @@ curMeta.class(curOkayMask & curMeta.priSpineSynFrac < 0.25) = 'Inhibitory';
 
 conn.axonMeta = curMeta;
 
+%% Build dendrite classes
+clear cur*;
+
+curMeta = conn.denMeta;
+curMeta.nodeCount = arrayfun( ...
+    @(d) size(d.nodes, 1), dendrites(curMeta.id));
+curMergerMask = curMeta.nodeCount > maxDendriteNodes;
+curMeta.targetClass(curMergerMask) = 'Merger';
+conn.denMeta = curMeta;
+
 %% Complete ASI table
 clear cur*;
 
 [~, curTypeRow] = ismember(asiT.id, synT.id);
 asiT.type = synT.type(curTypeRow);
 asiT.axonClass = conn.axonMeta.class(asiT.preAggloId);
+asiT.targetClass = conn.denMeta.targetClass(asiT.postAggloId);
 
 %% Build configurations
 clear cur*;
@@ -145,11 +163,6 @@ if ~isempty(debugNmlDir)
     if ~exist('axons', 'var')
         axons = conn.info.param.axonFile;
         axons = Util.load(axons, 'axons');
-    end
-    
-    if ~exist('dendrites', 'var')
-        dendrites = conn.info.param.dendriteFile;
-        dendrites = Util.load(dendrites, 'dendrites');
     end
     
     curPlotConfig = plotConfigs(1);
