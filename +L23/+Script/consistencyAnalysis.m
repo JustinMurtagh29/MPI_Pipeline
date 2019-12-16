@@ -9,6 +9,7 @@ clear;
 rootDir = '/tmpscratch/amotta/l23/2018-10-09-mrnet-pipeline-run';
 connFile = fullfile(rootDir, 'connectome', 'Connectome_20191203T021242-results_20191203T021242-results-auto-spines-v2_SynapseAgglomerates--20191203T021242-results--20191203T021242-results-auto-spines-v2--v1.mat');
 asiRunId = '20191213T143516';
+interSynVersion = 1;
 
 minAxonSyns = 10;
 maxAxonSyns = 25;
@@ -133,19 +134,112 @@ plotConfigs = reshape( ...
     size(targetClasses, 1), ...
     size(axonClasses, 1));
 
+%% Calculate intersynapse distance
+clear cur*;
+
+curPlotConfig = plotConfigs(1);
+curPairs = connectEM.Consistency.buildPairConfigs(asiT, curPlotConfig);
+curPairs = curPairs(1);
+
+curInterSynFile = sprintf('__intersynapse_v%d.mat', interSynVersion);
+curInterSynFile = strrep(connFile, '.mat', curInterSynFile);
+curInterSyn = load(curInterSynFile);
+
+% Calculate distances for each pair
+pairDistT = table;
+pairDistT.synIds = curPairs.synIdPairs;
+pairDistT.axonId = asiT.preAggloId(pairDistT.synIds(:, 1));
+pairDistT.dendId = asiT.postAggloId(pairDistT.synIds(:, 1));
+
+pairDistT.axonDist(:) = nan;
+pairDistT.dendDist(:) = nan;
+for curIdx = 1:height(pairDistT)
+    % Axonal intersynapse distance
+    curAxonId = pairDistT.axonId(curIdx);
+    curAxonSynIds = curInterSyn.axonSynIds{curAxonId};
+    curAxonDists = curInterSyn.axonSynToSynDists{curAxonId};
+    curSynIds = asiT.id(pairDistT.synIds(curIdx, :));
+   [~, curSynIds] = ismember(curSynIds, curAxonSynIds);
+    curAxonDist = curAxonDists(curSynIds(1), curSynIds(2));
+    pairDistT.axonDist(curIdx) = curAxonDist;
+    
+    % Dendritic intersynapse distance
+    curDendId = pairDistT.dendId(curIdx);
+    curDendSynIds = curInterSyn.dendSynIds{curDendId};
+    curDendDists = curInterSyn.dendSynToSynDists{curDendId};
+    curSynIds = asiT.id(pairDistT.synIds(curIdx, :));
+   [~, curSynIds] = ismember(curSynIds, curDendSynIds);
+    curDendDist = curDendDists(curSynIds(1), curSynIds(2));
+    pairDistT.dendDist(curIdx) = curDendDist;
+end
+
+% To microns
+pairDistT.axonDist = pairDistT.axonDist / 1E3;
+pairDistT.dendDist = pairDistT.dendDist / 1E3;
+
+%% Calculate merge error probability
+clear cur*;
+curAxonMeanInterMergeDist = 39.2; % From blog
+curDendMeanInterMergeDist = 100; % Wild guess
+
+% NOTE(amotta): Assume two correct spine necks of 3 µm, each.
+curTrunkDist = max(0, pairDistT.dendDist - 2 * 3);
+
+pairDistT.correctProb = ...
+    exp(-pairDistT.axonDist / curAxonMeanInterMergeDist) ...
+ .* exp(-curTrunkDist / curDendMeanInterMergeDist);
+
+%% Plot results
+clear cur*;
+
+fig = figure();
+subplot(1, 3, 1);
+histogram(pairDistT.axonDist);
+xlabel('Axonal ISD [µm]');
+axis('square');
+
+subplot(1, 3, 2);
+histogram(pairDistT.dendDist);
+xlabel('Dendritic ISD [µm]');
+axis('square');
+
+subplot(1, 3, 3);
+histogram(pairDistT.correctProb, 'BinEdges', 0:0.05:1);
+xlabel('Correctness probability');
+axis('square');
+
+connectEM.Figure.config(fig, info);
+fig.Position(3:4) = [575, 210];
+
+%% Build more conservative plot config
+clear cur*;
+curMinCorrectProb = 0.5;
+
+curCorrMask = pairDistT.correctProb > curMinCorrectProb;
+curCorrSynIds = pairDistT.synIds(curCorrMask, :);
+
+curPlotConfig = plotConfigs(1);
+curPlotConfig.synIds = unique(curCorrSynIds(:));
+curPlotConfig.title = sprintf('%s (> %.3g %% correct)', ...
+    curPlotConfig.title, 100 * curMinCorrectProb);
+curPlotConfig.tag = sprintf('%s %g min corr', ...
+    curPlotConfig.tag, curMinCorrectProb);
+plotConfigs(2) = curPlotConfig;
+
 %% Set p-value thresholds for evaluation
 clear cur*;
 
 % NOTE(amotta): p-value threshold at which large and small low-CV regions
 % are not yet merged. (I've only looked at range up to p = 10 %.)
 curPvalThreshs = [0.5, 1, 2, 3, 4, 5] / 100;
-plotConfigs(1, 1).twoDimPValThreshs = 0.0102;
+plotConfigs(1).twoDimPValThreshs = 0.0102;
+plotConfigs(2).twoDimPValThreshs = 0.005;
 
 for curIdx = 1:numel(plotConfigs)
     curThreshs = plotConfigs(curIdx).twoDimPValThreshs;
     
     % Only consider p-value thresholds before LTP and LTD regions merger
-    curThreshs = curPvalThreshs(curPvalThreshs < curThreshs);
+    curThreshs = curPvalThreshs(curPvalThreshs <= curThreshs);
     
     % Only consider lowest and highest p-value threshold
     curThreshs = curThreshs(unique([1, numel(curThreshs)]));
