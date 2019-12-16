@@ -36,7 +36,8 @@ l4AsiT = l4AsiT(l4AsiT.area > 0, :);
 % Layer 2/3
 l23Config.param = Util.load(fullfile( ...
     l23Config.rootDir, 'allParameter.mat'), 'p');
-l23ShAgglos = Util.load(l23Config.shFile, 'shAgglos');
+[l23ShAgglos, l23ShAttached] = Util.load( ...
+    l23Config.shFile, 'shAgglos', 'attached');
 
 l23SegSizes = Seg.Global.getSegToSizeMap(l23Config.param);
 l23ShVols = cellfun(@(ids) sum(l23SegSizes(ids)), l23ShAgglos);
@@ -99,3 +100,59 @@ leg.Location = 'EastOutside';
 
 connectEM.Figure.config(fig, info);
 fig.Position(3:4) = [460, 225];
+
+%% Correlate spine head volume with ASI area
+clear cur*;
+curLimX = [-4, +1];
+curLimY = [-3, 1];
+
+fig = figure();
+subplot(1, 2, 1);
+scatter(log10(l4ShVols(l4AsiT.shId)), log10(l4AsiT.area), '.');
+curFit = fitlm(log10(l4ShVols(l4AsiT.shId)), log10(l4AsiT.area)) %#ok
+hold('on'); plot(curLimX(:), curFit.predict(curLimX(:)), 'k--');
+curLeg = legend(sprintf('y = %.2f + %.2fx (R² = %.2f)', ...
+    curFit.Coefficients.Estimate, curFit.Rsquared.Ordinary));
+set(curLeg, 'Box', 'Off', 'Location', 'South');
+axis('square'); xlim(curLimX); ylim(curLimY);
+xlabel('Spine head volume [log10(µm³)]');
+ylabel('ASI area [log10(µm²)]');
+
+subplot(1, 2, 2);
+scatter(log10(l23ShVols(l23AsiT.shId)), log10(l23AsiT.area), '.');
+curFit = fitlm(log10(l23ShVols(l23AsiT.shId)), log10(l23AsiT.area)) %#ok
+hold('on'); plot(curLimX(:), curFit.predict(curLimX(:)), 'k--');
+curLeg = legend(sprintf('y = %.2f + %.2fx (R² = %.2f)', ...
+    curFit.Coefficients.Estimate, curFit.Rsquared.Ordinary));
+set(curLeg, 'Box', 'Off', 'Location', 'South');
+axis('square'); xlim(curLimX); ylim(curLimY);
+
+connectEM.Figure.config(fig, info);
+fig.Position(3:4) = [555, 250];
+
+%% Plot spine head volumes (attached vs. unattached)
+clear cur*;
+curBinEdges = linspace(-3, 0, 41);
+
+fig = figure();
+ax = axes(fig);
+
+hold(ax, 'on');
+histogram(ax, log10(l23ShVols( ...
+    l23ShAttached > 0)), 'BinEdges', curBinEdges);
+histogram(ax, log10(l23ShVols( ...
+    l23ShAttached == 0)), 'BinEdges', curBinEdges);
+
+hists = flip(ax.Children);
+set(hists, 'Normalization', 'probability');
+
+xlabel(ax, 'Spine head volume [log10(µm³)]');
+ylabel(ax, 'Probability');
+
+leg = legend(hists, { ...
+    sprintf('L2/3 attached (n = %d)', sum(l23ShAttached > 0)), ...
+    sprintf('L2/3 unattached (n = %d)', sum(l23ShAttached == 0))});
+leg.Location = 'EastOutside';
+
+connectEM.Figure.config(fig, info);
+fig.Position(3:4) = [545, 225];
