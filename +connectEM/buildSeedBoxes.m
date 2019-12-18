@@ -12,16 +12,21 @@
 param = p;
 outDir = fullfile(param.saveFolder,'tracings', 'box-seeded');
 mkdir(outDir)
-numBoxes = 3;
-outFiles = arrayfun(@(x) fullfile(outDir,sprintf('calibration-box-%02d.nml',x)),1:numBoxes,'uni',0);
+numBoxes = 10;
+boxDim = 5000;% 2500 for agglo eval
+centerBoxDim = 100000; % 15000 for agglo eval
+outFiles = arrayfun(@(x) fullfile(outDir,sprintf('calibration-box-spines-%02d.nml',x)),1:numBoxes,'uni',0);
 %% Build boxes
 centerPos = round(mean(param.bbox, 2));
 
-centerBoxSize = round(15000 ./ param.raw.voxelSize(:));
+% for center of dataset for agglo evaluation
+%centerBoxSize = round(15000 ./ param.raw.voxelSize(:));
+% for spine-head training data boxes
+centerBoxSize = round(centerBoxDim ./ param.raw.voxelSize(:));
 centerBox = centerPos(:) - round(centerBoxSize(:) / 2);
 centerBox = centerBox + [[0; 0; 0], centerBoxSize - 1];
 
-boxSize = round(2500 ./ param.raw.voxelSize(:));
+boxSize = round(boxDim ./ param.raw.voxelSize(:));
 boxes = nan(3, 2, numBoxes);
 
 rng(0);
