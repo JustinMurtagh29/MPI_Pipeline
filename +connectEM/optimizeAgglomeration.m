@@ -241,7 +241,7 @@ curUb = ones(curNumParams, 1);
 curLb(endsWith(curParamNames, 'MinEdgeProb')) = 0.5;
 
 % NOTE(amotta): Restrict minimum agglomerate length to at most 50 µm.
-curUb(endsWith(curParamNames, 'MinAggloLength')) = 50000;
+curUb(endsWith(curParamNames, 'MinAggloLength')) = 10000;% 10um
 
 % NOTE(amotta): The maximum border size exceeds unity.
 curUb(endsWith(curParamNames, 'MinBorderSize')) = maxBorderSize;
@@ -359,4 +359,3 @@ function cost = fitness(parallelParam, inputs)
         cost(curParamIdx) = curCost;
     end
 end
-
