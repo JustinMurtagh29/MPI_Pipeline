@@ -1,26 +1,27 @@
-function spineLengths = ...
+function [spineLengths, dendIds, nodeIds] = ...
         calculateSpineLengths(param, trunks, dendrites, spineHeads)
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
+    spineHeads = reshape(spineHeads, [], 1);
+    
     maxSegId = Seg.Global.getMaxSegId(param);
     trunkLUT = logical(Agglo.buildLUT(maxSegId, trunks));
     
     % Find dendrite to spine head
-    attached = Agglo.fromSuperAgglo(dendrites);
-    attached = Agglo.buildLUT(maxSegId, attached);
+    dendIds = Agglo.fromSuperAgglo(dendrites);
+    dendIds = Agglo.buildLUT(maxSegId, dendIds);
+    dendIds = cellfun(@(ids) mode(nonzeros(dendIds(ids))), spineHeads);
+    dendIds(isnan(dendIds)) = 0;
     
-    attached = cellfun(@(ids) mode( ...
-        nonzeros(attached(ids))), spineHeads);
-    attached(isnan(attached)) = 0;
-    
-   [uniAggloIds, ~, uniSpineIds] = unique(attached);
+   [uniAggloIds, ~, uniSpineIds] = unique(dendIds);
    
     if ~uniAggloIds(1)
         uniAggloIds(1) = [];
         uniSpineIds = uniSpineIds - 1;
     end
     
-    spineLengths = nan(size(attached));
+    spineLengths = nan(size(spineHeads));
+    nodeIds = nan(size(spineHeads));
     for curAggloIdx = 1:numel(uniAggloIds)
         curAggloId = uniAggloIds(curAggloIdx);
         curSpineMask = uniSpineIds == curAggloIdx;
@@ -28,45 +29,57 @@ function spineLengths = ...
         curDendrite = dendrites(curAggloId);
         curSpineHeads = spineHeads(curSpineMask);
         
-        spineLengths(curSpineMask) = forAgglo( ...
+       [curLengths, curNodeIds] = forAgglo( ...
             param, trunkLUT, curDendrite, curSpineHeads);
+        
+        spineLengths(curSpineMask) = curLengths;
+        nodeIds(curSpineMask) = curNodeIds;
     end
 end
 
-function spineLengths = forAgglo(param, trunkLUT, dendrite, spineHeads)
+function [spineLengths, nodeIds] = forAgglo( ...
+        param, trunkLUT, dendrite, spineHeads)
     spineLengths = nan(size(spineHeads));
+    nodeIds = nan(size(spineHeads));
     
-    % Project spine heads onto nodes
-    spineHeadIds = repelem( ...
-        transpose(1:numel(spineHeads)), ...
-        cellfun(@numel, spineHeads));
-   [~, spineHeadNodeIds] = ismember( ...
-        cell2mat(spineHeads), dendrite.nodes(:, 4));
+    flatten = @(v) reshape(v, [], 1);
     
-    spineHeadIds(~spineHeadNodeIds) = [];
-    spineHeadNodeIds(~spineHeadNodeIds) = [];
+    shT = table;
+    shT.id = flatten(repelem( ...
+        1:numel(spineHeads), ...
+        cellfun(@numel, spineHeads)));
+    
+    shT.nodeId = cell2mat(spineHeads(:));
+    dendriteSegIds = dendrite.nodes(:, 4);
+   [~, shT.nodeId] = ismember(shT.nodeId, dendriteSegIds);
+    shT = shT(shT.nodeId > 0, :);
     
     % Find trunk nodes
-    trunkNodeIds = ~isnan(dendrite.nodes(:, 4));
+    trunkNodeIds = not( ...
+        isnan(dendriteSegIds));
     trunkNodeIds(trunkNodeIds) = ...
-        trunkLUT(dendrite.nodes(trunkNodeIds, 4));
+        trunkLUT(dendriteSegIds(trunkNodeIds));
     trunkNodeIds = find(trunkNodeIds);
     
     % No trunk nodes? Return NaN.
     if isempty(trunkNodeIds); return; end
 
-    edgeLengths = ...
+    trunkDists = ...
         dendrite.nodes(dendrite.edges(:, 1), 1:3) ...
       - dendrite.nodes(dendrite.edges(:, 2), 1:3);
-    edgeLengths = param.raw.voxelSize .* edgeLengths;
-    edgeLengths = sqrt(sum(edgeLengths .* edgeLengths, 2));
+    trunkDists = param.raw.voxelSize .* trunkDists;
+    trunkDists = sqrt(sum(trunkDists .* trunkDists, 2));
     
-    spineLengths = graph( ...
+    trunkDists = graph( ...
         dendrite.edges(:, 1), dendrite.edges(:, 2), ...
-        edgeLengths, 'OmitSelfLoops');
-    spineLengths = distances( ...
-        spineLengths, trunkNodeIds, spineHeadNodeIds);
+        trunkDists, size(dendrite.nodes, 1), 'OmitSelfLoops');
+    trunkDists = distances(trunkDists, trunkNodeIds, shT.nodeId);
     
-    spineLengths = min(spineLengths, [], 1);
-    spineLengths = accumarray(spineHeadIds(:), spineLengths(:), [], @min);
+   [shT.length(:), shT.trunkNodeId(:)] = min(trunkDists, [], 1);
+    shT.trunkNodeId = trunkNodeIds(shT.trunkNodeId);
+    
+    shT = sortrows(shT, 'length', 'ascend');
+   [shIds, shRows] = unique(shT.id, 'stable');
+    spineLengths(shIds) = shT.length(shRows);
+    nodeIds(shIds) = shT.trunkNodeId(shRows);
 end
