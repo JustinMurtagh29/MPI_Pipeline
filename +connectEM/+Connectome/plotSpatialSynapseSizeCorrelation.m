@@ -150,20 +150,20 @@ rng(0);
 
 % NOTE(amotta): The first run corresponds to actually observed data. All
 % subsequent runs use randomly redistributed ASI areas.
-curNumRuns = 1 + 100;
-curDistThresh = 2000;
+numRuns = 1 + 100;
+distThresh = 2500;
 
-curShT = table;
+curShT = shT;
 curAsiT = asiT( ...
     asiT.type == 'PrimarySpine' ...
   & asiT.targetClass == 'ProximalDendrite' ...
   & ismember(asiT.axonClass, {'Corticocortical', 'Thalamocortical'}), :);
 curAsiT.postAggloId = shT.dendId(curAsiT.shId);
 
-seedAreas = nan([height(curAsiT), curNumRuns]);
-condAreas = cell([height(curAsiT), curNumRuns]);
+seedAreas = nan([height(curAsiT), numRuns]);
+condAreas = cell([height(curAsiT), numRuns]);
 
-for curRunIdx = 1:curNumRuns    
+for curRunIdx = 1:numRuns
     curShT.asiArea(:) = nan;
     curShT.asiArea(curAsiT.shId) = curAsiT.area;
     
@@ -181,7 +181,7 @@ for curRunIdx = 1:curNumRuns
         curDendDists = dendShToShDists{curSeedDendId};
         curDendDists = curDendDists(:, curSeedShMask);
 
-        curOtherShMask = curDendDists < curDistThresh;
+        curOtherShMask = curDendDists < distThresh;
         curOtherShMask = curOtherShMask & not(curSeedShMask);
 
         curOtherShIds = curDendShIds(curOtherShMask);
@@ -197,16 +197,48 @@ for curRunIdx = 1:curNumRuns
     curAsiT.area = curAsiT.area(curRandIds);
 end
 
+%% Plot size versus number of neighboring spines
+clear cur*;
+
+curX = log10(seedAreas(:, 1));
+curY = condAreas(:, 1);
+curY = cellfun(@numel, curY);
+
+curFit = fitlm(curX, curY);
+
+curFig = figure();
+curAx = axes(curFig);
+hold(curAx, 'on');
+
+scatter(curAx, curX, curY, '.');
+curFitX = curAx.XLim(:);
+curFitY = curFit.predict(curFitX);
+plot(curAx, curFitX, curFitY, 'k--');
+connectEM.Figure.config(curFig, info);
+
 %% Plot results
-curDens = cell(curNumRuns, 1);
+clear cur*;
+
+curImSize = 256;
+curDens = cell(numRuns, 1);
 curLims = [-1.5, 0];
 
-curConfigAxis = @(ax) set(ax, ...
-    'PlotBoxAspectRatio', [1, 1, 1], ...
-    'DataAspectRatioMode', 'auto', ...
-    'XDir', 'normal', 'YDir', 'normal');
+curTicks = [-1, 0];
+curTickLabels = {'-1', '0'};
+curTickIds = linspace(curLims(1), curLims(2), curImSize);
+[~, curTickIds] = arrayfun(@(t) min(abs(t - curTickIds)), curTicks);
 
-for curRunIdx = 1:curNumRuns
+curXLabel = 'log10(reference ASI area [µm²])';
+curYLabel = 'log10(ASI area within %g µm [µm³])';
+curYLabel = sprintf(curYLabel, distThresh / 1E3);
+
+curConfigAxis = @(ax) set(ax, ...
+    'PlotBoxAspectRatio', [1, 1, 1], 'DataAspectRatioMode', 'auto', ...
+    'XDir', 'normal', 'XTick', curTickIds, 'XTickLabel', curTickLabels, ...
+    'YDir', 'normal', 'YTick', curTickIds, 'YTickLabel', curTickLabels);
+
+curBw = [];
+for curRunIdx = 1:numRuns
     curSeedAreas = seedAreas(:, curRunIdx);
     curCondAreas = condAreas(:, curRunIdx);
     
@@ -217,30 +249,28 @@ for curRunIdx = 1:curNumRuns
     curX = log10(curX);
     curY = log10(curY);
 
-   [~, curDens{curRunIdx}] = ...
+   [curRunBw, curDens{curRunIdx}] = ...
         connectEM.Libs.kde2d( ...
-            cat(2, curX, curY), 256, ...
+           [curX(:), curY(:)], curImSize, ...
             repelem(curLims(1), 2), ...
-            repelem(curLims(2), 2));
-    curDens{curRunIdx} = curDens{curRunIdx} / sum(curDens{curRunIdx}(:));
+            repelem(curLims(2), 2), ...
+            curBw);
+    
+    % NOTE(amotta): The first run contains the "observed data". We use an
+    % empty bandwidth vector for this run in order for `kde2d` to derive
+    % these values.
+    %   But for all subsequent runs we want to use the bandwidth derived
+    % from the actualy data. So, we set it here.
+    if isempty(curBw); curBw = curRunBw; end
+    
+    curDens{curRunIdx} = ...
+        curDens{curRunIdx} ...
+      / sum(curDens{curRunIdx}(:));
 end
 
 curRealDens = curDens{1};
 curCtrlDens = mean(cat(3, curDens{2:end}), 3);
 curDiffDens = curRealDens - curCtrlDens;
-
-curFig = figure();
-curAx = axes(curFig);
-imagesc(curAx, curRealDens);
-curConfigAxis(curAx);
-connectEM.Figure.config(curFig, info);
-
-curFig = figure();
-curAx = axes(curFig);
-imagesc(curAx, curDiffDens);
-curAx.CLim = [-1, +1] * max(abs(curDiffDens(:)));
-curConfigAxis(curAx);
-connectEM.Figure.config(curFig, info);
 
 curRealCond = sum(curRealDens, 1);
 curRealCond(~curRealCond) = eps;
@@ -251,17 +281,65 @@ curCtrlCond(~curCtrlCond) = eps;
 curCtrlCond = curCtrlDens ./ curCtrlCond;
 curDiffCond = curRealCond - curCtrlCond;
 
+
+% Plot 1
 curFig = figure();
 curAx = axes(curFig);
-imagesc(curAx, curRealCond);
+imagesc(curAx, curRealDens);
+curCbar = colorbar(curAx);
+
+xlabel(curAx, curXLabel);
+ylabel(curAx, curYLabel);
+curAx.CLim = [0, max(curRealDens(:))];
+curCbar.Label.String = 'P(ref. ASI, close-by ASIs)';
+
 curConfigAxis(curAx);
 connectEM.Figure.config(curFig, info);
 
+
+% Plot 2
+curFig = figure();
+curAx = axes(curFig);
+imagesc(curAx, curDiffDens);
+curCbar = colorbar(curAx);
+
+xlabel(curAx, curXLabel);
+ylabel(curAx, curYLabel);
+curAx.CLim = [-1, +1] * max(abs(curDiffDens(:)));
+curCbar.Label.String = 'ΔP(ref. ASI, close-by ASIs) to random';
+
+curConfigAxis(curAx);
+connectEM.Figure.config(curFig, info);
+
+
+% Plot 3
+curFig = figure();
+curAx = axes(curFig);
+imagesc(curAx, curRealCond);
+curCbar = colorbar(curAx);
+
+xlabel(curAx, curXLabel);
+ylabel(curAx, curYLabel);
+curAx.CLim = [0, max(curRealCond(:))];
+curCbar.Label.String = 'P(close-by ASIs | ref. ASI)';
+
+curConfigAxis(curAx);
+connectEM.Figure.config(curFig, info);
+
+
+% Plot 4
 curFig = figure();
 curAx = axes(curFig);
 imagesc(curAx, curDiffCond);
-curClim = curDiffCond(:, 50:end);
+curCbar = colorbar(curAx);
+
+curClim = curDiffCond(:, 75:225);
 curClim = [-1, +1] * max(abs(curClim(:)));
+
+xlabel(curAx, curXLabel);
+ylabel(curAx, curYLabel);
 curAx.CLim = curClim;
+curCbar.Label.String = 'ΔP(close-by ASIs | ref. ASI) to random';
+
 curConfigAxis(curAx);
 connectEM.Figure.config(curFig, info);
