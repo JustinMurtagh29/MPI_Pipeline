@@ -9,6 +9,10 @@ dendFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v3_auto-and-
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-linearized_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v8-classified.mat');
 asiRunId = '20190227T082543';
 
+% For analysis of soma-distance
+somaFile  = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_03_v2.mat');
+wcFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v3_auto-and-manual.mat');
+
 debugNmlDir = '';
 
 % For the origin of this magic constant, see
@@ -341,6 +345,99 @@ curCbar.Label.String = 'ΔP(close-by ASIs | ref. ASI) to random';
 curConfigAxis(curAx);
 connectEM.Figure.config(curFig, info);
 
+%% Look at effect of soma distance
+clear cur*;
+
+curWcs = load(wcFile, 'dendrites', 'indWholeCells');
+curWcs = curWcs.dendrites(curWcs.indWholeCells);
+
+curSomata = load(somaFile, 'dendAgglos', 'indSomata');
+curSomata = curSomata.dendAgglos(curSomata.indSomata);
+
+% Build soma → whole cell mapping
+curWcLUT = Agglo.fromSuperAgglo(curWcs);
+curWcLUT = Agglo.buildLUT(maxSegId, curWcLUT);
+curSomaToWc = cellfun(@(ids) mode(nonzeros(curWcLUT(ids))), curSomata);
+assert(isequaln(sort(curSomaToWc), unique(curSomaToWc)));
+
+% Build whole cell → soma mapping
+[~, curWcToSoma] = ismember(1:numel(curWcs), curSomaToWc);
+assert(all(curWcToSoma));
+
+% Calculate soma distances
+somaDists = nan(maxSegId, 1);
+
+for curIdx = 1:numel(curWcs)
+    curWc = curWcs(curIdx);
+    curSomaId = curWcToSoma(curIdx);
+    curSoma = curSomata{curSomaId};
+    
+    curSomaNodeIds = ismember(curWc.nodes(:, 4), curSoma);
+    curSomaNodeIds = find(curSomaNodeIds);
+    
+    curGraph = ...
+        curWc.nodes(curWc.edges(:, 1), 1:3) ...
+      - curWc.nodes(curWc.edges(:, 2), 1:3);
+    curGraph = curGraph .* param.raw.voxelSize;
+    curGraph = sqrt(sum(curGraph .* curGraph, 2));
+    
+    curGraph = graph( ...
+        curWc.edges(:, 1), curWc.edges(:, 2), ...
+        curGraph, size(curWc.nodes, 1));
+    
+    curSomaDists = distances(curGraph, curSomaNodeIds);
+    curSomaDists = min(curSomaDists, [], 1);
+    
+    curSegIds = curWc.nodes(:, 4);
+    curMask = not(isnan(curSegIds));
+    
+    curSegIds = curSegIds(curMask);
+    curSomaDists = curSomaDists(curMask);
+    
+    somaDists(curSegIds) = curSomaDists;
+    curIdx %#ok
+end
+
+%% Plot results
+curAsiT = asiT( ...
+    asiT.type == 'PrimarySpine' ...
+  & asiT.targetClass == 'ProximalDendrite' ...
+  & ismember(asiT.axonClass, {'Corticocortical', 'Thalamocortical'}), :);
+
+curShT = shT;
+curShT.asiArea(:) = nan;
+curShT.asiArea(curAsiT.shId) = curAsiT.area;
+
+curShT.somaDist(:) = nan;
+curMask = ~isnan(curShT.trunkSegId);
+curShT.somaDist(curMask) = somaDists(curShT.trunkSegId(curMask));
+
+curShT = curShT( ...
+    not(isnan(curShT.asiArea)) ...
+  & not(isnan(curShT.somaDist)), :);
+
+curX = curShT.somaDist / 1E3;
+curY = log10(curShT.asiArea);
+
+curFit = fitlm(curX(:), curY(:));
+disp(curFit);
+
+
+% Plot 1
+curFig = figure;
+curAx = axes(curFig);
+hold(curAx, 'on');
+
+scatter(curAx, curX, curY, '.');
+curFitX = curAx.XLim(:);
+curFitY = curFit.predict(curFitX);
+plot(curAx, curFitX, curFitY, 'k--');
+
+axis(curAx, 'square');
+xlabel(curAx, 'Distance to soma [µm]');
+ylabel(curAx, 'log10(ASI area [µm²]');
+connectEM.Figure.config(curFig, info);
+
 %% Utilities
 function [im, bwOut] = kde2d(x, y, w, imSize, xlim, ylim, bwIn)
    [gridY, gridX] = ndgrid( ...
@@ -353,7 +450,7 @@ function [im, bwOut] = kde2d(x, y, w, imSize, xlim, ylim, bwIn)
     if ~isempty(w); optKvPairs(end + 1, :) = {'Weights', w}; end
     optKvPairs = transpose(optKvPairs);
     
-    im = cat(2, x(:), y(:));
+    im = cat(2, y(:), x(:));
    [im, ~, bw] = ksdensity(im, grid, optKvPairs{:});
     im = reshape(im, [imSize, imSize]);
         
