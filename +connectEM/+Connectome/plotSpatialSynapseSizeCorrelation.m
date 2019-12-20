@@ -150,7 +150,7 @@ rng(0);
 
 % NOTE(amotta): The first run corresponds to actually observed data. All
 % subsequent runs use randomly redistributed ASI areas.
-numRuns = 1 + 100;
+numRuns = 1 + 10;
 distThresh = 2500;
 
 curShT = shT;
@@ -243,6 +243,7 @@ for curRunIdx = 1:numRuns
     curCondAreas = condAreas(:, curRunIdx);
     
     curX = cellfun(@numel, curCondAreas);
+    curW = repelem(1 ./ curX, curX);
     curX = repelem(curSeedAreas, curX);
     curY = cell2mat(curCondAreas);
 
@@ -250,7 +251,7 @@ for curRunIdx = 1:numRuns
     curY = log10(curY);
     
    [curDens{curRunIdx}, curRunBw] = kde2d( ...
-        curX, curY, [], curImSize, curLims, curLims, curBw);
+        curX, curY, curW, curImSize, curLims, curLims, curBw);
     
     % NOTE(amotta): The first run contains the "observed data". We use an
     % empty bandwidth vector for this run in order for `kde2d` to derive
@@ -341,13 +342,20 @@ curConfigAxis(curAx);
 connectEM.Figure.config(curFig, info);
 
 %% Utilities
-function [im, bwOut] = kde2d(x, y, weights, imSize, xlim, ylim, bwIn)
-   [bw, im] = ...
-        connectEM.Libs.kde2d( ...
-           [x(:), y(:)], imSize, ...
-           [xlim(1), ylim(1)], ...
-           [xlim(2), ylim(2)], ...
-            bwIn);
+function [im, bwOut] = kde2d(x, y, w, imSize, xlim, ylim, bwIn)
+   [gridY, gridX] = ndgrid( ...
+        linspace(ylim(1), ylim(2), imSize), ...
+        linspace(xlim(1), xlim(2), imSize));
+    grid = horzcat(gridY(:), gridX(:));
+
+    optKvPairs = cell(0, 2);
+    if ~isempty(bwIn); optKvPairs(end + 1, :) = {'Bandwidth', bwIn}; end
+    if ~isempty(w); optKvPairs(end + 1, :) = {'Weights', w}; end
+    optKvPairs = transpose(optKvPairs);
+    
+    im = cat(2, x(:), y(:));
+   [im, ~, bw] = ksdensity(im, grid, optKvPairs{:});
+    im = reshape(im, [imSize, imSize]);
         
     bwOut = bwIn;
     if isempty(bwOut); bwOut = bw; end
