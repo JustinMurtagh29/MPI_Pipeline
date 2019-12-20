@@ -109,9 +109,10 @@ types.probs(curMask, :) = ...
 
 segMeta.probs = nan(maxSegId, numel(types.classes) + 2);
 segMeta.probs(types.segId, 1:3) = types.probs;
+segMeta.probs(:, 4) = zeros(maxSegId,1); % all non vessel seg have score 0, not NaN
 segMeta.probs(heuristics.segIds, 4) = heuristics.vesselScore;
+segMeta.probs(:, 5) = zeros(maxSegId,1); % all non nuclei seg have score 0, not NaN
 segMeta.probs(heuristics.segIds, 5) = heuristics.nucleiScore;
-
 
 segMeta.classes = categorical([ ...
     cellstr(types.classes), {'vessel', 'nucleus'}]);
@@ -359,3 +360,4 @@ function cost = fitness(parallelParam, inputs)
         cost(curParamIdx) = curCost;
     end
 end
+
