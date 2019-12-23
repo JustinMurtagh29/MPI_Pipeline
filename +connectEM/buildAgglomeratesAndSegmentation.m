@@ -11,7 +11,7 @@
 % connectEM.optimizeAgglomeration
 
 param = p;
-m = load(fullfile(param.saveFolder,'aggloGA','20191223T000223aggloGA.mat'));
+m = load(fullfile(param.saveFolder,'aggloGA','20191223T000223optimParams.mat'));
 
 aggloParam = struct;
 aggloParam.axon.minEdgeProb = m.curParams(1);
