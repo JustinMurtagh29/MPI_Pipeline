@@ -67,7 +67,7 @@ dendEvalParam.tracingLenPerSplitQuery = 2000;
 dendEvalParam.nrExitsPerMerger = 2;
 
 dendEvalParam.nrQueriesPerMerger = 2;
-dendEvalParam.tracingLenPerMergeQuery = 5*10000;
+dendEvalParam.tracingLenPerMergeQuery = 5*2000;
 
 evalParam = struct;
 evalParam.axon = axonEvalParam;
