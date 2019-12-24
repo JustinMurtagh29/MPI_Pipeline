@@ -9,7 +9,7 @@
 % =>20191204T111414aggloGA.mat
 % Optimized using
 % connectEM.optimizeAgglomeration
-
+%{
 param = p;
 m = load(fullfile(param.saveFolder,'aggloGA','20191223T000223optimParams.mat'));
 
@@ -53,6 +53,8 @@ Util.showRunInfo(info);
 Util.log('Loading data...')
 rootDir = param.saveFolder;
 maxSegId = Seg.Global.getMaxSegId(param);
+
+segmentMeta = load([param.saveFolder 'segmentMeta.mat'], 'voxelCount', 'point', 'maxSegId');
 
 segMeta = struct;
 segMeta.id = reshape(1:maxSegId, [], 1);
@@ -156,22 +158,40 @@ curOutFile = sprintf('%s_results.mat', datestr(now, 30));
 curOutFile = fullfile(outDir, curOutFile);
 
 Util.saveStruct(curOutFile, curOut);
-keyboard
+%}
+
+% Sort agglomerates by voxel size
+partition = dendrites;
+partitionSize = arrayfun(@(x)sum(segmentMeta.voxelCount(x.segIds)), partition);
+[partitionSize, idx] = sort(partitionSize, 'descend');
+partition = partition(idx);
+dendritesSorted = partition;
+dendritesSortedAgglos = arrayfun(@(x) x.segIds,dendritesSorted,'uni',0);
+
+partition = axons;
+partitionSize = arrayfun(@(x)sum(segmentMeta.voxelCount(x.segIds)), partition);
+[partitionSize, idx] = sort(partitionSize, 'descend');
+partition = partition(idx);
+axonsSorted = partition;
+axonsSortedAgglos = arrayfun(@(x) x.segIds,axonsSorted,'uni',0);
+
 %% write skeletons
 Util.log('Export skeletons:')
 outputFolderSub = fullfile(outDir,'dendrites');
 mkdir(outputFolderSub)
-for i=1:100
-    curSkel = dendrites(i);
-    curSkel.write(fullfile(outputFolderSub,[sprintf('dendrite_%02d',i)]));
-end
+agglosOut = dendritesSortedAgglos(1:100);
+display('Writing skeletons for debugging the process:');
+parameters.experiment.name = ['Mk1_F6_JS_SubI_v1_mrnet_wsmrnet' '_dend' datasetNameAppend];
+Superagglos.skeletonFromAgglo(graphCut.edges, segmentMeta, ...
+    agglosOut, 'dendrites', outputFolderSub, parameters);
 
 outputFolderSub = fullfile(outDir,'axons');
 mkdir(outputFolderSub)
-for i=1:100
-    curSkel = dendrites(i);
-    curSkel.write(fullfile(outputFolderSub,[sprintf('dendrite_%02d',i)]));
-end
+agglosOut = axonsSortedAgglos(1:100);
+display('Writing skeletons for debugging the process:');
+parameters.experiment.name = ['Mk1_F6_JS_SubI_v1_mrnet_wsmrnet' '_axon' datasetNameAppend];
+Superagglos.skeletonFromAgglo(graphCut.edges, segmentMeta, ...
+    agglosOut, 'axons', outputFolderSub, parameters);
  
 %% write segmentation
 Util.log('Write new segmentation based on agglos')
@@ -182,7 +202,7 @@ mkdir(segOut.root)
 dataType = 'uint32';
 wkwInit('new',segOut.root,32, 32, dataType, 1);
 segOut.backend = 'wkwrap';
-agglosSorted = dendriteAgglos;
+agglosSorted = dendritesSortedAgglos;
 mapping = connectEM.createLookup(segMeta, agglosSorted);
 Seg.Global.applyMappingToSegmentation(p, mapping, segOut);
 thisBBox = [1, 1, 1; (ceil(p.bbox(:, 2) ./ 1024) .* 1024)']';
@@ -195,7 +215,7 @@ mkdir(segOut.root)
 dataType = 'uint32';
 wkwInit('new',segOut.root,32, 32, dataType, 1);
 segOut.backend = 'wkwrap';
-agglosSorted = axonAgglos;
+agglosSorted = axonsSortedAgglos;
 mapping = connectEM.createLookup(segMeta, agglosSorted);
 Seg.Global.applyMappingToSegmentation(p, mapping, segOut);
 thisBBox = [1, 1, 1; (ceil(p.bbox(:, 2) ./ 1024) .* 1024)']';
