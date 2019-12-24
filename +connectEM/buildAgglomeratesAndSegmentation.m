@@ -158,7 +158,6 @@ curOutFile = sprintf('%s_results.mat', datestr(now, 30));
 curOutFile = fullfile(outDir, curOutFile);
 
 Util.saveStruct(curOutFile, curOut);
-%}
 
 % Sort agglomerates by voxel size
 partition = dendrites;
@@ -192,7 +191,8 @@ display('Writing skeletons for debugging the process:');
 parameters.experiment.name = ['Mk1_F6_JS_SubI_v1_mrnet_wsmrnet' '_axon' datasetNameAppend];
 Superagglos.skeletonFromAgglo(segGraph.edges, segmentMeta, ...
     agglosOut, 'axons', outputFolderSub, parameters);
- 
+%}
+maxSegId = segmentMeta.maxSegId; 
 %% write segmentation
 Util.log('Write new segmentation based on agglos')
 segOut = struct;
@@ -203,7 +203,7 @@ dataType = 'uint32';
 wkwInit('new',segOut.root,32, 32, dataType, 1);
 segOut.backend = 'wkwrap';
 agglosSorted = dendritesSortedAgglos;
-mapping = connectEM.createLookup(segMeta, agglosSorted);
+mapping = connectEM.createLookup(segmentMeta, agglosSorted);
 Seg.Global.applyMappingToSegmentation(p, mapping, segOut);
 thisBBox = [1, 1, 1; (ceil(p.bbox(:, 2) ./ 1024) .* 1024)']';
 createResolutionPyramid(segOut, thisBBox, [], true);
@@ -216,7 +216,7 @@ dataType = 'uint32';
 wkwInit('new',segOut.root,32, 32, dataType, 1);
 segOut.backend = 'wkwrap';
 agglosSorted = axonsSortedAgglos;
-mapping = connectEM.createLookup(segMeta, agglosSorted);
+mapping = connectEM.createLookup(segmentMeta, agglosSorted);
 Seg.Global.applyMappingToSegmentation(p, mapping, segOut);
 thisBBox = [1, 1, 1; (ceil(p.bbox(:, 2) ./ 1024) .* 1024)']';
 createResolutionPyramid(segOut, thisBBox, [], true);
