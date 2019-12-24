@@ -182,7 +182,7 @@ mkdir(outputFolderSub)
 agglosOut = dendritesSortedAgglos(1:100);
 display('Writing skeletons for debugging the process:');
 parameters.experiment.name = ['Mk1_F6_JS_SubI_v1_mrnet_wsmrnet' '_dend' datasetNameAppend];
-Superagglos.skeletonFromAgglo(graphCut.edges, segmentMeta, ...
+Superagglos.skeletonFromAgglo(segGraph.edges, segmentMeta, ...
     agglosOut, 'dendrites', outputFolderSub, parameters);
 
 outputFolderSub = fullfile(outDir,'axons');
@@ -190,7 +190,7 @@ mkdir(outputFolderSub)
 agglosOut = axonsSortedAgglos(1:100);
 display('Writing skeletons for debugging the process:');
 parameters.experiment.name = ['Mk1_F6_JS_SubI_v1_mrnet_wsmrnet' '_axon' datasetNameAppend];
-Superagglos.skeletonFromAgglo(graphCut.edges, segmentMeta, ...
+Superagglos.skeletonFromAgglo(segGraph.edges, segmentMeta, ...
     agglosOut, 'axons', outputFolderSub, parameters);
  
 %% write segmentation
