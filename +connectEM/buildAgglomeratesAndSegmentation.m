@@ -9,9 +9,10 @@
 % =>20191204T111414aggloGA.mat
 % Optimized using
 % connectEM.optimizeAgglomeration
-%{
+
 param = p;
-m = load(fullfile(param.saveFolder,'aggloGA','20191223T000223optimParams.mat'));
+% m = load(fullfile(param.saveFolder,'aggloGA','20191223T000223optimParams.mat')); % for longer dendrites
+m = load(fullfile(param.saveFolder,'aggloGA','20191224T235355optimParams.mat')); % for same axon/dend agglo lengths
 
 aggloParam = struct;
 aggloParam.axon.minEdgeProb = m.curParams(1);
@@ -31,7 +32,7 @@ aggloParam.dend.minAggloLength = m.curParams(11);
 aggloParam.dend.maxVesselProb = 0.5;
 aggloParam.dend.maxNucleusProb = 0.5;
 
-datasetNameAppend = '_ga';
+datasetNameAppend = ['_ga' '_20191224T235355optimParams'];
 timeStamp = [datestr(clock,30) datasetNameAppend];
 outDir = fullfile(p.saveFolder, 'aggloMat', [timeStamp '_agglomeration']);
 
@@ -191,7 +192,7 @@ display('Writing skeletons for debugging the process:');
 parameters.experiment.name = ['Mk1_F6_JS_SubI_v1_mrnet_wsmrnet' '_axon' datasetNameAppend];
 Superagglos.skeletonFromAgglo(segGraph.edges, segmentMeta, ...
     agglosOut, 'axons', outputFolderSub, parameters);
-%}
+
 maxSegId = segmentMeta.maxSegId; 
 %% write segmentation
 Util.log('Write new segmentation based on agglos')
