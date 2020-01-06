@@ -557,6 +557,7 @@ for curConfig = reshape(plotConfigs(1, :), 1, [])
         %}
         
         %% Evaluate sensitivity to p-value threshold
+        %{
         curCtrlCounts = curCtrlMaps > curSaSdMap;
         curCtrlCounts = sum(curCtrlCounts, 3);
         
@@ -608,6 +609,7 @@ for curConfig = reshape(plotConfigs(1, :), 1, [])
         
         curFig.Position(3:4) = [330, 260];
         connectEM.Figure.config(curFig, info);
+        %}
         
         %% Scatter plot
         curFig = figure();
