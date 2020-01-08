@@ -29,5 +29,5 @@ for i = 1:3
 end
 
 saveSegDataGlobal(segSVM, p.local(i,j,k).bboxSmall(:,1)', seg); 
-Util.save([p.local(i,j,k).saveFolder 'svmSegData.mat'], seg,synCom, vcCom, miCom,);
+Util.save([p.local(i,j,k).saveFolder 'svmSegData.mat'], seg,synCom, vcCom, miCom);
 end
