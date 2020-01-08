@@ -5,10 +5,9 @@
 addpath(genpath('/u/sahilloo/repos/Benedikt/'));
 datasetName = 'Mk1_F6_JS_SubI_v1';
 svmPredNetwork = 'mr_2e_cont4';
-boxIds = 1:100;
 dateStamp =  datestr(clock,30);
 
-aviFlag = true;
+aviFlag = false;
 rootDir = fullfile('/tmpscratch/sahilloo/data/', datasetName, 'pipelineRun_mr2e_wsmrnet/');
 m = load(fullfile(rootDir, 'allParameter.mat'));
 p = m.p;
@@ -26,6 +25,8 @@ if ~exist(segSVM.root,'dir')
     mkdir(segSVM.root);
 end
 wkwInit('new',segSVM.root,32, 32, 'uint32', 1);
+
+boxIds = 1:prod(p.tiles);
 
 for i=1:numel(boxIds)
     boxId = i;
@@ -62,3 +63,6 @@ for i=1:numel(boxIds)
     end
     saveSegDataGlobal(segSVM, double(bbox(:,1)'), seg); 
 end
+% create all resolutions for segmentation
+%thisBBox = [1, 1, 1; (ceil(p.bbox(:, 2) ./ 1024) .* 1024)']';
+%createResolutionPyramid(segSVM, thisBBox, [], true);
