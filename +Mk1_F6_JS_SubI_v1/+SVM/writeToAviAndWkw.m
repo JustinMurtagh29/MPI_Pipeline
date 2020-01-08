@@ -39,7 +39,7 @@ for boxId = 1:endStep
     predOut(:,:,:,2) = pred(:,:,:,3); % segId 2 -> VC
     predOut(:,:,:,3) = pred(:,:,:,4); % segId 3 -> Mito
     
-    Util.log('obtain seg')
+    Util.log(['Obtaining seg: %d',boxId])
     t = 0.5;
     minArea = 3000;
     nhood = [5,5,3];
