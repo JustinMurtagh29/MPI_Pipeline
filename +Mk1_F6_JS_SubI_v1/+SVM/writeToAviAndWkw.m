@@ -28,7 +28,8 @@ wkwInit('new',segSVM.root,32, 32, 'uint32', 1);
 
 boxIds = 1:prod(p.tiles);
 tic;
-for boxId = 1:numel(boxIds)
+endStep = numel(boxIds);
+for boxId = 1:endStep
     m = load(fullfile('/tmpscratch/sahilloo/data/', datasetName, ['svm_' svmPredNetwork '_slurm'], [num2str(boxId) '.mat']));
     pred = m.pred;
     bbox_wk = [m.offset, m.shape];
@@ -61,7 +62,7 @@ for boxId = 1:numel(boxIds)
     end
     saveSegDataGlobal(segSVM, double(bbox(:,1)'), seg);
     Util.save([p.local(boxId).saveFolder 'svmSegData.mat'], seg, synCom, vcCom, miCom);
-    Util.progressBar(boxId,numel(boxIds));
+    Util.progressBar(boxId, endStep);
 end
 % create all resolutions for segmentation
 %thisBBox = [1, 1, 1; (ceil(p.bbox(:, 2) ./ 1024) .* 1024)']';
