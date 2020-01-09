@@ -15,11 +15,13 @@ x = [1,2];
 y = [trainStatNum;testStatNum];
 barh(x,y,'grouped');
 set(gca,'yticklabels',{'train','test'})
+title('Numbers')
 subplot(1,2,2)
 x = [1,2];
 y = [trainStatFrac;testStatFrac];
 barh(x,y,'grouped');
 set(gca,'yticklabels',{'train','test'})
+title('Fraction')
 legend({'SH','nonSH'})
 saveas(gcf,fullfile(param.saveFolder,'typeEM','spine','train_test_statistics_dense.png'))
 close all
