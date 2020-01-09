@@ -5,11 +5,11 @@
 
 % training set
 % Positive labels: 11 boxes dense-spine-head labels
-% Negative lables: 13 typeEM boxes with Axon/Dend/Glia labels
+% Negative lables: all remaining segments in the boxes
 % test set:
 % Positive labels: All 20 SH nodes in one box
 % Negative labels: All the rest segments in the box
-
+%{
 clear;
 methodUsed = 'LogitBoost'; %'AdaBoostM1'; % 'LogitBoost';
 addpath(genpath('/gaba/u/sahilloo/repos/amotta/matlab/'))
@@ -21,27 +21,12 @@ param.experimentName = 'Mk1_F6_JS_SubI_v1_mrnet_wsmrnet';
 import Mk1_F6_JS_SubI_v1.TypeEM.*
 
 info = Util.runInfo();
+
 segmentMeta = load([param.saveFolder 'segmentMeta.mat'], 'voxelCount', 'point');
 vxThr = 50;
 
 % load training data
 featureSetName = 'segmentAgglomerate';
-nmlDir = fullfile(param.saveFolder, ...
-     'tracings', 'typeEM');
-nmlFiles = fullfile(nmlDir, 'proofread', ...
-     {'box-1.nml','box-2.nml', 'box-3.nml', ...
-     'box-4.nml','box-5.nml','box-6.nml',...
-     'box-7.nml','box-8.nml','box-9.nml',...
-     'box-10.nml','box-11.nml','box-12.nml',...
-     'box-13.nml'});
-
-rng(0);
-idxTrain = [1,2,3,4,5,6,7,8,9,10,11,12,13];
-% load features
-gtType = TypeEM.GroundTruth.loadSet( ...
-        param, featureSetName, nmlFiles(idxTrain));
-gtType = TypeEM.GroundTruth.loadFeatures(param, featureSetName, gtType);
-
 % load spinehead training data
 nmlDir = fullfile(param.saveFolder, ...
      'tracings', 'box-seeded','spine-head-ground-truth');
@@ -56,38 +41,47 @@ idxTrain = [1,2,3,4,5,6,7,8,9,10];
 idxTest = 11;
 % load train set
 curNodes = table();
+gt = struct;
+gt.class = categorical({'spinehead'});
+gt.segId = [];
+gt.label = [];
+curMask = gt.class == 'spinehead';
 for i = idxTrain
     curNml = slurpNml(nmlFiles{i});
-    curNodes = cat(1, curNodes, NML.buildNodeTable(curNml));
+    curNodes = NML.buildNodeTable(curNml);
+    
+    curNodes.coord = curNodes.coord + 1;
+    curNodes.segId = Seg.Global.getSegIds(param, curNodes.coord);
+    assert(all(curNodes.segId));
+    
+    curBox = curNml.parameters.userBoundingBox;
+    curBox = { ...
+        curBox.topLeftX, curBox.topLeftY, curBox.topLeftZ, ...
+        curBox.width, curBox.height, curBox.depth};
+    curBox = cellfun(@str2double, curBox);
+    
+    curBox = Util.convertWebknossosToMatlabBbox(curBox);
+    curseg = loadSegDataGlobal(param.seg, curBox);
+    
+    posSegIds = reshape(unique(curNodes.segId), [], 1);
+    negSegIds = reshape(setdiff(curseg, [0; posSegIds]), [], 1);
+
+    % throw away segments that are too small
+    vxCount = segmentMeta.voxelCount(negSegIds); 
+    toDel = vxCount < vxThr;
+    negSegIds(toDel) = [];
+
+    gt.segId = cat(1,gt.segId, double(posSegIds), double(negSegIds));
+    labelTemp = zeros(numel(posSegIds)+numel(negSegIds), numel(gt.class));
+    labelTemp(1:numel(posSegIds), curMask) = +1;
+    labelTemp((numel(posSegIds) + 1):end, curMask) = -1;
+    
+    gt.label = cat(1,gt.label, labelTemp);
+
     clear curNml
 end
-curNodes.coord = curNodes.coord + 1;
-curNodes.segId = Seg.Global.getSegIds(param, curNodes.coord);
-assert(all(curNodes.segId));
-
-gtSH = struct;
-gtSH.class = categorical({'glia', 'axon', 'dendrite', 'spinehead'});
-gtSH.segId = reshape(unique(curNodes.segId), [], 1);
-gtSH.label = [-1*ones(numel(gtSH.segId),3), ones(numel(gtSH.segId),1)]; %[-1,-1,-1,+1]
-gtSH = TypeEM.GroundTruth.loadFeatures(param, featureSetName, gtSH);
-
-% combine type gt and spinehead gt
-gt = struct;
-gt.segId = cat(1,gtType.segId, gtSH.segId);
-gt.class = categorical({'glia', 'axon', 'dendrite', 'spinehead'});
-
-gt.label = zeros(numel(gt.segId), numel(gt.class));
-gt.label = cat(1, [gtType.label, -1*ones(numel(gtType.segId),1)],... % [x,x,x,-1]
-                  gtSH.label); % [-1,-1,-1,+1] 
-
-gt.featMat = cat(1, gtType.featMat, gtSH.featMat); 
-gt.featNames = cat(2, gtType.featNames, gtSH.featNames);
-
-% Reduce to spinehead class only
-curMask = gt.class == 'spinehead';
-gt.class = gt.class(curMask);
-gt.label = gt.label(:,curMask);
-
+gt = TypeEM.GroundTruth.loadFeatures(param, featureSetName, gt);
+%}
 % load test set
 curNml = slurpNml(nmlFiles{idxTest});
 curNodes = NML.buildNodeTable(curNml);
@@ -149,7 +143,7 @@ for curTrainSize = trainSizes
     % apply classifier to test data
     [precRec, fig, curGtTest] = TypeEM.Classifier.evaluate(param, curClassifier, gtTest);
     title([methodUsed ' with trainSize:' num2str(curTrainSize)])
-    saveas(gcf,fullfile(param.saveFolder,'typeEM','spine',['precrec_box_' methodUsed '_tsize_' num2str(curTrainSize) '.png']))
+    saveas(gcf,fullfile(param.saveFolder,'typeEM','spine',['precrec_box_' methodUsed '_tsize_' num2str(curTrainSize) '_dense.png']))
     close all
 
     % build platt parameters
@@ -173,13 +167,13 @@ end
 curCount = 40;
 className = 'spinehead';
 skels = Debug.inspectFPs(param, curCount, className, curGtTest);
-skels.write(fullfile(param.saveFolder,'typeEM','spine', sprintf('fps-%s.nml',className)));
+skels.write(fullfile(param.saveFolder,'typeEM','spine', sprintf('fps-%s-dense.nml',className)));
 
 % Look at true positives
 curCount = 40;
 className = 'spinehead';
 skels = Debug.inspectTPs(param, curCount, className, curGtTest);
-skels.write(fullfile(param.saveFolder,'typeEM','spine', sprintf('tps-%s.nml',className)));
+skels.write(fullfile(param.saveFolder,'typeEM','spine', sprintf('tps-%s-dense.nml',className)));
 
 % label statistics
 %Debug.labelDistributions
