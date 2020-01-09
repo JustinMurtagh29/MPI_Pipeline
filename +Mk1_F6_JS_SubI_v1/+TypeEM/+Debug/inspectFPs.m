@@ -10,10 +10,10 @@ fp.label = gt.label(:, curMask);
 fp.score = gt.scores(:, curMask);
 fp.probs = gt.probs(:,curMask);
 
-fp = fp(fp.label < 0, :);
-fp = sortrows(fp, 'probs', 'descend');
+fp = fp(fp.label > 0, :);
+fp = sortrows(fp, 'probs', 'ascend');
 
-curCount = min(curCount,sum(fp.label < 0));
+curCount = min(curCount,sum(fp.label>0));
 curDigits = ceil(log10(1 + curCount));
 
 skel = skeleton();
