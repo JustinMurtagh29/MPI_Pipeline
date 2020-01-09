@@ -182,7 +182,7 @@ skels = Debug.inspectTPs(param, curCount, className, curGtTest);
 skels.write(fullfile(param.saveFolder,'typeEM','spine', sprintf('tps-%s.nml',className)));
 
 % label statistics
-%Debug.labelDistributions
+Spine.Debug.labelDistributions
 
 %{
 
