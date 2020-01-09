@@ -4,11 +4,11 @@
 %   Sahil Loomba <sahil.loomba@brain.mpg.de>
 
 % training set
-% Positive labels: 10 boxes dense-spine-head labels
+% Positive labels: 11 boxes dense-spine-head labels
 % Negative lables: all remaining segments in the boxes
 % test set:
-% Positive labels: All 20 SH nodes in one box
-% Negative labels: All the rest segments in the box
+% Positive labels: All SH trees nodes in dense box
+% Negative labels: All Axon-Dend-Glia tree nodes in dense box
 
 clear;
 methodUsed = 'LogitBoost'; %'AdaBoostM1'; % 'LogitBoost';
@@ -34,11 +34,11 @@ nmlFiles = fullfile(nmlDir, ...
      {'spine-head-ground-truth-1.nml','spine-head-ground-truth-2.nml', 'spine-head-ground-truth-3.nml', ...
      'spine-head-ground-truth-4.nml','spine-head-ground-truth-5.nml','spine-head-ground-truth-6.nml',...
      'spine-head-ground-truth-7.nml','spine-head-ground-truth-8.nml','spine-head-ground-truth-9.nml',...
-     'spine-head-ground-truth-10.nml','spine-head-ground-truth-11.nml'});
+     'spine-head-ground-truth-10.nml','spine-head-ground-truth-11.nml','dense-typeEM-spines-01.nml'});
 
 rng(0);
-idxTrain = [1,2,3,4,5,6,7,8,9,10];
-idxTest = 11;
+idxTrain = [1,2,3,4,5,6,7,8,9,10,11];
+idxTest = 12; % box with all processes dense labeled
 % load train set
 curNodes = table();
 gt = struct;
@@ -84,27 +84,26 @@ gt = TypeEM.GroundTruth.loadFeatures(param, featureSetName, gt);
 
 % load test set
 curNml = slurpNml(nmlFiles{idxTest});
-curNodes = NML.buildNodeTable(curNml);
+% separate spinehead trees from axon.dend,glia
+mask = cellfun(@(x) any(regexp(x,'spinehead')),curNml.things.name); % spinehead
+func = @(x) x(mask);
+posNml = curNml;
+posNml.things = structfun(func, curNml.things,'uni',false);
+func = @(x) x(~mask);
+negNml = curNml;
+negNml.things = structfun(func, curNml.things,'uni',false);
 
+curNodes = NML.buildNodeTable(posNml);
 curNodes.coord = curNodes.coord + 1;
 curNodes.segId = Seg.Global.getSegIds(param, curNodes.coord);
 assert(all(curNodes.segId));
-
-curBox = curNml.parameters.userBoundingBox;
-curBox = { ...
-    curBox.topLeftX, curBox.topLeftY, curBox.topLeftZ, ...
-    curBox.width, curBox.height, curBox.depth};
-curBox = cellfun(@str2double, curBox);
-
-curBox = Util.convertWebknossosToMatlabBbox(curBox);
-curseg = loadSegDataGlobal(param.seg, curBox);
-
 posSegIds = reshape(unique(curNodes.segId), [], 1);
-negSegIds = reshape(setdiff(curseg, [0; posSegIds]), [], 1);
-% throw away segments that are too small
-vxCount = segmentMeta.voxelCount(negSegIds);
-toDel = vxCount < vxThr;
-negSegIds(toDel) = [];
+
+curNodes = NML.buildNodeTable(negNml);
+curNodes.coord = curNodes.coord + 1;
+curNodes.segId = Seg.Global.getSegIds(param, curNodes.coord);
+assert(all(curNodes.segId));
+negSegIds = reshape(unique(curNodes.segId), [], 1);
 
 gtTest = struct;
 gtTest.class = categorical({'spinehead'});
@@ -143,7 +142,7 @@ for curTrainSize = trainSizes
     % apply classifier to test data
     [precRec, fig, curGtTest] = TypeEM.Classifier.evaluate(param, curClassifier, gtTest);
     title([methodUsed ' with trainSize:' num2str(curTrainSize)])
-    saveas(gcf,fullfile(param.saveFolder,'typeEM','spine',['precrec_box_' methodUsed '_tsize_' num2str(curTrainSize) '_dense.png']))
+    saveas(gcf,fullfile(param.saveFolder,'typeEM','spine',['precrec_box_' methodUsed '_tsize_' num2str(curTrainSize) '_box-dense.png']))
     close all
 
     % build platt parameters
@@ -167,13 +166,13 @@ end
 curCount = 40;
 className = 'spinehead';
 skels = Debug.inspectFPs(param, curCount, className, curGtTest);
-skels.write(fullfile(param.saveFolder,'typeEM','spine', sprintf('fps-%s-dense.nml',className)));
+skels.write(fullfile(param.saveFolder,'typeEM','spine', sprintf('fps-%s-box-dense.nml',className)));
 
 % Look at true positives
 curCount = 40;
 className = 'spinehead';
 skels = Debug.inspectTPs(param, curCount, className, curGtTest);
-skels.write(fullfile(param.saveFolder,'typeEM','spine', sprintf('tps-%s-dense.nml',className)));
+skels.write(fullfile(param.saveFolder,'typeEM','spine', sprintf('tps-%s-box-dense.nml',className)));
 
 % label statistics
 Spine.Debug.labelDistributions
