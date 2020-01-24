@@ -148,6 +148,75 @@ if ~isempty(debugNmlDir)
     curSkel.write(fullfile(debugNmlDir, 'test.nml'));
 end
 
+%% Control: Compare ASI distributions across proximal dendrites
+clear cur*;
+
+curX = (-2):0.01:0.5;
+curMinSynCount = 200;
+
+curAsiT = asiT( ...
+    asiT.type == 'PrimarySpine' ...
+  & asiT.targetClass == 'ProximalDendrite', :);
+
+curPdT = table;
+[curPdT.aggloId, ~, curAsiT.postPdId] = unique(curAsiT.postAggloId);
+
+curPdT.relAsiIds = accumarray( ...
+    curAsiT.postPdId, ...
+    reshape(1:height(curAsiT), [], 1), ...
+    [], @(ids) {ids(:)}, {zeros(0, 1)});
+curPdT.asiCount = cellfun( ...
+    @numel, curPdT.relAsiIds);
+
+% NOTE(amotta): Reduce sampling noise
+curPdT = curPdT(curPdT.asiCount >= curMinSynCount, :);
+
+% Plot results
+curFig = figure();
+curAx = axes(curFig);
+hold(curAx, 'on');
+
+% NOTE(amotta): Compute kernel density estimates of the probability density
+% function, because visualization by histograms turned out to be difficult.
+curData = nan(height(curPdT), numel(curX));
+for curPdIdx = 1:height(curPdT)
+    curPdAsiAreas = curPdT.relAsiIds{curPdIdx};
+    curPdAsiAreas = curAsiT.area(curPdAsiAreas);
+    curPdAsiAreas = log10(curPdAsiAreas);
+    
+    curY = ksdensity(curPdAsiAreas, curX);
+    curY = curY / sum(curY);
+    
+    curData(curPdIdx, :) = curY;
+end
+
+curColors = parula(height(curPdT));
+
+% NOTE(amotta): Let's use the mode of the ASI area distribution to
+% calculate the Z-index and the color of the proximal dendrite.
+[~, curSortIds] = max(curData, [], 2);
+[~, curSortIds] = sort(curX(curSortIds), 'ascend');
+
+for curPdIdx = 1:height(curPdT)
+    curPdId = curSortIds(curPdIdx);
+    curColor = curColors(curPdIdx, :);
+    
+    plot(curAx, ...
+        curX, curData(curPdId, :), ...
+        'Color', curColor, 'LineWidth', 2);
+end
+
+xlabel(curAx, 'log10(ASI area [µm²])');
+ylabel(curAx, 'Est. probability density');
+
+curTitle = { ...
+    'Primary spine synapses onto proximal dendrites'; sprintf( ...
+    '(n = %d PDs with ≥ %d synapses)', height(curPdT), curMinSynCount)};
+title(curAx, curTitle);
+
+connectEM.Figure.config(curFig, info);
+curFig.Position(3:4) = [390, 275];
+
 %% Let's have a look at synapses onto proximal dendrites
 clear cur*;
 rng(0);
