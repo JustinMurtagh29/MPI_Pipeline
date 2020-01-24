@@ -28,6 +28,10 @@ param = param.p;
 
 maxSegId = Seg.Global.getMaxSegId(param);
 
+% NOTE(amotta): For translation of agglomerate → cell id
+conn = load(connFile, 'axons', 'axonMeta', 'dendrites', 'denMeta', 'info');
+conn.denMeta = connectEM.Dendrite.completeCellMeta(param, conn);
+
 trunks = Util.load(trunkFile, 'dendrites');
 trunks = Agglo.fromSuperAgglo(trunks);
 trunkIds = Agglo.calculateVolume(param, trunks);
@@ -216,6 +220,17 @@ title(curAx, curTitle);
 
 connectEM.Figure.config(curFig, info);
 curFig.Position(3:4) = [390, 275];
+
+% NOTE(amotta): Some more information on the most extreme neurons
+curPdT.cellId = conn.denMeta.cellId(curPdT.aggloId);
+
+fprintf([ ...
+    '\n', ...
+    'ASI area distribution over proximal dendrites\n', ...
+    '* Neurons with smallest ASI area modes: %d, %d\n', ...
+    '* Neurons with largest ASI area modes: %d, %d\n'], ...
+    curPdT.cellId(curSortIds(1:2)), ...
+    curPdT.cellId(curSortIds((end - 1):end)));
 
 %% Let's have a look at synapses onto proximal dendrites
 clear cur*;
