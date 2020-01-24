@@ -238,6 +238,13 @@ fprintf([ ...
 clear cur*;
 rng(0);
 
+% NOTE(amotta): If set, the analysis will be performed exclusively for the
+% synapses onto this particular cell.
+%   Most importantly, this also affects the null model: The synapse size
+% distributions in the surround will be compared against other synapses
+% onto the same neuron.
+cellId = [];
+
 % NOTE(amotta): The first run corresponds to actually observed data. All
 % subsequent runs use randomly redistributed ASI areas.
 numRuns = 1 + 10;
@@ -248,7 +255,14 @@ curAsiT = asiT( ...
     asiT.type == 'PrimarySpine' ...
   & asiT.targetClass == 'ProximalDendrite' ...
   & ismember(asiT.axonClass, {'Corticocortical', 'Thalamocortical'}), :);
+
+% IMPORTANT(amotta): Use `postAggloId` before transforming it!
+curAsiT.postCellId = conn.denMeta.cellId(curAsiT.postAggloId);
 curAsiT.postAggloId = shT.dendId(curAsiT.shId);
+
+if ~isempty(cellId)
+    curAsiT = curAsiT(curAsiT.postCellId == cellId, :);
+end
 
 seedAreas = nan([height(curAsiT), numRuns]);
 condAreas = cell([height(curAsiT), numRuns]);
@@ -322,6 +336,11 @@ curXLabel = 'log10(reference ASI area [µm²])';
 curYLabel = 'log10(ASI area within %g µm [µm³])';
 curYLabel = sprintf(curYLabel, distThresh / 1E3);
 
+curTitle = '';
+if ~isempty(cellId)
+    curTitle = sprintf('Synapses onto neuron %d', cellId);
+end
+
 curConfigAxis = @(ax) set(ax, ...
     'PlotBoxAspectRatio', [1, 1, 1], 'DataAspectRatioMode', 'auto', ...
     'XDir', 'normal', 'XTick', curTickIds, 'XTickLabel', curTickLabels, ...
@@ -381,6 +400,7 @@ curAx.CLim = [0, max(curRealDens(:))];
 curCbar.Label.String = 'P(ref. ASI, close-by ASIs)';
 
 curConfigAxis(curAx);
+if ~isempty(curTitle); title(curAx, curTitle); end
 connectEM.Figure.config(curFig, info);
 
 
@@ -396,6 +416,7 @@ curAx.CLim = [-1, +1] * max(abs(curDiffDens(:)));
 curCbar.Label.String = 'ΔP(ref. ASI, close-by ASIs) to random';
 
 curConfigAxis(curAx);
+if ~isempty(curTitle); title(curAx, curTitle); end
 connectEM.Figure.config(curFig, info);
 
 
@@ -411,6 +432,7 @@ curAx.CLim = [0, max(curRealCond(:))];
 curCbar.Label.String = 'P(close-by ASIs | ref. ASI)';
 
 curConfigAxis(curAx);
+if ~isempty(curTitle); title(curAx, curTitle); end
 connectEM.Figure.config(curFig, info);
 
 
@@ -429,6 +451,7 @@ curAx.CLim = curClim;
 curCbar.Label.String = 'ΔP(close-by ASIs | ref. ASI) to random';
 
 curConfigAxis(curAx);
+if ~isempty(curTitle); title(curAx, curTitle); end
 connectEM.Figure.config(curFig, info);
 
 %% Look at effect of soma distance
