@@ -155,6 +155,7 @@ end
 %% Control: Compare ASI distributions across proximal dendrites
 clear cur*;
 
+curBw = 0.1;
 curX = (-2):0.01:0.5;
 curMinSynCount = 200;
 
@@ -188,7 +189,7 @@ for curPdIdx = 1:height(curPdT)
     curPdAsiAreas = curAsiT.area(curPdAsiAreas);
     curPdAsiAreas = log10(curPdAsiAreas);
     
-    curY = ksdensity(curPdAsiAreas, curX);
+    curY = ksdensity(curPdAsiAreas, curX, 'Bandwidth', curBw);
     curY = curY / sum(curY);
     
     curData(curPdIdx, :) = curY;
