@@ -221,6 +221,7 @@ title(curAx, curTitle);
 connectEM.Figure.config(curFig, info);
 curFig.Position(3:4) = [390, 275];
 
+
 % NOTE(amotta): Some more information on the most extreme neurons
 curPdT.cellId = conn.denMeta.cellId(curPdT.aggloId);
 
