@@ -337,7 +337,7 @@ curXLabel = 'log10(reference ASI area [µm²])';
 curYLabel = 'log10(ASI area within %g µm [µm³])';
 curYLabel = sprintf(curYLabel, distThresh / 1E3);
 
-curCmap = connectEM.Figure.redBlue(256);
+curCmap = connectEM.Figure.blueWhiteRed(256);
 
 curTitle = '';
 if ~isempty(cellId)

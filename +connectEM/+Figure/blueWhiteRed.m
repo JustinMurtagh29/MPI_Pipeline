@@ -1,5 +1,5 @@
-function cmap = redBlue(n)
-    % cmap = redBlue(n)
+function cmap = blueWhiteRed(n)
+    % cmap = blueWhiteRed(n)
     %   Generates a color map with `n` entries from blue over white to red.
     %
     % Written by

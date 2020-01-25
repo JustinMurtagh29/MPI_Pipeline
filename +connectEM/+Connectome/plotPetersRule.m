@@ -409,7 +409,7 @@ function plotMatrix( ...
     frac = rows / cols;
     
     colorMat = log10(corrCoeffs);
-    colorMap = connectEM.Figure.redBlue(129);
+    colorMap = connectEM.Figure.blueWhiteRed(129);
     
     curVals = linspace(-colorLim, +colorLim, size(colorMap, 1));
     colorMap(abs(curVals) < minObsExpRatio, :) = 1;
