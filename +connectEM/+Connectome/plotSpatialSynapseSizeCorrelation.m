@@ -471,6 +471,40 @@ plot(curAx, xlim(curAx), ylim(curAx), 'k--');
 if ~isempty(curTitle); title(curAx, curTitle); end
 connectEM.Figure.config(curFig, info);
 
+%% Find size range with signs of homeostatic suppression in surround
+clear cur*;
+
+curSeedAreas = seedAreas(:, 1);
+curCondAreas = condAreas(:, 1);
+
+% To log10-space
+curSeedAreas = log10(curSeedAreas);
+curCondAreas = cellfun(@log10, curCondAreas, 'UniformOutput', false);
+
+curCondN = cellfun(@numel, curCondAreas);
+curCondAreas = cell2mat(curCondAreas);
+
+curYs = [];
+for curX = -1.5:0.05:0
+    % NOTE(amotta): Uniform kernel
+    curCondW = curSeedAreas - curX;
+    curCondW = double(abs(curCondW) < 0.1);
+
+    assert(isequal(size(curCondW), size(curCondN)));
+    curCondW = repelem(curCondW ./ curCondN, curCondN);
+    curCondW = curCondW / sum(curCondW(:));
+
+    curY = ...
+        sum(curCondAreas(:) .* curCondW(:)) ...
+      - mean(curSeedAreas);
+    curYs(end + 1) = curY;
+end
+
+figure;
+hold on;
+plot(curYs);
+plot(xlim(), [0, 0], 'k--');
+
 %% Look at effect of soma distance
 clear cur*;
 
