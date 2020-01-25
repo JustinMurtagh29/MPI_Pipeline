@@ -337,7 +337,8 @@ curXLabel = 'log10(reference ASI area [µm²])';
 curYLabel = 'log10(ASI area within %g µm [µm³])';
 curYLabel = sprintf(curYLabel, distThresh / 1E3);
 
-curCmap = connectEM.Figure.blueWhiteRed(256);
+curRedCmap = connectEM.Figure.whiteRed(256);
+curBlueRedCmap = connectEM.Figure.blueWhiteRed(256);
 
 curTitle = '';
 if ~isempty(cellId)
@@ -345,9 +346,12 @@ if ~isempty(cellId)
 end
 
 curConfigAxis = @(ax) set(ax, ...
-    'PlotBoxAspectRatio', [1, 1, 1], 'DataAspectRatioMode', 'auto', ...
-    'XDir', 'normal', 'XTick', curTickIds, 'XTickLabel', curTickLabels, ...
-    'YDir', 'normal', 'YTick', curTickIds, 'YTickLabel', curTickLabels);
+    'PlotBoxAspectRatio', [1, 1, 1], ...
+    'DataAspectRatioMode', 'auto', ...
+    'XLim', [0, curImSize] + 0.5, 'XDir', 'normal', ...
+    'XTick', curTickIds, 'XTickLabel', curTickLabels, ...
+    'YLim', [0, curImSize] + 0.5, 'YDir', 'normal', ...
+    'YTick', curTickIds, 'YTickLabel', curTickLabels);
 
 curBw = [];
 curDens = cell(numRuns, 1);
@@ -404,6 +408,7 @@ curAx.CLim = [0, max(curRealDens(:))];
 curCbar.Label.String = 'P(ref. ASI, close-by ASIs)';
 
 curConfigAxis(curAx);
+colormap(curAx, curRedCmap);
 if ~isempty(curTitle); title(curAx, curTitle); end
 connectEM.Figure.config(curFig, info);
 
@@ -411,6 +416,8 @@ connectEM.Figure.config(curFig, info);
 % Plot 2
 curFig = figure();
 curAx = axes(curFig);
+hold(curAx, 'on');
+
 imagesc(curAx, curDiffDens);
 curCbar = colorbar(curAx);
 
@@ -420,7 +427,8 @@ curAx.CLim = [-1, +1] * max(abs(curDiffDens(:)));
 curCbar.Label.String = 'ΔP(ref. ASI, close-by ASIs) to random';
 
 curConfigAxis(curAx);
-colormap(curAx, curCmap);
+colormap(curAx, curBlueRedCmap);
+plot(curAx, xlim(curAx), ylim(curAx), 'k--');
 if ~isempty(curTitle); title(curAx, curTitle); end
 connectEM.Figure.config(curFig, info);
 
@@ -437,6 +445,7 @@ curAx.CLim = [0, max(curRealCond(:))];
 curCbar.Label.String = 'P(close-by ASIs | ref. ASI)';
 
 curConfigAxis(curAx);
+colormap(curAx, curRedCmap);
 if ~isempty(curTitle); title(curAx, curTitle); end
 connectEM.Figure.config(curFig, info);
 
@@ -444,6 +453,7 @@ connectEM.Figure.config(curFig, info);
 % Plot 4
 curFig = figure();
 curAx = axes(curFig);
+hold(curAx, 'on');
 imagesc(curAx, curDiffCond);
 curCbar = colorbar(curAx);
 
@@ -456,7 +466,8 @@ curAx.CLim = curClim;
 curCbar.Label.String = 'ΔP(close-by ASIs | ref. ASI) to random';
 
 curConfigAxis(curAx);
-colormap(curAx, curCmap);
+colormap(curAx, curBlueRedCmap);
+plot(curAx, xlim(curAx), ylim(curAx), 'k--');
 if ~isempty(curTitle); title(curAx, curTitle); end
 connectEM.Figure.config(curFig, info);
 
