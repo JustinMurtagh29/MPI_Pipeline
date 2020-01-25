@@ -4,10 +4,19 @@ function cmap = redBlue(n)
     %
     % Written by
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
-    m = round(0.5 * n);
-    cmap = nan(n, 3);
+    gamma = 2.2;
     
-    cmap(:, 1) = min((1:n) / m, 1);
-    cmap(:, 2) = 1 - abs(1 - (1:n) / m);
-    cmap(:, 3) = min(2 - (1:n) / m, 1);
+    cmap = zeros(n, 3);
+    cmap(1:ceil(n / 2), 3) = 1;
+    cmap(ceil(n / 2 + 1):end, 1) = 1;
+    
+    alpha = [ ...
+        linspace(1, 0, ceil(n / 2)), ...
+        linspace(0, 1, n - ceil(n / 2))];
+    alpha = reshape(alpha, [], 1);
+    
+    cmap = ( ...
+        (cmap .^ gamma) .* alpha ...
+      + ([1, 1, 1] .^ gamma) .* (1 - alpha)...
+      ) .^ (1 / gamma);
 end

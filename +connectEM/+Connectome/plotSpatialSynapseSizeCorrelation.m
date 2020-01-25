@@ -274,6 +274,7 @@ for curRunIdx = 1:numRuns
     for curIdx = 1:height(curAsiT)
         curSeedShId = curAsiT.shId(curIdx);
         curSeedDendId = curAsiT.postAggloId(curIdx);
+        
         curSeedAsiArea = curShT.asiArea(curSeedShId);
 
         % Find other spine heads onto same dendrite
@@ -323,8 +324,8 @@ connectEM.Figure.config(curFig, info);
 %% Plot results
 clear cur*;
 
+% Configuration
 curImSize = 256;
-curDens = cell(numRuns, 1);
 curLims = [-1.5, 0];
 
 curTicks = [-1, 0];
@@ -335,6 +336,8 @@ curTickIds = linspace(curLims(1), curLims(2), curImSize);
 curXLabel = 'log10(reference ASI area [µm²])';
 curYLabel = 'log10(ASI area within %g µm [µm³])';
 curYLabel = sprintf(curYLabel, distThresh / 1E3);
+
+curCmap = connectEM.Figure.redBlue(256);
 
 curTitle = '';
 if ~isempty(cellId)
@@ -347,13 +350,14 @@ curConfigAxis = @(ax) set(ax, ...
     'YDir', 'normal', 'YTick', curTickIds, 'YTickLabel', curTickLabels);
 
 curBw = [];
+curDens = cell(numRuns, 1);
 for curRunIdx = 1:numRuns
     curSeedAreas = seedAreas(:, curRunIdx);
     curCondAreas = condAreas(:, curRunIdx);
     
-    curX = cellfun(@numel, curCondAreas);
-    curW = repelem(1 ./ curX, curX);
-    curX = repelem(curSeedAreas, curX);
+    curN = cellfun(@numel, curCondAreas);
+    curW = repelem(1 ./ curN, curN);
+    curX = repelem(curSeedAreas, curN);
     curY = cell2mat(curCondAreas);
 
     curX = log10(curX);
@@ -416,6 +420,7 @@ curAx.CLim = [-1, +1] * max(abs(curDiffDens(:)));
 curCbar.Label.String = 'ΔP(ref. ASI, close-by ASIs) to random';
 
 curConfigAxis(curAx);
+colormap(curAx, curCmap);
 if ~isempty(curTitle); title(curAx, curTitle); end
 connectEM.Figure.config(curFig, info);
 
@@ -451,6 +456,7 @@ curAx.CLim = curClim;
 curCbar.Label.String = 'ΔP(close-by ASIs | ref. ASI) to random';
 
 curConfigAxis(curAx);
+colormap(curAx, curCmap);
 if ~isempty(curTitle); title(curAx, curTitle); end
 connectEM.Figure.config(curFig, info);
 
