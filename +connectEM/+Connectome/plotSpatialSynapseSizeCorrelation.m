@@ -283,7 +283,6 @@ numRuns = 1 + 10;
 distThresh = 2500;
 
 if ~exist(cellDataFile, 'file')
-
     curAggloToCell = conn.denMeta.cellId;
     cellIds = setdiff(curAggloToCell, 0);
     cellData = cell(numel(cellIds), 1);
@@ -712,6 +711,8 @@ connectEM.Figure.config(curFig, info);
 
 %% Utilities
 function [im, bwOut] = kde2d(x, y, w, imSize, xlim, ylim, bwIn)
+    bwOut = bwIn;
+    
    [gridY, gridX] = ndgrid( ...
         linspace(ylim(1), ylim(2), imSize), ...
         linspace(xlim(1), xlim(2), imSize));
@@ -723,9 +724,9 @@ function [im, bwOut] = kde2d(x, y, w, imSize, xlim, ylim, bwIn)
     optKvPairs = transpose(optKvPairs);
     
     im = cat(2, y(:), x(:));
+    if isempty(im); im = nan(imSize); return; end
    [im, ~, bw] = ksdensity(im, grid, optKvPairs{:});
     im = reshape(im, [imSize, imSize]);
-        
-    bwOut = bwIn;
+    
     if isempty(bwOut); bwOut = bw; end
 end
