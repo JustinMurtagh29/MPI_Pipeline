@@ -165,18 +165,15 @@ clear cur*;
 % connectome file.
 
 curConnLUT = Agglo.buildLUT(maxSegId, conn.dendrites);
+curConnIds = Agglo.fromSuperAgglo(dendrites);
+curConnIds = cellfun(@(ids) max(curConnLUT(ids)), curConnIds);
 
-curDendIds = Agglo.fromSuperAgglo(dendrites);
-curDendIds = cellfun(@(ids) max(curConnLUT(ids)), curDendIds);
+curMask = shT.dendId > 0;
+shT.dendId(curMask) = curConnIds(shT.dendId(curMask));
 
-% NOTE(amotta): We're done with these
+% NOTE(amotta): Remove obsolete data
+shT(:, {'trunkNodeId', 'trunkSegId'}) = [];
 clear dendrites trunks;
-
-curShT = shT;
-curMask = curShT.dendId > 0;
-curShT.dendId(curMask) = curDendIds(curShT.dendId(curMask));
-curShT(:, {'trunkNodeId', 'trunkSegId'}) = [];
-shT = curShT;
 
 %% Control: Compare ASI distributions across proximal dendrites
 clear cur*;
