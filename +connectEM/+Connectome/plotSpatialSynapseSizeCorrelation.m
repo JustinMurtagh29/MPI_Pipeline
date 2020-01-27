@@ -9,6 +9,9 @@ dendFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v3_auto-and-
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-linearized_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v8-classified.mat');
 asiRunId = '20190227T082543';
 
+cellDataFile = '/tmpscratch/amotta/l4/2020-01-27-cell-based-homeostatic-plasticity-analysis';
+cellDataFile = fullfile(cellDataFile, 'cell-data_weighted_v1.mat');
+
 % For analysis of soma-distance
 somaFile  = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_03_v2.mat');
 wcFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v3_auto-and-manual.mat');
@@ -187,7 +190,7 @@ clear dendrites trunks dendShIds dendShToShDists;
 %% Control: Compare ASI distributions across proximal dendrites
 clear cur*;
 
-curBw = 0.1;
+bw = 0.1;
 curX = (-2):0.01:0.5;
 curMinSynCount = 200;
 
@@ -221,7 +224,7 @@ for curPdIdx = 1:height(curPdT)
     curPdAsiAreas = curAsiT.area(curPdAsiAreas);
     curPdAsiAreas = log10(curPdAsiAreas);
     
-    curY = ksdensity(curPdAsiAreas, curX, 'Bandwidth', curBw);
+    curY = ksdensity(curPdAsiAreas, curX, 'Bandwidth', bw);
     curY = curY / sum(curY);
     
     curData(curPdIdx, :) = curY;
@@ -268,67 +271,138 @@ fprintf([ ...
 
 %% Let's have a look at synapses onto proximal dendrites
 clear cur*;
-rng(0);
 
-% NOTE(amotta): If set, the analysis will be performed exclusively for the
-% synapses onto this particular cell.
-%   Most importantly, this also affects the null model: The synapse size
-% distributions in the surround will be compared against other synapses
-% onto the same neuron.
-cellId = [];
+% Configurations
+imSize = 256;
+lims = [-1.5, 0];
+bw = [0.1, 0.1];
 
 % NOTE(amotta): The first run corresponds to actually observed data. All
 % subsequent runs use randomly redistributed ASI areas.
 numRuns = 1 + 10;
 distThresh = 2500;
 
-curShT = shT;
-curAsiT = asiT( ...
-    asiT.type == 'PrimarySpine' ...
-  & asiT.targetClass == 'ProximalDendrite' ...
-  & ismember(asiT.axonClass, {'Corticocortical', 'Thalamocortical'}), :);
-curAsiT.postCellId = conn.denMeta.cellId(curAsiT.postAggloId);
+if ~exist(cellDataFile, 'file')
 
-if ~isempty(cellId)
-    curAsiT = curAsiT(curAsiT.postCellId == cellId, :);
-end
+    curAggloToCell = conn.denMeta.cellId;
+    cellIds = setdiff(curAggloToCell, 0);
+    cellData = cell(numel(cellIds), 1);
 
-seedAreas = nan([height(curAsiT), numRuns]);
-condAreas = cell([height(curAsiT), numRuns]);
+    parfor curCellIdx = 1:numel(cellIds)
+        curCellId = cellIds(curCellIdx);
 
-for curRunIdx = 1:numRuns
-    curShT.asiArea(:) = nan;
-    curShT.asiArea(curAsiT.shId) = curAsiT.area;
-    
-    for curIdx = 1:height(curAsiT)
-        curSeedShId = curAsiT.shId(curIdx);
-        curSeedDendId = curAsiT.postAggloId(curIdx);
-        
-        curSeedAsiArea = curShT.asiArea(curSeedShId);
+        curShT = shT;
+        curAsiT = asiT( ...
+            asiT.type == 'PrimarySpine' ...
+          & asiT.targetClass == 'ProximalDendrite', :); %#ok
 
-        % Find other spine heads onto same dendrite
-        curDendShIds = dendT.shIds{curSeedDendId};
-        curSeedShMask = curDendShIds == curSeedShId;
-        assert(sum(curSeedShMask) == 1);
+        curAsiT.postCellId = curAggloToCell(curAsiT.postAggloId); %#ok
+        curAsiT = curAsiT(curAsiT.postCellId == cellId, :);
 
-        % Restrict to other spine heads in surround
-        curDendDists = dendT.shToShDists{curSeedDendId};
-        curDendDists = curDendDists(:, curSeedShMask);
+        curCellSeedAreas = nan([height(curAsiT), numRuns]);
+        curCellCondAreas = cell([height(curAsiT), numRuns]);
 
-        curOtherShMask = curDendDists < distThresh;
-        curOtherShMask = curOtherShMask & not(curSeedShMask);
+        rng(0);
+        for curRunIdx = 1:numRuns
+            curShT.asiArea(:) = nan;
+            curShT.asiArea(curAsiT.shId) = curAsiT.area;
 
-        curOtherShIds = curDendShIds(curOtherShMask);
-        curOtherAsiAreas = curShT.asiArea(curOtherShIds);
-        curOtherAsiAreas = rmmissing(curOtherAsiAreas);
-        
-        seedAreas(curIdx, curRunIdx) = curSeedAsiArea;
-        condAreas{curIdx, curRunIdx} = curOtherAsiAreas(:);
+            for curIdx = 1:height(curAsiT)
+                curSeedShId = curAsiT.shId(curIdx);
+                curSeedDendId = curAsiT.postAggloId(curIdx);
+
+                curSeedAsiArea = curShT.asiArea(curSeedShId);
+
+                % Find other spine heads onto same dendrite
+                curDendShIds = dendT.shIds{curSeedDendId}; %#ok
+                curSeedShMask = curDendShIds == curSeedShId;
+                assert(sum(curSeedShMask) == 1);
+
+                % Restrict to other spine heads in surround
+                curDendDists = dendT.shToShDists{curSeedDendId};
+                curDendDists = curDendDists(:, curSeedShMask);
+
+                curOtherShMask = curDendDists < distThresh;
+                curOtherShMask = curOtherShMask & not(curSeedShMask);
+
+                curOtherShIds = curDendShIds(curOtherShMask);
+                curOtherAsiAreas = curShT.asiArea(curOtherShIds);
+                curOtherAsiAreas = rmmissing(curOtherAsiAreas);
+
+                curCellSeedAreas(curIdx, curRunIdx) = curSeedAsiArea;
+                curCellCondAreas{curIdx, curRunIdx} = curOtherAsiAreas(:);
+            end
+
+            % Shuffle areas
+            curRandIds = randperm(height(curAsiT));
+            curAsiT.area = curAsiT.area(curRandIds);
+        end
+
+        curDens = cell(numRuns, 1);
+        for curRunIdx = 1:numRuns
+            curSeedAreas = curCellSeedAreas(:, curRunIdx);
+            curCondAreas = curCellCondAreas(:, curRunIdx);
+
+            curN = cellfun(@numel, curCondAreas);
+            curX = repelem(curSeedAreas, curN);
+            curY = cell2mat(curCondAreas);
+
+            % NOTE(amotta): As of now (27.01.2020), it's not yet clear to
+            % me which of the following strategies is what we want to do:
+            %
+            % * Assign each synapse in each neighborhood the same weight?
+            %   This would mean that one surround with many small synapses
+            %   would dominate over another surround with one large synapse.
+            % * Or, assign each synapse in each neighborhood that is
+            %   inversely proportional to the number of synapses in the
+            %   neighborhood? This would allow us to ask: What is the
+            %   average size distribution in the surround of a synapse of
+            %   size X?
+            %
+            % The latter seems closer to what I'm interested in. This
+            % approach is more robust against the synapse density being
+            % correlated with the size of the surround seed synapse.
+            curW = repelem(1 ./ curN, curN);
+
+            curX = log10(curX);
+            curY = log10(curY);
+
+           [curDens{curRunIdx}, curRunBw] = kde2d( ...
+                curX, curY, curW, imSize, lims, lims, bw);
+
+            curDens{curRunIdx} = ...
+                curDens{curRunIdx} ...
+              / sum(curDens{curRunIdx}(:));
+        end
+
+        curRealDens = curDens{1};
+        curCtrlDens = cat(3, curDens{2:end});
+        curCtrlDens = mean(curCtrlDens, 3);
+
+        curCellData = struct;
+        curCellData.seedAreas = curCellSeedAreas(:, 1);
+        curCellData.condAreas = curCellCondAreas(:, 1);
+        curCellData.realDens = curRealDens;
+        curCellData.ctrlDens = curCtrlDens;
+
+        cellData{curCellIdx} = curCellData;
     end
+
+    cellData = cat(1, cellData);
+
+    % NOTE(amotta): To tell MATLAB that we don't use these after the `parfor`.
+    clear curSeedAreas curCondAreas curRealDens;
     
-    % Shuffle areas
-    curRandIds = randperm(height(curAsiT));
-    curAsiT.area = curAsiT.area(curRandIds);
+    curOut = struct;
+    curOut.info = info;
+    curOut.cellIds = cellIds(:);
+    curOut.cellData = cellData(:);
+    
+    Util.saveStruct(cellDataFile, curOut);
+    Util.protect(cellDataFile);
+else
+    % NOTE(amotta): Load data from cache
+   [cellIds, cellData] = Util.load(cellDataFile, 'cellIds', 'cellData');
 end
 
 %% Plot size versus number of neighboring spines
