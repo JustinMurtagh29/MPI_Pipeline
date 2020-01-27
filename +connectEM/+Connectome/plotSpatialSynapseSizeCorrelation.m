@@ -155,25 +155,34 @@ if ~isempty(debugNmlDir)
 end
 
 %% Clean up spine head table
-clear cur*;
-
 % NOTE(amotta): As mentioned in the first sections of this script, we
 % required dendrite super-agglomerates from a separate file to compute the
 % intersynapse and interspine distances.
 %   But now that we've done that, let's translate all dendrite indices and
 % get rid of data that refers to dendrites other than the ones in the
 % connectome file.
+clear cur*;
 
 curConnLUT = Agglo.buildLUT(maxSegId, conn.dendrites);
 curConnIds = Agglo.fromSuperAgglo(dendrites);
-curConnIds = cellfun(@(ids) max(curConnLUT(ids)), curConnIds);
 
+curConnIds = cellfun(@(ids) mode(nonzeros(curConnLUT(ids))), curConnIds);
+% NOTE(amotta): MATLAB's `mode` function returns NaN on empty inputs.
+curConnIds(isnan(curConnIds)) = 0;
+
+% Update dendrite IDs
 curMask = shT.dendId > 0;
 shT.dendId(curMask) = curConnIds(shT.dendId(curMask));
 
+dendT = table;
+dendT.shIds = repelem({zeros(0, 1)}, numel(conn.dendrites), 1);
+dendT.shIds(curConnIds(curConnIds > 0)) = dendShIds(curConnIds > 0);
+dendT.shToShDists = repelem({zeros(0, 0)}, numel(conn.dendrites), 1);
+dendT.shToShDists(curConnIds(curConnIds > 0)) = dendShToShDists(curConnIds > 0);
+
 % NOTE(amotta): Remove obsolete data
 shT(:, {'trunkNodeId', 'trunkSegId'}) = [];
-clear dendrites trunks;
+clear dendrites trunks dendShIds dendShToShDists;
 
 %% Control: Compare ASI distributions across proximal dendrites
 clear cur*;
