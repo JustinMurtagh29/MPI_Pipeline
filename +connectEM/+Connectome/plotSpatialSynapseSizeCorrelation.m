@@ -406,10 +406,11 @@ else
 end
 
 %% Plot size versus number of neighboring spines
+%{
 clear cur*;
 
-curX = log10(seedAreas(:, 1));
-curY = condAreas(:, 1);
+curX = log10(curSeedAreas(:, 1));
+curY = curCondAreas(:, 1);
 curY = cellfun(@numel, curY);
 
 curFit = fitlm(curX, curY);
@@ -427,13 +428,9 @@ connectEM.Figure.config(curFig, info);
 %% Plot results
 clear cur*;
 
-% Configuration
-curImSize = 256;
-curLims = [-1.5, 0];
-
 curTicks = [-1, 0];
 curTickLabels = {'-1', '0'};
-curTickIds = linspace(curLims(1), curLims(2), curImSize);
+curTickIds = linspace(lims(1), lims(2), imSize);
 [~, curTickIds] = arrayfun(@(t) min(abs(t - curTickIds)), curTicks);
 
 curXLabel = 'log10(reference ASI area [µm²])';
@@ -451,52 +448,10 @@ end
 curConfigAxis = @(ax) set(ax, ...
     'PlotBoxAspectRatio', [1, 1, 1], ...
     'DataAspectRatioMode', 'auto', ...
-    'XLim', [0, curImSize] + 0.5, 'XDir', 'normal', ...
+    'XLim', [0, imSize] + 0.5, 'XDir', 'normal', ...
     'XTick', curTickIds, 'XTickLabel', curTickLabels, ...
-    'YLim', [0, curImSize] + 0.5, 'YDir', 'normal', ...
+    'YLim', [0, imSize] + 0.5, 'YDir', 'normal', ...
     'YTick', curTickIds, 'YTickLabel', curTickLabels);
-
-curBw = [];
-curDens = cell(numRuns, 1);
-for curRunIdx = 1:numRuns
-    curSeedAreas = seedAreas(:, curRunIdx);
-    curCondAreas = condAreas(:, curRunIdx);
-    
-    curN = cellfun(@numel, curCondAreas);
-    curW = repelem(1 ./ curN, curN);
-    curX = repelem(curSeedAreas, curN);
-    curY = cell2mat(curCondAreas);
-
-    curX = log10(curX);
-    curY = log10(curY);
-    
-   [curDens{curRunIdx}, curRunBw] = kde2d( ...
-        curX, curY, curW, curImSize, curLims, curLims, curBw);
-    
-    % NOTE(amotta): The first run contains the "observed data". We use an
-    % empty bandwidth vector for this run in order for `kde2d` to derive
-    % these values.
-    %   But for all subsequent runs we want to use the bandwidth derived
-    % from the actualy data. So, we set it here.
-    if isempty(curBw); curBw = curRunBw; end
-    
-    curDens{curRunIdx} = ...
-        curDens{curRunIdx} ...
-      / sum(curDens{curRunIdx}(:));
-end
-
-curRealDens = curDens{1};
-curCtrlDens = mean(cat(3, curDens{2:end}), 3);
-curDiffDens = curRealDens - curCtrlDens;
-
-curRealCond = sum(curRealDens, 1);
-curRealCond(~curRealCond) = eps;
-curRealCond = curRealDens ./ curRealCond;
-
-curCtrlCond = sum(curCtrlDens, 1);
-curCtrlCond(~curCtrlCond) = eps;
-curCtrlCond = curCtrlDens ./ curCtrlCond;
-curDiffCond = curRealCond - curCtrlCond;
 
 
 % Plot 1
@@ -576,37 +531,90 @@ connectEM.Figure.config(curFig, info);
 
 %% Find size range with signs of homeostatic suppression in surround
 clear cur*;
+rng(0);
 
-curSeedAreas = seedAreas(:, 1);
-curCondAreas = condAreas(:, 1);
+distThresh = 2500;
+minSynCount = 200;
 
-% To log10-space
-curSeedAreas = log10(curSeedAreas);
-curCondAreas = cellfun(@log10, curCondAreas, 'UniformOutput', false);
+curVecX = -1.5:0.05:0;
 
-curCondN = cellfun(@numel, curCondAreas);
-curCondAreas = cell2mat(curCondAreas);
+curAsiT = asiT( ...
+    asiT.type == 'PrimarySpine' ...
+  & asiT.targetClass == 'ProximalDendrite' ...
+  & ismember(asiT.axonClass, {'Corticocortical', 'Thalamocortical'}), :);
 
-curYs = [];
-for curX = -1.5:0.05:0
-    % NOTE(amotta): Uniform kernel
-    curCondW = curSeedAreas - curX;
-    curCondW = double(abs(curCondW) < 0.1);
+% IMPORTANT(amotta): Use `postAggloId` before transforming it!
+curAsiT.postCellId = conn.denMeta.cellId(curAsiT.postAggloId);
+curAsiT.postAggloId = shT.dendId(curAsiT.shId);
 
-    assert(isequal(size(curCondW), size(curCondN)));
-    curCondW = repelem(curCondW ./ curCondN, curCondN);
-    curCondW = curCondW / sum(curCondW(:));
+% NOTE(amotta): Restrict to cell with at least X synapses
+[curCellIds, ~, curCellSynCounts] = unique(curAsiT.postCellId);
+curCellSynCounts = accumarray(curCellSynCounts, 1);
 
-    curY = ...
-        sum(curCondAreas(:) .* curCondW(:)) ...
-      - mean(curSeedAreas);
-    curYs(end + 1) = curY;
+curCellIds = curCellIds(curCellSynCounts >= minSynCount);
+curCellIds = 32;
+curMatY = nan(numel(curCellIds), numel(curVecX));
+
+for curCellIdx = 1:numel(curCellIds)
+    curCellId = curCellIds(curCellIdx);
+    curCellAsiT = curAsiT(curAsiT.postCellId == curCellId, :);
+
+    curShT = shT;
+    curShT.asiArea(:) = nan;
+    curShT.asiArea(curCellAsiT.shId) = curCellAsiT.area;
+
+    curSeedAreas = nan([height(curCellAsiT), 1]);
+    curCondAreas = cell([height(curCellAsiT), 1]);
+    for curIdx = 1:height(curCellAsiT)
+        curSeedShId = curCellAsiT.shId(curIdx);
+        curSeedDendId = curCellAsiT.postAggloId(curIdx);
+
+        curSeedAsiArea = curShT.asiArea(curSeedShId);
+
+        % Find other spine heads onto same dendrite
+        curDendShIds = dendShIds{curSeedDendId};
+        curSeedShMask = curDendShIds == curSeedShId;
+        assert(sum(curSeedShMask) == 1);
+
+        % Restrict to other spine heads in surround
+        curDendDists = dendShToShDists{curSeedDendId};
+        curDendDists = curDendDists(:, curSeedShMask);
+
+        curOtherShMask = curDendDists < distThresh;
+        curOtherShMask = curOtherShMask & not(curSeedShMask);
+
+        curOtherShIds = curDendShIds(curOtherShMask);
+        curOtherAsiAreas = curShT.asiArea(curOtherShIds);
+        curOtherAsiAreas = rmmissing(curOtherAsiAreas);
+
+        curSeedAreas(curIdx) = curSeedAsiArea;
+        curCondAreas{curIdx} = curOtherAsiAreas(:);
+    end
+    
+    % To log10-space
+    curSeedAreas = log10(curSeedAreas);
+    curCondAreas = cellfun(@log10, curCondAreas, 'UniformOutput', false);
+
+    curCondN = cellfun(@numel, curCondAreas);
+    curCondAreas = cell2mat(curCondAreas);
+
+    for curIdxX = 1:numel(curVecX)
+        curX = curVecX(curIdxX);
+        
+        % NOTE(amotta): Uniform kernel
+        curCondW = curSeedAreas - curX;
+        curCondW = double(abs(curCondW) < 0.2);
+
+        assert(isequal(size(curCondW), size(curCondN)));
+        curCondW = repelem(curCondW ./ curCondN, curCondN);
+        curCondW = curCondW / sum(curCondW(:));
+
+        curY = sum(curCondAreas(:) .* curCondW(:));
+        curY = curY - mean(curSeedAreas);
+        
+        curMatY(curCellIdx, curIdxX) = curY;
+    end
 end
-
-figure;
-hold on;
-plot(curYs);
-plot(xlim(), [0, 0], 'k--');
 
 %% Look at effect of soma distance
 clear cur*;
@@ -700,6 +708,7 @@ axis(curAx, 'square');
 xlabel(curAx, 'Distance to soma [µm]');
 ylabel(curAx, 'log10(ASI area [µm²]');
 connectEM.Figure.config(curFig, info);
+%}
 
 %% Utilities
 function [im, bwOut] = kde2d(x, y, w, imSize, xlim, ylim, bwIn)
