@@ -10,7 +10,7 @@ connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-linearize
 asiRunId = '20190227T082543';
 
 cellDataFile = '/tmpscratch/amotta/l4/2020-01-27-cell-based-homeostatic-plasticity-analysis';
-cellDataFile = fullfile(cellDataFile, 'cell-data_weighted_v1.mat');
+cellDataFile = fullfile(cellDataFile, 'cell-data_weighted_2-5um-radius_v1.mat');
 
 % For analysis of soma-distance
 somaFile  = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_03_v2.mat');
@@ -387,7 +387,7 @@ if ~exist(cellDataFile, 'file')
         cellData{curCellIdx} = curCellData;
     end
 
-    cellData = cat(1, cellData);
+    cellData = cat(1, cellData{:});
 
     % NOTE(amotta): To tell MATLAB that we don't use these after the `parfor`.
     clear curSeedAreas curCondAreas curRealDens;
