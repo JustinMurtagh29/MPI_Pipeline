@@ -287,10 +287,7 @@ curAsiT = asiT( ...
     asiT.type == 'PrimarySpine' ...
   & asiT.targetClass == 'ProximalDendrite' ...
   & ismember(asiT.axonClass, {'Corticocortical', 'Thalamocortical'}), :);
-
-% IMPORTANT(amotta): Use `postAggloId` before transforming it!
 curAsiT.postCellId = conn.denMeta.cellId(curAsiT.postAggloId);
-curAsiT.postAggloId = shT.dendId(curAsiT.shId);
 
 if ~isempty(cellId)
     curAsiT = curAsiT(curAsiT.postCellId == cellId, :);
@@ -310,12 +307,12 @@ for curRunIdx = 1:numRuns
         curSeedAsiArea = curShT.asiArea(curSeedShId);
 
         % Find other spine heads onto same dendrite
-        curDendShIds = dendShIds{curSeedDendId};
+        curDendShIds = dendT.shIds{curSeedDendId};
         curSeedShMask = curDendShIds == curSeedShId;
         assert(sum(curSeedShMask) == 1);
 
         % Restrict to other spine heads in surround
-        curDendDists = dendShToShDists{curSeedDendId};
+        curDendDists = dendT.shToShDists{curSeedDendId};
         curDendDists = curDendDists(:, curSeedShMask);
 
         curOtherShMask = curDendDists < distThresh;
