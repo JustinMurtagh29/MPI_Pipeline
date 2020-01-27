@@ -34,19 +34,24 @@ conn.denMeta = connectEM.Dendrite.completeCellMeta(param, conn);
 
 trunks = Util.load(trunkFile, 'dendrites');
 trunks = Agglo.fromSuperAgglo(trunks);
-trunkIds = Agglo.calculateVolume(param, trunks);
-trunkIds = find(trunkIds > trunkMinSize);
-trunks = trunks(trunkIds);
+curTrunkMask = Agglo.calculateVolume(param, trunks);
+curTrunkMask = curTrunkMask > trunkMinSize;
+trunks = trunks(curTrunkMask);
 
-dendrites = load(dendFile);
-shAgglos = dendrites.shAgglos;
-dendrites = dendrites.dendrites;
+shT = table;
+% NOTE(amotta): The dendrites of the connectome only consist of segment
+% equivalence classes. But in this script, we're interested in the
+% intersynapse and interspine distances along the dendritic trunk.
+%   That's why we use the dendritic super-agglomerates and the spine head
+% agglomerates from a separate file here.
+[dendrites, shT.agglo] = Util.load( ...
+    dendFile, 'dendrites', 'shAgglos');
 
 % Only keep dendrites that also contain a trunk
-curLUT = Agglo.buildLUT(maxSegId, trunks);
-dendIds = Agglo.fromSuperAgglo(dendrites, true);
-dendIds = find(cellfun(@(ids) any(curLUT(ids)), dendIds));
-dendrites = dendrites(dendIds);
+curTrunkLUT = Agglo.buildLUT(maxSegId, trunks);
+curDendMask = Agglo.fromSuperAgglo(dendrites, true);
+curDendMask = cellfun(@(ids) any(curTrunkLUT(ids)), curDendMask);
+dendrites = dendrites(curDendMask);
 
 % Load ASI areas
 [curDir, curAsiFile] = fileparts(connFile);
@@ -62,9 +67,6 @@ assert(numel(trunks) == numel(dendrites));
 
 %% Map spine heads onto dendritic trunk
 clear cur*;
-
-shT = table;
-shT.agglo = shAgglos;
 
 [shT.length, shT.dendId, shT.trunkNodeId]  = ...
     connectEM.Dendrite.calculateSpineLengths( ...
@@ -151,6 +153,30 @@ if ~isempty(debugNmlDir)
 
     curSkel.write(fullfile(debugNmlDir, 'test.nml'));
 end
+
+%% Clean up spine head table
+clear cur*;
+
+% NOTE(amotta): As mentioned in the first sections of this script, we
+% required dendrite super-agglomerates from a separate file to compute the
+% intersynapse and interspine distances.
+%   But now that we've done that, let's translate all dendrite indices and
+% get rid of data that refers to dendrites other than the ones in the
+% connectome file.
+
+curConnLUT = Agglo.buildLUT(maxSegId, conn.dendrites);
+
+curDendIds = Agglo.fromSuperAgglo(dendrites);
+curDendIds = cellfun(@(ids) max(curConnLUT(ids)), curDendIds);
+
+% NOTE(amotta): We're done with these
+clear dendrites trunks;
+
+curShT = shT;
+curMask = curShT.dendId > 0;
+curShT.dendId(curMask) = curDendIds(curShT.dendId(curMask));
+curShT(:, {'trunkNodeId', 'trunkSegId'}) = [];
+shT = curShT;
 
 %% Control: Compare ASI distributions across proximal dendrites
 clear cur*;
