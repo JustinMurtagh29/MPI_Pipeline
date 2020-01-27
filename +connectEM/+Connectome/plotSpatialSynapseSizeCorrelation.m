@@ -297,7 +297,7 @@ if ~exist(cellDataFile, 'file')
           & asiT.targetClass == 'ProximalDendrite', :); %#ok
 
         curAsiT.postCellId = curAggloToCell(curAsiT.postAggloId); %#ok
-        curAsiT = curAsiT(curAsiT.postCellId == cellId, :);
+        curAsiT = curAsiT(curAsiT.postCellId == curCellId, :);
 
         curCellSeedAreas = nan([height(curAsiT), numRuns]);
         curCellCondAreas = cell([height(curAsiT), numRuns]);
