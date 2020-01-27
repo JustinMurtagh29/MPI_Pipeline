@@ -439,11 +439,6 @@ curYLabel = sprintf(curYLabel, distThresh / 1E3);
 curRedCmap = connectEM.Figure.whiteRed(256);
 curBlueRedCmap = connectEM.Figure.blueWhiteRed(256);
 
-curTitle = '';
-if ~isempty(cellId)
-    curTitle = sprintf('Synapses onto neuron %d', cellId);
-end
-
 curConfigAxis = @(ax) set(ax, ...
     'PlotBoxAspectRatio', [1, 1, 1], ...
     'DataAspectRatioMode', 'auto', ...
@@ -452,81 +447,115 @@ curConfigAxis = @(ax) set(ax, ...
     'YLim', [0, imSize] + 0.5, 'YDir', 'normal', ...
     'YTick', curTickIds, 'YTickLabel', curTickLabels);
 
+curDiffCondDiags = nan(numel(cellData), imSize);
 
-% Plot 1
-curFig = figure();
-curAx = axes(curFig);
-imagesc(curAx, curRealDens);
-curCbar = colorbar(curAx);
+for curCellIdx = 1:numel(cellData)
+    curCellId = cellIds(curCellIdx);
+    curCellData = cellData(curCellIdx);
+    
+    curRealDens = curCellData.realDens;
+    curCtrlDens = curCellData.ctrlDens;
+    
+    if any(isnan(curRealDens(:))); continue; end
+    if any(isnan(curCtrlDens(:))); continue; end
+    
+    curRealCond = curRealDens;
+    curRealCond(~curRealCond) = eps;
+    curRealCond = curRealCond ./ sum(curRealCond, 1);
+    
+    curCtrlCond = curCtrlDens;
+    curCtrlCond(~curCtrlCond) = eps;
+    curCtrlCond = curCtrlCond ./ sum(curCtrlCond, 1);
+    
+    curDiffDens = curRealDens - curCtrlDens;
+    curDiffCond = curRealCond - curCtrlCond;
+    
+    curDiffCondDiag = curDiffCond(1:(size(curDiffCond, 1) + 1):end);
+    curDiffCondDiags(curCellIdx, :) = curDiffCondDiag;
+    
+    curTitle = sprintf('Synapses onto neuron %d', curCellId);
 
-xlabel(curAx, curXLabel);
-ylabel(curAx, curYLabel);
-curAx.CLim = [0, max(curRealDens(:))];
-curCbar.Label.String = 'P(ref. ASI, close-by ASIs)';
+    % Plot 1
+    %{
+    curFig = figure();
+    curAx = axes(curFig);
+    imagesc(curAx, curRealDens);
+    curCbar = colorbar(curAx);
 
-curConfigAxis(curAx);
-colormap(curAx, curRedCmap);
-if ~isempty(curTitle); title(curAx, curTitle); end
-connectEM.Figure.config(curFig, info);
+    xlabel(curAx, curXLabel);
+    ylabel(curAx, curYLabel);
+    curAx.CLim = [0, max(curRealDens(:))];
+    curCbar.Label.String = 'P(ref. ASI, close-by ASIs)';
 
-
-% Plot 2
-curFig = figure();
-curAx = axes(curFig);
-hold(curAx, 'on');
-
-imagesc(curAx, curDiffDens);
-curCbar = colorbar(curAx);
-
-xlabel(curAx, curXLabel);
-ylabel(curAx, curYLabel);
-curAx.CLim = [-1, +1] * max(abs(curDiffDens(:)));
-curCbar.Label.String = 'ΔP(ref. ASI, close-by ASIs) to random';
-
-curConfigAxis(curAx);
-colormap(curAx, curBlueRedCmap);
-plot(curAx, xlim(curAx), ylim(curAx), 'k--');
-if ~isempty(curTitle); title(curAx, curTitle); end
-connectEM.Figure.config(curFig, info);
-
-
-% Plot 3
-curFig = figure();
-curAx = axes(curFig);
-imagesc(curAx, curRealCond);
-curCbar = colorbar(curAx);
-
-xlabel(curAx, curXLabel);
-ylabel(curAx, curYLabel);
-curAx.CLim = [0, max(curRealCond(:))];
-curCbar.Label.String = 'P(close-by ASIs | ref. ASI)';
-
-curConfigAxis(curAx);
-colormap(curAx, curRedCmap);
-if ~isempty(curTitle); title(curAx, curTitle); end
-connectEM.Figure.config(curFig, info);
+    curConfigAxis(curAx);
+    colormap(curAx, curRedCmap);
+    if ~isempty(curTitle); title(curAx, curTitle); end
+    connectEM.Figure.config(curFig, info);
 
 
-% Plot 4
-curFig = figure();
-curAx = axes(curFig);
-hold(curAx, 'on');
-imagesc(curAx, curDiffCond);
-curCbar = colorbar(curAx);
+    % Plot 2
+    curFig = figure();
+    curAx = axes(curFig);
+    hold(curAx, 'on');
 
-curClim = curDiffCond(:, 75:225);
-curClim = [-1, +1] * max(abs(curClim(:)));
+    imagesc(curAx, curDiffDens);
+    curCbar = colorbar(curAx);
 
-xlabel(curAx, curXLabel);
-ylabel(curAx, curYLabel);
-curAx.CLim = curClim;
-curCbar.Label.String = 'ΔP(close-by ASIs | ref. ASI) to random';
+    xlabel(curAx, curXLabel);
+    ylabel(curAx, curYLabel);
+    curAx.CLim = [-1, +1] * max(abs(curDiffDens(:)));
+    curCbar.Label.String = 'ΔP(ref. ASI, close-by ASIs) to random';
 
-curConfigAxis(curAx);
-colormap(curAx, curBlueRedCmap);
-plot(curAx, xlim(curAx), ylim(curAx), 'k--');
-if ~isempty(curTitle); title(curAx, curTitle); end
-connectEM.Figure.config(curFig, info);
+    curConfigAxis(curAx);
+    colormap(curAx, curBlueRedCmap);
+    plot(curAx, xlim(curAx), ylim(curAx), 'k--');
+    if ~isempty(curTitle); title(curAx, curTitle); end
+    connectEM.Figure.config(curFig, info);
+
+
+    % Plot 3
+    curFig = figure();
+    curAx = axes(curFig);
+    imagesc(curAx, curRealCond);
+    curCbar = colorbar(curAx);
+
+    xlabel(curAx, curXLabel);
+    ylabel(curAx, curYLabel);
+    curAx.CLim = [0, max(curRealCond(:))];
+    curCbar.Label.String = 'P(close-by ASIs | ref. ASI)';
+
+    curConfigAxis(curAx);
+    colormap(curAx, curRedCmap);
+    if ~isempty(curTitle); title(curAx, curTitle); end
+    connectEM.Figure.config(curFig, info);
+
+
+    % Plot 4
+    curFig = figure();
+    curAx = axes(curFig);
+    hold(curAx, 'on');
+    imagesc(curAx, curDiffCond);
+    curCbar = colorbar(curAx);
+
+    curClim = curDiffCond(:, 75:225);
+    curClim = [-1, +1] * max(abs(curClim(:)));
+
+    xlabel(curAx, curXLabel);
+    ylabel(curAx, curYLabel);
+    curAx.CLim = curClim;
+    curCbar.Label.String = 'ΔP(close-by ASIs | ref. ASI) to random';
+
+    curConfigAxis(curAx);
+    colormap(curAx, curBlueRedCmap);
+    plot(curAx, xlim(curAx), ylim(curAx), 'k--');
+    if ~isempty(curTitle); title(curAx, curTitle); end
+    connectEM.Figure.config(curFig, info);
+    %}
+end
+
+curDiffCondDiags(all(isnan(curDiffCondDiags), 2), :) = [];
+figure; plot(linspace(0, 1.5, imSize), curDiffCondDiags, 'LineWidth', 2);
+figure; plot(linspace(0, 1.5, imSize), mean(curDiffCondDiags, 1), 'k', 'LineWidth', 2);
 
 %% Find size range with signs of homeostatic suppression in surround
 clear cur*;
