@@ -308,7 +308,7 @@ if ~exist(cellDataFile, 'file')
 
             for curIdx = 1:height(curAsiT)
                 curSeedShId = curAsiT.shId(curIdx);
-                curSeedDendId = curAsiT.postAggloId(curIdx);
+                curSeedDendId = shT.dendId(curSeedShId);
 
                 curSeedAsiArea = curShT.asiArea(curSeedShId);
 
