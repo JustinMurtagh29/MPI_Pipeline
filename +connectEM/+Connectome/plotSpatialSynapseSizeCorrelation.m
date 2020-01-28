@@ -574,6 +574,7 @@ plot(curAx, curX, curMean, 'k', 'LineWidth', 2);
 
 xlabel(curAx, sprintf('log10(%s)', sizeLabel));
 ylabel(curAx, 'ΔP(SH in surround) to random');
+ylim(curAx, [-1, +1] * max(abs(ylim(curAx))));
 connectEM.Figure.config(curFig, info);
 curFig.Position(3:4) = [440, 420];
 
@@ -593,6 +594,7 @@ plot(curAx, curX, curMean, 'k', 'LineWidth', 2);
 
 xlabel(curAx, sprintf('log10(%s)', sizeLabel));
 ylabel(curAx, 'ΔP(identically sized SH in surround) to random');
+ylim(curAx, [-1, +1] * max(abs(ylim(curAx))));
 connectEM.Figure.config(curFig, info);
 curFig.Position(3:4) = [440, 420];
 
