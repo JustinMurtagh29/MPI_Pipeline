@@ -9,10 +9,6 @@ dendFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v3_auto-and-
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-linearized_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v8-classified.mat');
 asiRunId = '20190227T082543';
 
-cellDataFile = '/tmpscratch/amotta/l4/2020-01-27-cell-based-homeostatic-plasticity-analysis';
-cellDataFile = fullfile(cellDataFile, 'cell-data_weighted_5-0um-radius_v1.mat');
-cellDataFile = '';
-
 % For analysis of soma-distance
 somaFile  = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_03_v2.mat');
 wcFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v3_auto-and-manual.mat');
@@ -292,9 +288,11 @@ switch lower(sizeVar)
     case 'asi'
         lims = [-1.5, 0];
         bw = [0.1, 0.1];
+        sizeLabel = 'ASI area [µm²]';
     case 'vol'
         lims = [-2.5, -0];
         bw = [0.2, 0.2];
+        sizeLabel = 'spine volume [µm³]';
     otherwise
         error('Unknown variable');
 end
@@ -303,7 +301,7 @@ end
 % subsequent runs use randomly redistributed ASI areas.
 numRuns = 1;
 distThresh = 2500;
-minShCount = 50;
+minShCount = 0;
 
 curShT = shT;
 curShT.size = curShT.(sizeVar);
@@ -422,9 +420,8 @@ curTickLabels = {'-3', '-2', '-1', '0'};
 curTickIds = linspace(lims(1), lims(2), imSize);
 [~, curTickIds] = arrayfun(@(t) min(abs(t - curTickIds)), curTicks);
 
-curXLabel = 'log10(reference ASI area [µm²])';
-curYLabel = 'log10(ASI area within %g µm [µm³])';
-curYLabel = sprintf(curYLabel, distThresh / 1E3);
+curXLabel = sprintf('log10(reference %s)', sizeLabel);
+curYLabel = sprintf('log10(%s within %g µm)', sizeLabel, distThresh / 1E3);
 
 curRedCmap = connectEM.Figure.whiteRed(256);
 curBlueRedCmap = connectEM.Figure.blueWhiteRed(256);
@@ -471,9 +468,8 @@ for curDendIdx = 1:numel(dendData)
     curDiffDiag = curDiffDens(1:(imSize + 1):end);
     curDiffDiags(curDendIdx, :) = curDiffDiag;
     
-    curTitle = sprintf('Synapses onto neuron %d', curDendId);
+    curTitle = sprintf('Synapses onto dendrite %d', curDendId);
 
-    %{
     % Plot 1
     curFig = figure();
     curAx = axes(curFig);
@@ -483,7 +479,7 @@ for curDendIdx = 1:numel(dendData)
     xlabel(curAx, curXLabel);
     ylabel(curAx, curYLabel);
     curAx.CLim = [0, max(curRealDens(:))];
-    curCbar.Label.String = 'P(ref. ASI, close-by ASIs)';
+    curCbar.Label.String = 'P(ref. SH, surround SH)';
 
     curConfigAxis(curAx);
     colormap(curAx, curRedCmap);
@@ -502,7 +498,7 @@ for curDendIdx = 1:numel(dendData)
     xlabel(curAx, curXLabel);
     ylabel(curAx, curYLabel);
     curAx.CLim = [-1, +1] * max(abs(curDiffDens(:)));
-    curCbar.Label.String = 'ΔP(ref. ASI, close-by ASIs) to random';
+    curCbar.Label.String = 'ΔP(ref. SH, surround SH) to random';
 
     curConfigAxis(curAx);
     colormap(curAx, curBlueRedCmap);
@@ -520,7 +516,7 @@ for curDendIdx = 1:numel(dendData)
     xlabel(curAx, curXLabel);
     ylabel(curAx, curYLabel);
     curAx.CLim = [0, max(curRealCond(:))];
-    curCbar.Label.String = 'P(close-by ASIs | ref. ASI)';
+    curCbar.Label.String = 'P(surround SH | ref. SH)';
 
     curConfigAxis(curAx);
     colormap(curAx, curRedCmap);
@@ -541,32 +537,32 @@ for curDendIdx = 1:numel(dendData)
     xlabel(curAx, curXLabel);
     ylabel(curAx, curYLabel);
     curAx.CLim = curClim;
-    curCbar.Label.String = 'ΔP(close-by ASIs | ref. ASI) to random';
+    curCbar.Label.String = 'ΔP(surround SH | ref. SH) to random';
 
     curConfigAxis(curAx);
     colormap(curAx, curBlueRedCmap);
     plot(curAx, xlim(curAx), ylim(curAx), 'k--');
     if ~isempty(curTitle); title(curAx, curTitle); end
     connectEM.Figure.config(curFig, info);
-    %}
 end
 
 % Clustering plot
 curX = linspace(lims(1), lims(2), imSize);
 curMean = sum(curWeights(:) .* curDiffDiags, 1);
 curMean = curMean / sum(curWeights);
+curMask = curWeights > 100;
 
 curFig = figure();
 curAx = axes(curFig);
 axis(curAx, 'square');
 hold(curAx, 'on');
 
-plot(curAx, curX, curDiffDiags);
+plot(curAx, curX, curDiffDiags(curMask, :));
 plot(curAx, curX, zeros(size(curX)), 'k--');
 plot(curAx, curX, curMean, 'k', 'LineWidth', 2);
 
-xlabel(curAx, 'log10(ASI area [µm²])');
-ylabel(curAx, 'ΔP(identically sized ASI in surround) to random');
+xlabel(curAx, sprintf('log10(%s)', sizeLabel));
+ylabel(curAx, 'ΔP(identically sized SH in surround) to random');
 connectEM.Figure.config(curFig, info);
 curFig.Position(3:4) = [440, 420];
 
