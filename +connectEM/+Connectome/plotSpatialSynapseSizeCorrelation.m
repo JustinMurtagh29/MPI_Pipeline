@@ -279,7 +279,7 @@ bw = [0.1, 0.1];
 
 % NOTE(amotta): The first run corresponds to actually observed data. All
 % subsequent runs use randomly redistributed ASI areas.
-numRuns = 1 + 10;
+numRuns = 1;
 distThresh = 2500;
 
 if ~exist(cellDataFile, 'file')
@@ -287,7 +287,7 @@ if ~exist(cellDataFile, 'file')
     cellIds = setdiff(curAggloToCell, 0);
     cellData = cell(numel(cellIds), 1);
 
-    parfor curCellIdx = 1:numel(cellIds)
+    for curCellIdx = 1:numel(cellIds)
         curCellId = cellIds(curCellIdx);
 
         curShT = shT;
@@ -361,7 +361,7 @@ if ~exist(cellDataFile, 'file')
             % The latter seems closer to what I'm interested in. This
             % approach is more robust against the synapse density being
             % correlated with the size of the surround seed synapse.
-            curW = repelem(1 ./ curN, curN);
+            curW = [];
 
             curX = log10(curX);
             curY = log10(curY);
@@ -423,6 +423,8 @@ curFitX = curAx.XLim(:);
 curFitY = curFit.predict(curFitX);
 plot(curAx, curFitX, curFitY, 'k--');
 connectEM.Figure.config(curFig, info);
+%}
+
 
 %% Plot results
 clear cur*;
@@ -447,36 +449,44 @@ curConfigAxis = @(ax) set(ax, ...
     'YLim', [0, imSize] + 0.5, 'YDir', 'normal', ...
     'YTick', curTickIds, 'YTickLabel', curTickLabels);
 
-curDiffCondDiags = nan(numel(cellData), imSize);
+curWeights = nan(numel(cellData), 1);
+curDiffDiags = nan(numel(cellData), imSize);
 
 for curCellIdx = 1:numel(cellData)
     curCellId = cellIds(curCellIdx);
     curCellData = cellData(curCellIdx);
     
-    curRealDens = curCellData.realDens;
-    curCtrlDens = curCellData.ctrlDens;
+    curWeight = sum(not(cellfun( ...
+        @isempty, curCellData.condAreas)));
+    curWeights(curCellIdx) = curWeight;
+    if ~curWeight; continue; end
     
-    if any(isnan(curRealDens(:))); continue; end
-    if any(isnan(curCtrlDens(:))); continue; end
+    curRealDens = curCellData.realDens;
+    assert(not(any(isnan(curRealDens(:)))));
+    
+    curSeedDens = ksdensity( ...
+        log10(curCellData.seedAreas), ...
+        linspace(lims(1), lims(2), imSize), ...
+        'Bandwidth', bw(1));
+    
+    curSeedDens = curSeedDens / sum(curSeedDens(:));
+    curCtrlDens = curSeedDens(:) .* sum(curRealDens, 1);
     
     curRealCond = curRealDens;
     curRealCond(~curRealCond) = eps;
     curRealCond = curRealCond ./ sum(curRealCond, 1);
-    
-    curCtrlCond = curCtrlDens;
-    curCtrlCond(~curCtrlCond) = eps;
-    curCtrlCond = curCtrlCond ./ sum(curCtrlCond, 1);
+    curCtrlCond = repmat(curSeedDens(:), 1, imSize);
     
     curDiffDens = curRealDens - curCtrlDens;
     curDiffCond = curRealCond - curCtrlCond;
     
-    curDiffCondDiag = curDiffCond(1:(size(curDiffCond, 1) + 1):end);
-    curDiffCondDiags(curCellIdx, :) = curDiffCondDiag;
+    curDiffDiag = curDiffDens(1:(imSize + 1):end);
+    curDiffDiags(curCellIdx, :) = curDiffDiag;
     
     curTitle = sprintf('Synapses onto neuron %d', curCellId);
 
-    % Plot 1
     %{
+    % Plot 1
     curFig = figure();
     curAx = axes(curFig);
     imagesc(curAx, curRealDens);
@@ -491,8 +501,8 @@ for curCellIdx = 1:numel(cellData)
     colormap(curAx, curRedCmap);
     if ~isempty(curTitle); title(curAx, curTitle); end
     connectEM.Figure.config(curFig, info);
-
-
+    
+    
     % Plot 2
     curFig = figure();
     curAx = axes(curFig);
@@ -511,8 +521,8 @@ for curCellIdx = 1:numel(cellData)
     plot(curAx, xlim(curAx), ylim(curAx), 'k--');
     if ~isempty(curTitle); title(curAx, curTitle); end
     connectEM.Figure.config(curFig, info);
-
-
+    
+    
     % Plot 3
     curFig = figure();
     curAx = axes(curFig);
@@ -528,7 +538,7 @@ for curCellIdx = 1:numel(cellData)
     colormap(curAx, curRedCmap);
     if ~isempty(curTitle); title(curAx, curTitle); end
     connectEM.Figure.config(curFig, info);
-
+    
 
     % Plot 4
     curFig = figure();
@@ -553,9 +563,27 @@ for curCellIdx = 1:numel(cellData)
     %}
 end
 
-curDiffCondDiags(all(isnan(curDiffCondDiags), 2), :) = [];
-figure; plot(linspace(0, 1.5, imSize), curDiffCondDiags, 'LineWidth', 2);
-figure; plot(linspace(0, 1.5, imSize), mean(curDiffCondDiags, 1), 'k', 'LineWidth', 2);
+% Clustering plot
+curX = linspace(lims(1), lims(2), imSize);
+curDiffDiags(curWeights < 200, :) = [];
+curWeights(curWeights < 200) = [];
+
+curMean = sum(curWeights(:) .* curDiffDiags, 1);
+curMean = curMean / sum(curWeights);
+
+curFig = figure();
+curAx = axes(curFig);
+axis(curAx, 'square');
+hold(curAx, 'on');
+
+plot(curAx, curX, curDiffDiags);
+plot(curAx, curX, zeros(size(curX)), 'k--');
+plot(curAx, curX, curMean, 'k', 'LineWidth', 2);
+
+xlabel(curAx, 'log10(ASI area [µm²])');
+ylabel(curAx, 'ΔP(identically sized ASI in surround) to random');
+connectEM.Figure.config(curFig, info);
+curFig.Position(3:4) = [440, 420];
 
 %% Find size range with signs of homeostatic suppression in surround
 clear cur*;
