@@ -307,7 +307,7 @@ curShT = shT;
 curShT.size = curShT.(sizeVar);
 curShT.id = reshape(1:height(curShT), [], 1);
 
-dendIds = curShT.targetClass == 'ApicalDendrite';
+dendIds = curShT.targetClass == 'WholeCell';
 dendIds = curShT.dendId(dendIds);
 
 [dendIds, ~, curCount] = unique(dendIds);
@@ -436,6 +436,7 @@ curConfigAxis = @(ax) set(ax, ...
 
 curWeights = nan(numel(dendData), 1);
 curDiffDiags = nan(numel(dendData), imSize);
+curDiffMargins = nan(numel(dendData), imSize);
 
 for curDendIdx = 1:numel(dendData)
     curDendId = dendIds(curDendIdx);
@@ -457,6 +458,9 @@ for curDendIdx = 1:numel(dendData)
     curSeedDens = curSeedDens / sum(curSeedDens(:));
     curCtrlDens = curSeedDens(:) .* sum(curRealDens, 1);
     
+    curDiffMargin = sum(curRealDens, 1) - curSeedDens;
+    curDiffMargins(curDendIdx, :) = curDiffMargin;
+    
     curRealCond = curRealDens;
     curRealCond(~curRealCond) = eps;
     curRealCond = curRealCond ./ sum(curRealCond, 1);
@@ -470,6 +474,8 @@ for curDendIdx = 1:numel(dendData)
     
     curTitle = sprintf('Synapses onto dendrite %d', curDendId);
 
+    
+    %{
     % Plot 1
     curFig = figure();
     curAx = axes(curFig);
@@ -544,13 +550,37 @@ for curDendIdx = 1:numel(dendData)
     plot(curAx, xlim(curAx), ylim(curAx), 'k--');
     if ~isempty(curTitle); title(curAx, curTitle); end
     connectEM.Figure.config(curFig, info);
+    %}
 end
 
-% Clustering plot
 curX = linspace(lims(1), lims(2), imSize);
+% NOTE(amotta): That's for plotting only. In the calculation of the grand
+% average we are still going to consider all data points.
+curMask = curWeights > 100;
+
+
+% Spine density plot
+curMean = sum(curWeights(:) .* curDiffMargins, 1);
+curMean = curMean / sum(curWeights);
+
+curFig = figure();
+curAx = axes(curFig);
+axis(curAx, 'square');
+hold(curAx, 'on');
+
+plot(curAx, curX, curDiffMargins(curMask, :));
+plot(curAx, curX, zeros(size(curX)), 'k--');
+plot(curAx, curX, curMean, 'k', 'LineWidth', 2);
+
+xlabel(curAx, sprintf('log10(%s)', sizeLabel));
+ylabel(curAx, 'ΔP(SH in surround) to random');
+connectEM.Figure.config(curFig, info);
+curFig.Position(3:4) = [440, 420];
+
+
+% Clustering plot
 curMean = sum(curWeights(:) .* curDiffDiags, 1);
 curMean = curMean / sum(curWeights);
-curMask = curWeights > 100;
 
 curFig = figure();
 curAx = axes(curFig);
