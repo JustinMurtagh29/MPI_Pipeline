@@ -10,7 +10,8 @@ connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-linearize
 asiRunId = '20190227T082543';
 
 cellDataFile = '/tmpscratch/amotta/l4/2020-01-27-cell-based-homeostatic-plasticity-analysis';
-cellDataFile = fullfile(cellDataFile, 'cell-data_weighted_2-5um-radius_v1.mat');
+cellDataFile = fullfile(cellDataFile, 'cell-data_weighted_5-0um-radius_v1.mat');
+cellDataFile = '';
 
 % For analysis of soma-distance
 somaFile  = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_03_v2.mat');
@@ -187,6 +188,17 @@ dendT.shToShDists(curConnIds(curConnIds > 0)) = dendShToShDists(curConnIds > 0);
 shT(:, {'trunkNodeId', 'trunkSegId'}) = [];
 clear dendrites trunks dendShIds dendShToShDists;
 
+%% Complete spine head table
+clear cur*;
+
+curSegSizes = Seg.Global.getSegToSizeMap(param);
+shT.vol = cellfun(@(ids) sum(curSegSizes(ids)), shT.agglo);
+shT.vol = shT.vol * prod(param.raw.voxelSize / 1E3);
+
+curMask = shT.dendId ~= 0;
+shT.targetClass(:) = categorical({'Unknown'});
+shT.targetClass(curMask) = conn.denMeta.targetClass(shT.dendId(curMask));
+
 %% Control: Compare ASI distributions across proximal dendrites
 clear cur*;
 
@@ -273,164 +285,140 @@ fprintf([ ...
 clear cur*;
 
 % Configurations
+sizeVar = 'vol';
 imSize = 256;
-lims = [-1.5, 0];
-bw = [0.1, 0.1];
+
+switch lower(sizeVar)
+    case 'asi'
+        lims = [-1.5, 0];
+        bw = [0.1, 0.1];
+    case 'vol'
+        lims = [-2.5, -0];
+        bw = [0.2, 0.2];
+    otherwise
+        error('Unknown variable');
+end
 
 % NOTE(amotta): The first run corresponds to actually observed data. All
 % subsequent runs use randomly redistributed ASI areas.
 numRuns = 1;
 distThresh = 2500;
+minShCount = 50;
 
-if ~exist(cellDataFile, 'file')
-    curAggloToCell = conn.denMeta.cellId;
-    cellIds = setdiff(curAggloToCell, 0);
-    cellData = cell(numel(cellIds), 1);
+curShT = shT;
+curShT.size = curShT.(sizeVar);
+curShT.id = reshape(1:height(curShT), [], 1);
 
-    for curCellIdx = 1:numel(cellIds)
-        curCellId = cellIds(curCellIdx);
+dendIds = curShT.targetClass == 'ApicalDendrite';
+dendIds = curShT.dendId(dendIds);
 
-        curShT = shT;
-        curAsiT = asiT( ...
-            asiT.type == 'PrimarySpine' ...
-          & asiT.targetClass == 'ProximalDendrite', :); %#ok
+[dendIds, ~, curCount] = unique(dendIds);
+curCount = accumarray(curCount, 1);
+dendIds = dendIds(curCount > minShCount);
 
-        curAsiT.postCellId = curAggloToCell(curAsiT.postAggloId); %#ok
-        curAsiT = curAsiT(curAsiT.postCellId == curCellId, :);
+dendIds = setdiff(dendIds, 0);
 
-        curCellSeedAreas = nan([height(curAsiT), numRuns]);
-        curCellCondAreas = cell([height(curAsiT), numRuns]);
+tic;
+dendData = cell(numel(dendIds), 1);
+for curDendIdx = 1:numel(dendIds)
+    curDendId = dendIds(curDendIdx);
+    curDendShIds = dendT.shIds{curDendId};
+    
+    curDendMask = curShT.dendId == curDendId;
+    curDendShT = curShT(curDendMask, :);
 
-        rng(0);
-        for curRunIdx = 1:numRuns
-            curShT.asiArea(:) = nan;
-            curShT.asiArea(curAsiT.shId) = curAsiT.area;
+    curDendSeedSizes = nan([height(curDendShT), numRuns]);
+    curDendCondSizes = cell([height(curDendShT), numRuns]);
 
-            for curIdx = 1:height(curAsiT)
-                curSeedShId = curAsiT.shId(curIdx);
-                curSeedDendId = shT.dendId(curSeedShId);
+    rng(0);
+    for curRunIdx = 1:numRuns
+        for curIdx = 1:height(curDendShT)
+            curSeedShId = curDendShT.id(curIdx);
+            curSeedSize = curShT.size(curSeedShId);
 
-                curSeedAsiArea = curShT.asiArea(curSeedShId);
+            % Find other spine heads onto same dendrite
+            curSeedShMask = curDendShIds == curSeedShId;
+            assert(sum(curSeedShMask) == 1);
 
-                % Find other spine heads onto same dendrite
-                curDendShIds = dendT.shIds{curSeedDendId}; %#ok
-                curSeedShMask = curDendShIds == curSeedShId;
-                assert(sum(curSeedShMask) == 1);
+            % Restrict to other spine heads in surround
+            curDendDists = dendT.shToShDists{curDendId};
+            curDendDists = curDendDists(:, curSeedShMask);
 
-                % Restrict to other spine heads in surround
-                curDendDists = dendT.shToShDists{curSeedDendId};
-                curDendDists = curDendDists(:, curSeedShMask);
+            curOtherShMask = curDendDists < distThresh;
+            curOtherShMask = curOtherShMask & not(curSeedShMask);
 
-                curOtherShMask = curDendDists < distThresh;
-                curOtherShMask = curOtherShMask & not(curSeedShMask);
+            curOtherShIds = curDendShIds(curOtherShMask);
+            curOtherSizes = curShT.size(curOtherShIds);
+            curOtherSizes = rmmissing(curOtherSizes);
 
-                curOtherShIds = curDendShIds(curOtherShMask);
-                curOtherAsiAreas = curShT.asiArea(curOtherShIds);
-                curOtherAsiAreas = rmmissing(curOtherAsiAreas);
-
-                curCellSeedAreas(curIdx, curRunIdx) = curSeedAsiArea;
-                curCellCondAreas{curIdx, curRunIdx} = curOtherAsiAreas(:);
-            end
-
-            % Shuffle areas
-            curRandIds = randperm(height(curAsiT));
-            curAsiT.area = curAsiT.area(curRandIds);
+            curDendSeedSizes(curIdx, curRunIdx) = curSeedSize;
+            curDendCondSizes{curIdx, curRunIdx} = curOtherSizes(:);
         end
 
-        curDens = cell(numRuns, 1);
-        for curRunIdx = 1:numRuns
-            curSeedAreas = curCellSeedAreas(:, curRunIdx);
-            curCondAreas = curCellCondAreas(:, curRunIdx);
-
-            curN = cellfun(@numel, curCondAreas);
-            curX = repelem(curSeedAreas, curN);
-            curY = cell2mat(curCondAreas);
-
-            % NOTE(amotta): As of now (27.01.2020), it's not yet clear to
-            % me which of the following strategies is what we want to do:
-            %
-            % * Assign each synapse in each neighborhood the same weight?
-            %   This would mean that one surround with many small synapses
-            %   would dominate over another surround with one large synapse.
-            % * Or, assign each synapse in each neighborhood that is
-            %   inversely proportional to the number of synapses in the
-            %   neighborhood? This would allow us to ask: What is the
-            %   average size distribution in the surround of a synapse of
-            %   size X?
-            %
-            % The latter seems closer to what I'm interested in. This
-            % approach is more robust against the synapse density being
-            % correlated with the size of the surround seed synapse.
-            curW = [];
-
-            curX = log10(curX);
-            curY = log10(curY);
-
-           [curDens{curRunIdx}, curRunBw] = kde2d( ...
-                curX, curY, curW, imSize, lims, lims, bw);
-
-            curDens{curRunIdx} = ...
-                curDens{curRunIdx} ...
-              / sum(curDens{curRunIdx}(:));
-        end
-
-        curRealDens = curDens{1};
-        curCtrlDens = cat(3, curDens{2:end});
-        curCtrlDens = mean(curCtrlDens, 3);
-
-        curCellData = struct;
-        curCellData.seedAreas = curCellSeedAreas(:, 1);
-        curCellData.condAreas = curCellCondAreas(:, 1);
-        curCellData.realDens = curRealDens;
-        curCellData.ctrlDens = curCtrlDens;
-
-        cellData{curCellIdx} = curCellData;
+        % Shuffle sizes
+        curShT.size(curDendMask) = ...
+            curDendShT.size(randperm(height(curDendShT)));
     end
 
-    cellData = cat(1, cellData{:});
+    curDens = cell(numRuns, 1);
+    for curRunIdx = 1:numRuns
+        curSeedSizes = curDendSeedSizes(:, curRunIdx);
+        curCondSizes = curDendCondSizes(:, curRunIdx);
 
-    % NOTE(amotta): To tell MATLAB that we don't use these after the `parfor`.
-    clear curSeedAreas curCondAreas curRealDens;
-    
-    curOut = struct;
-    curOut.info = info;
-    curOut.cellIds = cellIds(:);
-    curOut.cellData = cellData(:);
-    
-    Util.saveStruct(cellDataFile, curOut);
-    Util.protect(cellDataFile);
-else
-    % NOTE(amotta): Load data from cache
-   [cellIds, cellData] = Util.load(cellDataFile, 'cellIds', 'cellData');
+        curN = cellfun(@numel, curCondSizes);
+        curX = repelem(curSeedSizes, curN);
+        curY = cell2mat(curCondSizes);
+
+        % NOTE(amotta): As of now (27.01.2020), it's not yet clear to
+        % me which of the following strategies is what we want to do:
+        %
+        % * Assign each synapse in each neighborhood the same weight?
+        %   This would mean that one surround with many small synapses
+        %   would dominate over another surround with one large synapse.
+        % * Or, assign each synapse in each neighborhood that is
+        %   inversely proportional to the number of synapses in the
+        %   neighborhood? This would allow us to ask: What is the
+        %   average size distribution in the surround of a synapse of
+        %   size X?
+        %
+        % The latter seems closer to what I'm interested in. This
+        % approach is more robust against the synapse density being
+        % correlated with the size of the surround seed synapse.
+        curW = [];
+
+        curX = log10(curX);
+        curY = log10(curY);
+
+       [curDens{curRunIdx}, curRunBw] = kde2d( ...
+            curX, curY, curW, imSize, lims, lims, bw);
+
+        curDens{curRunIdx} = ...
+            curDens{curRunIdx} ...
+          / sum(curDens{curRunIdx}(:));
+    end
+
+    curRealDens = curDens{1};
+    curCtrlDens = cat(3, curDens{2:end});
+    curCtrlDens = mean(curCtrlDens, 3);
+
+    curCellData = struct;
+    curCellData.seedSizes = curDendSeedSizes(:, 1);
+    curCellData.condSizes = curDendCondSizes(:, 1);
+    curCellData.realDens = curRealDens;
+    curCellData.ctrlDens = curCtrlDens;
+
+    dendData{curDendIdx} = curCellData;
+    Util.progressBar(curDendIdx, numel(dendIds));
 end
 
-%% Plot size versus number of neighboring spines
-%{
-clear cur*;
-
-curX = log10(curSeedAreas(:, 1));
-curY = curCondAreas(:, 1);
-curY = cellfun(@numel, curY);
-
-curFit = fitlm(curX, curY);
-
-curFig = figure();
-curAx = axes(curFig);
-hold(curAx, 'on');
-
-scatter(curAx, curX, curY, '.');
-curFitX = curAx.XLim(:);
-curFitY = curFit.predict(curFitX);
-plot(curAx, curFitX, curFitY, 'k--');
-connectEM.Figure.config(curFig, info);
-%}
+dendData = cat(1, dendData{:});
 
 
 %% Plot results
 clear cur*;
 
-curTicks = [-1, 0];
-curTickLabels = {'-1', '0'};
+curTicks = [-3, -2, -1, 0];
+curTickLabels = {'-3', '-2', '-1', '0'};
 curTickIds = linspace(lims(1), lims(2), imSize);
 [~, curTickIds] = arrayfun(@(t) min(abs(t - curTickIds)), curTicks);
 
@@ -449,23 +437,23 @@ curConfigAxis = @(ax) set(ax, ...
     'YLim', [0, imSize] + 0.5, 'YDir', 'normal', ...
     'YTick', curTickIds, 'YTickLabel', curTickLabels);
 
-curWeights = nan(numel(cellData), 1);
-curDiffDiags = nan(numel(cellData), imSize);
+curWeights = nan(numel(dendData), 1);
+curDiffDiags = nan(numel(dendData), imSize);
 
-for curCellIdx = 1:numel(cellData)
-    curCellId = cellIds(curCellIdx);
-    curCellData = cellData(curCellIdx);
+for curDendIdx = 1:numel(dendData)
+    curDendId = dendIds(curDendIdx);
+    curCellData = dendData(curDendIdx);
     
     curWeight = sum(not(cellfun( ...
-        @isempty, curCellData.condAreas)));
-    curWeights(curCellIdx) = curWeight;
+        @isempty, curCellData.condSizes)));
+    curWeights(curDendIdx) = curWeight;
     if ~curWeight; continue; end
     
     curRealDens = curCellData.realDens;
     assert(not(any(isnan(curRealDens(:)))));
     
     curSeedDens = ksdensity( ...
-        log10(curCellData.seedAreas), ...
+        log10(curCellData.seedSizes), ...
         linspace(lims(1), lims(2), imSize), ...
         'Bandwidth', bw(1));
     
@@ -481,9 +469,9 @@ for curCellIdx = 1:numel(cellData)
     curDiffCond = curRealCond - curCtrlCond;
     
     curDiffDiag = curDiffDens(1:(imSize + 1):end);
-    curDiffDiags(curCellIdx, :) = curDiffDiag;
+    curDiffDiags(curDendIdx, :) = curDiffDiag;
     
-    curTitle = sprintf('Synapses onto neuron %d', curCellId);
+    curTitle = sprintf('Synapses onto neuron %d', curDendId);
 
     %{
     % Plot 1
@@ -565,9 +553,6 @@ end
 
 % Clustering plot
 curX = linspace(lims(1), lims(2), imSize);
-curDiffDiags(curWeights < 200, :) = [];
-curWeights(curWeights < 200) = [];
-
 curMean = sum(curWeights(:) .* curDiffDiags, 1);
 curMean = curMean / sum(curWeights);
 
@@ -585,186 +570,6 @@ ylabel(curAx, 'ΔP(identically sized ASI in surround) to random');
 connectEM.Figure.config(curFig, info);
 curFig.Position(3:4) = [440, 420];
 
-%% Find size range with signs of homeostatic suppression in surround
-clear cur*;
-rng(0);
-
-distThresh = 2500;
-minSynCount = 200;
-
-curVecX = -1.5:0.05:0;
-
-curAsiT = asiT( ...
-    asiT.type == 'PrimarySpine' ...
-  & asiT.targetClass == 'ProximalDendrite' ...
-  & ismember(asiT.axonClass, {'Corticocortical', 'Thalamocortical'}), :);
-
-% IMPORTANT(amotta): Use `postAggloId` before transforming it!
-curAsiT.postCellId = conn.denMeta.cellId(curAsiT.postAggloId);
-curAsiT.postAggloId = shT.dendId(curAsiT.shId);
-
-% NOTE(amotta): Restrict to cell with at least X synapses
-[curCellIds, ~, curCellSynCounts] = unique(curAsiT.postCellId);
-curCellSynCounts = accumarray(curCellSynCounts, 1);
-
-curCellIds = curCellIds(curCellSynCounts >= minSynCount);
-curCellIds = 32;
-curMatY = nan(numel(curCellIds), numel(curVecX));
-
-for curCellIdx = 1:numel(curCellIds)
-    curCellId = curCellIds(curCellIdx);
-    curCellAsiT = curAsiT(curAsiT.postCellId == curCellId, :);
-
-    curShT = shT;
-    curShT.asiArea(:) = nan;
-    curShT.asiArea(curCellAsiT.shId) = curCellAsiT.area;
-
-    curSeedAreas = nan([height(curCellAsiT), 1]);
-    curCondAreas = cell([height(curCellAsiT), 1]);
-    for curIdx = 1:height(curCellAsiT)
-        curSeedShId = curCellAsiT.shId(curIdx);
-        curSeedDendId = curCellAsiT.postAggloId(curIdx);
-
-        curSeedAsiArea = curShT.asiArea(curSeedShId);
-
-        % Find other spine heads onto same dendrite
-        curDendShIds = dendShIds{curSeedDendId};
-        curSeedShMask = curDendShIds == curSeedShId;
-        assert(sum(curSeedShMask) == 1);
-
-        % Restrict to other spine heads in surround
-        curDendDists = dendShToShDists{curSeedDendId};
-        curDendDists = curDendDists(:, curSeedShMask);
-
-        curOtherShMask = curDendDists < distThresh;
-        curOtherShMask = curOtherShMask & not(curSeedShMask);
-
-        curOtherShIds = curDendShIds(curOtherShMask);
-        curOtherAsiAreas = curShT.asiArea(curOtherShIds);
-        curOtherAsiAreas = rmmissing(curOtherAsiAreas);
-
-        curSeedAreas(curIdx) = curSeedAsiArea;
-        curCondAreas{curIdx} = curOtherAsiAreas(:);
-    end
-    
-    % To log10-space
-    curSeedAreas = log10(curSeedAreas);
-    curCondAreas = cellfun(@log10, curCondAreas, 'UniformOutput', false);
-
-    curCondN = cellfun(@numel, curCondAreas);
-    curCondAreas = cell2mat(curCondAreas);
-
-    for curIdxX = 1:numel(curVecX)
-        curX = curVecX(curIdxX);
-        
-        % NOTE(amotta): Uniform kernel
-        curCondW = curSeedAreas - curX;
-        curCondW = double(abs(curCondW) < 0.2);
-
-        assert(isequal(size(curCondW), size(curCondN)));
-        curCondW = repelem(curCondW ./ curCondN, curCondN);
-        curCondW = curCondW / sum(curCondW(:));
-
-        curY = sum(curCondAreas(:) .* curCondW(:));
-        curY = curY - mean(curSeedAreas);
-        
-        curMatY(curCellIdx, curIdxX) = curY;
-    end
-end
-
-%% Look at effect of soma distance
-clear cur*;
-
-curWcs = load(wcFile, 'dendrites', 'indWholeCells');
-curWcs = curWcs.dendrites(curWcs.indWholeCells);
-
-curSomata = load(somaFile, 'dendAgglos', 'indSomata');
-curSomata = curSomata.dendAgglos(curSomata.indSomata);
-
-% Build soma → whole cell mapping
-curWcLUT = Agglo.fromSuperAgglo(curWcs);
-curWcLUT = Agglo.buildLUT(maxSegId, curWcLUT);
-curSomaToWc = cellfun(@(ids) mode(nonzeros(curWcLUT(ids))), curSomata);
-assert(isequaln(sort(curSomaToWc), unique(curSomaToWc)));
-
-% Build whole cell → soma mapping
-[~, curWcToSoma] = ismember(1:numel(curWcs), curSomaToWc);
-assert(all(curWcToSoma));
-
-% Calculate soma distances
-somaDists = nan(maxSegId, 1);
-
-for curIdx = 1:numel(curWcs)
-    curWc = curWcs(curIdx);
-    curSomaId = curWcToSoma(curIdx);
-    curSoma = curSomata{curSomaId};
-    
-    curSomaNodeIds = ismember(curWc.nodes(:, 4), curSoma);
-    curSomaNodeIds = find(curSomaNodeIds);
-    
-    curGraph = ...
-        curWc.nodes(curWc.edges(:, 1), 1:3) ...
-      - curWc.nodes(curWc.edges(:, 2), 1:3);
-    curGraph = curGraph .* param.raw.voxelSize;
-    curGraph = sqrt(sum(curGraph .* curGraph, 2));
-    
-    curGraph = graph( ...
-        curWc.edges(:, 1), curWc.edges(:, 2), ...
-        curGraph, size(curWc.nodes, 1));
-    
-    curSomaDists = distances(curGraph, curSomaNodeIds);
-    curSomaDists = min(curSomaDists, [], 1);
-    
-    curSegIds = curWc.nodes(:, 4);
-    curMask = not(isnan(curSegIds));
-    
-    curSegIds = curSegIds(curMask);
-    curSomaDists = curSomaDists(curMask);
-    
-    somaDists(curSegIds) = curSomaDists;
-    curIdx %#ok
-end
-
-%% Plot results
-curAsiT = asiT( ...
-    asiT.type == 'PrimarySpine' ...
-  & asiT.targetClass == 'ProximalDendrite' ...
-  & ismember(asiT.axonClass, {'Corticocortical', 'Thalamocortical'}), :);
-
-curShT = shT;
-curShT.asiArea(:) = nan;
-curShT.asiArea(curAsiT.shId) = curAsiT.area;
-
-curShT.somaDist(:) = nan;
-curMask = ~isnan(curShT.trunkSegId);
-curShT.somaDist(curMask) = somaDists(curShT.trunkSegId(curMask));
-
-curShT = curShT( ...
-    not(isnan(curShT.asiArea)) ...
-  & not(isnan(curShT.somaDist)), :);
-
-curX = curShT.somaDist / 1E3;
-curY = log10(curShT.asiArea);
-
-curFit = fitlm(curX(:), curY(:));
-disp(curFit);
-
-
-% Plot 1
-curFig = figure;
-curAx = axes(curFig);
-hold(curAx, 'on');
-
-scatter(curAx, curX, curY, '.');
-curFitX = curAx.XLim(:);
-curFitY = curFit.predict(curFitX);
-plot(curAx, curFitX, curFitY, 'k--');
-
-axis(curAx, 'square');
-xlabel(curAx, 'Distance to soma [µm]');
-ylabel(curAx, 'log10(ASI area [µm²]');
-connectEM.Figure.config(curFig, info);
-%}
 
 %% Utilities
 function [im, bwOut] = kde2d(x, y, w, imSize, xlim, ylim, bwIn)
