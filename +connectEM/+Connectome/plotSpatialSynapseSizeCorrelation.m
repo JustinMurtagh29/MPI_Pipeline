@@ -299,7 +299,7 @@ end
 
 % NOTE(amotta): The first run corresponds to actually observed data. All
 % subsequent runs use randomly redistributed ASI areas.
-numRuns = 1;
+numRuns = 2;
 distThresh = 2500;
 minShCount = 0;
 
@@ -423,6 +423,9 @@ dendData = cat(1, dendData{:});
 %% Plot results
 clear cur*;
 
+% NOTE(amotta): Set to `ctrlDens` for control runs
+curPlotVar = 'realDens';
+
 curTicks = [-3, -2, -1, 0];
 curTickLabels = {'-3', '-2', '-1', '0'};
 curTickIds = linspace(lims(1), lims(2), imSize);
@@ -455,7 +458,7 @@ for curDendIdx = 1:numel(dendData)
     curWeights(curDendIdx) = curWeight;
     if ~curWeight; continue; end
     
-    curRealDens = curCellData.realDens;
+    curRealDens = curCellData.(curPlotVar);
     assert(not(any(isnan(curRealDens(:)))));
     
     curSeedDens = ksdensity( ...
