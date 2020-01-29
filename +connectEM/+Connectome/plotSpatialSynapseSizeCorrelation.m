@@ -449,6 +449,7 @@ curSpineDensDiffs = nan(numel(dendData), imSize);
 
 curWeights = nan(numel(dendData), 1);
 curDensDiffs = nan(numel(dendData), imSize, imSize);
+curCondDiffs = nan(numel(dendData), imSize, imSize);
 curCondDiffDiags = nan(numel(dendData), imSize);
 
 for curDendIdx = 1:numel(dendData)
@@ -496,7 +497,9 @@ for curDendIdx = 1:numel(dendData)
     
     % NOTE(amotta): Contrary to the above analysis, we now take into
     % account the observed size-dependence of spine density on spine size.
-    curDensCtrl = curDensSeed(:) .* sum(curDensReal, 1);
+    curDensCtrl = curCellData.densCtrl;
+    assert(abs(sum(curDensCtrl(:)) - 1) < 1E-3);
+    
     curDensDiff = curDensReal - curDensCtrl;
     curDensDiffs(curDendIdx, :, :) = curDensDiff;
     
@@ -504,7 +507,12 @@ for curDendIdx = 1:numel(dendData)
     curCondReal(~curCondReal) = eps;
     curCondReal = curCondReal ./ sum(curCondReal, 1);
     
-    curCondDiff = curCondReal - curDensSeed(:);
+    curCondCtrl = curDensCtrl;
+    curCondCtrl(~curCondCtrl) = eps;
+    curCondCtrl = curCondCtrl ./ sum(curCondCtrl, 1);
+    
+    curCondDiff = curCondReal - curCondCtrl;
+    curCondDiffs(curDendIdx, :, :) = curCondDiff;
     curCondDiffDiag = curCondDiff(1:(imSize + 1):end);
     curCondDiffDiags(curDendIdx, :) = curCondDiffDiag;
 end
@@ -530,10 +538,10 @@ plot(curAx, ...
 plot(curAx, curX, zeros(size(curX)), 'k--');
 plot(curAx, curX, curMean, 'k', 'LineWidth', 2);
 
-title(curAx, curTitle);
 xlabel(curAx, sprintf('log10(%s)', sizeLabel));
 ylabel(curAx, 'ΔP(SH in surround) to random');
 ylim(curAx, [-1, +1] * max(abs(ylim(curAx))));
+if ~isempty(curTitle); title(curAx, curTitle); end
 connectEM.Figure.config(curFig, info);
 curFig.Position(3:4) = [440, 420];
 
@@ -557,16 +565,16 @@ plot(curAx, curX, curMean, 'k', 'LineWidth', 2);
 
 xlabel(curAx, sprintf('log10(%s)', sizeLabel));
 ylabel(curAx, 'ΔP(SH of identical size in surround) to random');
-
-title(curAx, curTitle);
 curYlim = curCondDiffDiags(curMask, 75:225);
 curYlim = max(abs(curYlim(:)));
 ylim(curAx, [-1, +1] * curYlim);
+
+if ~isempty(curTitle); title(curAx, curTitle); end
 connectEM.Figure.config(curFig, info);
 curFig.Position(3:4) = [440, 420];
 
 
-% Size relationship
+% Joint size relationship
 curMean = sum(curWeights(:) .* curDensDiffs, 1);
 curMean = shiftdim(curMean, 1) / sum(curWeights);
 
@@ -577,12 +585,33 @@ hold(curAx, 'on');
 imagesc(curAx, curMean);
 curCbar = colorbar(curAx);
 
-title(curAx, curTitle);
 xlabel(curAx, curXLabel);
 ylabel(curAx, curYLabel);
 curAx.CLim = [-1, +1] * max(abs(curMean(:)));
 curCbar.Label.String = 'ΔP(ref. SH, surround SH) to random';
 
+curConfigAxis(curAx);
+colormap(curAx, curBlueRedCmap);
+plot(curAx, xlim(curAx), ylim(curAx), 'k--');
+if ~isempty(curTitle); title(curAx, curTitle); end
+connectEM.Figure.config(curFig, info);
+
+
+% Conditional size relationship
+curMean = sum(curWeights(:) .* curCondDiffs, 1);
+curMean = shiftdim(curMean, 1) / sum(curWeights);
+
+curFig = figure();
+curAx = axes(curFig);
+hold(curAx, 'on');
+
+imagesc(curAx, curMean);
+curCbar = colorbar(curAx);
+
+xlabel(curAx, curXLabel);
+ylabel(curAx, curYLabel);
+curAx.CLim = [-1, +1] * max(abs(curMean(:)));
+curCbar.Label.String = 'ΔP(surround SH | ref. SH) to random';
 
 curConfigAxis(curAx);
 colormap(curAx, curBlueRedCmap);
