@@ -620,6 +620,76 @@ if ~isempty(curTitle); title(curAx, curTitle); end
 connectEM.Figure.config(curFig, info);
 
 
+%% Size-conditional nearest neighbor distributions
+clear cur*;
+rng(0);
+
+curBinEdges = 0:0.5:10;
+
+curConfigs = struct;
+curConfigs(1).title = 'log10(spine head volume [µm³]) < -1.1';
+curConfigs(1).cond = @(s) s < -1.1;
+
+curConfigs(2).title = 'log10(spine head volume [µm³]) > -0.9';
+curConfigs(2).cond = @(s) s > -0.9;
+
+for curConfig = curConfigs
+    curRealDists = cell(numel(dendData), 1);
+    curCtrlDists = cell(numel(dendData), 1);
+    
+    for curDendIdx = 1:numel(dendData)
+        curDendId = dendIds(curDendIdx);
+        curShToShDists = dendT.shToShDists{curDendId};
+        
+        curDendData = dendData(curDendIdx);
+        curSeedSizes = log10(curDendData.seedSizes);
+        
+        curShMask = curConfig.cond(curSeedSizes);
+
+        % NOTE(amotta): Find distance to closest small spine
+        curRealDist = curShToShDists(curShMask, curShMask);
+        curRealDist(1:(size(curRealDist, 1) + 1):end) = nan;
+        curRealDist = min(curRealDist, [], 1);
+
+        % TODO(amotta): What I'd actually would like to do: Check if the
+        % selected spine heads are uniformly distributed along the dendrite
+        % or whether there is any evidence for clustering or artificial
+        % dispersion.
+        %   If I'm not mistaken, the uniform distribution assumption
+        % results in a Poisson process. The nearest neighbor distribution
+        % of a (one-dimensional) Poisson process should be another Poisson
+        % process with twice the decay rate.
+        %   The measured nearest neighbor distribution could thus be used
+        % to a) check for goodness of fit against a Poisson distribution,
+        % and b) to infer the parameter `mu` / `lambda`, and then compare
+        % the observed with the expected distribution.
+        curCtrlDist = randperm(size(curShToShDists, 1), sum(curShMask));
+        curCtrlDist = curShToShDists(curCtrlDist, curCtrlDist);
+        curCtrlDist(1:(size(curCtrlDist, 1) + 1):end) = nan;
+        curCtrlDist = min(curCtrlDist, [], 1);
+
+        curRealDists{curDendIdx} = curRealDist(:);
+        curCtrlDists{curDendIdx} = curCtrlDist(:);
+    end
+
+    curRealDists = cat(1, curRealDists{:}) / 1E3;
+    curCtrlDists = cat(1, curCtrlDists{:}) / 1E3;
+
+    curFig = figure();
+    curAx = axes(curFig); %#ok
+    hold(curAx, 'on');
+
+    histogram(curRealDists, curBinEdges);
+    histogram(curCtrlDists, curBinEdges);
+    
+    xlabel(curAx, 'Distance to nearest neighbor [µm]');
+    ylabel(curAx, 'Number of spine heads');
+    
+    title(curAx, curConfig.title);
+    connectEM.Figure.config(curFig, info);
+    curFig.Position(3:4) = [390, 270];
+end
+
 %% Utilities
 function [im, bwOut] = kde2d(x, y, w, imSize, xlim, ylim, bwIn)
     bwOut = bwIn;
