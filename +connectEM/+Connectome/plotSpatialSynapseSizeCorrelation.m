@@ -292,7 +292,7 @@ switch lower(sizeVar)
     case 'vol'
         lims = [-2.5, -0];
         bw = [0.2, 0.2];
-        sizeLabel = 'spine volume [µm³]';
+        sizeLabel = 'spine head volume [µm³]';
     otherwise
         error('Unknown variable');
 end
@@ -403,15 +403,15 @@ for curDendIdx = 1:numel(dendIds)
           / sum(curDens{curRunIdx}(:));
     end
 
-    curRealDens = curDens{1};
-    curCtrlDens = cat(3, curDens{2:end});
-    curCtrlDens = mean(curCtrlDens, 3);
+    curDensReal = curDens{1};
+    curDensCtrl = cat(3, curDens{2:end});
+    curDensCtrl = mean(curDensCtrl, 3);
 
     curCellData = struct;
     curCellData.seedSizes = curDendSeedSizes(:, 1);
     curCellData.condSizes = curDendCondSizes(:, 1);
-    curCellData.realDens = curRealDens;
-    curCellData.ctrlDens = curCtrlDens;
+    curCellData.densReal = curDensReal;
+    curCellData.densCtrl = curDensCtrl;
 
     dendData{curDendIdx} = curCellData;
     Util.progressBar(curDendIdx, numel(dendIds));
@@ -424,17 +424,15 @@ dendData = cat(1, dendData{:});
 clear cur*;
 
 % NOTE(amotta): Set to `ctrlDens` for control runs
-curPlotVar = 'realDens';
+curPlotVar = 'densReal';
 
-curTicks = [-3, -2, -1, 0];
-curTickLabels = {'-3', '-2', '-1', '0'};
+curTicks = [-2, -1, 0];
+curTickLabels = {'-2', '-1', '0'};
 curTickIds = linspace(lims(1), lims(2), imSize);
 [~, curTickIds] = arrayfun(@(t) min(abs(t - curTickIds)), curTicks);
 
 curXLabel = sprintf('log10(reference %s)', sizeLabel);
 curYLabel = sprintf('log10(%s within %g µm)', sizeLabel, distThresh / 1E3);
-
-curRedCmap = connectEM.Figure.whiteRed(256);
 curBlueRedCmap = connectEM.Figure.blueWhiteRed(256);
 
 curConfigAxis = @(ax) set(ax, ...
@@ -445,9 +443,13 @@ curConfigAxis = @(ax) set(ax, ...
     'YLim', [0, imSize] + 0.5, 'YDir', 'normal', ...
     'YTick', curTickIds, 'YTickLabel', curTickLabels);
 
+
+curSpineCounts = nan(numel(dendData), 1);
+curSpineDensDiffs = nan(numel(dendData), imSize);
+
 curWeights = nan(numel(dendData), 1);
-curDiffDiags = nan(numel(dendData), imSize);
-curDiffMargins = nan(numel(dendData), imSize);
+curDensDiffs = nan(numel(dendData), imSize, imSize);
+curCondDiffDiags = nan(numel(dendData), imSize);
 
 for curDendIdx = 1:numel(dendData)
     curDendId = dendIds(curDendIdx);
@@ -458,131 +460,77 @@ for curDendIdx = 1:numel(dendData)
     curWeights(curDendIdx) = curWeight;
     if ~curWeight; continue; end
     
-    curRealDens = curCellData.(curPlotVar);
-    assert(not(any(isnan(curRealDens(:)))));
+    curDensReal = curCellData.(curPlotVar);
+    assert(not(any(isnan(curDensReal(:)))));
+    assert(abs(sum(curDensReal(:)) - 1) < 1E-6);
     
-    curSeedDens = ksdensity( ...
+    
+    % Size distribution
+    curDensSeed = ksdensity( ...
         log10(curCellData.seedSizes), ...
         linspace(lims(1), lims(2), imSize), ...
         'Bandwidth', bw(1));
     
-    curSeedDens = curSeedDens / sum(curSeedDens(:));
-    curCtrlDens = curSeedDens(:) .* sum(curRealDens, 1);
-    
-    curDiffMargin = sum(curRealDens, 1) - curSeedDens;
-    curDiffMargins(curDendIdx, :) = curDiffMargin;
-    
-    curRealCond = curRealDens;
-    curRealCond(~curRealCond) = eps;
-    curRealCond = curRealCond ./ sum(curRealCond, 1);
-    curCtrlCond = repmat(curSeedDens(:), 1, imSize);
-    
-    curDiffDens = curRealDens - curCtrlDens;
-    curDiffCond = curRealCond - curCtrlCond;
-    
-    curDiffDiag = curDiffDens(1:(imSize + 1):end);
-    curDiffDiags(curDendIdx, :) = curDiffDiag;
-    
-    curTitle = sprintf('Synapses onto dendrite %d', curDendId);
-
-    
-    %{
-    % Plot 1
-    curFig = figure();
-    curAx = axes(curFig);
-    imagesc(curAx, curRealDens);
-    curCbar = colorbar(curAx);
-
-    xlabel(curAx, curXLabel);
-    ylabel(curAx, curYLabel);
-    curAx.CLim = [0, max(curRealDens(:))];
-    curCbar.Label.String = 'P(ref. SH, surround SH)';
-
-    curConfigAxis(curAx);
-    colormap(curAx, curRedCmap);
-    if ~isempty(curTitle); title(curAx, curTitle); end
-    connectEM.Figure.config(curFig, info);
+    curDensSeed = curDensSeed / sum(curDensSeed(:));
+    curDensSeed = reshape(curDensSeed, 1, []);
     
     
-    % Plot 2
-    curFig = figure();
-    curAx = axes(curFig);
-    hold(curAx, 'on');
-
-    imagesc(curAx, curDiffDens);
-    curCbar = colorbar(curAx);
-
-    xlabel(curAx, curXLabel);
-    ylabel(curAx, curYLabel);
-    curAx.CLim = [-1, +1] * max(abs(curDiffDens(:)));
-    curCbar.Label.String = 'ΔP(ref. SH, surround SH) to random';
-
-    curConfigAxis(curAx);
-    colormap(curAx, curBlueRedCmap);
-    plot(curAx, xlim(curAx), ylim(curAx), 'k--');
-    if ~isempty(curTitle); title(curAx, curTitle); end
-    connectEM.Figure.config(curFig, info);
+    % Check size-dependence of spine density
+    curSpineCount = numel(curCellData.seedSizes);
+    curSpineCounts(curDendIdx) = curSpineCount;
+    
+    curTotalSpinesInSurround = sum(cellfun(@numel, curCellData.condSizes));
+    curAvgSpinesInSurround = curTotalSpinesInSurround / curSpineCount;
+    
+    curSpineDensCtrl = curAvgSpinesInSurround * curSpineCount;
+    curSpineDensCtrl = curDensSeed(:) .* curDensSeed .* curSpineDensCtrl;
+    assert(abs(sum(curSpineDensCtrl(:)) - curTotalSpinesInSurround) < 1);
+    
+    curSpineDensReal = curTotalSpinesInSurround * curDensReal;
+    curSpineDensDiff = curSpineDensReal - curSpineDensCtrl;
+    
+    curSpineDensDiffs(curDendIdx, :) = ...
+        sum(curSpineDensDiff, 1) ...
+      / curTotalSpinesInSurround;
     
     
-    % Plot 3
-    curFig = figure();
-    curAx = axes(curFig);
-    imagesc(curAx, curRealCond);
-    curCbar = colorbar(curAx);
-
-    xlabel(curAx, curXLabel);
-    ylabel(curAx, curYLabel);
-    curAx.CLim = [0, max(curRealCond(:))];
-    curCbar.Label.String = 'P(surround SH | ref. SH)';
-
-    curConfigAxis(curAx);
-    colormap(curAx, curRedCmap);
-    if ~isempty(curTitle); title(curAx, curTitle); end
-    connectEM.Figure.config(curFig, info);
+    % NOTE(amotta): Contrary to the above analysis, we now take into
+    % account the observed size-dependence of spine density on spine size.
+    curDensCtrl = curDensSeed(:) .* sum(curDensReal, 1);
+    curDensDiff = curDensReal - curDensCtrl;
+    curDensDiffs(curDendIdx, :, :) = curDensDiff;
     
-
-    % Plot 4
-    curFig = figure();
-    curAx = axes(curFig);
-    hold(curAx, 'on');
-    imagesc(curAx, curDiffCond);
-    curCbar = colorbar(curAx);
-
-    curClim = curDiffCond(:, 75:225);
-    curClim = [-1, +1] * max(abs(curClim(:)));
-
-    xlabel(curAx, curXLabel);
-    ylabel(curAx, curYLabel);
-    curAx.CLim = curClim;
-    curCbar.Label.String = 'ΔP(surround SH | ref. SH) to random';
-
-    curConfigAxis(curAx);
-    colormap(curAx, curBlueRedCmap);
-    plot(curAx, xlim(curAx), ylim(curAx), 'k--');
-    if ~isempty(curTitle); title(curAx, curTitle); end
-    connectEM.Figure.config(curFig, info);
-    %}
+    curCondReal = curDensReal;
+    curCondReal(~curCondReal) = eps;
+    curCondReal = curCondReal ./ sum(curCondReal, 1);
+    
+    curCondDiff = curCondReal - curDensSeed(:);
+    curCondDiffDiag = curCondDiff(1:(imSize + 1):end);
+    curCondDiffDiags(curDendIdx, :) = curCondDiffDiag;
 end
 
 curX = linspace(lims(1), lims(2), imSize);
-% NOTE(amotta): That's for plotting only. In the calculation of the grand
-% average we are still going to consider all data points.
-curMask = curWeights > 100;
+curTitle = 'Grand average across proximal dendrites';
 
 
 % Spine density plot
-curMean = sum(curWeights(:) .* curDiffMargins, 1);
-curMean = curMean / sum(curWeights);
+curMean = sum(curSpineCounts(:) .* curSpineDensDiffs, 1);
+curMean = curMean / sum(curSpineCounts);
+% NOTE(amotta): For plotting only.
+curMask = curSpineCounts >= 100;
 
 curFig = figure();
 curAx = axes(curFig);
 axis(curAx, 'square');
 hold(curAx, 'on');
 
-plot(curAx, curX, curDiffMargins(curMask, :));
+plot(curAx, ...
+    curX, curSpineDensDiffs(curMask, :), ...
+    'Color', repelem(0.7, 3));
 plot(curAx, curX, zeros(size(curX)), 'k--');
 plot(curAx, curX, curMean, 'k', 'LineWidth', 2);
 
+title(curAx, curTitle);
 xlabel(curAx, sprintf('log10(%s)', sizeLabel));
 ylabel(curAx, 'ΔP(SH in surround) to random');
 ylim(curAx, [-1, +1] * max(abs(ylim(curAx))));
@@ -590,24 +538,57 @@ connectEM.Figure.config(curFig, info);
 curFig.Position(3:4) = [440, 420];
 
 
-% Clustering plot
-curMean = sum(curWeights(:) .* curDiffDiags, 1);
+% Size clustering plot
+curMean = sum(curWeights(:) .* curCondDiffDiags, 1);
 curMean = curMean / sum(curWeights);
+% NOTE(amotta): For plotting only.
+curMask = curWeights >= 100;
 
 curFig = figure();
 curAx = axes(curFig);
 axis(curAx, 'square');
 hold(curAx, 'on');
 
-plot(curAx, curX, curDiffDiags(curMask, :));
+plot(curAx, ...
+    curX, curCondDiffDiags(curMask, :), ...
+    'Color', repelem(0.7, 3));
 plot(curAx, curX, zeros(size(curX)), 'k--');
 plot(curAx, curX, curMean, 'k', 'LineWidth', 2);
 
 xlabel(curAx, sprintf('log10(%s)', sizeLabel));
-ylabel(curAx, 'ΔP(identically sized SH in surround) to random');
-ylim(curAx, [-1, +1] * max(abs(ylim(curAx))));
+ylabel(curAx, 'ΔP(SH of identical size in surround) to random');
+
+title(curAx, curTitle);
+curYlim = curCondDiffDiags(curMask, 75:225);
+curYlim = max(abs(curYlim(:)));
+ylim(curAx, [-1, +1] * curYlim);
 connectEM.Figure.config(curFig, info);
 curFig.Position(3:4) = [440, 420];
+
+
+% Size relationship
+curMean = sum(curWeights(:) .* curDensDiffs, 1);
+curMean = shiftdim(curMean, 1) / sum(curWeights);
+
+curFig = figure();
+curAx = axes(curFig);
+hold(curAx, 'on');
+
+imagesc(curAx, curMean);
+curCbar = colorbar(curAx);
+
+title(curAx, curTitle);
+xlabel(curAx, curXLabel);
+ylabel(curAx, curYLabel);
+curAx.CLim = [-1, +1] * max(abs(curMean(:)));
+curCbar.Label.String = 'ΔP(ref. SH, surround SH) to random';
+
+
+curConfigAxis(curAx);
+colormap(curAx, curBlueRedCmap);
+plot(curAx, xlim(curAx), ylim(curAx), 'k--');
+if ~isempty(curTitle); title(curAx, curTitle); end
+connectEM.Figure.config(curFig, info);
 
 
 %% Utilities
