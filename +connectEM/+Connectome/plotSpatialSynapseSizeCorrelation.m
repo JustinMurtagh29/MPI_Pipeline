@@ -324,6 +324,12 @@ for curDendIdx = 1:numel(dendIds)
     
     curDendMask = curShT.dendId == curDendId;
     curDendShT = curShT(curDendMask, :);
+    
+    % NOTE(amotta): In control runs, the spine sizes will be shuffled. But
+    % that shuffling only affects `curShT`. To make sure that the spine
+    % size will always be pulled from from there and not `curDendShT`, it
+    % is probably safer to just remove it here.
+    curDendShT.size = [];
 
     curDendSeedSizes = nan([height(curDendShT), numRuns]);
     curDendCondSizes = cell([height(curDendShT), numRuns]);
@@ -354,8 +360,10 @@ for curDendIdx = 1:numel(dendIds)
         end
 
         % Shuffle sizes
-        curShT.size(curDendMask) = ...
-            curDendShT.size(randperm(height(curDendShT)));
+        curShuffled = curShT.size(curDendMask);
+        curShuffled = curShuffled(randperm(numel(curShuffled)));
+        curShT.size(curDendMask) = curShuffled;
+        clear curShuffled;
     end
 
     curDens = cell(numRuns, 1);
