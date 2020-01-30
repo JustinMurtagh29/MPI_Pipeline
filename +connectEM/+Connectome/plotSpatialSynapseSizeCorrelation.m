@@ -619,6 +619,59 @@ plot(curAx, xlim(curAx), ylim(curAx), 'k--');
 if ~isempty(curTitle); title(curAx, curTitle); end
 connectEM.Figure.config(curFig, info);
 
+%% Check for consistency with Poisson process
+clear cur*;
+
+curBinEdges = 0:1:20;
+
+curConfigs = struct;
+curConfigs(1).title = 'All spine heads';
+curConfigs(1).cond = @(s) true(size(s));
+
+for curConfig = curConfigs
+    curCondCounts = cell(numel(dendData), 1);
+    
+    for curDendIdx = 1:numel(dendData)
+        curDendData = dendData(curDendIdx);
+        curSizes = log10(curDendData.seedSizes);
+        curCounts = cellfun(@numel, curDendData.condSizes);
+        
+        curMask = curConfig.cond(curSizes);
+        curCondCounts{curDendIdx} = curCounts(curMask);
+    end
+
+    curCondCounts = cat(1, curCondCounts{:});
+
+    
+    curLambda = mapEstCondPoisson(curCondCounts);
+    curPoissonCounts = poisspdf(curBinEdges(1:(end - 1)) + 1, curLambda);
+    curPoissonCounts = curPoissonCounts / (1 - exp(-curLambda));
+    curPoissonCounts = numel(curCondCounts) * curPoissonCounts;
+
+
+    curFig = figure();
+    curAx = axes(curFig);
+    hold(curAx, 'on');
+
+    histogram(curAx, ...
+        curCondCounts, ...
+        'BinEdges', curBinEdges - 0.5);
+
+    curPoissonHist = histogram(curAx, ...
+        'BinEdges', curBinEdges - 0.5, ...
+        'BinCounts', curPoissonCounts);
+
+    curLeg = legend({'Measured', 'Poisson model'});
+    curLeg.Location = 'NorthEast';
+
+    xlabel(curAx, sprintf( ...
+        'Number of spines within %g µm', distThresh / 1E3));
+    ylabel(curAx, 'Est. probability mass');
+    title(curAx, curConfig.title);
+    
+    connectEM.Figure.config(curFig, info);
+    curPoissonHist.EdgeColor = 'black';
+end
 
 %% Size-conditional nearest neighbor distributions
 clear cur*;
@@ -691,6 +744,26 @@ for curConfig = curConfigs
 end
 
 %% Utilities
+function lambda = mapEstCondPoisson(counts)
+    % NOTE(amotta): This function infers the rate parameter of a Poisson
+    % distribution given the number of surrounding spine heads for a set of
+    % spine heads.
+    %   Importantly, we have to correct for that fact that we're only
+    % considering surrounds that were chosen by the presence of a spine!
+    counts = counts + 1;
+    
+    opts = optimoptions('fmincon', 'Display', 'notify-detailed');
+    lambda = fmincon(@negLogLik, 1, -1, 0, [], [], [], [], [], opts);
+    
+    function nll = negLogLik(lambda)
+        nll = ...
+            numel(counts) * ((-lambda) - log(1 - exp(-lambda))) ...
+          - sum(arrayfun(@(c) sum(log(1:c)), counts)) ...
+          + sum(counts) * log(lambda);
+        nll = -nll;
+    end
+end
+
 function [im, bwOut] = kde2d(x, y, w, imSize, xlim, ylim, bwIn)
     bwOut = bwIn;
     
