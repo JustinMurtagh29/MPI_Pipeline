@@ -303,6 +303,9 @@ numRuns = 2;
 distThresh = 2500;
 minShCount = 0;
 
+curCtrlRunIdx = numRuns;
+if numRuns == 1; curCtrlRunIdx = []; end
+
 curShT = shT;
 curShT.size = curShT.(sizeVar);
 curShT.id = reshape(1:height(curShT), [], 1);
@@ -410,6 +413,8 @@ for curDendIdx = 1:numel(dendIds)
     curCellData = struct;
     curCellData.seedSizes = curDendSeedSizes(:, 1);
     curCellData.condSizes = curDendCondSizes(:, 1);
+    curCellData.seedSizesCtrl = curDendSeedSizes(:, curCtrlRunIdx);
+    curCellData.condSizesCtrl = curDendCondSizes(:, curCtrlRunIdx);
     curCellData.densReal = curDensReal;
     curCellData.densCtrl = curDensCtrl;
 
