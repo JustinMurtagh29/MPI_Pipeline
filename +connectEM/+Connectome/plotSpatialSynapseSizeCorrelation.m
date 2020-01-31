@@ -631,13 +631,13 @@ clear cur*;
 curConfigs = struct;
 
 curConfigs(1).title = 'log10(SH volume [µm³]) < -1.2';
-curConfigs(1).cond = @(s) s < -1.2;
+curConfigs(1).cond = @(s) log10(s) < -1.2;
 
 curConfigs(2).title = 'log10(SH volume [µm³]) > -1.0';
-curConfigs(2).cond = @(s) s > -1.0;
+curConfigs(2).cond = @(s) log10(s) > -1.0;
 
 curConfigs(3).title = 'log10(SH volume [µm³]) > -0.5';
-curConfigs(3).cond = @(s) s > -0.5;
+curConfigs(3).cond = @(s) log10(s) > -0.5;
 
 curCondCounts = cell(numel(dendData), numel(curConfigs));
 curCondMeanSizes = cell(numel(dendData), numel(curConfigs));
@@ -646,12 +646,12 @@ curTotalSizes = cell(numel(dendData), numel(curConfigs));
 for curDendIdx = 1:numel(dendData)
     curDendData = dendData(curDendIdx);
     
-    curDendSeedSizes = log10(curDendData.seedSizes);
+    curDendSeedSizes = curDendData.seedSizes;
     curDendTotalSizes = cellfun(@sum, curDendData.condSizes);
-    curDendTotalSizes = log10(curDendData.seedSizes + curDendTotalSizes);
+    curDendTotalSizes = curDendData.seedSizes + curDendTotalSizes;
     
     curDendCondCounts = cellfun(@numel, curDendData.condSizes);
-    curDendCondMeanSizes = log10(cellfun(@mean, curDendData.condSizes));
+    curDendCondMeanSizes = cellfun(@mean, curDendData.condSizes);
     curDendCondMeanSizes(~curDendCondCounts) = nan;
 
     for curConfigIdx = 1:numel(curConfigs)
@@ -683,16 +683,19 @@ curTotalSizes = curTotalSizes(1, :);
 
 curPlotConfigs = struct;
 curPlotConfigs(1).data = curCondCounts;
+curPlotConfigs(1).plotTransform = @(x) x;
 curPlotConfigs(1).binEdges = (0:1:20) - 0.5;
 curPlotConfigs(1).xLabel = sprintf( ...
     'Number of spine heads within %g µm', distThresh / 1E3);
 
 curPlotConfigs(2).data = curCondMeanSizes;
+curPlotConfigs(2).plotTransform = @log10;
 curPlotConfigs(2).binEdges = (-2):0.1:0;
 curPlotConfigs(2).xLabel = sprintf( ...
     'Average volume of spine heads within %g µm', distThresh / 1E3);
 
 curPlotConfigs(3).data = curTotalSizes;
+curPlotConfigs(3).plotTransform = @log10;
 curPlotConfigs(3).binEdges = (-2):0.1:0.5;
 curPlotConfigs(3).xLabel = sprintf( ...
     'Total volume of spine heads within %g µm (incl. seed)', ...
@@ -717,7 +720,7 @@ for curPlotConfig = curPlotConfigs
             median(curData, 'omitnan'));
         
         histogram(curAx, ...
-            curData, ...
+            curPlotConfig.plotTransform(curData), ...
             'BinEdges', curPlotConfig.binEdges, ...
             'Normalization', 'probability');
     end
