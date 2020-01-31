@@ -631,6 +631,9 @@ curConfigs(1).cond = @(s) s < -1.2;
 curConfigs(2).title = 'log10(SH volume [µm³]) > -1.0';
 curConfigs(2).cond = @(s) s > -1.0;
 
+curConfigs(3).title = 'log10(SH volume [µm³]) > -0.5';
+curConfigs(3).cond = @(s) s > -0.5;
+
 curCondCounts = cell(numel(dendData), numel(curConfigs));
 curCondMeanSizes = cell(numel(dendData), numel(curConfigs));
 curTotalSizes = cell(numel(dendData), numel(curConfigs));
