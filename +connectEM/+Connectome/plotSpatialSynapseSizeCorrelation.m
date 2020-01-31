@@ -619,6 +619,111 @@ plot(curAx, xlim(curAx), ylim(curAx), 'k--');
 if ~isempty(curTitle); title(curAx, curTitle); end
 connectEM.Figure.config(curFig, info);
 
+
+%% Plot number of neighbors for small and large spines
+clear cur*;
+
+curConfigs = struct;
+
+curConfigs(1).title = 'log10(SH volume [µm³]) < -1.2';
+curConfigs(1).cond = @(s) s < -1.2;
+
+curConfigs(2).title = 'log10(SH volume [µm³]) > -1.0';
+curConfigs(2).cond = @(s) s > -1.0;
+
+curCondCounts = cell(numel(dendData), numel(curConfigs));
+curCondMeanSizes = cell(numel(dendData), numel(curConfigs));
+curTotalSizes = cell(numel(dendData), numel(curConfigs));
+    
+for curDendIdx = 1:numel(dendData)
+    curDendData = dendData(curDendIdx);
+    
+    curDendSeedSizes = log10(curDendData.seedSizes);
+    curDendTotalSizes = cellfun(@sum, curDendData.condSizes);
+    curDendTotalSizes = log10(curDendData.seedSizes + curDendTotalSizes);
+    
+    curDendCondCounts = cellfun(@numel, curDendData.condSizes);
+    curDendCondMeanSizes = log10(cellfun(@mean, curDendData.condSizes));
+    curDendCondMeanSizes(~curDendCondCounts) = nan;
+
+    for curConfigIdx = 1:numel(curConfigs)
+        curConfig = curConfigs(curConfigIdx);
+        curMask = curConfig.cond(curDendSeedSizes);
+        
+        curCondCounts{curDendIdx, curConfigIdx} = ...
+            curDendCondCounts(curMask);
+        curCondMeanSizes{curDendIdx, curConfigIdx} = ...
+            curDendCondMeanSizes(curMask);
+        curTotalSizes{curDendIdx, curConfigIdx} = ...
+            curDendTotalSizes(curMask);
+    end
+end
+
+for curConfigIdx = 1:numel(curConfigs)
+    curCondCounts{1, curConfigIdx} = cat( ...
+        1, curCondCounts{:, curConfigIdx});
+    curCondMeanSizes{1, curConfigIdx} = cat( ...
+        1, curCondMeanSizes{:, curConfigIdx});
+    curTotalSizes{1, curConfigIdx} = cat( ...
+        1, curTotalSizes{:, curConfigIdx});
+end
+
+curCondCounts = curCondCounts(1, :);
+curCondMeanSizes = curCondMeanSizes(1, :);
+curTotalSizes = curTotalSizes(1, :);
+
+
+curPlotConfigs = struct;
+curPlotConfigs(1).data = curCondCounts;
+curPlotConfigs(1).binEdges = (0:1:20) - 0.5;
+curPlotConfigs(1).xLabel = sprintf( ...
+    'Number of spine heads within %g µm', distThresh / 1E3);
+
+curPlotConfigs(2).data = curCondMeanSizes;
+curPlotConfigs(2).binEdges = (-2):0.1:0;
+curPlotConfigs(2).xLabel = sprintf( ...
+    'Average volume of spine heads within %g µm', distThresh / 1E3);
+
+curPlotConfigs(3).data = curTotalSizes;
+curPlotConfigs(3).binEdges = (-2):0.1:0.5;
+curPlotConfigs(3).xLabel = sprintf( ...
+    'Total volume of spine heads within %g µm (incl. seed)', ...
+    distThresh / 1E3);
+
+curTitle = 'Grand average across proximal dendrites';
+
+
+for curPlotConfig = curPlotConfigs
+    curFig = figure();
+    curAx = axes(curFig); %#ok
+    hold(curAx, 'on');
+    
+    curLegends = {curConfigs.title};
+    for curConfigIdx = 1:numel(curConfigs)
+        curData = curPlotConfig.data{curConfigIdx};
+        
+        curLegends{curConfigIdx} = sprintf( ...
+            '%s (mean: %.3f; median: %.3f)', ...
+            curLegends{curConfigIdx}, ...
+            mean(curData, 'omitnan'), ...
+            median(curData, 'omitnan'));
+        
+        histogram(curAx, ...
+            curData, ...
+            'BinEdges', curPlotConfig.binEdges, ...
+            'Normalization', 'probability');
+    end
+    
+    xlim(curAx, curPlotConfig.binEdges([1, end]));
+    xlabel(curAx, curPlotConfig.xLabel);
+    ylabel(curAx, 'Probability');
+    title(curAx, curTitle);
+    
+    legend(curAx, curLegends, 'Location', 'SouthOutside');
+    connectEM.Figure.config(curFig, info);
+    curFig.Position(3:4) = [470, 420];
+end
+
 %% Check for consistency with Poisson process
 clear cur*;
 
@@ -650,7 +755,7 @@ for curConfig = curConfigs
 
 
     curFig = figure();
-    curAx = axes(curFig);
+    curAx = axes(curFig); %#ok
     hold(curAx, 'on');
 
     histogram(curAx, ...
