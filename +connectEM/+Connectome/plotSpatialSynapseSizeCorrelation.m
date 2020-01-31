@@ -277,6 +277,7 @@ fprintf([ ...
     curPdT.cellId(curSortIds(1:3)), ...
     curPdT.cellId(curSortIds((end - 2):end)));
 
+
 %% Let's have a look at synapses onto proximal dendrites
 clear cur*;
 
@@ -735,13 +736,76 @@ for curPlotConfig = curPlotConfigs
     curFig.Position(3:4) = [470, 420];
 end
 
+
+%% Check for upper bound on total spine head volume
+clear cur*;
+
+curTitle = 'Grand average across proximal dendrites';
+
+curTotalSizes = cell(numel(dendData), 2);
+curSuffices = {'', 'Ctrl'};
+
+for curDendIdx = 1:numel(dendData)
+    curDendData = dendData(curDendIdx);
+
+    for curIsCtrl = [false, true]
+        curSuffix = curSuffices{1 + curIsCtrl};
+        curSeedVar = sprintf('seedSizes%s', curSuffix);
+        curCondVar = sprintf('condSizes%s', curSuffix);
+        
+        curTotals = cellfun(@sum, curDendData.(curCondVar));
+        curTotals = curDendData.(curSeedVar) + curTotals;
+        
+        curTotalSizes{curDendIdx, 1 + curIsCtrl} = curTotals;
+    end
+end
+
+curTotalSizes{1, 1} = cat(1, curTotalSizes{:, 1});
+curTotalSizes{1, 2} = cat(1, curTotalSizes{:, 2});
+curTotalSizes = curTotalSizes(1, :);
+
+
+curFig = figure();
+curAx = axes(curFig);
+hold(curAx, 'on');
+
+curBinEdges = (-2):0.1:0.5;
+curLegends = {'Measured', 'Control'};
+
+for curIsCtrl = [false, true]
+    histogram(curAx, ...
+        log10(curTotalSizes{1 + curIsCtrl}), ...
+        'BinEdges', curBinEdges, ...
+        'Normalization', 'probability');
+    
+    curLegends{1 + curIsCtrl} = sprintf( ...
+        '%s (mean: %.3f; median: %.3f; var: %.3f)', ...
+        curLegends{1 + curIsCtrl}, ...
+        mean(curTotalSizes{1 + curIsCtrl}), ...
+        median(curTotalSizes{1 + curIsCtrl}), ...
+        var(curTotalSizes{1 + curIsCtrl}));
+end
+
+xlim(curAx, curBinEdges([1, end]));
+xlabel(curAx, sprintf( ...
+   ['Total volume of spine heads ', ...
+    'within %g µm (incl. seed)'], ...
+    distThresh / 1E3));
+ylabel(curAx, 'Probability');
+title(curAx, curTitle);
+
+legend(curAx, curLegends, 'Location', 'SouthOutside');
+connectEM.Figure.config(curFig, info);
+curFig.Position(3:4) = [470, 420];
+
+
 %% Check for consistency with Poisson process
 clear cur*;
 
 curBinEdges = 0:1:20;
 
 curConfigs = struct;
-curConfigs(1).title = 'All spine heads';
+curConfigs(1).title = 'Grand average across proximal dendrites';
 curConfigs(1).cond = @(s) true(size(s));
 
 for curConfig = curConfigs
@@ -777,7 +841,9 @@ for curConfig = curConfigs
         'BinEdges', curBinEdges - 0.5, ...
         'BinCounts', curPoissonCounts);
 
-    curLeg = legend({'Measured', 'Poisson model'});
+    curLeg = legend({'Measured', sprintf( ...
+        'Poisson (λ = %.3f / %g µm)', ...
+        curLambda, 2 * distThresh / 1E3)});
     curLeg.Location = 'NorthEast';
 
     xlabel(curAx, sprintf( ...
@@ -787,6 +853,7 @@ for curConfig = curConfigs
     
     connectEM.Figure.config(curFig, info);
     curPoissonHist.EdgeColor = 'black';
+    curFig.Position(3:4) = [470, 310];
 end
 
 %% Size-conditional nearest neighbor distributions
