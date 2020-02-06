@@ -5,6 +5,7 @@ clear;
 %% configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-partiallySplit-v2_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v8-classified.mat');
+inhSomaSpecFile = '/home/amotta/Desktop/inh-soma-spec-axons_v1.mat';
 
 targetClasses = { ...
     'Somata', 'SO'; ...
@@ -66,6 +67,10 @@ classConn = ...
 %% prepare for analysis while accounting for false positive inh. synapses
 [axonClasses.synFalsePosRates] = deal([]);
 [axonClasses.synFalsePosMethod] = deal([]);
+
+% NOTE(amotta): Let's keep the inhibitory axons without false positive
+% synapse simulation, so we can export the list of soma-specific axons.
+axonClasses(end + 1) = axonClasses(2);
 
 axonClasses(2).synFalsePosRates = inhFpRates;
 axonClasses(2).synFalsePosMethod = 'binomial';
@@ -163,6 +168,20 @@ for curClassId = 1:numel(axonClasses)
     
     fprintf('%s\n\n', curAxonClass.title);
     disp(curStatT); fprintf('\n');
+    
+    if ~isempty(inhSomaSpecFile) ...
+          && strcmpi(curAxonClass.tag, 'inh') ...
+          && isempty(curAxonClass.synFalsePosRates)
+        % NOTE(amotta): Export list of soma specific axons for movie.
+        fprintf('Exporting %s\n', curAxonClass.title);
+        fprintf('to %s\n', inhSomaSpecFile);
+        
+        curOut = struct;
+        curOut.info = info;
+        curOut.axonIds = curAxonClass.specs.Somata.axonIds;
+        Util.saveStruct(inhSomaSpecFile, curOut);
+        Util.protect(curOut);
+    end
 end
 
 %% quantitative evaluation
