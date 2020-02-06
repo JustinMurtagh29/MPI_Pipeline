@@ -33,11 +33,11 @@ if(length(args) < 2) {
 alternative <- args[1]
 file_path <- args[2]
 
-file <- h5::h5file(file_path, 'r')
+file <- hdf5r::H5File$new(file_path, mode="r+")
 
-null_knots <- file["null_knots"][]
-null_masses <- file["null_masses"][]
-observations <- file["observations"][]
+null_knots <- file[["null_knots"]]$read()
+null_masses <- file[["null_masses"]]$read()
+observations <- file[["observations"]]$read()
 
 # sanity checks
 if(is.unsorted(null_knots)) {
