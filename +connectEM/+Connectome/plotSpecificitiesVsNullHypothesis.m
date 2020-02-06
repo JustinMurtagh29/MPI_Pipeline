@@ -180,7 +180,7 @@ for curClassId = 1:numel(axonClasses)
         curOut.info = info;
         curOut.axonIds = curAxonClass.specs.Somata.axonIds;
         Util.saveStruct(inhSomaSpecFile, curOut);
-        Util.protect(curOut);
+        Util.protect(inhSomaSpecFile);
     end
 end
 
