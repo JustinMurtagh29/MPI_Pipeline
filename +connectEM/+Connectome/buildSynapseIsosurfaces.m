@@ -65,10 +65,6 @@ function isoSurf = doIt( ...
     borders = Util.indToSubMat(sizePadded, borders);
     borders = Util.sub2ind(sizeRaw, borders - sphereRadVx);
     
-    mask = seg(borders);
-    mask = mask ~= 1 & mask ~= 2;
-    borders = borders(mask);
-    
     mask = false(size(seg));
     mask(borders) = true;
     
