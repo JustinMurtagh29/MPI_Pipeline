@@ -4,11 +4,9 @@ function axonMeta = completeSynapseMeta( ...
     %   Alessandro Motta <alessandro.motta@brain.mpg.de>
     import connectEM.Axon.*;
     
-    synIds = getSynapses(conn, syn);
-    boutonIds = clusterSynapsesIntoBoutons(synIds, interSyn);
-    fullPriSynSpineMask = syn.synapses.type == 'PrimarySpine';
-    
+    axonMeta = conn.axonMeta;
     synapses = syn.synapses;
+    
     synapses.id = reshape( ...
         1:size(synapses, 1), [], 1);
     synapses.ontoSpine = ...
@@ -24,9 +22,12 @@ function axonMeta = completeSynapseMeta( ...
     
     synapses(~cellfun(@isscalar, synapses.axonId), :) = [];
     synapses.axonId = cell2mat(synapses.axonId);
-
-    axonMeta = conn.axonMeta;
-    axonMeta.pathLen = interSyn.axonPathLens / 1E3;
+    
+    if ~isempty(interSyn)
+        axonMeta.pathLen = interSyn.axonPathLens / 1E3;
+    else
+        axonMeta.pathLen(:) = nan;
+    end
     
     axonMeta.fullSynCount = accumarray( ...
         synapses.axonId, 1, size(axonMeta.id));
@@ -37,20 +38,33 @@ function axonMeta = completeSynapseMeta( ...
         synapses.type == 'PrimarySpine';
     axonMeta.fullPriSpineSynCount = accumarray( ...
         synapses.axonId, priSynSpineMask, size(axonMeta.id));
+    
+    if ~isempty(interSyn)
+        synIds = getSynapses(conn, syn);
+        boutonIds = clusterSynapsesIntoBoutons(synIds, interSyn);
+        fullPriSynSpineMask = syn.synapses.type == 'PrimarySpine';
+        
+        % Average number of primary spine innervations per axonal bouton
+        axonMeta.fullPriSpinesPerBouton = cellfun( ...
+            @(synIds, boutonIds) mean(accumarray( ...
+                boutonIds, fullPriSynSpineMask(synIds))), ...
+            synIds, boutonIds);
 
-    % Average number of primary spine innervations per axonal bouton
-    axonMeta.fullPriSpinesPerBouton = cellfun( ...
-        @(synIds, boutonIds) mean(accumarray( ...
-            boutonIds, fullPriSynSpineMask(synIds))), ...
-        synIds, boutonIds);
+        % Fraction of axonal boutons with multiple primary spine synapses
+        axonMeta.fullPriSpinesMultiHitFrac = cellfun( ...
+            @(synIds, boutonIds) mean(accumarray( ...
+                boutonIds, fullPriSynSpineMask(synIds)) > 1), ...
+            synIds, boutonIds);
+    else
+        axonMeta.fullPriSpinesPerBouton(:) = nan;
+        axonMeta.fullPriSpinesMultiHitFrac(:) = nan;
+    end
     
-    % Fraction of axonal boutons with multiple primary spine innervations
-    axonMeta.fullPriSpinesMultiHitFrac = cellfun( ...
-        @(synIds, boutonIds) mean(accumarray( ...
-            boutonIds, fullPriSynSpineMask(synIds)) > 1), ...
-        synIds, boutonIds);
-    
-    % Median volume of axonal boutons (in µm³)
-    axonMeta.medianBoutonVol = cellfun( ...
-        @median, boutonMeta.boutonVols) / (1E3) ^ 3;
+    if ~isempty(boutonMeta)
+        % Median volume of axonal boutons (in µm³)
+        axonMeta.medianBoutonVol = cellfun( ...
+            @median, boutonMeta.boutonVols) / (1E3) ^ 3;
+    else
+        axonMeta.medianBoutonVol(:) = nan;
+    end
 end

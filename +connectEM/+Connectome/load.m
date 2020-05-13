@@ -39,12 +39,24 @@ function [conn, syn, axonClasses] = load(param, connFile, synFile)
    [connDir, connName] = fileparts(connFile);
     interSynFile = sprintf('%s_intersynapse_v2.mat', connName);
     interSynFile = fullfile(connDir, interSynFile);
-    interSyn = load(interSynFile);
+    
+    try
+        interSyn = load(interSynFile);
+    catch
+        warning('Could not load "%s"', interSynFile);
+        interSyn = struct([]);
+    end
     
     % meta data about axonal boutons (for detection of TC axons)
     boutonMetaFile = sprintf('%s_axonalBoutons_v1.mat', connName);
     boutonMetaFile = fullfile(connDir, boutonMetaFile);
-    boutonMeta = load(boutonMetaFile);
+    
+    try
+        boutonMeta = load(boutonMetaFile);
+    catch
+        warning('Could not load "%s"', boutonMetaFile);
+        boutonMeta = struct([]);
+    end
     
     %% complete axon meta data
     conn.axonMeta = ...
