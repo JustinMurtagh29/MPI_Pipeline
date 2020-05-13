@@ -47,7 +47,7 @@ function [synFrac, expAxonCount] = ...
             % `synFrac`. Let's merge these entries by adding up
             % `expAxonCount`.
            [synFrac, ~, uniGroups] = unique(t.synFrac);
-            expAxonCount = accumarray(uniGroups, t.expAxonCount);
+            expAxonCount = accumarray(uniGroups, t.expAxonCount(:));
         case 'absolute'
             synFrac = [t.synCount, t.synCountAll];
             expAxonCount = t.expAxonCount;
