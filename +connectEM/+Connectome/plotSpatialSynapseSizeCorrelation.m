@@ -626,6 +626,97 @@ if ~isempty(curTitle); title(curAx, curTitle); end
 connectEM.Figure.config(curFig, info);
 
 
+%% Size versus number of neighbors for individual neurons
+clear cur*;
+curMinSynCount = 200;
+curRobust = 'off';
+curLimX = [-2.5, 0];
+
+curFits = struct( ...
+    'count', cell(size(dendData)), ...
+    'delta', cell(size(dendData)));
+for curDendIdx = 1:numel(dendData)
+    curSeedSizes = log10(dendData(curDendIdx).seedSizes);
+    curCount = cellfun(@numel, dendData(curDendIdx).condSizes);
+    curDelta = curCount - mean(curCount);
+    
+    if numel(curSeedSizes) < curMinSynCount; continue; end
+    
+    curFits(curDendIdx).count = fitlm( ...
+        curSeedSizes, curCount, 'RobustOpts', curRobust);
+    curFits(curDendIdx).delta = fitlm( ...
+        curSeedSizes, curDelta, 'RobustOpts', curRobust);
+end
+
+
+curConfigs = struct;
+curConfigs(1).varName = 'count';
+curConfigs(1).yLabel = sprintf( ...
+    'Number of spine heads within %g µm', distThresh / 1E3);
+curConfigs(2).varName = 'delta';
+curConfigs(2).yLabel = {sprintf( ...
+    'Number of spine heads within %g µm', distThresh / 1E3); ...
+    'relative to dendritic average'};
+
+for curConfigIdx = 1:numel(curConfigs)
+    curConfig = curConfigs(curConfigIdx);
+    curVarName = curConfig.varName;
+    curYLabel = curConfig.yLabel;
+
+    curFig = figure();
+    curAx = axes(curFig);
+    hold(curAx, 'on');
+
+    curX = linspace(curLimX(1), curLimX(2), 101);
+    curX = reshape(curX, [], 1);
+
+    for curDendIdx = 1:numel(curFits)
+        curFit = curFits(curDendIdx).(curVarName);
+        if isempty(curFit); continue; end
+
+        curY = curFit.predict(curX);
+        plot(curAx, curX, curY, 'Color', 'black');
+    end
+    
+    xlabel(curAx, sprintf('Reference %s', sizeLabel));
+    ylabel(curAx, curYLabel);
+    
+    connectEM.Figure.config(curFig, info);
+    curFig.Position(3:4) = [385, 345];
+end
+
+curParams = reshape( ...
+    {curFits.count}, [], 1);
+curParams = cell2mat(cellfun( ...
+    @(f) f.Coefficients{'x1', {'Estimate', 'SE'}}, ...
+    curParams(not(cellfun(@isempty, curParams))), ...
+    'UniformOutput', false));
+
+% NOTE(amotta): Mean and standard deviation across fits
+curExpMean = sum(curParams(:, 1)) / size(curParams, 1);
+curExpSem = sqrt(sum(curParams(:, 2) .^ 2)) / size(curParams, 1);
+
+curData = curParams(:, 1);
+curBinSize = 0.2;
+
+curBinEdges = [ ...
+    floor(min(curData) / curBinSize) * curBinSize, ...
+    ceil(max(curData) / curBinSize) * curBinSize];
+curBinEdges = [-1, +1] * max(abs(curBinEdges));
+curBinEdges = curBinEdges(1):curBinSize:curBinEdges(2);
+
+curFig = figure();
+curAx = axes(curFig);
+hold(curAx, 'on');
+
+histogram(curAx, curData, 'BinEdges', curBinEdges);
+plot(curAx, repelem(curExpMean, 2), ylim(curAx), 'k--', 'LineWidth', 2);
+
+xlabel(curAx, 'ΔSH in surround per ×10 increase in ref. SH volume');
+ylabel(curAx, 'Proximal dendrites');
+connectEM.Figure.config(curFig, info);
+curFig.Position(3:4) = [370, 280];
+
 %% Plot number of neighbors for small and large spines
 clear cur*;
 
