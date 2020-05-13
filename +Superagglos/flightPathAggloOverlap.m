@@ -74,12 +74,12 @@ nodes = cell2mat(fp.nodes);
 ids = zeros(size(nodes, 1), 27);
 cubeIdx = Skeleton.findSegCubeIdxOfNodes(nodes, p);
 [group, cubeIdx] = Util.group2Cell(cubeIdx);
-if cubeIdx(1) == 0
+if ~isempty(cubeIdx) && cubeIdx(1) == 0
     group = group(2:end);
     cubeIdx = cubeIdx(2:end);
 end
 fprintf('Loading segment ids:  0%%');
-for i = 1:length(cubeIdx)
+for i = 1:numel(cubeIdx)
     this_bbox = Util.addBorder(p.local(cubeIdx(i)).bboxSmall, [1, 1, 1]);
     warning('off', 'all') % reading of empty cubes
     seg = Seg.IO.loadSeg(p, this_bbox);
