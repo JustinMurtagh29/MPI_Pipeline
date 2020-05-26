@@ -12,10 +12,10 @@ rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 adFile = '/tmpscratch/sahilloo/L4/dataPostSyn/dendritesADState_v2.mat';
 trunkFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v3.mat');
 shFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v3_auto.mat');
-dendFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_03_v2.mat');
+dendFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_autoSpines_v1.mat');
 
 [outDir, outFile] = fileparts(dendFile);
-outFile = fullfile(outDir, sprintf('%s_classified.mat', outFile));
+outFile = fullfile(outDir, sprintf('%s_classified_v1.mat', outFile));
 clear outDir;
 
 % Set path to export NML file with conflicts
