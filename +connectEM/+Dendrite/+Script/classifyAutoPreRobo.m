@@ -19,10 +19,12 @@ outFile = fullfile(outDir, sprintf('%s_classified_v1.mat', outFile));
 clear outDir;
 
 % Set path to export NML file with conflicts
-confNmlFile = '/gaba/u/amotta/sd-ad-conflicts_auto-pre-robo_v1.nml';
+confNmlFile = '';
 
 % NML file resolving conflicts
-annNmlFile = '';
+annNmlFile = fullfile( ...
+    fileparts(mfilename('fullpath')), 'annotations', ...
+    'sd-ad-conflict-resolution_auto-pre-robo.nml');
 
 % Very rough threshold based on table 2 from
 % Kawaguchi, Karuba, Kubota (2006) Cereb Cortex
@@ -106,15 +108,16 @@ if ~isempty(annNmlFile)
         '^Dendrite\W+(\d+)', 'tokens', 'once');
     trees(cellfun(@isempty, trees.dendId), :) = [];
     trees.dendId = cellfun(@str2double, trees.dendId);
+    
+    curSdMask = contains(trees.name, {'mhSD', 'amSD'}, 'IgnoreCase', true);
+    curAdMask = contains(trees.name, {'mhAD', 'amAD'}, 'IgnoreCase', true);
 
     % Sanity check
     assert(all(ismember(trees.dendId, dendIds)));
 
     trees.targetClass(:) = {'OtherDendrite'};
-    trees.targetClass(contains( ...
-        trees.name, 'mhSD', 'IgnoreCase', true)) = {'SmoothDendrite'};
-    trees.targetClass(contains( ...
-        trees.name, 'mhAD', 'IgnoreCase', true)) = {'ApicalDendrite'};
+    trees.targetClass(curSdMask) = {'SmoothDendrite'};
+    trees.targetClass(curAdMask) = {'ApicalDendrite'};
     trees.targetClass = categorical(trees.targetClass);
 
     sdIds = union(sdIds, trees.dendId( ...
