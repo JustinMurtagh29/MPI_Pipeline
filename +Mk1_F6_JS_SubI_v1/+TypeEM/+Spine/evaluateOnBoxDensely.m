@@ -212,6 +212,7 @@ function classifier = buildForClass(gt, class, methodUsed, numTrees)
 end
 
 function [a, b] = trainPlattForClass(gt, classIdx)
+    mask = gt.label(:, classIdx) ~= 0;
     scores = gt.scores(mask, classIdx);
     labels = double(gt.label(mask, classIdx) > 0);
 
