@@ -11,7 +11,9 @@
 % Negative labels: All the rest segments in the box
 
 clear;
+timeStamp = datestr(now,'yyyymmddTHHMMSS');
 methodUsed = 'LogitBoost'; %'AdaBoostM1'; % 'LogitBoost';
+numTrees = 1500;
 addpath(genpath('/gaba/u/sahilloo/repos/amotta/matlab/'))
 
 rootDir = '/tmpscratch/sahilloo/data/Mk1_F6_JS_SubI_v1/pipelineRun_mr2e_wsmrnet/';
@@ -102,6 +104,7 @@ curseg = loadSegDataGlobal(param.seg, curBox);
 posSegIds = reshape(unique(curNodes.segId), [], 1);
 negSegIds = reshape(setdiff(curseg, [0; posSegIds]), [], 1);
 % throw away segments that are too small
+% throw away segments that are too small
 vxCount = segmentMeta.voxelCount(negSegIds);
 toDel = vxCount < vxThr;
 negSegIds(toDel) = [];
@@ -136,14 +139,14 @@ for curTrainSize = trainSizes
 
     curClassifier.classes = gt.class; % classifier for spinehead class only
     curClassifier.classifiers = arrayfun( ...
-            @(c) buildForClass(gtTrain, c, methodUsed), ...
+            @(c) buildForClass(gtTrain, c, methodUsed, numTrees), ...
             gtTrain.class, 'UniformOutput', false);
     curClassifier.featureSetName = featureSetName;
 
     % apply classifier to test data
     [precRec, fig, curGtTest] = TypeEM.Classifier.evaluate(param, curClassifier, gtTest);
-    title([methodUsed ' with trainSize:' num2str(curTrainSize)])
-    saveas(gcf,fullfile(param.saveFolder,'typeEM','spine',['precrec_box_' methodUsed '_tsize_' num2str(curTrainSize) '_dense.png']))
+    title([methodUsed ' with trainSize:' num2str(curTrainSize) '_trees:' num2str(numTrees)])
+    saveas(gcf,fullfile(param.saveFolder,'typeEM','spine',[timeStamp '_precrec_box_' methodUsed '_tsize_' num2str(curTrainSize) '_BoxDensely.png']))
     close all
 
     % build platt parameters
@@ -167,13 +170,13 @@ end
 curCount = 40;
 className = 'spinehead';
 skels = Debug.inspectFPs(param, curCount, className, curGtTest);
-skels.write(fullfile(param.saveFolder,'typeEM','spine', sprintf('fps-%s-dense.nml',className)));
+skels.write(fullfile(param.saveFolder,'typeEM','spine', sprintf('%s_fps-%s-BoxDensely.nml',timeStamp, className)));
 
 % Look at true positives
 curCount = 40;
 className = 'spinehead';
 skels = Debug.inspectTPs(param, curCount, className, curGtTest);
-skels.write(fullfile(param.saveFolder,'typeEM','spine', sprintf('tps-%s-dense.nml',className)));
+skels.write(fullfile(param.saveFolder,'typeEM','spine', sprintf('%s_tps-%s-BoxDensely.nml',timeStamp, className)));
 
 % label statistics
 Spine.Debug.labelDistributions
@@ -186,7 +189,7 @@ classifier = classifiers{end}; %choose trained on all data
 Util.save(['/u/sahilloo/Mk1_F6_JS_SubI_v1/type-em/spineClassifier/' datestr(clock,30) '.mat'],classifier,gt,info);
 %}
 
-function classifier = buildForClass(gt, class, methodUsed)
+function classifier = buildForClass(gt, class, methodUsed, numTrees)
     % classifier = buildForClass(data, className)
     %   Builds a one-versus-all (OVA) classifier for a class
 
@@ -200,7 +203,7 @@ function classifier = buildForClass(gt, class, methodUsed)
     % train classifier
     classifier = fitensemble( ...
         trainFeat, trainClass, ...
-        methodUsed, 1500, 'tree', ...
+        methodUsed, numTrees, 'tree', ...
         'LearnRate', 0.1, ...
         'NPrint', 100, ...
         'Prior', 'Empirical', ...
@@ -209,7 +212,6 @@ function classifier = buildForClass(gt, class, methodUsed)
 end
 
 function [a, b] = trainPlattForClass(gt, classIdx)
-    mask = gt.label(:, classIdx) ~= 0;
     scores = gt.scores(mask, classIdx);
     labels = double(gt.label(mask, classIdx) > 0);
 

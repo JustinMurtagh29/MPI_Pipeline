@@ -23,8 +23,5 @@ barh(x,y,'grouped');
 set(gca,'yticklabels',{'train','test'})
 title('Fraction')
 legend({'SH','nonSH'})
-saveas(gcf,fullfile(param.saveFolder,'typeEM','spine','train_test_statistics_dense.png'))
+saveas(gcf,fullfile(param.saveFolder,'typeEM','spine',[timeStamp '_train_test_statistics.png']))
 close all
-
-
-
