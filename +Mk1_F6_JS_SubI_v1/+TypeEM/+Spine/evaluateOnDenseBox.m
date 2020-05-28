@@ -13,7 +13,7 @@
 clear;
 timeStamp = datestr(now,'yyyymmddTHHMMSS');
 methodUsed = 'LogitBoost'; %'AdaBoostM1'; % 'LogitBoost';
-numTrees = 1500;
+numTrees = 10000;
 addpath(genpath('/gaba/u/sahilloo/repos/amotta/matlab/'))
 
 rootDir = '/tmpscratch/sahilloo/data/Mk1_F6_JS_SubI_v1/pipelineRun_mr2e_wsmrnet/';
@@ -28,7 +28,7 @@ segmentMeta = load([param.saveFolder 'segmentMeta.mat'], 'voxelCount', 'point');
 vxThr = 50;
 
 % load training data
-featureSetName = 'segmentAgglomerate';
+featureSetName = 'segmentAgglomerate'; % 'segment'
 % load spinehead training data
 nmlDir = fullfile(param.saveFolder, ...
      'tracings', 'box-seeded','spine-head-ground-truth');
@@ -120,7 +120,7 @@ curRandIds = randperm(size(gt.label,1));
 trainIds = curRandIds;
 
 % train with increasing training data sizes
-trainFrac = [0.2, 0.4, 0.6, 0.8, 1];
+trainFrac = 1;% [0.2, 0.4, 0.6, 0.8, 1];
 trainSizes = floor(trainFrac.*length(trainIds));
 curRandIds = randperm(length(trainIds));
 
@@ -144,7 +144,7 @@ for curTrainSize = trainSizes
     % apply classifier to test data
     [precRec, fig, curGtTest] = TypeEM.Classifier.evaluate(param, curClassifier, gtTest);
     title([methodUsed ' with trainSize:' num2str(curTrainSize) '_trees:' num2str(numTrees)])
-    saveas(gcf,fullfile(param.saveFolder,'typeEM','spine',[timeStamp '_precrec_box_' methodUsed '_tsize_' num2str(curTrainSize) '_DenseBox.png']))
+    saveas(gcf,fullfile(param.saveFolder,'typeEM','spine',[timeStamp '_precrec_box_' methodUsed '_tsize_' num2str(curTrainSize) '_numTrees_' num2str(numTrees) '_DenseBox.png']))
     close all
 
     % build platt parameters

@@ -13,6 +13,8 @@ classEmParam.agglo = struct;
 classEmParam.agglo.maxSegCount = 1;
 classEmParam.agglo.padSize = [0, 0, 0];
 
+classEmParam.texture.inputs = struct;
+
 fileName = 'segmentFeatures.mat';
 
 info = Util.runInfo();
