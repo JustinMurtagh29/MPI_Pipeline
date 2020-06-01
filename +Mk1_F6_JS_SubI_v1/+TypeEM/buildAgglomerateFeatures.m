@@ -1,5 +1,8 @@
 % Written by
 %   Alessandro Motta <alessandro.motta@brain.mpg.de>
+%
+% NOTE: This works with older version of amotta TypeEM code in "amotta"
+% amottaNew contains Texture.buildFeatures with additional classEMParam structs. This is used to to generate single segment based segmentFeatures
 clear;
 
 %% Configuration

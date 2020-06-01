@@ -13,7 +13,11 @@ classEmParam.agglo = struct;
 classEmParam.agglo.maxSegCount = 1;
 classEmParam.agglo.padSize = [0, 0, 0];
 
+% introduced later by AM for mSEM - try for SBEM
 classEmParam.texture.inputs = struct;
+classEmParam.texture.inputs.name = 'raw'; % no 'membrane' based affinity features for SBEM
+classEmParam.texture.inputs.load = @(p, box) ...
+        (single(wkwLoadRoi(p.raw.root, box)) - p.raw.mean) / p.raw.std;
 
 fileName = 'segmentFeatures.mat';
 
