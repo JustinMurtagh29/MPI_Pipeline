@@ -15,20 +15,34 @@ shFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v3_auto.mat');
 dendFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_autoSpines_v1.mat');
 
 [outDir, outFile] = fileparts(dendFile);
-outFile = fullfile(outDir, sprintf('%s_classified_v1.mat', outFile));
+outFile = fullfile(outDir, sprintf('%s_classified_v2.mat', outFile));
 clear outDir;
 
 % Set path to export NML file with conflicts
-confNmlFile = '';
+confNmlFile = '/gaba/u/amotta/sd-ad-conflicts_auto-pre-robo_corrected-spine-density.nml';
 
 % NML file resolving conflicts
-annNmlFile = fullfile( ...
-    fileparts(mfilename('fullpath')), 'annotations', ...
-    'sd-ad-conflict-resolution_auto-pre-robo.nml');
+annNmlFile = '';
 
 % Very rough threshold based on table 2 from
 % Kawaguchi, Karuba, Kubota (2006) Cereb Cortex
-maxSpinesPerUm = 0.4;
+
+% NOTE(amotta): This automated pre-RoboEM state only contains spines that
+% got attached by the greedy walk-based spine attachment method. This
+% systematically lowers the spine density compared to the dendrite
+% reconstruction that also contained manually attached spines.
+%   To prevent a systematic bias towards smooth dendrites, let's lower the
+% spine density threshold that is used to define smooth dendrites. We do
+% this by multiplying the threshold with the ration of automatically to
+% automatically-or-manually attached spines.
+
+% NOTE(amotta): These numbers were obtained by
+% connectEM.Number.spineAttachment
+% git@gitlab.mpcdf.mpg.de:connectomics/pipeline.git f33c7c2f786401135c7f3715f802beb519c2b56b
+% amotta@m-01522. MATLAB 9.3.0.713579 (R2017b). 02-Jun-2020 14:17:05
+numAutoAttachedSpines = 229990; % sum(shT.autoAttached)
+numAutoOrManuallyAttachedSpines = 327958; % sum(shT.attached)
+maxSpinesPerUm = 0.4 * (numAutoAttachedSpines / numAutoOrManuallyAttachedSpines);
 
 info = Util.runInfo();
 Util.showRunInfo(info);
@@ -124,6 +138,8 @@ if ~isempty(annNmlFile)
         trees.targetClass == 'SmoothDendrite'));
     adIds = union(adIds, trees.dendId( ...
         trees.targetClass == 'ApicalDendrite'));
+else
+    error('Require NML file for conflict resolution to continue');
 end
 
 % Sanity check
