@@ -19,10 +19,12 @@ outFile = fullfile(outDir, sprintf('%s_classified_v2.mat', outFile));
 clear outDir;
 
 % Set path to export NML file with conflicts
-confNmlFile = '/gaba/u/amotta/sd-ad-conflicts_auto-pre-robo_corrected-spine-density.nml';
+confNmlFile = '';
 
 % NML file resolving conflicts
-annNmlFile = '';
+annNmlFile = fullfile( ...
+    fileparts(mfilename('fullpath')), 'annotations', ...
+    'sd-ad-conflict-resolution_auto-pre-robo.nml');
 
 % Very rough threshold based on table 2 from
 % Kawaguchi, Karuba, Kubota (2006) Cereb Cortex
