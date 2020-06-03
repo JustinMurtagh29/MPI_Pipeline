@@ -5,7 +5,7 @@ clear;
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 shFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v3_auto.mat');
-connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-04_dendrites-wholeCells-03-v2-classified_SynapseAgglos-initAxonAgglos-v1.mat');
+connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v8.mat');
 
 % As in Benedikt's +L4/updateParamsToNewestFiles.m
 % Commit hash `590d8538d65463151d43491e2446e25ca11dd5f6`
