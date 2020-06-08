@@ -13,6 +13,9 @@ connFiles = { ...
     'connectome_axons-19-a-partiallySplit-v2_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v8-classified.mat'};
 connFiles = fullfile(rootDir, 'connectomeState', connFiles);
 
+% NOTE(amotta): For evaluation of spine heads
+shFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v3_auto.mat');
+
 info = Util.runInfo();
 Util.showRunInfo(info);
 
@@ -21,6 +24,9 @@ clear cur*;
 
 param = fullfile(rootDir, 'allParameter.mat');
 param = Util.load(param, 'p');
+
+maxSegId = Seg.Global.getMaxSegId(param);
+curShAgglos = Util.load(shFile, 'shAgglos');
 
 [conns, syns] = deal(cell(size(connFiles)));
 for curConnIdx = 1:numel(connFiles)
@@ -33,11 +39,30 @@ for curConnIdx = 1:numel(connFiles)
     % Complete axon meta data (for primary spine synapse fraction)
     curConn.axonMeta = completeAxonMeta(param, curConn, curSyn);
     
+    % Complete dendrite meta data (number of spine heads)
+    curDendLUT = Agglo.buildLUT(maxSegId, curConn.dendrites);
+    
+    curShDendIds = cellfun( ...
+        @(segIds) mode(nonzeros(curDendLUT(segIds))), ...
+        curShAgglos, 'UniformOutput', false);
+    
+    assert(all(cellfun(@isscalar, curShDendIds)));
+    curShDendIds = cell2mat(curShDendIds(:));
+    
+    % NOTE(amotta): `mode` returns `NaN` on empty inputs. For our count,
+    % let's remove spine heads that did not get attached.
+    curShDendIds(isnan(curShDendIds)) = [];
+    assert(all(curShDendIds(:) > 0));
+    
+    curConn.denMeta.spineHeadCount = accumarray( ...
+        curShDendIds(:), 1, size(curConn.dendrites(:)));
+    
     conns{curConnIdx} = curConn;
     syns{curConnIdx} = curSyn;
 end
 
 %% collect numbers
+clear cur*;
 connVals = cell(numel(conns), 2);
 
 for idx = 1:numel(conns)
@@ -51,6 +76,8 @@ for idx = 1:numel(conns)
         '# axons', numel(conn.axons)}; %#ok
     vals(end + 1, :) = { ...
         '# postsynaptic targets', numel(conn.dendrites)}; %#ok
+    vals(end + 1, :) = { ...
+        '# spine heads', sum(conn.denMeta.spineHeadCount)}; %#ok
     
     vals(end + 1, :) = { ...
         '# synapses', conn.connectomeMeta.noSynapses}; %#ok
