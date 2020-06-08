@@ -16,8 +16,7 @@ clear;
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 axonFile = fullfile(rootDir, 'aggloState', 'axons_04.mat');
 
-outputDir = fullfile(rootDir, ...
-    'tripletDetection', '20200608T164619-on-axons-04');
+outputDir = fullfile(rootDir, 'tripletDetection', '20200608T182413');
 tempOutputDir = '/tmpscratch/amotta/l4/chiasma-detection';
 
 chiasmaParam = struct;
