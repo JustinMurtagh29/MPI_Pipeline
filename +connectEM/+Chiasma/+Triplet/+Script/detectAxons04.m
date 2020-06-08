@@ -36,13 +36,6 @@ param = param.p;
 agglos = load(axonFile, 'axons', 'indBigAxons');
 agglos = agglos.axons(agglos.indBigAxons);
 
-% NOTE(amotta): Axons 19a were never intended to be queried for chiasmata
-% again. Hence, the `solvedChiasma` field was left in an invalid state. But
-% for our purposes (splitting axons for control of synaptic consistency)
-% it's fine to just remove this field, thus implicitly marking all of the
-% chiasmata as unsolved.
-agglos = rmfield(agglos, 'solvedChiasma');
-
 %% run chiasma detection
 [job, runId] = connectEM.detectChiasmataSuperSuper( ...
     param, chiasmaParam, agglos, tempOutputDir);
