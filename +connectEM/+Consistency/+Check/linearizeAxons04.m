@@ -34,20 +34,21 @@ outFile = fullfile(outDir, sprintf('%s_linearized.mat', outFile));
 
 % Super-agglomerates
 axons = load(axonFile);
+
+% NOTE(amotta): This early in the axon reconstruction, we haven't set the
+% `endings` and `solvedChiasma` fields yet. So, let's just set them to
+% correctly shaped null values.
+for curIdx = 1:numel(axons.axons)
+    axons.axons(curIdx).endings = zeros(0, 1);
+    axons.axons(curIdx).solvedChiasma = ...
+        false(size(axons.axons(curIdx).nodes, 1), 1);
+end
+
 bigAxonIds = find(axons.indBigAxons);
 bigAxons = axons.axons(bigAxonIds);
 
 % Sanity check
 assert(isequal(size(bigAxons), size(chiasmata)));
-
-% NOTE(amotta): This early in the axon reconstruction, we haven't set the
-% `endings` and `solvedChiasma` fields yet. So, let's just set them to
-% correctly shaped null values.
-for curIdx = 1:numel(bigAxons)
-    bigAxons(curIdx).endings = zeros(0, 1);
-    bigAxons(curIdx).solvedChiasma = ...
-        false(size(bigAxons(curIdx).nodes, 1), 1);
-end
 
 %% Linearize axons
 aggloCount = numel(bigAxons);
