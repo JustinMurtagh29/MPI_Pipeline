@@ -24,6 +24,16 @@ conn = connectEM.Connectome.load(param, connFile);
 
 % Loading axons
 axons = load(conn.info.param.axonFile);
+
+% NOTE(amotta): This early in the axon reconstruction, we haven't set the
+% `endings` and `solvedChiasma` fields yet. So, let's just set them to
+% correctly shaped null values.
+for curIdx = 1:numel(axons.axons)
+    axons.axons(curIdx).endings = zeros(0, 1);
+    axons.axons(curIdx).solvedChiasma = ...
+        false(size(axons.axons(curIdx).nodes, 1), 1);
+end
+
 splitAxons = load(splitAxonFile);
 
 % Sanity check
