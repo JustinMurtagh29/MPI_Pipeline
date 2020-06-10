@@ -26,7 +26,8 @@ param = param.p;
 maxSegId = Seg.Global.getMaxSegId(param);
 points = Seg.Global.getSegToPointMap(param);
 
-[conn, syn, connLinFile] = connectEM.Consistency.loadConnectome(param);
+[conn, syn, connLinFile] = ...
+    connectEM.Consistency.loadConnectomePaper(param);
 
 % [conn, syn, axonClasses] = ...
 %     connectEM.Connectome.load(param, connFile);

@@ -25,7 +25,7 @@ segSizes = Seg.Global.getSegToSizeMap(param);
 [conn, syn, axonClasses] = ...
     connectEM.Connectome.load(param, connFile);
 [linConn, linSyn, linConnFile] = ...
-    connectEM.Consistency.loadConnectome(param);
+    connectEM.Consistency.loadConnectomePaper(param);
 
 axons = load(conn.info.param.axonFile);
 dendrites = load(conn.info.param.dendriteFile);

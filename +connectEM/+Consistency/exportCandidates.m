@@ -23,7 +23,7 @@ param = param.p;
 
 points = Seg.Global.getSegToPointMap(param);
 
-[conn, syn] = connectEM.Consistency.loadConnectome(param);
+[conn, syn] = connectEM.Consistency.loadConnectomePaper(param);
 
 % Load axon-spine interfaces
 [curDir, curAsiFile] = fileparts(connFile);

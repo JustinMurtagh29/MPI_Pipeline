@@ -37,7 +37,7 @@ shAgglos = shAgglos.shAgglos;
 % Connectome that was used for consistency analysis
 % See commit 34dee843596df4ad59a68bb2b8cf0d03edf11038
 % of +connectEM/+Consistency/+Script/buildAxonSpineInterfaces.m
-linConn = connectEM.Consistency.loadConnectome(param);
+linConn = connectEM.Consistency.loadConnectomePaper(param);
 linConn = connectEM.Connectome.prepareForSpecificityAnalysis(linConn);
 
 %% Generate isosurfaces of axons

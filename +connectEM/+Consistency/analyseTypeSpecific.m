@@ -14,7 +14,7 @@ param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 
 [conn, syn, connFile] = ...
-    connectEM.Consistency.loadConnectome(param);
+    connectEM.Consistency.loadConnectomePaper(param);
 
 %{
 % Loading spine head agglomerates
