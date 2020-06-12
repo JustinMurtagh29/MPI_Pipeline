@@ -8,10 +8,12 @@ rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 connNames = { ...
     'InitialAxonAgglomerates', ...
     'InitialAxonAgglomeratesLinearzed', ...
-    'FinalAxonAgglomerates'};
+    'InitialAxonAgglomeratesPartiallySplit', ...
+    'FinalAxonAgglomeratesPartiallySplit'};
 connFiles = { ...
     'connectome_axons-04_dendrites-wholeCells-autoSpines-v1-classified-v2_SynapseAgglos-autoPreRobo-v1-classified.mat';
     'connectome_axons-04-linearized_dendrites-wholeCells-autoSpines-v1-classified-v2_SynapseAgglos-autoPreRobo-v1-classified.mat';
+    'connectome_axons-04-partiallySplit-v1_dendrites-wholeCells-autoSpines-v1-classified-v2_SynapseAgglos-autoPreRobo-v1-classified.mat';
     'connectome_axons-19-a-partiallySplit-v2_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v8-classified.mat'};
 connFiles = fullfile(rootDir, 'connectomeState', connFiles);
 
@@ -140,6 +142,10 @@ disp(t);
 %% Plot primary spine synapse fraction distribution
 % See +connectEM/+Figure/spineSynapseFraction.m
 clear cur*;
+
+% NOTE(amotta): Only show the two "partially split" connectomes
+curShowConnIds = numel(connFiles) + [-1, 0];
+
 curMinSynCount = 10;
 curThreshLines = [0.2, 0.5];
 curBinEdges = linspace(0, 1, 21);
@@ -149,7 +155,7 @@ curAx = axes(curFig);
 axis(curAx, 'square')
 hold(curAx, 'on');
 
-for curConnIdx = 1:numel(connFiles)
+for curConnIdx = curShowConnIds
     curConn = conns{curConnIdx};
     curAxonMeta = curConn.axonMeta;
 
@@ -162,16 +168,16 @@ for curConnIdx = 1:numel(connFiles)
  
     histogram(curAx, ...
         curAxonMeta.fullPriSpineSynFrac, curBinEdges, ...
-        'Normalization', 'probability');
+        'Normalization', 'count');
 end
 
 lines = arrayfun(@(x) plot(curAx, [x, x], curAx.YLim), curThreshLines);
 set(lines, 'Color', 'black', 'LineWidth', 2', 'LineStyle', '--');
 
 xlabel(curAx, {'Fraction of synapses'; 'onto primary spines'});
-ylabel(curAx, 'Fraction of axons');
+ylabel(curAx, 'Number of axons');
 
-curLeg = legend(curAx, connNames);
+curLeg = legend(curAx, connNames(curShowConnIds));
 curLeg.Location = 'EastOutside';
 
 connectEM.Figure.config(curFig, info);
