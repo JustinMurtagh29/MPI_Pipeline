@@ -37,7 +37,7 @@ clear cur*;
 rng(0);
 mkdir(outputDir);
 
-curAxonIds = specClasses(2).specs.SmoothDendrite.axonIds;
+curAxonIds = specClasses(2).specs.ApicalDendrite.axonIds;
 curAxonIds = curAxonIds(randperm(numel(curAxonIds)));
 curAxonIds = curAxonIds(1:10);
 
