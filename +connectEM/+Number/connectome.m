@@ -5,6 +5,7 @@ clear;
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-partiallySplit-v2_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v8-classified.mat');
+shFile = fullfile(rootDir, 'aggloState', 'dendrites_wholeCells_02_v3_auto.mat');
 
 info = Util.runInfo();
 Util.showRunInfo(info);
@@ -14,6 +15,7 @@ param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 
 maxSegId = Seg.Global.getMaxSegId(param);
+shAgglos = Util.load(shFile, 'shAgglos');
 [conn, syn, axonClasses] = connectEM.Connectome.load(param, connFile);
 
 %% Connectome
@@ -80,6 +82,28 @@ numLikelyInhSomaSynapses = sum( ...
     synT.targetClass(synT.isLikelyInhibitory) == 'Somata') %#ok
 fractionOfLikelyInhibitorySynapsesOntoSomata = mean( ...
     synT.targetClass(synT.isLikelyInhibitory) == 'Somata') %#ok
+
+curShLUT = Agglo.buildLUT(maxSegId, shAgglos);
+synT.shId = cellfun( ...
+    @(ids) mode(nonzeros(curShLUT(ids))), ...
+    syn.synapses.postsynId(synT.id));
+synT.shId(isnan(synT.shId)) = 0;
+
+shT = table;
+[shT.id, ~, synT.uniShId] = unique(synT.shId);
+shT.numSynapses = accumarray(synT.uniShId, 1);
+shT.numLikelyInhSynapses = accumarray(synT.uniShId, synT.isLikelyInhibitory);
+shT = shT(shT.id > 0, :);
+
+numSpineHeadsWithSynapse = height(shT) %#ok
+fractionOfSpineHeadsWithASingleSynapse = ...
+    mean(shT.numSynapses == 1) %#ok
+fractionOfSpineHeadsWithASingleLikelyInhibitorySynapse = ...
+    mean(shT.numSynapses == 1 & shT.numLikelyInhSynapses == 1) %#ok
+fractionOfSpineHeadsWithMultipleSynapses = ...
+    mean(shT.numSynapses > 1) %#ok
+fractionOfSpineHeadsWithMultipleSynapsesAndAtLeastOneLikelyInhibitorySynapse = ...
+    mean(shT.numSynapses > 1 & shT.numLikelyInhSynapses > 1) %#ok
 
 %% AIS synapses, independent of neurites or connectome
 aisLUT = conn.denMeta.targetClass == 'AxonInitialSegment';
