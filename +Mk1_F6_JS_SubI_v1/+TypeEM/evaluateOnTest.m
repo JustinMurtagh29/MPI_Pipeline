@@ -45,6 +45,7 @@ classifiers = cell(0);
 results = cell(0, 2);
 
 for curTrainSize = trainSizes
+    % NOTE: This is wrong. trainIds should be used here!!
     curTrainIds = curRandIds(1:curTrainSize);
 
     gtTrain = gt;

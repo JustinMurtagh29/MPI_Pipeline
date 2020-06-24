@@ -17,7 +17,7 @@ classEmParam.agglo.padSize = [0, 0, 0];
 classEmParam.texture.inputs = struct;
 classEmParam.texture.inputs.name = 'raw'; % no 'membrane' based affinity features for SBEM
 classEmParam.texture.inputs.load = @(p, box) ...
-        (single(wkwLoadRoi(p.raw.root, box)) - p.raw.mean) / p.raw.std;
+        (single(wkwLoadRoi(p.raw.root, box)) - p.norm.meanVal) / p.norm.stdVal;
 
 fileName = 'segmentFeatures.mat';
 
