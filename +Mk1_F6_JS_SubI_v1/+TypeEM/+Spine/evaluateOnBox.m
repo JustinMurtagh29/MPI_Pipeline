@@ -14,6 +14,7 @@ clear;
 methodUsed = 'LogitBoost'; %'AdaBoostM1'; % 'LogitBoost';
 addpath(genpath('/gaba/u/sahilloo/repos/amotta/matlab/'))
 
+timeStamp = datestr(now,'yyyymmddTHHMMSS');
 rootDir = '/tmpscratch/sahilloo/data/Mk1_F6_JS_SubI_v1/pipelineRun_mr2e_wsmrnet/';
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
@@ -26,6 +27,7 @@ vxThr = 50;
 
 % load training data
 featureSetName = 'segmentAgglomerate';
+Util.log(sprintf('Evaluating for %s features',featureSetName))
 nmlDir = fullfile(param.saveFolder, ...
      'tracings', 'typeEM');
 nmlFiles = fullfile(nmlDir, 'proofread', ...
@@ -49,11 +51,18 @@ nmlFiles = fullfile(nmlDir, ...
      {'spine-head-ground-truth-1.nml','spine-head-ground-truth-2.nml', 'spine-head-ground-truth-3.nml', ...
      'spine-head-ground-truth-4.nml','spine-head-ground-truth-5.nml','spine-head-ground-truth-6.nml',...
      'spine-head-ground-truth-7.nml','spine-head-ground-truth-8.nml','spine-head-ground-truth-9.nml',...
-     'spine-head-ground-truth-10.nml','spine-head-ground-truth-11.nml'});
+     'spine-head-ground-truth-10.nml','spine-head-ground-truth-11.nml',...
+     'spine-head-ground-truth-13.nml', ...
+     'spine-head-ground-truth-14.nml','spine-head-ground-truth-15.nml','spine-head-ground-truth-16.nml',...
+     'spine-head-ground-truth-18.nml','spine-head-ground-truth-19.nml',...
+     'spine-head-ground-truth-20.nml', 'spine-head-ground-truth-21.nml','spine-head-ground-truth-23.nml',...
+     'spine-head-ground-truth-24.nml','spine-head-ground-truth-25.nml'});
 
 rng(0);
-idxTrain = [1,2,3,4,5,6,7,8,9,10];
-idxTest = 11;
+gtFiles = randperm(numel(nmlFiles));
+idxTrain = gtFiles(1:end-1);
+idxTest = gtFiles(end);
+
 % load train set
 curNodes = table();
 for i = idxTrain
@@ -125,7 +134,7 @@ curRandIds = randperm(size(gt.label,1));
 trainIds = curRandIds;
 
 % train with increasing training data sizes
-trainFrac = 1; %[0.2, 0.4, 0.6, 0.8, 1];
+trainFrac = [0.2, 0.4, 0.6, 0.8, 1];
 trainSizes = floor(trainFrac.*length(trainIds));
 curRandIds = randperm(length(trainIds));
 
@@ -149,7 +158,7 @@ for curTrainSize = trainSizes
     % apply classifier to test data
     [precRec, fig, curGtTest] = TypeEM.Classifier.evaluate(param, curClassifier, gtTest);
     title([methodUsed ' with trainSize:' num2str(curTrainSize)])
-    saveas(gcf,fullfile(param.saveFolder,'typeEM','spine',['precrec_box_' methodUsed '_tsize_' num2str(curTrainSize) '.png']))
+    saveas(gcf,fullfile(param.saveFolder,'typeEM','spine',[timeStamp '_precrec_box_' methodUsed '_tsize_' num2str(curTrainSize) '_typeEMBox.png']))
     close all
 
     % build platt parameters
@@ -173,13 +182,13 @@ end
 curCount = 40;
 className = 'spinehead';
 skels = Debug.inspectFPs(param, curCount, className, curGtTest);
-skels.write(fullfile(param.saveFolder,'typeEM','spine', sprintf('fps-%s.nml',className)));
+skels.write(fullfile(param.saveFolder,'typeEM','spine', featureSetName,sprintf('%s-fps-%s_typeEMBox.nml',timeStamp, className)));
 
 % Look at true positives
 curCount = 40;
 className = 'spinehead';
 skels = Debug.inspectTPs(param, curCount, className, curGtTest);
-skels.write(fullfile(param.saveFolder,'typeEM','spine', sprintf('tps-%s.nml',className)));
+skels.write(fullfile(param.saveFolder,'typeEM','spine', featureSetName,sprintf('%s-tps-%s_typeEMBox.nml',timeStamp, className)));
 
 % label statistics
 Spine.Debug.labelDistributions

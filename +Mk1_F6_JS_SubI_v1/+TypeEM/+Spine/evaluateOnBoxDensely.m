@@ -13,7 +13,7 @@
 clear;
 timeStamp = datestr(now,'yyyymmddTHHMMSS');
 methodUsed = 'LogitBoost'; %'AdaBoostM1'; % 'LogitBoost';
-numTrees = 3000;
+numTrees = 1500;
 addpath(genpath('/gaba/u/sahilloo/repos/amotta/matlab/'))
 
 rootDir = '/tmpscratch/sahilloo/data/Mk1_F6_JS_SubI_v1/pipelineRun_mr2e_wsmrnet/';
@@ -29,6 +29,8 @@ vxThr = 50;
 
 % load training data
 featureSetName = 'segment'; %'segmentAgglomerate'; % 'segment'
+Util.log(sprintf('Evaluating for %s features',featureSetName))
+
 % load spinehead training data
 nmlDir = fullfile(param.saveFolder, ...
      'tracings', 'box-seeded','spine-head-ground-truth');
@@ -36,11 +38,18 @@ nmlFiles = fullfile(nmlDir, ...
      {'spine-head-ground-truth-1.nml','spine-head-ground-truth-2.nml', 'spine-head-ground-truth-3.nml', ...
      'spine-head-ground-truth-4.nml','spine-head-ground-truth-5.nml','spine-head-ground-truth-6.nml',...
      'spine-head-ground-truth-7.nml','spine-head-ground-truth-8.nml','spine-head-ground-truth-9.nml',...
-     'spine-head-ground-truth-10.nml','spine-head-ground-truth-11.nml'});
+     'spine-head-ground-truth-10.nml','spine-head-ground-truth-11.nml',...
+     'spine-head-ground-truth-13.nml', ...
+     'spine-head-ground-truth-14.nml','spine-head-ground-truth-15.nml','spine-head-ground-truth-16.nml',...
+     'spine-head-ground-truth-18.nml','spine-head-ground-truth-19.nml',...
+     'spine-head-ground-truth-20.nml', 'spine-head-ground-truth-21.nml','spine-head-ground-truth-23.nml',...
+    'spine-head-ground-truth-24.nml','spine-head-ground-truth-25.nml'});
 
 rng(0);
-idxTrain = [1,2,3,4,5,6,7,8,9,10];
-idxTest = 11;
+gtFiles = randperm(numel(nmlFiles));
+idxTrain = gtFiles(1:end-1);
+idxTest = gtFiles(end);
+
 % load train set
 curNodes = table();
 gt = struct;
