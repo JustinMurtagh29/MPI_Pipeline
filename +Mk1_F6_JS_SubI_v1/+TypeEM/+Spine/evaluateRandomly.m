@@ -20,10 +20,10 @@ import Mk1_F6_JS_SubI_v1.TypeEM.*
 info = Util.runInfo();
 
 segmentMeta = load([param.saveFolder 'segmentMeta.mat'], 'voxelCount', 'point');
-vxThr = 50;
+vxThr = 100;
 
 % load training data
-featureSetName = 'segmentAgglomerate'; %'segmentAgglomerate'; % 'segment'
+featureSetName = 'segment'; %'segmentAgglomerate'; % 'segment'
 Util.log(sprintf('Evaluating for %s features',featureSetName))
 
 % load spinehead training data
@@ -142,13 +142,13 @@ for curTrainSize = trainSizes
 end 
 
 % Look at false positives
-curCount = 40;
+curCount = 100;
 className = 'spinehead';
 skels = Debug.inspectFPs(param, curCount, className, curGtTest);
 skels.write(fullfile(param.saveFolder,'typeEM','spine', featureSetName,sprintf('%s_fps-%s-Random.nml',timeStamp, className)));
 
 % Look at true positives
-curCount = 40;
+curCount = 100;
 className = 'spinehead';
 skels = Debug.inspectTPs(param, curCount, className, curGtTest);
 skels.write(fullfile(param.saveFolder,'typeEM','spine', featureSetName,sprintf('%s_tps-%s-Random.nml',timeStamp, className)));

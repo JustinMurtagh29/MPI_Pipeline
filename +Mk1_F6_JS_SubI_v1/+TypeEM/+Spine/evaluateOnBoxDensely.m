@@ -25,7 +25,7 @@ import Mk1_F6_JS_SubI_v1.TypeEM.*
 info = Util.runInfo();
 
 segmentMeta = load([param.saveFolder 'segmentMeta.mat'], 'voxelCount', 'point');
-vxThr = 50;
+vxThr = 100;
 
 % load training data
 featureSetName = 'segment'; %'segmentAgglomerate'; % 'segment'
