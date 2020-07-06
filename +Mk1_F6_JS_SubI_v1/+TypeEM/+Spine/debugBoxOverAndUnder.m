@@ -17,6 +17,8 @@ clear;
 timeStamp = datestr(now,'yyyymmddTHHMMSS');
 methodUsed = 'LogitBoost'; %'AdaBoostM1'; % 'LogitBoost';
 numTrees = 1500;
+numNmlsToUse = 22;
+addNoise = true;
 
 if Util.isLocal()
     rootDir = 'E:\u\sahilloo\repos\pipelineHuman';
@@ -26,7 +28,7 @@ else
     addpath(genpath('/gaba/u/sahilloo/repos/amotta/matlab/'))
 end
 
-experimentName = sprintf('box_%s_%d_overAndUnder',methodUsed, numTrees);
+experimentName = sprintf('box_%s_%d_%dnmls-overAndUnder-cost-100-addNoise0.05-%d-Testset',methodUsed, numTrees, numNmlsToUse, addNoise);
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 param.experimentName = 'Mk1_F6_JS_SubI_v1_mrnet_wsmrnet';
@@ -57,7 +59,8 @@ nmlFiles = fullfile(nmlDir, ...
 
 rng(0);
 gtFiles = randperm(numel(nmlFiles));
-idxTrain = gtFiles(1:end-1);
+gtFiles = gtFiles(1:numNmlsToUse);
+idxTrain = gtFiles(1:end);
 idxTest = gtFiles(end)
 
 % load train set
@@ -164,6 +167,10 @@ for curTrainSize = trainSizes
     gtTrain.label = gt.label(curTrainIds,:);
     gtTrain.featMat = gt.featMat(curTrainIds,:);
 
+    if addNoise
+        gtTrain.featMat = augmentFeatures(gtTrain.featMat,0.05);
+    end
+
     curClassifier.classes = gt.class; % classifier for spinehead class only
     curClassifier.classifiers  = arrayfun( ...
             @(c) buildForClass(gtTrain, c, methodUsed, numTrees), ...
@@ -177,6 +184,7 @@ for curTrainSize = trainSizes
             [timeStamp '_precrec_box_' 'tsize_' num2str(curTrainSize) ...
             '_' experimentName '.png']))
     close all
+
     % build platt parameters
     trainPlattFunc = @(curIdx) trainPlattForClass(curGtTest, curIdx);
     [aVec, bVec] = arrayfun(trainPlattFunc, 1:numel(curClassifier.classes));
@@ -209,6 +217,19 @@ className = 'spinehead';
 skels = Debug.inspectTPs(param, curCount, className, curGtTest);
 skels.write(fullfile(param.saveFolder,'typeEM','spine', featureSetName,sprintf('%s_false-labels-%s-%s.nml',timeStamp, className, experimentName)));
 
+Ensemble = curClassifier.classifiers{1};
+Util.save(fullfile(param.saveFolder,'typeEM','spine', featureSetName,sprintf('%s-%s-%s-matData.mat',timeStamp, className, experimentName)), Ensemble)
+
+figure
+plot(resubLoss(Ensemble,'Mode','Cumulative'));
+xlabel('Number of trees');
+ylabel('Resubstitution error');
+legend('-','Location','NE');
+saveas(gcf,fullfile(param.saveFolder,'typeEM','spine',featureSetName,...
+            [timeStamp '_resubloss_box_' 'tsize_' num2str(curTrainSize) ...
+            '_' experimentName '.png']))
+
+
 %{
 % label statistics
 Spine.Debug.labelDistributions
@@ -235,17 +256,51 @@ function classifier = buildForClass(gt, class, methodUsed, numTrees)
     weights = ones(length(trainClass),1);
     weights(trainClass==1) = 1;
 
+    % cost from confusion matrix
+    cost.ClassNames = [true, false];
+    cost.ClassificationCosts = [0,100; 1,0];
+
     % train classifier
-    classifier = fitensemble( ...
-        trainFeat, trainClass, ...
-        methodUsed, numTrees, 'tree', ...
-        'Weights', weights,...
-        'LearnRate', 0.1, ...
-        'NPrint', 100, ...
-        'Prior', 'Empirical', ...
-        'Type', 'Classification', ...
-        'Learners', 'Tree',...
-        'ClassNames', [true, false]);
+    switch methodUsed
+        case 'LogitBoost'
+            classifier = fitensemble( ...
+                trainFeat, trainClass, ...
+                methodUsed, numTrees,'tree', ...
+                'LearnRate', 0.1, ...
+                'NPrint', 100, ...
+                'Prior', 'Empirical', ...
+                'Type', 'Classification', ...
+                'Cost', cost, ...
+                'crossval','off', ...
+                'ClassNames', [true, false]);
+        case 'RobustBoost'
+            classifier = fitcensemble( ...
+                trainFeat, trainClass, ...
+                'method', methodUsed, ...
+                'NPrint', 100, ...
+                'Prior', 'Empirical', ...
+                'Type', 'Classification', ...
+                'Learners', 'Tree', ...
+                'RobustErrorGoal',0.01, ...
+                'NumLearningCycles',numTrees, ...
+                'Cost', cost, ...
+                'ClassNames', [true, false]);
+        case 'GentleBoost'
+            classifier = fitcensemble( ...
+                trainFeat, trainClass, ...
+                'method', methodUsed, ...
+                'NPrint', 100, ...
+                'LearnRate', 0.1, ...
+                'Prior', 'Empirical', ...
+                'Type', 'Classification', ...
+                'Learners', 'Tree', ...
+                'NumLearningCycles',numTrees, ...
+                'Cost', cost, ...
+                'ClassNames', [true, false]);
+        case 'Optimize'
+             classifier = fitcensemble(trainFeat,trainClass,'OptimizeHyperparameters','auto',...
+                'HyperparameterOptimizationOptions',struct('AcquisitionFunctionName','expected-improvement-plus'));
+    end
 end
 
 function [a, b] = trainPlattForClass(gt, classIdx)
@@ -257,3 +312,26 @@ function [a, b] = trainPlattForClass(gt, classIdx)
     [a, b] = TypeEM.Classifier.learnPlattParams(scores, labels);
 end
 
+function X = augmentFeatures(X, dev)
+%AUGMENTFEATURES Add random noise to features based on the feature mean.
+% INPUT X: [NxM] float
+%           Feature matrix. Rows correspond to instances and columns to
+%           features.
+%       dev: (Optional) float
+%           Fraction of the feature mean that is used as the standard
+%           deviation for random noise for the corresponding feature. i.e.
+%           for each column the following is done
+%           X(:,i) = X(:,i) + randn(length(X(:,i), 1), 1).*mean(X(:,i))*dev
+%           (Default: 0.01)
+% OUTPUT X: [NxM] float
+%           The input features with added random noise.
+% Author: Benedikt Staffler <benedikt.staffler@brain.mpg.de>
+
+if ~exist('dev', 'var') || isempty(dev)
+    dev = 0.01;
+end
+
+m = mean(X, 1);
+X = bsxfun(@plus, X, bsxfun(@times, randn(size(X), 'like', X), m.*dev));
+
+end
