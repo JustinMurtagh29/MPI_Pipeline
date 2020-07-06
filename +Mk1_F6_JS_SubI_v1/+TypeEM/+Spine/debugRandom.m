@@ -7,7 +7,7 @@
 
 clear;
 timeStamp = datestr(now,'yyyymmddTHHMMSS');
-methodUsed = 'AdaBoostM1'; %'AdaBoostM1'; % 'LogitBoost';
+methodUsed = 'LogitBoost'; %'AdaBoostM1'; % 'LogitBoost';
 numTrees = 1500;
 addpath(genpath('/gaba/u/sahilloo/repos/amotta/matlab/'))
 
@@ -34,7 +34,7 @@ nmlFiles = fullfile(nmlDir, ...
      'spine-head-ground-truth-4.nml','spine-head-ground-truth-5.nml','spine-head-ground-truth-6.nml',...
      'spine-head-ground-truth-7.nml','spine-head-ground-truth-8.nml','spine-head-ground-truth-9.nml',...
      'spine-head-ground-truth-10.nml','spine-head-ground-truth-11.nml',...
-     'spine-head-ground-truth-13.nml', ...
+     'spine-head-ground-truth-13.nml',...
      'spine-head-ground-truth-14.nml','spine-head-ground-truth-15.nml','spine-head-ground-truth-16.nml',...
      'spine-head-ground-truth-18.nml','spine-head-ground-truth-19.nml',...
      'spine-head-ground-truth-20.nml', 'spine-head-ground-truth-21.nml','spine-head-ground-truth-23.nml',...
@@ -84,6 +84,7 @@ for i = idxTrain
     clear curNml
 end
 gt = TypeEM.GroundTruth.loadFeatures(param, featureSetName, gt);
+sprintf('gt has + labels: %d and - labels: %d', sum(gt.label==1), sum(gt.label==-1))
 
 %% divide into training and test set
 rng(0);
@@ -118,16 +119,31 @@ for curTrainSize = trainSizes
             gtTrain.class, 'UniformOutput', false);
     curClassifier.featureSetName = featureSetName;
 
+    % apply classifier to training data
+    [precRec, fig, curGtTrain] = TypeEM.Classifier.evaluate(param, curClassifier, gtTrain);
+    title([methodUsed ' with trainSize:' num2str(curTrainSize) '_trees:' num2str(numTrees)])
+    saveas(gcf,fullfile(param.saveFolder,'typeEM','spine',featureSetName,...
+                [timeStamp '_precrec_box_' methodUsed '_tsize_' num2str(curTrainSize) '_trees_' num2str(numTrees) '_TrainDebug.png']))
+    close all
+
+    % build platt parameters
+    trainPlattFunc = @(curIdx) trainPlattForClass(curGtTrain, curIdx);
+    [aVec, bVec] = arrayfun(trainPlattFunc, 1:numel(curClassifier.classes));
+
+    % build output
+    platt = struct( ...
+        'a', num2cell(aVec), ...
+        'b', num2cell(bVec));
+    % convert to probs
+    curClassifier.plattParams = platt;
+    probs = TypeEM.Classifier.applyPlatt(curClassifier, curGtTrain.scores);
+    curGtTrain.probs = probs;
+
     % apply classifier to test data
     [precRec, fig, curGtTest] = TypeEM.Classifier.evaluate(param, curClassifier, gtTest);
     title([methodUsed ' with trainSize:' num2str(curTrainSize) '_trees:' num2str(numTrees)])
-    saveas(gcf,fullfile(param.saveFolder,'typeEM','spine',featureSetName,[timeStamp '_precrec_box_' methodUsed '_tsize_' num2str(curTrainSize) '_trees_' num2str(numTrees) '_Random.png']))
-    close all
-
-    % evaluate on sh agglomerates
-    TypeEM.Classifier.evaluateSpineHeads(param, curClassifier, gtTest);
-    title([methodUsed ' with trainSize:' num2str(curTrainSize) '_trees:' num2str(numTrees)])
-    saveas(gcf,fullfile(param.saveFolder,'typeEM','spine',featureSetName,[timeStamp '_precrec_box_' methodUsed '_tsize_' num2str(curTrainSize) '_trees_' num2str(numTrees) '_Random_Agglos.png']))
+    saveas(gcf,fullfile(param.saveFolder,'typeEM','spine',featureSetName,...
+                [timeStamp '_precrec_box_' methodUsed '_tsize_' num2str(curTrainSize) '_trees_' num2str(numTrees) '_TestDebug.png']))
     close all
 
     % build platt parameters
@@ -151,19 +167,18 @@ end
 curCount = 100;
 className = 'spinehead';
 skels = Debug.inspectFPs(param, curCount, className, curGtTest);
-skels.write(fullfile(param.saveFolder,'typeEM','spine', featureSetName,sprintf('%s_fps-%s-Random.nml',timeStamp, className)));
+skels.write(fullfile(param.saveFolder,'typeEM','spine', featureSetName,sprintf('%s_fps-%s-Debug.nml',timeStamp, className)));
 
 % Look at true positives
 curCount = 100;
 className = 'spinehead';
 skels = Debug.inspectTPs(param, curCount, className, curGtTest);
-skels.write(fullfile(param.saveFolder,'typeEM','spine', featureSetName,sprintf('%s_tps-%s-Random.nml',timeStamp, className)));
+skels.write(fullfile(param.saveFolder,'typeEM','spine', featureSetName,sprintf('%s_tps-%s-Debug.nml',timeStamp, className)));
 
 % label statistics
-Spine.Debug.labelDistributions
+%Spine.Debug.labelDistributions
 
 %{
-
 %% Building output
 Util.log('Building output');
 classifier = classifiers{end}; %choose trained on all data

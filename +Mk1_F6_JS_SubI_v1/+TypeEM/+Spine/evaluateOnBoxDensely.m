@@ -28,13 +28,28 @@ segmentMeta = load([param.saveFolder 'segmentMeta.mat'], 'voxelCount', 'point');
 vxThr = 100;
 
 % load training data
-featureSetName = 'segment'; %'segmentAgglomerate'; % 'segment'
+featureSetName = 'segmentAgglomerate'; %'segmentAgglomerate'; % 'segment'
 Util.log(sprintf('Evaluating for %s features',featureSetName))
 
 % load spinehead training data
 nmlDir = fullfile(param.saveFolder, ...
      'tracings', 'box-seeded','spine-head-ground-truth');
 nmlFiles = fullfile(nmlDir, ...
+     {'spine-head-ground-truth-1.nml','spine-head-ground-truth-2.nml', 'spine-head-ground-truth-3.nml', ...
+     'spine-head-ground-truth-4.nml','spine-head-ground-truth-5.nml','spine-head-ground-truth-6.nml',...
+     'spine-head-ground-truth-7.nml','spine-head-ground-truth-8.nml','spine-head-ground-truth-9.nml',...
+     'spine-head-ground-truth-10.nml','spine-head-ground-truth-11.nml',...
+     'spine-head-ground-truth-13.nml', ...
+     'spine-head-ground-truth-14.nml','spine-head-ground-truth-15.nml','spine-head-ground-truth-16.nml',...
+     'spine-head-ground-truth-18.nml','spine-head-ground-truth-19.nml',...
+     'spine-head-ground-truth-20.nml', 'spine-head-ground-truth-21.nml','spine-head-ground-truth-23.nml',...
+    'spine-head-ground-truth-24.nml','spine-head-ground-truth-25.nml'});
+
+% test on boxes with mostly spine heads
+trainVersion = 'v3';
+nmlDirV1 = fullfile(param.saveFolder, ...
+     'tracings', 'box-seeded','spine-head-ground-truth','v1');
+nmlFilesV1 = fullfile(nmlDirV1, ...
      {'spine-head-ground-truth-1.nml','spine-head-ground-truth-2.nml', 'spine-head-ground-truth-3.nml', ...
      'spine-head-ground-truth-4.nml','spine-head-ground-truth-5.nml','spine-head-ground-truth-6.nml',...
      'spine-head-ground-truth-7.nml','spine-head-ground-truth-8.nml','spine-head-ground-truth-9.nml',...
@@ -58,7 +73,12 @@ gt.segId = [];
 gt.label = [];
 curMask = gt.class == 'spinehead';
 for i = idxTrain
-    curNml = slurpNml(nmlFiles{i});
+    if strcmp(trainVersion,'v1')
+        Util.log('Training on v1 GT box:')
+        curNml = slurpNml(nmlFilesV1{i});
+    else
+        curNml = slurpNml(nmlFiles{i});
+    end
     curNodes = NML.buildNodeTable(curNml);
     
     curNodes.coord = curNodes.coord + 1;
@@ -146,8 +166,18 @@ for curTrainSize = trainSizes
     gtTrain.label = gt.label(curTrainIds,:);
     gtTrain.featMat = gt.featMat(curTrainIds,:);
 
+
+    % decrease negative class datapoints
+    idxKeep = find(gtTrain.label == -1);
+    reduceToSize = ceil(length(idxKeep)*0.8); % reduce negative labels
+    %reduceToSize = 2*length(find(gtTrain.label == 1));
+    idxKeep = idxKeep(1:reduceToSize);
+    gtTrain.segId = gt.segId(idxKeep,:);
+    gtTrain.label = gt.label(idxKeep,:);
+    gtTrain.featMat = gt.featMat(idxKeep,:);
+
     curClassifier.classes = gt.class; % classifier for spinehead class only
-    curClassifier.classifiers = arrayfun( ...
+    curClassifier.classifiers  = arrayfun( ...
             @(c) buildForClass(gtTrain, c, methodUsed, numTrees), ...
             gtTrain.class, 'UniformOutput', false);
     curClassifier.featureSetName = featureSetName;
@@ -155,9 +185,16 @@ for curTrainSize = trainSizes
     % apply classifier to test data
     [precRec, fig, curGtTest] = TypeEM.Classifier.evaluate(param, curClassifier, gtTest);
     title([methodUsed ' with trainSize:' num2str(curTrainSize) '_trees:' num2str(numTrees)])
-    saveas(gcf,fullfile(param.saveFolder,'typeEM','spine',featureSetName,[timeStamp '_precrec_box_' methodUsed '_tsize_' num2str(curTrainSize) '_trees_' num2str(numTrees) '_BoxDensely.png']))
+    saveas(gcf,fullfile(param.saveFolder,'typeEM','spine',featureSetName,[timeStamp '_precrec_box_' methodUsed '_tsize_' num2str(curTrainSize) '_trees_' num2str(numTrees) ...
+                    '_BoxDensely_train' trainVersion '_reduced0.8.png']))
     close all
-
+%{
+    % evaluate on sh agglomerates
+    TypeEM.Classifier.evaluateSpineHeads(param, curClassifier, gtTest);
+    title([methodUsed ' with trainSize:' num2str(curTrainSize) '_trees:' num2str(numTrees)])
+    saveas(gcf,fullfile(param.saveFolder,'typeEM','spine',featureSetName,[timeStamp '_precrec_box_' methodUsed '_tsize_' num2str(curTrainSize) '_trees_' num2str(numTrees) '_BoxDensely_Agglos.png']))
+    close all
+%}
     % build platt parameters
     trainPlattFunc = @(curIdx) trainPlattForClass(curGtTest, curIdx);
     [aVec, bVec] = arrayfun(trainPlattFunc, 1:numel(curClassifier.classes));
@@ -176,13 +213,13 @@ for curTrainSize = trainSizes
 end 
 
 % Look at false positives
-curCount = 40;
+curCount = 100;
 className = 'spinehead';
 skels = Debug.inspectFPs(param, curCount, className, curGtTest);
 skels.write(fullfile(param.saveFolder,'typeEM','spine', featureSetName,sprintf('%s_fps-%s-BoxDensely.nml',timeStamp, className)));
 
 % Look at true positives
-curCount = 40;
+curCount = 100;
 className = 'spinehead';
 skels = Debug.inspectTPs(param, curCount, className, curGtTest);
 skels.write(fullfile(param.saveFolder,'typeEM','spine', featureSetName,sprintf('%s_tps-%s-BoxDensely.nml',timeStamp, className)));

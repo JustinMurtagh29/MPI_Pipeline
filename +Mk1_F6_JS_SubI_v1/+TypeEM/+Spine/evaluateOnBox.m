@@ -23,7 +23,7 @@ import Mk1_F6_JS_SubI_v1.TypeEM.*
 
 info = Util.runInfo();
 segmentMeta = load([param.saveFolder 'segmentMeta.mat'], 'voxelCount', 'point');
-vxThr = 50;
+vxThr = 100;
 
 % load training data
 featureSetName = 'segmentAgglomerate';
@@ -44,6 +44,13 @@ gtType = TypeEM.GroundTruth.loadSet( ...
         param, featureSetName, nmlFiles(idxTrain));
 gtType = TypeEM.GroundTruth.loadFeatures(param, featureSetName, gtType);
 
+%{
+% remove dendrite segments from training data of typeEM boxes
+idxDel = gtType.label(:,3) == -1;
+gtType.segId(idxDel,:) = [];
+gtType.label(idxDel,:) = [];
+gtType.featMat(idxDel,:) = [];
+%}
 % load spinehead training data
 nmlDir = fullfile(param.saveFolder, ...
      'tracings', 'box-seeded','spine-head-ground-truth');
@@ -92,6 +99,13 @@ gt.label = cat(1, [gtType.label, -1*ones(numel(gtType.segId),1)],... % [x,x,x,-1
 gt.featMat = cat(1, gtType.featMat, gtSH.featMat); 
 gt.featNames = cat(2, gtType.featNames, gtSH.featNames);
 
+% throw away segments that are too small
+vxCount = segmentMeta.voxelCount(gt.segId);
+toDel = vxCount < vxThr;
+gt.segId(toDel,:) = [];
+gt.label(toDel,:) = [];
+gt.featMat(toDel,:) = [];
+
 % Reduce to spinehead class only
 curMask = gt.class == 'spinehead';
 gt.class = gt.class(curMask);
@@ -134,7 +148,7 @@ curRandIds = randperm(size(gt.label,1));
 trainIds = curRandIds;
 
 % train with increasing training data sizes
-trainFrac = [0.2, 0.4, 0.6, 0.8, 1];
+trainFrac = 1; %[0.2, 0.4, 0.6, 0.8, 1];
 trainSizes = floor(trainFrac.*length(trainIds));
 curRandIds = randperm(length(trainIds));
 
@@ -158,9 +172,9 @@ for curTrainSize = trainSizes
     % apply classifier to test data
     [precRec, fig, curGtTest] = TypeEM.Classifier.evaluate(param, curClassifier, gtTest);
     title([methodUsed ' with trainSize:' num2str(curTrainSize)])
-    saveas(gcf,fullfile(param.saveFolder,'typeEM','spine',[timeStamp '_precrec_box_' methodUsed '_tsize_' num2str(curTrainSize) '_typeEMBox.png']))
+    saveas(gcf,fullfile(param.saveFolder,'typeEM','spine',featureSetName,[timeStamp '_precrec_box_' methodUsed '_tsize_' num2str(curTrainSize) '_typeEMBoxWDend.png']))
     close all
-
+%{
     % build platt parameters
     trainPlattFunc = @(curIdx) trainPlattForClass(curGtTest, curIdx);
     [aVec, bVec] = arrayfun(trainPlattFunc, 1:numel(curClassifier.classes));
@@ -176,8 +190,10 @@ for curTrainSize = trainSizes
 
     classifiers{end + 1} = curClassifier;
     results(end + 1, :) = {precRec, probs};
+%}
 end 
 
+%{
 % Look at false positives
 curCount = 40;
 className = 'spinehead';
@@ -192,7 +208,7 @@ skels.write(fullfile(param.saveFolder,'typeEM','spine', featureSetName,sprintf('
 
 % label statistics
 Spine.Debug.labelDistributions
-
+%}
 %{
 
 %% Building output
