@@ -29,10 +29,10 @@ else
     addpath(genpath('/gaba/u/sahilloo/repos/amotta/matlab/'))
 end
 
-experimentName = sprintf('box_%s_%d_%dnmls-overAndUnder-cost-100-addNoise-%.2f-Testset',methodUsed, numTrees, numNmlsToUse, noiseDev);
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 param.experimentName = 'Mk1_F6_JS_SubI_v1_mrnet_wsmrnet';
+maxSegId = Seg.Global.getMaxSegId(param);
 import Mk1_F6_JS_SubI_v1.TypeEM.*
 
 info = Util.runInfo();
@@ -61,18 +61,66 @@ nmlFiles = fullfile(nmlDir, ...
 rng(0);
 gtFiles = randperm(numel(nmlFiles));
 gtFiles = gtFiles(1:numNmlsToUse);
-idxTrain = gtFiles(1:end-1);
-idxTest = gtFiles(end)
 
-% load train set
-curNodes = table();
-gt = struct;
-gt.class = categorical({'spinehead'});
-gt.segId = [];
-gt.label = [];
-curMask = gt.class == 'spinehead';
-for i = idxTrain
-    curNml = slurpNml(nmlFiles{i});
+%for idxTest = gtFiles
+    idxTest = gtFiles(end); 
+    idxTrain = setdiff(gtFiles, idxTest); % all except test nml
+    
+    experimentName = sprintf('box_%s_%d_%dnmls-overAndUnder-cost-100-addNoise-%.3f-TestsetAgglos%d',methodUsed, numTrees, numNmlsToUse, noiseDev, idxTest);
+    
+    % load train set
+    curNodes = table();
+    gt = struct;
+    gt.class = categorical({'spinehead'});
+    gt.segId = [];
+    gt.label = [];
+    curMask = gt.class == 'spinehead';
+    for i = idxTrain
+        curNml = slurpNml(nmlFiles{i});
+        curNodes = NML.buildNodeTable(curNml);
+        
+        curNodes.coord = curNodes.coord + 1;
+        curNodes.segId = Seg.Global.getSegIds(param, curNodes.coord);
+        assert(all(curNodes.segId));
+        
+        curBox = curNml.parameters.userBoundingBox;
+        curBox = { ...
+            curBox.topLeftX, curBox.topLeftY, curBox.topLeftZ, ...
+            curBox.width, curBox.height, curBox.depth};
+        curBox = cellfun(@str2double, curBox);
+        
+        curBox = Util.convertWebknossosToMatlabBbox(curBox);
+        curseg = loadSegDataGlobal(param.seg, curBox);
+        
+        posSegIds = reshape(unique(curNodes.segId), [], 1);
+    
+        factor = 0.2;
+        %oversample pos segIds
+        posSegIds = repmat(posSegIds,100*factor,1);
+        negSegIds = reshape(setdiff(curseg, [0; posSegIds]), [], 1);
+        
+        % undersample negative labels
+        factor = 0.5;
+        negSegIds = negSegIds(randperm(length(negSegIds), ceil(factor*length(negSegIds)))); % choose x% of ids
+    
+        % throw away segments that are too small
+        vxCount = segmentMeta.voxelCount(negSegIds); 
+        toDel = vxCount < vxThr;
+        negSegIds(toDel) = [];
+    
+        gt.segId = cat(1,gt.segId, double(posSegIds), double(negSegIds));
+        labelTemp = zeros(numel(posSegIds)+numel(negSegIds), numel(gt.class));
+        labelTemp(1:numel(posSegIds), curMask) = +1;
+        labelTemp((numel(posSegIds) + 1):end, curMask) = -1;
+        
+        gt.label = cat(1,gt.label, labelTemp);
+    
+        clear curNml
+    end
+    gt = TypeEM.GroundTruth.loadFeatures(param, featureSetName, gt);
+    
+    % load test set
+    curNml = slurpNml(nmlFiles{idxTest});
     curNodes = NML.buildNodeTable(curNml);
     
     curNodes.coord = curNodes.coord + 1;
@@ -89,135 +137,109 @@ for i = idxTrain
     curseg = loadSegDataGlobal(param.seg, curBox);
     
     posSegIds = reshape(unique(curNodes.segId), [], 1);
-
-    factor = 0.2;
-    %oversample pos segIds
-    posSegIds = repmat(posSegIds,100*factor,1);
     negSegIds = reshape(setdiff(curseg, [0; posSegIds]), [], 1);
     
-    % undersample negative labels
-    factor = 0.5;
-    negSegIds = negSegIds(randperm(length(negSegIds), ceil(factor*length(negSegIds)))); % choose x% of ids
-
     % throw away segments that are too small
-    vxCount = segmentMeta.voxelCount(negSegIds); 
+    vxCount = segmentMeta.voxelCount(negSegIds);
     toDel = vxCount < vxThr;
     negSegIds(toDel) = [];
-
-    gt.segId = cat(1,gt.segId, double(posSegIds), double(negSegIds));
-    labelTemp = zeros(numel(posSegIds)+numel(negSegIds), numel(gt.class));
-    labelTemp(1:numel(posSegIds), curMask) = +1;
-    labelTemp((numel(posSegIds) + 1):end, curMask) = -1;
     
-    gt.label = cat(1,gt.label, labelTemp);
+    gtTest = struct;
+    gtTest.class = categorical({'spinehead'});
+    gtTest.segId = cat(1, double(posSegIds), double(negSegIds));
+    gtTest.label = zeros(numel(gtTest.segId), numel(gtTest.class));
+    
+    curMask = gtTest.class == 'spinehead';
+    gtTest.label(1:numel(posSegIds), curMask) = +1;
+    gtTest.label((numel(posSegIds) + 1):end, curMask) = -1;
+    
+    curRandIds = randperm(size(gt.label,1));
+    trainIds = curRandIds;
+    
+    % train with increasing training data sizes
+    trainFrac = 1; %[0.2, 0.4, 0.6, 0.8, 1];
+    trainSizes = floor(trainFrac.*length(trainIds));
+    curRandIds = randperm(length(trainIds));
+    
+    classifiers = cell(0);
+    results = cell(0, 2);
+    
+    for curTrainSize = trainSizes
+        curTrainIds = curRandIds(1:curTrainSize);
+    
+        gtTrain = gt;
+        gtTrain.segId = gt.segId(curTrainIds,:);
+        gtTrain.label = gt.label(curTrainIds,:);
+        gtTrain.featMat = gt.featMat(curTrainIds,:);
+    
+        if addNoise
+            gtTrain.featMat = augmentFeatures(gtTrain.featMat, noiseDev);
+        end
+    
+        curClassifier.classes = gt.class; % classifier for spinehead class only
+        curClassifier.classifiers  = arrayfun( ...
+                @(c) buildForClass(gtTrain, c, methodUsed, numTrees), ...
+                gtTrain.class, 'UniformOutput', false);
+        curClassifier.featureSetName = featureSetName;
+    
+        % apply classifier to test data
 
-    clear curNml
-end
-gt = TypeEM.GroundTruth.loadFeatures(param, featureSetName, gt);
+        % add agglos to gtTest to update to max of neighbour scores       
+        [~,idxSort] = sort(gtTest.segId);
+        gtTest.segId = gtTest.segId(idxSort);
+        gtTest.label = gtTest.label(idxSort);
 
-% load test set
-curNml = slurpNml(nmlFiles{idxTest});
-curNodes = NML.buildNodeTable(curNml);
+        [~, newTreeIds] = histc(curNodes.treeId, unique(curNodes.treeId)); % order them from 1 onwards
+        shSegIds = gtTest.segId(gtTest.label==1);
+        nonShSegIds = gtTest.segId(gtTest.label==-1);
+        agglos = zeros(maxSegId,1);
+        agglos(shSegIds) = newTreeIds;
+        agglos(nonShSegIds) = reshape(max(newTreeIds) + (1:numel(nonShSegIds)), 1,'');
+        agglos(agglos==0) = [];
+        gtTest.agglos = agglos;
+        clear agglos;
 
-curNodes.coord = curNodes.coord + 1;
-curNodes.segId = Seg.Global.getSegIds(param, curNodes.coord);
-assert(all(curNodes.segId));
+        [precRec, fig, curGtTest] = TypeEM.Classifier.evaluate(param, curClassifier, gtTest);
+        title([methodUsed ' with trainSize:' num2str(curTrainSize) '_trees:' num2str(numTrees)])
+        saveas(gcf,fullfile(param.saveFolder,'typeEM','spine',featureSetName,...
+                [timeStamp '_precrec_' experimentName '.png']))
+        close all
+    
+        % build platt parameters
+        trainPlattFunc = @(curIdx) trainPlattForClass(curGtTest, curIdx);
+        [aVec, bVec] = arrayfun(trainPlattFunc, 1:numel(curClassifier.classes));
+    
+        % build output
+        platt = struct( ...
+            'a', num2cell(aVec), ...
+            'b', num2cell(bVec));
+        % convert to probs
+        curClassifier.plattParams = platt;
+        probs = TypeEM.Classifier.applyPlatt(curClassifier, curGtTest.scores);
+        curGtTest.probs = probs;
+    
+        classifiers{end + 1} = curClassifier;
+        results(end + 1, :) = {precRec, probs};
+    end 
+    
+    sprintf('GT train: + labels: %d, - labels: %d', sum(gtTrain.label==1), sum(gtTrain.label==-1))
+    sprintf('GT test: + labels: %d, - labels: %d', sum(gtTest.label==1), sum(gtTest.label==-1))
+    
+    % Look at false positives
+    curCount = 100;
+    className = 'spinehead';
+    skels = Debug.inspectFPs(param, curCount, className, curGtTest);
+    skels.write(fullfile(param.saveFolder,'typeEM','spine', featureSetName,sprintf('%s_true-labels-%s-%s.nml',timeStamp, className, experimentName)));
+    
+    % Look at true positives
+    curCount = 100;
+    className = 'spinehead';
+    skels = Debug.inspectTPs(param, curCount, className, curGtTest);
+    skels.write(fullfile(param.saveFolder,'typeEM','spine', featureSetName,sprintf('%s_false-labels-%s-%s.nml',timeStamp, className, experimentName)));
+    
+%end
 
-curBox = curNml.parameters.userBoundingBox;
-curBox = { ...
-    curBox.topLeftX, curBox.topLeftY, curBox.topLeftZ, ...
-    curBox.width, curBox.height, curBox.depth};
-curBox = cellfun(@str2double, curBox);
-
-curBox = Util.convertWebknossosToMatlabBbox(curBox);
-curseg = loadSegDataGlobal(param.seg, curBox);
-
-posSegIds = reshape(unique(curNodes.segId), [], 1);
-negSegIds = reshape(setdiff(curseg, [0; posSegIds]), [], 1);
-
-% throw away segments that are too small
-vxCount = segmentMeta.voxelCount(negSegIds);
-toDel = vxCount < vxThr;
-negSegIds(toDel) = [];
-
-gtTest = struct;
-gtTest.class = categorical({'spinehead'});
-gtTest.segId = cat(1, double(posSegIds), double(negSegIds));
-gtTest.label = zeros(numel(gtTest.segId), numel(gtTest.class));
-
-curMask = gtTest.class == 'spinehead';
-gtTest.label(1:numel(posSegIds), curMask) = +1;
-gtTest.label((numel(posSegIds) + 1):end, curMask) = -1;
-
-curRandIds = randperm(size(gt.label,1));
-trainIds = curRandIds;
-
-% train with increasing training data sizes
-trainFrac = 1; %[0.2, 0.4, 0.6, 0.8, 1];
-trainSizes = floor(trainFrac.*length(trainIds));
-curRandIds = randperm(length(trainIds));
-
-classifiers = cell(0);
-results = cell(0, 2);
-
-for curTrainSize = trainSizes
-    curTrainIds = curRandIds(1:curTrainSize);
-
-    gtTrain = gt;
-    gtTrain.segId = gt.segId(curTrainIds,:);
-    gtTrain.label = gt.label(curTrainIds,:);
-    gtTrain.featMat = gt.featMat(curTrainIds,:);
-
-    if addNoise
-        gtTrain.featMat = augmentFeatures(gtTrain.featMat, noiseDev);
-    end
-
-    curClassifier.classes = gt.class; % classifier for spinehead class only
-    curClassifier.classifiers  = arrayfun( ...
-            @(c) buildForClass(gtTrain, c, methodUsed, numTrees), ...
-            gtTrain.class, 'UniformOutput', false);
-    curClassifier.featureSetName = featureSetName;
-
-    % apply classifier to test data
-    [precRec, fig, curGtTest] = TypeEM.Classifier.evaluate(param, curClassifier, gtTest);
-    title([methodUsed ' with trainSize:' num2str(curTrainSize) '_trees:' num2str(numTrees)])
-    saveas(gcf,fullfile(param.saveFolder,'typeEM','spine',featureSetName,...
-            [timeStamp '_precrec_box_' 'tsize_' num2str(curTrainSize) ...
-            '_' experimentName '.png']))
-    close all
-
-    % build platt parameters
-    trainPlattFunc = @(curIdx) trainPlattForClass(curGtTest, curIdx);
-    [aVec, bVec] = arrayfun(trainPlattFunc, 1:numel(curClassifier.classes));
-
-    % build output
-    platt = struct( ...
-        'a', num2cell(aVec), ...
-        'b', num2cell(bVec));
-    % convert to probs
-    curClassifier.plattParams = platt;
-    probs = TypeEM.Classifier.applyPlatt(curClassifier, curGtTest.scores);
-    curGtTest.probs = probs;
-
-    classifiers{end + 1} = curClassifier;
-    results(end + 1, :) = {precRec, probs};
-end 
-
-sprintf('GT train: + labels: %d, - labels: %d', sum(gtTrain.label==1), sum(gtTrain.label==-1))
-sprintf('GT test: + labels: %d, - labels: %d', sum(gtTest.label==1), sum(gtTest.label==-1))
-
-% Look at false positives
-curCount = 100;
-className = 'spinehead';
-skels = Debug.inspectFPs(param, curCount, className, curGtTest);
-skels.write(fullfile(param.saveFolder,'typeEM','spine', featureSetName,sprintf('%s_true-labels-%s-%s.nml',timeStamp, className, experimentName)));
-
-% Look at true positives
-curCount = 100;
-className = 'spinehead';
-skels = Debug.inspectTPs(param, curCount, className, curGtTest);
-skels.write(fullfile(param.saveFolder,'typeEM','spine', featureSetName,sprintf('%s_false-labels-%s-%s.nml',timeStamp, className, experimentName)));
-
+%{
 Ensemble = curClassifier.classifiers{1};
 Util.save(fullfile(param.saveFolder,'typeEM','spine', featureSetName,sprintf('%s-%s-%s-matData.mat',timeStamp, className, experimentName)), Ensemble)
 
@@ -229,7 +251,7 @@ legend('-','Location','NE');
 saveas(gcf,fullfile(param.saveFolder,'typeEM','spine',featureSetName,...
             [timeStamp '_resubloss_box_' 'tsize_' num2str(curTrainSize) ...
             '_' experimentName '.png']))
-
+%}
 
 %{
 % label statistics
