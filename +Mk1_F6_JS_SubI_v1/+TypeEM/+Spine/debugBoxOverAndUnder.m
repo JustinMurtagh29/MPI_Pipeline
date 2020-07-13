@@ -20,6 +20,8 @@ numTrees = 1500;
 numNmlsToUse = 22;
 addNoise = true;
 noiseDev = 0.01;
+evalForAgglos = true;
+vxThrTest = true;
 
 if Util.isLocal()
     rootDir = 'E:\u\sahilloo\repos\pipelineHuman';
@@ -46,7 +48,7 @@ Util.log(sprintf('Evaluating for %s features',featureSetName))
 
 % load spinehead training data
 nmlDir = fullfile(param.saveFolder, ...
-     'tracings', 'box-seeded','spine-head-ground-truth');
+     'tracings', 'box-seeded','spine-head-ground-truth', 'v4');
 nmlFiles = fullfile(nmlDir, ...
      {'spine-head-ground-truth-1.nml','spine-head-ground-truth-2.nml', 'spine-head-ground-truth-3.nml', ...
      'spine-head-ground-truth-4.nml','spine-head-ground-truth-5.nml','spine-head-ground-truth-6.nml',...
@@ -66,7 +68,7 @@ gtFiles = gtFiles(1:numNmlsToUse);
     idxTest = gtFiles(end); 
     idxTrain = setdiff(gtFiles, idxTest); % all except test nml
     
-    experimentName = sprintf('box_%s_%d_%dnmls-overAndUnder-cost-100-addNoise-%.3f-TestsetAgglos%d',methodUsed, numTrees, numNmlsToUse, noiseDev, idxTest);
+    experimentName = sprintf('box_%s_%d_%dnmls-overAndUnder-cost-100-addNoise-%.3f-TestsetAgglo-%d-v4GT',methodUsed, numTrees, numNmlsToUse, noiseDev, idxTest);
     
     % load train set
     curNodes = table();
@@ -139,11 +141,13 @@ gtFiles = gtFiles(1:numNmlsToUse);
     posSegIds = reshape(unique(curNodes.segId), [], 1);
     negSegIds = reshape(setdiff(curseg, [0; posSegIds]), [], 1);
     
+    if vxThrTest
     % throw away segments that are too small
     vxCount = segmentMeta.voxelCount(negSegIds);
     toDel = vxCount < vxThr;
     negSegIds(toDel) = [];
-    
+    end
+
     gtTest = struct;
     gtTest.class = categorical({'spinehead'});
     gtTest.segId = cat(1, double(posSegIds), double(negSegIds));
@@ -183,7 +187,7 @@ gtFiles = gtFiles(1:numNmlsToUse);
         curClassifier.featureSetName = featureSetName;
     
         % apply classifier to test data
-
+        if evalForAgglos
         % add agglos to gtTest to update to max of neighbour scores       
         [~,idxSort] = sort(gtTest.segId);
         gtTest.segId = gtTest.segId(idxSort);
@@ -198,8 +202,10 @@ gtFiles = gtFiles(1:numNmlsToUse);
         agglos(agglos==0) = [];
         gtTest.agglos = agglos;
         clear agglos;
-
+        end
         [precRec, fig, curGtTest] = TypeEM.Classifier.evaluate(param, curClassifier, gtTest);
+        %TypeEM.Classifier.evaluateSpineHeads(param, curClassifier, gtTest);
+
         title([methodUsed ' with trainSize:' num2str(curTrainSize) '_trees:' num2str(numTrees)])
         saveas(gcf,fullfile(param.saveFolder,'typeEM','spine',featureSetName,...
                 [timeStamp '_precrec_' experimentName '.png']))
@@ -253,16 +259,13 @@ saveas(gcf,fullfile(param.saveFolder,'typeEM','spine',featureSetName,...
             '_' experimentName '.png']))
 %}
 
-%{
 % label statistics
 Spine.Debug.labelDistributions
-%}
-%{
+
 %% Building output
 Util.log('Building output');
 classifier = classifiers{end}; %choose trained on all data
 Util.save(['/u/sahilloo/Mk1_F6_JS_SubI_v1/type-em/spineClassifier/' datestr(clock,30) '.mat'],classifier,gt,info);
-%}
 
 function classifier = buildForClass(gt, class, methodUsed, numTrees)
     % classifier = buildForClass(data, className)
