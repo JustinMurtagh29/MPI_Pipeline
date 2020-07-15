@@ -209,6 +209,8 @@ gtFiles = gtFiles(1:numNmlsToUse);
         title([methodUsed ' with trainSize:' num2str(curTrainSize) '_trees:' num2str(numTrees)])
         saveas(gcf,fullfile(param.saveFolder,'typeEM','spine',featureSetName,...
                 [timeStamp '_precrec_' experimentName '.png']))
+        saveas(gcf,fullfile(param.saveFolder,'typeEM','spine',featureSetName,...
+                [timeStamp '_precrec_' experimentName '.fig']))
         close all
     
         % build platt parameters
@@ -265,7 +267,21 @@ Spine.Debug.labelDistributions
 %% Building output
 Util.log('Building output');
 classifier = classifiers{end}; %choose trained on all data
-Util.save(['/u/sahilloo/Mk1_F6_JS_SubI_v1/type-em/spineClassifier/' datestr(clock,30) '.mat'],classifier,gt,info);
+Util.save(['/u/sahilloo/Mk1_F6_JS_SubI_v1/type-em/spineClassifier/' datestr(clock,30) '.mat'],classifier,gt, curGtTest, precRec, info);
+
+% extract the score threshold
+scoreVec = curGtTest.scores;
+[threshVec, threshIndVec] = ...
+        sort(scoreVec, 'descend');
+
+probsVec = curGtTest.probs;
+[probVec, probsIndVec] = ...
+        sort(probsVec, 'descend');
+
+prec = 1; rec = 0.9;
+idxThr = find(precRec.spinehead(:,1)==prec & precRec.spinehead(:,2)==rec);
+sprintf('Score thr is %f at pre %f/ rec %f',threshVec(idxThr),prec, rec)
+sprintf('Prob thr is %f at pre %f/ rec %f',probVec(idxThr),prec, rec)
 
 function classifier = buildForClass(gt, class, methodUsed, numTrees)
     % classifier = buildForClass(data, className)
