@@ -6,7 +6,7 @@
 % This module was developed by AM and modifed here for NHP dataset
 % Note: replace astrocytes class with glia
 %       heuristics: update nans error
-%{
+
 clear;
 
 %% Configuration
@@ -83,7 +83,7 @@ segMeta.classes = categorical([ ...
     cellstr(types.classes), {'vessel', 'nucleus'}]);
 
 clear types
-%}
+
 %% Loading ground truth tracings
 clear cur*;
 
