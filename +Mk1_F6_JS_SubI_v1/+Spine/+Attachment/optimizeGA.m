@@ -55,8 +55,8 @@ Util.log('Loading graph');
 graph = fullfile(param.saveFolder, 'graph.mat');
 graph = load(graph, 'edges', 'prob');
 
-Util.log('Finding graph neighbors');
-graph = Graph.addNeighbours(graph);
+%Util.log('Finding graph neighbors');
+%graph = Graph.addNeighbours(graph);
 
 % COPYNPASTE(amotta): The following code was copied from
 % +L23/+ConnectEM/optimizeAgglomeration.m
@@ -213,6 +213,9 @@ function cost = fitness(parallelParam, inputs)
 
     [gtT, graph, dendLUT, segMeta, optimParam] = Util.load(parallelParam.inputFile, ...
             'gtT', 'graph', 'dendLUT', 'segMeta', 'optimParam');
+    
+    Util.log('Finding graph neighbors');
+    graph = Graph.addNeighbours(graph);
 
     optimParam = fieldnames(optimParam);
     assert(isequal(numel(optimParam), size(inputs, 2)));
