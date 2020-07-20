@@ -6,7 +6,6 @@
 % This module was developed by AM and modifed here for NHP dataset
 % Note: replace astrocytes class with glia
 %       heuristics: update nans error
-
 %{
 clear;
 
@@ -84,24 +83,29 @@ segMeta.classes = categorical([ ...
     cellstr(types.classes), {'vessel', 'nucleus'}]);
 
 clear types
+%}
 %% Loading ground truth tracings
 clear cur*;
 
 nmlFiles = dir(fullfile(nmlDir, '*.nml'));
 nmlFiles(cat(1, nmlFiles.isdir)) = [];
 nmlFiles = fullfile(nmlDir, {nmlFiles.name});
-%}
+
+spineT = table();
 for curIdx = 1:numel(nmlFiles)
     curNmlFile = nmlFiles{curIdx};
-    spineT = mSEM.Spine.Attachment.loadNml(param, curNmlFile);
+    tempSpineT = mSEM.Spine.Attachment.loadNml(param, curNmlFile);
+    if ~isempty(spineT)
+        tempSpineT.id = max(spineT.id) + tempSpineT.id; % append to spineT
+    end
+    spineT = cat(1, spineT, tempSpineT);
+    clear tempSpineT
 end
 
 % Generate consecutive spine IDs
 [~, ~, spineT.id] = unique(spineT.id);
 
 %% Build spine head agglomerates
-clear cur*;
-
 gtT = table;
 gtT.id = reshape(1:max(spineT.id), [], 1);
 
@@ -124,16 +128,17 @@ gtT.trunkIds = cellfun( ...
 
 % NOTE(amotta): For now, let's ignore ground truth tracings in which even
 % manual attachment was not possible (for me, at least).
-gtT(cellfun(@isempty, gtT.trunkAgglo), :) = [];
+curMask = cellfun(@isempty, gtT.trunkAgglo);
+warning('Ignoring %d spines where no trunk was found manually', sum(curMask));
+gtT(curMask,:) = [];
 
 % NOTE(amotta): Let's also ignore the ground truth tracings where none of
 % the trunk nodes was part of a dendrite agglomerate.
 curMask = cellfun(@isempty, gtT.trunkIds);
-warning('Ignoring %d spines that did not reach a trunk', sum(curMask));
+warning('Ignoring %d spines where trunk segId based dendrite agglo was not found', sum(curMask));
 gtT(curMask, :) = [];
 
 %% Evaluate parameter set
-clear cur*;
 rng(0);
 
 curData = struct;
