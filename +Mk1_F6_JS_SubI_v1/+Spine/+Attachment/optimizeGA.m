@@ -146,11 +146,12 @@ gtT(curMask, :) = [];
 %% Save shared inputs
 curData = struct;
 curData.gtT = gtT;
-curData.graph = graph;
+%curData.graph = graph;
 curData.dendLUT = dendLUT(:);
 curData.segMeta = segMeta;
 curData.optimParam = optimParam;
 
+parallelParam.graph = graph; % graph too big to save and load from disk
 curTempDir = Util.makeTempDir();
 parallelParam.inputFile = fullfile(curTempDir, 'input-data.mat');
 
@@ -214,9 +215,11 @@ end
 
 %% Core
 function cost = fitness(parallelParam, inputs)
+    % graph is too big to store and read
+    graph = parallelParam.graph;
 
-    [gtT, graph, dendLUT, segMeta, optimParam] = Util.load(parallelParam.inputFile, ...
-            'gtT', 'graph', 'dendLUT', 'segMeta', 'optimParam');
+    [gtT, dendLUT, segMeta, optimParam] = Util.load(parallelParam.inputFile, ...
+            'gtT', 'dendLUT', 'segMeta', 'optimParam');
     
     optimParam = fieldnames(optimParam);
     assert(isequal(numel(optimParam), size(inputs, 2)));
