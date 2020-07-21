@@ -7,6 +7,7 @@
 % Note: replace astrocytes class with glia
 %       heuristics: update nans error
 % use GA to optimize the attachment parameters
+
 clear;
 
 %% Configuration
@@ -55,8 +56,8 @@ Util.log('Loading graph');
 graph = fullfile(param.saveFolder, 'graph.mat');
 graph = load(graph, 'edges', 'prob');
 
-%Util.log('Finding graph neighbors');
-%graph = Graph.addNeighbours(graph);
+Util.log('Finding graph neighbors');
+graph = Graph.addNeighbours(graph);
 
 % COPYNPASTE(amotta): The following code was copied from
 % +L23/+ConnectEM/optimizeAgglomeration.m
@@ -169,6 +170,9 @@ curUb = ones(curNumParams, 1);
 % It's highly unlikely that anything below that will make sense.
 %curLb(endsWith(curParamNames, 'minEdgeProb')) = 0.5;
 
+% allow max steps to 15
+curUb(endsWith(curParamNames, 'maxNumSteps')) = 15;
+
 curFitnessFun = @(x) fitnessParallel(parallelParam, x);
 curOptions = optimoptions( ...
     'ga', 'UseVectorized', true, 'Display', 'iter', ...
@@ -214,41 +218,44 @@ function cost = fitness(parallelParam, inputs)
     [gtT, graph, dendLUT, segMeta, optimParam] = Util.load(parallelParam.inputFile, ...
             'gtT', 'graph', 'dendLUT', 'segMeta', 'optimParam');
     
-    Util.log('Finding graph neighbors');
-    graph = Graph.addNeighbours(graph);
-
     optimParam = fieldnames(optimParam);
     assert(isequal(numel(optimParam), size(inputs, 2)));
     optimParam = cell2struct(num2cell(inputs), optimParam, 2);
 
-    % HACKHACKHACK(amotta): Make sure it's an integer
-    optimParam.maxNumSteps = round(optimParam.maxNumSteps);
-    
-    attachData = struct;
-    attachData.graph = graph;
-    attachData.dendLUT = dendLUT;
-    
-    curProbs = segMeta.probs;
-    curClasses = segMeta.classes;
-    
-    attachData.exclLUT = ...
-        (curProbs(:, curClasses == 'axon') > optimParam.maxAxonProb) ...
-      | (curProbs(:, curClasses == 'dendrite') < optimParam.minDendProb) ...
-      | (curProbs(:, curClasses == 'glia') > optimParam.maxAstroProb) ...
-      | (curProbs(:, curClasses == 'vessel') > 0.5) ...
-      | (curProbs(:, curClasses == 'nucleus') > 0.5);
-  
-   [~, attachedTo] = ...
-        L4.Spine.Head.attachCore( ...
-            optimParam, attachData, gtT.shAgglo);
+    % evaluate parameter sets
+    cost = nan(size(optimParam));
+    for curParamIdx = 1:numel(optimParam)
+        curOptimParam = optimParam(curParamIdx);
 
-    isAttached = attachedTo > 0;
-    isCorrect = cellfun(@ismember, num2cell(attachedTo), gtT.trunkIds);
-    assert(not(any(isCorrect(not(isAttached)))));
-
-    % NOTE(amotta): We punish wrongly attached spine heads twice as much as
-    % non-attached spine heads. The factor is, of course, arbitrary.
-    numUnattached = sum(not(isAttached));
-    numWronglyAttached = sum(not(isCorrect(isAttached)));
-    cost = numUnattached + 2 * numWronglyAttached;
+        % HACKHACKHACK(amotta): Make sure it's an integer
+        curOptimParam.maxNumSteps = round(curOptimParam.maxNumSteps);
+        
+        attachData = struct;
+        attachData.graph = graph;
+        attachData.dendLUT = dendLUT;
+        
+        curProbs = segMeta.probs;
+        curClasses = segMeta.classes;
+        
+        attachData.exclLUT = ...
+            (curProbs(:, curClasses == 'axon') > curOptimParam.maxAxonProb) ...
+          | (curProbs(:, curClasses == 'dendrite') < curOptimParam.minDendProb) ...
+          | (curProbs(:, curClasses == 'glia') > curOptimParam.maxAstroProb) ...
+          | (curProbs(:, curClasses == 'vessel') > 0.5) ...
+          | (curProbs(:, curClasses == 'nucleus') > 0.5);
+      
+        [~, attachedTo] = ...
+            L4.Spine.Head.attachCore( ...
+                curOptimParam, attachData, gtT.shAgglo);
+    
+        isAttached = attachedTo > 0;
+        isCorrect = cellfun(@ismember, num2cell(attachedTo), gtT.trunkIds);
+        assert(not(any(isCorrect(not(isAttached)))));
+    
+        % NOTE(amotta): We punish wrongly attached spine heads twice as much as
+        % non-attached spine heads. The factor is, of course, arbitrary.
+        numUnattached = sum(not(isAttached));
+        numWronglyAttached = sum(not(isCorrect(isAttached)));
+        cost(curParamIdx) = numUnattached + 2 * numWronglyAttached;
+    end
 end
