@@ -7,7 +7,7 @@
 % Note: replace astrocytes class with glia
 %       heuristics: update nans error
 % use GA to optimize the attachment parameters
-
+%{
 clear;
 
 %% Configuration
@@ -164,7 +164,7 @@ parallelParam.inputFile = fullfile(curTempDir, 'input-data.mat');
 Util.log('Writing shared input data to "%s"', parallelParam.inputFile);
 Util.saveStruct(parallelParam.inputFile, curData);
 Util.log('Done');
-
+%}
 %% Evaluate parameter set
 rng(0);
 
@@ -206,7 +206,7 @@ function cost = fitnessParallel(parallelParam, inputs)
     sharedInputs = {parallelParam};
     
     clusterOpts = { ...
-        'memory', 48, 'cores', 4, ...
+        'memory', 72, 'cores', 6, ...
         'priority', 100, 'time', '12:00:00'};
     job = Cluster.startJob( ...
         @fitness, inputs, 'sharedInputs', sharedInputs, ...
