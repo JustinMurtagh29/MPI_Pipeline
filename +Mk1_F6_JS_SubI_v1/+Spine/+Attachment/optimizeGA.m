@@ -18,6 +18,9 @@ param = param.p;
 nmlDir = fullfile(param.saveFolder, 'tracings', 'spine-attachment');
 dendFile = fullfile(param.saveFolder, 'aggloMat', '20191227T134319_ga_20191224T235355optimParams_agglomeration/20191227T220548_results.mat');
 
+maxNumSteps = 20;
+minEdgeProb = 0.5;
+
 optimParam = struct;
 % NOTE(amotta): These are the mean values over the final population of 100 in
 % which all parameter sets reached a minimal cost of 9. Let's check whether the
@@ -56,8 +59,13 @@ Util.log('Loading graph');
 graph = fullfile(param.saveFolder, 'graph.mat');
 graph = load(graph, 'edges', 'prob');
 
+graph = struct2table(graph);
+graph = Graph.reduce(graph);
+graph = graph(graph.prob > minEdgeProb, :);
+
 Util.log('Finding graph neighbors');
-graph = Graph.addNeighbours(graph);
+graph = table2struct(graph, 'ToScalar', true);
+%graph = Graph.addNeighbours(graph);
 
 % COPYNPASTE(amotta): The following code was copied from
 % +L23/+ConnectEM/optimizeAgglomeration.m
@@ -90,8 +98,6 @@ segMeta.classes = categorical([ ...
 clear types
 
 %% Loading ground truth tracings
-clear cur*;
-
 nmlFiles = dir(fullfile(nmlDir, '*.nml'));
 nmlFiles(cat(1, nmlFiles.isdir)) = [];
 nmlFiles = fullfile(nmlDir, {nmlFiles.name});
@@ -146,12 +152,12 @@ gtT(curMask, :) = [];
 %% Save shared inputs
 curData = struct;
 curData.gtT = gtT;
-%curData.graph = graph;
+curData.graph = graph;
 curData.dendLUT = dendLUT(:);
 curData.segMeta = segMeta;
 curData.optimParam = optimParam;
 
-parallelParam.graph = graph; % graph too big to save and load from disk
+%parallelParam.graph = graph; % graph too big to save and load from disk
 curTempDir = Util.makeTempDir();
 parallelParam.inputFile = fullfile(curTempDir, 'input-data.mat');
 
@@ -160,7 +166,6 @@ Util.saveStruct(parallelParam.inputFile, curData);
 Util.log('Done');
 
 %% Evaluate parameter set
-clear cur*
 rng(0);
 
 curParamNames = fieldnames(optimParam);
@@ -172,7 +177,7 @@ curUb = ones(curNumParams, 1);
 %curLb(endsWith(curParamNames, 'minEdgeProb')) = 0.5;
 
 % allow max steps to 15
-curUb(endsWith(curParamNames, 'maxNumSteps')) = 15;
+curUb(endsWith(curParamNames, 'maxNumSteps')) = maxNumSteps;
 
 curFitnessFun = @(x) fitnessParallel(parallelParam, x);
 curOptions = optimoptions( ...
@@ -216,11 +221,12 @@ end
 %% Core
 function cost = fitness(parallelParam, inputs)
     % graph is too big to store and read
-    graph = parallelParam.graph;
+    %graph = parallelParam.graph;
 
-    [gtT, dendLUT, segMeta, optimParam] = Util.load(parallelParam.inputFile, ...
-            'gtT', 'dendLUT', 'segMeta', 'optimParam');
-    
+    [gtT, dendLUT, graph, segMeta, optimParam] = Util.load(parallelParam.inputFile, ...
+            'gtT', 'dendLUT', 'graph', 'segMeta', 'optimParam');
+    graph = Graph.addNeighbours(graph);
+ 
     optimParam = fieldnames(optimParam);
     assert(isequal(numel(optimParam), size(inputs, 2)));
     optimParam = cell2struct(num2cell(inputs), optimParam, 2);
