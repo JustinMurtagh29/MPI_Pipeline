@@ -176,13 +176,19 @@ curUb = ones(curNumParams, 1);
 % It's highly unlikely that anything below that will make sense.
 %curLb(endsWith(curParamNames, 'minEdgeProb')) = 0.5;
 
-% allow max steps to 15
+% restrict max steps
 curUb(endsWith(curParamNames, 'maxNumSteps')) = maxNumSteps;
 
 curFitnessFun = @(x) fitnessParallel(parallelParam, x);
+
+% load saved population where 'nextPopulation' errored in one task OOM but not anymore?
+m = load('/tmpscratch/sahilloo/data/Mk1_F6_JS_SubI_v1/pipelineRun_mr2e_wsmrnet/spineAttachment/ga/2020_07_23_saved_pop.mat');
+initial_pop = m.thisPopulation;
+
 curOptions = optimoptions( ...
     'ga', 'UseVectorized', true, 'Display', 'iter', ...
-    'PopulationSize', parallelParam.batchCount * parallelParam.batchSize);
+    'PopulationSize', parallelParam.batchCount * parallelParam.batchSize, ...
+    'InitialPopulationMatrix', initial_pop);
 
 [curParams, curMinCost, curExitFlags, curPop, curScores] = ga( ...
     curFitnessFun, curNumParams, [], [], [], [], ...
