@@ -9,7 +9,7 @@ param = param.p;
 
 nmlDir = fullfile(param.saveFolder, 'tracings', 'spine-attachment');
 dendFile = fullfile(param.saveFolder, 'aggloMat', '20191227T134319_ga_20191224T235355optimParams_agglomeration/20191227T220548_results_auto-spines_v1.mat');
-skelFile = fullfile(nmlDir, 'debug-spine-attachment.nml');
+skelFile = fullfile(param.saveFolder, 'spineAttachment', 'debug-spine-attachment.nml');
 
 exportCount = 200;
 
@@ -68,6 +68,8 @@ for curIdx = 1:numel(randIds)
    [~, curEdges] = ismember(curEdges, curSegIds);
     assert(all(curEdges(:)));
     
+    % remove duplicate edges
+    curEdges = unique(curEdges, 'rows');
     skel = skel.addTree(curName, curNodes, curEdges);
 end
 
