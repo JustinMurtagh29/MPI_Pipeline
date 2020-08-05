@@ -44,7 +44,7 @@ info = Util.runInfo();
 
 %% complete configuration
 [outDir, outFile] = fileparts(dendFile);
-outFile = sprintf('%s_auto-spines_v2.mat', outFile);
+outFile = sprintf('%s_auto-spines_v3.mat', outFile);
 outFile = fullfile(outDir, outFile);
 clear outDir;
 
