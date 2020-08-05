@@ -8,8 +8,8 @@ param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 
 nmlDir = fullfile(param.saveFolder, 'tracings', 'spine-attachment');
-dendFile = fullfile(param.saveFolder, 'aggloMat', '20191227T134319_ga_20191224T235355optimParams_agglomeration/20191227T220548_results_auto-spines_v1.mat');
-skelFile = fullfile(param.saveFolder, 'spineAttachment', 'debug-spine-attachment.nml');
+dendFile = fullfile(param.saveFolder, 'aggloMat', '20191227T134319_ga_20191224T235355optimParams_agglomeration/20191227T220548_results_auto-spines_v2.mat');
+skelFile = fullfile(param.saveFolder, 'spineAttachment', 'debug','debug-spine-attachment-v2.nml');
 
 exportCount = 200;
 
@@ -58,7 +58,8 @@ for curIdx = 1:numel(randIds)
         reshape(curShSegIds(1:(end - 1)), [], 1), ...
         reshape(curShSegIds(2:end), [], 1));
     
-    curEdges = dend.shEdges{curId};
+    %curEdges = dend.shEdges{curId}; % redundant (SL)
+    curEdges = dend.edges{curId};
     curEdges = curEdges(all(curEdges, 2), :);
     curEdges = vertcat(curShEdges, curEdges); %#ok
     
