@@ -15,7 +15,7 @@ else
     rootDir = '/tmpscratch/sahilloo/data/Mk1_F6_JS_SubI_v1/pipelineRun_mr2e_wsmrnet';
     addpath(genpath('/gaba/u/sahilloo/repos/amotta/matlab/'))
 end
-addNoise = true;
+addNoise = false;
 noiseDev = 0.01;
 
 vxThrTest= true;
@@ -33,7 +33,7 @@ segmentMeta = load([param.saveFolder 'segmentMeta.mat'], 'voxelCount', 'point');
 vxThr = 100;
 
 % load classifier
-m = load('/u/sahilloo/Mk1_F6_JS_SubI_v1/type-em/spineClassifier/20200709T123459.mat');
+m = load('/u/sahilloo/Mk1_F6_JS_SubI_v1/type-em/spineClassifier/20200715T135315.mat');
 curClassifier = m.classifier;
 
 % load spinehead training data
@@ -96,7 +96,7 @@ for idxTest = 1:numel(nmlFiles)
     end
 
     gtTest.scores = TypeEM.Classifier.apply(curClassifier, gtTest.featMat);
-    % without true labels, conversion from scorse to probs is not possible
+    % without true labels, conversion from scores to probs is not possible
     gtTest.probs = gtTest.scores;
 
     % Look at segment scores
