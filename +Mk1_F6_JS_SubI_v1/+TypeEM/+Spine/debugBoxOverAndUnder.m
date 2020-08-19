@@ -60,9 +60,12 @@ nmlFiles = fullfile(nmlDir, ...
      'spine-head-ground-truth-20.nml', 'spine-head-ground-truth-21.nml','spine-head-ground-truth-23.nml',...
     'spine-head-ground-truth-24.nml','spine-head-ground-truth-25.nml'});
 
-rng(0);
+rng(2); % default 0
 gtFiles = randperm(numel(nmlFiles));
 gtFiles = gtFiles(1:numNmlsToUse);
+
+% debug: remove box 13 from training
+%gtFiles = gtFiles(~(gtFiles==12));
 
 %for idxTest = gtFiles
     idxTest = gtFiles(end); 
@@ -188,23 +191,26 @@ gtFiles = gtFiles(1:numNmlsToUse);
     
         % apply classifier to test data
         if evalForAgglos
-        % add agglos to gtTest to update to max of neighbour scores       
-        [~,idxSort] = sort(gtTest.segId);
-        gtTest.segId = gtTest.segId(idxSort);
-        gtTest.label = gtTest.label(idxSort);
+            % add agglos to gtTest to update to max of neighbour scores       
+            [~,idxSort] = sort(gtTest.segId);
+            gtTest.segId = gtTest.segId(idxSort);
+            gtTest.label = gtTest.label(idxSort);
+    
+            [~,idxSort] = sort(curNodes.segId);
+            [~, newTreeIds] = histc(curNodes.treeId(idxSort), unique(curNodes.treeId)); % order them from 1 onwards, sorted by ascendign segIds
+            
+            shSegIds = gtTest.segId(gtTest.label==1);
+            nonShSegIds = gtTest.segId(gtTest.label==-1);
+            agglos = zeros(maxSegId,1);
 
-        [~, newTreeIds] = histc(curNodes.treeId, unique(curNodes.treeId)); % order them from 1 onwards
-        shSegIds = gtTest.segId(gtTest.label==1);
-        nonShSegIds = gtTest.segId(gtTest.label==-1);
-        agglos = zeros(maxSegId,1);
-        agglos(shSegIds) = newTreeIds;
-        agglos(nonShSegIds) = reshape(max(newTreeIds) + (1:numel(nonShSegIds)), 1,'');
-        agglos(agglos==0) = [];
-        gtTest.agglos = agglos;
-        clear agglos;
+            % curNodes.segIds have to be sorted as well to match shSegIds
+            agglos(shSegIds) = newTreeIds;
+            agglos(nonShSegIds) = reshape(max(newTreeIds) + (1:numel(nonShSegIds)), 1,'');
+            agglos(agglos==0) = [];
+            gtTest.agglos = agglos;
+            clear agglos;
         end
         [precRec, fig, curGtTest] = TypeEM.Classifier.evaluate(param, curClassifier, gtTest);
-        %TypeEM.Classifier.evaluateSpineHeads(param, curClassifier, gtTest);
 
         title([methodUsed ' with trainSize:' num2str(curTrainSize) '_trees:' num2str(numTrees)])
         saveas(gcf,fullfile(param.saveFolder,'typeEM','spine',featureSetName,...
@@ -247,27 +253,13 @@ gtFiles = gtFiles(1:numNmlsToUse);
     
 %end
 
-%{
-Ensemble = curClassifier.classifiers{1};
-Util.save(fullfile(param.saveFolder,'typeEM','spine', featureSetName,sprintf('%s-%s-%s-matData.mat',timeStamp, className, experimentName)), Ensemble)
-
-figure
-plot(resubLoss(Ensemble,'Mode','Cumulative'));
-xlabel('Number of trees');
-ylabel('Resubstitution error');
-legend('-','Location','NE');
-saveas(gcf,fullfile(param.saveFolder,'typeEM','spine',featureSetName,...
-            [timeStamp '_resubloss_box_' 'tsize_' num2str(curTrainSize) ...
-            '_' experimentName '.png']))
-%}
-
 % label statistics
 Spine.Debug.labelDistributions
 
 %% Building output
 Util.log('Building output');
 classifier = classifiers{end}; %choose trained on all data
-Util.save(['/u/sahilloo/Mk1_F6_JS_SubI_v1/type-em/spineClassifier/' datestr(clock,30) '.mat'],classifier,gt, curGtTest, precRec, info);
+%Util.save(['/u/sahilloo/Mk1_F6_JS_SubI_v1/type-em/spineClassifier/' datestr(clock,30) '.mat'],classifier,gt, curGtTest, precRec, info);
 
 % extract the score threshold
 scoreVec = curGtTest.scores;
