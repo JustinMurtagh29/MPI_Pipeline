@@ -22,6 +22,10 @@ addNoise = true;
 noiseDev = 0.01;
 evalForAgglos = true;
 vxThrTest = true;
+gtVersion = 'v4';
+featureSetName = 'segmentAgglomerate'; %'segmentAgglomerate'; % 'segment'
+factorPos = 0.8; % 100x times oversample
+factorNeg = 0.8; % x times undersample
 
 if Util.isLocal()
     rootDir = 'E:\u\sahilloo\repos\pipelineHuman';
@@ -43,12 +47,11 @@ segmentMeta = load([param.saveFolder 'segmentMeta.mat'], 'voxelCount', 'point');
 vxThr = 100;
 
 % load training data
-featureSetName = 'segmentAgglomerate'; %'segmentAgglomerate'; % 'segment'
 Util.log(sprintf('Evaluating for %s features',featureSetName))
 
 % load spinehead training data
 nmlDir = fullfile(param.saveFolder, ...
-     'tracings', 'box-seeded','spine-head-ground-truth', 'v4');
+     'tracings', 'box-seeded','spine-head-ground-truth', gtVersion);
 nmlFiles = fullfile(nmlDir, ...
      {'spine-head-ground-truth-1.nml','spine-head-ground-truth-2.nml', 'spine-head-ground-truth-3.nml', ...
      'spine-head-ground-truth-4.nml','spine-head-ground-truth-5.nml','spine-head-ground-truth-6.nml',...
@@ -60,7 +63,7 @@ nmlFiles = fullfile(nmlDir, ...
      'spine-head-ground-truth-20.nml', 'spine-head-ground-truth-21.nml','spine-head-ground-truth-23.nml',...
     'spine-head-ground-truth-24.nml','spine-head-ground-truth-25.nml'});
 
-rng(2); % default 0
+rng(0); % default 0
 gtFiles = randperm(numel(nmlFiles));
 gtFiles = gtFiles(1:numNmlsToUse);
 
@@ -70,8 +73,13 @@ gtFiles = gtFiles(1:numNmlsToUse);
 %for idxTest = gtFiles
     idxTest = gtFiles(end); 
     idxTrain = setdiff(gtFiles, idxTest); % all except test nml
-    
-    experimentName = sprintf('box_%s_%d_%dnmls-overAndUnder-cost-100-addNoise-%.3f-TestsetAgglo-%d-v4GT',methodUsed, numTrees, numNmlsToUse, noiseDev, idxTest);
+    if addNoise
+        experimentName = sprintf('box_%s_%d_nmls_%d_over_%.2f_under_%.2f_cost_100_addNoise_%.3f_testset_%d_GT_%s_features_%s_evalForAgglo_%d', ...
+                methodUsed, numTrees, numNmlsToUse, factorPos, factorNeg, noiseDev, idxTest, gtVersion, featureSetName, evalForAgglos);
+    else
+        experimentName = sprintf('box_%s_%d_nmls_%d_over_%.2f_under_%.2f_cost_100_noNoise_testset_%d_GT_%s_features_%s_evalForAgglo_%d', ...
+            methodUsed, numTrees, numNmlsToUse, factorPos, factorNeg, idxTest, gtVersion, featureSetName, evalForAgglos);
+    end
     
     % load train set
     curNodes = table();
@@ -99,14 +107,12 @@ gtFiles = gtFiles(1:numNmlsToUse);
         
         posSegIds = reshape(unique(curNodes.segId), [], 1);
     
-        factor = 0.2;
         %oversample pos segIds
-        posSegIds = repmat(posSegIds,100*factor,1);
+        posSegIds = repmat(posSegIds,int32(100*factorPos),1);
         negSegIds = reshape(setdiff(curseg, [0; posSegIds]), [], 1);
         
         % undersample negative labels
-        factor = 0.5;
-        negSegIds = negSegIds(randperm(length(negSegIds), ceil(factor*length(negSegIds)))); % choose x% of ids
+        negSegIds = negSegIds(randperm(length(negSegIds), ceil(factorNeg*length(negSegIds)))); % choose x% of ids
     
         % throw away segments that are too small
         vxCount = segmentMeta.voxelCount(negSegIds); 
@@ -212,11 +218,13 @@ gtFiles = gtFiles(1:numNmlsToUse);
         end
         [precRec, fig, curGtTest] = TypeEM.Classifier.evaluate(param, curClassifier, gtTest);
 
-        title([methodUsed ' with trainSize:' num2str(curTrainSize) '_trees:' num2str(numTrees)])
+        title(sprintf('%s \n trainSize: %d numTrees: %d', experimentName, curTrainSize, numTrees), 'Interpreter', 'none')
         saveas(gcf,fullfile(param.saveFolder,'typeEM','spine',featureSetName,...
                 [timeStamp '_precrec_' experimentName '.png']))
+        %{
         saveas(gcf,fullfile(param.saveFolder,'typeEM','spine',featureSetName,...
                 [timeStamp '_precrec_' experimentName '.fig']))
+        %}
         close all
     
         % build platt parameters
@@ -253,13 +261,14 @@ gtFiles = gtFiles(1:numNmlsToUse);
     
 %end
 
+%{
 % label statistics
 Spine.Debug.labelDistributions
 
 %% Building output
 Util.log('Building output');
 classifier = classifiers{end}; %choose trained on all data
-%Util.save(['/u/sahilloo/Mk1_F6_JS_SubI_v1/type-em/spineClassifier/' datestr(clock,30) '.mat'],classifier,gt, curGtTest, precRec, info);
+Util.save(['/u/sahilloo/Mk1_F6_JS_SubI_v1/type-em/spineClassifier/' datestr(clock,30) '.mat'],classifier,gt, curGtTest, precRec, info);
 
 % extract the score threshold
 scoreVec = curGtTest.scores;
@@ -274,7 +283,7 @@ prec = 1; rec = 0.9;
 idxThr = find(precRec.spinehead(:,1)==prec & precRec.spinehead(:,2)==rec);
 sprintf('Score thr is %f at pre %f/ rec %f',threshVec(idxThr),prec, rec)
 sprintf('Prob thr is %f at pre %f/ rec %f',probVec(idxThr),prec, rec)
-
+%}
 function classifier = buildForClass(gt, class, methodUsed, numTrees)
     % classifier = buildForClass(data, className)
     %   Builds a one-versus-all (OVA) classifier for a class
