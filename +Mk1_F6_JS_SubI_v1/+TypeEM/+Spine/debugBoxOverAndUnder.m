@@ -26,6 +26,7 @@ gtVersion = 'v4';
 featureSetName = 'segmentAgglomerate'; %'segmentAgglomerate'; % 'segment'
 factorPos = 0.8; % 100x times oversample
 factorNeg = 0.8; % x times undersample
+featsImp = true;
 
 if Util.isLocal()
     rootDir = 'E:\u\sahilloo\repos\pipelineHuman';
@@ -63,10 +64,13 @@ nmlFiles = fullfile(nmlDir, ...
      'spine-head-ground-truth-20.nml', 'spine-head-ground-truth-21.nml','spine-head-ground-truth-23.nml',...
     'spine-head-ground-truth-24.nml','spine-head-ground-truth-25.nml'});
 
-rng(0); % default 0
+rng(1); % default 0
 gtFiles = randperm(numel(nmlFiles));
 gtFiles = gtFiles(1:numNmlsToUse);
 
+if featsImp
+    load(fullfile('/tmpscratch/sahilloo/data/Mk1_F6_JS_SubI_v1/pipelineRun_mr2e_wsmrnet/typeEM/spine/segmentAgglomerate/importantFeatures.mat'));
+end
 % debug: remove box 13 from training
 %gtFiles = gtFiles(~(gtFiles==12));
 
@@ -151,10 +155,10 @@ gtFiles = gtFiles(1:numNmlsToUse);
     negSegIds = reshape(setdiff(curseg, [0; posSegIds]), [], 1);
     
     if vxThrTest
-    % throw away segments that are too small
-    vxCount = segmentMeta.voxelCount(negSegIds);
-    toDel = vxCount < vxThr;
-    negSegIds(toDel) = [];
+        % throw away segments that are too small
+        vxCount = segmentMeta.voxelCount(negSegIds);
+        toDel = vxCount < vxThr;
+        negSegIds(toDel) = [];
     end
 
     gtTest = struct;
@@ -189,6 +193,10 @@ gtFiles = gtFiles(1:numNmlsToUse);
             gtTrain.featMat = augmentFeatures(gtTrain.featMat, noiseDev);
         end
     
+        if featsImp
+            gtTrain.featMat = gtTrain.featMat(:,idxImpFeats);
+            gtTrain.featNames = gtTrain.featNames(:,idxImpFeats);
+        end
         curClassifier.classes = gt.class; % classifier for spinehead class only
         curClassifier.classifiers  = arrayfun( ...
                 @(c) buildForClass(gtTrain, c, methodUsed, numTrees), ...
@@ -216,6 +224,11 @@ gtFiles = gtFiles(1:numNmlsToUse);
             gtTest.agglos = agglos;
             clear agglos;
         end
+
+        if featsImp
+            gtTest.featsImp = idxImpFeats;
+        end
+
         [precRec, fig, curGtTest] = TypeEM.Classifier.evaluate(param, curClassifier, gtTest);
 
         title(sprintf('%s \n trainSize: %d numTrees: %d', experimentName, curTrainSize, numTrees), 'Interpreter', 'none')
