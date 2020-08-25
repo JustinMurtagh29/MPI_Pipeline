@@ -1,18 +1,39 @@
 % script to extract GT from nmls and their corresponding cubeIds
 
+rootDir = '/tmpscratch/sahilloo/data/Mk1_F6_JS_SubI_v1/pipelineRun_mr2e_wsmrnet';
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
 param.experimentName = 'Mk1_F6_JS_SubI_v1_mrnet_wsmrnet';
 maxSegId = Seg.Global.getMaxSegId(param);
 import Mk1_F6_JS_SubI_v1.TypeEM.*
 
-idxTrain = 1:22;
+addTypeEM = true;
 
+if addTypeEM
+    nmlDir = fullfile(param.saveFolder, ...
+         'tracings', 'typeEM');
+    nmlFiles = fullfile(nmlDir, 'proofread', 'withoutSpines', ...
+         {'box-1.nml','box-2.nml', 'box-3.nml', ...
+         'box-4.nml','box-5.nml','box-6.nml',...
+         'box-7.nml','box-8.nml','box-9.nml',...
+         'box-10.nml','box-11.nml','box-12.nml',...
+         'box-13.nml'});
+    featureSetName = 'segmentAgglomerate'; %'segmentAgglomerate'; % 'segment'
+    idxTrain = [1,2,3,4,5,6,7,8,9,10,11,12,13];
+    % load features
+    Util.log(sprintf('Loading typeEM GT from %s',nmlDir))
+    gtType = TypeEM.GroundTruth.loadSet( ...
+            param, featureSetName, nmlFiles(idxTrain));
+
+else
+    gtType.segId = [];
+end
+
+% load SH training data
+idxTrain = 1:22;
 nmlDir = fullfile(param.saveFolder, ...
      'tracings', 'box-seeded','spine-head-ground-truth', 'v4');
-
-Util.log(sprintf('Loading GT from %s', nmlDir))
-
+Util.log(sprintf('Loading SH GT from %s', nmlDir))
 nmlFiles = fullfile(nmlDir, ...
      {'spine-head-ground-truth-1.nml','spine-head-ground-truth-2.nml', 'spine-head-ground-truth-3.nml', ...
      'spine-head-ground-truth-4.nml','spine-head-ground-truth-5.nml','spine-head-ground-truth-6.nml',...
@@ -65,11 +86,9 @@ for i = idxTrain
 end
 
 Util.log('Finding cubeIds...')
-t = table();
-t.segId = gt.segId(:);
-t.cubeIdx = cubeIdsForSegs(param.saveFolder, t.segId);
-
-cubeIds = unique(t.cubeIdx);
+cubeIdsSH = cubeIdsForSegs(param.saveFolder, gt.segId(:));
+cubeIdsTypeEM = cubeIdsForSegs(param.saveFolder, gtType.segId(:));
+cubeIds = unique(vertcat(cubeIdsSH(:), cubeIdsTypeEM(:)));
 save(fullfile(nmlDir,'cubeIds.mat'), 'cubeIds')
 
 function cubeIds = cubeIdsForSegs(rootDir, segIds)
