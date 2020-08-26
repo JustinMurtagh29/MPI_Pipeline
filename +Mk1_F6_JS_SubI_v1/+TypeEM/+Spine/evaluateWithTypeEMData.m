@@ -21,7 +21,7 @@ evalForAgglos = true;
 vxThrTest = true;
 gtVersion = 'v4';
 featureSetName = 'segmentAgglomerate'; %'segmentAgglomerate'; % 'segment'
-factorPos = 0.08; % 100x times oversample
+factorPos = 0.04; % 100x times oversample
 factorNeg = 1; % x times undersample
 featsImp = false;
 
