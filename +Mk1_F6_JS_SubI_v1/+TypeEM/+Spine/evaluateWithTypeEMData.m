@@ -14,24 +14,19 @@ clear;
 timeStamp = datestr(now,'yyyymmddTHHMMSS');
 methodUsed = 'LogitBoost'; %'AdaBoostM1'; % 'LogitBoost';
 numTrees = 1500;
-numNmlsToUse = 22;
+numNmlsToUse = 32;
 addNoise = true;
 noiseDev = 0.01;
 evalForAgglos = true;
 vxThrTest = true;
 gtVersion = 'v4';
 featureSetName = 'segmentAgglomerate'; %'segmentAgglomerate'; % 'segment'
-factorPos = 0.04; % 100x times oversample
+factorPos = 0.01; % 100x times oversample
 factorNeg = 1; % x times undersample
 featsImp = false;
 
-if Util.isLocal()
-    rootDir = 'E:\u\sahilloo\repos\pipelineHuman';
-    addpath(genpath('E:\u\sahilloo\repos\amotta\matlab'))
-else
-    rootDir = '/tmpscratch/sahilloo/data/Mk1_F6_JS_SubI_v1/pipelineRun_mr2e_wsmrnet';
-    addpath(genpath('/gaba/u/sahilloo/repos/amotta/matlab/'))
-end
+rootDir = '/tmpscratch/sahilloo/data/Mk1_F6_JS_SubI_v1/pipelineRun_mr2e_wsmrnet';
+addpath(genpath('/gaba/u/sahilloo/repos/amotta/matlab/'))
 
 param = load(fullfile(rootDir, 'allParameter.mat'));
 param = param.p;
@@ -46,33 +41,17 @@ vxThr = 100;
 % load training data from typeEM boxes for negative labels
 Util.log(sprintf('Evaluating for %s features',featureSetName))
 nmlDir = fullfile(param.saveFolder, ...
-     'tracings', 'typeEM');
-nmlFiles = fullfile(nmlDir, 'proofread', 'withoutSpines', ...
-     {'box-1.nml','box-2.nml', 'box-3.nml', ...
-     'box-4.nml','box-5.nml','box-6.nml',...
-     'box-7.nml','box-8.nml','box-9.nml',...
-     'box-10.nml','box-11.nml','box-12.nml',...
-     'box-13.nml'});
+     'tracings', 'typeEM', 'proofread', 'withoutSpines');
+nmlFiles = arrayfun(@(x) fullfile(nmlDir, x.name), dir(fullfile(nmlDir, '*.nml')), 'uni',0);
 
-idxTrain = [1,2,3,4,5,6,7,8,9,10,11,12,13];
-% load features
 gtType = TypeEM.GroundTruth.loadSet( ...
-        param, featureSetName, nmlFiles(idxTrain));
+        param, featureSetName, nmlFiles);
 gtType = TypeEM.GroundTruth.loadFeatures(param, featureSetName, gtType);
 
 % load spinehead training data
 nmlDir = fullfile(param.saveFolder, ...
      'tracings', 'box-seeded','spine-head-ground-truth', gtVersion);
-nmlFiles = fullfile(nmlDir, ...
-     {'spine-head-ground-truth-1.nml','spine-head-ground-truth-2.nml', 'spine-head-ground-truth-3.nml', ...
-     'spine-head-ground-truth-4.nml','spine-head-ground-truth-5.nml','spine-head-ground-truth-6.nml',...
-     'spine-head-ground-truth-7.nml','spine-head-ground-truth-8.nml','spine-head-ground-truth-9.nml',...
-     'spine-head-ground-truth-10.nml','spine-head-ground-truth-11.nml',...
-     'spine-head-ground-truth-13.nml', ...
-     'spine-head-ground-truth-14.nml','spine-head-ground-truth-15.nml','spine-head-ground-truth-16.nml',...
-     'spine-head-ground-truth-18.nml','spine-head-ground-truth-19.nml',...
-     'spine-head-ground-truth-20.nml', 'spine-head-ground-truth-21.nml','spine-head-ground-truth-23.nml',...
-     'spine-head-ground-truth-24.nml','spine-head-ground-truth-25.nml'});
+nmlFiles = arrayfun(@(x) fullfile(nmlDir, x.name), dir(fullfile(nmlDir, '*.nml')), 'uni',0);
 
 rng(0);
 gtFiles = randperm(numel(nmlFiles));
@@ -83,7 +62,7 @@ if featsImp
 end
 
 %for idxTest = gtFiles
-    idxTest = gtFiles(end);
+    idxTest = 12; %gtFiles(end);
     idxTrain = setdiff(gtFiles, idxTest); % all except test nml
 
     if addNoise
@@ -381,26 +360,26 @@ function [a, b] = trainPlattForClass(gt, classIdx)
 end
 
 function X = augmentFeatures(X, dev)
-%AUGMENTFEATURES Add random noise to features based on the feature mean.
-% INPUT X: [NxM] float
-%           Feature matrix. Rows correspond to instances and columns to
-%           features.
-%       dev: (Optional) float
-%           Fraction of the feature mean that is used as the standard
-%           deviation for random noise for the corresponding feature. i.e.
-%           for each column the following is done
-%           X(:,i) = X(:,i) + randn(length(X(:,i), 1), 1).*mean(X(:,i))*dev
-%           (Default: 0.01)
-% OUTPUT X: [NxM] float
-%           The input features with added random noise.
-% Author: Benedikt Staffler <benedikt.staffler@brain.mpg.de>
-
-if ~exist('dev', 'var') || isempty(dev)
-    dev = 0.01;
-end
-
-m = mean(X, 1);
-X = bsxfun(@plus, X, bsxfun(@times, randn(size(X), 'like', X), m.*dev));
-
+    %AUGMENTFEATURES Add random noise to features based on the feature mean.
+    % INPUT X: [NxM] float
+    %           Feature matrix. Rows correspond to instances and columns to
+    %           features.
+    %       dev: (Optional) float
+    %           Fraction of the feature mean that is used as the standard
+    %           deviation for random noise for the corresponding feature. i.e.
+    %           for each column the following is done
+    %           X(:,i) = X(:,i) + randn(length(X(:,i), 1), 1).*mean(X(:,i))*dev
+    %           (Default: 0.01)
+    % OUTPUT X: [NxM] float
+    %           The input features with added random noise.
+    % Author: Benedikt Staffler <benedikt.staffler@brain.mpg.de>
+    
+    if ~exist('dev', 'var') || isempty(dev)
+        dev = 0.01;
+    end
+    
+    m = mean(X, 1);
+    X = bsxfun(@plus, X, bsxfun(@times, randn(size(X), 'like', X), m.*dev));
+    
 end
 
