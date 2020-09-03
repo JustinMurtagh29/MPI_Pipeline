@@ -14,8 +14,7 @@ clear;
 timeStamp = datestr(now,'yyyymmddTHHMMSS');
 methodUsed = 'LogitBoost'; %'AdaBoostM1'; % 'LogitBoost';
 numTrees = 1500;
-numNmlsToUse = 32;
-addNoise = true;
+addNoise = false;
 noiseDev = 0.01;
 evalForAgglos = true;
 vxThrTest = true;
@@ -38,41 +37,32 @@ info = Util.runInfo();
 segmentMeta = load([param.saveFolder 'segmentMeta.mat'], 'voxelCount', 'point');
 vxThr = 100;
 
-% load training data from typeEM boxes for negative labels
-Util.log(sprintf('Evaluating for %s features',featureSetName))
-nmlDir = fullfile(param.saveFolder, ...
-     'tracings', 'typeEM', 'proofread', 'withoutSpines');
-nmlFiles = arrayfun(@(x) fullfile(nmlDir, x.name), dir(fullfile(nmlDir, '*.nml')), 'uni',0);
-
-gtType = TypeEM.GroundTruth.loadSet( ...
-        param, featureSetName, nmlFiles);
-gtType = TypeEM.GroundTruth.loadFeatures(param, featureSetName, gtType);
-
-% load spinehead training data
-nmlDir = fullfile(param.saveFolder, ...
-     'tracings', 'box-seeded','spine-head-ground-truth', gtVersion);
-nmlFiles = arrayfun(@(x) fullfile(nmlDir, x.name), dir(fullfile(nmlDir, '*.nml')), 'uni',0);
-
-rng(0);
-gtFiles = randperm(numel(nmlFiles));
-gtFiles = gtFiles(1:numNmlsToUse);
-
 if featsImp
     load(fullfile('/tmpscratch/sahilloo/data/Mk1_F6_JS_SubI_v1/pipelineRun_mr2e_wsmrnet/typeEM/spine/segmentAgglomerate/importantFeatures.mat'));
 end
 
+Util.log(sprintf('Evaluating for %s features',featureSetName))
+
 %for idxTest = gtFiles
-    idxTest = 12; %gtFiles(end);
+    % load training data from typeEM boxes for negative labels
+    nmlDir = fullfile(param.saveFolder, ...
+         'tracings', 'typeEM', 'proofread', 'withoutSpines');
+    nmlFiles = arrayfun(@(x) fullfile(nmlDir, x.name), dir(fullfile(nmlDir, '*.nml')), 'uni',0);
+
+    rng(0);
+    gtFiles = 1:numel(nmlFiles); % randperm(numel(nmlFiles));
+    idxTest = 39; %76.nml %gtFiles(end);
     idxTrain = setdiff(gtFiles, idxTest); % all except test nml
-
-    if addNoise
-        experimentName = sprintf('box_%s_%d_nmls_%d_over_%.2f_under_%.2f_cost_100_addNoise_%.3f_testset_%d_GT_%s_features_%s_evalForAgglo_%d', ...
-                methodUsed, numTrees, numNmlsToUse, factorPos, factorNeg, noiseDev, idxTest, gtVersion, featureSetName, evalForAgglos);
-    else
-        experimentName = sprintf('box_%s_%d_nmls_%d_over_%.2f_under_%.2f_cost_100_noNoise_testset_%d_GT_%s_features_%s_evalForAgglo_%d', ...
-            methodUsed, numTrees, numNmlsToUse, factorPos, factorNeg, idxTest, gtVersion, featureSetName, evalForAgglos);
-    end
-
+    
+    gtType = TypeEM.GroundTruth.loadSet( ...
+            param, featureSetName, nmlFiles(idxTrain));
+    gtType = TypeEM.GroundTruth.loadFeatures(param, featureSetName, gtType);
+    
+    % load spinehead training data
+    nmlDir = fullfile(param.saveFolder, ...
+         'tracings', 'box-seeded','spine-head-ground-truth', gtVersion);
+    nmlFiles = arrayfun(@(x) fullfile(nmlDir, x.name), dir(fullfile(nmlDir, '*.nml')), 'uni',0);
+    
     % load train set
     curNodes = table();
     gtSH = struct;
@@ -164,7 +154,7 @@ end
     trainIds = curRandIds;
     
     % train with increasing training data sizes
-    trainFrac = 1; %[0.2, 0.4, 0.6, 0.8, 1];
+    trainFrac = 1; % [0.2, 0.4, 0.6, 0.8, 1];
     trainSizes = floor(trainFrac.*length(trainIds));
     curRandIds = randperm(length(trainIds));
     
@@ -209,6 +199,15 @@ end
         end
 
         [precRec, fig, curGtTest] = TypeEM.Classifier.evaluate(param, curClassifier, gtTest);
+
+        if addNoise
+            experimentName = sprintf('box_%s_%d_over_%.2f_under_%.2f_cost_100_addNoise_%.3f_testset_%d_GT_%s_features_%s_evalForAgglo_%d', ...
+                    methodUsed, numTrees, factorPos, factorNeg, noiseDev, idxTest, gtVersion, featureSetName, evalForAgglos);
+        else
+            experimentName = sprintf('box_%s_%d_over_%.2f_under_%.2f_cost_100_noNoise_testset_%d_GT_%s_features_%s_evalForAgglo_%d', ...
+                methodUsed, numTrees, factorPos, factorNeg, idxTest, gtVersion, featureSetName, evalForAgglos);
+        end
+
         title(sprintf('%s \n trainSize: %d numTrees: %d', experimentName, curTrainSize, numTrees), 'Interpreter', 'none')
         saveas(gcf,fullfile(param.saveFolder,'typeEM','spine',featureSetName,...
                 [timeStamp '_precrec_' experimentName '.png']))

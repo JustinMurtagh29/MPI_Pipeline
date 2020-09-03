@@ -9,7 +9,7 @@
 % test set:
 % Positive labels: All SH nodes in one box
 % Negative labels: All the rest segments in the box
-% check if overfit on training data
+% overfit sanity check
 
 clear;
 timeStamp = datestr(now,'yyyymmddTHHMMSS');
@@ -38,40 +38,32 @@ info = Util.runInfo();
 segmentMeta = load([param.saveFolder 'segmentMeta.mat'], 'voxelCount', 'point');
 vxThr = 100;
 
-% load training data from typeEM boxes for negative labels
-Util.log(sprintf('Evaluating for %s features',featureSetName))
-nmlDir = fullfile(param.saveFolder, ...
-     'tracings', 'typeEM', 'proofread', 'withoutSpines');
-nmlFiles = arrayfun(@(x) fullfile(nmlDir, x.name), dir(fullfile(nmlDir, '*.nml')), 'uni',0);
-
-gtType = TypeEM.GroundTruth.loadSet( ...
-        param, featureSetName, nmlFiles);
-gtType = TypeEM.GroundTruth.loadFeatures(param, featureSetName, gtType);
-
-% load spinehead training data
-nmlDir = fullfile(param.saveFolder, ...
-     'tracings', 'box-seeded','spine-head-ground-truth', gtVersion);
-nmlFiles = arrayfun(@(x) fullfile(nmlDir, x.name), dir(fullfile(nmlDir, '*.nml')), 'uni',0);
-
-rng(0);
-gtFiles = 1:numel(nmlFiles); % randperm(numel(nmlFiles));
-
 if featsImp
     load(fullfile('/tmpscratch/sahilloo/data/Mk1_F6_JS_SubI_v1/pipelineRun_mr2e_wsmrnet/typeEM/spine/segmentAgglomerate/importantFeatures.mat'));
 end
 
+Util.log(sprintf('Evaluating for %s features',featureSetName))
+
 %for idxTest = gtFiles
-    idxTest = 59; %76.nml %gtFiles(end);
-    idxTrain = gtFiles; % overfit test %setdiff(gtFiles, idxTest); % all except test nml
+    % load training data from typeEM boxes for negative labels
+    nmlDir = fullfile(param.saveFolder, ...
+         'tracings', 'typeEM', 'proofread', 'withoutSpines');
+    nmlFiles = arrayfun(@(x) fullfile(nmlDir, x.name), dir(fullfile(nmlDir, '*.nml')), 'uni',0);
 
-    if addNoise
-        experimentName = sprintf('overfit_typeEM_%s_%d_over_%.2f_under_%.2f_cost_100_addNoise_%.3f_testset_%d_GT_%s_features_%s_evalForAgglo_%d', ...
-                methodUsed, numTrees, factorPos, factorNeg, noiseDev, idxTest, gtVersion, featureSetName, evalForAgglos);
-    else
-        experimentName = sprintf('overfit_typeEM_%s_%d_over_%.2f_under_%.2f_cost_100_noNoise_testset_%d_GT_%s_features_%s_evalForAgglo_%d', ...
-            methodUsed, numTrees, factorPos, factorNeg, idxTest, gtVersion, featureSetName, evalForAgglos);
-    end
-
+    rng(0);
+    gtFiles = 1:numel(nmlFiles); % randperm(numel(nmlFiles));
+    idxTest = 39; %76.nml %gtFiles(end);
+    idxTrain = gtFiles; %setdiff(gtFiles, idxTest); % all except test nml
+    
+    gtType = TypeEM.GroundTruth.loadSet( ...
+            param, featureSetName, nmlFiles(idxTrain));
+    gtType = TypeEM.GroundTruth.loadFeatures(param, featureSetName, gtType);
+    
+    % load spinehead training data
+    nmlDir = fullfile(param.saveFolder, ...
+         'tracings', 'box-seeded','spine-head-ground-truth', gtVersion);
+    nmlFiles = arrayfun(@(x) fullfile(nmlDir, x.name), dir(fullfile(nmlDir, '*.nml')), 'uni',0);
+    
     % load train set
     curNodes = table();
     gtSH = struct;
@@ -208,6 +200,15 @@ end
         end
 
         [precRec, fig, curGtTest] = TypeEM.Classifier.evaluate(param, curClassifier, gtTest);
+
+        if addNoise
+            experimentName = sprintf('overfit_typeEM_%s_%d_over_%.2f_under_%.2f_cost_100_addNoise_%.3f_testset_%d_GT_%s_features_%s_evalForAgglo_%d', ...
+                    methodUsed, numTrees, factorPos, factorNeg, noiseDev, idxTest, gtVersion, featureSetName, evalForAgglos);
+        else
+            experimentName = sprintf('overfit_typeEM_%s_%d_over_%.2f_under_%.2f_cost_100_noNoise_testset_%d_GT_%s_features_%s_evalForAgglo_%d', ...
+                methodUsed, numTrees, factorPos, factorNeg, idxTest, gtVersion, featureSetName, evalForAgglos);
+        end
+
         title(sprintf('%s \n trainSize: %d numTrees: %d', experimentName, curTrainSize, numTrees), 'Interpreter', 'none')
         saveas(gcf,fullfile(param.saveFolder,'typeEM','spine',featureSetName,...
                 [timeStamp '_precrec_' experimentName '.png']))

@@ -17,14 +17,13 @@ clear;
 timeStamp = [datestr(now,'yyyymmddTHHMMSS')];
 methodUsed = 'LogitBoost'; %'AdaBoostM1'; % 'LogitBoost';
 numTrees = 1500;
-numNmlsToUse = 32;
 addNoise = true;
 noiseDev = 0.01;
 evalForAgglos = true;
 vxThrTest = true;
 gtVersion = 'v4';
 featureSetName = 'segmentAgglomerate'; %'segmentAgglomerate'; % 'segment'
-factorPos = 0.65; % 100x times oversample
+factorPos = 0.01; % 100x times oversample
 factorNeg = 0.8; % x times undersample
 featsImp = false;
 
@@ -42,31 +41,29 @@ info = Util.runInfo();
 segmentMeta = load([param.saveFolder 'segmentMeta.mat'], 'voxelCount', 'point');
 vxThr = 100;
 
-% load training data
-Util.log(sprintf('Evaluating for %s features',featureSetName))
-
-% load spinehead training data
-nmlDir = fullfile(param.saveFolder, ...
-     'tracings', 'box-seeded','spine-head-ground-truth', gtVersion);
-nmlFiles = arrayfun(@(x) fullfile(nmlDir, x.name), dir(fullfile(nmlDir, '*.nml')), 'uni',0);
-
-rng(0); % default 0
-gtFiles = randperm(numel(nmlFiles));
-gtFiles = gtFiles(1:numNmlsToUse);
-
 if featsImp
     load(fullfile('/tmpscratch/sahilloo/data/Mk1_F6_JS_SubI_v1/pipelineRun_mr2e_wsmrnet/typeEM/spine/segmentAgglomerate/importantFeatures.mat'));
 end
 
+Util.log(sprintf('Evaluating for %s features',featureSetName))
+
 %for idxTest = gtFiles
-    idxTest = 59; %gtFiles(end); 
-    idxTrain = gtFiles; % overfit test setdiff(gtFiles, idxTest); % all except test nml
+    % load spinehead training data
+    nmlDir = fullfile(param.saveFolder, ...
+         'tracings', 'box-seeded','spine-head-ground-truth', gtVersion);
+    nmlFiles = arrayfun(@(x) fullfile(nmlDir, x.name), dir(fullfile(nmlDir, '*.nml')), 'uni',0);
+    
+    rng(0); % default 0
+    gtFiles = 1:numel(nmlFiles);
+    idxTest = 39; %gtFiles(end);
+    idxTrain = gtFiles ;%setdiff(gtFiles, idxTest); % all except test nml
+ 
     if addNoise
-        experimentName = sprintf('overfit_box%s_%d_nmls_%d_over_%.2f_under_%.2f_cost_100_addNoise_%.3f_testset_%d_GT_%s_features_%s_evalForAgglo_%d', ...
-                methodUsed, numTrees, numNmlsToUse, factorPos, factorNeg, noiseDev, idxTest, gtVersion, featureSetName, evalForAgglos);
+        experimentName = sprintf('overfit_box_%s_%d_over_%.2f_under_%.2f_cost_100_addNoise_%.3f_testset_%d_GT_%s_features_%s_evalForAgglo_%d', ...
+                methodUsed, numTrees, factorPos, factorNeg, noiseDev, idxTest, gtVersion, featureSetName, evalForAgglos);
     else
-        experimentName = sprintf('overfit_box_%s_%d_nmls_%d_over_%.2f_under_%.2f_cost_100_noNoise_testset_%d_GT_%s_features_%s_evalForAgglo_%d', ...
-            methodUsed, numTrees, numNmlsToUse, factorPos, factorNeg, idxTest, gtVersion, featureSetName, evalForAgglos);
+        experimentName = sprintf('overfit_box_%s_%d_over_%.2f_under_%.2f_cost_100_noNoise_testset_%d_GT_%s_features_%s_evalForAgglo_%d', ...
+            methodUsed, numTrees, factorPos, factorNeg, idxTest, gtVersion, featureSetName, evalForAgglos);
     end
     
     % load train set
