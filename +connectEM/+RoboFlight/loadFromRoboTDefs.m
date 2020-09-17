@@ -40,7 +40,7 @@ flights = struct();
 flights.nodes = nodes(idcsSrtd);
 flights.startNode = flights.nodes;
 nonEmptyFlights = cellfun(@numel, flights.startNode) > 0;
-flights.startNode(nonEmptyFlights) = cellfun(@(x) x(1, :), flights.startNodes(nonEmptyFlights), 'uni', false);
+flights.startNode(nonEmptyFlights) = cellfun(@(x) x(1, :), flights.startNode(nonEmptyFlights), 'uni', false);
 
 [flights.segIds, flights.neighbours] = connectEM.lookupSkelGT(param, flights);
 
