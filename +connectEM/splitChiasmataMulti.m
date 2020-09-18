@@ -320,7 +320,7 @@ function [newAgglos, summary] = ...
     % Save results
     if ~isempty(opts.outputFile)
         Util.save( ...
-            strcat(opts.outputFile, '.mat'), ...
+            strcat(opts.outputFile, '_axonId_', num2str(axonId), '.mat'), ...
             agglo, queries, newAgglos, summary);
     end
     
@@ -329,11 +329,11 @@ function [newAgglos, summary] = ...
         skel = skeleton();
         
         comments = repmat({''}, size(agglo.nodes, 1), 1);
-        comments(cat(1, tasks.centeridx)) = {'Chiasma'};
+        comments(cat(1, summary.centerIdx)) = {'Chiasma'};
         
         skel = skel.addTree( ...
             'Original', agglo.nodes, agglo.edges, [], [], comments);
-        skel = skel.addBranchpoint(cat(1, tasks.centeridx));
+        skel = skel.addBranchpoint(cat(1, summary.centerIdx));
         
         for curIdx = 1:newAggloCount
             skel = skel.addTree( ...
@@ -342,7 +342,7 @@ function [newAgglos, summary] = ...
         end
         
         skel = Skeleton.setParams4Pipeline(skel, p);
-        skel.write(strcat(opts.outputFile, '.nml'));
+        skel.write(strcat(opts.outputFile, '_axonId_', num2str(axonId), '.nml'));
         clear comments skel;
     end
 end
