@@ -9,7 +9,7 @@ param = param.p;
 
 nmlDir = fullfile(param.saveFolder, 'tracings', 'spine-attachment');
 dendFile = fullfile(param.saveFolder, 'aggloMat', '20191227T134319_ga_20191224T235355optimParams_agglomeration/20191227T220548_results_auto-spines_v3.mat');
-skelFile = fullfile(param.saveFolder, 'spineAttachment', 'debug','debug-spine-attachment-v2.nml');
+skelFile = fullfile(param.saveFolder, 'spineAttachment', 'debug','debug-spine-attachment-v3.nml');
 
 exportCount = 200;
 

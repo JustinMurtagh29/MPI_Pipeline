@@ -27,7 +27,7 @@ borderMeta = load([p.saveFolder 'globalBorder.mat'], 'borderSize', 'borderCoM');
 %}
 
 outputFolder = '/tmpscratch/sahilloo/data/Mk1_F6_JS_SubI_v1/pipelineRun_mr2e_wsmrnet/spineAttachment/debug';
-segId = 97125313
+segId = 20942724
 
 edges= graph.edges;
 prob = graph.prob;
