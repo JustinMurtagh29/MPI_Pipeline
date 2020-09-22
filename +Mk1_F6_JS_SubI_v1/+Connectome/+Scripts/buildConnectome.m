@@ -132,6 +132,7 @@ contactomeMeta = L4.Connectome.contactomeBorderMeta(contactome, ...
 Util.log('Target class mapping.');
 denClasses = {'soma', 'whole cells', 'apical dendrites', ...
     'smooth dendrite', 'AIS', 'other'};
+%{
 classConnectome = zeros(length(axons), length(denClasses));
 classConnectome(:,1) = sum(connectomeFull(:, idxSoma), 2);
 classConnectome(:,2) = sum(connectomeFull(:, idxWC), 2);
@@ -139,7 +140,8 @@ classConnectome(:,3) = sum(connectomeFull(:, idxAD), 2);
 classConnectome(:,4) = sum(connectomeFull(:, idxSD), 2);
 classConnectome(:,5) = sum(connectomeFull(:, idxAIS), 2);
 classConnectome(:,6) = sum(connectomeFull(:, idxOther), 2);
-
+%}
+classConnectome = [];
 
 %% axon statistics
 % taken from connectEM.Connectome.augmentForMoritz
@@ -178,11 +180,11 @@ denMeta.spineSynCount = accumarray( ...
 
 %% save results
 
-save(outFile, 'connectome', 'contactome', 'connectomeMeta', ...
-    'contactomeMeta', 'axons', 'dendrites', 'classConnectome', ...
-    'denClasses', 'axonMeta', 'denMeta', 'info');
+Util.save(outFile, connectome, contactome, connectomeMeta, ...
+    contactomeMeta, axons, dendrites, classConnectome, ...
+    denClasses, axonMeta, denMeta, info);
 Util.protect(outFile);
 
-save(outFileSmall, 'connectome', 'connectomeMeta', 'classConnectome', ...
-    'denClasses', 'axonMeta', 'denMeta', 'info');
+Util.save(outFileSmall, connectome, connectomeMeta, classConnectome, ...
+    denClasses, axonMeta, denMeta, info);
 Util.protect(outFileSmall);
