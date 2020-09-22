@@ -12,7 +12,7 @@
 param = p;
 outDir = fullfile(param.saveFolder,'tracings', 'box-seeded');
 mkdir(outDir)
-numBoxes = 40;
+numBoxes = 150;
 boxDim = 5000;% 2500 for agglo eval
 centerBoxDim = 100000; % 15000 for agglo eval
 outFiles = arrayfun(@(x) fullfile(outDir,sprintf('calibration-box-spines-%02d.nml',x)),1:numBoxes,'uni',0);
