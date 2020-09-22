@@ -11,11 +11,11 @@
 % Use SVM predictions to overlay with SynEM predictions and get "better" synapse agglomerates
 
 addpath(genpath('/u/sahilloo/repos/Benedikt/'));
-rootDir = p.saveFolder;
+rootDir = '/tmpscratch/sahilloo/data/Mk1_F6_JS_SubI_v1/pipelineRun_mr2e_wsmrnet/';
+p = load(fullfile(rootDir, 'allParameter.mat'));
 
 axonAggloFile = '/tmpscratch/sahilloo/data/Mk1_F6_JS_SubI_v1/pipelineRun_mr2e_wsmrnet/aggloMat/20191227T134319_ga_20191224T235355optimParams_agglomeration/20191227T220548_results.mat';
-
-spineHeadFile = ' ... 20191203T021242_results_auto-spines_v2.mat';
+spineHeadFile = '/tmpscratch/sahilloo/data/Mk1_F6_JS_SubI_v1/pipelineRun_mr2e_wsmrnet/aggloMat/20191227T134319_ga_20191224T235355optimParams_agglomeration/20191227T220548_results_auto-spines_v3.mat';
 
 [~, curAxonName] = fileparts(axonAggloFile);
 [~, curSpineName] = fileparts(spineHeadFile);
@@ -40,7 +40,7 @@ p.svg.borderMetaFile = fullfile(rootDir, 'globalBorder.mat');
 p.svg.graphFile = fullfile(rootDir, 'graph.mat');
 p.svg.correspondenceFile = fullfile(rootDir, 'correspondences.mat');
 p.svg.aggloPredFile = fullfile(rootDir, 'segmentAggloPredictions.mat');
-p.svg.heuristicFile = fullfile(rootDir, 'heuristicResult.mat');
+p.svg.heuristicFile = fullfile(rootDir, 'heuristicResultComplete.mat'); % assumes scores exist for each segment but not available yet
 
 p.connectome = struct;
 p.connectome.saveFolder = fullfile(rootDir, 'connectome');
