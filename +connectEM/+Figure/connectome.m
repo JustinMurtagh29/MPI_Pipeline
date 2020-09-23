@@ -6,6 +6,9 @@ clear;
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-partiallySplit-v2_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v8-classified.mat');
 
+% If set, writes out the connectome as CSV file
+csvPath = '/home/amotta/Desktop/connectome.csv';
+
 minSynCount = 10;
 plotSynCountHists = true;
 
@@ -247,3 +250,31 @@ annotation( ...
     fig, 'textbox', [0, 0.9, 1, 0.1], ...
     'String', {info.filename; info.git_repos{1}.hash}, ...
     'EdgeColor', 'none', 'HorizontalAlignment', 'center');
+
+%% Export connectome as CSV file
+clear cur*;
+
+if ~isempty(csvPath)
+    curFid = fopen(csvPath, 'w');
+    assert(curFid ~= 0);
+
+    curMat = sparse( ...
+        conn.coord(:, 1), conn.coord(:, 2), ...
+        conn.synCount, height(axonMeta), height(dendMeta));
+
+    % Write target classes
+    for curIdx = 1:height(dendMeta)
+        fprintf(curFid, ',%s', dendMeta.targetClass(curIdx));
+    end
+
+    % Write connectome and axon classes
+    for curAxIdx = 1:height(axonMeta)
+        fprintf(curFid, '\n%s', axonMeta.axonClass(curAxIdx));
+        for curDendIdx = 1:height(dendMeta)
+            curSynCount = full(curMat(curAxIdx, curDendIdx));
+            fprintf(curFid, ',%d', curSynCount);
+        end
+    end
+
+    fprintf(curFid, '\n');
+end
