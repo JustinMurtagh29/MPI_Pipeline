@@ -4,6 +4,7 @@ clear;
 
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
+isoDir = '/tmpscratch/amotta/l4/2018-05-10-whole-cell-isosurfaces-spine-evolution/full/mat/';
 
 % Set output directory to write figures to disk instead of displaying them.
 plotDir = '';
@@ -37,8 +38,115 @@ segPoint = Seg.Global.getSegToPointMap(param);
 synPos = connectEM.Synapse.calculatePositions(param, syn);
 synTypes = unique(conn.axonMeta.axonClass);
 
+synTypeFracs = connectEM.Connectome.buildSynapseTable(conn, syn);
+synTypeFracs = conn.axonMeta.axonClass(synTypeFracs.preAggloId);
+[~, synTypeFracs] = ismember(synTypeFracs, synTypes);
+synTypeFracs = accumarray(synTypeFracs, 1);
+synTypeFracs = synTypeFracs / sum(synTypeFracs);
+
 wcData = load(wcFile);
 somaData = load(somaFile);
+
+colors = get(groot, 'defaultAxesColorOrder');
+
+%% Find axon subpopulations with target specificities
+clear cur*;
+specConn = conn;
+specAxonClasses = axonClasses(1:2);
+
+[specConn, specAxonClasses] = ...
+    connectEM.Connectome.prepareForSpecificityAnalysis( ...
+        specConn, specAxonClasses, 'minSynPre', 10);
+specAxonClasses = ...
+    connectEM.Connectome.buildAxonSpecificityClasses( ...
+        specConn, specAxonClasses);
+
+% HACKHACK(amotta): Introduce separate "Perisoma" category for inhibitory
+% axons that both soma- and proximal dendrite-specific.
+curInhSpecs = specAxonClasses(2).specs;
+
+curPerisomaAxonIds = intersect( ...
+    curInhSpecs.Somata.axonIds, ...
+    curInhSpecs.ProximalDendrite.axonIds);
+
+curInhSpecs.Somata.axonIds = setdiff( ...
+    curInhSpecs.Somata.axonIds, curPerisomaAxonIds);
+curInhSpecs.ProximalDendrite.axonIds = setdiff( ...
+    curInhSpecs.ProximalDendrite.axonIds, curPerisomaAxonIds);
+
+curInhSpecs.Perisoma = struct;
+curInhSpecs.Perisoma.axonIds = curPerisomaAxonIds(:);
+
+specAxonClasses(2).specs = curInhSpecs;
+clear curInhSpecs;
+
+% Reset classes in axon meta data. The values are filled in below.
+specSynTypes = {};
+specConn.axonMeta.axonClass = ...q
+    repelem({[]}, numel(specConn.axons), 1);
+
+% Modified from
+% +connectEM/+Consistency/loadConnectome.m
+% commit a23788a05313f61dfef152443cde5d7ff59d7622
+for curIdx = 1:numel(specAxonClasses)
+    curAxonClass = specAxonClasses(curIdx);
+    curSpecs = curAxonClass.specs;
+    
+    curPrefix = strsplit(curAxonClass.title);
+    curPrefix = curPrefix{1};
+    curPrefix(1) = upper(curPrefix(1));
+    
+    curNames = fieldnames(curSpecs);
+    curAxonIds = cellfun( ...
+        @(n) curSpecs.(n).axonIds, ...
+        curNames, 'UniformOutput', false);
+
+    % Find axons with no and multiple specificities
+   [curSpecAxonIds, ~, curDupAxonIds] = unique(cell2mat(curAxonIds));
+    curDupAxonIds = curSpecAxonIds(accumarray(curDupAxonIds, 1) > 1);
+    curNonSpecAxonIds = setdiff(curAxonClass.axonIds, curSpecAxonIds);
+
+    curAxonIds = cellfun( ...
+        @(ids) setdiff(ids, curDupAxonIds), ...
+        curAxonIds, 'UniformOutput', false);
+    
+    curNames{end + 1} = 'MultiSpec'; %#ok
+    curAxonIds{end + 1} = curDupAxonIds(:); %#ok
+    
+    curNames{end + 1} = 'NoSpec'; %#ok
+    curAxonIds{end + 1} = curNonSpecAxonIds(:); %#ok
+    
+    for curNameIdx = 1:numel(curNames)
+        curName = curNames{curNameIdx};
+        curSpecs.(curName).axonIds = curAxonIds{curNameIdx};
+    end
+    
+    % Update specificity classes
+    specAxonClasses(curIdx).specs = curSpecs;
+    
+    % Update axon meta data
+    curNames = strcat(curPrefix, curNames);
+    specSynTypes = cat(1, specSynTypes(:), curNames(:));
+    specConn.axonMeta.axonClass(cell2mat(curAxonIds)) = ...
+        repelem(curNames, cellfun(@numel, curAxonIds), 1);
+end
+
+specSynTypes{end + 1} = 'Other';
+specConn.axonMeta.axonClass(cellfun( ...
+    @isempty, specConn.axonMeta.axonClass)) = {'Other'};
+
+specSynTypes = categorical(specSynTypes, specSynTypes, 'Ordinal', true);
+[~, curIds] = ismember(specConn.axonMeta.axonClass, specSynTypes);
+specConn.axonMeta.axonClass = specSynTypes(curIds);
+
+curSynT = connectEM.Connectome.buildSynapseTable(specConn, syn);
+curAxonIds = conn.axonMeta.axonClass(curSynT.preAggloId);
+[~, curAxonIds] = ismember(curAxonIds, synTypes);
+curSpecIds = specConn.axonMeta.axonClass(curSynT.preAggloId);
+[~, curSpecIds] = ismember(curSpecIds, specSynTypes);
+
+specAxonTypeFracs = accumarray([curAxonIds, curSpecIds], 1);
+specAxonTypeFracs = specAxonTypeFracs / sum(specAxonTypeFracs(:));
 
 %% NML files for splitting whole cells into individual dendrites
 splitNmlT = connectEM.WholeCell.loadSplitNmls(splitNmlDir);
@@ -124,6 +232,7 @@ clear cur*;
 
 wcT.synapses = cell(size(wcT.id));
 wcT.classConn = nan(height(wcT), numel(synTypes));
+wcT.specClassConn = nan(height(wcT), numel(specSynTypes));
 
 for curIdx = 1:size(wcT, 1)
     curAgglo = wcT.agglo(curIdx);
@@ -159,12 +268,29 @@ for curIdx = 1:size(wcT, 1)
     curSynT.axonId = repelem( ...
         curConnRows.edges(:, 1), ...
         cellfun(@numel, curConnRows.synIdx));
+    
+    %{
+    % HACKHACKHACK(amotta): Ignore synapses in the "bottom right" corner of
+    % the YZ viewport because we have a hot spot of apical dendrite-
+    % specific inhibitory synapses there. This is a control. See
+    % https://webknossos.brain.mpg.de/annotations/Explorational/5d68eba201000090262d3a7a#3246,5313,2426,0,17.909,124656
+    curSynT.pos = curAgglo.nodes(curSynT.nodeId, 1:3);
+    
+    curSynT( ...
+        curSynT.pos(:, 2) >= 5313 ...
+      & curSynT.pos(:, 3) >= 2426, :) = [];
+    %}
+    
     curClassConn = accumarray( ...
         double(conn.axonMeta.axonClass(curSynT.axonId)), ...
         1, [numel(synTypes), 1]);
+    curSpecClassConn = accumarray( ...
+        double(specConn.axonMeta.axonClass(curSynT.axonId)), ...
+        1, [numel(specSynTypes), 1]);
     
     wcT.synapses{curIdx} = curSynT;
     wcT.classConn(curIdx, :) = curClassConn;
+    wcT.specClassConn(curIdx, :) = curSpecClassConn;
 end
 
 %% Debugging
@@ -225,109 +351,150 @@ for curIdx = 1:height(wcT)
     curSynapses(curDropMask, :) = [];
     
     % Update class connectome
-    curClassConn = double(conn.axonMeta.axonClass(curSynapses.axonId));
-    curClassConn = accumarray(curClassConn, 1, [numel(synTypes), 1]);
+    curClassConn = ...
+        conn.axonMeta.axonClass(curSynapses.axonId);
+    curClassConn = accumarray( ...
+        double(curClassConn), 1, [numel(synTypes), 1]);
+    
+    curSpecClassConn = ...
+        specConn.axonMeta.axonClass(curSynapses.axonId);
+    curSpecClassConn = accumarray( ...
+        double(curSpecClassConn), 1, [numel(specSynTypes), 1]);
     
     wcT.synapses{curIdx} = curSynapses;
     wcT.classConn(curIdx, :) = curClassConn;
+    wcT.specClassConn(curIdx, :) = curSpecClassConn;
 end
 
 %% Render isosurface
 % Since Mr. Amira is on vacation.
 clear cur*;
 
-% Configuration
-curIsoDir = '/tmpscratch/amotta/l4/2018-05-10-whole-cell-isosurfaces-spine-evolution/full/mat/';
+curDefColors = get(groot, 'defaultAxesColorOrder');
+curTurquoise = [64, 224, 208] / 255;
 
+% Configuration
 curCellId = 21;
 curCamPos = [44683, 16045, -15604];
 curCamTarget = [2852.5, 4320.0, 1965.4];
 curCamUpVector = [-0.0178, -0.0785, -0.0153];
 curCamViewAngle = 10.4142;
 
-curIso = load(fullfile(curIsoDir, sprintf('iso-%d.mat', curCellId)));
+curSynConfigs = struct;
+curSynConfigs(1).types = conn.axonMeta.axonClass;
+curSynConfigs(1).colors = cat(1, curDefColors(1:3, :), [0, 0, 0]);
+curSynConfigs(1).rads = 1E3 * [1, 1, 1, 0.5];
+
+% NOTE(amotta): Second variant in which we show
+% * synapses from CC axons in blue,
+% * synapses from TC axons in red,
+% * synapses from AD-specific inh. axons in violet,
+% * synapses from soma or perisoma-specific inh. axons in green,
+% * synapses from PD-specific inh. axons in turquoise,
+% * synapses from other inh. axons in yellow,
+% * remaining synapses in small and black.
+curSpecTypes = specConn.axonMeta.axonClass;
+curInhPerisomaTypes = {'InhibitorySomata', 'InhibitoryPerisoma'};
+
+curTypes = repelem(categorical({'Other'}), numel(conn.axons), 1);
+curTypes(conn.axonMeta.axonClass == 'Corticocortical') = 'CC';
+curTypes(conn.axonMeta.axonClass == 'Thalamocortical') = 'TC';
+curTypes(conn.axonMeta.axonClass == 'Inhibitory') = 'Inh';
+curTypes(curSpecTypes == 'InhibitoryApicalDendrite') = 'InhAD';
+curTypes(ismember(curSpecTypes, curInhPerisomaTypes)) = 'InhSOM';
+curTypes(curSpecTypes == 'InhibitoryProximalDendrite') = 'InhPD';
+
+curColors = cat(1, zeros(1, 3), curDefColors(1:5, :), curTurquoise);
+curRads = 1E3 * cat(2, 0.5, repelem(1, 7));
+
+curSynConfigs(2).types = curTypes;
+curSynConfigs(2).colors = curColors;
+curSynConfigs(2).rads = curRads;
+
+curIso = load(fullfile(isoDir, sprintf('iso-%d.mat', curCellId)));
 curIso = curIso.isoSurf;
 
-curSyn = wcT.synapses{wcT.id == curCellId};
-curSyn.type = conn.axonMeta.axonClass(curSyn.axonId);
+for curSynConfig = curSynConfigs
+    curSyn = wcT.synapses{wcT.id == curCellId};
+    curSyn.type = curSynConfig.types(curSyn.axonId);
 
-curSynPos = connectEM.Synapse.calculatePositions(param, syn, 'pre');
-curSynPos = curSynPos(curSyn.id, :);
+    curSynPos = connectEM.Synapse.calculatePositions(param, syn, 'pre');
+    curSynPos = curSynPos(curSyn.id, :);
 
-curFig = figure;
-curFig.Color = 'none';
+    curFig = figure;
+    curFig.Color = 'none';
 
-curAx = axes(curFig);
-curAx.Visible = 'off';
+    curAx = axes(curFig); %#ok
+    curAx.Visible = 'off';
 
-curColors = curAx.ColorOrder;
-curColors = cat(1, curColors(1:3, :), [0, 0, 0]);
-curRads = [1, 1, 1, 0.5] .* 1E3;
+    curColors = curSynConfig.colors;
+    curRads = curSynConfig.rads;
 
-hold(curAx, 'on');
-daspect(curAx, 1 ./ param.raw.voxelSize);
+    hold(curAx, 'on');
+    daspect(curAx, 1 ./ param.raw.voxelSize);
 
-curP = patch(curAx, curIso);
-curP.EdgeColor = 'none';
-curP.FaceColor = repelem(0.85, 3);
-material(curP, 'dull');
+    curP = patch(curAx, curIso);
+    curP.EdgeColor = 'none';
+    curP.FaceColor = repelem(0.85, 3);
+    material(curP, 'dull');
 
-[curX, curY, curZ] = sphere();
-curX = curX / param.raw.voxelSize(1);
-curY = curY / param.raw.voxelSize(2);
-curZ = curZ / param.raw.voxelSize(3);
+    [curX, curY, curZ] = sphere();
+    curX = curX / param.raw.voxelSize(1);
+    curY = curY / param.raw.voxelSize(2);
+    curZ = curZ / param.raw.voxelSize(3);
 
-for curId = 1:height(curSyn)
-    curTypeId = double(curSyn.type(curId));
-    curColor = curColors(curTypeId, :);
-    curPos = curSynPos(curId, :);
-    curRad = curRads(curTypeId);
-    
-    curSurf = surf(curAx, ...
-        curRad * curX + curPos(1), ...
-        curRad * curY + curPos(2), ...
-        curRad * curZ + curPos(3));
-    curSurf.FaceColor = curColor;
-    curSurf.EdgeColor = 'none';
-    material(curSurf, 'dull');
+    for curId = 1:height(curSyn)
+        curTypeId = double(curSyn.type(curId));
+        curColor = curColors(curTypeId, :);
+        curPos = curSynPos(curId, :);
+        curRad = curRads(curTypeId);
+
+        curSurf = surf(curAx, ...
+            curRad * curX + curPos(1), ...
+            curRad * curY + curPos(2), ...
+            curRad * curZ + curPos(3));
+        curSurf.FaceColor = curColor;
+        curSurf.EdgeColor = 'none';
+        material(curSurf, 'dull');
+    end
+
+    curAx.CameraPosition = curCamPos;
+    curAx.CameraTarget = curCamTarget;
+    curAx.CameraUpVector = curCamUpVector;
+    curAx.CameraViewAngle = curCamViewAngle;
+
+    camlight(curAx);
+
+    curScaleBar = 10E3;
+    curScaleBar = curScaleBar ./ param.raw.voxelSize;
+
+    curOrig = [ ...
+        param.bbox(1, 1), ...
+        param.bbox(2, 2) - 1E3, ...
+        param.bbox(3, 1) + 3E3];
+    curDirs = [+1, -1, +1];
+
+    plot3(curAx, ...
+        curOrig(1) + curDirs(1) .* [0, curScaleBar(1)], ...
+        repelem(curOrig(2), 2), ...
+        repelem(curOrig(3), 2));
+    plot3(curAx, ...
+        repelem(curOrig(1), 2), ...
+        curOrig(2) + curDirs(2) .* [0, curScaleBar(2)], ...
+        repelem(curOrig(3), 2), 'Color', 'black');
+    plot3(curAx, ...
+        repelem(curOrig(1), 2), ...
+        repelem(curOrig(2), 2), ...
+        curOrig(3) + curDirs(3) .* [0, curScaleBar(3)]);
+
+    curPlots = findobj(curAx, 'Type', 'Line');
+    set(curPlots, 'Color', 'black', 'LineWidth', 2);
+
+    annotation( ...
+        curFig, 'textbox', [0, 0.9, 1, 0.1], ...
+        'String', {info.filename; info.git_repos{1}.hash}, ...
+        'EdgeColor', 'none', 'HorizontalAlignment', 'center');
 end
-
-curAx.CameraPosition = curCamPos;
-curAx.CameraTarget = curCamTarget;
-curAx.CameraUpVector = curCamUpVector;
-curAx.CameraViewAngle = curCamViewAngle;
-
-camlight(curAx);
-
-curScaleBar = 10E3;
-curScaleBar = curScaleBar ./ param.raw.voxelSize;
-
-curOrig = [ ...
-    param.bbox(1, 1), ...
-    param.bbox(2, 2) - 1E3, ...
-    param.bbox(3, 1) + 3E3];
-curDirs = [+1, -1, +1];
-
-plot3(curAx, ...
-    curOrig(1) + curDirs(1) .* [0, curScaleBar(1)], ...
-    repelem(curOrig(2), 2), ...
-    repelem(curOrig(3), 2));
-plot3(curAx, ...
-    repelem(curOrig(1), 2), ...
-    curOrig(2) + curDirs(2) .* [0, curScaleBar(2)], ...
-    repelem(curOrig(3), 2), 'Color', 'black');
-plot3(curAx, ...
-    repelem(curOrig(1), 2), ...
-    repelem(curOrig(2), 2), ...
-    curOrig(3) + curDirs(3) .* [0, curScaleBar(3)]);
-
-curPlots = findobj(curAx, 'Type', 'Line');
-set(curPlots, 'Color', 'black', 'LineWidth', 2);
-
-annotation( ...
-    curFig, 'textbox', [0, 0.9, 1, 0.1], ...
-    'String', {info.filename; info.git_repos{1}.hash}, ...
-    'EdgeColor', 'none', 'HorizontalAlignment', 'center');
 
 %% Plot soma position versus input ratios
 clear cur*;
@@ -426,11 +593,12 @@ dendT(~dendT.cellRow, :) = [];
 
 dendT.dir = nan(size(dendT.somaPos));
 dendT.classConn = nan(height(dendT), numel(synTypes));
+dendT.specClassConn = nan(height(dendT), numel(specSynTypes));
 dendT.tcExcRatio = nan(size(dendT.id));
 dendT.wcRelTcExcRatio = nan(size(dendT.id));
 
 for curIdx = 1:size(dendT, 1)
-    curSyns = dendT.synapses{curIdx};
+    curSynapses = dendT.synapses{curIdx};
     curCell = curWcT(dendT.cellRow(curIdx), :);
     
     % Calculate dendrite orientation
@@ -449,15 +617,22 @@ for curIdx = 1:size(dendT, 1)
     curDendDir = sum(curSegMass .* curDendDir, 1);
     curDendDir = curDendDir / sqrt(sum(curDendDir .^ 2));
     
-    curSynData = accumarray( ...
-        double(conn.axonMeta.axonClass(curSyns.axonId)), ...
-        1, [numel(synTypes), 1], @sum, 0);
+    curClassConn = ...
+        conn.axonMeta.axonClass(curSynapses.axonId);
+    curClassConn = accumarray( ...
+        double(curClassConn), 1, [numel(synTypes), 1]);
+    
+    curSpecClassConn = ...
+        specConn.axonMeta.axonClass(curSynapses.axonId);
+    curSpecClassConn = accumarray( ...
+        double(curSpecClassConn), 1, [numel(specSynTypes), 1]);
     
     dendT.dir(curIdx, :) = curDendDir;
-    dendT.classConn(curIdx, :) = curSynData;
+    dendT.classConn(curIdx, :) = curClassConn;
+    dendT.specClassConn(curIdx, :) = curSpecClassConn;
     
     dendT.tcExcRatio(curIdx) = ...
-        curSynData(2) / sum(curSynData(1:2));
+        curClassConn(2) / sum(curClassConn(1:2));
     dendT.wcRelTcExcRatio(curIdx) = ...
         dendT.tcExcRatio(curIdx) / curCell.tcRatio;
 end
@@ -557,6 +732,316 @@ curFit = fitlm(dendT.dir(:, 1), dendT.tcExcRatio);
 tcCcWmPiaRatio = ...
     curFit.predict(+1) / curFit.predict(-1) %#ok
 
+%% Correlate input ratios
+clear cur*;
+
+curWcMinSyn = 100;
+curDendMinSyn = 50;
+curRenormNames = {'Excitatory', 'Inhibitory'};
+
+curLims = [0, 1];
+curTicks = 0:0.2:1;
+curShowLegend = false;
+curDropZeros = false;
+
+curWcT = wcT(sum(wcT.classConn, 2) >= curWcMinSyn, :);
+curDendT = dendT(sum(dendT.classConn, 2) >= curDendMinSyn, :);
+
+curData = {curWcT, curDendT};
+curSummaries = cell(size(curData));
+curSummaryVars = { ...
+    'name', ...
+    'fit', 'slope', 'relSlope', 'rSquared', ...
+    'pValue', 'rankPValue', 'nullModel', 'nullCorrFit', 'nullCorrPValue'};
+
+curDataNames = {'neurons', 'dendrites'};
+curVarNames = strcat('frac', categories(specSynTypes));
+curVarNames = cat(1, {'ieRatio'}, curVarNames); %#ok
+
+% NOTE(amotta): Only use the following variables in production
+curVarNames = strcat('Inhibitory', {'ApicalDendrite', 'Somata'});
+curVarNames = cat(2, ...
+    strcat('frac', curVarNames), ...
+    strcat('num', cat(2, {'Inhibitory'}, curVarNames)));
+
+for curDataIdx = 1:numel(curData)
+    curDataName = curDataNames{curDataIdx};
+    curDataT = curData{curDataIdx};
+    
+    curDataT.tcCount = ...
+        curDataT.classConn(:, 2);
+    curDataT.tcRatio = ...
+        curDataT.classConn(:, 2) ...
+     ./ sum(curDataT.classConn(:, 1:2), 2);
+
+    curDataT.numInhibitory = ...
+        curDataT.classConn(:, 3);
+    curDataT.ieRatio = ...
+        curDataT.classConn(:, 3) ...
+     ./ sum(curDataT.classConn(:, 1:3), 2);
+    
+    for curTypeIdx = 1:numel(specSynTypes)
+        curTypeName = char(specSynTypes(curTypeIdx));
+        
+        % NOTE(amotta): Exploit that inhibitory specificity classes are
+        % completely independent of the TC / (TC + CC), and that we can
+        % derive the expected composition of excitatory specificity classes
+        % under the null hypothesis.
+        %   In preparation for that, let's renormalize the compositions
+        % within the excitatory and inhibitory synapse populations,
+        % respectively.
+        curRenormIdx = find(cellfun( ...
+            @(p) startsWith(curTypeName, p), curRenormNames));
+        
+        if isempty(curRenormIdx)
+            curRenorm = sum(curDataT.specClassConn, 2);
+        else
+            assert(isscalar(curRenormIdx));
+            curRenorm = curRenormNames{curRenormIdx};
+            curRenorm = startsWith(categories(specSynTypes), curRenorm);
+            curRenorm = sum(curDataT.specClassConn(:, curRenorm), 2);
+        end
+        
+        curDataT.(sprintf('num%s', curTypeName)) = ...
+            curDataT.specClassConn(:, curTypeIdx);
+        curDataT.(sprintf('frac%s', curTypeName)) = ...
+            curDataT.specClassConn(:, curTypeIdx) ./ curRenorm;
+    end
+    
+    curSummaryT = cell( ...
+        numel(curVarNames), ...
+        numel(curSummaryVars));
+    
+    for curVarIdx = 1:numel(curVarNames)
+        curVarName = curVarNames{curVarIdx};
+        curY = curDataT.(curVarName);
+        
+        switch curVarName
+            case curVarNames(startsWith(curVarNames, 'frac'))
+                curX = curDataT.tcRatio;
+            case curVarNames(startsWith(curVarNames, 'num'))
+                curX = curDataT.tcCount;
+            otherwise
+                error('Error for variable "%s"', curVarName)
+        end
+        
+        if curDropZeros
+            curX = curX(curY ~= 0);
+            curY = curY(curY ~= 0);
+        end
+        
+        switch curVarName
+            case 'ieRatio'
+                curNullModel = @(x) ones(size(x)) ...
+                 .* synTypeFracs(synTypes == 'Inhibitory') ...
+                 ./ sum(synTypeFracs(synTypes ~= 'Other'));
+             
+            case 'fracOther'
+                curNullModel = @(x) ones(size(x)) ...
+                 .* synTypeFracs(synTypes == 'Other');
+             
+            case curVarNames(startsWith(curVarNames, 'fracExcitatory'))
+                curExc = 'Excitatory';
+                curCcTc = {'Corticocortical', 'Thalamocortical'};
+                
+                curVar = specSynTypes == curVarName(5:end);
+                curRenorm = startsWith(categories(specSynTypes), curExc);
+               [~, curIds] = ismember(curCcTc, synTypes);
+                curFracs = specAxonTypeFracs(curIds, :);
+                
+                curNullModel = @(x) feval( ...
+                    @(m) ...
+                        sum(m(:, curVar, :), 1) ...
+                     ./ sum(sum(m(:, curRenorm, :), 1), 2), ...
+                    curFracs .* ([1; 0] + [-1; +1] .* x));
+                curNullModel = @(x) reshape( ...
+                    curNullModel(reshape(x, 1, 1, [])), size(x));
+                
+            case curVarNames(startsWith(curVarNames, 'fracInhibitory'))
+                curInh = 'Inhibitory';
+                curVar = specSynTypes == curVarName(5:end);
+                curRenorm = startsWith(categories(specSynTypes), curInh);
+                
+                curFrac = specAxonTypeFracs(synTypes == curInh, :);
+                curFrac = curFrac(curVar) / sum(curFrac(curRenorm));
+                
+                curNullModel = @(x) ones(size(x)) .* curFrac;
+                
+            case curVarNames(startsWith(curVarNames, 'num'))
+                curNullModel = @(x) zeros(size(x));
+                
+            otherwise
+                error('No null model for variable "%s"', curVarName);
+        end
+        
+        curFit = fitlm(curX, curY);
+        curSlope = curFit.Coefficients.Estimate(2);
+        curRelSlope = curSlope / mean(curY);
+        curPvalue = curFit.Coefficients.pValue(2);
+        curRsq = curFit.Rsquared.Ordinary;
+        
+        % p-value based on rank correlation
+       [~, curRankPvalue] = corr(curX, curY, 'Type', 'Spearman');
+        
+        % p value against our custom null model
+        curNullCorrY = curY - curNullModel(curX);
+        curNullCorrFit = fitlm(curX, curNullCorrY);
+        curNullCorrPvalue = curNullCorrFit.Coefficients.pValue(2);
+        
+        curSummaryT(curVarIdx, :) = { ...
+            curVarName, ...
+            curFit, curSlope, curRelSlope, ...
+            curRsq, curPvalue, curRankPvalue, ...
+            curNullModel, curNullCorrFit, curNullCorrPvalue};
+    end
+    
+    curSummaryT = cell2table( ...
+        curSummaryT, 'VariableNames', curSummaryVars);
+    
+    fprintf('Results for %s (n = %d)\n', curDataName, size(curDataT, 1));
+    curShowT = {'fit', 'nullModel', 'nullCorrFit'};
+    curShowT = setdiff(curSummaryVars, curShowT, 'stable');
+    disp(sortrows(curSummaryT(:, curShowT), 'relSlope', 'ascend'));
+    
+    curData{curDataIdx} = curDataT;
+    curSummaries{curDataIdx} = curSummaryT;
+end
+
+% Plot correlation of dendrite length with TC input fraction
+curDataT = strcmpi(curDataNames, 'dendrites');
+curDataT = curData{curDataT};
+
+curX = cellfun(@max, curDataT.nodeDists) / 1E3;
+curY = curDataT.tcRatio;
+
+curDistLims = [0, ceil(max(curX) / 10) * 10];
+curDistTicks = curDistLims(1):50:curDistLims(end);
+
+curFit = fitlm(curX, curY);
+curFitY = curFit.predict(curDistLims(:))';
+
+curFig = figure();
+curAx = axes(curFig);
+hold(curAx, 'on');
+
+curScatter = scatter(curAx, curX, curY, 20, 'o');
+curScatter.MarkerEdgeColor = 'none';
+curScatter.MarkerFaceColor = colors(1, :);
+
+curFitPlot = plot( ...
+    curAx, curDistLims, curFitY, ...
+    'Color', 'black', 'LineWidth', 2);
+
+axis(curAx, 'square');
+xlim(curAx, curDistLims);
+xticks(curAx, curDistTicks);
+ylim(curAx, [0, 1]);
+
+xlabel(curAx, 'Dendrite length [µm]');
+ylabel(curAx, 'tcRatio');
+
+if curShowLegend
+    curLeg = { ...
+        sprintf( ...
+            'Dendrites (n = %d)', height(curDataT)), ...
+        sprintf( ...
+            'y = %.2f %+.2fx (p_{slope} = %.2f)', ...
+            curFit.Coefficients.Estimate, ...
+            curFit.Coefficients.pValue(end))};
+    curLeg = legend(curLeg);
+end
+
+connectEM.Figure.config(curFig, info);
+curFig.Position(3:4) = [360, 360];
+
+% Plot correlates of TC input fraction
+curConfigs = struct;
+curConfigs(1).xName = 'tcRatio';
+curConfigs(1).varIds = find(startsWith(curVarNames, 'frac'));
+curConfigs(1).xLims = [0, 1]; curConfigs(1).xTicks = 0:0.2:1;
+curConfigs(1).yLims = [0, 1]; curConfigs(1).yTicks = 0:0.2:1;
+
+curConfigs(2).xName = 'tcCount';
+curConfigs(2).varIds = find(startsWith(curVarNames, 'num'));
+curConfigs(2).xLims = [0, 100]; curConfigs(2).xTicks = 0:50:100;
+
+for curConfig = curConfigs
+    curXName = curConfig.xName;
+    curVarIds = curConfig.varIds;
+    curLims = curConfig.xLims;    
+    
+    curFig = figure();
+    for curDataIdx = 1:numel(curData)
+        curDataName = curDataNames{curDataIdx};
+        curSummaryT = curSummaries{curDataIdx};
+        curDataT = curData{curDataIdx};
+
+        for curVarIdx = 1:numel(curVarIds)
+            curVarId = curVarIds(curVarIdx);
+            curVarName = curVarNames{curVarId};
+            
+            curX = curDataT.(curXName);
+            curY = curDataT.(curVarName);
+            
+            if curDropZeros
+                curX = curX(curY ~= 0);
+                curY = curY(curY ~= 0);
+            end
+
+            curFit = curSummaryT.fit{curVarId};
+            curFitY = curFit.predict(curLims(:))';
+
+            curNull = curSummaryT.nullModel{curVarId};
+            curNullY = curNull(curLims);
+
+            curNullCorrFit = curSummaryT.nullCorrFit{curVarId};
+
+            curAx = numel(curVarIds) * (curDataIdx - 1) + curVarIdx;
+            curAx = subplot(numel(curData), numel(curVarIds), curAx);
+            hold(curAx, 'on');
+
+            curScatter = scatter(curAx, curX, curY, 20, 'o');
+            curScatter.MarkerEdgeColor = 'none';
+            curScatter.MarkerFaceColor = colors(1, :);
+            
+            curFitPlot = plot( ...
+                curAx, curLims, curFitY, ...
+                'Color', 'black', 'LineWidth', 2);
+            curNullPlot = plot( ...
+                curAx, curLims, curNullY, ...
+                'Color', 'black', 'LineStyle', '--');
+
+            axis(curAx, 'square');
+            curAx.XLim(1) = 0;
+            curAx.YLim(1) = 0;
+            
+            if ~isempty(curConfig.xLims); xlim(curAx, curConfig.xLims); end
+            if ~isempty(curConfig.xTicks); xticks(curAx, curConfig.xTicks); end
+            if ~isempty(curConfig.yLims); ylim(curAx, curConfig.yLims); end
+            if ~isempty(curConfig.yTicks); yticks(curAx, curConfig.yTicks); end
+
+            xlabel(curAx, sprintf('%s (%s)', curXName, curDataName));
+            ylabel(curAx, sprintf('%s (%s)', curVarName, curDataName));
+
+            if curShowLegend
+                curLeg = { ...
+                    sprintf( ...
+                        'y = %.2f %+.2fx (p_{slope} = %.2f)', ...
+                        curFit.Coefficients.Estimate, ...
+                        curFit.Coefficients.pValue(end)), ...
+                    sprintf( ...
+                        'Null model (p_{slope vs. null} = %.2f)', ...
+                        curNullCorrFit.Coefficients.pValue(end))};
+                curLeg = legend([curFitPlot, curNullPlot], curLeg);
+                curLeg.Location = 'north';
+            end
+        end
+    end
+
+    connectEM.Figure.config(curFig, info);
+    curFig.Position(3:4) = [560, 580];
+end
+
 %% Try to find border cells
 clear cur*;
 somaPos = cell2mat(arrayfun( ...
@@ -633,6 +1118,7 @@ for curIdx = 1:numel(wcGroups)
     curQueenWcT.nodeParentIds = {cat(1, curWcT.nodeParentIds{:})};
     curQueenWcT.synapses = {curLumpedSynapses};
     curQueenWcT.classConn = sum(curWcT.classConn, 1);
+    curQueenWcT.specClassConn = sum(curWcT.specClassConn, 1);
 
     extWcT = cat(1, extWcT, curQueenWcT);
 end

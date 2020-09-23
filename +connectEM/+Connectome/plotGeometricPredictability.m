@@ -11,9 +11,24 @@ minSynPre = 10;
 maxRadius = 50;
 maxAvail = 0.7;
 
-% Set to radius (in µm) to run forward model to generate fake connectome
-% and calibrate the geometric predictability analysis.
-fakeRadius = [];
+% Set to radius (in µm) to run forward model on synthetic connectome to
+% calibrate the geometric predictability analysis.
+synth = struct;
+
+% Synthesize connectome assuming independence axon and target classes
+% synth.method = 'independentPrePost';
+
+% Synthesize connectome using availability as synapse probability
+% synth.method = 'availIsSynProb';
+% synth.radius = 10;
+
+% Synthesize connectome using availability as fractional synapses. This
+% methods avoids the variance introduced by multinomial sampling.
+% synth.method = 'availIsSynFrac';
+% synth.radius = 10;
+
+% Set of axon classes to analyse.
+axonClassNames = {'excitatory', 'inhibitory'};
 
 targetClasses = { ...
     'Somata', 'SO';
@@ -37,7 +52,13 @@ param = param.p;
 [conn, axonClasses] = ...
     connectEM.Connectome.prepareForSpecificityAnalysis( ...
         conn, axonClasses, 'minSynPre', minSynPre);
-axonClasses = axonClasses(1:2);
+
+first = @(vals) vals(1);
+curClassIds = arrayfun(@(a) first(strsplit(a.title)), axonClasses);
+[~, curClassIds] = ismember(axonClassNames, curClassIds);
+
+assert(all(curClassIds));
+axonClasses = axonClasses(curClassIds);
 
 avail = load(availFile);
 
@@ -82,10 +103,16 @@ allAxonClasses = axonClasses;
 
 % NOTE(amotta): As discussed with MH on 08.08.2018, let's not predict
 % targets that are not innervated by excitatory axons.
-allAxonClasses(1).title = sprintf( ...
-    '%s (without SOM and AIS)', allAxonClasses(1).title);
-allAxonClasses(1).predictClasses = setdiff( ...
-    targetClasses, {'Somata', 'AxonInitialSegment'});
+curExcNames = {'excitatory', 'corticocortical', 'thalamocortical'};
+curExcIds = arrayfun(@(a) first(strsplit(a.title)), allAxonClasses);
+curExcIds = find(ismember(curExcIds, curExcNames));
+
+for curId = reshape(curExcIds, 1, [])
+    allAxonClasses(curId).title = sprintf( ...
+        '%s (without SOM and AIS)', allAxonClasses(curId).title);
+    allAxonClasses(curId).predictClasses = setdiff( ...
+        targetClasses, {'Somata', 'AxonInitialSegment'});
+end
 
 % Do same thing with linear regression
 curNewAxonClasses = allAxonClasses(1:numel(axonClasses));
@@ -133,25 +160,70 @@ end
 
 plotAxonClasses = 1:numel(allAxonClasses);
 
-%% Build fake connectome for testing
-if ~isempty(fakeRadius)
-    fakeRadiusId = find(avail.dists == 1E3 * fakeRadius);
-    fakeConn = availabilities(:, fakeRadiusId, :);
-    fakeConn = transpose(squeeze(fakeConn));
-    
-    % Build fake connectome by multinomial sampling
-    rng(0);
-    fakeConn = cell2mat(cellfun( ...
-        @(n, probs) mnrnd(n, probs), ...
-        num2cell(sum(classConn, 2)), ...
-        num2cell(fakeConn, 2), ...
-        'UniformOutput', false));
-    classConn = fakeConn;
-    
-    fakeAxonClassTitles = strcat( ...
-        {'fake '}, {allAxonClasses.title}, ...
-        sprintf(' (r_{fake} = %d µm)', fakeRadius));
-   [allAxonClasses.title] = deal(fakeAxonClassTitles{:});
+%% Build synthetic connectome for testing
+clear cur*;
+rng(0);
+
+curMethod = '';
+if isfield(synth, 'method')
+    curMethod = synth.method;
+end
+
+switch curMethod
+    case ''
+        % nothing to do
+        
+    case {'availIsSynFrac', 'availIsSynProb'}
+        curRadius = synth.radius;
+        curRadiusId = find(avail.dists == 1E3 * curRadius);
+        assert(isscalar(curRadiusId));
+        
+        synthConn = availabilities(:, curRadiusId, :);
+        synthConn = transpose(squeeze(synthConn));
+
+        % Build synth connectome by multinomial sampling
+        if strcmp(curMethod, 'availIsSynProb')
+            synthConn = cell2mat(cellfun( ...
+                @(n, probs) mnrnd(n, probs), ...
+                    num2cell(sum(classConn, 2)), ...
+                    num2cell(synthConn, 2), ...
+                'UniformOutput', false));
+        end
+        
+        classConn = synthConn;
+        curAxonClassTitles = strcat( ...
+            {'synth '}, {allAxonClasses.title}, ...
+            sprintf(' (r_{synth} = %d µm)', curRadius));
+       [allAxonClasses.title] = deal(curAxonClassTitles{:});
+        
+    case 'independentPrePost'
+        % NOTE(amotta): Make sure that axon classes are mutually exclusive.
+        % This is necessary for the connectome synthesis to work properly.
+        curAxonIds = cell2mat(reshape({axonClasses.axonIds}, [], 1));
+        assert(isequal(sort(curAxonIds), unique(curAxonIds)));
+        
+        synthConn = nan(size(classConn));
+        for curAxonClassIdx = 1:numel(axonClasses)
+            curAxonClass = axonClasses(curAxonClassIdx);
+            curAxonIds = curAxonClass.axonIds;
+            
+            curClassConn = classConn(curAxonIds, :);
+            curSynCounts = sum(curClassConn, 2);
+            
+            curTargetProbs = sum(curClassConn, 1);
+            curTargetProbs = curTargetProbs / sum(curTargetProbs);
+            
+            curSynthConn = mnrnd(curSynCounts, curTargetProbs);
+            synthConn(curAxonIds, :) = curSynthConn;
+        end
+        
+        classConn = synthConn;
+        curAxonClassTitles = strcat( ...
+            {'synth '}, {allAxonClasses.title});
+       [allAxonClasses.title] = deal(curAxonClassTitles{:});
+        
+    otherwise
+        error('Invalid method "%s"', curMethod);
 end
 
 %% Plot mean availabilities / specificities
@@ -411,27 +483,22 @@ for curAxonClassId = 1:numel(allAxonClasses)
         
         curPred = curPredFunc( ...
             curConn, curAvails, curSynCounts, curPredictClassIds);
+        curSqRes = (curPred - curConn) .^ 2;
         
+        % Binomial variance correction
         curBinoVar = curAvails(:, curPredictClassIds);
         curBinoVar = curBinoVar .* (1 - curBinoVar) ./ curSynCounts;
         curBinoVar = curCorrect * curBinoVar;
         
-        % Per axon and target class
-        curVarLeft = (curPred - curConn) .^ 2;
-        curVarLeft = max(curVarLeft - curBinoVar, 0);
+        curVarCorr = curVar - curBinoVar;
+        curSqResCorr = curSqRes - curBinoVar;
         
-        curVarExplained = sum(curVar - curVarLeft, 1);
-        curVarFracExplained = curVarExplained ./ sum(curVar, 1);
+        curRsq = 1 - sum(curSqResCorr, 1) ./ sum(curVarCorr, 1);
+        axonTargetClassExplainability( ...
+            curPredictClassIds, curDistId, curAxonClassId) = curRsq;
         
-        axonTargetClassExplainability(curPredictClassIds, ...
-            curDistId, curAxonClassId) = curVarFracExplained;
-        
-        % Per axon class
-        curVarExplained = sum(curVar(:) - curVarLeft(:));
-        curVarFracExplained = curVarExplained / sum(curVar(:));
-        
-        axonClassExplainability( ...
-            curDistId, curAxonClassId) = curVarFracExplained;
+        curRsq = 1 - sum(curSqResCorr(:)) / sum(curVarCorr(:));
+        axonClassExplainability(curDistId, curAxonClassId) = curRsq;
     end
 end
 
@@ -496,7 +563,7 @@ curRadius = 10;
 curPad = 0.05;
 curMinRange = 0.1;
 
-curAxonIds = conn.axonMeta.synCount >= curSynCount;
+curAxonIds = sum(classConn, 2) >= curSynCount;
 curRadiusId = find(avail.dists == 1E3 * curRadius);
 
 curFig = figure();
@@ -653,16 +720,36 @@ annotation(curFig, ...
     'EdgeColor', 'none', ...
     'HorizontalAlignment', 'center', ...
     'String', {info.filename; info.git_repos{1}.hash});
+
+%% Quantitative evaluation
+clear cur*;
+curRadiiUm = [0, 5];
+curDistMask = avail.dists / 1E3;
+
+curDistMask = ...
+    curRadiiUm(1) <= curDistMask ...
+  & curDistMask <= curRadiiUm(2);
+
+fprintf('\n');
+fprintf('Predictability in range from %g to %g µm\n', curRadiiUm);
+
+for curAxonClassId = plotAxonClasses
+    curTitle = allAxonClasses(curAxonClassId).title;
+    curData = axonClassExplainability(curDistMask, curAxonClassId);
+    curRange = [min(curData), max(curData)];
+    
+    fprintf('* %s: %.2f - %.f %%\n', curTitle, 100 * curRange);
+end
     
 %% Geometric prediction models
 function preds = predictTargetClassAvailability(~, avails, ~, predictClassIds) %#ok
     preds = avails(:, predictClassIds);
 end
 
-function preds = predictUsingLinearRegressionOnTargetClassAvailability(conn, avails, ~, ~) %#ok
+function preds = predictUsingLinearRegressionOnTargetClassAvailability(conn, avails, ~, predictClassIds) %#ok
     preds = nan(size(conn));
     for curIdx = 1:size(conn, 2)
-        curAvails = avails(:, [curIdx, end]);
+        curAvails = avails(:, [predictClassIds(curIdx), end]);
         curFit = curAvails \ conn(:, curIdx);
         preds(:, curIdx) = curAvails * curFit;
     end

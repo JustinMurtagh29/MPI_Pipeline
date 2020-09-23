@@ -4,13 +4,13 @@ clear;
 
 %% configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons_18_a_ax_spine_syn_clust.mat');
-synFile = fullfile(rootDir, 'connectomeState', 'SynapseAgglos_v3_ax_spine_clustered.mat');
+connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-partiallySplit-v2_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v8-classified.mat');
 
 outputDir = '/home/amotta/Desktop/ad-specific-axons';
 assert(mkdir(outputDir));
 
 info = Util.runInfo();
+Util.showRunInfo(info);
 
 %% loading data
 param = load(fullfile(rootDir, 'allParameter.mat'), 'p');
@@ -18,56 +18,25 @@ param = param.p;
 
 points = Seg.Global.getSegToPointMap(param);
 
-[~, connName] = fileparts(connFile);
-conn = connectEM.Connectome.load(param, connName);
-syn = load(synFile);
-
-%% build class connectome
-% try to replicate cass connectome
-connectome = conn.connectome;
-
-% count synapses
-connectome.synCount = cellfun(@numel, connectome.synIdx);
-connectome.synIdx = [];
-
-% add target class to connectome
-[~, denMetaRow] = ismember(connectome.edges(:, 2), conn.denMeta.id);
-connectome.targetClass = conn.denMeta.targetClass(denMetaRow);
-
-[targetClasses, ~, connectome.targetClassId] = ...
-    unique(connectome.targetClass);
-
-classConnectome = accumarray( ...
-    cat(2, connectome.edges(:, 1), connectome.targetClassId), ...
-    connectome.synCount, [numel(conn.axons), numel(targetClasses)]);
+[conn, syn, axonClasses] = ...
+    connectEM.Connectome.load(param, connFile);
+[conn, axonClasses] = ...
+    connectEM.Connectome.prepareForSpecificityAnalysis( ...
+        conn, axonClasses(1:2), 'minSynPre', 10);
+axonClasses = ...
+    connectEM.Connectome.buildAxonSpecificityClasses(conn, axonClasses);
 
 %% building skeletons
-className = 'ApicalDendrite';
+clear cur*;
 
-conn.axonMeta.spineSynFrac = ...
-    conn.axonMeta.spineSynCount ...
-    ./ conn.axonMeta.synCount;
-
-axonSpecs = ...
-    classConnectome ...
-    ./ sum(classConnectome, 2);
-
-axonIds = find( ...
-    conn.axonMeta.synCount >= 10 ...
-  & conn.axonMeta.spineSynFrac >= 0.7 ...
-  & axonSpecs(:, targetClasses == className) >= 0.45);
-
-% sort by increasing spine fraction
-[~, sortIds] = sort(conn.axonMeta.spineSynFrac(axonIds));
-axonIds = axonIds(sortIds);
+axonIds = axonClasses(2).specs.ApicalDendrite.axonIds;
+dendIds = find(conn.denMeta.targetClass == 'ApicalDendrite');
 
 skel = skeleton();
 skel = Skeleton.setParams4Pipeline(skel, param);
-skel = skel.setDescription(sprintf( ...
-    '%s (%s)', mfilename, info.git_repos{1}.hash));
+skel = Skeleton.setDescriptionFromRunInfo(skel, info);
 
 % targets
-dendIds = find(conn.denMeta.targetClass == className);
 for curIdx = 1:numel(dendIds)
     curDendId = dendIds(curIdx);
     curAgglo = conn.dendrites{curDendId};
@@ -78,20 +47,19 @@ for curIdx = 1:numel(dendIds)
     skel.colors{end} = [0, 0, 1, 1];
 end
 
+[skel, curGroupId] = skel.addGroup('Dendrites');
+skel = skel.addTreesToGroup(1:numel(dendIds), curGroupId);
+
 % axons
 for curIdx = 1:numel(axonIds)
     curAxonId = axonIds(curIdx);
     curAgglo = conn.axons{curAxonId};
     
     % axon
-    curSkel = Skeleton.fromMST( ...
+    skel = Skeleton.fromMST( ...
         points(curAgglo, :), param.raw.voxelSize, skel);
-    curSkel.names{end} = sprintf( ...
-        'Axon %d. TC: %d. Specificity: %.2f. Spine fraction %.2f', ...
-        curAxonId, conn.axonMeta.isThalamocortical(curAxonId), ...
-        axonSpecs(curAxonId, targetClasses == className), ...
-        conn.axonMeta.spineSynFrac(curAxonId));
-    curSkel.colors{end} = [1, 0, 0, 1];
+    skel.names{end} = sprintf('Axon %d', curAxonId);
+    skel.colors{end} = [1, 0, 0, 1];
     
     % synapses
     curSynIds = (conn.connectome.edges(:, 1) == curAxonId);
@@ -106,17 +74,21 @@ for curIdx = 1:numel(axonIds)
         @(segIds) points(unique(segIds), :), ...
         curSyns, 'UniformOutput', false);
     
-    curSkel = Skeleton.fromMST( ...
-        curSyns, param.raw.voxelSize, curSkel);
+    skel = Skeleton.fromMST( ...
+        curSyns, param.raw.voxelSize, skel);
     
     curSynTreeIds = (1:numel(curSynIds)) - 1;
-    curSynTreeIds = numel(curSkel.nodes) - curSynTreeIds;
-    curSkel.names(curSynTreeIds) = arrayfun( ...
+    curSynTreeIds = numel(skel.nodes) - curSynTreeIds;
+    skel.names(curSynTreeIds) = arrayfun( ...
         @(id) sprintf('Synapse %d', id), ...
         curSynIds, 'UniformOutput', false);
-    curSkel.colors(curSynTreeIds) = {[1, 1, 0, 1]};
+    skel.colors(curSynTreeIds) = {[1, 1, 0, 1]};
     
-    curSkelFile = sprintf('%0*d_axon-%d.nml', ...
-        ceil(log10(1 + numel(axonIds))), curIdx, curAxonId);
-    curSkel.write(fullfile(outputDir, curSkelFile));
+    % group axon and synapses
+    curTreeIds = 1:(numel(curSynIds) + 1);
+    curTreeIds = numel(skel.nodes) + 1 - curTreeIds;
+   [skel, curGroupId] = skel.addGroup(sprintf('Axon %d', curAxonId));
+    skel = skel.addTreesToGroup(curTreeIds, curGroupId);
 end
+
+skel.write(fullfile(outputDir, 'skel.nml'));

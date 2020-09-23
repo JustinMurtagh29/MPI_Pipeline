@@ -4,8 +4,20 @@ clear;
 
 %% Configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-linearized_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v8-classified.mat');
-asiRunId = '20190227T082543';
+
+% Partially split version of semi-automatically reconstructed axons,
+% and dendrites with automatically and manually attached spines. This is
+% the connectome used for the "L4 paper".
+% pValThreshs = [0.026; inf; 0.015; inf];
+% connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-linearized_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v8-classified.mat');
+% asiRunId = '20190227T082543';
+
+% Partially split version of automatically reconstructed axons,
+% and dendrites with automatically attached spines. This is the
+% automatically generated state prior to RoboEM.
+pValThreshs = [inf; inf; inf; inf];
+connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-04-linearized_dendrites-wholeCells-autoSpines-v1-classified-v2_SynapseAgglos-autoPreRobo-v1-classified.mat');
+asiRunId = '20200610T105703';
 
 info = Util.runInfo();
 Util.showRunInfo(info);
@@ -30,9 +42,7 @@ clear cur*;
 plotConfigs = struct('synIds', {}, 'title', {}, 'tag', {});
 
 axonClasses = { ...
-    'Exc', {'Corticocortical', 'Thalamocortical'}; ...
-    'CC',  {'Corticocortical'}; ...
-    'TC',  {'Thalamocortical'}};
+    'Exc', {'Corticocortical', 'Thalamocortical'}};
 targetClasses = { ...
     'All', categories(asiT.targetClass); ...
     'PD',  'ProximalDendrite'; ...
@@ -77,22 +87,9 @@ plotConfigs = reshape( ...
 curPvalThreshs = [0.5, 1, 2, 3, 4, 5] / 100;
 
 % Excitatory axons
-plotConfigs(1, 1).twoDimPValThreshs = 0.026;
-plotConfigs(2, 1).twoDimPValThreshs = inf;
-plotConfigs(3, 1).twoDimPValThreshs = 0.015;
-plotConfigs(4, 1).twoDimPValThreshs = inf;
-
-% Corticocortical axons
-plotConfigs(1, 2).twoDimPValThreshs = 0.052;
-plotConfigs(2, 2).twoDimPValThreshs = inf;
-plotConfigs(3, 2).twoDimPValThreshs = inf;
-plotConfigs(4, 2).twoDimPValThreshs = inf;
-
-% Thalamocortical axons
-plotConfigs(1, 3).twoDimPValThreshs = 0.087;
-plotConfigs(2, 3).twoDimPValThreshs = inf;
-plotConfigs(3, 3).twoDimPValThreshs = inf;
-plotConfigs(4, 3).twoDimPValThreshs = inf;
+curPValThreshs = num2cell(pValThreshs);
+assert(isequal(size(curPValThreshs), size(plotConfigs)));
+[plotConfigs(:).twoDimPValThreshs] = deal(curPValThreshs{:});
 
 for curIdx = 1:numel(plotConfigs)
     curThreshs = plotConfigs(curIdx).twoDimPValThreshs;
@@ -128,30 +125,11 @@ for curConfigIdx = 1:numel(plotConfigs)
     fprintf('\n');
 end
 
-curFig = figure();
-curAx = axes(curFig);
-imagesc(curAx, transpose(meanAsis));
-axis(curAx, 'image');
-
-xticks(curAx, 1:size(targetClasses, 1));
-xticklabels(curAx, targetClasses(:, 1));
-
-yticks(curAx, 1:size(axonClasses, 1));
-yticklabels(curAx, axonClasses(:, 1));
-
-curCbar = colorbar('peer', curAx);
-curCbar.Label.String = 'Average ASI area [µm²]';
-
-curFig.Position(3:4) = [280, 180];
-connectEM.Figure.config(curFig, info);
-
 %% Plot distribution of synapse size
 connectEM.Consistency.plotSizeHistogram( ...
     info, asiT, plotConfigs(1, :), 'scale', 'log10');
 connectEM.Consistency.plotSizeHistogram( ...
     info, asiT, plotConfigs(:, 1), 'scale', 'log10');
-connectEM.Consistency.plotSizeHistogram( ...
-    info, asiT, plotConfigs(2:end, 2:end), 'scale', 'log10');
 
 %% Report number of occurences for degree of coupling
 clear cur*;
@@ -211,8 +189,9 @@ for curIdx = 1:numel(plotConfigs)
     curLeg = {curSaSdConfig.title, curCtrlConfig.title};
     curLeg = legend(curAx, curLeg, 'Location', 'SouthOutside');
     
+    title(curAx, curPlotConfig.title);
     connectEM.Figure.config(curFig, info);
-    curFig.Position(3:4) = [300, 260];
+    curFig.Position(3:4) = [300, 300];
 end
 
 %% Synapse area variability
@@ -285,43 +264,6 @@ for curIdx = 1:numel(plotConfigs)
 end
 
 pValues = reshape(pValues, [4, size(plotConfigs)]);
-
-%% Show p-values
-clear cur*;
-
-curTitles = ...
-    connectEM.Consistency.buildPairConfigs(asiT, plotConfigs(1));
-curTitles = curTitles(1:(end - 1));
-
-curTitles = cellfun( ...
-    @(n) n(1:(find(n == '(', 1) - 2)), ...
-    {curTitles.title}, 'UniformOutput', false);
-assert(isequal(numel(curTitles), size(pValues, 1)));
-
-curFig = figure();
-
-for curIdx = 1:numel(curTitles)
-    curPValues = pValues(curIdx, :, :);
-    curPValues = shiftdim(curPValues, 1);
-    curMap = -log10(curPValues);
-    
-    subplot(2, 2, curIdx);
-    imagesc(transpose(curMap));
-    title(curTitles{curIdx});
-    
-    caxis(feval(@(v) [0, v(2)], caxis()));
-    colorbar();
-end
-
-curAxes = flip(findobj(curFig, 'type', 'axes'));
-xticks(curAxes, 1:size(targetClasses, 1));
-xticklabels(curAxes, targetClasses(:, 1));
-
-yticks(curAxes, 1:size(axonClasses, 1));
-yticklabels(curAxes, axonClasses(:, 1));
-
-curFig.Position(3:4) = [1050, 700];
-connectEM.Figure.config(curFig, info);
 
 %% Correlation of synapse size correlation with synapse size
 clear cur*;
@@ -396,7 +338,7 @@ curCv(curCv >= sqrt(2)) = nan;
 curMinMap = (10 .^ curLog10Avg(:)) .* (1 - curCv / sqrt(2));
 curMaxMap = (10 .^ curLog10Avg(:)) .* (1 + curCv / sqrt(2));
 
-for curConfig = reshape(plotConfigs(1, :), 1, [])
+for curConfig = reshape(plotConfigs, 1, [])
     curSaSdConfig = connectEM.Consistency.buildPairConfigs(asiT, curConfig);
     curSaSdConfig = curSaSdConfig(1);
             
@@ -631,6 +573,9 @@ for curConfig = reshape(plotConfigs(1, :), 1, [])
             'EdgeColor', 'none', 'HorizontalAlignment', 'center');
         
         %% Evaluation
+        fprintf('%s\n', curConfig.title);
+        fprintf('\n');
+        
         curTitle = cell(numel(curRegionProps), 1);
         curFracsToPercsStr = @(f) strjoin(arrayfun( ...
             @(v) num2str(v, '%.1f%%'), 100 * f, ...
@@ -657,11 +602,11 @@ for curConfig = reshape(plotConfigs(1, :), 1, [])
                 curFracs(curPvalIdx, 3) = mean(curMask(curSaSdT.mapIdx));
             end
             
-            fprintf('Region %d\n', curRegionId);
-            fprintf('* Average area: %.2f - %.2f µm²\n', curAreaRange);
-            fprintf('* Upper bound (kde): %.1f - %.1f %%\n', 100 * curFracs(:, 1));
-            fprintf('* Surplus (kde): %.1f - %.1f %%\n', 100 * diff(flip(curFracs(:, 1:2))));
-            fprintf('* Upper bound (points): %.1f - %.1f %%\n', 100 * curFracs(:, 3));
+            fprintf('* Region %d\n', curRegionId);
+            fprintf('  * Average area: %.2f - %.2f µm²\n', curAreaRange);
+            fprintf('  * Upper bound (kde): %.1f - %.1f %%\n', 100 * curFracs(:, 1));
+            fprintf('  * Surplus (kde): %.1f - %.1f %%\n', 100 * diff(flip(curFracs(:, 1:2))));
+            fprintf('  * Upper bound (points): %.1f - %.1f %%\n', 100 * curFracs(:, 3));
             fprintf('\n');
             
             curTitle{curRegionId} = sprintf( ...
@@ -784,6 +729,7 @@ for curConfig = reshape(plotConfigs(1, :), 1, [])
         
         curFig.Position(3:4) = [1100, 770];
         connectEM.Figure.config(curFig, info);
+        %}
         
         %% Evaluate sensitivity to p-value threshold
         curCtrlCounts = curCtrlMaps > curSaSdMap;
@@ -837,7 +783,6 @@ for curConfig = reshape(plotConfigs(1, :), 1, [])
         
         curFig.Position(3:4) = [330, 260];
         connectEM.Figure.config(curFig, info);
-        %}
         
         %% Scatter plot
         curFig = figure();
@@ -898,82 +843,6 @@ for curConfig = reshape(plotConfigs(1, :), 1, [])
         axis(curAx, 'square');
         connectEM.Figure.config(curFig, info);
         curFig.Position(3:4) = 160;
-        
-        %% Spatial distribution
-        curVxSize = param.raw.voxelSize;
-        
-        curRegionNames = { ...
-            'Non-significant pairs', ...
-            'Small low-CV pairs', ...
-            'Large low-CV pairs'};
-        
-        % TODO(amotta): Add legend
-        error('TODO: Add legend');
-        
-        curColors = get(groot, 'defaultAxesColorOrder');
-        curColors = cat(1, zeros(1, 3), curColors(1:2, :));
-        
-        curFig = figure();
-        
-        for curDimId = 1:3
-            curDimName = char(int8('X') + (curDimId - 1));
-            
-            curLims = param.bbox .* curVxSize(:);
-            curLims = curLims(curDimId, :) / 10E3;
-            curLims = [floor(curLims(1)), ceil(curLims(2))] * 10;
-            
-            % Position
-            curSynPos = asiT.pos(curSaSdT.synIds(:), curDimId);
-            curSynPos = curSynPos .* curVxSize(curDimId) / 1E3;
-            curSynPos = reshape(curSynPos, size(curSaSdT.synIds));
-            
-            % Distance
-            curSynDist = diff(curSynPos, 1, 2);
-            curSynDist = sqrt(curSynDist .* curSynDist);
-            
-            % Statistics
-            for curRegionId = 1:2
-                curCtrlMask = curSaSdT.regionId == 0;
-                curThisMask = curSaSdT.regionId == curRegionId;
-                
-               [~, curPval] = kstest2( ...
-                   curSynDist(curThisMask), ...
-                   curSynDist(curCtrlMask));
-            end
-            
-            % Plotting
-            for curRegionId = 0:2
-                curColor = curColors(curRegionId + 1, :);
-                curSaSdMask = curSaSdT.regionId == curRegionId;
-                
-                % Position
-                curAx = subplot(2, 3, curDimId);
-                hold(curAx, 'on');
-                
-                histogram( ...
-                    curAx, curSynPos(curSaSdMask, :), ...
-                    'Normalization', 'probability', ...
-                    'BinEdges', curLims(1):10:curLims(2), ...
-                    'DisplayStyle', 'stairs', ...
-                    'EdgeColor', curColor);
-                
-                xlabel(curAx, sprintf('%s position [µm]', curDimName));
-                ylabel(curAx, 'Probability');
-                
-                % Distance
-                curAx = subplot(2, 3, 3 + curDimId);
-                hold(curAx, 'on');
-                
-                histogram( ...
-                    curAx, curSynDist(curSaSdMask), ...
-                    'Normalization', 'probability', ...
-                    'BinEdges', 0:1:30, 'DisplayStyle', 'stairs', ...
-                    'EdgeColor', curColor);
-                
-                xlabel(curAx, sprintf('%s distance [µm]', curDimName));
-                ylabel(curAx, 'Probability');
-            end
-        end
         
         connectEM.Figure.config(curFig, info);
     end

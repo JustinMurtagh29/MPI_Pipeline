@@ -4,8 +4,7 @@ clear;
 
 %% configuration
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
-connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-partiallySplit-v2_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v8-classified.mat');
-inhSomaSpecFile = '/home/amotta/Desktop/inh-soma-spec-axons_v1.mat';
+connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-04_dendrites-wholeCells-03-v2-classified_SynapseAgglos-initAxonAgglos-v1-classified.mat');
 
 targetClasses = { ...
     'Somata', 'SO'; ...
@@ -37,6 +36,9 @@ param = param.p;
 [conn, syn, axonClasses] = connectEM.Connectome.load(param, connFile);
 [axonClasses.tag] = deal('Exc', 'Inh', 'TC', 'CC', 'Unclear');
 
+% HACKHACKHACK(amotta): Get rid of TC and CC
+axonClasses(3:4) = [];
+
 %% build class connectome for shaft synapses
 % This is needed to simulate the effect of FP inhibitory synapses.
 clear cur*;
@@ -65,25 +67,26 @@ classConn = ...
         conn, 'targetClasses', targetClasses);
     
 %% prepare for analysis while accounting for false positive inh. synapses
+%{
 [axonClasses.synFalsePosRates] = deal([]);
 [axonClasses.synFalsePosMethod] = deal([]);
 
-% NOTE(amotta): Let's keep the inhibitory axons without false positive
-% synapse simulation, so we can export the list of soma-specific axons.
-axonClasses(end + 1) = axonClasses(2);
-
 axonClasses(2).synFalsePosRates = inhFpRates;
 axonClasses(2).synFalsePosMethod = 'binomial';
+%}
 
 %% plot
 clear cur*;
 
 evalT = cell(size(axonClasses));
 barFracs = cell(size(axonClasses));
+fdrThreshs = [0.025, 0.05, 0.1, 0.2, 0.3];
 
 for curClassId = 1:numel(axonClasses)
     curAxonClass = axonClasses(curClassId);
+    curFpRates = [];
     
+    %{
     curFpRates = curAxonClass.synFalsePosRates;
     curFpMethod = curAxonClass.synFalsePosMethod;
     
@@ -95,6 +98,9 @@ for curClassId = 1:numel(axonClasses)
         case true, numRuns = 1;
         case false, numRuns = 20;
     end
+    %}
+    
+    numRuns = numel(fdrThreshs);
     
     curEvalT = array2table( ...
         nan(numRuns, 1 + numel(targetClasses)), ...
@@ -102,12 +108,12 @@ for curClassId = 1:numel(axonClasses)
     curBarFracs = nan(numRuns, 2 * numel(targetClasses) - 1);
     
     for curRun = 1:numRuns
-        curFdrThresh = 0.2;
-        curConn = classConn;
+        curFdrThresh = fdrThreshs(curRun);
+        curConn = classConn(curAxonClass.nullAxonIds, :);
         
         if ~isempty(curFpRates)
             % Take into account false positive synapse rates
-            curShaftConn = classConnShafts;
+            curShaftConn = classConnShafts(curAxonClass.nullAxonIds, :);
             curSpineConn = curConn - curShaftConn;
 
             rng(curRun);
@@ -142,14 +148,11 @@ for curClassId = 1:numel(axonClasses)
         
         curAxonClass.nullTargetClassProbs = ...
             connectEM.Specificity.calcFirstHitProbs( ...
-                curConn(curAxonClass.nullAxonIds, :), ...
-                'oneVersusRestBinomial');
-        curAxonClass.specs =  ...
-            connectEM.Specificity.calcForAxonClass( ...
-                curConn, targetClasses, curAxonClass, ...
-                'fdrThresh', curFdrThresh, ...
-                'showPlot', false, ...
-                'info', info);
+                curConn, 'oneVersusRestBinomial');
+        curAxonClass.specs = plotAxonClass( ...
+            classConn, targetClasses, curAxonClass, ...
+            'fdrThresh', curFdrThresh, 'showPlot', false, 'info', info);
+        
        [curA, curB, curC] = ...
             connectEM.Specificity.calcAxonFractions( ...
                 curAxonClass, targetClasses);
@@ -160,28 +163,6 @@ for curClassId = 1:numel(axonClasses)
     
     evalT{curClassId} = curEvalT;
     barFracs{curClassId} = curBarFracs;
-    
-    curStatT = curEvalT;
-    curStatT = varfun(@(v) [prctile(v, [0; 50; 100]); mean(v)], curStatT);
-    curStatT.Properties.VariableNames = curEvalT.Properties.VariableNames;
-    curStatT.Properties.RowNames = {'Min', 'Median', 'Max', 'Mean'};
-    
-    fprintf('%s\n\n', curAxonClass.title);
-    disp(curStatT); fprintf('\n');
-    
-    if ~isempty(inhSomaSpecFile) ...
-          && strcmpi(curAxonClass.tag, 'inh') ...
-          && isempty(curAxonClass.synFalsePosRates)
-        % NOTE(amotta): Export list of soma specific axons for movie.
-        fprintf('Exporting %s\n', curAxonClass.title);
-        fprintf('to %s\n', inhSomaSpecFile);
-        
-        curOut = struct;
-        curOut.info = info;
-        curOut.axonIds = curAxonClass.specs.Somata.axonIds;
-        Util.saveStruct(inhSomaSpecFile, curOut);
-        Util.protect(inhSomaSpecFile);
-    end
 end
 
 %% quantitative evaluation
@@ -274,78 +255,196 @@ for curIdx = 1:numel(fdrThreshs)
     connectEM.Figure.config(curFig, info);
 end
 
-%% Calculate coinnervation matrix
-clear cur*;
-curFdThresh = 0.2;
+%% plotting
+function specs = plotAxonClass( ...
+        classConn, targetClasses, axonClass, varargin)
+    opts = struct;
+    opts.info = [];
+    opts.showPlot = false;
+    opts.fdrThresh = 0.2;
+    opts = Util.modifyStruct(opts, varargin{:});
+    
+    specs = struct;
+    
+    nullTargetClassProbs = axonClass.nullTargetClassProbs;
+    axonSpecs = classConn(axonClass.axonIds, :);
+    synCounts = sum(axonSpecs, 2);
+    axonSpecs = axonSpecs ./ synCounts;
+    
+    %% preparations
+    axonNullProbs = ...
+        connectEM.Specificity.calcChanceProbs( ...
+            classConn, axonClass.axonIds, nullTargetClassProbs, ...
+            'distribution', 'binomial');
+    
+    binEdges = linspace(0, 1, 21);
+    
+    if opts.showPlot
+        fig = figure;
+        axes = cell(size(targetClasses));
+        pValAxes = cell(size(targetClasses));
+    end
+    
+    for classIdx = 1:numel(targetClasses)
+        className = targetClasses{classIdx};
+        classProb = nullTargetClassProbs(classIdx);
+        
+        axonClassSpecs = axonSpecs(:, classIdx);
+        axonClassNullProbs = axonNullProbs(:, classIdx);
+        
+        % Null hypothesis
+       [nullSynFrac, nullAxonCount] = ...
+            connectEM.Specificity.calcExpectedDist( ...
+                synCounts, classProb, 'distribution', 'binomial');
+            
+        ksProb = ...
+            connectEM.Specificity.kolmogorovSmirnovTest( ...
+                axonClassSpecs, nullSynFrac, ...
+                'nullWeights', nullAxonCount, ...
+                'tail', 'smaller');
+        
+        nullBinId = discretize(nullSynFrac, binEdges);
+        nullBinCount = accumarray(nullBinId, nullAxonCount);
+        
+        % p-values
+        curBinEdges = linspace(-1E-3, 1 + 1E-3, numel(binEdges));
+        
+       [expChanceProbs, expChanceCounts] = ...
+            connectEM.Specificity.calcExpectedChanceProbDist( ...
+                synCounts, classProb);
+        
+        curExpCounts = discretize(expChanceProbs, curBinEdges);
+        curExpCounts = accumarray(curExpCounts, expChanceCounts);
+        
+        % alternative visualization
+        % Compare p-value distribution against expectation:
+        % We'd expect there to be `theta` percent of axons with a p-value
+        % below `theta`. If there are, however, significantly more axons
+        % with a p-value below `theta`, something interesting is going on.
+        curPVal = sort(axonClassNullProbs, 'ascend');
+        curPVal = reshape(curPVal, 1, []);
+        
+       [curPVal, ~, curPAxonFrac] = unique(curPVal);
+        curPAxonFrac = accumarray(curPAxonFrac, 1);
+        curPAxonFrac = cumsum(curPAxonFrac) / sum(curPAxonFrac);
+        
+        % Conservative estimate of false detection rate (FDR)
+        curFdrEst = cumsum(expChanceCounts);
+        curFdrEst = curFdrEst / curFdrEst(end);
+        
+        curFdrEst = interp1(expChanceProbs, curFdrEst, curPVal);
+        curFdrEst = curFdrEst(:) ./ curPAxonFrac(:);
+        
+        curThetaPVal = 1 + find( ...
+            curFdrEst(1:(end - 1)) <= opts.fdrThresh ...
+          & curFdrEst(2:end) > opts.fdrThresh, 1);
+      
+        curThetaPVal = curPVal(curThetaPVal);
+        if isempty(curThetaPVal); curThetaPVal = nan; end
+        
+        if ksProb < 0.01 ...
+                && not(isnan(curThetaPVal)) ...
+                && not(strcmpi(className, 'OtherDendrite'))
+            curSpecs = struct;
+            curSpecs.pThresh = curThetaPVal;
+            curSpecs.axonIds = axonClass.axonIds( ...
+                axonClassNullProbs < curThetaPVal);
+            specs.(className) = curSpecs;
+        end
 
-for curAxonClass = axonClasses(2)
-    curConn = classConn;
-    
-    curAxonClass.nullTargetClassProbs = ...
-        connectEM.Specificity.calcFirstHitProbs( ...
-            curConn(curAxonClass.nullAxonIds, :), ...
-            'oneVersusRestBinomial');
-    curAxonClass.specs =  ...
-        connectEM.Specificity.calcForAxonClass( ...
-            curConn, targetClasses, curAxonClass, ...
-            'fdrThresh', curFdThresh, 'showPlot', false);
-	
-    if isfield(curAxonClass, 'synFalsePosRates') ...
-            && not(isempty(curAxonClass.synFalsePosRates))
-        % NOTE(amotta): If the user has specified synapse false positive
-        % rates then let's corrected for the expectation. As discussed with
-        % MH on 07.03.2019 we're using the unmodified class connectome to
-        % defined the target-specific axons.
-        curFpRates = curAxonClass.synFalsePosRates;
+        %% Plotting
+        if ~opts.showPlot; continue; end
         
-        curShaftConn = classConnShafts;
-        curSpineConn = curConn - curShaftConn;
+        ax = subplot(3, numel(targetClasses), classIdx);
+        axis(ax, 'square');
+        hold(ax, 'on');
         
-        curConn = ...
-            curShaftConn .* (1 - curFpRates(1, :)) ...
-          + curSpineConn .* (1 - curFpRates(2, :));
+        histogram(ax, ...
+            axonClassSpecs, ...
+            'BinEdges', binEdges, ...
+            'DisplayStyle', 'stairs');
+        histogram(ax, ...
+            'BinEdges', binEdges, ...
+            'BinCounts', nullBinCount, ...
+            'DisplayStyle', 'stairs');
+
+        xlabel(ax, 'Synapse fraction');
+        ax.XAxis.TickDirection = 'out';
+        ax.XAxis.Limits = [0, 1];
+        
+        ylabel(ax, 'Axons');
+        ax.YAxis.TickDirection = 'out';
+        ax.YAxis.Limits(1) = 10 ^ (-0.1);
+        ax.YAxis.Scale = 'log';
+        
+        title(ax, ...
+            {className; sprintf('p = %g (tailed KS)', ksProb)});
+        axes{classIdx} = ax;
+            
+        ax = subplot( ...
+            3, numel(targetClasses), ...
+            numel(targetClasses) + classIdx);
+        axis(ax, 'square');
+        hold(ax, 'on');
+        
+        histogram(ax, ...
+            axonClassNullProbs, ...
+            'BinEdges', curBinEdges, ...
+            'DisplayStyle', 'stairs');
+        histogram(ax, ...
+            'BinCounts', curExpCounts, ...
+            'BinEdges', curBinEdges, ...
+            'DisplayStyle', 'stairs');
+        
+        pValAxes{classIdx} = ax;
+        
+        ax = subplot( ...
+            3, numel(targetClasses), ...
+            2 * numel(targetClasses) + classIdx);
+        axis(ax, 'square');
+        hold(ax, 'on');
+        
+        plot(ax, curPVal, curFdrEst, 'LineWidth', 1);
+        
+        xlim(ax, [0, 1]);
+        ylim(ax, [0, 1.2]);
+        xlabel(ax, 'p-value');
+        ylabel(ax, 'Estimated FDR');
+        
+        if ~isnan(curThetaPVal)
+            plot(ax, ...
+                repelem(curThetaPVal, 2), ylim(ax), ...
+                'Color', 'black', 'LineStyle', '--');
+            title(ax, sprintf('p = %f', curThetaPVal));
+        end
     end
-	
-    curSpecs = curAxonClass.specs;
-    curSpecClasses = fieldnames(curSpecs);
     
-   [~, curSpecClasses] = ismember(curSpecClasses, targetClasses);
-    curSpecClasses = sort(curSpecClasses);
+    if ~opts.showPlot; return; end
     
-    curCoinMat = nan(numel(curSpecClasses), numel(targetClasses));
-    curSpecClassRates = nan(1, numel(curSpecClasses));
+    % Legend
+    ax = axes{end};
+    axPos = ax.Position;
+    leg = legend(ax, ...
+        'Observed', ...
+        'Binomial model', ...
+        'Location', 'East');
     
-    for curSpecIdx = 1:numel(curSpecClasses)
-        curSpecClass = curSpecClasses(curSpecIdx);
-        curAxonIds = curSpecs.(targetClasses{curSpecClass}).axonIds;
-        
-        curCoinVec = curConn(curAxonIds, :);
-        curCoinVec(:, curSpecClass) = 0;
-        curCoinVec = sum(curCoinVec, 1) / sum(curCoinVec(:));
-        curCoinMat(curSpecIdx, :) = curCoinVec;
-        
-        curSpecClassRate = curConn(curAxonIds, :);
-        curSpecClassRate = ...
-            sum(curSpecClassRate(:, curSpecClass)) ...
-         ./ sum(curSpecClassRate(:));
-        curSpecClassRates(curSpecIdx) = curSpecClassRate;
-    end
+    % Fix positions
+    ax.Position = axPos;
+    leg.Position(1) = sum(axPos([1, 3])) + 0.005;
+
+    axes = horzcat(axes{:});
+    yMax = max(arrayfun(@(a) a.YAxis.Limits(end), axes));
+    for ax = axes; ax.YAxis.Limits(end) = yMax; end
     
-    % All axons
-    curCoinVec = curConn(curAxonClass.axonIds, :);
-    curCoinVec = sum(curCoinVec, 1) / sum(curCoinVec(:));
-    curCoinMat = cat(1, curCoinMat, curCoinVec);
+    curTitle = { ...
+        'Observed synapse fractions vs. null hypothesis'; axonClass.title};
+    annotation(fig, 'textbox', [0, 0.9, 1, 0.1], 'String', curTitle);
     
-    curTargetLabels = targetLabels;
-    assert(isequal(curTargetLabels{end}, 'OD'));
-    curTargetLabels = curTargetLabels(1:(end - 1));
-    
-    plotIt(info, ...
-        curTargetLabels, curAxonClass, curSpecClasses, ...
-        curCoinMat, 'specClassRates', curSpecClassRates);
+    connectEM.Figure.config(fig, opts.info);
+    fig.Position(3:4) = [1850, 1150];
 end
 
-%% plotting
 function classConn = ...
         removeConstantFractionOfSynapses(classConn, removeRate)
     assert(all(0 <= removeRate(:) & removeRate(:) <= 1));
@@ -378,111 +477,4 @@ function classConn = ...
         classConn(curIds, curIdx) = ...
             classConn(curIds, curIdx) - curCounts;
     end
-end
-
-function plotIt( ...
-        info, targetClasses, axonClass, ...
-        specClasses, coinMat, varargin)
-    opt = struct;
-    opt.maxDelta = 0.20;
-    opt.specClassRates = [];
-    opt = Util.modifyStruct(opt, varargin{:});
-    
-    specLabels = targetClasses(specClasses);
-    specLabels{end + 1} = 'All';
-    
-    % Don't show the synapses, which do not fall in one of the target
-    % classes listed in `targetClasses`.
-    coinMat(:, end) = [];
-    
-    rows = numel(specLabels);
-    cols = numel(targetClasses);
-    frac = rows / cols;
-    
-    % Sanity checks
-    assert(isequal(size(coinMat), [rows, cols]));
-    
-    diagIds = arrayfun( ...
-        @(idx, id) sub2ind(size(coinMat), idx, id), ...
-        reshape(1:numel(specClasses), size(specClasses)), specClasses);
-    
-    deltaMat = coinMat - coinMat(end, :);
-    deltaMat(diagIds) = 0;
-    
-    if ~isempty(opt.specClassRates)
-        coinMat(diagIds) = opt.specClassRates;
-    end
-    
-    fig = figure();
-    ax = axes(fig);
-    
-    imshow( ...
-        deltaMat, [-opt.maxDelta, +opt.maxDelta], ...
-        'Colormap', buildColormap(129), ...
-        'Parent', ax);
-
-    fig.Color = 'white';
-    fig.Position(3:4) = 350 .* [1, frac];
-
-    ax.Visible = 'on';
-    ax.TickDir = 'out';
-    ax.Box = 'off';
-
-    ax.XAxisLocation = 'top';
-    ax.XTick = 1:size(coinMat, 2);
-    ax.XTickLabel = targetClasses;
-    ax.XTickLabelRotation = 90;
-
-    ax.YTick = 1:size(coinMat, 1);
-    ax.YTickLabel = specLabels;
-    ax.Position = [0.1, 0.01, 0.75, 0.75];
-    
-    for curIdx = 1:numel(coinMat)
-       [curRow, curCol] = ind2sub(size(coinMat), curIdx);
-        curEdgeColor = 'none';
-        
-        if curRow <= numel(specClasses) ...
-                && specClasses(curRow) == curCol
-            if isempty(opt.specClassRates); continue; end
-            curEdgeColor = 'black';
-        end
-
-        curBoxSize = ax.Position(3:4) ./ [cols, rows];
-        curOff = [curCol, numel(specLabels) - curRow + 1];
-        curOff = ax.Position(1:2) + (curOff - 1) .* curBoxSize;
-        
-        curAnn = annotation( ...
-            fig, 'textbox', [curOff, curBoxSize], ...
-            'String', sprintf('%.2g', 100 * coinMat(curIdx)));
-        curAnn.HorizontalAlignment = 'center';
-        curAnn.VerticalAlignment = 'middle';
-        curAnn.EdgeColor = curEdgeColor;
-        curAnn.Color = 'black';
-        curAnn.FontSize = 12;
-        curAnn.LineWidth = 2;
-    end
-    
-    cbar = colorbar('peer', ax);
-    cbar.TickLabels = arrayfun( ...
-        @(f) sprintf('%+g %%', 100 * f), ...
-        cbar.Ticks, 'UniformOutput', false);
-    cbar.TickDirection = 'out';
-    cbar.Position = [0.91, 0.1, 0.02, 0.8];
-    cbar.Position([2, 4]) = ax.Position([2, 4]);
-
-    title(ax, ...
-        {info.filename; info.git_repos{1}.hash; axonClass.title}, ...
-        'FontWeight', 'normal', 'FontSize', 10);
-end
-
-function cmap = buildColormap(n)
-    c = 1 + (n - 1) / 2;
-    alpha = linspace(0, 1, c);
-    alpha = transpose(alpha);
-    
-    cmap = zeros(n, 3);
-    cmap(1:c, :) = alpha .* [1, 1, 1];
-    cmap(c:n, :) = sqrt(( ...
-        alpha .* [0.301, 0.745, 0.933] .^ 2 ...
-      + (1 - alpha) .* [1, 1, 1] .^ 2));
 end
