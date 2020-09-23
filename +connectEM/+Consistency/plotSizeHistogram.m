@@ -7,19 +7,22 @@ function fig = plotSizeHistogram(info, synT, plotConfigs, varargin)
     opt.binEdges = [];
     opt = Util.modifyStruct(opt, varargin{:});
     
-    xLabelText = 'Synapse area (µm²)';
+    xLabelText = 'Synapse area [µm²]';
     
     switch opt.scale
         case 'linear'
             defaultBinEdges = linspace(0, 1.2, 61);
-        case 'log'
+        case {'ln', 'loge'}
+            synT.area = log(synT.area);
+            defaultBinEdges = linspace(-4, 1, 51);
+            xLabelText = sprintf('loge(%s)', xLabelText);
+        case {'log', 'log10'}
             synT.area = log10(synT.area);
-            defaultBinEdges = linspace(-2, 1, 61);
-            xLabelText = sprintf('log_{10}(%s)', xLabelText);
+            defaultBinEdges = linspace(-2, 0.5, 51);
+            xLabelText = sprintf('log10(%s)', xLabelText);
         otherwise
             error('Invalid scale "%s"', opt.scale);
     end
-    
     if isempty(opt.binEdges)
         opt.binEdges = defaultBinEdges;
     end
@@ -28,12 +31,10 @@ function fig = plotSizeHistogram(info, synT, plotConfigs, varargin)
     opt.title = cat(1, {info.filename; info.git_repos{1}.hash}, opt.title);
 
     fig = figure();
-    fig.Color = 'white';
-    fig.Position(3:4) = [820, 475];
+    fig.Position(3:4) = [540, 200];
 
     ax = axes(fig);
     hold(ax, 'on');
-    ax.TickDir = 'out';
 
     for curPlotConfig = reshape(plotConfigs, 1, [])
         curSynAreas = synT.area(curPlotConfig.synIds);
@@ -41,16 +42,14 @@ function fig = plotSizeHistogram(info, synT, plotConfigs, varargin)
         histogram( ...
             ax, curSynAreas, ...
             'BinEdges', opt.binEdges, ...
-            'Normalization', 'probability', ...
-            'DisplayStyle', 'stairs', ...
-            'LineWidth', 2, ...
-            'FaceAlpha', 1);
+            'Normalization', 'probability');
     end
 
-    xlim(ax, opt.binEdges([1, end]));
     xlabel(ax, xLabelText);
     ylabel(ax, 'Probability');
 
-    legend(ax, {plotConfigs.title}, 'Location', 'NorthEast', 'Box', 'off');
-    title(opt.title, 'FontWeight', 'normal', 'FontSize', 10);
+    legend(ax, {plotConfigs.title}, 'Location', 'EastOutside');
+    title(opt.title);
+    
+    connectEM.Figure.config(fig);
 end
