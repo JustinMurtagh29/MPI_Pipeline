@@ -6,7 +6,7 @@
 clear;
 
 %% Configuration
-rootDir = '/tmpscratch/sahilloo/data/Mk1_F6_JS_SubI_v1/pipelineRun_mr2e_wsmrnet/';
+rootDir = Util.getGabaPath('/tmpscratch/sahilloo/data/Mk1_F6_JS_SubI_v1/pipelineRun_mr2e_wsmrnet/');
 connFile = fullfile(rootDir, 'connectome', 'Connectome_20191227T220548-results_20191227T220548-results-auto-spines-v3_SynapseAgglomerates--20191227T220548-results--20191227T220548-results-auto-spines-v3--v1.mat');
 
 asiRunId = '20200923T114443';
@@ -17,7 +17,7 @@ maxAxonSyns = 25;
 maxDendriteNodes = inf;
 
 % NOTE(amotta): Set this path to generate a debug NML file
-debugNmlDir = '';
+debugNmlDir = '';% fullfile(rootDir,'connectome','debug');
 
 info = Util.runInfo();
 Util.showRunInfo(info);
@@ -32,18 +32,18 @@ dendrites = conn.info.param.dendriteFile;
 dendrites = Util.load(dendrites, 'dendrites');
 
 synFile = conn.info.param.synFile;
-syn = load(synFile);
+syn = load(Util.getGabaPath(synFile));
 
 curAsiFile = sprintf('__%s_asiT.mat', asiRunId);
 curAsiFile = strrep(connFile, '.mat', curAsiFile);
-asiT = Util.load(curAsiFile, 'asiT');
+asiT = Util.load(Util.getGabaPath(curAsiFile), 'asiT');
 
 % NOTE(amotta): From +connectEM/+Connectome/plotSynapseSizeConsistency.m
 asiT = asiT(asiT.area > 0, :);
 asiT = connectEM.Consistency.Calibration.apply(asiT);
 
 curTypeFile = strrep(synFile, '.mat', '__types_v1.mat');
-syn.synapses.type = Util.load(curTypeFile, 'types');
+syn.synapses.type = Util.load(Util.getGabaPath(curTypeFile), 'types');
 
 %% Build synapse table
 clear cur*;
@@ -116,7 +116,7 @@ for curAxonIdx = 1:size(axonClasses, 1)
         if isempty(curSynIds); continue; end
         
         curTitle = sprintf( ...
-            '%s → %s primary spine synapses', ...
+            '%s ??? %s primary spine synapses', ...
             curAxonClass{1}, curTargetClass{1});
         curTag = sprintf('%s %s pri sp', ...
             curAxonClass{1}, curTargetClass{1});
@@ -144,7 +144,7 @@ curPairs = curPairs(1);
 
 curInterSynFile = sprintf('__intersynapse_v%d.mat', interSynVersion);
 curInterSynFile = strrep(connFile, '.mat', curInterSynFile);
-curInterSyn = load(curInterSynFile);
+curInterSyn = load(Util.getGabaPath(curInterSynFile));
 
 % Calculate distances for each pair
 pairDistT = table;
@@ -183,7 +183,7 @@ clear cur*;
 curAxonMeanInterMergeDist = 39.2; % From blog
 curDendMeanInterMergeDist = 100; % Wild guess
 
-% NOTE(amotta): Assume two correct spine necks of 3 µm, each.
+% NOTE(amotta): Assume two correct spine necks of 3 ??m, each.
 curTrunkDist = max(0, pairDistT.dendDist - 2 * 3);
 
 pairDistT.correctProb = ...
@@ -196,12 +196,12 @@ clear cur*;
 fig = figure();
 subplot(1, 3, 1);
 histogram(pairDistT.axonDist);
-xlabel('Axonal ISD [µm]');
+xlabel('Axonal ISD [??m]');
 axis('square');
 
 subplot(1, 3, 2);
 histogram(pairDistT.dendDist);
-xlabel('Dendritic ISD [µm]');
+xlabel('Dendritic ISD [??m]');
 axis('square');
 
 subplot(1, 3, 3);
@@ -211,6 +211,8 @@ axis('square');
 
 connectEM.Figure.config(fig, info);
 fig.Position(3:4) = [575, 210];
+
+saveas(gcf, fullfile(rootDir, 'connectome', 'figures', 'pairDistSynapses.png'))
 
 %% Build more conservative plot config
 clear cur*;
@@ -257,7 +259,7 @@ curMaxNodeCount = 50000;
 if ~isempty(debugNmlDir)
     if ~exist('axons', 'var')
         axons = conn.info.param.axonFile;
-        axons = Util.load(axons, 'axons');
+        axons = Util.load(Util.getGabaPath(axons), 'axons');
     end
     
     curPlotConfig = plotConfigs(1);
@@ -318,6 +320,8 @@ clear cur*;
 connectEM.Consistency.plotSizeHistogram( ...
     info, asiT, plotConfigs, 'scale', 'log10');
 
+saveas(gcf, fullfile(rootDir, 'connectome', 'figures', 'synapseSizes.png'))
+
 %% Report number of occurences for degree of coupling
 clear cur*;
 
@@ -361,14 +365,14 @@ for curIdx = 1:numel(plotConfigs)
 
     % Quantitative reporting
     fprintf('**%s**\n', curPlotConfig.title);
-    fprintf('CV between pairs (mean ± std)\n');
+    fprintf('CV between pairs (mean ?? std)\n');
     
     for curPairConfig = curPairConfigs
         curCvs = asiT.area(curPairConfig.synIdPairs);
         curCvs = std(curCvs, 0, 2) ./ mean(curCvs, 2);
 
         fprintf( ...
-            '* %s: %f ± %f\n', ...
+            '* %s: %f ?? %f\n', ...
             curPairConfig.title, ...
             mean(curCvs), std(curCvs));
     end
@@ -436,12 +440,12 @@ switch lower(curScaleY)
         curLimY = [0, 1];
         curTicksY = linspace(0, 1, 5);
         curFuncY = @(areas) mean(areas, 2);
-        curLabelY = 'Average ASI area [µm²]';
+        curLabelY = 'Average ASI area [??m??]';
     case 'log10'
         curLimY = [-1.5, 0.5];
         curTicksY = linspace(-1.5, 0.5, 5);
         curFuncY = @(areas) log10(mean(areas, 2));
-        curLabelY = 'log10(Average ASI area [µm²])';
+        curLabelY = 'log10(Average ASI area [??m??])';
     otherwise
         error('Invalid Y scale "%s"', curScaleY);
 end
@@ -464,7 +468,7 @@ curRegionColors = [];
 curRegionContourProps = {'LineColor', 'black'};
 
 % NOTE(amotta): The `curMinMap` and `curMaxMap` matrices have the same size
-% as the heatmaps of the CV × log10(avg. ASI) space. They contain the ASI
+% as the heatmaps of the CV ?? log10(avg. ASI) space. They contain the ASI
 % areas of the smaller and larger synapses, respectively.
 curLog10Avg = linspace(curLimY(1), curLimY(2), curImSize(1));
 if strcmpi(curScaleY, 'linear'); curLog10Avg = log10(curLog10Avg); end
@@ -737,7 +741,7 @@ for curConfig = reshape(plotConfigs(1, :), 1, [])
             end
             
             fprintf('Region %d\n', curRegionId);
-            fprintf('* Average area: %.2f - %.2f µm²\n', curAreaRange);
+            fprintf('* Average area: %.2f - %.2f ??m??\n', curAreaRange);
             fprintf('* Upper bound (kde): %.1f - %.1f %%\n', 100 * curFracs(:, 1));
             fprintf('* Surplus (kde): %.1f - %.1f %%\n', 100 * diff(flip(curFracs(:, 1:2))));
             fprintf('* Upper bound (points): %.1f - %.1f %%\n', 100 * curFracs(:, 3));
@@ -765,7 +769,7 @@ for curConfig = reshape(plotConfigs(1, :), 1, [])
         plot(gca, log10(curX), cumsum(curCtrlMap(curIds)));
         plot(gca, log10(curX), cumsum(curSaSdMap(curIds)));
         
-        xlabel(curAx, 'log10(Max ASI area of small synapse [µm²])');
+        xlabel(curAx, 'log10(Max ASI area of small synapse [??m??])');
         xlim(curAx, curLimY);
         
         subplot(2, 3, 1 + 3);
@@ -794,7 +798,7 @@ for curConfig = reshape(plotConfigs(1, :), 1, [])
         plot(curAx, log10(curX), cumsum(curCtrlMap(curIds)));
         plot(curAx, log10(curX), cumsum(curSaSdMap(curIds)));
         
-        xlabel(curAx, 'log10(Min ASI area of large synapse [µm²])');
+        xlabel(curAx, 'log10(Min ASI area of large synapse [??m??])');
         xlim(curAx, curLimY);
         
         subplot(2, 3, 2 + 3);
@@ -840,8 +844,8 @@ for curConfig = reshape(plotConfigs(1, :), 1, [])
         xticks(curAx, curTickIds); xticklabels(curAx, curTickLabels);
         yticks(curAx, curTickIds); yticklabels(curAx, curTickLabels);
         
-        xlabel(curAx, 'log10(Max ASI area of small synapse [µm²])');
-        ylabel(curAx, 'log10(Min ASI area of large synapse [µm²])');
+        xlabel(curAx, 'log10(Max ASI area of small synapse [??m??])');
+        ylabel(curAx, 'log10(Min ASI area of large synapse [??m??])');
         
         curLines = findobj(curFig, 'type', 'line');
         set(curLines, 'LineWidth', 2);
@@ -1040,7 +1044,7 @@ for curConfig = reshape(plotConfigs(1, :), 1, [])
                     'DisplayStyle', 'stairs', ...
                     'EdgeColor', curColor);
                 
-                xlabel(curAx, sprintf('%s position [µm]', curDimName));
+                xlabel(curAx, sprintf('%s position [??m]', curDimName));
                 ylabel(curAx, 'Probability');
                 
                 % Distance
@@ -1053,7 +1057,7 @@ for curConfig = reshape(plotConfigs(1, :), 1, [])
                     'BinEdges', 0:1:30, 'DisplayStyle', 'stairs', ...
                     'EdgeColor', curColor);
                 
-                xlabel(curAx, sprintf('%s distance [µm]', curDimName));
+                xlabel(curAx, sprintf('%s distance [??m]', curDimName));
                 ylabel(curAx, 'Probability');
             end
         end

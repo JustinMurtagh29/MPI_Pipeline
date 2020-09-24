@@ -82,5 +82,5 @@ ylabel(ax, 'Fraction of axons');
 fig.Position(3:4) = [440, 310];
 connectEM.Figure.config(fig, info);
 
-saveas(gcf, fullfile(rootDir, 'connectome','buildAxonClasses.png'))
+saveas(gcf, fullfile(rootDir, 'connectome','figures','buildAxonClasses.png'))
 close all

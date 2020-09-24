@@ -42,7 +42,7 @@ xlabel('Postsyn dendrites')
 ylabel('Presyn axons')
 title('Sparse connectome')
 
-saveas(gcf,fullfile(conn.info.param.rootDir,'connectome','sparseConnectome.png'))
+saveas(gcf,fullfile(conn.info.param.rootDir,'connectome','figures', 'sparseConnectome.png'))
 
 %% plot sparse contactome
 i = conn.contactome.aggloIdx(:,1);
@@ -79,6 +79,6 @@ xlabel('Postsyn dendrites')
 ylabel('Presyn axons')
 title('Sparse contactome')
 
-saveas(gcf,fullfile(conn.info.param.rootDir,'connectome','sparseContactome.png'))
+saveas(gcf,fullfile(conn.info.param.rootDir,'connectome','figures','sparseContactome.png'))
 
 
