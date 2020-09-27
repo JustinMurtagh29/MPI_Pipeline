@@ -89,6 +89,8 @@ sprintf('Soma-Soma: %d', sum( (contains(outTable.syn1,'Soma') & contains(outTabl
 sprintf('Soma-Shaft: %d', sum( (contains(outTable.syn1,'Soma') & contains(outTable.syn2,'Shaft')) | ...
                                 (contains(outTable.syn1,'Shaft') & contains(outTable.syn2,'Soma')) ))
 
+sprintf('Neck-Shaft: %d', sum( (contains(outTable.syn1,'Neck') & contains(outTable.syn2,'Shaft')) | ...
+                                (contains(outTable.syn1,'Shaft') & contains(outTable.syn2,'Neck')) ))
 
 
 
