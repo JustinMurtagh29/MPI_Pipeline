@@ -17,7 +17,7 @@ maxSegId = segmentMeta.maxSegId;
 
 Util.log('Dendrite version: %s',dendriteFile)
 dendrites = Util.load(dendriteFile, 'dendrites');
-dendAgglos = SuperAgglo.toBundle(maxSegId, dendrites);
+dendAgglos = arrayfun(@(x) SuperAgglo.toBundle(maxSegId,x), dendrites);
 dendAgglos = arrayfun(@(x) x.agglomerate_to_segments, dendAgglos, 'uni',0);
 
 Util.log('Axon version: %s',axonFile)
