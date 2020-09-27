@@ -9,7 +9,7 @@ Util.showRunInfo(info);
 
 [~, curConnName] = fileparts(connFile);
 curVer = 'v1';
-experimentName = 'Mk1_F6_JS_SubI_v1_mrnet_wsmrnet'; % wk dataset with axon_dend_spines agglos as segmentation
+experimentName = 'Mk1_F6_JS_SubI_v1_mrnet_wsmrnet_axonDendSpines_ga_20191224T235355optimParams'; % wk dataset with axon_dend_spines agglos as segmentation
 
 %% Loading data
 param = load(fullfile(rootDir, 'allParameter.mat'));
