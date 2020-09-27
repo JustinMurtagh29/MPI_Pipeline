@@ -1,6 +1,6 @@
 % get synapses corresponding to a given axon agglomerate
 % skel with synapse locations exported as nml
-%{
+
 rootFolder = '/tmpscratch/sahilloo/data/H2_3_v2_U1_SubI/pipelineRun_mr2e_wsmrnet/20190702T100708_agglomeration/';
 load(fullfile(rootFolder,'agglos.mat')); % load state of agglos of axons and dendrites
 
@@ -38,7 +38,7 @@ parameters.offset.y = '0';
 parameters.offset.z = '0';
 
 maxSegId = segmentMeta.maxSegId;
-%}
+
 % choose which axon agglos to search
 agglos = axonsSorted(1:100);
 for i=1:numel(agglos)
