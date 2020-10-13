@@ -114,17 +114,18 @@ for curConfigIdx = 1:numel(plotConfigs)
     curConfig = plotConfigs(curConfigIdx);
     curSynT = asiT(curConfig.synIds, :);
     
+    curN = height(curSynT);
     curLog10MeanAsi = log10(mean(curSynT.area));
     curMeanLog10Asi = mean(log10(curSynT.area));
     curStdLog10Asi = std(log10(curSynT.area));
     meanAsis(curConfigIdx) = mean(curSynT.area);
     
     fprintf( ...
-        '* log10(Mean %s ASI [µm²]): %f\n', ...
-        curConfig.title, curLog10MeanAsi);
+        '* log10(Mean %s ASI [µm²]): %f\n (n=%d)', ...
+        curConfig.title, curLog10MeanAsi, curN);
     fprintf( ...
-        '* log10(%s ASI [µm²]): %f ± %f (mean ± std.)\n', ...
-        curConfig.title, curMeanLog10Asi, curStdLog10Asi);
+        '* log10(%s ASI [µm²]): %f ± %f (mean ± std; n=%d)\n', ...
+        curConfig.title, curMeanLog10Asi, curStdLog10Asi, curN);
     fprintf('\n');
 end
 
