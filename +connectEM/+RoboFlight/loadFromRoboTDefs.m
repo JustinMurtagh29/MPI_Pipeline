@@ -1,13 +1,17 @@
-function [flights] = loadFromRoboTDefs(tdefOutputDir, tdefFNames, roboRunIds, param)
+function [flights] = loadFromRoboTDefs(tdefOutputDir, tdefFNames, roboRunIds, param, numNodesValFailed)
 %% Written by
 %    Martin Schmidt <martin.schmidt@brain.mpg.de>
+
+if ~exist('numNodesValFailed', 'var') || isempty(numNodesValFailed)
+    numNodesValFailed = 0;
+end
 
 % Read taskdefs and tracings:
 tdefs = roboUtil.readBatchedTDefs(tdefOutputDir, tdefFNames, roboRunIds);
 
 % Get main tracing (i.e. without validation path) of validated tracings only:
 tracings = cellfun( ...
-    @(tdef) tdef.getValidatedTracings(0), ...
+    @(tdef) tdef.getValidatedTracings(numNodesValFailed), ...
     tdefs, 'uni', false);
 tripods = cellfun( ...
     @(tracing) tracing.tripod, ...
