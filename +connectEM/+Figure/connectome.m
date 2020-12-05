@@ -6,8 +6,17 @@ clear;
 rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-partiallySplit-v2_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v8-classified.mat');
 
+% NOTE(amotta): Uncomment to plot same-axon same-dendrite connections
+% sasdFile = '/gaba/u/mberning/results/pipeline/20170217_ROI/connectomeState/connectome_axons-19-a-linearized_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v8-classified_sasdT.mat';
+% NOTE(amotta): Restrict to region
+% * 0 is "high-CV"
+% * 1 is "low-CV and small"
+% * 2 is "low-CV and large"
+% * empty to show all regions
+% sasdShowRegion = 2;
+
 % If set, writes out the connectome as CSV file
-csvPath = '/home/amotta/Desktop/connectome.csv';
+csvPath = '';
 
 minSynCount = 10;
 plotSynCountHists = true;
@@ -26,6 +35,13 @@ conn = connectEM.Connectome.load(param, connFile);
 % exception are AIS, which we plot irrespectively of their synapse number.
 axonMeta = conn.axonMeta;
 axonMeta(axonMeta.synCount < minSynCount, :) = [];
+
+% HACKHACKHACK(amotta): For the same-axon same-dendrite-pairs.
+% HACK(amotta): The connectome used `axons_19_a_partiallySplit_v2.mat`,
+% but the parent IDs were only added later in version 4...
+curMeta = conn.info.param.axonFile;
+curMeta = load(strrep(curMeta, '_v2.mat', '_v4.mat'), 'parentIds');
+axonMeta.unsplitParentId = curMeta.parentIds(axonMeta.parentId);
 
 dendMeta = conn.denMeta;
 dendMeta( ...
@@ -91,16 +107,59 @@ conn.coord = nan(size(conn.edges));
 [~, conn.coord(:, 2)] = ismember(conn.edges(:, 2), dendMeta.id);
 conn = sortrows(conn, 'synCount', 'ascend');
 
-%% Plot
 colorMap = parula(5);
+conn.color = colorMap(min(conn.synCount, size(colorMap, 1)), :);
+
+%% HACKHACKHACK(amotta): Replace by pairs
+if not(isempty(sasdFile))
+    cur = load(sasdFile);
+    
+    minSynCount = 1;
+    plotSynCountHists = false;
+    
+    colorMap = [1, 1, 1];
+    sasdT = true(height(cur.sasdT), 1);
+    
+    if not(isempty(sasdShowRegion))    
+        switch sasdShowRegion
+            case 0; colorMap = [0, 0, 1];
+            case 1; colorMap = [0, 1, 0];
+            case 2; colorMap = [1, 0, 0];
+            otherwise; error('Invalid region');
+        end
+        
+        sasdT = cur.sasdT.regionId == sasdShowRegion;
+    end
+    
+    sasdT = cur.sasdT(sasdT, :);
+    sasdT = [cur.asiT(sasdT.synIds(:, 1), :), sasdT(:, {'x'})];
+    sasdT.Properties.VariableNames{end} = 'cv';
+    
+    sasdT = sasdT(:, {'preAggloId', 'postAggloId', 'cv'});
+    sasdT.preAggloId = cur.connAxonMeta.unsplitParentId(sasdT.preAggloId);
+   [~, sasdT.connRow] = ismember(sasdT.preAggloId, axonMeta.unsplitParentId);
+   [~, sasdT.connCol] = ismember(sasdT.postAggloId, dendMeta.id);
+    sasdT = sasdT(sasdT.connRow & sasdT.connCol, :);
+    
+    conn = table;
+    conn.coord = [sasdT.connRow, sasdT.connCol];
+   [conn, ~, curSynCount] = unique(conn, 'rows');
+    conn.synCount = accumarray(curSynCount, 1);
+    conn.color = logical(conn.synCount) .* colorMap;
+end
+
+%% Plot
+clear cur*;
 
 fig = figure();
 fig.Color = 'white';
 fig.Position(3:4) = 1200;
 
 ax = axes(fig);
-h = scatter(ax, conn.coord(:, 2), conn.coord(:, 1), '.');
-h.CData = colorMap(min(conn.synCount, size(colorMap, 1)), :);
+h = scatter(ax, ...
+    conn.coord(:, 2), ...
+    conn.coord(:, 1), '.');
+h.CData = conn.color;
 
 ax.TickDir = 'out';
 ax.YDir = 'reverse';
