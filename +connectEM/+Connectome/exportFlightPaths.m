@@ -18,7 +18,7 @@ param = param.p;
 
 outDir = fullfile(outDir, runId);
 assert(not(exist(outDir, 'dir')));
-assert(mkdir(outDir'));
+assert(mkdir(outDir));
 
 %% Extract flight paths of axons
 axons = Util.load(axonFile, 'axons');
