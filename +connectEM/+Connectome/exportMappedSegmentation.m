@@ -30,6 +30,7 @@ allDends = Util.load(conn.info.param.dendriteFile, 'dendrites');
 allDends = Agglo.fromSuperAgglo(allDends(:), true);
 
 %% Building mapping
+Util.log('Building mapping');
 connAgglos = [conn.axons(:); conn.dendrites(:)];
 connAgglos = Agglo.removeSegmentOverlap(connAgglos);
 
@@ -66,17 +67,30 @@ aggloIds = cast(aggloIds, 'uint64');
 segLUT = 1:uint64(maxSegId);
 segLUT(cell2mat(allAgglos)) = repelem( ...
     aggloIds, cellfun(@numel, allAgglos));
+segLUT = [0; segLUT(:)];
 
 % Build agglomerate file with mapping
-curAggloFile = sprintf('%s_mapping.hdf5', runId);
-curAggloFile = fullfile(outDir, curAggloFile);
-curMapping = [0; segLUT(:)];
+aggloFile = fullfile(outDir, mapping.hdf5);
+Util.log('Writing agglomerate file:\n%s', aggloFile);
 
 h5create( ...
-    curAggloFile, '/segment_to_agglomerate', ...
-    numel(curMapping), 'Datatype', class(curMapping));
+    aggloFile, '/segment_to_agglomerate', ...
+    numel(segLUT), 'Datatype', class(segLUT));
 h5write( ...
-    curAggloFile, '/segment_to_agglomerate', curMapping);
-Util.protect(curAggloFile);
+    aggloFile, '/segment_to_agglomerate', segLUT);
+Util.protect(aggloFile);
+Util.clear(segLUT);
 
-% TODO(amotta): Write mapped segmentation
+%% Build mapped segmentation
+mappedSegParam = struct;
+mappedSegParam.root = fullfile(outDir, 'segmentation', '1');
+mappedSegParam.backend = 'wkwrap';
+mappedSegParam.dtype = 'uint32';
+
+curTmpDir = tempname(outDir);
+wkwInit('new', curTmpDir, 32, 32, mappedSegParam.dtype, 1);
+wkwInit('compress', curTmpDir, mappedSegParam.root);
+assert(rmdir(curTmpDir, 's'));
+
+Util.log('Building mapped segmentation');
+Seg.Global.applyMappingToSegmentation(param, aggloFile, mappedSegParam);
