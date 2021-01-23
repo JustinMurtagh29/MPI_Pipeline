@@ -63,11 +63,12 @@ segLUT = Agglo.buildLUT(maxSegId, allAgglos, segLUT);
 
 % Build agglomerate file with mapping
 curAggloFile = sprintf('%s_mapping.hdf5', runId);
+curAggloFile = fullfile(outDir, curAggloFile);
 curMapping = [0; segLUT(:)];
 
 h5create( ...
     curAggloFile, '/segment_to_agglomerate', ...
-    size(curMapping), 'Datatype', class(curMapping));
+    numel(curMapping), 'Datatype', class(curMapping));
 h5write( ...
     curAggloFile, '/segment_to_agglomerate', curMapping);
 Util.protect(curAggloFile);
