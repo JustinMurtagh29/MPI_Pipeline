@@ -51,15 +51,21 @@ otherDends = cellfun( ...
 Util.clear(curLUT);
 
 otherAgglos = [otherAxons(:); otherDends(:)];
-Util.clear(otherAxons, otherDends); % To reduce RAM usage
+Util.clear(otherAxons, otherDends);
 otherAgglos = Agglo.removeSegmentOverlap(otherAgglos);
 
 allAgglos = [connAgglos(:); otherAgglos(:)];
 Util.clear(connAgglos, otherAgglos);
+allAgglos(cellfun(@isempty, allAgglos)) = [];
 
 %% Build mapping
-segLUT = 1:uint64(numel(allAgglos));
-segLUT = Agglo.buildLUT(maxSegId, allAgglos, segLUT);
+aggloIds = cellfun(@min, allAgglos);
+assert(numel(aggloIds) == numel(unique(aggloIds)));
+aggloIds = cast(aggloIds, 'uint64');
+
+segLUT = 1:uint64(maxSegId);
+segLUT(cell2mat(allAgglos)) = repelem( ...
+    aggloIds, cellfun(@numel, allAgglos));
 
 % Build agglomerate file with mapping
 curAggloFile = sprintf('%s_mapping.hdf5', runId);

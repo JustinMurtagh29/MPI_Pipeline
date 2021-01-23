@@ -7,13 +7,13 @@ rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 connFile = fullfile(rootDir, 'connectomeState', 'connectome_axons-19-a-partiallySplit-v2_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v8-classified.mat');
 
 % NOTE(amotta): Uncomment to plot same-axon same-dendrite connections
-% sasdFile = '/gaba/u/mberning/results/pipeline/20170217_ROI/connectomeState/connectome_axons-19-a-linearized_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v8-classified_sasdT.mat';
+sasdFile = '/gaba/u/mberning/results/pipeline/20170217_ROI/connectomeState/connectome_axons-19-a-linearized_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v8-classified_sasdT.mat';
 % NOTE(amotta): Restrict to region
 % * 0 is "high-CV"
 % * 1 is "low-CV and small"
 % * 2 is "low-CV and large"
 % * empty to show all regions
-% sasdShowRegion = 2;
+sasdShowRegion = [];
 
 % If set, writes out the connectome as CSV file
 csvPath = '';
@@ -122,7 +122,7 @@ if not(isempty(sasdFile))
     
     if not(isempty(sasdShowRegion))    
         switch sasdShowRegion
-            case 0; colorMap = [0, 0, 1];
+            case 0; colorMap = [1, 1, 1];
             case 1; colorMap = [0, 1, 0];
             case 2; colorMap = [1, 0, 0];
             otherwise; error('Invalid region');
@@ -308,7 +308,8 @@ end
 annotation( ...
     fig, 'textbox', [0, 0.9, 1, 0.1], ...
     'String', {info.filename; info.git_repos{1}.hash}, ...
-    'EdgeColor', 'none', 'HorizontalAlignment', 'center');
+    'EdgeColor', 'none', 'HorizontalAlignment', 'center', ...
+    'Color', 'white');
 
 %% Export connectome as CSV file
 clear cur*;
