@@ -70,7 +70,7 @@ segLUT(cell2mat(allAgglos)) = repelem( ...
 segLUT = [0; segLUT(:)];
 
 % Build agglomerate file with mapping
-aggloFile = fullfile(outDir, mapping.hdf5);
+aggloFile = fullfile(outDir, 'mapping.hdf5');
 Util.log('Writing agglomerate file:\n%s', aggloFile);
 
 h5create( ...
