@@ -57,12 +57,25 @@ otherAgglos = Agglo.removeSegmentOverlap(otherAgglos);
 
 allAgglos = [connAgglos(:); otherAgglos(:)];
 Util.clear(connAgglos, otherAgglos);
-allAgglos(cellfun(@isempty, allAgglos)) = [];
+
+mask = not(cellfun(@isempty, allAgglos));
+allAgglos = allAgglos(mask);
 
 %% Build mapping
 aggloIds = cellfun(@min, allAgglos);
 assert(numel(aggloIds) == numel(unique(aggloIds)));
 aggloIds = cast(aggloIds, 'uint64');
+
+% Mapped segment ID per connectome axon
+axonMask = mask(1:numel(conn.axons));
+axonSegIds = zeros(size(conn.axons), 'like', aggloIds);
+axonSegIds(axonMask) = aggloIds(1:sum(axonMask));
+
+% Mapped segment ID per connectome dendrites
+dendMask = mask((1:numel(conn.dendrites)) + numel(conn.axons));
+dendSegIds = zeros(size(conn.dendrites), 'like', aggloIds);
+dendSegIds(dendMask) = aggloIds((1:sum(dendMask)) + sum(axonMask));
+Util.clear(mask, axonMask, dendMask);
 
 segLUT = 1:uint64(maxSegId);
 segLUT(cell2mat(allAgglos)) = repelem( ...
@@ -73,11 +86,9 @@ segLUT = [0; segLUT(:)];
 aggloFile = fullfile(outDir, 'mapping.hdf5');
 Util.log('Writing agglomerate file:\n%s', aggloFile);
 
-h5create( ...
-    aggloFile, '/segment_to_agglomerate', ...
-    numel(segLUT), 'Datatype', class(segLUT));
-h5write( ...
-    aggloFile, '/segment_to_agglomerate', segLUT);
+numericToHdf5(aggloFile, '/segment_to_agglomerate', segLUT(:));
+numericToHdf5(aggloFile, '/axon_mapped_seg_ids', axonSegIds(:));
+numericToHdf5(aggloFile, '/dendrite_mapped_seg_ids', dendSegIds(:));
 Util.protect(aggloFile);
 Util.clear(segLUT);
 
