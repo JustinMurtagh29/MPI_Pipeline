@@ -7,6 +7,7 @@ rootDir = '/gaba/u/mberning/results/pipeline/20170217_ROI';
 outDir = '/tmpscratch/amotta/l4/2021-01-22-export-of-flight-paths';
 axonFile = fullfile(rootDir, 'aggloState', 'axons_19_a_partiallySplit_v2.mat');
 
+minNodeDistNm = 250;
 runId = datestr(now, 30);
 
 info = Util.runInfo();
@@ -65,8 +66,10 @@ for curIdx = 1:numel(axonFlights)
     curFlight = axonFlights(curIdx);
     % NOTE(amotta): Skip empty flight paths
     if isempty(curFlight.edges); continue; end
-    
     flightId = flightId + 1;
+    
+    curFlight = Skeleton.reduceNodeDensity( ...
+        curFlight, minNodeDistNm, param.raw.voxelSize);
     
     curName = sprintf( ...
         'Axon %0*d, flight %0*d', ...
