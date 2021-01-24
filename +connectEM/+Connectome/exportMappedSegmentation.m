@@ -89,6 +89,7 @@ Util.log('Writing agglomerate file:\n%s', aggloFile);
 numericToHdf5(aggloFile, '/segment_to_agglomerate', segLUT(:));
 numericToHdf5(aggloFile, '/axon_mapped_seg_ids', axonSegIds(:));
 numericToHdf5(aggloFile, '/dendrite_mapped_seg_ids', dendSegIds(:));
+infoToHdf5(aggloFile, info);
 Util.protect(aggloFile);
 Util.clear(segLUT);
 
