@@ -32,7 +32,8 @@ axonIds = cellfun(@numel, axonFlights);
 axonIds = repelem(1:numel(axonFlights), axonIds);
 axonIds = reshape(axonIds, [], 1);
 
-axonFlights = cat(1, axonFlights{:});
+axonFlights = cat(2, axonFlights{:});
+axonFlights = axonFlights(:);
 
 out = struct;
 out.info = info;
