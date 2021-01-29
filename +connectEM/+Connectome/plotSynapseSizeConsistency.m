@@ -287,6 +287,76 @@ end
 
 pValues = reshape(pValues, [4, size(plotConfigs)]);
 
+%% Categorize connections by secondary inputs
+clear cur*;
+
+assert(all(asiT.shId));
+curMaxShId = max(asiT.shId);
+
+curShHasSecondarySynapse = false(curMaxShId, 1);
+curShHasSecondarySynapse(asiT.shId(asiT.type == 'SecondarySpine')) = true;
+asiT.shHasSecondarySynapse = curShHasSecondarySynapse(asiT.shId);
+
+curShHasMultipleSynapses = accumarray(asiT.shId, 1, [curMaxShId, 1]) > 1;
+asiT.shHasMultipleSynapses = curShHasMultipleSynapses(asiT.shId);
+
+curPlotConfig = plotConfigs(1);
+curPairConfig = connectEM.Consistency.buildPairConfigs(asiT, curPlotConfig);
+curPairConfig = curPairConfig(1);
+
+curPairT = table;
+curPairT.synIds = curPairConfig.synIdPairs;
+curPairT.shsHaveMultipleSynapses = asiT.shHasMultipleSynapses(curPairT.synIds);
+curPairT.shsWithMultipleSynapses = sum(curPairT.shsHaveMultipleSynapses, 2);
+
+curPairConfigs = repelem(curPairConfig, 4);
+
+curPairConfigs(2).synIdPairs = ...
+    curPairT.synIds(curPairT.shsWithMultipleSynapses == 0, :);
+curPairConfigs(2).title = sprintf( ...
+    'No spine with secondary input(s) (n = %d SASD pairs)', ...
+    size(curPairConfigs(2).synIdPairs, 1));
+
+curPairConfigs(3).synIdPairs = ...
+    curPairT.synIds(curPairT.shsWithMultipleSynapses == 1, :);
+curPairConfigs(3).title = sprintf( ...
+    'Either spine with secondary input(s) (n = %d SASD pairs)', ...
+    size(curPairConfigs(3).synIdPairs, 1));
+
+curPairConfigs(4).synIdPairs = ...
+    curPairT.synIds(curPairT.shsWithMultipleSynapses == 2, :);
+curPairConfigs(4).title = sprintf( ...
+    'Both spines with secondary input(s) (n = %d SASD pairs)', ...
+    size(curPairConfigs(4).synIdPairs, 1));
+
+curFig = ...
+    connectEM.Consistency.plotVariabilityHistogram( ...
+        info, asiT, curPlotConfig, ...
+        reshape(curPairConfigs(:), [], 1), ...
+        'binEdges', linspace(0, 1.5, 11));
+curFig.Position(3:4) = [465, 540];
+
+curFig = ...
+    connectEM.Consistency.plotVariabilityHistogram( ...
+        info, asiT, curPlotConfig, ...
+        reshape(curPairConfigs(1:3), [], 1), ...
+        'binEdges', linspace(0, 1.5, 16));
+curFig.Position(3:4) = [465, 540];
+
+% Quantitative reporting
+fprintf('**%s**\n', curPlotConfig.title);
+fprintf('CV between pairs (mean ± std)\n');
+
+for curPairConfig = curPairConfigs
+    curCvs = asiT.area(curPairConfig.synIdPairs);
+    curCvs = std(curCvs, 0, 2) ./ mean(curCvs, 2);
+    
+    fprintf( ...
+        '* %s: %f ± %f\n', ...
+        curPairConfig.title, ...
+        mean(curCvs), std(curCvs));
+end
+
 %% Show p-values
 clear cur*;
 
