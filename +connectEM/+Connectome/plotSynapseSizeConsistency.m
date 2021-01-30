@@ -290,15 +290,28 @@ pValues = reshape(pValues, [4, size(plotConfigs)]);
 %% Categorize connections by secondary inputs
 clear cur*;
 
+% Compute number of input synapses per spine head
+curFullConnFile = fullfile( ...
+    rootDir, 'connectomeState', ...
+    'connectome_axons-19-a-partiallySplit-v2_dendrites-wholeCells-03-v2-classified_SynapseAgglos-v8-classified.mat');
+[fullConn, fullSyn] = connectEM.Connectome.load(param, curFullConnFile);
+
+curShFile = fullfile( ...
+    rootDir, 'aggloState', ...
+    'dendrites_wholeCells_02_v3_auto.mat');
+curShAgglos = Util.load(curShFile, 'shAgglos');
+
+curShLUT = Seg.Global.getMaxSegId(param);
+curShLUT = Agglo.buildLUT(curShLUT, curShAgglos);
+
+shSynCount = cell2mat(cellfun( ...
+    @(segIds) reshape(setdiff(curShLUT(segIds), 0), [], 1), ...
+    fullSyn.synapses.postsynId, 'UniformOutput', false));
+shSynCount = accumarray(shSynCount, 1, size(curShAgglos(:)));
+
 assert(all(asiT.shId));
 curMaxShId = max(asiT.shId);
-
-curShHasSecondarySynapse = false(curMaxShId, 1);
-curShHasSecondarySynapse(asiT.shId(asiT.type == 'SecondarySpine')) = true;
-asiT.shHasSecondarySynapse = curShHasSecondarySynapse(asiT.shId);
-
-curShHasMultipleSynapses = accumarray(asiT.shId, 1, [curMaxShId, 1]) > 1;
-asiT.shHasMultipleSynapses = curShHasMultipleSynapses(asiT.shId);
+asiT.shHasMultipleSynapses = shSynCount(asiT.shId) > 1;
 
 curPlotConfig = plotConfigs(1);
 curPairConfig = connectEM.Consistency.buildPairConfigs(asiT, curPlotConfig);
@@ -332,15 +345,14 @@ curPairConfigs(4).title = sprintf( ...
 curFig = ...
     connectEM.Consistency.plotVariabilityHistogram( ...
         info, asiT, curPlotConfig, ...
-        reshape(curPairConfigs(:), [], 1), ...
-        'binEdges', linspace(0, 1.5, 11));
+        reshape(curPairConfigs(1:3), [], 1));
 curFig.Position(3:4) = [465, 540];
 
 curFig = ...
     connectEM.Consistency.plotVariabilityHistogram( ...
         info, asiT, curPlotConfig, ...
-        reshape(curPairConfigs(1:3), [], 1), ...
-        'binEdges', linspace(0, 1.5, 16));
+        reshape(curPairConfigs, [], 1), ...
+        'binEdges', linspace(0, 1.5, 11));
 curFig.Position(3:4) = [465, 540];
 
 % Quantitative reporting
