@@ -318,7 +318,7 @@ curPairConfig = connectEM.Consistency.buildPairConfigs(asiT, curPlotConfig);
 
 rng(0);
 curPairConfig = curPairConfig(1);
-curMask = rand(height(curPairT), 1) > 0.5;
+curMask = rand(size(curPairConfig.synIdPairs, 1), 1) > 0.5;
 curPairConfig.synIdPairs(curMask, :) = flip( ...
     curPairConfig.synIdPairs(curMask, :), 2);
 
