@@ -309,7 +309,6 @@ shSynCount = cell2mat(cellfun( ...
     fullSyn.synapses.postsynId, 'UniformOutput', false));
 shSynCount = accumarray(shSynCount, 1, size(curShAgglos(:)));
 
-%%
 assert(all(asiT.shId));
 curMaxShId = max(asiT.shId);
 asiT.shHasMultipleSynapses = shSynCount(asiT.shId) > 1;
