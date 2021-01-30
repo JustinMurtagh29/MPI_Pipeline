@@ -309,18 +309,35 @@ shSynCount = cell2mat(cellfun( ...
     fullSyn.synapses.postsynId, 'UniformOutput', false));
 shSynCount = accumarray(shSynCount, 1, size(curShAgglos(:)));
 
+%%
 assert(all(asiT.shId));
 curMaxShId = max(asiT.shId);
 asiT.shHasMultipleSynapses = shSynCount(asiT.shId) > 1;
 
 curPlotConfig = plotConfigs(1);
 curPairConfig = connectEM.Consistency.buildPairConfigs(asiT, curPlotConfig);
+
+rng(0);
 curPairConfig = curPairConfig(1);
+curMask = rand(height(curPairT), 1) > 0.5;
+curPairConfig.synIdPairs(curMask, :) = flip( ...
+    curPairConfig.synIdPairs(curMask, :), 2);
 
 curPairT = table;
-curPairT.synIds = curPairConfig.synIdPairs;
-curPairT.shsHaveMultipleSynapses = asiT.shHasMultipleSynapses(curPairT.synIds);
-curPairT.shsWithMultipleSynapses = sum(curPairT.shsHaveMultipleSynapses, 2);
+curPairT.synIds = ...
+    curPairConfig.synIdPairs;
+curPairT.shsHaveMultipleSynapses = ...
+    asiT.shHasMultipleSynapses(curPairT.synIds);
+curPairT.shsWithMultipleSynapses = ...
+    sum(curPairT.shsHaveMultipleSynapses, 2);
+
+curMask = ...
+    curPairT.shsHaveMultipleSynapses(:, 1) ...
+  & not(curPairT.shsHaveMultipleSynapses(:, 2));
+curPairT.synIds(curMask, :) = ...
+    flip(curPairT.synIds(curMask, :), 2);
+curPairT.shsHaveMultipleSynapses(curMask, :) = ...
+    flip(curPairT.shsHaveMultipleSynapses(curMask, :), 2);
 
 curPairConfigs = repelem(curPairConfig, 4);
 
@@ -367,6 +384,37 @@ for curPairConfig = curPairConfigs
         '* %s: %f ± %f\n', ...
         curPairConfig.title, ...
         mean(curCvs), std(curCvs));
+end
+
+% Control within group
+for curIdx = 2:4
+    curCtrlConfigs = ...
+        repelem(curPairConfigs(curIdx), 2);
+
+    rng(0);
+    curSynIds = ...
+        curCtrlConfigs(2).synIdPairs(:, 2);
+    curCtrlConfigs(2).synIdPairs(:, 2) = ...
+        curSynIds(randperm(numel(curSynIds)));
+    curCtrlConfigs(2).title = sprintf( ...
+        'Random pairs with %s%s', ...
+        lower(curCtrlConfigs(2).title(1)), ...
+        curCtrlConfigs(2).title(2:end));
+
+    curFig = ...
+        connectEM.Consistency.plotVariabilityHistogram( ...
+            info, asiT, curPlotConfig, ...
+            reshape(curCtrlConfigs, [], 1), ...
+            'binEdges', linspace(0, 1.5, 11));
+    curFig.Position(3:4) = [520, 540];
+    
+    % HACKHACKHACK(amotta): Fix legend
+    curLeg = curFig.Children(1);
+    curAx = curFig.Children(2);
+    
+    curAxPos = curAx.Position;
+    curLeg.Position(1) = (1 - curLeg.Position(3)) / 2;
+    curAx.Position = curAxPos;
 end
 
 %% Show p-values
