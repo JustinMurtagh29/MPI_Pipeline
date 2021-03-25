@@ -24,8 +24,8 @@ synIndices = conn.connectome.synIdx(idxOut); % maybe more than one synIdx per co
 synIndicesLookup = transpose(horzcat(synIndices{:}));
 contactArea = conn.connectomeMeta.contactArea(idxOut);
 contactAreaLookup = transpose(horzcat(contactArea{:}));
-%}
-%{
+
+
 %% Specify which synapses file to parse after proofread
 %nmlFile = fullfile(rootDir,'connectome','nmls','proofread',[curConnName,sprintf('-proofreadSynapses-%s-finished.nml', curVer)]);
 % merged with proofread annotations
@@ -117,10 +117,24 @@ dataTable = outTable(outTable.keep == 1,:); % keep true SASD
 
 % keep pairs with mergers pre or post side in otherTable
 otherTable = outTable(outTable.keep == -1,:); % keep non-SASD
+%}
+% choose which synapses to analyse
+sasdType = 'shaft-shaft'; % 
+
+switch sasdType
+    case 'spine-spine'
+        synapseSearchList = {'Spine','Prim','Second'};
+    case 'shaft-shaft'
+        synapseSearchList = {'Shaft'};    
+    case 'spine-shaft'
+    
+    otherwise
+        error('Pls specify correct sasd synapse types')
+end 
 
 %% Spine-Spine analysis: Asi-1 vs Asi2 Bartol et al 2015
 % SASD pairs
-idxPlot = contains(dataTable.syn1,{'Spine','Prim','Second'}) & contains(dataTable.syn2,{'Spine','Prim','Second'});
+idxPlot = contains(dataTable.syn1,synapseSearchList) & contains(dataTable.syn2,synapseSearchList);
 x1 = dataTable(idxPlot,:).asi1;
 x2 = dataTable(idxPlot,:).asi2;
 
@@ -128,10 +142,10 @@ d = sort([x1,x2],2,'descend'); % sort asi data
 x1 = d(:,1); x2 = d(:,2);
 clear d idxPlot
 assert(numel(x1) == numel(x2))
-sprintf('Found %d SASD spine-spine pairs',numel(x1))
+sprintf('Found %d SASD %s pairs',numel(x1), sasdType)
 
 % non-SASD pairs
-idxPlot = contains(otherTable.syn1,{'Spine','Prim','Second'}) & contains(otherTable.syn2,{'Spine','Prim','Second'});
+idxPlot = contains(otherTable.syn1,synapseSearchList) & contains(otherTable.syn2, synapseSearchList);
 z1 = dataTable(idxPlot,:).asi1;
 z2 = dataTable(idxPlot,:).asi2;
 
@@ -139,10 +153,9 @@ d = sort([z1,z2],2,'descend'); % sort asi data
 z1 = d(:,1); z2 = d(:,2);
 clear d idxPlot
 assert(numel(z1) == numel(z2))
-sprintf('Found %d non-SASD spine-spine pairs',numel(z1))
-%}
+sprintf('Found %d non-SASD %s pairs',numel(z1), sasdType)
 
-%{
+
 %% plot
 fig = figure;
 fig.Color = 'white';
@@ -185,10 +198,10 @@ xlabel('Asi 1 area [log_{10}(um^2)]')
 ylabel('Asi 2 area [log_{10}(um^2)]')
 set(gca,'FontSize',10)
 title(ax, ...
-    {info.filename; info.git_repos{1}.hash; 'Spine-Spine'}, ...
+    {info.filename; info.git_repos{1}.hash; sasdType}, ...
     'FontWeight', 'normal', 'FontSize', 10, 'Interpreter','none');
 Util.setPlotDefault(ax)
-outfile = fullfile(rootDir,'connectome','figures','scatter-Asi1-vs-Asi2-spine-spine-log-bartol_et_al.png')
+outfile = fullfile(rootDir,'connectome','figures',sprintf('%s-scatter-Asi1-vs-Asi2-log-bartol_et_al.png',sasdType))
 export_fig(outfile,'-q101', '-nocrop','-transparent')
 close all
 
@@ -218,13 +231,13 @@ xlabel('Asi 1 area (um^2)')
 ylabel('Asi 2 area (um^2)')
 set(gca,'FontSize',10)
 title(ax, ...
-    {info.filename; info.git_repos{1}.hash; 'Spine-Spine'}, ...
+    {info.filename; info.git_repos{1}.hash; sasdType}, ...
     'FontWeight', 'normal', 'FontSize', 10, 'Interpreter','none');
 Util.setPlotDefault(ax)
-outfile = fullfile(rootDir,'connectome','figures','scatter-Asi1-vs-Asi2-spine-spine.png')
+outfile = fullfile(rootDir,'connectome','figures',sprintf('%s-scatter-Asi1-vs-Asi2.png',sasdType))
 export_fig(outfile,'-q101', '-nocrop','-transparent')
 close all
-%}
+
 
 %% histogram 1D
 fig = figure;
@@ -234,6 +247,8 @@ hold on;
 axis(ax, 'square');
 
 cvData = cat(2, x1, x2);
+%cvData = abs(randn(93,2)); % gaussian dist SASD pairs
+
 curCvs = std(cvData, 0, 2) ./ mean(cvData, 2);
 
 % Random pairs
@@ -273,7 +288,7 @@ title(ax, ...
     {info.filename; info.git_repos{1}.hash;}, ...
     'FontWeight', 'normal', 'FontSize', 10, 'Interpreter','none');
 Util.setPlotDefault(ax)
-outfile = fullfile(rootDir,'connectome','figures','variability_histogram_spine-spine.png')
+outfile = fullfile(rootDir,'connectome','figures',sprintf('%s_variability_histogram.png',sasdType))
 export_fig(outfile,'-q101', '-nocrop','-m8')
 close all
 
@@ -336,7 +351,7 @@ h = suptitle(...
     {info.filename; info.git_repos{1}.hash});
 set(h,'FontWeight', 'normal', 'FontSize', 10, 'Interpreter','none');
 
-outfile = fullfile(rootDir,'connectome','figures','cv-vs-mean-asi-scatter-spine-spine.png')
+outfile = fullfile(rootDir,'connectome','figures',sprintf('%s-cv-vs-mean-asi-scatter.png',sasdType))
 export_fig(outfile,'-q101', '-nocrop','-m8')
 close all
 
@@ -610,82 +625,10 @@ annotation( ...
         curConfigTitle; curCtrlTitle}, ...
     'EdgeColor', 'none', 'HorizontalAlignment', 'center', 'FontSize',8);
 
-outfile = fullfile(rootDir,'connectome','figures','sasd-heatmap_spine-spine.png')
+outfile = fullfile(rootDir,'connectome','figures',sprintf('%s-sasd-heatmap.png',sasdType))
 export_fig(outfile,'-q101', '-nocrop','-m8')
 close all
 
-%{
-% 2. plot shaft-shaft
-fig = figure;
-fig.Color = 'white';
-ax = gca;
-hold on;
-idxPlot = contains(dataTable.syn1,{'Shaft'}) & contains(dataTable.syn2,{'Shaft'});
-x1 = dataTable(idxPlot,:).asi1;
-x2 = dataTable(idxPlot,:).asi2;
-% sort data
-d = sort([x1,x2],2,'descend');
-x1 = d(:,1); x2 = d(:,2);
-clear d
-
-scatter(x1,x2,'kx')
-count = sum(idxPlot);
-
-curFit = fitlm(x1, x2);
-plot(curLimX(:), curFit.predict(curLimX(:)), 'k--');
-curLeg = legend(sprintf('y = %.2f + %.2fx (R² = %.2f) N=%d', ...
-    curFit.Coefficients.Estimate, curFit.Rsquared.Ordinary,count));
-set(curLeg, 'Box', 'Off', 'Location', 'South');
-
-ax.YAxis.Limits = curLimX;
-ax.XAxis.Limits = curLimY;
-axis('square')
-ax.LineWidth = 2;
-xlabel('Asi 1 area (um^2)')
-ylabel('Asi 2 area (um^2)')
-set(gca,'FontSize',10)
-title(ax, ...
-    {info.filename; info.git_repos{1}.hash; 'Shaft-Shaft'}, ...
-    'FontWeight', 'normal', 'FontSize', 10);
-outfile = fullfile(rootDir,'connectome','figures','sasd-pairs-ASI-shaft-shaft.png')
-export_fig(outfile,'-q101', '-nocrop','-transparent')
-close all
-
-%% statistics
-sprintf('False: %d', sum(~outTable.keep))
-sprintf('Spine-Spine: %d', sum(contains(dataTable.syn1,'Spine') & contains(dataTable.syn2,'Spine')))
-sprintf('Spine-Prim: %d', sum( (contains(dataTable.syn1,'Spine') & contains(dataTable.syn2,'Prim')) | ...
-                                (contains(dataTable.syn1,'Prim') & contains(dataTable.syn2,'Spine')) ))
-sprintf('Spine-Second: %d', sum( (contains(dataTable.syn1,'Spine') & contains(dataTable.syn2,'Second')) | ...
-                                (contains(dataTable.syn1,'Second') & contains(dataTable.syn2,'Spine')) ))
-sprintf('Prim-Prim: %d', sum( (contains(dataTable.syn1,'Prim') & contains(dataTable.syn2,'Prim')) | ...
-                                (contains(dataTable.syn1,'Prim') & contains(dataTable.syn2,'Prim')) ))
-
-sprintf('Second-Second: %d', sum( (contains(dataTable.syn1,'Second') & contains(dataTable.syn2,'Second')) | ...
-                                (contains(dataTable.syn1,'Second') & contains(dataTable.syn2,'Second')) ))
-
-sprintf('Prim-Second: %d', sum( (contains(dataTable.syn1,'Prim') & contains(dataTable.syn2,'Second')) | ...
-                                (contains(dataTable.syn1,'Second') & contains(dataTable.syn2,'Prim')) ))
-
-sprintf('Spine-Shaft: %d', sum( (contains(dataTable.syn1,'Spine') & contains(dataTable.syn2,'Shaft')) | ...
-                                (contains(dataTable.syn1,'Shaft') & contains(dataTable.syn2,'Spine')) ))
-sprintf('Prim-Shaft: %d', sum( (contains(dataTable.syn1,'Prim') & contains(dataTable.syn2,'Shaft')) | ...
-                                (contains(dataTable.syn1,'Shaft') & contains(dataTable.syn2,'Prim')) ))
-sprintf('Second-Shaft: %d', sum( (contains(dataTable.syn1,'Second') & contains(dataTable.syn2,'Shaft')) | ...
-                                (contains(dataTable.syn1,'Shaft') & contains(dataTable.syn2,'Second')) ))
-sprintf('Shaft-Shaft: %d', sum( (contains(dataTable.syn1,'Shaft') & contains(dataTable.syn2,'Shaft')) | ...
-                                (contains(dataTable.syn1,'Shaft') & contains(dataTable.syn2,'Shaft')) ))
-
-sprintf('Soma-Soma: %d', sum( (contains(dataTable.syn1,'Soma') & contains(dataTable.syn2,'Soma')) | ...
-                                (contains(dataTable.syn1,'Soma') & contains(dataTable.syn2,'Soma')) ))
-
-sprintf('Soma-Shaft: %d', sum( (contains(dataTable.syn1,'Soma') & contains(dataTable.syn2,'Shaft')) | ...
-                                (contains(dataTable.syn1,'Shaft') & contains(dataTable.syn2,'Soma')) ))
-
-sprintf('Neck-Shaft: %d', sum( (contains(dataTable.syn1,'Neck') & contains(dataTable.syn2,'Shaft')) | ...
-                                (contains(dataTable.syn1,'Shaft') & contains(dataTable.syn2,'Neck')) ))
-
-%}
 function type = funType(x)
     if isempty(x)
         type = 'Spine';
