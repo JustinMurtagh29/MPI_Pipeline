@@ -117,24 +117,34 @@ dataTable = outTable(outTable.keep == 1,:); % keep true SASD
 
 % keep pairs with mergers pre or post side in otherTable
 otherTable = outTable(outTable.keep == -1,:); % keep non-SASD
+
+% save data
+outfile = fullfile( rootDir, 'connectome', sprintf('%s__%s_sasdData.mat',curConnName, datestr(clock,30)));
+Util.save(outfile,outTable, dataTable, otherTable)
+sprintf('Saved data to: %s',outfile)
+
 %}
 % choose which synapses to analyse
-sasdType = 'shaft-shaft'; % 
+sasdType = 'spine-shaft'; % 
 
 switch sasdType
     case 'spine-spine'
-        synapseSearchList = {'Spine','Prim','Second'};
+        synapseSearchList1 = {'Spine','Prim','Second'};
+        synapseSearchList2 = {'Spine','Prim','Second'};
     case 'shaft-shaft'
-        synapseSearchList = {'Shaft'};    
+        synapseSearchList1 = {'Shaft'};    
+        synapseSearchList2 = {'Shaft'};
     case 'spine-shaft'
-    
+        synapseSearchList1 = {'Spine','Prim','Second'};
+        synapseSearchList2 = {'Shaft'};
     otherwise
         error('Pls specify correct sasd synapse types')
 end 
 
 %% Spine-Spine analysis: Asi-1 vs Asi2 Bartol et al 2015
 % SASD pairs
-idxPlot = contains(dataTable.syn1,synapseSearchList) & contains(dataTable.syn2,synapseSearchList);
+idxPlot = (contains(dataTable.syn1,synapseSearchList1) & contains(dataTable.syn2,synapseSearchList2)) | ...
+          (contains(dataTable.syn1,synapseSearchList2) & contains(dataTable.syn2,synapseSearchList1)) ;
 x1 = dataTable(idxPlot,:).asi1;
 x2 = dataTable(idxPlot,:).asi2;
 
@@ -145,7 +155,8 @@ assert(numel(x1) == numel(x2))
 sprintf('Found %d SASD %s pairs',numel(x1), sasdType)
 
 % non-SASD pairs
-idxPlot = contains(otherTable.syn1,synapseSearchList) & contains(otherTable.syn2, synapseSearchList);
+idxPlot = (contains(otherTable.syn1,synapseSearchList1) & contains(otherTable.syn2, synapseSearchList2)) | ...
+          (contains(otherTable.syn1,synapseSearchList2) & contains(otherTable.syn2, synapseSearchList1));
 z1 = dataTable(idxPlot,:).asi1;
 z2 = dataTable(idxPlot,:).asi2;
 
