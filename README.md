@@ -1,3 +1,5 @@
+!!!!! This repository is no longer maintained !!!!!
+
 Introduction to the Pipline Repository
 ======================================
 
@@ -5,8 +7,6 @@ Introduction to the Pipline Repository
 Preparation
 -----------
 1. Get a account at the Max Planck Computing and Data Facility (MPCDF). Make sure you can connect to the GABA cluster at the Rechenzentrum Garching (see [here](https://wiki.hest.brain.mpg.de/doku.php?id=knowledge:organization:it:connecting_to_garching) for a guide)
-2. Send an email to heiko.wissler@brain.mpg.de with your GitLab username to be added to the respective teams/repos
-3. Wait for a positive reply from Heiko
 
 
 Connecting to GABA
